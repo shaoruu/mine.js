@@ -1,3 +1,4 @@
+/** Basis */
 import React from 'react'
 import ReactDOM from 'react-dom'
 
@@ -16,12 +17,12 @@ import { ApolloProvider } from 'react-apollo'
 /** Local Imports */
 import './index.css'
 import * as serviceWorker from './serviceWorker'
-import Minecraft from './containers/Minecraft'
-import { getToken } from './utils'
+import Main from './containers/Main'
+import { getToken } from './lib/utils'
 
 const httpLink = createHttpLink({
 	uri: 'http://localhost:4000',
-	credentials: 'same-origins'
+	credentials: 'same-origin'
 })
 
 const link = split(
@@ -43,7 +44,7 @@ const authLink = setContext((_, { headers }) => {
 	return {
 		headers: {
 			...headers,
-			authorization: token ? `JWT ${token}` : ''
+			authorization: token ? `Bearer ${token}` : ''
 		}
 	}
 })
@@ -59,7 +60,7 @@ const apolloClient = new ApolloClient({
 const main = (
 	<ApolloProvider client={apolloClient}>
 		<BrowserRouter>
-			<Minecraft />
+			<Main />
 		</BrowserRouter>
 	</ApolloProvider>
 )

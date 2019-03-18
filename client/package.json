@@ -10,6 +10,7 @@
     "apollo-link-ws": "^1.0.17",
     "apollo-utilities": "^1.2.1",
     "cookie": "^0.3.1",
+    "formik": "^1.5.1",
     "graphql": "^14.1.1",
     "graphql-tag": "^2.10.1",
     "react": "^16.8.4",
@@ -18,7 +19,8 @@
     "react-router-dom": "^4.4.0",
     "react-scripts": "2.1.8",
     "subscriptions-transport-ws": "^0.9.16",
-    "three": "^0.102.1"
+    "three": "^0.102.1",
+    "yup": "^0.27.0"
   },
   "scripts": {
     "start": "react-scripts start",

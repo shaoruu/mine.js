@@ -1,5 +1,6 @@
 type Query {
 	users(query: String, first: Int, skip: Int, after: String): [User!]!
+	me: User!
 }
 
 type User {
@@ -19,9 +20,9 @@ type Mutation {
 }
 
 input CreateUserInput {
-	name: String!
 	email: String!
 	password: String!
+	username: String!
 }
 
 input LoginUserInput {
@@ -30,7 +31,7 @@ input LoginUserInput {
 }
 
 input UpdateUserInput {
-	name: String
+	username: String
 	email: String
 	password: String
 }
