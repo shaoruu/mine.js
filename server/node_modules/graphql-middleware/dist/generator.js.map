@@ -1,0 +1,1 @@
+{"version":3,"file":"generator.js","sourceRoot":"","sources":["../src/generator.ts"],"names":[],"mappings":";;AAOA;IAIE,6BACE,SAAoE;QAEpE,IAAI,CAAC,SAAS,GAAG,SAAS,CAAA;IAC5B,CAAC;IAED,sCAAQ,GAAR,UAAS,MAAqB;QAC5B,OAAO,IAAI,CAAC,SAAS,CAAC,MAAM,CAAC,CAAA;IAC/B,CAAC;IACH,0BAAC;AAAD,CAAC,AAbD,IAaC;AAbY,kDAAmB"}

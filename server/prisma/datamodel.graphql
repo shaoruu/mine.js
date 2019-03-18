@@ -1,0 +1,45 @@
+type User {
+	id: ID! @unique
+	username: String!
+	email: String! @unique
+	password: String!
+	updatedAt: DateTime!
+	createdAt: DateTime!
+}
+
+type Player {
+	id: ID! @unique
+	gamemode: String!
+	user: User!
+	position: Position!
+	lastLogin: DateTime!
+}
+
+type Block {
+	type: String!
+	position: Position!
+}
+
+type Chunk {
+	blocks: [Block!]!
+	origin: Origin!
+}
+
+type Position {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type Origin {
+	x: Int!
+	y: Int!
+	z: Int!
+}
+
+type World {
+	name: String!
+	seed: String!
+	chunks: [Chunk!]!
+	players: [Player!]!
+}
