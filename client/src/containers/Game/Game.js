@@ -6,23 +6,23 @@
 import React, { Component } from 'react'
 import { withRouter, Redirect } from 'react-router-dom'
 
-import { Minecraft, Start, WorldList, Options } from '../../components/Game'
+import { Minecraft, Start, Worlds, Options } from '../../components/Game'
 
 class Game extends Component {
 	render() {
 		const {
 			match: {
-				params: { page }
+				params: { page, query }
 			}
 		} = this.props
 
 		let render = null
 		switch (page) {
 			case 'minecraft':
-				render = <Minecraft />
+				render = <Minecraft id={query} />
 				break
 			case 'worlds':
-				render = <WorldList />
+				render = <Worlds subpage={query} />
 				break
 			case 'start':
 				render = <Start />
@@ -31,10 +31,9 @@ class Game extends Component {
 				render = <Options />
 				break
 			default:
+				render = <Redirect to="/game/start" />
 				break
 		}
-
-		if (!render) return <Redirect to="/game/start" />
 
 		return render
 	}

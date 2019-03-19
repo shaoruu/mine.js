@@ -9,10 +9,11 @@ import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 
 class Home extends Component {
 	render() {
-		const { isAuth, history } = this.props
+		const { isAuth, history, username } = this.props
 
 		const content = isAuth ? (
 			<div>
+				<span>{username}</span>
 				<button onClick={() => history.push('/game')}>Game</button>
 				<button onClick={() => history.push('/settings')}>Settings</button>
 				<button onClick={() => history.push('/logout')}>Logout</button>

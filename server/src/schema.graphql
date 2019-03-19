@@ -2,6 +2,7 @@ type Query {
 	users(query: String, first: Int, skip: Int, after: String): [User!]!
 	me: User!
 	myWorlds(first: Int, skip: Int, after: String): [World!]!
+	world(query: String!): World!
 }
 
 type Mutation {
@@ -38,7 +39,7 @@ type Player {
 	gamemode: String!
 	user: User!
 	position: Position!
-	lastLogin: String!
+	lastLogin: String
 }
 
 type Block {

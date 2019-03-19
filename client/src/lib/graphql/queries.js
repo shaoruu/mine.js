@@ -16,8 +16,50 @@ export const USERS_QUERY = gql`
 	}
 `
 
-// export const WORLDS_QUERY = gql`
-//     query Worlds {
+export const MY_WORLDS_QUERY = gql`
+	query MyWorlds {
+		myWorlds {
+			id
+			name
+			seed
+		}
+	}
+`
 
-//     }
-// `
+export const WORLD_QUERY = gql`
+	query World($query: String!) {
+		world(query: $query) {
+			name
+			seed
+			chunks {
+				blocks {
+					type
+					position {
+						x
+						y
+						z
+					}
+				}
+				origin {
+					x
+					y
+					z
+				}
+			}
+			players {
+				id
+				isAdmin
+				gamemode
+				user {
+					username
+				}
+				position {
+					x
+					y
+					z
+				}
+				lastLogin
+			}
+		}
+	}
+`

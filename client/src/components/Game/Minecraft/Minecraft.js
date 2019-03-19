@@ -1,7 +1,22 @@
 import React from 'react'
+import { Query } from 'react-apollo'
 
-const Minecraft = props => {
-	return <h1>minecraft</h1>
+import { WORLD_QUERY } from '../../../lib/graphql'
+
+const Minecraft = ({ id }) => {
+	return (
+		<Query
+			query={WORLD_QUERY}
+			variables={{ query: id }}
+			onError={error => console.error(error)}>
+			{({ loading, data }) => {
+				if (loading) return null
+
+				console.log(data)
+				return null
+			}}
+		</Query>
+	)
 }
 
 export { Minecraft }

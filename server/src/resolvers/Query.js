@@ -27,6 +27,9 @@ const Query = {
 
 		return prisma.query.worlds(opArgs, info)
 	},
+	world(parent, args, { prisma }, info) {
+		return prisma.query.world({ where: { id: args.query } }, info)
+	},
 	users(parent, args, { prisma }, info) {
 		const opArgs = {
 			first: args.first,

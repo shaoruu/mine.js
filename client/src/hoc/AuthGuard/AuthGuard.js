@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import { Query } from 'react-apollo'
 
 import { ME_QUERY } from '../../lib/graphql'
-import { signout } from '../../lib/utils'
 
 const withAuthGuard = WrappedComponent => {
 	return class extends Component {
@@ -14,11 +13,13 @@ const withAuthGuard = WrappedComponent => {
 						if (!error.message.includes('Authentication'))
 							console.error(error.message)
 					}}>
-					{({ loading, error }) => {
+					{({ data, loading, error }) => {
 						if (loading) return null
 						if (error) return <WrappedComponent isAuth={false} />
 
-						return <WrappedComponent isAuth={true} />
+						return (
+							<WrappedComponent isAuth={true} username={data.me.username} />
+						)
 					}}
 				</Query>
 			)

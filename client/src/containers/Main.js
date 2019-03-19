@@ -21,7 +21,7 @@ class Main extends Component {
 					<Route path="/logout" component={Logout} />
 					<Route path="/home" component={Home} />
 					<Route path="/settings" component={Settings} />
-					<Route path="/game/:page?" component={Game} />
+					<Route path="/game/:page?/:query?" component={Game} />
 					<Route path="/login" component={Login} />
 					<Route path="/register" component={Register} />
 					<Route path="/home" component={Home} />

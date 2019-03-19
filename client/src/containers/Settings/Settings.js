@@ -10,7 +10,7 @@ import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 
 class Settings extends Component {
 	render() {
-		return null
+		return <h1>Settings</h1>
 	}
 }
 
