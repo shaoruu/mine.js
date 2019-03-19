@@ -13,7 +13,6 @@ const CreateNewWorld = withRouter(({ history, match }) => {
 		<Mutation
 			mutation={CREATE_WORLD_MUTATION}
 			onCompleted={({ createWorld: { id } }) => {
-				console.log(id)
 				history.push(`/game/minecraft/${id}`)
 			}}
 			onError={error => console.error(error)}>
@@ -22,7 +21,6 @@ const CreateNewWorld = withRouter(({ history, match }) => {
 					initialValues={{ name: '', seed: '' }}
 					validationSchema={CREATE_WORLD_SCHEMA}
 					onSubmit={(values, { setSubmitting }) => {
-						console.log('shit')
 						createWorld({
 							variables: {
 								...values,

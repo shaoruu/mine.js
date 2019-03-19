@@ -13,7 +13,6 @@ const Minecraft = ({ id }) => {
 			{({ loading, data }) => {
 				if (loading) return null
 
-				console.log(data)
 				return <MainScene />
 			}}
 		</Query>
