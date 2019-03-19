@@ -2,6 +2,7 @@ import React from 'react'
 import { Query } from 'react-apollo'
 
 import { WORLD_QUERY } from '../../../lib/graphql'
+import MainScene from './app/MainScene/MainScene'
 
 const Minecraft = ({ id }) => {
 	return (
@@ -13,7 +14,7 @@ const Minecraft = ({ id }) => {
 				if (loading) return null
 
 				console.log(data)
-				return null
+				return <MainScene />
 			}}
 		</Query>
 	)
