@@ -1,3 +1,8 @@
+/**
+ * HOME PAGE
+ * - REPRESENTS: LAUNCHER HOME
+ */
+
 import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
@@ -19,7 +24,12 @@ class Home extends Component {
 			</div>
 		)
 
-		return content
+		return (
+			<div>
+				<h1>Minecraft</h1>
+				{content}
+			</div>
+		)
 	}
 }
 

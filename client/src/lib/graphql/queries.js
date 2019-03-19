@@ -15,3 +15,9 @@ export const USERS_QUERY = gql`
 		}
 	}
 `
+
+// export const WORLDS_QUERY = gql`
+//     query Worlds {
+
+//     }
+// `

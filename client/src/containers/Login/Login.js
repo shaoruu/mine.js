@@ -1,3 +1,8 @@
+/**
+ * LOGIN PAGE
+ * - REPRESENTS: LAUNCHER LOGIN
+ */
+
 import React, { Component } from 'react'
 import { Mutation, withApollo } from 'react-apollo'
 import { withRouter, Redirect } from 'react-router-dom'

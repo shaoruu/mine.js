@@ -1,3 +1,8 @@
+/**
+ * NOT ACTUALLY A PAGE
+ * - REPRESENTS: SWITCH ACCOUNT BUTTON
+ */
+
 import React, { Component } from 'react'
 import { ApolloConsumer } from 'react-apollo'
 import { withRouter } from 'react-router-dom'

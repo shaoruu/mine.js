@@ -1,3 +1,8 @@
+/**
+ * REGISTER PAGE
+ * - REPRESENTS: MINECRAFT.ORG / MOJANG REGISTRATION
+ */
+
 import React, { Component } from 'react'
 import { Mutation, withApollo } from 'react-apollo'
 import { withRouter, Redirect } from 'react-router-dom'

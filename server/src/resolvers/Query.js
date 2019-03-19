@@ -9,6 +9,24 @@ const Query = {
 
 		return me
 	},
+	myWorlds(parent, args, { prisma, request }, info) {
+		const userId = getUserId(request)
+		const opArgs = {
+			first: args.first,
+			skip: args.skip,
+			after: args.after,
+			orderBy: args.orderBy,
+			where: {
+				players_some: {
+					user: {
+						id: userId
+					}
+				}
+			}
+		}
+
+		return prisma.query.worlds(opArgs, info)
+	},
 	users(parent, args, { prisma }, info) {
 		const opArgs = {
 			first: args.first,

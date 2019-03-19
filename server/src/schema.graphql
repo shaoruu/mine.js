@@ -1,6 +1,7 @@
 type Query {
 	users(query: String, first: Int, skip: Int, after: String): [User!]!
 	me: User!
+	myWorlds(first: Int, skip: Int, after: String): [World!]!
 }
 
 type Mutation {
