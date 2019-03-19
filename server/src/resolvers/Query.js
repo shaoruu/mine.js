@@ -6,7 +6,6 @@ const Query = {
 
 		const me = await prisma.query.user({ where: { id } }, info)
 		if (!me) throw new Error('Unknown token')
-		console.log(me)
 
 		return me
 	},

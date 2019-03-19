@@ -68,6 +68,65 @@ const Mutation = {
 			},
 			info
 		)
+	},
+	async createWorld(parent, args, { prisma, request }, info) {
+		const id = getUserId(request)
+		const {
+			data: { gamemode, name, seed }
+		} = args
+
+		const userExists = await prisma.exists.User({
+			id
+		})
+
+		if (!userExists) throw new Error('User not found')
+
+		// World generation
+		const world = await prisma.mutation.createWorld(
+			{
+				data: {
+					name,
+					seed
+				}
+			},
+			'{ id }'
+		)
+
+		const owner = await prisma.mutation.createPlayer({
+			data: {
+				isAdmin: true,
+				gamemode: args.data.gamemode,
+				user: {
+					connect: {
+						id
+					}
+				},
+				world: {
+					connect: {
+						id: world.id
+					}
+				},
+				position: {
+					create: {
+						x: 0,
+						y: 0,
+						z: 0
+					}
+				}
+			}
+		})
+
+		return prisma.mutation.updateWorld(
+			{
+				where: { id: world.id },
+				data: {
+					players: {
+						connect: [{ id: owner.id }]
+					}
+				}
+			},
+			info
+		)
 	}
 }
 

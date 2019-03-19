@@ -9,7 +9,7 @@ export const checkLoggedIn = apolloClient =>
 			return data
 		})
 		.catch(err => {
-			console.log(err)
+			console.error(err)
 			// Fail gracefully
 			return { me: {} }
 		})

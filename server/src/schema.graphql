@@ -3,6 +3,17 @@ type Query {
 	me: User!
 }
 
+type Mutation {
+	# USER
+	createUser(data: CreateUserInput!): AuthPayload!
+	login(data: LoginUserInput!): AuthPayload!
+	deleteUser: User!
+	updateUser(data: UpdateUserInput!): User!
+
+	# WORLD
+	createWorld(data: CreateWorldInput!): World!
+}
+
 type User {
 	id: ID!
 	username: String!
@@ -12,11 +23,43 @@ type User {
 	createdAt: String!
 }
 
-type Mutation {
-	createUser(data: CreateUserInput!): AuthPayload!
-	login(data: LoginUserInput!): AuthPayload!
-	deleteUser: User!
-	updateUser(data: UpdateUserInput!): User!
+type World {
+	id: ID!
+	name: String!
+	seed: String!
+	chunks: [Chunk!]!
+	players: [Player!]!
+}
+
+type Player {
+	id: ID!
+	isAdmin: Boolean!
+	gamemode: String!
+	user: User!
+	position: Position!
+	lastLogin: String!
+}
+
+type Block {
+	type: String!
+	position: Position!
+}
+
+type Chunk {
+	blocks: [Block!]!
+	origin: Origin!
+}
+
+type Position {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type Origin {
+	x: Int!
+	y: Int!
+	z: Int!
 }
 
 input CreateUserInput {
@@ -36,7 +79,20 @@ input UpdateUserInput {
 	password: String
 }
 
+input CreateWorldInput {
+	name: String!
+	seed: String!
+	gamemode: Gamemode!
+}
+
 type AuthPayload {
 	token: String!
 	user: User!
+}
+
+enum Gamemode {
+	SURVIVAL
+	CREATIVE
+	ADVENTURE
+	SPECTATOR
 }

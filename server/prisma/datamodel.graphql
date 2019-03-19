@@ -1,18 +1,21 @@
 type User {
 	id: ID! @unique
-	username: String!
+	username: String! @unique
 	email: String! @unique
 	password: String!
+	worlds: [World!]!
 	updatedAt: DateTime!
 	createdAt: DateTime!
 }
 
 type Player {
 	id: ID! @unique
-	gamemode: String!
+	isAdmin: Boolean!
+	gamemode: Gamemode!
 	user: User!
+	world: World!
 	position: Position!
-	lastLogin: DateTime!
+	lastLogin: DateTime
 }
 
 type Block {
@@ -38,8 +41,16 @@ type Origin {
 }
 
 type World {
+	id: ID! @unique
 	name: String!
 	seed: String!
 	chunks: [Chunk!]!
 	players: [Player!]!
+}
+
+enum Gamemode {
+	SURVIVAL
+	CREATIVE
+	ADVENTURE
+	SPECTATOR
 }
