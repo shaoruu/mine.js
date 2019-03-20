@@ -6,10 +6,13 @@
 import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
+import { Loading } from '../../components/Utils'
 
 class Home extends Component {
 	render() {
-		const { isAuth, history, username } = this.props
+		const { isAuth, history, username, loading } = this.props
+
+		if (loading) return <Loading />
 
 		const content = isAuth ? (
 			<div>

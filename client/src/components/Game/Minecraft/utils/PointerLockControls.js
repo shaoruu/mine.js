@@ -5,7 +5,7 @@
 
 import * as THREE from 'three'
 
-import Config from '../data/config'
+import Config from '../Data/Config'
 
 const PointerLockControls = function(camera, domElement) {
 	var scope = this

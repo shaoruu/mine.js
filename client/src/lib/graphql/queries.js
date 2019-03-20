@@ -32,19 +32,9 @@ export const WORLD_QUERY = gql`
 			name
 			seed
 			chunks {
-				blocks {
-					type
-					position {
-						x
-						y
-						z
-					}
-				}
-				origin {
-					x
-					y
-					z
-				}
+				blocks
+				coordx
+				coordz
 			}
 			players {
 				id
@@ -53,12 +43,10 @@ export const WORLD_QUERY = gql`
 				user {
 					username
 				}
-				position {
-					x
-					y
-					z
-				}
 				lastLogin
+				x
+				y
+				z
 			}
 		}
 	}

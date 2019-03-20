@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import getUserId from '../utils/getUserId'
 import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
+import generateSingleBlock from '../utils/generateSingleBlock'
 
 const Mutation = {
 	async createUser(parent, args, { prisma }, info) {
@@ -75,13 +76,13 @@ const Mutation = {
 			data: { gamemode, name, seed }
 		} = args
 
+		// Check if user exists
 		const userExists = await prisma.exists.User({
 			id
 		})
-
 		if (!userExists) throw new Error('User not found')
 
-		// World generation
+		// World creation
 		const world = await prisma.mutation.createWorld(
 			{
 				data: {
@@ -92,10 +93,11 @@ const Mutation = {
 			'{ id }'
 		)
 
+		// Adding owner into world
 		const owner = await prisma.mutation.createPlayer({
 			data: {
 				isAdmin: true,
-				gamemode: args.data.gamemode,
+				gamemode: gamemode,
 				user: {
 					connect: {
 						id
@@ -106,22 +108,43 @@ const Mutation = {
 						id: world.id
 					}
 				},
-				position: {
-					create: {
-						x: 0,
-						y: 0,
-						z: 0
-					}
-				}
+				x: 0,
+				y: 0,
+				z: 0
 			}
 		})
 
+		let blocks = ''
+		// TODO: change 16 to configured value
+		for (let x = 0; x < 16; x++) {
+			for (let z = 0; z < 16; z++) {
+				// const maxHeight = Math.random() * 160 + 100
+				for (let y = 0; y < 20; y++) {
+					blocks += generateSingleBlock(1, { x, y, z })
+				}
+			}
+		}
+		// blocks += generateSingleBlock('STONE', { x: 0, y: 0, z: 0 })
+
+		/**
+		 * TODO: Implement chunk generation and blocks here.
+		 */
+		// Chunk generation around player
 		return prisma.mutation.updateWorld(
 			{
 				where: { id: world.id },
 				data: {
 					players: {
 						connect: [{ id: owner.id }]
+					},
+					chunks: {
+						create: [
+							{
+								blocks,
+								coordx: 0,
+								coordz: 0
+							}
+						]
 					}
 				}
 			},

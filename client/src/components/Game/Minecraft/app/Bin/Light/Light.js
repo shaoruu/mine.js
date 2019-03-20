@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import Config from '../../data/config'
+import Config from '../../../Data/Config'
 
 // Sets up and places all lights in scene
 export default class Light {

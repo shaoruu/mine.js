@@ -1,23 +1,11 @@
 # source: http://localhost:4466
-# timestamp: Tue Mar 19 2019 07:18:15 GMT+0800 (Taipei Standard Time)
-
-type AggregateBlock {
-  count: Int!
-}
+# timestamp: Wed Mar 20 2019 17:03:15 GMT+0800 (Taipei Standard Time)
 
 type AggregateChunk {
   count: Int!
 }
 
-type AggregateOrigin {
-  count: Int!
-}
-
 type AggregatePlayer {
-  count: Int!
-}
-
-type AggregatePosition {
   count: Int!
 }
 
@@ -34,152 +22,11 @@ type BatchPayload {
   count: Long!
 }
 
-type Block {
-  type: String!
-  position: Position!
-}
-
-"""A connection to a list of items."""
-type BlockConnection {
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """A list of edges."""
-  edges: [BlockEdge]!
-  aggregate: AggregateBlock!
-}
-
-input BlockCreateInput {
-  type: String!
-  position: PositionCreateOneInput!
-}
-
-input BlockCreateManyInput {
-  create: [BlockCreateInput!]
-}
-
-"""An edge in a connection."""
-type BlockEdge {
-  """The item at the end of the edge."""
-  node: Block!
-
-  """A cursor for use in pagination."""
-  cursor: String!
-}
-
-enum BlockOrderByInput {
-  type_ASC
-  type_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
-}
-
-type BlockPreviousValues {
-  type: String!
-}
-
-type BlockSubscriptionPayload {
-  mutation: MutationType!
-  node: Block
-  updatedFields: [String!]
-  previousValues: BlockPreviousValues
-}
-
-input BlockSubscriptionWhereInput {
-  """Logical AND on all given filters."""
-  AND: [BlockSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [BlockSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [BlockSubscriptionWhereInput!]
-
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: BlockWhereInput
-}
-
-input BlockUpdateManyMutationInput {
-  type: String
-}
-
-input BlockWhereInput {
-  """Logical AND on all given filters."""
-  AND: [BlockWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [BlockWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [BlockWhereInput!]
-  type: String
-
-  """All values that are not equal to given value."""
-  type_not: String
-
-  """All values that are contained in given list."""
-  type_in: [String!]
-
-  """All values that are not contained in given list."""
-  type_not_in: [String!]
-
-  """All values less than the given value."""
-  type_lt: String
-
-  """All values less than or equal the given value."""
-  type_lte: String
-
-  """All values greater than the given value."""
-  type_gt: String
-
-  """All values greater than or equal the given value."""
-  type_gte: String
-
-  """All values containing the given string."""
-  type_contains: String
-
-  """All values not containing the given string."""
-  type_not_contains: String
-
-  """All values starting with the given string."""
-  type_starts_with: String
-
-  """All values not starting with the given string."""
-  type_not_starts_with: String
-
-  """All values ending with the given string."""
-  type_ends_with: String
-
-  """All values not ending with the given string."""
-  type_not_ends_with: String
-  position: PositionWhereInput
-}
-
-type Chunk {
-  blocks(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Block!]
-  origin: Origin!
+type Chunk implements Node {
+  id: ID!
+  blocks: String!
+  coordx: Int!
+  coordz: Int!
 }
 
 """A connection to a list of items."""
@@ -193,12 +40,14 @@ type ChunkConnection {
 }
 
 input ChunkCreateInput {
-  blocks: BlockCreateManyInput
-  origin: OriginCreateOneInput!
+  blocks: String!
+  coordx: Int!
+  coordz: Int!
 }
 
 input ChunkCreateManyInput {
   create: [ChunkCreateInput!]
+  connect: [ChunkWhereUniqueInput!]
 }
 
 """An edge in a connection."""
@@ -213,16 +62,165 @@ type ChunkEdge {
 enum ChunkOrderByInput {
   id_ASC
   id_DESC
+  blocks_ASC
+  blocks_DESC
+  coordx_ASC
+  coordx_DESC
+  coordz_ASC
+  coordz_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
 }
 
+type ChunkPreviousValues {
+  id: ID!
+  blocks: String!
+  coordx: Int!
+  coordz: Int!
+}
+
+input ChunkScalarWhereInput {
+  """Logical AND on all given filters."""
+  AND: [ChunkScalarWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [ChunkScalarWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [ChunkScalarWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
+  blocks: String
+
+  """All values that are not equal to given value."""
+  blocks_not: String
+
+  """All values that are contained in given list."""
+  blocks_in: [String!]
+
+  """All values that are not contained in given list."""
+  blocks_not_in: [String!]
+
+  """All values less than the given value."""
+  blocks_lt: String
+
+  """All values less than or equal the given value."""
+  blocks_lte: String
+
+  """All values greater than the given value."""
+  blocks_gt: String
+
+  """All values greater than or equal the given value."""
+  blocks_gte: String
+
+  """All values containing the given string."""
+  blocks_contains: String
+
+  """All values not containing the given string."""
+  blocks_not_contains: String
+
+  """All values starting with the given string."""
+  blocks_starts_with: String
+
+  """All values not starting with the given string."""
+  blocks_not_starts_with: String
+
+  """All values ending with the given string."""
+  blocks_ends_with: String
+
+  """All values not ending with the given string."""
+  blocks_not_ends_with: String
+  coordx: Int
+
+  """All values that are not equal to given value."""
+  coordx_not: Int
+
+  """All values that are contained in given list."""
+  coordx_in: [Int!]
+
+  """All values that are not contained in given list."""
+  coordx_not_in: [Int!]
+
+  """All values less than the given value."""
+  coordx_lt: Int
+
+  """All values less than or equal the given value."""
+  coordx_lte: Int
+
+  """All values greater than the given value."""
+  coordx_gt: Int
+
+  """All values greater than or equal the given value."""
+  coordx_gte: Int
+  coordz: Int
+
+  """All values that are not equal to given value."""
+  coordz_not: Int
+
+  """All values that are contained in given list."""
+  coordz_in: [Int!]
+
+  """All values that are not contained in given list."""
+  coordz_not_in: [Int!]
+
+  """All values less than the given value."""
+  coordz_lt: Int
+
+  """All values less than or equal the given value."""
+  coordz_lte: Int
+
+  """All values greater than the given value."""
+  coordz_gt: Int
+
+  """All values greater than or equal the given value."""
+  coordz_gte: Int
+}
+
 type ChunkSubscriptionPayload {
   mutation: MutationType!
   node: Chunk
   updatedFields: [String!]
+  previousValues: ChunkPreviousValues
 }
 
 input ChunkSubscriptionWhereInput {
@@ -257,8 +255,56 @@ input ChunkSubscriptionWhereInput {
   node: ChunkWhereInput
 }
 
+input ChunkUpdateDataInput {
+  blocks: String
+  coordx: Int
+  coordz: Int
+}
+
+input ChunkUpdateInput {
+  blocks: String
+  coordx: Int
+  coordz: Int
+}
+
+input ChunkUpdateManyDataInput {
+  blocks: String
+  coordx: Int
+  coordz: Int
+}
+
 input ChunkUpdateManyInput {
   create: [ChunkCreateInput!]
+  connect: [ChunkWhereUniqueInput!]
+  set: [ChunkWhereUniqueInput!]
+  disconnect: [ChunkWhereUniqueInput!]
+  delete: [ChunkWhereUniqueInput!]
+  update: [ChunkUpdateWithWhereUniqueNestedInput!]
+  updateMany: [ChunkUpdateManyWithWhereNestedInput!]
+  deleteMany: [ChunkScalarWhereInput!]
+  upsert: [ChunkUpsertWithWhereUniqueNestedInput!]
+}
+
+input ChunkUpdateManyMutationInput {
+  blocks: String
+  coordx: Int
+  coordz: Int
+}
+
+input ChunkUpdateManyWithWhereNestedInput {
+  where: ChunkScalarWhereInput!
+  data: ChunkUpdateManyDataInput!
+}
+
+input ChunkUpdateWithWhereUniqueNestedInput {
+  where: ChunkWhereUniqueInput!
+  data: ChunkUpdateDataInput!
+}
+
+input ChunkUpsertWithWhereUniqueNestedInput {
+  where: ChunkWhereUniqueInput!
+  update: ChunkUpdateDataInput!
+  create: ChunkCreateInput!
 }
 
 input ChunkWhereInput {
@@ -270,10 +316,134 @@ input ChunkWhereInput {
 
   """Logical NOT on all given filters combined by AND."""
   NOT: [ChunkWhereInput!]
-  blocks_every: BlockWhereInput
-  blocks_some: BlockWhereInput
-  blocks_none: BlockWhereInput
-  origin: OriginWhereInput
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
+  blocks: String
+
+  """All values that are not equal to given value."""
+  blocks_not: String
+
+  """All values that are contained in given list."""
+  blocks_in: [String!]
+
+  """All values that are not contained in given list."""
+  blocks_not_in: [String!]
+
+  """All values less than the given value."""
+  blocks_lt: String
+
+  """All values less than or equal the given value."""
+  blocks_lte: String
+
+  """All values greater than the given value."""
+  blocks_gt: String
+
+  """All values greater than or equal the given value."""
+  blocks_gte: String
+
+  """All values containing the given string."""
+  blocks_contains: String
+
+  """All values not containing the given string."""
+  blocks_not_contains: String
+
+  """All values starting with the given string."""
+  blocks_starts_with: String
+
+  """All values not starting with the given string."""
+  blocks_not_starts_with: String
+
+  """All values ending with the given string."""
+  blocks_ends_with: String
+
+  """All values not ending with the given string."""
+  blocks_not_ends_with: String
+  coordx: Int
+
+  """All values that are not equal to given value."""
+  coordx_not: Int
+
+  """All values that are contained in given list."""
+  coordx_in: [Int!]
+
+  """All values that are not contained in given list."""
+  coordx_not_in: [Int!]
+
+  """All values less than the given value."""
+  coordx_lt: Int
+
+  """All values less than or equal the given value."""
+  coordx_lte: Int
+
+  """All values greater than the given value."""
+  coordx_gt: Int
+
+  """All values greater than or equal the given value."""
+  coordx_gte: Int
+  coordz: Int
+
+  """All values that are not equal to given value."""
+  coordz_not: Int
+
+  """All values that are contained in given list."""
+  coordz_in: [Int!]
+
+  """All values that are not contained in given list."""
+  coordz_not_in: [Int!]
+
+  """All values less than the given value."""
+  coordz_lt: Int
+
+  """All values less than or equal the given value."""
+  coordz_lte: Int
+
+  """All values greater than the given value."""
+  coordz_gt: Int
+
+  """All values greater than or equal the given value."""
+  coordz_gte: Int
+}
+
+input ChunkWhereUniqueInput {
+  id: ID
 }
 
 scalar DateTime
@@ -297,33 +467,28 @@ scalar Long
 type Mutation {
   createPlayer(data: PlayerCreateInput!): Player!
   createUser(data: UserCreateInput!): User!
-  createOrigin(data: OriginCreateInput!): Origin!
-  createChunk(data: ChunkCreateInput!): Chunk!
-  createBlock(data: BlockCreateInput!): Block!
   createWorld(data: WorldCreateInput!): World!
-  createPosition(data: PositionCreateInput!): Position!
+  createChunk(data: ChunkCreateInput!): Chunk!
   updatePlayer(data: PlayerUpdateInput!, where: PlayerWhereUniqueInput!): Player
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updateWorld(data: WorldUpdateInput!, where: WorldWhereUniqueInput!): World
+  updateChunk(data: ChunkUpdateInput!, where: ChunkWhereUniqueInput!): Chunk
   deletePlayer(where: PlayerWhereUniqueInput!): Player
   deleteUser(where: UserWhereUniqueInput!): User
   deleteWorld(where: WorldWhereUniqueInput!): World
+  deleteChunk(where: ChunkWhereUniqueInput!): Chunk
   upsertPlayer(where: PlayerWhereUniqueInput!, create: PlayerCreateInput!, update: PlayerUpdateInput!): Player!
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertWorld(where: WorldWhereUniqueInput!, create: WorldCreateInput!, update: WorldUpdateInput!): World!
+  upsertChunk(where: ChunkWhereUniqueInput!, create: ChunkCreateInput!, update: ChunkUpdateInput!): Chunk!
   updateManyPlayers(data: PlayerUpdateManyMutationInput!, where: PlayerWhereInput): BatchPayload!
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
-  updateManyOrigins(data: OriginUpdateManyMutationInput!, where: OriginWhereInput): BatchPayload!
-  updateManyBlocks(data: BlockUpdateManyMutationInput!, where: BlockWhereInput): BatchPayload!
   updateManyWorlds(data: WorldUpdateManyMutationInput!, where: WorldWhereInput): BatchPayload!
-  updateManyPositions(data: PositionUpdateManyMutationInput!, where: PositionWhereInput): BatchPayload!
+  updateManyChunks(data: ChunkUpdateManyMutationInput!, where: ChunkWhereInput): BatchPayload!
   deleteManyPlayers(where: PlayerWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
-  deleteManyOrigins(where: OriginWhereInput): BatchPayload!
-  deleteManyChunks(where: ChunkWhereInput): BatchPayload!
-  deleteManyBlocks(where: BlockWhereInput): BatchPayload!
   deleteManyWorlds(where: WorldWhereInput): BatchPayload!
-  deleteManyPositions(where: PositionWhereInput): BatchPayload!
+  deleteManyChunks(where: ChunkWhereInput): BatchPayload!
   executeRaw(database: PrismaDatabase, query: String!): Json!
 }
 
@@ -337,184 +502,6 @@ enum MutationType {
 interface Node {
   """The id of the object."""
   id: ID!
-}
-
-type Origin {
-  x: Int!
-  y: Int!
-  z: Int!
-}
-
-"""A connection to a list of items."""
-type OriginConnection {
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """A list of edges."""
-  edges: [OriginEdge]!
-  aggregate: AggregateOrigin!
-}
-
-input OriginCreateInput {
-  x: Int!
-  y: Int!
-  z: Int!
-}
-
-input OriginCreateOneInput {
-  create: OriginCreateInput
-}
-
-"""An edge in a connection."""
-type OriginEdge {
-  """The item at the end of the edge."""
-  node: Origin!
-
-  """A cursor for use in pagination."""
-  cursor: String!
-}
-
-enum OriginOrderByInput {
-  x_ASC
-  x_DESC
-  y_ASC
-  y_DESC
-  z_ASC
-  z_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
-}
-
-type OriginPreviousValues {
-  x: Int!
-  y: Int!
-  z: Int!
-}
-
-type OriginSubscriptionPayload {
-  mutation: MutationType!
-  node: Origin
-  updatedFields: [String!]
-  previousValues: OriginPreviousValues
-}
-
-input OriginSubscriptionWhereInput {
-  """Logical AND on all given filters."""
-  AND: [OriginSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [OriginSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [OriginSubscriptionWhereInput!]
-
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: OriginWhereInput
-}
-
-input OriginUpdateManyMutationInput {
-  x: Int
-  y: Int
-  z: Int
-}
-
-input OriginWhereInput {
-  """Logical AND on all given filters."""
-  AND: [OriginWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [OriginWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [OriginWhereInput!]
-  x: Int
-
-  """All values that are not equal to given value."""
-  x_not: Int
-
-  """All values that are contained in given list."""
-  x_in: [Int!]
-
-  """All values that are not contained in given list."""
-  x_not_in: [Int!]
-
-  """All values less than the given value."""
-  x_lt: Int
-
-  """All values less than or equal the given value."""
-  x_lte: Int
-
-  """All values greater than the given value."""
-  x_gt: Int
-
-  """All values greater than or equal the given value."""
-  x_gte: Int
-  y: Int
-
-  """All values that are not equal to given value."""
-  y_not: Int
-
-  """All values that are contained in given list."""
-  y_in: [Int!]
-
-  """All values that are not contained in given list."""
-  y_not_in: [Int!]
-
-  """All values less than the given value."""
-  y_lt: Int
-
-  """All values less than or equal the given value."""
-  y_lte: Int
-
-  """All values greater than the given value."""
-  y_gt: Int
-
-  """All values greater than or equal the given value."""
-  y_gte: Int
-  z: Int
-
-  """All values that are not equal to given value."""
-  z_not: Int
-
-  """All values that are contained in given list."""
-  z_in: [Int!]
-
-  """All values that are not contained in given list."""
-  z_not_in: [Int!]
-
-  """All values less than the given value."""
-  z_lt: Int
-
-  """All values less than or equal the given value."""
-  z_lte: Int
-
-  """All values greater than the given value."""
-  z_gt: Int
-
-  """All values greater than or equal the given value."""
-  z_gte: Int
 }
 
 """Information about pagination in a connection."""
@@ -538,8 +525,10 @@ type Player implements Node {
   gamemode: Gamemode!
   user: User!
   world: World!
-  position: Position!
   lastLogin: DateTime
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 """A connection to a list of items."""
@@ -556,9 +545,11 @@ input PlayerCreateInput {
   isAdmin: Boolean!
   gamemode: Gamemode!
   lastLogin: DateTime
+  x: Float!
+  y: Float!
+  z: Float!
   user: UserCreateOneInput!
   world: WorldCreateOneWithoutPlayersInput!
-  position: PositionCreateOneInput!
 }
 
 input PlayerCreateManyWithoutWorldInput {
@@ -570,8 +561,10 @@ input PlayerCreateWithoutWorldInput {
   isAdmin: Boolean!
   gamemode: Gamemode!
   lastLogin: DateTime
+  x: Float!
+  y: Float!
+  z: Float!
   user: UserCreateOneInput!
-  position: PositionCreateOneInput!
 }
 
 """An edge in a connection."""
@@ -592,6 +585,12 @@ enum PlayerOrderByInput {
   gamemode_DESC
   lastLogin_ASC
   lastLogin_DESC
+  x_ASC
+  x_DESC
+  y_ASC
+  y_DESC
+  z_ASC
+  z_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -603,6 +602,162 @@ type PlayerPreviousValues {
   isAdmin: Boolean!
   gamemode: Gamemode!
   lastLogin: DateTime
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input PlayerScalarWhereInput {
+  """Logical AND on all given filters."""
+  AND: [PlayerScalarWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [PlayerScalarWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [PlayerScalarWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
+  isAdmin: Boolean
+
+  """All values that are not equal to given value."""
+  isAdmin_not: Boolean
+  gamemode: Gamemode
+
+  """All values that are not equal to given value."""
+  gamemode_not: Gamemode
+
+  """All values that are contained in given list."""
+  gamemode_in: [Gamemode!]
+
+  """All values that are not contained in given list."""
+  gamemode_not_in: [Gamemode!]
+  lastLogin: DateTime
+
+  """All values that are not equal to given value."""
+  lastLogin_not: DateTime
+
+  """All values that are contained in given list."""
+  lastLogin_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  lastLogin_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  lastLogin_lt: DateTime
+
+  """All values less than or equal the given value."""
+  lastLogin_lte: DateTime
+
+  """All values greater than the given value."""
+  lastLogin_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  lastLogin_gte: DateTime
+  x: Float
+
+  """All values that are not equal to given value."""
+  x_not: Float
+
+  """All values that are contained in given list."""
+  x_in: [Float!]
+
+  """All values that are not contained in given list."""
+  x_not_in: [Float!]
+
+  """All values less than the given value."""
+  x_lt: Float
+
+  """All values less than or equal the given value."""
+  x_lte: Float
+
+  """All values greater than the given value."""
+  x_gt: Float
+
+  """All values greater than or equal the given value."""
+  x_gte: Float
+  y: Float
+
+  """All values that are not equal to given value."""
+  y_not: Float
+
+  """All values that are contained in given list."""
+  y_in: [Float!]
+
+  """All values that are not contained in given list."""
+  y_not_in: [Float!]
+
+  """All values less than the given value."""
+  y_lt: Float
+
+  """All values less than or equal the given value."""
+  y_lte: Float
+
+  """All values greater than the given value."""
+  y_gt: Float
+
+  """All values greater than or equal the given value."""
+  y_gte: Float
+  z: Float
+
+  """All values that are not equal to given value."""
+  z_not: Float
+
+  """All values that are contained in given list."""
+  z_in: [Float!]
+
+  """All values that are not contained in given list."""
+  z_not_in: [Float!]
+
+  """All values less than the given value."""
+  z_lt: Float
+
+  """All values less than or equal the given value."""
+  z_lte: Float
+
+  """All values greater than the given value."""
+  z_gt: Float
+
+  """All values greater than or equal the given value."""
+  z_gte: Float
 }
 
 type PlayerSubscriptionPayload {
@@ -648,32 +803,56 @@ input PlayerUpdateInput {
   isAdmin: Boolean
   gamemode: Gamemode
   lastLogin: DateTime
+  x: Float
+  y: Float
+  z: Float
   user: UserUpdateOneRequiredInput
   world: WorldUpdateOneRequiredWithoutPlayersInput
-  position: PositionUpdateOneRequiredInput
+}
+
+input PlayerUpdateManyDataInput {
+  isAdmin: Boolean
+  gamemode: Gamemode
+  lastLogin: DateTime
+  x: Float
+  y: Float
+  z: Float
 }
 
 input PlayerUpdateManyMutationInput {
   isAdmin: Boolean
   gamemode: Gamemode
   lastLogin: DateTime
+  x: Float
+  y: Float
+  z: Float
 }
 
 input PlayerUpdateManyWithoutWorldInput {
   create: [PlayerCreateWithoutWorldInput!]
   connect: [PlayerWhereUniqueInput!]
+  set: [PlayerWhereUniqueInput!]
   disconnect: [PlayerWhereUniqueInput!]
   delete: [PlayerWhereUniqueInput!]
   update: [PlayerUpdateWithWhereUniqueWithoutWorldInput!]
+  updateMany: [PlayerUpdateManyWithWhereNestedInput!]
+  deleteMany: [PlayerScalarWhereInput!]
   upsert: [PlayerUpsertWithWhereUniqueWithoutWorldInput!]
+}
+
+input PlayerUpdateManyWithWhereNestedInput {
+  where: PlayerScalarWhereInput!
+  data: PlayerUpdateManyDataInput!
 }
 
 input PlayerUpdateWithoutWorldDataInput {
   isAdmin: Boolean
   gamemode: Gamemode
   lastLogin: DateTime
+  x: Float
+  y: Float
+  z: Float
   user: UserUpdateOneRequiredInput
-  position: PositionUpdateOneRequiredInput
 }
 
 input PlayerUpdateWithWhereUniqueWithoutWorldInput {
@@ -772,142 +951,6 @@ input PlayerWhereInput {
 
   """All values greater than or equal the given value."""
   lastLogin_gte: DateTime
-  user: UserWhereInput
-  world: WorldWhereInput
-  position: PositionWhereInput
-}
-
-input PlayerWhereUniqueInput {
-  id: ID
-}
-
-type Position {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-"""A connection to a list of items."""
-type PositionConnection {
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """A list of edges."""
-  edges: [PositionEdge]!
-  aggregate: AggregatePosition!
-}
-
-input PositionCreateInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input PositionCreateOneInput {
-  create: PositionCreateInput
-}
-
-"""An edge in a connection."""
-type PositionEdge {
-  """The item at the end of the edge."""
-  node: Position!
-
-  """A cursor for use in pagination."""
-  cursor: String!
-}
-
-enum PositionOrderByInput {
-  x_ASC
-  x_DESC
-  y_ASC
-  y_DESC
-  z_ASC
-  z_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
-}
-
-type PositionPreviousValues {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-type PositionSubscriptionPayload {
-  mutation: MutationType!
-  node: Position
-  updatedFields: [String!]
-  previousValues: PositionPreviousValues
-}
-
-input PositionSubscriptionWhereInput {
-  """Logical AND on all given filters."""
-  AND: [PositionSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [PositionSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [PositionSubscriptionWhereInput!]
-
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: PositionWhereInput
-}
-
-input PositionUpdateDataInput {
-  x: Float
-  y: Float
-  z: Float
-}
-
-input PositionUpdateManyMutationInput {
-  x: Float
-  y: Float
-  z: Float
-}
-
-input PositionUpdateOneRequiredInput {
-  create: PositionCreateInput
-  update: PositionUpdateDataInput
-  upsert: PositionUpsertNestedInput
-}
-
-input PositionUpsertNestedInput {
-  update: PositionUpdateDataInput!
-  create: PositionCreateInput!
-}
-
-input PositionWhereInput {
-  """Logical AND on all given filters."""
-  AND: [PositionWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [PositionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [PositionWhereInput!]
   x: Float
 
   """All values that are not equal to given value."""
@@ -974,6 +1017,12 @@ input PositionWhereInput {
 
   """All values greater than or equal the given value."""
   z_gte: Float
+  user: UserWhereInput
+  world: WorldWhereInput
+}
+
+input PlayerWhereUniqueInput {
+  id: ID
 }
 
 enum PrismaDatabase {
@@ -983,21 +1032,16 @@ enum PrismaDatabase {
 type Query {
   players(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Player]!
   users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
-  origins(where: OriginWhereInput, orderBy: OriginOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Origin]!
-  chunks(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Chunk]!
-  blocks(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Block]!
   worlds(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [World]!
-  positions(where: PositionWhereInput, orderBy: PositionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Position]!
+  chunks(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Chunk]!
   player(where: PlayerWhereUniqueInput!): Player
   user(where: UserWhereUniqueInput!): User
   world(where: WorldWhereUniqueInput!): World
+  chunk(where: ChunkWhereUniqueInput!): Chunk
   playersConnection(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PlayerConnection!
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
-  originsConnection(where: OriginWhereInput, orderBy: OriginOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OriginConnection!
-  chunksConnection(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ChunkConnection!
-  blocksConnection(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BlockConnection!
   worldsConnection(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): WorldConnection!
-  positionsConnection(where: PositionWhereInput, orderBy: PositionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PositionConnection!
+  chunksConnection(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ChunkConnection!
 
   """Fetches an object given its ID"""
   node(
@@ -1009,11 +1053,8 @@ type Query {
 type Subscription {
   player(where: PlayerSubscriptionWhereInput): PlayerSubscriptionPayload
   user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
-  origin(where: OriginSubscriptionWhereInput): OriginSubscriptionPayload
-  chunk(where: ChunkSubscriptionWhereInput): ChunkSubscriptionPayload
-  block(where: BlockSubscriptionWhereInput): BlockSubscriptionPayload
   world(where: WorldSubscriptionWhereInput): WorldSubscriptionPayload
-  position(where: PositionSubscriptionWhereInput): PositionSubscriptionPayload
+  chunk(where: ChunkSubscriptionWhereInput): ChunkSubscriptionPayload
 }
 
 type User implements Node {
@@ -1445,6 +1486,137 @@ type WorldPreviousValues {
   seed: String!
 }
 
+input WorldScalarWhereInput {
+  """Logical AND on all given filters."""
+  AND: [WorldScalarWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [WorldScalarWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [WorldScalarWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
+  name: String
+
+  """All values that are not equal to given value."""
+  name_not: String
+
+  """All values that are contained in given list."""
+  name_in: [String!]
+
+  """All values that are not contained in given list."""
+  name_not_in: [String!]
+
+  """All values less than the given value."""
+  name_lt: String
+
+  """All values less than or equal the given value."""
+  name_lte: String
+
+  """All values greater than the given value."""
+  name_gt: String
+
+  """All values greater than or equal the given value."""
+  name_gte: String
+
+  """All values containing the given string."""
+  name_contains: String
+
+  """All values not containing the given string."""
+  name_not_contains: String
+
+  """All values starting with the given string."""
+  name_starts_with: String
+
+  """All values not starting with the given string."""
+  name_not_starts_with: String
+
+  """All values ending with the given string."""
+  name_ends_with: String
+
+  """All values not ending with the given string."""
+  name_not_ends_with: String
+  seed: String
+
+  """All values that are not equal to given value."""
+  seed_not: String
+
+  """All values that are contained in given list."""
+  seed_in: [String!]
+
+  """All values that are not contained in given list."""
+  seed_not_in: [String!]
+
+  """All values less than the given value."""
+  seed_lt: String
+
+  """All values less than or equal the given value."""
+  seed_lte: String
+
+  """All values greater than the given value."""
+  seed_gt: String
+
+  """All values greater than or equal the given value."""
+  seed_gte: String
+
+  """All values containing the given string."""
+  seed_contains: String
+
+  """All values not containing the given string."""
+  seed_not_contains: String
+
+  """All values starting with the given string."""
+  seed_starts_with: String
+
+  """All values not starting with the given string."""
+  seed_not_starts_with: String
+
+  """All values ending with the given string."""
+  seed_ends_with: String
+
+  """All values not ending with the given string."""
+  seed_not_ends_with: String
+}
+
 type WorldSubscriptionPayload {
   mutation: MutationType!
   node: World
@@ -1498,18 +1670,31 @@ input WorldUpdateInput {
   players: PlayerUpdateManyWithoutWorldInput
 }
 
+input WorldUpdateManyDataInput {
+  name: String
+  seed: String
+}
+
 input WorldUpdateManyInput {
   create: [WorldCreateInput!]
   connect: [WorldWhereUniqueInput!]
+  set: [WorldWhereUniqueInput!]
   disconnect: [WorldWhereUniqueInput!]
   delete: [WorldWhereUniqueInput!]
   update: [WorldUpdateWithWhereUniqueNestedInput!]
+  updateMany: [WorldUpdateManyWithWhereNestedInput!]
+  deleteMany: [WorldScalarWhereInput!]
   upsert: [WorldUpsertWithWhereUniqueNestedInput!]
 }
 
 input WorldUpdateManyMutationInput {
   name: String
   seed: String
+}
+
+input WorldUpdateManyWithWhereNestedInput {
+  where: WorldScalarWhereInput!
+  data: WorldUpdateManyDataInput!
 }
 
 input WorldUpdateOneRequiredWithoutPlayersInput {

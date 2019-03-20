@@ -7,14 +7,21 @@ import React, { Component } from 'react'
 import { withRouter, Redirect } from 'react-router-dom'
 
 import { Minecraft, Start, Worlds, Options } from '../../components/Game'
+import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
+import { Loading } from '../../components/Utils'
 
 class Game extends Component {
 	render() {
 		const {
+			isAuth,
 			match: {
 				params: { page, query }
-			}
+			},
+			loading
 		} = this.props
+
+		if (loading) return <Loading />
+		if (!isAuth) return <Redirect to="/login" />
 
 		let render = null
 		switch (page) {
@@ -39,4 +46,4 @@ class Game extends Component {
 	}
 }
 
-export default withRouter(Game)
+export default withAuthGuard(withRouter(Game))

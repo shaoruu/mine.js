@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
-import PointerLockControls from '../../utils/PointerLockControls'
-import Config from '../../data/config'
+import PointerLockControls from '../../../Utils/PointerLockControls'
+import Config from '../../../Data/Config'
 
 // Controls based on orbit controls
 export default class Controls {

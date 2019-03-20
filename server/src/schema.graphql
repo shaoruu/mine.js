@@ -38,30 +38,17 @@ type Player {
 	isAdmin: Boolean!
 	gamemode: String!
 	user: User!
-	position: Position!
 	lastLogin: String
-}
-
-type Block {
-	type: String!
-	position: Position!
-}
-
-type Chunk {
-	blocks: [Block!]!
-	origin: Origin!
-}
-
-type Position {
 	x: Float!
 	y: Float!
 	z: Float!
 }
 
-type Origin {
-	x: Int!
-	y: Int!
-	z: Int!
+type Chunk {
+	id: ID!
+	blocks: String!
+	coordx: Int!
+	coordz: Int!
 }
 
 input CreateUserInput {

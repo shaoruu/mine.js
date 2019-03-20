@@ -1,15 +1,24 @@
 import React, { Component } from 'react'
 import * as THREE from 'three'
 
-import Renderer from '../bin/renderer'
-import Camera from '../bin/camera'
-import Light from '../bin/light'
-import Player from '../bin/player'
+import { Camera, Light, Player, Renderer } from '../Bin'
 import classes from './MainScene.module.css'
 
 class MainScene extends Component {
+	constructor(props) {
+		super(props)
+
+		const { chunks } = this.props
+
+		this.state = {
+			chunks
+		}
+	}
+
 	componentDidMount() {
-		// const { name } = this.props
+		const { chunks } = this.state
+
+		console.log(chunks)
 
 		// Main scene creation
 		this.scene = new THREE.Scene()
