@@ -131,6 +131,8 @@ class Block {
 						sideMesh.rotateY((Math.PI * 3) / 2)
 						sideMesh.position.x -= dimension / 2
 						break
+					default:
+						break
 				}
 
 				geo.push(sideMesh)

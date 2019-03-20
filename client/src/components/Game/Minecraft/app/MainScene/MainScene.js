@@ -1,35 +1,24 @@
 import React, { Component } from 'react'
-import { Mutation } from 'react-apollo'
+import { Mutation, Query } from 'react-apollo'
 import * as THREE from 'three'
 
 import { Camera, Light, Player, Renderer } from '../Bin'
 import classes from './MainScene.module.css'
 import World from '../Bin/World/World'
 import { UPDATE_PLAYER_MUTATION } from '../../../../../lib/graphql/mutations'
-
-const initPos = {}
+import { WORLD_QUERY } from '../../../../../lib/graphql'
+import { Loading } from '../../../../Utils'
 
 class MainScene extends Component {
 	constructor(props) {
 		super(props)
 
-		const {
-			username,
-			world: { players }
-		} = props
-
-		const currentPlayer = players.find(ele => ele.user.username === username)
-
-		this.state = {
-			playerId: currentPlayer.id
-		}
-
-		initPos = { x: currentPlayer.x, y: currentPlayer.y, z: currentPlayer.z }
-
+		this.initPos = null
+		this.prevPos = {}
 		this.updatePlayer = null
 	}
 
-	componentDidMount() {
+	handleQueryComplete = () => {
 		// Main scene creation
 		this.scene = new THREE.Scene()
 		this.scene.background = new THREE.Color(0xffffff)
@@ -51,7 +40,7 @@ class MainScene extends Component {
 			this.scene,
 			this.mount,
 			this.blocker,
-			initPos
+			this.initPos
 		)
 
 		/** TEST */
@@ -63,27 +52,28 @@ class MainScene extends Component {
 
 		this.init()
 
-		setInterval(
-			() =>
+		this.updatePosCall = setInterval(() => {
+			const playerCoords = this.player.getCoordinates()
+			if (!(JSON.stringify(playerCoords) === JSON.stringify(this.prevPos))) {
 				this.updatePlayer({
 					variables: {
-						id: this.state.playerId,
+						id: this.currentPlayer.id,
 						...this.player.getCoordinates()
 					}
-				}),
-			200
-		)
+				})
+				this.prevPos = { ...playerCoords }
+			}
+		}, 200)
 	}
 
 	componentWillUnmount() {
 		this.terminate()
 		this.mount.removeChild(this.renderer.threeRenderer.domElement)
+		clearInterval(this.updatePosCall)
 	}
 
 	init = () => {
-		const { world } = this.props
-
-		this.world = new World(world)
+		this.world = new World(this.worldData)
 		this.world.init(this.scene)
 
 		window.addEventListener('resize', this.onWindowResize, false)
@@ -120,25 +110,51 @@ class MainScene extends Component {
 	}
 
 	render() {
+		const { username, id: worldId } = this.props
+
 		return (
-			<Mutation
-				mutation={UPDATE_PLAYER_MUTATION}
-				onError={err => console.error(err)}>
-				{updatePlayer => {
-					this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
+			<Query
+				query={WORLD_QUERY}
+				variables={{ query: worldId }}
+				onError={err => console.error(err)}
+				fetchPolicy="network-only"
+				onCompleted={() => this.handleQueryComplete()}>
+				{({ loading, data }) => {
+					if (loading) return <Loading />
+					const { world } = data
+
+					this.worldData = world
+					this.currentPlayer = world.players.find(
+						ele => ele.user.username === username
+					)
+					this.initPos = {
+						x: this.currentPlayer.x,
+						y: this.currentPlayer.y,
+						z: this.currentPlayer.z
+					}
 
 					return (
-						<div
-							style={{ width: '100%', height: '100%' }}
-							ref={mount => (this.mount = mount)}>
-							<div
-								className={classes.blocker}
-								ref={blocker => (this.blocker = blocker)}
-							/>
-						</div>
+						<Mutation
+							mutation={UPDATE_PLAYER_MUTATION}
+							onError={err => console.error(err)}>
+							{updatePlayer => {
+								this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
+
+								return (
+									<div
+										style={{ width: '100%', height: '100%' }}
+										ref={mount => (this.mount = mount)}>
+										<div
+											className={classes.blocker}
+											ref={blocker => (this.blocker = blocker)}
+										/>
+									</div>
+								)
+							}}
+						</Mutation>
 					)
 				}}
-			</Mutation>
+			</Query>
 		)
 	}
 }
