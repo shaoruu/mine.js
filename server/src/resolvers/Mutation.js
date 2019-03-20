@@ -150,6 +150,27 @@ const Mutation = {
 			},
 			info
 		)
+	},
+	updatePlayer(parent, args, { prisma }, info) {
+		const {
+			data: { id, x, y, z }
+		} = args
+
+		console.log(x, y, z)
+
+		return prisma.mutation.updatePlayer(
+			{
+				where: {
+					id
+				},
+				data: {
+					x,
+					y,
+					z
+				}
+			},
+			info
+		)
 	}
 }
 

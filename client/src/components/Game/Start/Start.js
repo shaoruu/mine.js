@@ -7,9 +7,7 @@ const Start = withRouter(props => {
 		<div>
 			<h1>Minecraft</h1>
 			<div>
-				<button onClick={() => history.push('/game/worlds')}>
-					Single Player
-				</button>
+				<button onClick={() => history.push('/game/worlds')}>Play</button>
 				<button onClick={() => history.push('/game/options')}>Options</button>
 				<button onClick={() => history.push('/home')}>Quit Game</button>
 			</div>

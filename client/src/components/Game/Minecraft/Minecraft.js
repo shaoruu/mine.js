@@ -4,7 +4,7 @@ import { Query } from 'react-apollo'
 import { WORLD_QUERY } from '../../../lib/graphql'
 import MainScene from './App/MainScene/MainScene'
 
-const Minecraft = ({ id }) => {
+const Minecraft = ({ id, username }) => {
 	return (
 		<Query
 			query={WORLD_QUERY}
@@ -13,11 +13,9 @@ const Minecraft = ({ id }) => {
 			{({ loading, data }) => {
 				if (loading) return null
 
-				const {
-					world: { chunks }
-				} = data
+				const { world } = data
 
-				return <MainScene chunks={chunks} />
+				return <MainScene world={world} username={username} />
 			}}
 		</Query>
 	)

@@ -17,7 +17,8 @@ class Game extends Component {
 			match: {
 				params: { page, query }
 			},
-			loading
+			loading,
+			username
 		} = this.props
 
 		if (loading) return <Loading />
@@ -26,7 +27,7 @@ class Game extends Component {
 		let render = null
 		switch (page) {
 			case 'minecraft':
-				render = <Minecraft id={query} />
+				render = <Minecraft id={query} username={username} />
 				break
 			case 'worlds':
 				render = <Worlds subpage={query} />

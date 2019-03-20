@@ -5,9 +5,9 @@ import Config from '../../../Data/Config'
 
 // Controls based on orbit controls
 export default class Controls {
-	constructor(camera, scene, container, blocker) {
+	constructor(camera, scene, container, blocker, initPos) {
 		// Orbit controls first needs to pass in THREE to constructor
-		this.threeControls = new PointerLockControls(camera, container)
+		this.threeControls = new PointerLockControls(camera, container, initPos)
 
 		this.prevTime = performance.now()
 

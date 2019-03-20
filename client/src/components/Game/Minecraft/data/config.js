@@ -4,7 +4,6 @@ export default {
 	isDev: false,
 	isShowingStats: true,
 	isLoaded: false,
-	isTweening: false,
 	isRotating: true,
 	isMouseMoving: false,
 	isMouseOver: false,
@@ -42,15 +41,15 @@ export default {
 		posZ: 0
 	},
 	player: {
-		inertia: 10.0,
+		inertia: 8.0,
 		speed: {
-			horizontal: 120,
-			vertical: 160
+			horizontal: 1200,
+			vertical: 1600
 		},
 		coordinateDec: 2,
 		posX: 0,
-		posY: 5,
-		posZ: 10
+		posY: 30,
+		posZ: 0
 	},
 	controls: {
 		autoRotate: true,
@@ -119,7 +118,8 @@ export default {
 		dimension: 20
 	},
 	chunk: {
-		size: 8
+		size: 16,
+		height: 20
 	},
 	world: {
 		minHorizontalSize: 10, // minimum chunk dimension for world,
