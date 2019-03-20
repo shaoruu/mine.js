@@ -5,9 +5,9 @@ import Config from '../../../Data/Config'
 
 // Controls based on orbit controls
 export default class Controls {
-	constructor(camera, scene, container, blocker, initPos) {
+	constructor(camera, scene, container, blocker, initPos, initDirs) {
 		// Orbit controls first needs to pass in THREE to constructor
-		this.threeControls = new PointerLockControls(camera, container, initPos)
+		this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
 
 		this.prevTime = performance.now()
 
@@ -99,6 +99,12 @@ export default class Controls {
 			Math.round(position.z * Math.pow(10, Config.player.coordinateDec)) /
 			Math.pow(10, Config.player.coordinateDec)
 		return position
+	}
+	getDirections = () => {
+		return {
+			dirx: this.threeControls.getPitch().rotation.x,
+			diry: this.threeControls.getObject().rotation.y
+		}
 	}
 
 	// Private Methods

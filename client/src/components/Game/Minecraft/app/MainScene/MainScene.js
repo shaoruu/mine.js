@@ -14,7 +14,11 @@ class MainScene extends Component {
 		super(props)
 
 		this.initPos = null
+		this.initDirs = null
+
 		this.prevPos = {}
+		this.prevDirs = {}
+
 		this.updatePlayer = null
 	}
 
@@ -40,7 +44,8 @@ class MainScene extends Component {
 			this.scene,
 			this.mount,
 			this.blocker,
-			this.initPos
+			this.initPos,
+			this.initDirs
 		)
 
 		/** TEST */
@@ -53,15 +58,21 @@ class MainScene extends Component {
 		this.init()
 
 		this.updatePosCall = setInterval(() => {
-			const playerCoords = this.player.getCoordinates()
-			if (!(JSON.stringify(playerCoords) === JSON.stringify(this.prevPos))) {
+			const playerCoords = this.player.getCoordinates(),
+				playerDirs = this.player.getDirections()
+			if (
+				!(JSON.stringify(playerCoords) === JSON.stringify(this.prevPos)) ||
+				!(JSON.stringify(playerDirs) === JSON.stringify(this.prevDirs))
+			) {
 				this.updatePlayer({
 					variables: {
 						id: this.currentPlayer.id,
-						...this.player.getCoordinates()
+						...playerCoords,
+						...playerDirs
 					}
 				})
 				this.prevPos = { ...playerCoords }
+				this.prevDirs = { ...playerDirs }
 			}
 		}, 200)
 	}
@@ -131,6 +142,10 @@ class MainScene extends Component {
 						x: this.currentPlayer.x,
 						y: this.currentPlayer.y,
 						z: this.currentPlayer.z
+					}
+					this.initDirs = {
+						dirx: this.currentPlayer.dirx,
+						diry: this.currentPlayer.diry
 					}
 
 					return (

@@ -43,6 +43,8 @@ type Player {
 	x: Float!
 	y: Float!
 	z: Float!
+	dirx: Float!
+	diry: Float!
 }
 
 type Chunk {
@@ -77,9 +79,11 @@ input CreateWorldInput {
 
 input UpdatePlayerInput {
 	id: ID!
-	x: Float!
-	y: Float!
-	z: Float!
+	x: Float
+	y: Float
+	z: Float
+	dirx: Float
+	diry: Float
 }
 
 type AuthPayload {

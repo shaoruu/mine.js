@@ -19,6 +19,8 @@ type Player {
 	x: Float!
 	y: Float!
 	z: Float!
+	dirx: Float!
+	diry: Float!
 }
 
 type Chunk {

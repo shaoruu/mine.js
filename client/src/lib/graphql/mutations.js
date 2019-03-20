@@ -42,11 +42,20 @@ export const CREATE_WORLD_MUTATION = gql`
 `
 
 export const UPDATE_PLAYER_MUTATION = gql`
-	mutation UpdatePlayer($id: ID!, $x: Float!, $y: Float!, $z: Float!) {
-		updatePlayer(data: { id: $id, x: $x, y: $y, z: $z }) {
+	mutation UpdatePlayer(
+		$id: ID!
+		$x: Float
+		$y: Float
+		$z: Float
+		$dirx: Float
+		$diry: Float
+	) {
+		updatePlayer(data: { id: $id, x: $x, y: $y, z: $z, dirx: $dirx, diry: $diry }) {
 			x
 			y
 			z
+			dirx
+			diry
 		}
 	}
 `

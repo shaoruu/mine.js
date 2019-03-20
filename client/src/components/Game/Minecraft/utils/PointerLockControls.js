@@ -9,7 +9,7 @@ import Config from '../Data/Config'
 
 const size = Config.block.dimension
 
-const PointerLockControls = function(camera, domElement, initPos) {
+const PointerLockControls = function(camera, domElement, initPos, initDirs) {
 	var scope = this
 
 	this.domElement = domElement || document.body
@@ -23,6 +23,9 @@ const PointerLockControls = function(camera, domElement, initPos) {
 	var yawObject = new THREE.Object3D()
 	yawObject.position.set(initPos.x * size, initPos.y * size, initPos.z * size)
 	yawObject.add(pitchObject)
+
+	pitchObject.rotation.x = initDirs.dirx
+	yawObject.rotation.y = initDirs.diry
 
 	var PI_2 = Math.PI / 2
 
@@ -74,6 +77,10 @@ const PointerLockControls = function(camera, domElement, initPos) {
 
 	this.getObject = function() {
 		return yawObject
+	}
+
+	this.getPitch = function() {
+		return pitchObject
 	}
 
 	this.getDirection = (function() {

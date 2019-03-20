@@ -110,7 +110,9 @@ const Mutation = {
 				},
 				x: 0,
 				y: 0,
-				z: 0
+				z: 0,
+				dirx: 0,
+				diry: 0
 			}
 		})
 
@@ -152,11 +154,10 @@ const Mutation = {
 		)
 	},
 	updatePlayer(parent, args, { prisma }, info) {
-		const {
-			data: { id, x, y, z }
-		} = args
+		const id = args.data.id
+		delete args.data.id
 
-		console.log(x, y, z)
+		console.log({ ...args.data })
 
 		return prisma.mutation.updatePlayer(
 			{
@@ -164,9 +165,7 @@ const Mutation = {
 					id
 				},
 				data: {
-					x,
-					y,
-					z
+					...args.data
 				}
 			},
 			info

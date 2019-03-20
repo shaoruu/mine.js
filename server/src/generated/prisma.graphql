@@ -1,5 +1,5 @@
 # source: http://localhost:4466
-# timestamp: Wed Mar 20 2019 17:03:15 GMT+0800 (Taipei Standard Time)
+# timestamp: Thu Mar 21 2019 01:14:30 GMT+0800 (Taipei Standard Time)
 
 type AggregateChunk {
   count: Int!
@@ -529,6 +529,8 @@ type Player implements Node {
   x: Float!
   y: Float!
   z: Float!
+  dirx: Float!
+  diry: Float!
 }
 
 """A connection to a list of items."""
@@ -548,6 +550,8 @@ input PlayerCreateInput {
   x: Float!
   y: Float!
   z: Float!
+  dirx: Float!
+  diry: Float!
   user: UserCreateOneInput!
   world: WorldCreateOneWithoutPlayersInput!
 }
@@ -564,6 +568,8 @@ input PlayerCreateWithoutWorldInput {
   x: Float!
   y: Float!
   z: Float!
+  dirx: Float!
+  diry: Float!
   user: UserCreateOneInput!
 }
 
@@ -591,6 +597,10 @@ enum PlayerOrderByInput {
   y_DESC
   z_ASC
   z_DESC
+  dirx_ASC
+  dirx_DESC
+  diry_ASC
+  diry_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -605,6 +615,8 @@ type PlayerPreviousValues {
   x: Float!
   y: Float!
   z: Float!
+  dirx: Float!
+  diry: Float!
 }
 
 input PlayerScalarWhereInput {
@@ -758,6 +770,50 @@ input PlayerScalarWhereInput {
 
   """All values greater than or equal the given value."""
   z_gte: Float
+  dirx: Float
+
+  """All values that are not equal to given value."""
+  dirx_not: Float
+
+  """All values that are contained in given list."""
+  dirx_in: [Float!]
+
+  """All values that are not contained in given list."""
+  dirx_not_in: [Float!]
+
+  """All values less than the given value."""
+  dirx_lt: Float
+
+  """All values less than or equal the given value."""
+  dirx_lte: Float
+
+  """All values greater than the given value."""
+  dirx_gt: Float
+
+  """All values greater than or equal the given value."""
+  dirx_gte: Float
+  diry: Float
+
+  """All values that are not equal to given value."""
+  diry_not: Float
+
+  """All values that are contained in given list."""
+  diry_in: [Float!]
+
+  """All values that are not contained in given list."""
+  diry_not_in: [Float!]
+
+  """All values less than the given value."""
+  diry_lt: Float
+
+  """All values less than or equal the given value."""
+  diry_lte: Float
+
+  """All values greater than the given value."""
+  diry_gt: Float
+
+  """All values greater than or equal the given value."""
+  diry_gte: Float
 }
 
 type PlayerSubscriptionPayload {
@@ -806,6 +862,8 @@ input PlayerUpdateInput {
   x: Float
   y: Float
   z: Float
+  dirx: Float
+  diry: Float
   user: UserUpdateOneRequiredInput
   world: WorldUpdateOneRequiredWithoutPlayersInput
 }
@@ -817,6 +875,8 @@ input PlayerUpdateManyDataInput {
   x: Float
   y: Float
   z: Float
+  dirx: Float
+  diry: Float
 }
 
 input PlayerUpdateManyMutationInput {
@@ -826,6 +886,8 @@ input PlayerUpdateManyMutationInput {
   x: Float
   y: Float
   z: Float
+  dirx: Float
+  diry: Float
 }
 
 input PlayerUpdateManyWithoutWorldInput {
@@ -852,6 +914,8 @@ input PlayerUpdateWithoutWorldDataInput {
   x: Float
   y: Float
   z: Float
+  dirx: Float
+  diry: Float
   user: UserUpdateOneRequiredInput
 }
 
@@ -1017,6 +1081,50 @@ input PlayerWhereInput {
 
   """All values greater than or equal the given value."""
   z_gte: Float
+  dirx: Float
+
+  """All values that are not equal to given value."""
+  dirx_not: Float
+
+  """All values that are contained in given list."""
+  dirx_in: [Float!]
+
+  """All values that are not contained in given list."""
+  dirx_not_in: [Float!]
+
+  """All values less than the given value."""
+  dirx_lt: Float
+
+  """All values less than or equal the given value."""
+  dirx_lte: Float
+
+  """All values greater than the given value."""
+  dirx_gt: Float
+
+  """All values greater than or equal the given value."""
+  dirx_gte: Float
+  diry: Float
+
+  """All values that are not equal to given value."""
+  diry_not: Float
+
+  """All values that are contained in given list."""
+  diry_in: [Float!]
+
+  """All values that are not contained in given list."""
+  diry_not_in: [Float!]
+
+  """All values less than the given value."""
+  diry_lt: Float
+
+  """All values less than or equal the given value."""
+  diry_lte: Float
+
+  """All values greater than the given value."""
+  diry_gt: Float
+
+  """All values greater than or equal the given value."""
+  diry_gte: Float
   user: UserWhereInput
   world: WorldWhereInput
 }

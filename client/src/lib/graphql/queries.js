@@ -47,6 +47,8 @@ export const WORLD_QUERY = gql`
 				x
 				y
 				z
+				dirx
+				diry
 			}
 		}
 	}
