@@ -9,15 +9,15 @@ import { withRouter, Redirect } from 'react-router-dom'
 import { Formik } from 'formik'
 
 import { LOGIN_MUTATION, LOGIN_SCHEMA } from '../../lib/graphql'
-import { setCookie } from '../../lib/utils'
+import { setCookie, removeAllCookies } from '../../lib/utils'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
-import { Loading } from '../../components/Utils'
+import { Hint } from '../../components/Utils'
 
 // TODO Componentize login form
 
 class Login extends Component {
 	render() {
-		const { client, history, isAuth, loading: authLoading } = this.props
+		const { client, history, isAuth, loading: authHint } = this.props
 
 		if (isAuth) return <Redirect to="/home" />
 
@@ -25,6 +25,8 @@ class Login extends Component {
 			<Mutation
 				mutation={LOGIN_MUTATION}
 				onCompleted={data => {
+					removeAllCookies()
+
 					setCookie(data.login.token)
 
 					// Force a reload of all current queries now that user is
@@ -35,8 +37,8 @@ class Login extends Component {
 				}}
 				onError={error => console.error(error)}>
 				{(login, { error, loading }) =>
-					loading || authLoading ? (
-						<Loading />
+					loading || authHint ? (
+						<Hint />
 					) : (
 						<Formik
 							initialValues={{ email: '', password: '' }}

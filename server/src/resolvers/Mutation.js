@@ -1,12 +1,15 @@
 import bcrypt from 'bcryptjs'
+
 import getUserId from '../utils/getUserId'
 import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
 import generateSingleChunk from '../utils/generateSingleChunk'
+import getChunkRepresentation from '../utils/getChunkRepresentation'
 
 const size = 16,
 	dimension = 20,
-	height = 20
+	height = 20,
+	renderDistance = 3
 
 const Mutation = {
 	async createUser(parent, args, { prisma }, info) {
@@ -97,6 +100,8 @@ const Mutation = {
 			'{ id }'
 		)
 
+		const initialChunk = generateSingleChunk(0, 0, size, height)
+
 		// Adding owner into world
 		const owner = await prisma.mutation.createPlayer({
 			data: {
@@ -116,7 +121,8 @@ const Mutation = {
 				y: 0,
 				z: 0,
 				dirx: 0,
-				diry: 0
+				diry: 0,
+				loadedChunks: getChunkRepresentation(initialChunk.x, initialChunk.z)
 			}
 		})
 
@@ -132,7 +138,16 @@ const Mutation = {
 						connect: [{ id: owner.id }]
 					},
 					chunks: {
-						create: [generateSingleChunk(0, 0, size, height)]
+						create: [
+							{
+								...initialChunk,
+								world: {
+									connect: {
+										id: world.id
+									}
+								}
+							}
+						]
 					}
 				}
 			},
@@ -146,6 +161,13 @@ const Mutation = {
 		// console.log({ ...args.data })
 		const { x, z } = args.data
 		console.log(Math.floor(x / size), Math.floor(z / size))
+		const chunkx = Math.floor(x / size),
+			chunkz = Math.floor(z / size)
+
+		let chunks = ''
+		for (let i = chunkx - renderDistance; i <= chunkx + renderDistance; i++)
+			for (let j = chunkz - renderDistance; j <= chunkz + renderDistance; j++)
+				chunks += getChunkRepresentation(i, j)
 
 		return prisma.mutation.updatePlayer(
 			{
@@ -153,7 +175,8 @@ const Mutation = {
 					id
 				},
 				data: {
-					...args.data
+					...args.data,
+					loadedChunks: chunks
 				}
 			},
 			info

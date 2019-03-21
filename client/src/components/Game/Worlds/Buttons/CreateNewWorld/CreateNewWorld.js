@@ -4,7 +4,7 @@ import { withRouter } from 'react-router-dom'
 import { Formik } from 'formik'
 
 import { CREATE_WORLD_MUTATION, CREATE_WORLD_SCHEMA } from '../../../../../lib/graphql'
-import { Loading } from '../../../../Utils'
+import { Hint } from '../../../../Utils'
 
 const CreateNewWorld = withRouter(({ history, match }) => {
 	const gamemodes = ['SURVIVAL', 'CREATIVE', 'SPECTATOR', 'ADVENTURE']
@@ -23,7 +23,7 @@ const CreateNewWorld = withRouter(({ history, match }) => {
 			onError={error => console.error(error)}>
 			{(createWorld, { loading }) =>
 				loading ? (
-					<Loading text="Generating" />
+					<Hint text="Generating" />
 				) : (
 					<Formik
 						initialValues={{ name: '', seed: '' }}

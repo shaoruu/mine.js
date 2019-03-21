@@ -1,1 +1,1 @@
-export { Loading } from './Loading/Loading'
+export { Hint } from './Hint/Hint'

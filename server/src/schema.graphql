@@ -17,6 +17,11 @@ type Mutation {
 	updatePlayer(data: UpdatePlayerInput!): Player!
 }
 
+type Subscription {
+	# Chunks
+	chunk(worldId: ID!): ChunkSubscriptionPayload!
+}
+
 type User {
 	id: ID!
 	username: String!
@@ -45,6 +50,7 @@ type Player {
 	z: Float!
 	dirx: Float!
 	diry: Float!
+	loadedChunks: String!
 }
 
 type Chunk {
@@ -96,4 +102,15 @@ enum Gamemode {
 	CREATIVE
 	ADVENTURE
 	SPECTATOR
+}
+
+enum MutationType {
+	CREATED
+	UPDATED
+	DELETED
+}
+
+type ChunkSubscriptionPayload {
+	mutation: MutationType!
+	node: Chunk
 }

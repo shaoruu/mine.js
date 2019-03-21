@@ -21,10 +21,12 @@ type Player {
 	z: Float!
 	dirx: Float!
 	diry: Float!
+	loadedChunks: String!
 }
 
 type Chunk {
 	id: ID! @unique
+	world: World! @relation(name: "ChunkToWorld", onDelete: SET_NULL)
 	blocks: String!
 	coordx: Int!
 	coordz: Int!

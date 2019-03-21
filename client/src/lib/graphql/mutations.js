@@ -51,11 +51,7 @@ export const UPDATE_PLAYER_MUTATION = gql`
 		$diry: Float
 	) {
 		updatePlayer(data: { id: $id, x: $x, y: $y, z: $z, dirx: $dirx, diry: $diry }) {
-			x
-			y
-			z
-			dirx
-			diry
+			loadedChunks
 		}
 	}
 `

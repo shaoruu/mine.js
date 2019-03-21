@@ -8,3 +8,5 @@ export {
 	CREATE_WORLD_MUTATION,
 	CREATE_WORLD_SCHEMA
 } from './mutations'
+
+export { CHUNK_SUBSCRIPTION } from './subscriptions'

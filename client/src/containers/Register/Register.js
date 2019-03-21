@@ -9,13 +9,13 @@ import { withRouter, Redirect } from 'react-router-dom'
 import { Formik } from 'formik'
 
 import { REGISTER_MUTATION } from '../../lib/graphql'
-import { setCookie } from '../../lib/utils'
+import { setCookie, removeAllCookies } from '../../lib/utils'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
-import { Loading } from '../../components/Utils'
+import { Hint } from '../../components/Utils'
 
 class Register extends Component {
 	render() {
-		const { client, history, isAuth, loading: authLoading } = this.props
+		const { client, history, isAuth, loading: authHint } = this.props
 
 		if (isAuth) return <Redirect to="/home" />
 
@@ -23,6 +23,8 @@ class Register extends Component {
 			<Mutation
 				mutation={REGISTER_MUTATION}
 				onCompleted={data => {
+					removeAllCookies()
+
 					setCookie(data.createUser.token)
 
 					// Force a reload of all current queries now that user is
@@ -33,8 +35,8 @@ class Register extends Component {
 				}}
 				onError={error => console.error(error)}>
 				{(register, { error, loading }) =>
-					loading || authLoading ? (
-						<Loading />
+					loading || authHint ? (
+						<Hint />
 					) : (
 						<Formik
 							initialValues={{ username: '', email: '', password: '' }}

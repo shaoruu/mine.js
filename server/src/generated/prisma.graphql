@@ -1,5 +1,5 @@
 # source: http://localhost:4466
-# timestamp: Thu Mar 21 2019 01:14:30 GMT+0800 (Taipei Standard Time)
+# timestamp: Thu Mar 21 2019 22:38:57 GMT+0800 (Taipei Standard Time)
 
 type AggregateChunk {
   count: Int!
@@ -24,6 +24,7 @@ type BatchPayload {
 
 type Chunk implements Node {
   id: ID!
+  world: World!
   blocks: String!
   coordx: Int!
   coordz: Int!
@@ -43,6 +44,7 @@ input ChunkCreateInput {
   blocks: String!
   coordx: Int!
   coordz: Int!
+  world: WorldCreateOneInput!
 }
 
 input ChunkCreateManyInput {
@@ -259,12 +261,14 @@ input ChunkUpdateDataInput {
   blocks: String
   coordx: Int
   coordz: Int
+  world: WorldUpdateOneRequiredInput
 }
 
 input ChunkUpdateInput {
   blocks: String
   coordx: Int
   coordz: Int
+  world: WorldUpdateOneRequiredInput
 }
 
 input ChunkUpdateManyDataInput {
@@ -440,6 +444,7 @@ input ChunkWhereInput {
 
   """All values greater than or equal the given value."""
   coordz_gte: Int
+  world: WorldWhereInput
 }
 
 input ChunkWhereUniqueInput {
@@ -466,29 +471,29 @@ scalar Long
 
 type Mutation {
   createPlayer(data: PlayerCreateInput!): Player!
+  createChunk(data: ChunkCreateInput!): Chunk!
   createUser(data: UserCreateInput!): User!
   createWorld(data: WorldCreateInput!): World!
-  createChunk(data: ChunkCreateInput!): Chunk!
   updatePlayer(data: PlayerUpdateInput!, where: PlayerWhereUniqueInput!): Player
+  updateChunk(data: ChunkUpdateInput!, where: ChunkWhereUniqueInput!): Chunk
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updateWorld(data: WorldUpdateInput!, where: WorldWhereUniqueInput!): World
-  updateChunk(data: ChunkUpdateInput!, where: ChunkWhereUniqueInput!): Chunk
   deletePlayer(where: PlayerWhereUniqueInput!): Player
+  deleteChunk(where: ChunkWhereUniqueInput!): Chunk
   deleteUser(where: UserWhereUniqueInput!): User
   deleteWorld(where: WorldWhereUniqueInput!): World
-  deleteChunk(where: ChunkWhereUniqueInput!): Chunk
   upsertPlayer(where: PlayerWhereUniqueInput!, create: PlayerCreateInput!, update: PlayerUpdateInput!): Player!
+  upsertChunk(where: ChunkWhereUniqueInput!, create: ChunkCreateInput!, update: ChunkUpdateInput!): Chunk!
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertWorld(where: WorldWhereUniqueInput!, create: WorldCreateInput!, update: WorldUpdateInput!): World!
-  upsertChunk(where: ChunkWhereUniqueInput!, create: ChunkCreateInput!, update: ChunkUpdateInput!): Chunk!
   updateManyPlayers(data: PlayerUpdateManyMutationInput!, where: PlayerWhereInput): BatchPayload!
+  updateManyChunks(data: ChunkUpdateManyMutationInput!, where: ChunkWhereInput): BatchPayload!
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   updateManyWorlds(data: WorldUpdateManyMutationInput!, where: WorldWhereInput): BatchPayload!
-  updateManyChunks(data: ChunkUpdateManyMutationInput!, where: ChunkWhereInput): BatchPayload!
   deleteManyPlayers(where: PlayerWhereInput): BatchPayload!
+  deleteManyChunks(where: ChunkWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyWorlds(where: WorldWhereInput): BatchPayload!
-  deleteManyChunks(where: ChunkWhereInput): BatchPayload!
   executeRaw(database: PrismaDatabase, query: String!): Json!
 }
 
@@ -531,6 +536,7 @@ type Player implements Node {
   z: Float!
   dirx: Float!
   diry: Float!
+  loadedChunks: String!
 }
 
 """A connection to a list of items."""
@@ -552,6 +558,7 @@ input PlayerCreateInput {
   z: Float!
   dirx: Float!
   diry: Float!
+  loadedChunks: String!
   user: UserCreateOneInput!
   world: WorldCreateOneWithoutPlayersInput!
 }
@@ -570,6 +577,7 @@ input PlayerCreateWithoutWorldInput {
   z: Float!
   dirx: Float!
   diry: Float!
+  loadedChunks: String!
   user: UserCreateOneInput!
 }
 
@@ -601,6 +609,8 @@ enum PlayerOrderByInput {
   dirx_DESC
   diry_ASC
   diry_DESC
+  loadedChunks_ASC
+  loadedChunks_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -617,6 +627,7 @@ type PlayerPreviousValues {
   z: Float!
   dirx: Float!
   diry: Float!
+  loadedChunks: String!
 }
 
 input PlayerScalarWhereInput {
@@ -814,6 +825,46 @@ input PlayerScalarWhereInput {
 
   """All values greater than or equal the given value."""
   diry_gte: Float
+  loadedChunks: String
+
+  """All values that are not equal to given value."""
+  loadedChunks_not: String
+
+  """All values that are contained in given list."""
+  loadedChunks_in: [String!]
+
+  """All values that are not contained in given list."""
+  loadedChunks_not_in: [String!]
+
+  """All values less than the given value."""
+  loadedChunks_lt: String
+
+  """All values less than or equal the given value."""
+  loadedChunks_lte: String
+
+  """All values greater than the given value."""
+  loadedChunks_gt: String
+
+  """All values greater than or equal the given value."""
+  loadedChunks_gte: String
+
+  """All values containing the given string."""
+  loadedChunks_contains: String
+
+  """All values not containing the given string."""
+  loadedChunks_not_contains: String
+
+  """All values starting with the given string."""
+  loadedChunks_starts_with: String
+
+  """All values not starting with the given string."""
+  loadedChunks_not_starts_with: String
+
+  """All values ending with the given string."""
+  loadedChunks_ends_with: String
+
+  """All values not ending with the given string."""
+  loadedChunks_not_ends_with: String
 }
 
 type PlayerSubscriptionPayload {
@@ -864,6 +915,7 @@ input PlayerUpdateInput {
   z: Float
   dirx: Float
   diry: Float
+  loadedChunks: String
   user: UserUpdateOneRequiredInput
   world: WorldUpdateOneRequiredWithoutPlayersInput
 }
@@ -877,6 +929,7 @@ input PlayerUpdateManyDataInput {
   z: Float
   dirx: Float
   diry: Float
+  loadedChunks: String
 }
 
 input PlayerUpdateManyMutationInput {
@@ -888,6 +941,7 @@ input PlayerUpdateManyMutationInput {
   z: Float
   dirx: Float
   diry: Float
+  loadedChunks: String
 }
 
 input PlayerUpdateManyWithoutWorldInput {
@@ -916,6 +970,7 @@ input PlayerUpdateWithoutWorldDataInput {
   z: Float
   dirx: Float
   diry: Float
+  loadedChunks: String
   user: UserUpdateOneRequiredInput
 }
 
@@ -1125,6 +1180,46 @@ input PlayerWhereInput {
 
   """All values greater than or equal the given value."""
   diry_gte: Float
+  loadedChunks: String
+
+  """All values that are not equal to given value."""
+  loadedChunks_not: String
+
+  """All values that are contained in given list."""
+  loadedChunks_in: [String!]
+
+  """All values that are not contained in given list."""
+  loadedChunks_not_in: [String!]
+
+  """All values less than the given value."""
+  loadedChunks_lt: String
+
+  """All values less than or equal the given value."""
+  loadedChunks_lte: String
+
+  """All values greater than the given value."""
+  loadedChunks_gt: String
+
+  """All values greater than or equal the given value."""
+  loadedChunks_gte: String
+
+  """All values containing the given string."""
+  loadedChunks_contains: String
+
+  """All values not containing the given string."""
+  loadedChunks_not_contains: String
+
+  """All values starting with the given string."""
+  loadedChunks_starts_with: String
+
+  """All values not starting with the given string."""
+  loadedChunks_not_starts_with: String
+
+  """All values ending with the given string."""
+  loadedChunks_ends_with: String
+
+  """All values not ending with the given string."""
+  loadedChunks_not_ends_with: String
   user: UserWhereInput
   world: WorldWhereInput
 }
@@ -1139,17 +1234,17 @@ enum PrismaDatabase {
 
 type Query {
   players(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Player]!
+  chunks(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Chunk]!
   users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
   worlds(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [World]!
-  chunks(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Chunk]!
   player(where: PlayerWhereUniqueInput!): Player
+  chunk(where: ChunkWhereUniqueInput!): Chunk
   user(where: UserWhereUniqueInput!): User
   world(where: WorldWhereUniqueInput!): World
-  chunk(where: ChunkWhereUniqueInput!): Chunk
   playersConnection(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PlayerConnection!
+  chunksConnection(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ChunkConnection!
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   worldsConnection(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): WorldConnection!
-  chunksConnection(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ChunkConnection!
 
   """Fetches an object given its ID"""
   node(
@@ -1160,9 +1255,9 @@ type Query {
 
 type Subscription {
   player(where: PlayerSubscriptionWhereInput): PlayerSubscriptionPayload
+  chunk(where: ChunkSubscriptionWhereInput): ChunkSubscriptionPayload
   user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
   world(where: WorldSubscriptionWhereInput): WorldSubscriptionPayload
-  chunk(where: ChunkSubscriptionWhereInput): ChunkSubscriptionPayload
 }
 
 type User implements Node {
@@ -1555,6 +1650,11 @@ input WorldCreateManyInput {
   connect: [WorldWhereUniqueInput!]
 }
 
+input WorldCreateOneInput {
+  create: WorldCreateInput
+  connect: WorldWhereUniqueInput
+}
+
 input WorldCreateOneWithoutPlayersInput {
   create: WorldCreateWithoutPlayersInput
   connect: WorldWhereUniqueInput
@@ -1805,6 +1905,13 @@ input WorldUpdateManyWithWhereNestedInput {
   data: WorldUpdateManyDataInput!
 }
 
+input WorldUpdateOneRequiredInput {
+  create: WorldCreateInput
+  connect: WorldWhereUniqueInput
+  update: WorldUpdateDataInput
+  upsert: WorldUpsertNestedInput
+}
+
 input WorldUpdateOneRequiredWithoutPlayersInput {
   create: WorldCreateWithoutPlayersInput
   connect: WorldWhereUniqueInput
@@ -1821,6 +1928,11 @@ input WorldUpdateWithoutPlayersDataInput {
 input WorldUpdateWithWhereUniqueNestedInput {
   where: WorldWhereUniqueInput!
   data: WorldUpdateDataInput!
+}
+
+input WorldUpsertNestedInput {
+  update: WorldUpdateDataInput!
+  create: WorldCreateInput!
 }
 
 input WorldUpsertWithoutPlayersInput {

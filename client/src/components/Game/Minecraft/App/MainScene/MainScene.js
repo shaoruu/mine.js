@@ -1,13 +1,13 @@
 import React, { Component } from 'react'
-import { Mutation, Query } from 'react-apollo'
+import { Mutation, Query, Subscription } from 'react-apollo'
 import * as THREE from 'three'
 
 import { Camera, Light, Player, Renderer } from '../Bin'
 import classes from './MainScene.module.css'
 import World from '../Bin/World/World'
 import { UPDATE_PLAYER_MUTATION } from '../../../../../lib/graphql/mutations'
-import { WORLD_QUERY } from '../../../../../lib/graphql'
-import { Loading } from '../../../../Utils'
+import { WORLD_QUERY, CHUNK_SUBSCRIPTION } from '../../../../../lib/graphql'
+import { Hint } from '../../../../Utils'
 
 class MainScene extends Component {
 	constructor(props) {
@@ -60,6 +60,11 @@ class MainScene extends Component {
 		this.updatePosCall = setInterval(() => {
 			const playerCoords = this.player.getCoordinates(),
 				playerDirs = this.player.getDirections()
+
+			// Making sure no values are null
+			for (let member in playerCoords) if (playerCoords[member] === null) return
+			for (let member in playerDirs) if (playerDirs[member] === null) return
+
 			if (
 				!(JSON.stringify(playerCoords) === JSON.stringify(this.prevPos)) ||
 				!(JSON.stringify(playerDirs) === JSON.stringify(this.prevDirs))
@@ -124,54 +129,76 @@ class MainScene extends Component {
 		const { username, id: worldId } = this.props
 
 		return (
-			<Query
-				query={WORLD_QUERY}
-				variables={{ query: worldId }}
-				onError={err => console.error(err)}
-				fetchPolicy="network-only"
-				onCompleted={() => this.handleQueryComplete()}>
-				{({ loading, data }) => {
-					if (loading) return <Loading />
-					if (!data) return <Loading text="world not found." />
-
-					const { world } = data
-
-					this.worldData = world
-					this.currentPlayer = world.players.find(
-						ele => ele.user.username === username
-					)
-					this.initPos = {
-						x: this.currentPlayer.x,
-						y: this.currentPlayer.y,
-						z: this.currentPlayer.z
-					}
-					this.initDirs = {
-						dirx: this.currentPlayer.dirx,
-						diry: this.currentPlayer.diry
-					}
-
+			<Subscription
+				subscription={CHUNK_SUBSCRIPTION}
+				variables={{ worldId }}
+				onSubscriptionData={data => {
+					console.log(data)
+				}}>
+				{({ loading }) => {
+					if (loading) return <Hint text="Loading sockets..." />
 					return (
-						<Mutation
-							mutation={UPDATE_PLAYER_MUTATION}
-							onError={err => console.error(err)}>
-							{updatePlayer => {
-								this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
+						<Query
+							query={WORLD_QUERY}
+							variables={{ query: worldId }}
+							onError={err => console.error(err)}
+							fetchPolicy="network-only"
+							onCompleted={() => this.handleQueryComplete()}>
+							{({ loading, data }) => {
+								if (loading) return <Hint text="Generating world..." />
+								if (!data) return <Hint text="World not found." />
+
+								const { world } = data
+
+								this.worldData = world
+								this.currentPlayer = world.players.find(
+									ele => ele.user.username === username
+								)
+								this.initPos = {
+									x: this.currentPlayer.x,
+									y: this.currentPlayer.y,
+									z: this.currentPlayer.z
+								}
+								this.initDirs = {
+									dirx: this.currentPlayer.dirx,
+									diry: this.currentPlayer.diry
+								}
 
 								return (
-									<div
-										style={{ width: '100%', height: '100%' }}
-										ref={mount => (this.mount = mount)}>
-										<div
-											className={classes.blocker}
-											ref={blocker => (this.blocker = blocker)}
-										/>
-									</div>
+									<Mutation
+										mutation={UPDATE_PLAYER_MUTATION}
+										onError={err => console.error(err)}
+										onCompleted={({
+											updatePlayer: { loadedChunks }
+										}) => {
+											// console.log(loadedChunks)
+										}}>
+										{updatePlayer => {
+											this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
+
+											return (
+												<div
+													style={{
+														width: '100%',
+														height: '100%'
+													}}
+													ref={mount => (this.mount = mount)}>
+													<div
+														className={classes.blocker}
+														ref={blocker =>
+															(this.blocker = blocker)
+														}
+													/>
+												</div>
+											)
+										}}
+									</Mutation>
 								)
 							}}
-						</Mutation>
+						</Query>
 					)
 				}}
-			</Query>
+			</Subscription>
 		)
 	}
 }

@@ -5,13 +5,16 @@ import { withRouter, Redirect } from 'react-router-dom'
 import { MY_WORLDS_QUERY } from '../../../lib/graphql'
 import WorldList from './WorldList/WorldList'
 import CreateNewWorld from './Buttons/CreateNewWorld/CreateNewWorld'
-import { Loading } from '../../Utils'
+import { Hint } from '../../Utils'
 
 const Worlds = withRouter(({ history, subpage }) => {
 	return (
-		<Query query={MY_WORLDS_QUERY} onError={err => console.log(err)}>
+		<Query
+			query={MY_WORLDS_QUERY}
+			onError={err => console.log(err)}
+			fetchPolicy="network-only">
 			{({ loading, data }) => {
-				if (loading) return <Loading />
+				if (loading) return <Hint />
 
 				const { myWorlds } = data
 

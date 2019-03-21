@@ -8,7 +8,7 @@ import { withRouter, Redirect } from 'react-router-dom'
 
 import { Minecraft, Start, Worlds, Options } from '../../components/Game'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
-import { Loading } from '../../components/Utils'
+import { Hint } from '../../components/Utils'
 
 class Game extends Component {
 	render() {
@@ -21,7 +21,7 @@ class Game extends Component {
 			username
 		} = this.props
 
-		if (loading) return <Loading />
+		if (loading) return <Hint />
 		if (!isAuth) return <Redirect to="/login" />
 
 		let render = null
