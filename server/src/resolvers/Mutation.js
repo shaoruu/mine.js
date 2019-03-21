@@ -2,7 +2,11 @@ import bcrypt from 'bcryptjs'
 import getUserId from '../utils/getUserId'
 import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
-import generateSingleBlock from '../utils/generateSingleBlock'
+import generateSingleChunk from '../utils/generateSingleChunk'
+
+const size = 16,
+	dimension = 20,
+	height = 20
 
 const Mutation = {
 	async createUser(parent, args, { prisma }, info) {
@@ -116,18 +120,6 @@ const Mutation = {
 			}
 		})
 
-		let blocks = ''
-		// TODO: change 16 to configured value
-		for (let x = 0; x < 16; x++) {
-			for (let z = 0; z < 16; z++) {
-				// const maxHeight = Math.random() * 160 + 100
-				for (let y = 0; y < 20; y++) {
-					blocks += generateSingleBlock(1, { x, y, z })
-				}
-			}
-		}
-		// blocks += generateSingleBlock('STONE', { x: 0, y: 0, z: 0 })
-
 		/**
 		 * TODO: Implement chunk generation and blocks here.
 		 */
@@ -140,13 +132,7 @@ const Mutation = {
 						connect: [{ id: owner.id }]
 					},
 					chunks: {
-						create: [
-							{
-								blocks,
-								coordx: 0,
-								coordz: 0
-							}
-						]
+						create: [generateSingleChunk(0, 0, size, height)]
 					}
 				}
 			},
@@ -157,7 +143,9 @@ const Mutation = {
 		const id = args.data.id
 		delete args.data.id
 
-		console.log({ ...args.data })
+		// console.log({ ...args.data })
+		const { x, z } = args.data
+		console.log(Math.floor(x / size), Math.floor(z / size))
 
 		return prisma.mutation.updatePlayer(
 			{

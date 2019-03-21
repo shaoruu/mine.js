@@ -41,10 +41,10 @@ export default {
 		posZ: 0
 	},
 	player: {
-		inertia: 8.0,
+		inertia: 5.0,
 		speed: {
-			horizontal: 1200,
-			vertical: 1600
+			horizontal: 1400,
+			vertical: 1800
 		},
 		coordinateDec: 2,
 		posX: 0,

@@ -132,6 +132,8 @@ class MainScene extends Component {
 				onCompleted={() => this.handleQueryComplete()}>
 				{({ loading, data }) => {
 					if (loading) return <Loading />
+					if (!data) return <Loading text="world not found." />
+
 					const { world } = data
 
 					this.worldData = world

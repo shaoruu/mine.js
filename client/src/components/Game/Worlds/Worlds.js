@@ -1,6 +1,6 @@
 import React from 'react'
 import { Query } from 'react-apollo'
-import { withRouter } from 'react-router-dom'
+import { withRouter, Redirect } from 'react-router-dom'
 
 import { MY_WORLDS_QUERY } from '../../../lib/graphql'
 import WorldList from './WorldList/WorldList'
@@ -20,7 +20,8 @@ const Worlds = withRouter(({ history, subpage }) => {
 					case 'create':
 						render = <CreateNewWorld />
 						break
-					default:
+					case undefined:
+					case '':
 						render = (
 							<div>
 								<WorldList data={myWorlds} />
@@ -30,6 +31,10 @@ const Worlds = withRouter(({ history, subpage }) => {
 								</button>
 							</div>
 						)
+						break
+					default:
+						render = <Redirect to="/game/worlds" />
+						break
 				}
 
 				return render

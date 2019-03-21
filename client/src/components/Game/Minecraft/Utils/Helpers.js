@@ -30,4 +30,7 @@ export default class Helpers {
 
 		return mergedMesh
 	}
+	static round(value, decimals) {
+		return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals)
+	}
 }

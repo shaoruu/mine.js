@@ -2,6 +2,7 @@ import * as THREE from 'three'
 
 import PointerLockControls from '../../../Utils/PointerLockControls'
 import Config from '../../../Data/Config'
+import Helpers from '../../../Utils/Helpers'
 
 // Controls based on orbit controls
 export default class Controls {
@@ -102,8 +103,14 @@ export default class Controls {
 	}
 	getDirections = () => {
 		return {
-			dirx: this.threeControls.getPitch().rotation.x,
-			diry: this.threeControls.getObject().rotation.y
+			dirx: Helpers.round(
+				this.threeControls.getPitch().rotation.x,
+				Config.player.coordinateDec
+			),
+			diry: Helpers.round(
+				this.threeControls.getObject().rotation.y,
+				Config.player.coordinateDec
+			)
 		}
 	}
 
