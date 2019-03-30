@@ -1,5 +1,5 @@
 # source: http://localhost:4466
-# timestamp: Thu Mar 21 2019 22:38:57 GMT+0800 (Taipei Standard Time)
+# timestamp: Fri Mar 22 2019 01:28:46 GMT+0800 (Taipei Standard Time)
 
 type AggregateChunk {
   count: Int!
@@ -44,12 +44,18 @@ input ChunkCreateInput {
   blocks: String!
   coordx: Int!
   coordz: Int!
-  world: WorldCreateOneInput!
+  world: WorldCreateOneWithoutChunksInput!
 }
 
-input ChunkCreateManyInput {
-  create: [ChunkCreateInput!]
+input ChunkCreateManyWithoutWorldInput {
+  create: [ChunkCreateWithoutWorldInput!]
   connect: [ChunkWhereUniqueInput!]
+}
+
+input ChunkCreateWithoutWorldInput {
+  blocks: String!
+  coordx: Int!
+  coordz: Int!
 }
 
 """An edge in a connection."""
@@ -257,18 +263,11 @@ input ChunkSubscriptionWhereInput {
   node: ChunkWhereInput
 }
 
-input ChunkUpdateDataInput {
-  blocks: String
-  coordx: Int
-  coordz: Int
-  world: WorldUpdateOneRequiredInput
-}
-
 input ChunkUpdateInput {
   blocks: String
   coordx: Int
   coordz: Int
-  world: WorldUpdateOneRequiredInput
+  world: WorldUpdateOneRequiredWithoutChunksInput
 }
 
 input ChunkUpdateManyDataInput {
@@ -277,22 +276,22 @@ input ChunkUpdateManyDataInput {
   coordz: Int
 }
 
-input ChunkUpdateManyInput {
-  create: [ChunkCreateInput!]
-  connect: [ChunkWhereUniqueInput!]
-  set: [ChunkWhereUniqueInput!]
-  disconnect: [ChunkWhereUniqueInput!]
-  delete: [ChunkWhereUniqueInput!]
-  update: [ChunkUpdateWithWhereUniqueNestedInput!]
-  updateMany: [ChunkUpdateManyWithWhereNestedInput!]
-  deleteMany: [ChunkScalarWhereInput!]
-  upsert: [ChunkUpsertWithWhereUniqueNestedInput!]
-}
-
 input ChunkUpdateManyMutationInput {
   blocks: String
   coordx: Int
   coordz: Int
+}
+
+input ChunkUpdateManyWithoutWorldInput {
+  create: [ChunkCreateWithoutWorldInput!]
+  connect: [ChunkWhereUniqueInput!]
+  set: [ChunkWhereUniqueInput!]
+  disconnect: [ChunkWhereUniqueInput!]
+  delete: [ChunkWhereUniqueInput!]
+  update: [ChunkUpdateWithWhereUniqueWithoutWorldInput!]
+  updateMany: [ChunkUpdateManyWithWhereNestedInput!]
+  deleteMany: [ChunkScalarWhereInput!]
+  upsert: [ChunkUpsertWithWhereUniqueWithoutWorldInput!]
 }
 
 input ChunkUpdateManyWithWhereNestedInput {
@@ -300,15 +299,21 @@ input ChunkUpdateManyWithWhereNestedInput {
   data: ChunkUpdateManyDataInput!
 }
 
-input ChunkUpdateWithWhereUniqueNestedInput {
-  where: ChunkWhereUniqueInput!
-  data: ChunkUpdateDataInput!
+input ChunkUpdateWithoutWorldDataInput {
+  blocks: String
+  coordx: Int
+  coordz: Int
 }
 
-input ChunkUpsertWithWhereUniqueNestedInput {
+input ChunkUpdateWithWhereUniqueWithoutWorldInput {
   where: ChunkWhereUniqueInput!
-  update: ChunkUpdateDataInput!
-  create: ChunkCreateInput!
+  data: ChunkUpdateWithoutWorldDataInput!
+}
+
+input ChunkUpsertWithWhereUniqueWithoutWorldInput {
+  where: ChunkWhereUniqueInput!
+  update: ChunkUpdateWithoutWorldDataInput!
+  create: ChunkCreateWithoutWorldInput!
 }
 
 input ChunkWhereInput {
@@ -1641,7 +1646,7 @@ type WorldConnection {
 input WorldCreateInput {
   name: String!
   seed: String!
-  chunks: ChunkCreateManyInput
+  chunks: ChunkCreateManyWithoutWorldInput
   players: PlayerCreateManyWithoutWorldInput
 }
 
@@ -1650,8 +1655,8 @@ input WorldCreateManyInput {
   connect: [WorldWhereUniqueInput!]
 }
 
-input WorldCreateOneInput {
-  create: WorldCreateInput
+input WorldCreateOneWithoutChunksInput {
+  create: WorldCreateWithoutChunksInput
   connect: WorldWhereUniqueInput
 }
 
@@ -1660,10 +1665,16 @@ input WorldCreateOneWithoutPlayersInput {
   connect: WorldWhereUniqueInput
 }
 
+input WorldCreateWithoutChunksInput {
+  name: String!
+  seed: String!
+  players: PlayerCreateManyWithoutWorldInput
+}
+
 input WorldCreateWithoutPlayersInput {
   name: String!
   seed: String!
-  chunks: ChunkCreateManyInput
+  chunks: ChunkCreateManyWithoutWorldInput
 }
 
 """An edge in a connection."""
@@ -1867,14 +1878,14 @@ input WorldSubscriptionWhereInput {
 input WorldUpdateDataInput {
   name: String
   seed: String
-  chunks: ChunkUpdateManyInput
+  chunks: ChunkUpdateManyWithoutWorldInput
   players: PlayerUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateInput {
   name: String
   seed: String
-  chunks: ChunkUpdateManyInput
+  chunks: ChunkUpdateManyWithoutWorldInput
   players: PlayerUpdateManyWithoutWorldInput
 }
 
@@ -1905,11 +1916,11 @@ input WorldUpdateManyWithWhereNestedInput {
   data: WorldUpdateManyDataInput!
 }
 
-input WorldUpdateOneRequiredInput {
-  create: WorldCreateInput
+input WorldUpdateOneRequiredWithoutChunksInput {
+  create: WorldCreateWithoutChunksInput
   connect: WorldWhereUniqueInput
-  update: WorldUpdateDataInput
-  upsert: WorldUpsertNestedInput
+  update: WorldUpdateWithoutChunksDataInput
+  upsert: WorldUpsertWithoutChunksInput
 }
 
 input WorldUpdateOneRequiredWithoutPlayersInput {
@@ -1919,10 +1930,16 @@ input WorldUpdateOneRequiredWithoutPlayersInput {
   upsert: WorldUpsertWithoutPlayersInput
 }
 
+input WorldUpdateWithoutChunksDataInput {
+  name: String
+  seed: String
+  players: PlayerUpdateManyWithoutWorldInput
+}
+
 input WorldUpdateWithoutPlayersDataInput {
   name: String
   seed: String
-  chunks: ChunkUpdateManyInput
+  chunks: ChunkUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateWithWhereUniqueNestedInput {
@@ -1930,9 +1947,9 @@ input WorldUpdateWithWhereUniqueNestedInput {
   data: WorldUpdateDataInput!
 }
 
-input WorldUpsertNestedInput {
-  update: WorldUpdateDataInput!
-  create: WorldCreateInput!
+input WorldUpsertWithoutChunksInput {
+  update: WorldUpdateWithoutChunksDataInput!
+  create: WorldCreateWithoutChunksInput!
 }
 
 input WorldUpsertWithoutPlayersInput {

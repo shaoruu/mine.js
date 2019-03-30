@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Mutation, Query, Subscription } from 'react-apollo'
 import * as THREE from 'three'
+import Stats from 'stats-js'
 
 import { Camera, Light, Player, Renderer } from '../Bin'
 import classes from './MainScene.module.css'
@@ -8,6 +9,7 @@ import World from '../Bin/World/World'
 import { UPDATE_PLAYER_MUTATION } from '../../../../../lib/graphql/mutations'
 import { WORLD_QUERY, CHUNK_SUBSCRIPTION } from '../../../../../lib/graphql'
 import { Hint } from '../../../../Utils'
+import Config from '../../Data/Config'
 
 class MainScene extends Component {
 	constructor(props) {
@@ -19,14 +21,33 @@ class MainScene extends Component {
 		this.prevPos = {}
 		this.prevDirs = {}
 
+		this.playerChunks = ''
+
 		this.updatePlayer = null
 	}
 
 	handleQueryComplete = () => {
+		// Prerequisites
+		window.requestAnimationFrame =
+			window.requestAnimationFrame ||
+			window.mozRequestAnimationFrame ||
+			window.webkitRequestAnimationFrame ||
+			window.msRequestAnimationFrame ||
+			function(f) {
+				return setTimeout(f, 1000 / 60)
+			} // simulate calling code 60
+
+		window.cancelAnimationFrame =
+			window.cancelAnimationFrame ||
+			window.mozCancelAnimationFrame ||
+			function(requestID) {
+				clearTimeout(requestID)
+			} //fall back
+
 		// Main scene creation
 		this.scene = new THREE.Scene()
 		this.scene.background = new THREE.Color(0xffffff)
-		this.scene.fog = new THREE.Fog(0xffffff, 0, 1000)
+		this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
 
 		// Main renderer constructor
 		this.renderer = new Renderer(this.scene, this.mount)
@@ -48,6 +69,10 @@ class MainScene extends Component {
 			this.initDirs
 		)
 
+		// Stats creation
+		this.stats = new Stats()
+		this.mount.appendChild(this.stats.dom)
+
 		/** TEST */
 		// const geometry = new THREE.BoxGeometry(1, 1, 1)
 		// const material = new THREE.MeshBasicMaterial({ color: '#433F81' })
@@ -62,8 +87,10 @@ class MainScene extends Component {
 				playerDirs = this.player.getDirections()
 
 			// Making sure no values are null
-			for (let member in playerCoords) if (playerCoords[member] === null) return
-			for (let member in playerDirs) if (playerDirs[member] === null) return
+			for (let member in playerCoords)
+				if (playerCoords[member] !== 0 && !playerCoords[member]) return
+			for (let member in playerDirs)
+				if (playerDirs[member] !== 0 && !playerDirs[member]) return
 
 			if (
 				!(JSON.stringify(playerCoords) === JSON.stringify(this.prevPos)) ||
@@ -89,30 +116,27 @@ class MainScene extends Component {
 	}
 
 	init = () => {
-		this.world = new World(this.worldData)
-		this.world.init(this.scene)
+		this.world = new World(this.scene, this.worldData)
 
 		window.addEventListener('resize', this.onWindowResize, false)
-		if (!this.frameId) this.frameId = requestAnimationFrame(this.animate)
+		if (!this.frameId) this.frameId = window.requestAnimationFrame(this.animate)
 	}
 
 	terminate = () => {
-		cancelAnimationFrame(this.frameId)
+		window.cancelAnimationFrame(this.frameId)
 	}
 
 	animate = () => {
+		this.stats.begin()
 		this.update()
 
 		this.renderScene()
-		this.frameId = window.requestAnimationFrame(this.animate)
+		this.stats.end()
+		if (!document.webkitHidden)
+			this.frameId = window.requestAnimationFrame(this.animate)
 	}
 
 	update = () => {
-		/** TEST */
-		// this.cube.rotation.x += 0.01
-		// this.cube.rotation.y += 0.01
-		/** */
-
 		this.player.update()
 	}
 
@@ -129,76 +153,83 @@ class MainScene extends Component {
 		const { username, id: worldId } = this.props
 
 		return (
-			<Subscription
-				subscription={CHUNK_SUBSCRIPTION}
-				variables={{ worldId }}
-				onSubscriptionData={data => {
-					console.log(data)
-				}}>
-				{({ loading }) => {
-					if (loading) return <Hint text="Loading sockets..." />
+			<Query
+				query={WORLD_QUERY}
+				variables={{ query: worldId }}
+				onError={err => console.error(err)}
+				fetchPolicy="network-only"
+				onCompleted={() => this.handleQueryComplete()}>
+				{({ loading, data }) => {
+					if (loading) return <Hint text="Loading world..." />
+					if (!data) return <Hint text="World not found." />
+
+					const { world } = data
+
+					this.worldData = world
+					this.currentPlayer = world.players.find(
+						ele => ele.user.username === username
+					)
+					this.initPos = {
+						x: this.currentPlayer.x,
+						y: this.currentPlayer.y,
+						z: this.currentPlayer.z
+					}
+					this.initDirs = {
+						dirx: this.currentPlayer.dirx,
+						diry: this.currentPlayer.diry
+					}
+
 					return (
-						<Query
-							query={WORLD_QUERY}
-							variables={{ query: worldId }}
+						<Mutation
+							mutation={UPDATE_PLAYER_MUTATION}
 							onError={err => console.error(err)}
-							fetchPolicy="network-only"
-							onCompleted={() => this.handleQueryComplete()}>
-							{({ loading, data }) => {
-								if (loading) return <Hint text="Generating world..." />
-								if (!data) return <Hint text="World not found." />
-
-								const { world } = data
-
-								this.worldData = world
-								this.currentPlayer = world.players.find(
-									ele => ele.user.username === username
-								)
-								this.initPos = {
-									x: this.currentPlayer.x,
-									y: this.currentPlayer.y,
-									z: this.currentPlayer.z
+							onCompleted={({ updatePlayer: { loadedChunks } }) => {
+								if (this.playerChunks !== loadedChunks) {
+									// Update world's player chunk according to player's position
+									this.world.requestMeshUpdate(
+										this.player.getCoordinates()
+									)
+									// Update existing playerChunks
+									this.playerChunks = loadedChunks
 								}
-								this.initDirs = {
-									dirx: this.currentPlayer.dirx,
-									diry: this.currentPlayer.diry
-								}
+							}}>
+							{updatePlayer => {
+								this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
 
 								return (
-									<Mutation
-										mutation={UPDATE_PLAYER_MUTATION}
-										onError={err => console.error(err)}
-										onCompleted={({
-											updatePlayer: { loadedChunks }
-										}) => {
-											// console.log(loadedChunks)
-										}}>
-										{updatePlayer => {
-											this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
-
-											return (
-												<div
-													style={{
-														width: '100%',
-														height: '100%'
-													}}
-													ref={mount => (this.mount = mount)}>
-													<div
-														className={classes.blocker}
-														ref={blocker =>
-															(this.blocker = blocker)
-														}
-													/>
-												</div>
-											)
+									<div
+										style={{
+											width: '100%',
+											height: '100%'
 										}}
-									</Mutation>
+										ref={mount => (this.mount = mount)}>
+										<div
+											className={classes.blocker}
+											ref={blocker => (this.blocker = blocker)}
+										/>
+										<Subscription
+											subscription={CHUNK_SUBSCRIPTION}
+											variables={{ worldId }}
+											onSubscriptionData={async ({
+												subscriptionData: {
+													data: { chunk }
+												}
+											}) => {
+												const { node } = chunk
+												await this.world
+													.registerChunk(node)
+													.then(() =>
+														console.log('chunk loaded.')
+													)
+											}}
+										/>
+									</div>
 								)
 							}}
-						</Query>
+						</Mutation>
 					)
 				}}
-			</Subscription>
+			</Query>
 		)
 	}
 }

@@ -10,61 +10,21 @@ bottom: 5
 
 class Block {
 	constructor(id, x, y, z) {
+		this.id = id
 		this.position = new THREE.Vector3(x, y, z)
-
-		this.sources = null
-
-		switch (id) {
-			case 1:
-				this.sources = {
-					side: require('./assets/blocks/stone.png'),
-					top: require('./assets/blocks/stone.png'),
-					bottom: require('./assets/blocks/stone.png')
-				}
-				break
-			case 2:
-				this.sources = {
-					side: require('./assets/blocks/grass_side.png'),
-					top: require('./assets/blocks/grass_top.png'),
-					bottom: require('./assets/blocks/dirt.png')
-				}
-				break
-			case 3:
-				this.sources = {
-					side: require('./assets/blocks/dirt.png'),
-					top: require('./assets/blocks/dirt.png'),
-					bottom: require('./assets/blocks/dirt.png')
-				}
-				break
-			default:
-				this.sources = {
-					side: require('./assets/blocks/stone.png'),
-					top: require('./assets/blocks/stone.png'),
-					bottom: require('./assets/blocks/stone.png')
-				}
-				break
-		}
 	}
 
-	getTotalMesh = specifics => {
+	getTotalMesh = (specifics, materials) => {
 		const geo = []
 		const dimension = Config.block.dimension
+		const { top, side, bottom } = materials
+
+		// console.time('Block Get Total Mesh')
 
 		if (specifics.top) {
 			const topGeo = new THREE.PlaneGeometry(dimension, dimension)
 
-			let topTexture = new THREE.TextureLoader().load(this.sources.top)
-			topTexture.wrapS = THREE.RepeatWrapping
-			topTexture.wrapT = THREE.RepeatWrapping
-			topTexture.magFilter = THREE.NearestFilter
-			topTexture.minFilter = THREE.NearestMipMapLinearFilter
-
-			const topMaterial = new THREE.MeshBasicMaterial({
-				map: topTexture,
-				side: THREE.DoubleSide
-			})
-
-			const topMesh = new THREE.Mesh(topGeo, topMaterial)
+			const topMesh = new THREE.Mesh(topGeo, top)
 			topMesh.rotateX((Math.PI * 3) / 2)
 			topMesh.position.x = this.position.x
 			topMesh.position.y = this.position.y + dimension / 2
@@ -75,18 +35,7 @@ class Block {
 		if (specifics.bottom) {
 			const bottomGeo = new THREE.PlaneGeometry(dimension, dimension)
 
-			let bottomTexture = new THREE.TextureLoader().load(this.sources.bottom)
-			bottomTexture.wrapS = THREE.RepeatWrapping
-			bottomTexture.wrapT = THREE.RepeatWrapping
-			bottomTexture.magFilter = THREE.NearestFilter
-			bottomTexture.minFilter = THREE.NearestMipMapLinearFilter
-
-			const bottomMaterial = new THREE.MeshBasicMaterial({
-				map: bottomTexture,
-				side: THREE.DoubleSide
-			})
-
-			const bottomMesh = new THREE.Mesh(bottomGeo, bottomMaterial)
+			const bottomMesh = new THREE.Mesh(bottomGeo, bottom)
 			bottomMesh.rotateX(Math.PI / 2)
 			bottomMesh.position.x = this.position.x
 			bottomMesh.position.y = this.position.y - dimension / 2
@@ -94,22 +43,11 @@ class Block {
 			geo.push(bottomMesh)
 		}
 
-		let sideTexture = new THREE.TextureLoader().load(this.sources.side)
-		sideTexture.wrapS = THREE.RepeatWrapping
-		sideTexture.wrapT = THREE.RepeatWrapping
-		sideTexture.magFilter = THREE.NearestFilter
-		sideTexture.minFilter = THREE.NearestMipMapLinearFilter
-
-		const sideMaterial = new THREE.MeshBasicMaterial({
-			map: sideTexture,
-			side: THREE.DoubleSide
-		})
-
 		for (let i = 0; i < 4; i++) {
 			if (specifics.sides[i]) {
 				const sideGeo = new THREE.PlaneGeometry(dimension, dimension)
 
-				const sideMesh = new THREE.Mesh(sideGeo, sideMaterial)
+				const sideMesh = new THREE.Mesh(sideGeo, side)
 
 				sideMesh.position.x = this.position.x
 				sideMesh.position.y = this.position.y
@@ -138,6 +76,8 @@ class Block {
 				geo.push(sideMesh)
 			}
 		}
+
+		// console.timeEnd('Block Get Total Mesh')
 
 		return geo
 	}

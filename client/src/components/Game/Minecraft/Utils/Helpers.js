@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 export default class Helpers {
-	static mergeMeshes = (meshes, toBufferGeometry = false) => {
+	static mergeMeshes = (meshes, toBufferGeometry = true) => {
 		let finalGeometry,
 			materials = [],
 			mergedGeometry = new THREE.Geometry(),
@@ -32,5 +32,8 @@ export default class Helpers {
 	}
 	static round(value, decimals) {
 		return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals)
+	}
+	static getChunkRepresentation(x, z, semi = false) {
+		return `${x}:${z}${semi ? ';' : ''}`
 	}
 }

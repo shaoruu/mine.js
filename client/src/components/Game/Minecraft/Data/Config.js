@@ -10,13 +10,22 @@ export default {
 	maxAnisotropy: 1,
 	dpr: 1,
 	duration: 500,
-	model: {
-		path: './assets/models/Teapot.json',
-		scale: 20
-	},
-	texture: {
-		path: './assets/textures/',
-		imageFiles: [{ name: 'UV', image: 'UV_Grid_Sm.jpg' }]
+	textures: {
+		1: {
+			side: require('../../../../assets/blocks/stone.png'),
+			top: require('../../../../assets/blocks/stone.png'),
+			bottom: require('../../../../assets/blocks/stone.png')
+		},
+		2: {
+			side: require('../../../../assets/blocks/grass_side.png'),
+			top: require('../../../../assets/blocks/grass_top.png'),
+			bottom: require('../../../../assets/blocks/dirt.png')
+		},
+		3: {
+			side: require('../../../../assets/blocks/dirt.png'),
+			top: require('../../../../assets/blocks/dirt.png'),
+			bottom: require('../../../../assets/blocks/dirt.png')
+		}
 	},
 	mesh: {
 		enableHelper: false,
@@ -29,12 +38,13 @@ export default {
 	},
 	fog: {
 		color: 0xffffff,
-		near: 0.0008
+		near: 0.0008,
+		far: 3000
 	},
 	camera: {
 		fov: 75,
 		near: 1,
-		far: 1000,
+		far: 3000,
 		aspect: 1,
 		posX: 0,
 		posY: 0,
@@ -43,13 +53,14 @@ export default {
 	player: {
 		inertia: 5.0,
 		speed: {
-			horizontal: 1400,
-			vertical: 1800
+			horizontal: 600,
+			vertical: 800
 		},
 		coordinateDec: 2,
 		posX: 0,
 		posY: 30,
-		posZ: 0
+		posZ: 0,
+		renderDistance: 3 // 3 chunks
 	},
 	controls: {
 		autoRotate: true,
@@ -115,11 +126,11 @@ export default {
 		z: 0.75
 	},
 	block: {
-		dimension: 20
+		dimension: 40
 	},
 	chunk: {
-		size: 16,
-		height: 20
+		size: 8,
+		height: 16
 	},
 	world: {
 		minHorizontalSize: 10, // minimum chunk dimension for world,

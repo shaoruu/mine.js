@@ -6,10 +6,11 @@ import hashPassword from '../utils/hashPassword'
 import generateSingleChunk from '../utils/generateSingleChunk'
 import getChunkRepresentation from '../utils/getChunkRepresentation'
 
-const size = 16,
+const size = 8,
 	dimension = 20,
-	height = 20,
-	renderDistance = 3
+	height = 16,
+	renderDistance = 2,
+	loadDistance = 4
 
 const Mutation = {
 	async createUser(parent, args, { prisma }, info) {
@@ -100,8 +101,6 @@ const Mutation = {
 			'{ id }'
 		)
 
-		const initialChunk = generateSingleChunk(0, 0, size, height)
-
 		// Adding owner into world
 		const owner = await prisma.mutation.createPlayer({
 			data: {
@@ -122,7 +121,7 @@ const Mutation = {
 				z: 0,
 				dirx: 0,
 				diry: 0,
-				loadedChunks: getChunkRepresentation(initialChunk.x, initialChunk.z)
+				loadedChunks: ''
 			}
 		})
 
@@ -136,51 +135,78 @@ const Mutation = {
 				data: {
 					players: {
 						connect: [{ id: owner.id }]
-					},
-					chunks: {
-						create: [
-							{
-								...initialChunk,
-								world: {
-									connect: {
-										id: world.id
-									}
-								}
-							}
-						]
 					}
 				}
 			},
 			info
 		)
 	},
-	updatePlayer(parent, args, { prisma }, info) {
-		const id = args.data.id
+	async updatePlayer(parent, args, { prisma }, info) {
+		const playerId = args.data.id
 		delete args.data.id
 
-		// console.log({ ...args.data })
 		const { x, z } = args.data
-		console.log(Math.floor(x / size), Math.floor(z / size))
 		const chunkx = Math.floor(x / size),
 			chunkz = Math.floor(z / size)
+
+		console.log(args.data.x, args.data.y, args.data.z)
+
+		const player = await prisma.query.player(
+			{
+				where: {
+					id: playerId
+				}
+			},
+			`{
+                loadedChunks
+            world {
+                id
+                chunks {
+                    coordx
+                    coordz
+                }
+            }
+        }`
+		)
+
+		const {
+			world: { id: worldId, chunks: worldChunk }
+		} = player
+
+		const worldLoadedChunks = {}
+		for (let chunk of worldChunk) {
+			worldLoadedChunks[`${chunk.coordx}:${chunk.coordz}`] = true
+		}
+
+		for (let i = chunkx - loadDistance; i <= chunkx + loadDistance; i++)
+			for (let j = chunkz - loadDistance; j <= chunkz + loadDistance; j++) {
+				if (worldLoadedChunks[`${i}:${j}`]) continue
+				await prisma.mutation.createChunk({
+					data: {
+						...generateSingleChunk(i, j, size, height),
+						world: {
+							connect: {
+								id: worldId
+							}
+						}
+					}
+				})
+			}
 
 		let chunks = ''
 		for (let i = chunkx - renderDistance; i <= chunkx + renderDistance; i++)
 			for (let j = chunkz - renderDistance; j <= chunkz + renderDistance; j++)
-				chunks += getChunkRepresentation(i, j)
+				chunks += getChunkRepresentation(i, j, true)
 
-		return prisma.mutation.updatePlayer(
-			{
-				where: {
-					id
-				},
-				data: {
-					...args.data,
-					loadedChunks: chunks
-				}
+		return prisma.mutation.updatePlayer({
+			where: {
+				id: playerId
 			},
-			info
-		)
+			data: {
+				...args.data,
+				loadedChunks: chunks
+			}
+		})
 	}
 }
 

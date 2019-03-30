@@ -55,6 +55,7 @@ type Player {
 
 type Chunk {
 	id: ID!
+	world: World!
 	blocks: String!
 	coordx: Int!
 	coordz: Int!

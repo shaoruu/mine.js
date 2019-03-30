@@ -1,3 +1,3 @@
-export default (x, z) => {
-	return `${x}:${z};`
+export default (x, z, semi = false) => {
+	return `${x}:${z}${semi ? ';' : ''}`
 }

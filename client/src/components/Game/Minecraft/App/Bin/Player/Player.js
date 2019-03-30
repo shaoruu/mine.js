@@ -40,8 +40,8 @@ export default class Controls {
 	}
 
 	update = () => {
+		const now = performance.now()
 		if (this.threeControls.isLocked) {
-			const now = performance.now()
 			const delta = (now - this.prevTime) / 1000
 
 			// Extract movement info for later convenience
@@ -74,14 +74,12 @@ export default class Controls {
 				this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
 
 			// Translation of player
-			this.getObject().translateX(this.velocity.x * delta)
-			this.getObject().translateY(this.velocity.y * delta)
-			this.getObject().translateZ(this.velocity.z * delta)
-
-			this.prevTime = now
-		} else {
-			this.prevTime = performance.now()
+			const object = this.getObject()
+			object.translateX(this.velocity.x * delta)
+			object.translateY(this.velocity.y * delta)
+			object.translateZ(this.velocity.z * delta)
 		}
+		this.prevTime = now
 	}
 
 	getObject = () => this.threeControls.getObject()
