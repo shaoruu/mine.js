@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import Config from '../../../Data/Config'
 import Chunk from './Chunk/Chunk'
 import Helpers from '../../../Utils/Helpers'
+import BlockMaterials from './Chunk/Block/BlockMaterials'
 
 class World {
 	constructor(scene, worldData) {
@@ -18,13 +19,22 @@ class World {
 		this.mesh = null
 		this.chunks = {}
 
-		this._digestChunks(chunks).then(() => {
-			console.log('[MinecraftJS] Finished loading world chunks.')
-		})
+		// Loaders
+		this.materialManager = new BlockMaterials()
+		this.loadTextures()
+
+		this._digestChunks(chunks)
 		// this._generateChunks()
 	}
 
-	requestMeshUpdate = async ({ x, z }) => {
+	loadTextures = () => {
+		Helpers.log('Loading Textures...')
+		for (let key in Config.textures.blocks)
+			this.materialManager.load(key, Config.textures.blocks[key])
+		Helpers.log('Finished Loading Textures.')
+	}
+
+	requestMeshUpdate = ({ x, z }) => {
 		// ? PROBABLY SELECT ALL USING CHUNKS FIRST?
 		// ? AND PROBABLY CHANGING CHUNKDICTIONARY INTO AN ARRAY?
 
@@ -45,12 +55,8 @@ class World {
 		// TODO: CHUNK FACES ARES STILL NOT DETECTED
 		const updatedChunks = {}
 
-		for (let i = chunkx - renderDistance - 1; i <= chunkx + renderDistance + 1; i++)
-			for (
-				let j = chunkz - renderDistance - 1;
-				j <= chunkz + renderDistance + 1;
-				j++
-			) {
+		for (let i = chunkx - renderDistance; i <= chunkx + renderDistance; i++)
+			for (let j = chunkz - renderDistance; j <= chunkz + renderDistance; j++) {
 				const tempChunk = this.chunks[Helpers.getChunkRepresentation(i, j)]
 				if (!tempChunk) continue
 				if (isInRange(tempChunk)) {
@@ -76,7 +82,7 @@ class World {
 		shouldBeRemoved.forEach(obj => this.scene.remove(obj))
 	}
 
-	registerChunk = async chunk => {
+	registerChunk = chunk => {
 		const { blocks, coordx, coordz } = chunk
 
 		if (this.chunks[Helpers.getChunkRepresentation(coordx, coordz)]) return
@@ -96,6 +102,7 @@ class World {
 		}
 		// Creating a chunk instance and providing it with its neighbors
 		const newChunk = new Chunk(
+			this.materialManager,
 			{
 				origin: {
 					x: coordx,
@@ -111,33 +118,32 @@ class World {
 		// Knitting instance to neighbors
 		if (neighbors.north) {
 			neighbors.north.setSouth(newChunk)
-			// await neighbors.north.calculate()
-			await neighbors.north.combineMesh()
+			neighbors.north.combineMesh()
 		}
 		if (neighbors.south) {
 			neighbors.south.setNorth(newChunk)
-			// await neighbors.south.calculate()
-			await neighbors.south.combineMesh()
+			neighbors.south.combineMesh()
 		}
 		if (neighbors.east) {
 			neighbors.east.setWest(newChunk)
-			// await neighbors.east.calculate()
-			await neighbors.east.combineMesh()
+			neighbors.east.combineMesh()
 		}
 		if (neighbors.west) {
 			neighbors.west.setEast(newChunk)
-			// await neighbors.west.calculate()
-			await neighbors.west.combineMesh()
+			neighbors.west.combineMesh()
 		}
 
-		await newChunk.calculate()
-		await newChunk.combineMesh()
+		newChunk.combineMesh()
 		this.chunks[newChunk.getChunkRepresentation()] = newChunk
 	}
 
-	_digestChunks = async chunks => {
-		for (let chunk of chunks)
-			await this.registerChunk(chunk).then(() => console.log('chunk loaded.'))
+	_digestChunks = chunks => {
+		Helpers.log('Loading Existing Chunks...')
+		for (let chunk of chunks) {
+			this.registerChunk(chunk)
+			console.log('chunk loaded.')
+		}
+		Helpers.log('Finished Loading Existing Chunks.')
 	}
 	_digestBlocks = blocks => {
 		// console.time('Blocks Digestion')

@@ -36,4 +36,7 @@ export default class Helpers {
 	static getChunkRepresentation(x, z, semi = false) {
 		return `${x}:${z}${semi ? ';' : ''}`
 	}
+	static log(message) {
+		console.log('[MinecraftJS] ' + message)
+	}
 }

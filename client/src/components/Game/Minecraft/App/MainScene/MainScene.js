@@ -46,7 +46,7 @@ class MainScene extends Component {
 
 		// Main scene creation
 		this.scene = new THREE.Scene()
-		this.scene.background = new THREE.Color(0xffffff)
+		this.scene.background = new THREE.Color(Config.fog.color)
 		this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
 
 		// Main renderer constructor
@@ -96,6 +96,8 @@ class MainScene extends Component {
 				!(JSON.stringify(playerCoords) === JSON.stringify(this.prevPos)) ||
 				!(JSON.stringify(playerDirs) === JSON.stringify(this.prevDirs))
 			) {
+				this.prevPos = { ...playerCoords }
+				this.prevDirs = { ...playerDirs }
 				this.updatePlayer({
 					variables: {
 						id: this.currentPlayer.id,
@@ -103,8 +105,6 @@ class MainScene extends Component {
 						...playerDirs
 					}
 				})
-				this.prevPos = { ...playerCoords }
-				this.prevDirs = { ...playerDirs }
 			}
 		}, 200)
 	}
@@ -210,17 +210,13 @@ class MainScene extends Component {
 										<Subscription
 											subscription={CHUNK_SUBSCRIPTION}
 											variables={{ worldId }}
-											onSubscriptionData={async ({
+											onSubscriptionData={({
 												subscriptionData: {
 													data: { chunk }
 												}
 											}) => {
 												const { node } = chunk
-												await this.world
-													.registerChunk(node)
-													.then(() =>
-														console.log('chunk loaded.')
-													)
+												this.world.registerChunk(node)
 											}}
 										/>
 									</div>

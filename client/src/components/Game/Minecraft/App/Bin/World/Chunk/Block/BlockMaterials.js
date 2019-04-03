@@ -23,18 +23,18 @@ class BlockMaterials {
 			texture.wrapT = THREE.RepeatWrapping
 			texture.magFilter = THREE.NearestFilter
 			texture.minFilter = THREE.NearestMipMapLinearFilter
+			texture.flipY = true
 
-			const material = new THREE.MeshBasicMaterial({
+			var material = new THREE.MeshBasicMaterial({
 				map: texture,
 				side: THREE.DoubleSide
 			})
+
 			this.materials[id][key] = material
 		}
 	}
 
-	get = id => {
-		return this.materials[id]
-	}
+	get = id => this.materials[id]
 }
 
 export default BlockMaterials

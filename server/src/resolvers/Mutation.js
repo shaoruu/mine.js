@@ -5,12 +5,11 @@ import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
 import generateSingleChunk from '../utils/generateSingleChunk'
 import getChunkRepresentation from '../utils/getChunkRepresentation'
+import Config from '../data/Config'
 
-const size = 8,
-	dimension = 20,
-	height = 16,
-	renderDistance = 2,
-	loadDistance = 4
+const size = Config.chunk.size,
+	renderDistance = Config.player.renderDistance,
+	loadDistance = Config.world.loadDistance
 
 const Mutation = {
 	async createUser(parent, args, { prisma }, info) {
@@ -160,6 +159,7 @@ const Mutation = {
 			`{
                 loadedChunks
             world {
+                seed
                 id
                 chunks {
                     coordx
@@ -170,20 +170,20 @@ const Mutation = {
 		)
 
 		const {
-			world: { id: worldId, chunks: worldChunk }
+			world: { id: worldId, chunks: worldChunk, seed }
 		} = player
 
 		const worldLoadedChunks = {}
 		for (let chunk of worldChunk) {
-			worldLoadedChunks[`${chunk.coordx}:${chunk.coordz}`] = true
+			worldLoadedChunks[getChunkRepresentation(chunk.coordx, chunk.coordz)] = true
 		}
 
 		for (let i = chunkx - loadDistance; i <= chunkx + loadDistance; i++)
 			for (let j = chunkz - loadDistance; j <= chunkz + loadDistance; j++) {
-				if (worldLoadedChunks[`${i}:${j}`]) continue
+				if (worldLoadedChunks[getChunkRepresentation(i, j)]) continue
 				await prisma.mutation.createChunk({
 					data: {
-						...generateSingleChunk(i, j, size, height),
+						...generateSingleChunk(seed, i, j),
 						world: {
 							connect: {
 								id: worldId

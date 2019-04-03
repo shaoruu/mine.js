@@ -11,20 +11,42 @@ export default {
 	dpr: 1,
 	duration: 500,
 	textures: {
-		1: {
-			side: require('../../../../assets/blocks/stone.png'),
-			top: require('../../../../assets/blocks/stone.png'),
-			bottom: require('../../../../assets/blocks/stone.png')
-		},
-		2: {
-			side: require('../../../../assets/blocks/grass_side.png'),
-			top: require('../../../../assets/blocks/grass_top.png'),
-			bottom: require('../../../../assets/blocks/dirt.png')
-		},
-		3: {
-			side: require('../../../../assets/blocks/dirt.png'),
-			top: require('../../../../assets/blocks/dirt.png'),
-			bottom: require('../../../../assets/blocks/dirt.png')
+		blocks: {
+			1: {
+				side: require('../../../../assets/blocks/stone.png'),
+				top: require('../../../../assets/blocks/stone.png'),
+				bottom: require('../../../../assets/blocks/stone.png')
+			},
+			2: {
+				side: require('../../../../assets/blocks/grass_side.png'),
+				top: require('../../../../assets/blocks/grass_top.png'),
+				bottom: require('../../../../assets/blocks/dirt.png')
+			},
+			3: {
+				side: require('../../../../assets/blocks/dirt.png'),
+				top: require('../../../../assets/blocks/dirt.png'),
+				bottom: require('../../../../assets/blocks/dirt.png')
+			},
+			8: {
+				side: require('../../../../assets/blocks/water_flow.png'),
+				top: require('../../../../assets/blocks/water_flow.png'),
+				bottom: require('../../../../assets/blocks/water_flow.png')
+			},
+			12: {
+				side: require('../../../../assets/blocks/sand.png'),
+				top: require('../../../../assets/blocks/sand.png'),
+				bottom: require('../../../../assets/blocks/sand.png')
+			},
+			17: {
+				side: require('../../../../assets/blocks/log_oak.png'),
+				top: require('../../../../assets/blocks/log_oak_top.png'),
+				bottom: require('../../../../assets/blocks/log_oak_top.png')
+			},
+			18: {
+				side: require('../../../../assets/blocks/leaves_oak.png'),
+				top: require('../../../../assets/blocks/leaves_oak.png'),
+				bottom: require('../../../../assets/blocks/leaves_oak.png')
+			}
 		}
 	},
 	mesh: {
@@ -37,7 +59,7 @@ export default {
 		}
 	},
 	fog: {
-		color: 0xffffff,
+		color: 0xdcebf4,
 		near: 0.0008,
 		far: 3000
 	},
@@ -60,7 +82,7 @@ export default {
 		posX: 0,
 		posY: 30,
 		posZ: 0,
-		renderDistance: 3 // 3 chunks
+		renderDistance: 3
 	},
 	controls: {
 		autoRotate: true,
@@ -126,14 +148,10 @@ export default {
 		z: 0.75
 	},
 	block: {
-		dimension: 40
+		dimension: 20
 	},
 	chunk: {
-		size: 8,
-		height: 16
-	},
-	world: {
-		minHorizontalSize: 10, // minimum chunk dimension for world,
-		minVerticalSize: 10
+		size: 16,
+		height: 20
 	}
 }

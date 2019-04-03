@@ -10,31 +10,31 @@ import Config from '../Data/Config'
 const size = Config.block.dimension
 
 const PointerLockControls = function(camera, domElement, initPos, initDirs) {
-	var scope = this
+	let scope = this
 
 	this.domElement = domElement || document.body
 	this.isLocked = false
 
 	camera.rotation.set(0, 0, 0)
 
-	var pitchObject = new THREE.Object3D()
+	let pitchObject = new THREE.Object3D()
 	pitchObject.add(camera)
 
-	var yawObject = new THREE.Object3D()
+	let yawObject = new THREE.Object3D()
 	yawObject.position.set(initPos.x * size, initPos.y * size, initPos.z * size)
 	yawObject.add(pitchObject)
 
 	pitchObject.rotation.x = initDirs.dirx
 	yawObject.rotation.y = initDirs.diry
 
-	var PI_2 = Math.PI / 2
+	let PI_2 = Math.PI / 2
 
 	function onMouseMove(event) {
 		if (scope.isLocked === false) return
 
-		var movementX =
+		let movementX =
 			event.movementX || event.mozMovementX || event.webkitMovementX || 0
-		var movementY =
+		let movementY =
 			event.movementY || event.mozMovementY || event.webkitMovementY || 0
 
 		yawObject.rotation.y -= movementX * 0.002
@@ -86,8 +86,8 @@ const PointerLockControls = function(camera, domElement, initPos, initDirs) {
 	this.getDirection = (function() {
 		// assumes the camera itself is not rotated
 
-		var direction = new THREE.Vector3(0, 0, -1)
-		var rotation = new THREE.Euler(0, 0, 0, 'YXZ')
+		let direction = new THREE.Vector3(0, 0, -1)
+		let rotation = new THREE.Euler(0, 0, 0, 'YXZ')
 
 		return function(v) {
 			rotation.set(pitchObject.rotation.x, yawObject.rotation.y, 0)
