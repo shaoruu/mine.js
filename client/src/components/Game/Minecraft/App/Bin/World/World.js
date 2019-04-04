@@ -16,7 +16,6 @@ class World {
 		// Connections to outer space
 		this.scene = scene
 
-		this.mesh = null
 		this.chunks = {}
 
 		// Loaders
@@ -24,7 +23,6 @@ class World {
 		this.loadTextures()
 
 		this._digestChunks(chunks)
-		// this._generateChunks()
 	}
 
 	loadTextures = () => {
@@ -35,9 +33,6 @@ class World {
 	}
 
 	requestMeshUpdate = ({ x, z }) => {
-		// ? PROBABLY SELECT ALL USING CHUNKS FIRST?
-		// ? AND PROBABLY CHANGING CHUNKDICTIONARY INTO AN ARRAY?
-
 		const chunkx = Math.floor(x / Config.chunk.size),
 			chunkz = Math.floor(z / Config.chunk.size)
 
@@ -52,7 +47,6 @@ class World {
 			)
 		}
 
-		// TODO: CHUNK FACES ARES STILL NOT DETECTED
 		const updatedChunks = {}
 
 		for (let i = chunkx - renderDistance; i <= chunkx + renderDistance; i++)
@@ -82,56 +76,19 @@ class World {
 		shouldBeRemoved.forEach(obj => this.scene.remove(obj))
 	}
 
-	registerChunk = chunk => {
+	registerChunk = async chunk => {
 		const { blocks, coordx, coordz } = chunk
 
 		if (this.chunks[Helpers.getChunkRepresentation(coordx, coordz)]) return
 
-		// TODO: REWRITE THIS UGLY CODE BELOW
-		/**
-		 * NORTH = +Z
-		 * SOUTH = -Z
-		 * EAST  = +X
-		 * WEST  = -X
-		 */
-		const neighbors = {
-			north: this.chunks[Helpers.getChunkRepresentation(coordx, coordz + 1)],
-			south: this.chunks[Helpers.getChunkRepresentation(coordx, coordz - 1)],
-			east: this.chunks[Helpers.getChunkRepresentation(coordx + 1, coordz)],
-			west: this.chunks[Helpers.getChunkRepresentation(coordx - 1, coordz)]
-		}
 		// Creating a chunk instance and providing it with its neighbors
-		const newChunk = new Chunk(
-			this.materialManager,
-			{
-				origin: {
-					x: coordx,
-					z: coordz
-				},
-				blocks: this._digestBlocks(blocks)
+		const newChunk = new Chunk(this.materialManager, {
+			origin: {
+				x: coordx,
+				z: coordz
 			},
-			{
-				...neighbors
-			}
-		)
-
-		// Knitting instance to neighbors
-		if (neighbors.north) {
-			neighbors.north.setSouth(newChunk)
-			neighbors.north.combineMesh()
-		}
-		if (neighbors.south) {
-			neighbors.south.setNorth(newChunk)
-			neighbors.south.combineMesh()
-		}
-		if (neighbors.east) {
-			neighbors.east.setWest(newChunk)
-			neighbors.east.combineMesh()
-		}
-		if (neighbors.west) {
-			neighbors.west.setEast(newChunk)
-			neighbors.west.combineMesh()
-		}
+			blocks: this._digestBlocks(blocks)
+		})
 
 		newChunk.combineMesh()
 		this.chunks[newChunk.getChunkRepresentation()] = newChunk
@@ -147,7 +104,7 @@ class World {
 	}
 	_digestBlocks = blocks => {
 		// console.time('Blocks Digestion')
-		const bs = blocks
+		return blocks
 			.slice(0, -1)
 			.split(';')
 			.map(og => {
@@ -165,7 +122,6 @@ class World {
 				}
 			})
 		// console.timeEnd('Blocks Digestion')
-		return bs
 	}
 	_handleMeshCombining = meshGroup => {
 		this.mesh = Helpers.mergeMeshes(meshGroup)
