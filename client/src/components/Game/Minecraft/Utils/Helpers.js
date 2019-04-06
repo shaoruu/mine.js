@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import Config from '../Data/Config'
 
 export default class Helpers {
 	static mergeMeshes = (meshes, toBufferGeometry = true) => {
@@ -33,8 +34,8 @@ export default class Helpers {
 	static round(value, decimals) {
 		return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals)
 	}
-	static getChunkRepresentation(x, z, semi = false) {
-		return `${x}:${z}${semi ? ';' : ''}`
+	static getChunkRepresentation(x, y, z, semi = false) {
+		return `${x}:${y}:${z}${semi ? ';' : ''}`
 	}
 	static log(message) {
 		console.log('[MinecraftJS] ' + message)
@@ -123,4 +124,13 @@ export default class Helpers {
 		face1[2] = new THREE.Vector2(sMin, tMax)
 		geo.uvsNeedUpdate = true
 	}
+
+	/**
+	 * Converting player position to chunk position
+	 */
+	static toChunkCoords = ({ x, y, z }) => ({
+		coordx: Math.floor(x / Config.chunk.size),
+		coordy: Math.floor(y / Config.chunk.size),
+		coordz: Math.floor(z / Config.chunk.size)
+	})
 }

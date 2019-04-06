@@ -61,12 +61,12 @@ export default {
 	fog: {
 		color: 0xdcebf4,
 		near: 0.0008,
-		far: 3000
+		far: 2000
 	},
 	camera: {
 		fov: 75,
 		near: 1,
-		far: 3000,
+		far: 2000,
 		aspect: 1,
 		posX: 0,
 		posY: 0,
@@ -82,7 +82,8 @@ export default {
 		posX: 0,
 		posY: 30,
 		posZ: 0,
-		renderDistance: 3
+		horzD: 3,
+		vertD: 2
 	},
 	controls: {
 		autoRotate: true,
@@ -112,9 +113,9 @@ export default {
 		enabled: true,
 		color: 0xf0f0f0,
 		intensity: 0.4,
-		x: -75,
-		y: 280,
-		z: 150
+		x: 0,
+		y: 1,
+		z: 0
 	},
 	shadow: {
 		enabled: true,
@@ -148,10 +149,13 @@ export default {
 		z: 0.75
 	},
 	block: {
-		dimension: 20
+		dimension: 30
 	},
 	chunk: {
 		size: 16,
-		height: 20
+		height: 50
+	},
+	world: {
+		noiseConstant: 50
 	}
 }

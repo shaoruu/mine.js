@@ -19,7 +19,7 @@ type Mutation {
 
 type Subscription {
 	# Chunks
-	chunk(worldId: ID!): ChunkSubscriptionPayload!
+	block(worldId: ID!): BlockSubscriptionPayload!
 }
 
 type User {
@@ -27,6 +27,7 @@ type User {
 	username: String!
 	email: String!
 	password: String!
+	worlds: [World!]!
 	updatedAt: String!
 	createdAt: String!
 }
@@ -35,7 +36,7 @@ type World {
 	id: ID!
 	name: String!
 	seed: String!
-	chunks: [Chunk!]!
+	changedBlocks: [Block!]!
 	players: [Player!]!
 }
 
@@ -44,21 +45,21 @@ type Player {
 	isAdmin: Boolean!
 	gamemode: String!
 	user: User!
+	world: World!
 	lastLogin: String
 	x: Float!
 	y: Float!
 	z: Float!
 	dirx: Float!
 	diry: Float!
-	loadedChunks: String!
 }
 
-type Chunk {
-	id: ID!
+type Block {
+	type: Int!
 	world: World!
-	blocks: String!
-	coordx: Int!
-	coordz: Int!
+	x: Int!
+	y: Int!
+	z: Int!
 }
 
 input CreateUserInput {
@@ -111,7 +112,7 @@ enum MutationType {
 	DELETED
 }
 
-type ChunkSubscriptionPayload {
+type BlockSubscriptionPayload {
 	mutation: MutationType!
-	node: Chunk
+	node: Block
 }

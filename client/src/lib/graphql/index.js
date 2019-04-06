@@ -9,4 +9,4 @@ export {
 	CREATE_WORLD_SCHEMA
 } from './mutations'
 
-export { CHUNK_SUBSCRIPTION } from './subscriptions'
+export { BLOCK_SUBSCRIPTION } from './subscriptions'

@@ -1,13 +1,14 @@
 import gql from 'graphql-tag'
 
-export const CHUNK_SUBSCRIPTION = gql`
-	subscription chunk($worldId: ID!) {
-		chunk(worldId: $worldId) {
+export const BLOCK_SUBSCRIPTION = gql`
+	subscription block($worldId: ID!) {
+		block(worldId: $worldId) {
 			mutation
 			node {
-				blocks
-				coordx
-				coordz
+				type
+				x
+				y
+				z
 			}
 		}
 	}

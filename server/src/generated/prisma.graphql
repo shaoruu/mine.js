@@ -1,7 +1,7 @@
 # source: http://localhost:4466
-# timestamp: Fri Mar 22 2019 01:28:46 GMT+0800 (Taipei Standard Time)
+# timestamp: Sat Apr 06 2019 11:25:09 GMT+0800 (Taipei Standard Time)
 
-type AggregateChunk {
+type AggregateBlock {
   count: Int!
 }
 
@@ -22,224 +22,191 @@ type BatchPayload {
   count: Long!
 }
 
-type Chunk implements Node {
-  id: ID!
+type Block {
+  type: Int!
   world: World!
-  blocks: String!
-  coordx: Int!
-  coordz: Int!
+  x: Int!
+  y: Int!
+  z: Int!
 }
 
 """A connection to a list of items."""
-type ChunkConnection {
+type BlockConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
   """A list of edges."""
-  edges: [ChunkEdge]!
-  aggregate: AggregateChunk!
+  edges: [BlockEdge]!
+  aggregate: AggregateBlock!
 }
 
-input ChunkCreateInput {
-  blocks: String!
-  coordx: Int!
-  coordz: Int!
-  world: WorldCreateOneWithoutChunksInput!
+input BlockCreateInput {
+  type: Int!
+  x: Int!
+  y: Int!
+  z: Int!
+  world: WorldCreateOneWithoutChangedBlocksInput!
 }
 
-input ChunkCreateManyWithoutWorldInput {
-  create: [ChunkCreateWithoutWorldInput!]
-  connect: [ChunkWhereUniqueInput!]
+input BlockCreateManyWithoutWorldInput {
+  create: [BlockCreateWithoutWorldInput!]
 }
 
-input ChunkCreateWithoutWorldInput {
-  blocks: String!
-  coordx: Int!
-  coordz: Int!
+input BlockCreateWithoutWorldInput {
+  type: Int!
+  x: Int!
+  y: Int!
+  z: Int!
 }
 
 """An edge in a connection."""
-type ChunkEdge {
+type BlockEdge {
   """The item at the end of the edge."""
-  node: Chunk!
+  node: Block!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-enum ChunkOrderByInput {
+enum BlockOrderByInput {
+  type_ASC
+  type_DESC
+  x_ASC
+  x_DESC
+  y_ASC
+  y_DESC
+  z_ASC
+  z_DESC
   id_ASC
   id_DESC
-  blocks_ASC
-  blocks_DESC
-  coordx_ASC
-  coordx_DESC
-  coordz_ASC
-  coordz_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
 }
 
-type ChunkPreviousValues {
-  id: ID!
-  blocks: String!
-  coordx: Int!
-  coordz: Int!
+type BlockPreviousValues {
+  type: Int!
+  x: Int!
+  y: Int!
+  z: Int!
 }
 
-input ChunkScalarWhereInput {
+input BlockScalarWhereInput {
   """Logical AND on all given filters."""
-  AND: [ChunkScalarWhereInput!]
+  AND: [BlockScalarWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [ChunkScalarWhereInput!]
+  OR: [BlockScalarWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [ChunkScalarWhereInput!]
-  id: ID
+  NOT: [BlockScalarWhereInput!]
+  type: Int
 
   """All values that are not equal to given value."""
-  id_not: ID
+  type_not: Int
 
   """All values that are contained in given list."""
-  id_in: [ID!]
+  type_in: [Int!]
 
   """All values that are not contained in given list."""
-  id_not_in: [ID!]
+  type_not_in: [Int!]
 
   """All values less than the given value."""
-  id_lt: ID
+  type_lt: Int
 
   """All values less than or equal the given value."""
-  id_lte: ID
+  type_lte: Int
 
   """All values greater than the given value."""
-  id_gt: ID
+  type_gt: Int
 
   """All values greater than or equal the given value."""
-  id_gte: ID
-
-  """All values containing the given string."""
-  id_contains: ID
-
-  """All values not containing the given string."""
-  id_not_contains: ID
-
-  """All values starting with the given string."""
-  id_starts_with: ID
-
-  """All values not starting with the given string."""
-  id_not_starts_with: ID
-
-  """All values ending with the given string."""
-  id_ends_with: ID
-
-  """All values not ending with the given string."""
-  id_not_ends_with: ID
-  blocks: String
+  type_gte: Int
+  x: Int
 
   """All values that are not equal to given value."""
-  blocks_not: String
+  x_not: Int
 
   """All values that are contained in given list."""
-  blocks_in: [String!]
+  x_in: [Int!]
 
   """All values that are not contained in given list."""
-  blocks_not_in: [String!]
+  x_not_in: [Int!]
 
   """All values less than the given value."""
-  blocks_lt: String
+  x_lt: Int
 
   """All values less than or equal the given value."""
-  blocks_lte: String
+  x_lte: Int
 
   """All values greater than the given value."""
-  blocks_gt: String
+  x_gt: Int
 
   """All values greater than or equal the given value."""
-  blocks_gte: String
-
-  """All values containing the given string."""
-  blocks_contains: String
-
-  """All values not containing the given string."""
-  blocks_not_contains: String
-
-  """All values starting with the given string."""
-  blocks_starts_with: String
-
-  """All values not starting with the given string."""
-  blocks_not_starts_with: String
-
-  """All values ending with the given string."""
-  blocks_ends_with: String
-
-  """All values not ending with the given string."""
-  blocks_not_ends_with: String
-  coordx: Int
+  x_gte: Int
+  y: Int
 
   """All values that are not equal to given value."""
-  coordx_not: Int
+  y_not: Int
 
   """All values that are contained in given list."""
-  coordx_in: [Int!]
+  y_in: [Int!]
 
   """All values that are not contained in given list."""
-  coordx_not_in: [Int!]
+  y_not_in: [Int!]
 
   """All values less than the given value."""
-  coordx_lt: Int
+  y_lt: Int
 
   """All values less than or equal the given value."""
-  coordx_lte: Int
+  y_lte: Int
 
   """All values greater than the given value."""
-  coordx_gt: Int
+  y_gt: Int
 
   """All values greater than or equal the given value."""
-  coordx_gte: Int
-  coordz: Int
+  y_gte: Int
+  z: Int
 
   """All values that are not equal to given value."""
-  coordz_not: Int
+  z_not: Int
 
   """All values that are contained in given list."""
-  coordz_in: [Int!]
+  z_in: [Int!]
 
   """All values that are not contained in given list."""
-  coordz_not_in: [Int!]
+  z_not_in: [Int!]
 
   """All values less than the given value."""
-  coordz_lt: Int
+  z_lt: Int
 
   """All values less than or equal the given value."""
-  coordz_lte: Int
+  z_lte: Int
 
   """All values greater than the given value."""
-  coordz_gt: Int
+  z_gt: Int
 
   """All values greater than or equal the given value."""
-  coordz_gte: Int
+  z_gte: Int
 }
 
-type ChunkSubscriptionPayload {
+type BlockSubscriptionPayload {
   mutation: MutationType!
-  node: Chunk
+  node: Block
   updatedFields: [String!]
-  previousValues: ChunkPreviousValues
+  previousValues: BlockPreviousValues
 }
 
-input ChunkSubscriptionWhereInput {
+input BlockSubscriptionWhereInput {
   """Logical AND on all given filters."""
-  AND: [ChunkSubscriptionWhereInput!]
+  AND: [BlockSubscriptionWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [ChunkSubscriptionWhereInput!]
+  OR: [BlockSubscriptionWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [ChunkSubscriptionWhereInput!]
+  NOT: [BlockSubscriptionWhereInput!]
 
   """
   The subscription event gets dispatched when it's listed in mutation_in
@@ -260,200 +227,132 @@ input ChunkSubscriptionWhereInput {
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
   updatedFields_contains_some: [String!]
-  node: ChunkWhereInput
+  node: BlockWhereInput
 }
 
-input ChunkUpdateInput {
-  blocks: String
-  coordx: Int
-  coordz: Int
-  world: WorldUpdateOneRequiredWithoutChunksInput
+input BlockUpdateManyDataInput {
+  type: Int
+  x: Int
+  y: Int
+  z: Int
 }
 
-input ChunkUpdateManyDataInput {
-  blocks: String
-  coordx: Int
-  coordz: Int
+input BlockUpdateManyMutationInput {
+  type: Int
+  x: Int
+  y: Int
+  z: Int
 }
 
-input ChunkUpdateManyMutationInput {
-  blocks: String
-  coordx: Int
-  coordz: Int
+input BlockUpdateManyWithoutWorldInput {
+  create: [BlockCreateWithoutWorldInput!]
+  updateMany: [BlockUpdateManyWithWhereNestedInput!]
+  deleteMany: [BlockScalarWhereInput!]
 }
 
-input ChunkUpdateManyWithoutWorldInput {
-  create: [ChunkCreateWithoutWorldInput!]
-  connect: [ChunkWhereUniqueInput!]
-  set: [ChunkWhereUniqueInput!]
-  disconnect: [ChunkWhereUniqueInput!]
-  delete: [ChunkWhereUniqueInput!]
-  update: [ChunkUpdateWithWhereUniqueWithoutWorldInput!]
-  updateMany: [ChunkUpdateManyWithWhereNestedInput!]
-  deleteMany: [ChunkScalarWhereInput!]
-  upsert: [ChunkUpsertWithWhereUniqueWithoutWorldInput!]
+input BlockUpdateManyWithWhereNestedInput {
+  where: BlockScalarWhereInput!
+  data: BlockUpdateManyDataInput!
 }
 
-input ChunkUpdateManyWithWhereNestedInput {
-  where: ChunkScalarWhereInput!
-  data: ChunkUpdateManyDataInput!
-}
-
-input ChunkUpdateWithoutWorldDataInput {
-  blocks: String
-  coordx: Int
-  coordz: Int
-}
-
-input ChunkUpdateWithWhereUniqueWithoutWorldInput {
-  where: ChunkWhereUniqueInput!
-  data: ChunkUpdateWithoutWorldDataInput!
-}
-
-input ChunkUpsertWithWhereUniqueWithoutWorldInput {
-  where: ChunkWhereUniqueInput!
-  update: ChunkUpdateWithoutWorldDataInput!
-  create: ChunkCreateWithoutWorldInput!
-}
-
-input ChunkWhereInput {
+input BlockWhereInput {
   """Logical AND on all given filters."""
-  AND: [ChunkWhereInput!]
+  AND: [BlockWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [ChunkWhereInput!]
+  OR: [BlockWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [ChunkWhereInput!]
-  id: ID
+  NOT: [BlockWhereInput!]
+  type: Int
 
   """All values that are not equal to given value."""
-  id_not: ID
+  type_not: Int
 
   """All values that are contained in given list."""
-  id_in: [ID!]
+  type_in: [Int!]
 
   """All values that are not contained in given list."""
-  id_not_in: [ID!]
+  type_not_in: [Int!]
 
   """All values less than the given value."""
-  id_lt: ID
+  type_lt: Int
 
   """All values less than or equal the given value."""
-  id_lte: ID
+  type_lte: Int
 
   """All values greater than the given value."""
-  id_gt: ID
+  type_gt: Int
 
   """All values greater than or equal the given value."""
-  id_gte: ID
-
-  """All values containing the given string."""
-  id_contains: ID
-
-  """All values not containing the given string."""
-  id_not_contains: ID
-
-  """All values starting with the given string."""
-  id_starts_with: ID
-
-  """All values not starting with the given string."""
-  id_not_starts_with: ID
-
-  """All values ending with the given string."""
-  id_ends_with: ID
-
-  """All values not ending with the given string."""
-  id_not_ends_with: ID
-  blocks: String
+  type_gte: Int
+  x: Int
 
   """All values that are not equal to given value."""
-  blocks_not: String
+  x_not: Int
 
   """All values that are contained in given list."""
-  blocks_in: [String!]
+  x_in: [Int!]
 
   """All values that are not contained in given list."""
-  blocks_not_in: [String!]
+  x_not_in: [Int!]
 
   """All values less than the given value."""
-  blocks_lt: String
+  x_lt: Int
 
   """All values less than or equal the given value."""
-  blocks_lte: String
+  x_lte: Int
 
   """All values greater than the given value."""
-  blocks_gt: String
+  x_gt: Int
 
   """All values greater than or equal the given value."""
-  blocks_gte: String
-
-  """All values containing the given string."""
-  blocks_contains: String
-
-  """All values not containing the given string."""
-  blocks_not_contains: String
-
-  """All values starting with the given string."""
-  blocks_starts_with: String
-
-  """All values not starting with the given string."""
-  blocks_not_starts_with: String
-
-  """All values ending with the given string."""
-  blocks_ends_with: String
-
-  """All values not ending with the given string."""
-  blocks_not_ends_with: String
-  coordx: Int
+  x_gte: Int
+  y: Int
 
   """All values that are not equal to given value."""
-  coordx_not: Int
+  y_not: Int
 
   """All values that are contained in given list."""
-  coordx_in: [Int!]
+  y_in: [Int!]
 
   """All values that are not contained in given list."""
-  coordx_not_in: [Int!]
+  y_not_in: [Int!]
 
   """All values less than the given value."""
-  coordx_lt: Int
+  y_lt: Int
 
   """All values less than or equal the given value."""
-  coordx_lte: Int
+  y_lte: Int
 
   """All values greater than the given value."""
-  coordx_gt: Int
+  y_gt: Int
 
   """All values greater than or equal the given value."""
-  coordx_gte: Int
-  coordz: Int
+  y_gte: Int
+  z: Int
 
   """All values that are not equal to given value."""
-  coordz_not: Int
+  z_not: Int
 
   """All values that are contained in given list."""
-  coordz_in: [Int!]
+  z_in: [Int!]
 
   """All values that are not contained in given list."""
-  coordz_not_in: [Int!]
+  z_not_in: [Int!]
 
   """All values less than the given value."""
-  coordz_lt: Int
+  z_lt: Int
 
   """All values less than or equal the given value."""
-  coordz_lte: Int
+  z_lte: Int
 
   """All values greater than the given value."""
-  coordz_gt: Int
+  z_gt: Int
 
   """All values greater than or equal the given value."""
-  coordz_gte: Int
+  z_gte: Int
   world: WorldWhereInput
-}
-
-input ChunkWhereUniqueInput {
-  id: ID
 }
 
 scalar DateTime
@@ -476,27 +375,24 @@ scalar Long
 
 type Mutation {
   createPlayer(data: PlayerCreateInput!): Player!
-  createChunk(data: ChunkCreateInput!): Chunk!
+  createBlock(data: BlockCreateInput!): Block!
   createUser(data: UserCreateInput!): User!
   createWorld(data: WorldCreateInput!): World!
   updatePlayer(data: PlayerUpdateInput!, where: PlayerWhereUniqueInput!): Player
-  updateChunk(data: ChunkUpdateInput!, where: ChunkWhereUniqueInput!): Chunk
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updateWorld(data: WorldUpdateInput!, where: WorldWhereUniqueInput!): World
   deletePlayer(where: PlayerWhereUniqueInput!): Player
-  deleteChunk(where: ChunkWhereUniqueInput!): Chunk
   deleteUser(where: UserWhereUniqueInput!): User
   deleteWorld(where: WorldWhereUniqueInput!): World
   upsertPlayer(where: PlayerWhereUniqueInput!, create: PlayerCreateInput!, update: PlayerUpdateInput!): Player!
-  upsertChunk(where: ChunkWhereUniqueInput!, create: ChunkCreateInput!, update: ChunkUpdateInput!): Chunk!
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertWorld(where: WorldWhereUniqueInput!, create: WorldCreateInput!, update: WorldUpdateInput!): World!
   updateManyPlayers(data: PlayerUpdateManyMutationInput!, where: PlayerWhereInput): BatchPayload!
-  updateManyChunks(data: ChunkUpdateManyMutationInput!, where: ChunkWhereInput): BatchPayload!
+  updateManyBlocks(data: BlockUpdateManyMutationInput!, where: BlockWhereInput): BatchPayload!
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   updateManyWorlds(data: WorldUpdateManyMutationInput!, where: WorldWhereInput): BatchPayload!
   deleteManyPlayers(where: PlayerWhereInput): BatchPayload!
-  deleteManyChunks(where: ChunkWhereInput): BatchPayload!
+  deleteManyBlocks(where: BlockWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyWorlds(where: WorldWhereInput): BatchPayload!
   executeRaw(database: PrismaDatabase, query: String!): Json!
@@ -541,7 +437,6 @@ type Player implements Node {
   z: Float!
   dirx: Float!
   diry: Float!
-  loadedChunks: String!
 }
 
 """A connection to a list of items."""
@@ -563,7 +458,6 @@ input PlayerCreateInput {
   z: Float!
   dirx: Float!
   diry: Float!
-  loadedChunks: String!
   user: UserCreateOneInput!
   world: WorldCreateOneWithoutPlayersInput!
 }
@@ -582,7 +476,6 @@ input PlayerCreateWithoutWorldInput {
   z: Float!
   dirx: Float!
   diry: Float!
-  loadedChunks: String!
   user: UserCreateOneInput!
 }
 
@@ -614,8 +507,6 @@ enum PlayerOrderByInput {
   dirx_DESC
   diry_ASC
   diry_DESC
-  loadedChunks_ASC
-  loadedChunks_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -632,7 +523,6 @@ type PlayerPreviousValues {
   z: Float!
   dirx: Float!
   diry: Float!
-  loadedChunks: String!
 }
 
 input PlayerScalarWhereInput {
@@ -830,46 +720,6 @@ input PlayerScalarWhereInput {
 
   """All values greater than or equal the given value."""
   diry_gte: Float
-  loadedChunks: String
-
-  """All values that are not equal to given value."""
-  loadedChunks_not: String
-
-  """All values that are contained in given list."""
-  loadedChunks_in: [String!]
-
-  """All values that are not contained in given list."""
-  loadedChunks_not_in: [String!]
-
-  """All values less than the given value."""
-  loadedChunks_lt: String
-
-  """All values less than or equal the given value."""
-  loadedChunks_lte: String
-
-  """All values greater than the given value."""
-  loadedChunks_gt: String
-
-  """All values greater than or equal the given value."""
-  loadedChunks_gte: String
-
-  """All values containing the given string."""
-  loadedChunks_contains: String
-
-  """All values not containing the given string."""
-  loadedChunks_not_contains: String
-
-  """All values starting with the given string."""
-  loadedChunks_starts_with: String
-
-  """All values not starting with the given string."""
-  loadedChunks_not_starts_with: String
-
-  """All values ending with the given string."""
-  loadedChunks_ends_with: String
-
-  """All values not ending with the given string."""
-  loadedChunks_not_ends_with: String
 }
 
 type PlayerSubscriptionPayload {
@@ -920,7 +770,6 @@ input PlayerUpdateInput {
   z: Float
   dirx: Float
   diry: Float
-  loadedChunks: String
   user: UserUpdateOneRequiredInput
   world: WorldUpdateOneRequiredWithoutPlayersInput
 }
@@ -934,7 +783,6 @@ input PlayerUpdateManyDataInput {
   z: Float
   dirx: Float
   diry: Float
-  loadedChunks: String
 }
 
 input PlayerUpdateManyMutationInput {
@@ -946,7 +794,6 @@ input PlayerUpdateManyMutationInput {
   z: Float
   dirx: Float
   diry: Float
-  loadedChunks: String
 }
 
 input PlayerUpdateManyWithoutWorldInput {
@@ -975,7 +822,6 @@ input PlayerUpdateWithoutWorldDataInput {
   z: Float
   dirx: Float
   diry: Float
-  loadedChunks: String
   user: UserUpdateOneRequiredInput
 }
 
@@ -1185,46 +1031,6 @@ input PlayerWhereInput {
 
   """All values greater than or equal the given value."""
   diry_gte: Float
-  loadedChunks: String
-
-  """All values that are not equal to given value."""
-  loadedChunks_not: String
-
-  """All values that are contained in given list."""
-  loadedChunks_in: [String!]
-
-  """All values that are not contained in given list."""
-  loadedChunks_not_in: [String!]
-
-  """All values less than the given value."""
-  loadedChunks_lt: String
-
-  """All values less than or equal the given value."""
-  loadedChunks_lte: String
-
-  """All values greater than the given value."""
-  loadedChunks_gt: String
-
-  """All values greater than or equal the given value."""
-  loadedChunks_gte: String
-
-  """All values containing the given string."""
-  loadedChunks_contains: String
-
-  """All values not containing the given string."""
-  loadedChunks_not_contains: String
-
-  """All values starting with the given string."""
-  loadedChunks_starts_with: String
-
-  """All values not starting with the given string."""
-  loadedChunks_not_starts_with: String
-
-  """All values ending with the given string."""
-  loadedChunks_ends_with: String
-
-  """All values not ending with the given string."""
-  loadedChunks_not_ends_with: String
   user: UserWhereInput
   world: WorldWhereInput
 }
@@ -1239,15 +1045,14 @@ enum PrismaDatabase {
 
 type Query {
   players(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Player]!
-  chunks(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Chunk]!
+  blocks(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Block]!
   users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
   worlds(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [World]!
   player(where: PlayerWhereUniqueInput!): Player
-  chunk(where: ChunkWhereUniqueInput!): Chunk
   user(where: UserWhereUniqueInput!): User
   world(where: WorldWhereUniqueInput!): World
   playersConnection(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PlayerConnection!
-  chunksConnection(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ChunkConnection!
+  blocksConnection(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BlockConnection!
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   worldsConnection(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): WorldConnection!
 
@@ -1260,7 +1065,7 @@ type Query {
 
 type Subscription {
   player(where: PlayerSubscriptionWhereInput): PlayerSubscriptionPayload
-  chunk(where: ChunkSubscriptionWhereInput): ChunkSubscriptionPayload
+  block(where: BlockSubscriptionWhereInput): BlockSubscriptionPayload
   user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
   world(where: WorldSubscriptionWhereInput): WorldSubscriptionPayload
 }
@@ -1629,7 +1434,7 @@ type World implements Node {
   id: ID!
   name: String!
   seed: String!
-  chunks(where: ChunkWhereInput, orderBy: ChunkOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Chunk!]
+  changedBlocks(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Block!]
   players(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Player!]
 }
 
@@ -1646,7 +1451,7 @@ type WorldConnection {
 input WorldCreateInput {
   name: String!
   seed: String!
-  chunks: ChunkCreateManyWithoutWorldInput
+  changedBlocks: BlockCreateManyWithoutWorldInput
   players: PlayerCreateManyWithoutWorldInput
 }
 
@@ -1655,8 +1460,8 @@ input WorldCreateManyInput {
   connect: [WorldWhereUniqueInput!]
 }
 
-input WorldCreateOneWithoutChunksInput {
-  create: WorldCreateWithoutChunksInput
+input WorldCreateOneWithoutChangedBlocksInput {
+  create: WorldCreateWithoutChangedBlocksInput
   connect: WorldWhereUniqueInput
 }
 
@@ -1665,7 +1470,7 @@ input WorldCreateOneWithoutPlayersInput {
   connect: WorldWhereUniqueInput
 }
 
-input WorldCreateWithoutChunksInput {
+input WorldCreateWithoutChangedBlocksInput {
   name: String!
   seed: String!
   players: PlayerCreateManyWithoutWorldInput
@@ -1674,7 +1479,7 @@ input WorldCreateWithoutChunksInput {
 input WorldCreateWithoutPlayersInput {
   name: String!
   seed: String!
-  chunks: ChunkCreateManyWithoutWorldInput
+  changedBlocks: BlockCreateManyWithoutWorldInput
 }
 
 """An edge in a connection."""
@@ -1878,14 +1683,14 @@ input WorldSubscriptionWhereInput {
 input WorldUpdateDataInput {
   name: String
   seed: String
-  chunks: ChunkUpdateManyWithoutWorldInput
+  changedBlocks: BlockUpdateManyWithoutWorldInput
   players: PlayerUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateInput {
   name: String
   seed: String
-  chunks: ChunkUpdateManyWithoutWorldInput
+  changedBlocks: BlockUpdateManyWithoutWorldInput
   players: PlayerUpdateManyWithoutWorldInput
 }
 
@@ -1916,13 +1721,6 @@ input WorldUpdateManyWithWhereNestedInput {
   data: WorldUpdateManyDataInput!
 }
 
-input WorldUpdateOneRequiredWithoutChunksInput {
-  create: WorldCreateWithoutChunksInput
-  connect: WorldWhereUniqueInput
-  update: WorldUpdateWithoutChunksDataInput
-  upsert: WorldUpsertWithoutChunksInput
-}
-
 input WorldUpdateOneRequiredWithoutPlayersInput {
   create: WorldCreateWithoutPlayersInput
   connect: WorldWhereUniqueInput
@@ -1930,26 +1728,15 @@ input WorldUpdateOneRequiredWithoutPlayersInput {
   upsert: WorldUpsertWithoutPlayersInput
 }
 
-input WorldUpdateWithoutChunksDataInput {
-  name: String
-  seed: String
-  players: PlayerUpdateManyWithoutWorldInput
-}
-
 input WorldUpdateWithoutPlayersDataInput {
   name: String
   seed: String
-  chunks: ChunkUpdateManyWithoutWorldInput
+  changedBlocks: BlockUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateWithWhereUniqueNestedInput {
   where: WorldWhereUniqueInput!
   data: WorldUpdateDataInput!
-}
-
-input WorldUpsertWithoutChunksInput {
-  update: WorldUpdateWithoutChunksDataInput!
-  create: WorldCreateWithoutChunksInput!
 }
 
 input WorldUpsertWithoutPlayersInput {
@@ -2092,9 +1879,9 @@ input WorldWhereInput {
 
   """All values not ending with the given string."""
   seed_not_ends_with: String
-  chunks_every: ChunkWhereInput
-  chunks_some: ChunkWhereInput
-  chunks_none: ChunkWhereInput
+  changedBlocks_every: BlockWhereInput
+  changedBlocks_some: BlockWhereInput
+  changedBlocks_none: BlockWhereInput
   players_every: PlayerWhereInput
   players_some: PlayerWhereInput
   players_none: PlayerWhereInput

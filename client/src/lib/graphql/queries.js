@@ -31,10 +31,11 @@ export const WORLD_QUERY = gql`
 		world(query: $query) {
 			name
 			seed
-			chunks {
-				blocks
-				coordx
-				coordz
+			changedBlocks {
+				type
+				x
+				y
+				z
 			}
 			players {
 				id
@@ -49,7 +50,6 @@ export const WORLD_QUERY = gql`
 				z
 				dirx
 				diry
-				loadedChunks
 			}
 		}
 	}

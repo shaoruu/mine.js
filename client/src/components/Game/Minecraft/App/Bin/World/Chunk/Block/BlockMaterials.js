@@ -25,7 +25,7 @@ class BlockMaterials {
 			texture.minFilter = THREE.NearestMipMapLinearFilter
 			texture.flipY = true
 
-			var material = new THREE.MeshBasicMaterial({
+			var material = new THREE.MeshStandardMaterial({
 				map: texture,
 				side: THREE.DoubleSide
 			})

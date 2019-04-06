@@ -5,8 +5,7 @@ import Config from '../../../../Data/Config'
 import Helpers from '../../../../Utils/Helpers'
 
 const size = Config.chunk.size,
-	dimension = Config.block.dimension,
-	height = Config.chunk.height
+	dimension = Config.block.dimension
 
 class Chunk {
 	constructor(materialManager, { origin, blocks }) {
@@ -19,8 +18,8 @@ class Chunk {
 		this.name = this.getChunkRepresentation()
 
 		// grid system of chunk
-		const arr = new Uint16Array(size * size * height)
-		this.grid = new ndarray(arr, [size, size, height])
+		const arr = new Uint16Array(size * size * size)
+		this.grid = new ndarray(arr, [size, size, size])
 
 		this.isLoaded = false
 
@@ -48,7 +47,7 @@ class Chunk {
 	 */
 	genQuads = () => {
 		const volume = this.grid,
-			dims = [size, size, height]
+			dims = [size, size, size]
 
 		const f = (i, j, k) => {
 			return volume.get(i, j, k)
@@ -148,7 +147,7 @@ class Chunk {
 		 */
 		const mapVecToWorld = vec => [
 			this.origin.x * size * dimension + vec[0] * dimension,
-			vec[2] * dimension,
+			this.origin.y * size * dimension + vec[2] * dimension,
 			this.origin.z * size * dimension + vec[1] * dimension
 		]
 		const pushVertices = (geo, arr) =>
@@ -211,7 +210,7 @@ class Chunk {
 	unmark = () => (this.isLoaded = false)
 
 	getChunkRepresentation = () =>
-		Helpers.getChunkRepresentation(this.origin.x, this.origin.z)
+		Helpers.getChunkRepresentation(this.origin.x, this.origin.y, this.origin.z)
 }
 
 export default Chunk

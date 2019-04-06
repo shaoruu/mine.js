@@ -14,30 +14,28 @@ type Player {
 	gamemode: Gamemode!
 	user: User!
 	world: World! @relation(name: "PlayersToWorld", onDelete: SET_NULL)
-	# coordinates: Coordinates!
 	lastLogin: DateTime
 	x: Float!
 	y: Float!
 	z: Float!
 	dirx: Float!
 	diry: Float!
-	loadedChunks: String!
-}
-
-type Chunk {
-	id: ID! @unique
-	world: World! @relation(name: "ChunksToWorld", onDelete: SET_NULL)
-	blocks: String!
-	coordx: Int!
-	coordz: Int!
 }
 
 type World {
 	id: ID! @unique
 	name: String!
 	seed: String!
-	chunks: [Chunk!]! @relation(name: "ChunksToWorld", onDelete: CASCADE)
+	changedBlocks: [Block!]! @relation(name: "BlocksToWorld", onDelete: CASCADE)
 	players: [Player!]! @relation(name: "PlayersToWorld", onDelete: CASCADE)
+}
+
+type Block {
+	type: Int!
+	world: World! @relation(name: "BlocksToWorld", onDelete: SET_NULL)
+	x: Int!
+	y: Int!
+	z: Int!
 }
 
 enum Gamemode {

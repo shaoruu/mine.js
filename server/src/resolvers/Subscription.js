@@ -1,7 +1,7 @@
 const Subscription = {
-	chunk: {
+	block: {
 		subscribe(parent, { worldId }, { prisma }, info) {
-			return prisma.subscription.chunk(
+			return prisma.subscription.block(
 				{
 					where: {
 						node: {

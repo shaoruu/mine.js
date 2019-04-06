@@ -24,19 +24,6 @@ export const CREATE_WORLD_MUTATION = gql`
 	mutation CreateWorld($name: String!, $seed: String!, $gamemode: Gamemode!) {
 		createWorld(data: { name: $name, seed: $seed, gamemode: $gamemode }) {
 			id
-			# name
-			# seed
-			# players {
-			# 	user {
-			# 		username
-			# 	}
-			# 	position {
-			# 		x
-			# 		y
-			# 		z
-			# 	}
-			# 	gamemode
-			# }
 		}
 	}
 `
@@ -51,7 +38,9 @@ export const UPDATE_PLAYER_MUTATION = gql`
 		$diry: Float
 	) {
 		updatePlayer(data: { id: $id, x: $x, y: $y, z: $z, dirx: $dirx, diry: $diry }) {
-			loadedChunks
+			x
+			y
+			z
 		}
 	}
 `

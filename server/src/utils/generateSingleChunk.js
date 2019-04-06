@@ -1,5 +1,4 @@
 import generateSingleBlock from './generateSingleBlock'
-import getChunkRepresentation from './getChunkRepresentation'
 import Noise from '../bin/Noise'
 import Config from '../data/Config'
 

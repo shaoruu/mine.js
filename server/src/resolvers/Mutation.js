@@ -3,13 +3,6 @@ import bcrypt from 'bcryptjs'
 import getUserId from '../utils/getUserId'
 import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
-import generateSingleChunk from '../utils/generateSingleChunk'
-import getChunkRepresentation from '../utils/getChunkRepresentation'
-import Config from '../data/Config'
-
-const size = Config.chunk.size,
-	renderDistance = Config.player.renderDistance,
-	loadDistance = Config.world.loadDistance
 
 const Mutation = {
 	async createUser(parent, args, { prisma }, info) {
@@ -116,11 +109,10 @@ const Mutation = {
 					}
 				},
 				x: 0,
-				y: 0,
+				y: 40,
 				z: 0,
 				dirx: 0,
-				diry: 0,
-				loadedChunks: ''
+				diry: 0
 			}
 		})
 
@@ -144,69 +136,19 @@ const Mutation = {
 		const playerId = args.data.id
 		delete args.data.id
 
-		const { x, z } = args.data
-		const chunkx = Math.floor(x / size),
-			chunkz = Math.floor(z / size)
-
 		console.log(args.data.x, args.data.y, args.data.z)
 
-		const player = await prisma.query.player(
+		return prisma.mutation.updatePlayer(
 			{
 				where: {
 					id: playerId
+				},
+				data: {
+					...args.data
 				}
 			},
-			`{
-                loadedChunks
-            world {
-                seed
-                id
-                chunks {
-                    coordx
-                    coordz
-                }
-            }
-        }`
+			info
 		)
-
-		const {
-			world: { id: worldId, chunks: worldChunk, seed }
-		} = player
-
-		const worldLoadedChunks = {}
-		for (let chunk of worldChunk) {
-			worldLoadedChunks[getChunkRepresentation(chunk.coordx, chunk.coordz)] = true
-		}
-
-		for (let i = chunkx - loadDistance; i <= chunkx + loadDistance; i++)
-			for (let j = chunkz - loadDistance; j <= chunkz + loadDistance; j++) {
-				if (worldLoadedChunks[getChunkRepresentation(i, j)]) continue
-				await prisma.mutation.createChunk({
-					data: {
-						...generateSingleChunk(seed, i, j),
-						world: {
-							connect: {
-								id: worldId
-							}
-						}
-					}
-				})
-			}
-
-		let chunks = ''
-		for (let i = chunkx - renderDistance; i <= chunkx + renderDistance; i++)
-			for (let j = chunkz - renderDistance; j <= chunkz + renderDistance; j++)
-				chunks += getChunkRepresentation(i, j, true)
-
-		return prisma.mutation.updatePlayer({
-			where: {
-				id: playerId
-			},
-			data: {
-				...args.data,
-				loadedChunks: chunks
-			}
-		})
 	}
 }
 

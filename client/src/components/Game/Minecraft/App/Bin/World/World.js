@@ -1,12 +1,19 @@
 import * as THREE from 'three'
+// import { Worker, isMainThread, parentPort, workerData } from 'worker_threads'
+
 import Config from '../../../Data/Config'
 import Chunk from './Chunk/Chunk'
 import Helpers from '../../../Utils/Helpers'
 import BlockMaterials from './Chunk/Block/BlockMaterials'
+import Generator from './Generator/Generator'
+
+const size = Config.chunk.size,
+	horzD = Config.player.horzD,
+	vertD = Config.player.vertD
 
 class World {
 	constructor(scene, worldData) {
-		const { seed, name, chunks } = worldData
+		const { seed, name, changedBlocks } = worldData
 
 		this.chunkDimension = Config.chunk.size * Config.block.dimension
 
@@ -16,13 +23,18 @@ class World {
 		// Connections to outer space
 		this.scene = scene
 
+		// World Generating Helpers
 		this.chunks = {}
+		this.changedBlocks = {}
+		this.generator = new Generator(this.seed)
+
+		this.isDirty = false
 
 		// Loaders
 		this.materialManager = new BlockMaterials()
 		this.loadTextures()
 
-		this._digestChunks(chunks)
+		this.initWorld(changedBlocks)
 	}
 
 	loadTextures = () => {
@@ -32,66 +44,91 @@ class World {
 		Helpers.log('Finished Loading Textures.')
 	}
 
-	requestMeshUpdate = ({ x, z }) => {
-		const chunkx = Math.floor(x / Config.chunk.size),
-			chunkz = Math.floor(z / Config.chunk.size)
+	initWorld = changedBlocks => {
+		console.log(changedBlocks)
+		if (changedBlocks)
+			// TYPE = ID
+			changedBlocks.forEach(({ type, x, y, z }) => {
+				this.changedBlocks[Helpers.getChunkRepresentation(x, y, z)] = type
+			})
+	}
 
-		const renderDistance = Config.player.renderDistance
-
-		const isInRange = chunk => {
-			return (
-				chunk.origin.x <= chunkx + renderDistance &&
-				chunk.origin.x >= chunkx - renderDistance &&
-				(chunk.origin.z <= chunkz + renderDistance &&
-					chunk.origin.z >= chunkz - renderDistance)
-			)
-		}
-
+	requestMeshUpdate = ({ coordx, coordy, coordz }) => {
 		const updatedChunks = {}
 
-		for (let i = chunkx - renderDistance; i <= chunkx + renderDistance; i++)
-			for (let j = chunkz - renderDistance; j <= chunkz + renderDistance; j++) {
-				const tempChunk = this.chunks[Helpers.getChunkRepresentation(i, j)]
-				if (!tempChunk) continue
-				if (isInRange(tempChunk)) {
+		for (let x = coordx - horzD; x <= coordx + horzD; x++)
+			for (let z = coordz - horzD; z <= coordz + horzD; z++)
+				for (let y = coordy - vertD; y <= coordy + vertD; y++) {
+					let tempChunk = this.chunks[Helpers.getChunkRepresentation(x, y, z)]
+					if (!tempChunk)
+						tempChunk = this.registerChunk({
+							coordx: x,
+							coordy: y,
+							coordz: z
+						})
+
 					updatedChunks[tempChunk.name] = true
 					if (!tempChunk.isLoaded) {
 						const mesh = tempChunk.getMesh()
 						if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
 						tempChunk.mark()
-					} else continue // in range and loaded
-				} else {
-					if (tempChunk.isLoaded) {
-						tempChunk.unmark()
-						const selectedObj = this.scene.getObjectByName(tempChunk.name)
-						this.scene.remove(selectedObj)
-					} else continue // out of range and unloaded
+					}
 				}
-			}
 
 		const shouldBeRemoved = []
 		this.scene.children.forEach(child => {
-			if (!updatedChunks[child.name] && child.isChunk) shouldBeRemoved.push(child)
+			if (!updatedChunks[child.name] && child.isChunk) {
+				shouldBeRemoved.push(child)
+				this.chunks[child.name].unmark()
+			}
 		})
 		shouldBeRemoved.forEach(obj => this.scene.remove(obj))
 	}
 
-	registerChunk = async chunk => {
-		const { blocks, coordx, coordz } = chunk
-
-		if (this.chunks[Helpers.getChunkRepresentation(coordx, coordz)]) return
-
-		// Creating a chunk instance and providing it with its neighbors
+	registerChunk = ({ coordx, coordy, coordz }) => {
 		const newChunk = new Chunk(this.materialManager, {
 			origin: {
 				x: coordx,
+				y: coordy,
 				z: coordz
 			},
-			blocks: this._digestBlocks(blocks)
+			blocks: this.generateBlocks(coordx, coordy, coordz)
 		})
 
 		newChunk.combineMesh()
-		this.chunks[newChunk.getChunkRepresentation()] = newChunk
+		this.chunks[newChunk.name] = newChunk
+
+		return newChunk
+	}
+
+	generateBlocks = (coordx, coordy, coordz) => {
+		const blocks = []
+
+		// ! THIS IS WHERE CHUNK GENERATING HAPPENS FOR SINGLE CHUNK!
+		for (let x = 0; x < size; x++)
+			for (let z = 0; z < size; z++)
+				for (let y = 0; y < size; y++) {
+					blocks.push({
+						position: {
+							x,
+							y,
+							z
+						},
+						id:
+							this.changedBlocks[Helpers.getChunkRepresentation(x, y, z)] ||
+							this.generator.getBlockInfo(
+								coordx * size + x,
+								coordy * size + y,
+								coordz * size + z
+							)
+					})
+				}
+
+		return blocks
+	}
+
+	updateChanged = ({ type, x, y, z }) => {
+		// TODO Update dictionary `changedBlocks` and mark chunks for new update
 	}
 
 	_digestChunks = chunks => {

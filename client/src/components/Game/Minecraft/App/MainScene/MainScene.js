@@ -7,9 +7,10 @@ import { Camera, Light, Player, Renderer } from '../Bin'
 import classes from './MainScene.module.css'
 import World from '../Bin/World/World'
 import { UPDATE_PLAYER_MUTATION } from '../../../../../lib/graphql/mutations'
-import { WORLD_QUERY, CHUNK_SUBSCRIPTION } from '../../../../../lib/graphql'
+import { WORLD_QUERY, BLOCK_SUBSCRIPTION } from '../../../../../lib/graphql'
 import { Hint } from '../../../../Utils'
 import Config from '../../Data/Config'
+import Helpers from '../../Utils/Helpers'
 
 class MainScene extends Component {
 	constructor(props) {
@@ -20,8 +21,6 @@ class MainScene extends Component {
 
 		this.prevPos = {}
 		this.prevDirs = {}
-
-		this.playerChunks = ''
 
 		this.updatePlayer = null
 	}
@@ -69,19 +68,16 @@ class MainScene extends Component {
 			this.initDirs
 		)
 
+		// Marking Player Chunk Coords
+		this.currChunk = ''
+
 		// Stats creation
 		this.stats = new Stats()
 		this.mount.appendChild(this.stats.dom)
 
-		/** TEST */
-		// const geometry = new THREE.BoxGeometry(1, 1, 1)
-		// const material = new THREE.MeshBasicMaterial({ color: '#433F81' })
-		// this.cube = new THREE.Mesh(geometry, material)
-		// this.scene.add(this.cube)
-		/** */
-
 		this.init()
 
+		/** Called every 200ms to update player position with server. */
 		this.updatePosCall = setInterval(() => {
 			const playerCoords = this.player.getCoordinates(),
 				playerDirs = this.player.getDirections()
@@ -107,12 +103,12 @@ class MainScene extends Component {
 				})
 			}
 		}, 200)
+		this.requestChunkCall = setInterval(() => this.updateWorld(), 1000)
 	}
 
 	componentWillUnmount() {
 		this.terminate()
 		this.mount.removeChild(this.renderer.threeRenderer.domElement)
-		clearInterval(this.updatePosCall)
 	}
 
 	init = () => {
@@ -124,6 +120,8 @@ class MainScene extends Component {
 
 	terminate = () => {
 		window.cancelAnimationFrame(this.frameId)
+		clearInterval(this.updatePosCall)
+		clearInterval(this.requestChunkCall)
 	}
 
 	animate = () => {
@@ -142,6 +140,22 @@ class MainScene extends Component {
 
 	renderScene = () => {
 		this.renderer.render(this.scene, this.camera.threeCamera)
+	}
+
+	updateWorld = () => {
+		const { coordx, coordy, coordz } = Helpers.toChunkCoords(
+				this.player.getCoordinates()
+			),
+			currChunk = Helpers.getChunkRepresentation(coordx, coordy, coordz)
+
+		if (this.currChunk !== currChunk) {
+			this.currChunk = currChunk
+			this.world.requestMeshUpdate({
+				coordx,
+				coordy,
+				coordz
+			})
+		}
 	}
 
 	onWindowResize = () => {
@@ -183,16 +197,7 @@ class MainScene extends Component {
 						<Mutation
 							mutation={UPDATE_PLAYER_MUTATION}
 							onError={err => console.error(err)}
-							onCompleted={({ updatePlayer: { loadedChunks } }) => {
-								if (this.playerChunks !== loadedChunks) {
-									// Update world's player chunk according to player's position
-									this.world.requestMeshUpdate(
-										this.player.getCoordinates()
-									)
-									// Update existing playerChunks
-									this.playerChunks = loadedChunks
-								}
-							}}>
+							onCompleted={({ updatePlayer: { x, y, z } }) => {}}>
 							{updatePlayer => {
 								this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
 
@@ -208,16 +213,11 @@ class MainScene extends Component {
 											ref={blocker => (this.blocker = blocker)}
 										/>
 										<Subscription
-											subscription={CHUNK_SUBSCRIPTION}
+											subscription={BLOCK_SUBSCRIPTION}
 											variables={{ worldId }}
 											onSubscriptionData={({
-												subscriptionData: {
-													data: { chunk }
-												}
-											}) => {
-												const { node } = chunk
-												this.world.registerChunk(node)
-											}}
+												subscriptionData: { data }
+											}) => this.world.updateChanged(data)}
 										/>
 									</div>
 								)
