@@ -82,7 +82,7 @@ export default {
 		posX: 0,
 		posY: 30,
 		posZ: 0,
-		horzD: 3,
+		horzD: 5,
 		vertD: 2
 	},
 	controls: {
@@ -152,7 +152,7 @@ export default {
 		dimension: 30
 	},
 	chunk: {
-		size: 16,
+		size: 4,
 		height: 50
 	},
 	world: {

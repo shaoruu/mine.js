@@ -1,9 +1,10 @@
 import * as THREE from 'three'
-// import { Worker, isMainThread, parentPort, workerData } from 'worker_threads'
 
 import Config from '../../../Data/Config'
 import Chunk from './Chunk/Chunk'
 import Helpers from '../../../Utils/Helpers'
+import worker from './World.worker'
+import WebWorker from '../../Bin/WebWorker/WebWorker'
 import BlockMaterials from './Chunk/Block/BlockMaterials'
 import Generator from './Generator/Generator'
 
@@ -33,6 +34,12 @@ class World {
 		// Loaders
 		this.materialManager = new BlockMaterials()
 		this.loadTextures()
+
+		// Workers
+		this.worker = new WebWorker(worker)
+		this.worker.addEventListener('message', e => {
+			console.log(e)
+		})
 
 		this.initWorld(changedBlocks)
 	}
@@ -97,7 +104,6 @@ class World {
 
 		newChunk.combineMesh()
 		this.chunks[newChunk.name] = newChunk
-
 		return newChunk
 	}
 
