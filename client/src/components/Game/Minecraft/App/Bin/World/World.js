@@ -9,8 +9,10 @@ import BlockMaterials from './Chunk/Block/BlockMaterials'
 import Generator from './Generator/Generator'
 
 const size = Config.chunk.size,
+	height = Config.chunk.height,
 	horzD = Config.player.horzD,
-	vertD = Config.player.vertD
+	vertD = Config.player.vertD,
+	noiseConstant = Config.world.noiseConstant
 
 class World {
 	constructor(scene, worldData) {
@@ -27,9 +29,6 @@ class World {
 		// World Generating Helpers
 		this.chunks = {}
 		this.changedBlocks = {}
-		this.generator = new Generator(this.seed)
-
-		this.isDirty = false
 
 		// Loaders
 		this.materialManager = new BlockMaterials()
@@ -37,11 +36,43 @@ class World {
 
 		// Workers
 		this.worker = new WebWorker(worker)
-		this.worker.addEventListener('message', e => {
-			console.log(e)
-		})
+		this.setupWorker()
 
 		this.initWorld(changedBlocks)
+	}
+
+	setupWorker = () => {
+		this.worker.addEventListener('message', ({ data }) => {
+			const { ACTION } = data
+			switch (ACTION) {
+				case 'GEN_BLOCKS': {
+					const {
+						blocks,
+						coords: { coordx, coordy, coordz }
+					} = data
+					const temp = this.chunks[
+						Helpers.getCoordsRepresentation(coordx, coordy, coordz)
+					]
+					temp.initGrid(blocks)
+					this.worker.postMessage({
+						ACTION: 'GEN_QUADS',
+						size,
+						volume: temp.grid.data,
+						chunkName: temp.name
+					})
+					break
+				}
+				case 'GEN_QUADS': {
+					const { quads, chunkName } = data
+					const temp = this.chunks[chunkName]
+					temp.combineMesh(temp.meshQuads(quads))
+					temp.loading = false
+					break
+				}
+				default:
+					break
+			}
+		})
 	}
 
 	loadTextures = () => {
@@ -52,11 +83,10 @@ class World {
 	}
 
 	initWorld = changedBlocks => {
-		console.log(changedBlocks)
 		if (changedBlocks)
 			// TYPE = ID
 			changedBlocks.forEach(({ type, x, y, z }) => {
-				this.changedBlocks[Helpers.getChunkRepresentation(x, y, z)] = type
+				this.changedBlocks[Helpers.getCoordsRepresentation(x, y, z)] = type
 			})
 	}
 
@@ -66,14 +96,18 @@ class World {
 		for (let x = coordx - horzD; x <= coordx + horzD; x++)
 			for (let z = coordz - horzD; z <= coordz + horzD; z++)
 				for (let y = coordy - vertD; y <= coordy + vertD; y++) {
-					let tempChunk = this.chunks[Helpers.getChunkRepresentation(x, y, z)]
-					if (!tempChunk)
-						tempChunk = this.registerChunk({
+					let tempChunk = this.chunks[Helpers.getCoordsRepresentation(x, y, z)]
+					if (!tempChunk) {
+						this.registerChunk({
 							coordx: x,
 							coordy: y,
 							coordz: z
 						})
+						continue
+					}
+					if (tempChunk.loading) continue // Chunk worker is working on it
 
+					// To reach here means the chunk is loaded and meshed.
 					updatedChunks[tempChunk.name] = true
 					if (!tempChunk.isLoaded) {
 						const mesh = tempChunk.getMesh()
@@ -98,12 +132,22 @@ class World {
 				x: coordx,
 				y: coordy,
 				z: coordz
+			}
+		})
+		this.chunks[newChunk.name] = newChunk
+
+		this.worker.postMessage({
+			ACTION: 'GEN_BLOCKS',
+			seed: this.seed,
+			changedBlocks: this.changedBlocks,
+			configs: {
+				noiseConstant,
+				size,
+				height
 			},
-			blocks: this.generateBlocks(coordx, coordy, coordz)
+			coords: { coordx, coordy, coordz }
 		})
 
-		newChunk.combineMesh()
-		this.chunks[newChunk.name] = newChunk
 		return newChunk
 	}
 
@@ -121,7 +165,13 @@ class World {
 							z
 						},
 						id:
-							this.changedBlocks[Helpers.getChunkRepresentation(x, y, z)] ||
+							this.changedBlocks[
+								Helpers.getCoordsRepresentation(
+									coordx * size + x,
+									coordy * size + y,
+									coordz * size + z
+								)
+							] ||
 							this.generator.getBlockInfo(
 								coordx * size + x,
 								coordy * size + y,

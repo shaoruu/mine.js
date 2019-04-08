@@ -34,7 +34,7 @@ export default class Helpers {
 	static round(value, decimals) {
 		return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals)
 	}
-	static getChunkRepresentation(x, y, z, semi = false) {
+	static getCoordsRepresentation(x, y, z, semi = false) {
 		return `${x}:${y}:${z}${semi ? ';' : ''}`
 	}
 	static log(message) {

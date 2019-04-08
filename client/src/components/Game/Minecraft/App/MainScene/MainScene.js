@@ -144,18 +144,18 @@ class MainScene extends Component {
 
 	updateWorld = () => {
 		const { coordx, coordy, coordz } = Helpers.toChunkCoords(
-				this.player.getCoordinates()
-			),
-			currChunk = Helpers.getChunkRepresentation(coordx, coordy, coordz)
+			this.player.getCoordinates()
+		)
+		// 	currChunk = Helpers.getCoordsRepresentation(coordx, coordy, coordz)
 
-		if (this.currChunk !== currChunk) {
-			this.currChunk = currChunk
-			this.world.requestMeshUpdate({
-				coordx,
-				coordy,
-				coordz
-			})
-		}
+		// if (this.currChunk !== currChunk) {
+		// this.currChunk = currChunk
+		this.world.requestMeshUpdate({
+			coordx,
+			coordy,
+			coordz
+		})
+		// }
 	}
 
 	onWindowResize = () => {
