@@ -75,8 +75,8 @@ export default {
 	player: {
 		inertia: 5.0,
 		speed: {
-			horizontal: 600,
-			vertical: 800
+			horizontal: 800,
+			vertical: 1000
 		},
 		coordinateDec: 2,
 		posX: 0,
@@ -112,7 +112,7 @@ export default {
 	directionalLight: {
 		enabled: true,
 		color: 0xf0f0f0,
-		intensity: 0.4,
+		intensity: 1,
 		x: 0,
 		y: 1,
 		z: 0

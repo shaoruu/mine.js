@@ -372,7 +372,7 @@ export default () => {
 	function Generator(seed, noiseConstant, height) {
 		this.noise = new Noise(seed)
 
-		this.getBlockInfo = (x, y, z) => {
+		this.getBlockInfo = (x, y, z, solid = false) => {
 			let blockId = 0
 			if (y <= height / 2) {
 				blockId = 1
@@ -400,6 +400,18 @@ export default () => {
 				)
 				if (value >= -0.5) {
 					blockId = 1
+				}
+			}
+			if (!solid && blockId === 1) {
+				if (y === height || this.getBlockInfo(x, y + 1, z, true) === 0) {
+					blockId = 2
+				} else if (
+					y >= height - 3 ||
+					this.getBlockInfo(x, y + 4, z, true) === 0 ||
+					this.getBlockInfo(x, y + 3, z, true) === 0 ||
+					this.getBlockInfo(x, y + 2, z, true) === 0
+				) {
+					blockId = 3
 				}
 			}
 			return blockId
@@ -560,7 +572,7 @@ export default () => {
 											x[2] + du[2] + dv[2]
 										],
 										[x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]],
-										mask[n], // block type
+										mask[n],
 										d // axis
 									])
 									//Zero-out mask

@@ -6,7 +6,6 @@ import Helpers from '../../../Utils/Helpers'
 import worker from './World.worker'
 import WebWorker from '../../Bin/WebWorker/WebWorker'
 import BlockMaterials from './Chunk/Block/BlockMaterials'
-import Generator from './Generator/Generator'
 
 const size = Config.chunk.size,
 	height = Config.chunk.height,

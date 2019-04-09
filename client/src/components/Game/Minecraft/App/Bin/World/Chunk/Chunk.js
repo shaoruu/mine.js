@@ -59,6 +59,7 @@ class Chunk {
 
 		for (let quad of quads) {
 			const [v0, v1, v2, v3, type, axis] = quad
+
 			const { side, top } = this.materialManager.get(type)
 
 			const geo = new THREE.Geometry()
