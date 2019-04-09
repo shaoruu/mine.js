@@ -46,6 +46,16 @@ export default {
 				side: require('../../../../assets/blocks/leaves_oak.png'),
 				top: require('../../../../assets/blocks/leaves_oak.png'),
 				bottom: require('../../../../assets/blocks/leaves_oak.png')
+			},
+			89: {
+				side: require('../../../../assets/blocks/glowstone.png'),
+				top: require('../../../../assets/blocks/glowstone.png'),
+				bottom: require('../../../../assets/blocks/glowstone.png')
+			},
+			57: {
+				side: require('../../../../assets/blocks/diamond_block.png'),
+				top: require('../../../../assets/blocks/diamond_block.png'),
+				bottom: require('../../../../assets/blocks/diamond_block.png')
 			}
 		}
 	},
@@ -61,12 +71,12 @@ export default {
 	fog: {
 		color: 0xdcebf4,
 		near: 0.0008,
-		far: 2000
+		far: 2500
 	},
 	camera: {
 		fov: 75,
 		near: 1,
-		far: 2000,
+		far: 2500,
 		aspect: 1,
 		posX: 0,
 		posY: 0,
@@ -107,12 +117,12 @@ export default {
 	},
 	ambientLight: {
 		enabled: true,
-		color: 0x141414
+		color: 0xf0f0f0
 	},
 	directionalLight: {
 		enabled: true,
 		color: 0xf0f0f0,
-		intensity: 1,
+		intensity: 0.2,
 		x: 0,
 		y: 1,
 		z: 0

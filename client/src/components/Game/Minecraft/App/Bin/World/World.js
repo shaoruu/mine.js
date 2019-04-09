@@ -44,28 +44,13 @@ class World {
 		this.worker.addEventListener('message', ({ data }) => {
 			const { ACTION } = data
 			switch (ACTION) {
-				case 'GEN_BLOCKS': {
-					const {
-						blocks,
-						coords: { coordx, coordy, coordz }
-					} = data
-					const temp = this.chunks[
-						Helpers.getCoordsRepresentation(coordx, coordy, coordz)
-					]
-					temp.initGrid(blocks)
-					this.worker.postMessage({
-						ACTION: 'GEN_QUADS',
-						size,
-						volume: temp.grid.data,
-						chunkName: temp.name
-					})
-					break
-				}
-				case 'GEN_QUADS': {
-					const { quads, chunkName } = data
+				case 'GET_CHUNK': {
+					const { quads, blocks, chunkName } = data
 					const temp = this.chunks[chunkName]
-					temp.combineMesh(temp.meshQuads(quads))
-					temp.loading = false
+					temp.setGrid(blocks)
+					temp.combineMesh(temp.meshQuads(quads)).then(
+						() => (temp.loading = false)
+					)
 					break
 				}
 				default:
@@ -136,13 +121,15 @@ class World {
 		this.chunks[newChunk.name] = newChunk
 
 		this.worker.postMessage({
-			ACTION: 'GEN_BLOCKS',
+			ACTION: 'GET_CHUNK',
 			seed: this.seed,
 			changedBlocks: this.changedBlocks,
 			configs: {
 				noiseConstant,
 				size,
-				height
+				height,
+				stride: newChunk.grid.stride,
+				chunkName: newChunk.name
 			},
 			coords: { coordx, coordy, coordz }
 		})

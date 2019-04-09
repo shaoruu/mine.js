@@ -450,64 +450,45 @@ export default () => {
 		if (!ACTION) throw new Error('Action not specified.')
 
 		switch (ACTION) {
-			case 'GEN_BLOCKS': {
+			case 'GET_CHUNK': {
 				const {
 					seed,
 					changedBlocks,
-					configs: { noiseConstant, size, height },
+					configs: { noiseConstant, size, height, stride, chunkName },
 					coords: { coordx, coordy, coordz }
 				} = e.data
 
 				const generator = new Generator(seed, noiseConstant, height)
-				const blocks = []
+				const blocks = new Uint16Array(size * size * size)
+
+				const set = (i, j, k, v) =>
+					(blocks[i * stride[0] + j * stride[1] + k * stride[2]] = v)
+				const get = (i, j, k) =>
+					blocks[i * stride[0] + j * stride[1] + k * stride[2]]
 
 				for (let x = 0; x < size; x++)
 					for (let z = 0; z < size; z++)
-						for (let y = 0; y < size; y++) {
-							blocks.push({
-								position: {
-									x,
-									y,
-									z
-								},
-								id:
-									changedBlocks[
-										getCoordsRepresentation(
-											coordx * size + x,
-											coordy * size + y,
-											coordz * size + z
-										)
-									] ||
+						for (let y = 0; y < size; y++)
+							set(
+								x,
+								z,
+								y,
+								changedBlocks[
+									getCoordsRepresentation(
+										coordx * size + x,
+										coordy * size + y,
+										coordz * size + z
+									)
+								] ||
 									generator.getBlockInfo(
 										coordx * size + x,
 										coordy * size + y,
 										coordz * size + z
 									)
-							})
-						}
+							)
 
-				postMessage({ ACTION, coords: { coordx, coordy, coordz }, blocks })
-				break
-			}
-			case 'GEN_QUADS': {
-				/**
-				 * COLLECTING DATA TO PROCESS
-				 */
-				const { size, volume, chunkName } = e.data
 				const dims = [size, size, size]
 
-				/**
-				 * INTERNAL FUNCTIONS FOR CONVENIENCE
-				 */
-				const f = (i, j, k) => {
-					// TODO: FIX THIS DIRTY APPROACH TO ACCESS DATA
-					return volume[i * size * size + j * size + k]
-				}
-
-				/**
-				 * GREEDY!!!!!
-				 * --Sweeping over 3-axes--
-				 */
 				let quads = []
 				for (let d = 0; d < 3; ++d) {
 					let i,
@@ -529,9 +510,9 @@ export default () => {
 							for (x[u] = 0; x[u] < dims[u]; ++x[u]) {
 								/*eslint eqeqeq: ["off"]*/
 								mask[n++] =
-									(0 <= x[d] ? f(x[0], x[1], x[2]) : false) !=
+									(0 <= x[d] ? get(x[0], x[1], x[2]) : false) !=
 									(x[d] < dims[d] - 1
-										? f(x[0] + q[0], x[1] + q[1], x[2] + q[2])
+										? get(x[0] + q[0], x[1] + q[1], x[2] + q[2])
 										: false)
 							}
 						//Increment x[d]
@@ -572,7 +553,7 @@ export default () => {
 											x[2] + du[2] + dv[2]
 										],
 										[x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]],
-										mask[n],
+										2,
 										d // axis
 									])
 									//Zero-out mask
@@ -591,10 +572,7 @@ export default () => {
 					}
 				}
 
-				/**
-				 * POSTING THE RESULTS BACK
-				 */
-				postMessage({ ACTION, quads, chunkName })
+				postMessage({ ACTION, blocks, quads, chunkName })
 				break
 			}
 			default:

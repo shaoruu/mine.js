@@ -74,7 +74,7 @@ class Chunk {
 					break
 				case 1:
 					material = side
-					pushVertices(geo, [v1, v2, v3, v0])
+					pushVertices(geo, [v3, v0, v1, v2])
 					sMax = Helpers.calcDis(v1, v2)
 					tMax = Helpers.calcDis(v0, v1)
 					break
@@ -100,13 +100,15 @@ class Chunk {
 	}
 
 	/** Calculate mesh and merge them together */
-	combineMesh = meshes => {
+	combineMesh = async meshes => {
 		// console.time('Block Combination')
 		this.mesh = Helpers.mergeMeshes(meshes)
 		this.mesh.name = this.name
 		this.mesh.isChunk = true
 		// console.timeEnd('Block Combination')
 	}
+
+	setGrid = blocks => (this.grid.data = blocks)
 
 	getMesh = () => this.mesh
 	mark = () => (this.isLoaded = true)
