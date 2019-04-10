@@ -19,8 +19,8 @@ class Chunk {
 		this.loading = true
 
 		// Grid System of Chunk
-		const arr = new Uint16Array(size * size * size)
-		this.grid = new ndarray(arr, [size, size, size])
+		const arr = new Uint16Array((size + 2) * (size + 2) * (size + 2))
+		this.grid = new ndarray(arr, [size + 2, size + 2, size + 2])
 
 		this.isLoaded = false
 	}
@@ -42,15 +42,18 @@ class Chunk {
 
 	/** Generate THREE meshes and store them into an array. */
 	meshQuads = quads => {
+		// Avoiding extra work.
+		if (quads === undefined || quads.length === 0) return []
+
 		// const quads = quads || this.genQuads()
 
 		/**
 		 * Internal functions for convenience
 		 */
 		const mapVecToWorld = vec => [
-			this.origin.x * size * dimension + vec[0] * dimension,
-			this.origin.y * size * dimension + vec[2] * dimension,
-			this.origin.z * size * dimension + vec[1] * dimension
+			this.origin.x * size * dimension + (vec[0] - 1) * dimension,
+			this.origin.y * size * dimension + (vec[2] - 1) * dimension,
+			this.origin.z * size * dimension + (vec[1] - 1) * dimension
 		]
 		const pushVertices = (geo, arr) =>
 			(geo.vertices = arr.map(v => new THREE.Vector3(...mapVecToWorld(v))))

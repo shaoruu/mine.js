@@ -166,6 +166,6 @@ export default {
 		height: 50
 	},
 	world: {
-		noiseConstant: 50
+		noiseConstant: 40
 	}
 }

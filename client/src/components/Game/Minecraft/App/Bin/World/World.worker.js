@@ -67,8 +67,8 @@ export default () => {
 				seed |= seed << 8
 			}
 
-			for (var i = 0; i < 256; i++) {
-				var v
+			for (let i = 0; i < 256; i++) {
+				let v
 				if (i & 1) {
 					v = this.p[i] ^ (seed & 255)
 				} else {
@@ -83,7 +83,7 @@ export default () => {
 		this.seed(seed)
 
 		/*
-        for(var i=0; i<256; i++) {
+        for(let i=0; i<256; i++) {
           perm[i] = perm[i + 256] = p[i];
           gradP[i] = gradP[i + 256] = grad3[perm[i] % 12];
         }*/
@@ -92,17 +92,17 @@ export default () => {
 
 		// 2D simplex noise
 		this.simplex2 = (xin, yin) => {
-			var n0, n1, n2 // Noise contributions from the three corners
+			let n0, n1, n2 // Noise contributions from the three corners
 			// Skew the input space to determine which simplex cell we're in
-			var s = (xin + yin) * this.F2 // Hairy factor for 2D
-			var i = Math.floor(xin + s)
-			var j = Math.floor(yin + s)
-			var t = (i + j) * this.G2
-			var x0 = xin - i + t // The x,y distances from the cell origin, unskewed.
-			var y0 = yin - j + t
+			let s = (xin + yin) * this.F2 // Hairy factor for 2D
+			let i = Math.floor(xin + s)
+			let j = Math.floor(yin + s)
+			let t = (i + j) * this.G2
+			let x0 = xin - i + t // The x,y distances from the cell origin, unskewed.
+			let y0 = yin - j + t
 			// For the 2D case, the simplex shape is an equilateral triangle.
 			// Determine which simplex we are in.
-			var i1, j1 // Offsets for second (middle) corner of simplex in (i,j) coords
+			let i1, j1 // Offsets for second (middle) corner of simplex in (i,j) coords
 			if (x0 > y0) {
 				// lower triangle, XY order: (0,0)->(1,0)->(1,1)
 				i1 = 1
@@ -115,32 +115,32 @@ export default () => {
 			// A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
 			// a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
 			// c = (3-sqrt(3))/6
-			var x1 = x0 - i1 + this.G2 // Offsets for middle corner in (x,y) unskewed coords
-			var y1 = y0 - j1 + this.G2
-			var x2 = x0 - 1 + 2 * this.G2 // Offsets for last corner in (x,y) unskewed coords
-			var y2 = y0 - 1 + 2 * this.G2
+			let x1 = x0 - i1 + this.G2 // Offsets for middle corner in (x,y) unskewed coords
+			let y1 = y0 - j1 + this.G2
+			let x2 = x0 - 1 + 2 * this.G2 // Offsets for last corner in (x,y) unskewed coords
+			let y2 = y0 - 1 + 2 * this.G2
 			// Work out the hashed gradient indices of the three simplex corners
 			i &= 255
 			j &= 255
-			var gi0 = this.gradP[i + this.perm[j]]
-			var gi1 = this.gradP[i + i1 + this.perm[j + j1]]
-			var gi2 = this.gradP[i + 1 + this.perm[j + 1]]
+			let gi0 = this.gradP[i + this.perm[j]]
+			let gi1 = this.gradP[i + i1 + this.perm[j + j1]]
+			let gi2 = this.gradP[i + 1 + this.perm[j + 1]]
 			// Calculate the contribution from the three corners
-			var t0 = 0.5 - x0 * x0 - y0 * y0
+			let t0 = 0.5 - x0 * x0 - y0 * y0
 			if (t0 < 0) {
 				n0 = 0
 			} else {
 				t0 *= t0
 				n0 = t0 * t0 * gi0.dot2(x0, y0) // (x,y) of grad3 used for 2D gradient
 			}
-			var t1 = 0.5 - x1 * x1 - y1 * y1
+			let t1 = 0.5 - x1 * x1 - y1 * y1
 			if (t1 < 0) {
 				n1 = 0
 			} else {
 				t1 *= t1
 				n1 = t1 * t1 * gi1.dot2(x1, y1)
 			}
-			var t2 = 0.5 - x2 * x2 - y2 * y2
+			let t2 = 0.5 - x2 * x2 - y2 * y2
 			if (t2 < 0) {
 				n2 = 0
 			} else {
@@ -154,23 +154,23 @@ export default () => {
 
 		// 3D simplex noise
 		this.simplex3 = (xin, yin, zin) => {
-			var n0, n1, n2, n3 // Noise contributions from the four corners
+			let n0, n1, n2, n3 // Noise contributions from the four corners
 
 			// Skew the input space to determine which simplex cell we're in
-			var s = (xin + yin + zin) * this.F3 // Hairy factor for 2D
-			var i = Math.floor(xin + s)
-			var j = Math.floor(yin + s)
-			var k = Math.floor(zin + s)
+			let s = (xin + yin + zin) * this.F3 // Hairy factor for 2D
+			let i = Math.floor(xin + s)
+			let j = Math.floor(yin + s)
+			let k = Math.floor(zin + s)
 
-			var t = (i + j + k) * this.G3
-			var x0 = xin - i + t // The x,y distances from the cell origin, unskewed.
-			var y0 = yin - j + t
-			var z0 = zin - k + t
+			let t = (i + j + k) * this.G3
+			let x0 = xin - i + t // The x,y distances from the cell origin, unskewed.
+			let y0 = yin - j + t
+			let z0 = zin - k + t
 
 			// For the 3D case, the simplex shape is a slightly irregular tetrahedron.
 			// Determine which simplex we are in.
-			var i1, j1, k1 // Offsets for second corner of simplex in (i,j,k) coords
-			var i2, j2, k2 // Offsets for third corner of simplex in (i,j,k) coords
+			let i1, j1, k1 // Offsets for second corner of simplex in (i,j,k) coords
+			let i2, j2, k2 // Offsets for third corner of simplex in (i,j,k) coords
 			if (x0 >= y0) {
 				if (y0 >= z0) {
 					i1 = 1
@@ -222,50 +222,50 @@ export default () => {
 			// a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
 			// a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
 			// c = 1/6.
-			var x1 = x0 - i1 + this.G3 // Offsets for second corner
-			var y1 = y0 - j1 + this.G3
-			var z1 = z0 - k1 + this.G3
+			let x1 = x0 - i1 + this.G3 // Offsets for second corner
+			let y1 = y0 - j1 + this.G3
+			let z1 = z0 - k1 + this.G3
 
-			var x2 = x0 - i2 + 2 * this.G3 // Offsets for third corner
-			var y2 = y0 - j2 + 2 * this.G3
-			var z2 = z0 - k2 + 2 * this.G3
+			let x2 = x0 - i2 + 2 * this.G3 // Offsets for third corner
+			let y2 = y0 - j2 + 2 * this.G3
+			let z2 = z0 - k2 + 2 * this.G3
 
-			var x3 = x0 - 1 + 3 * this.G3 // Offsets for fourth corner
-			var y3 = y0 - 1 + 3 * this.G3
-			var z3 = z0 - 1 + 3 * this.G3
+			let x3 = x0 - 1 + 3 * this.G3 // Offsets for fourth corner
+			let y3 = y0 - 1 + 3 * this.G3
+			let z3 = z0 - 1 + 3 * this.G3
 
 			// Work out the hashed gradient indices of the four simplex corners
 			i &= 255
 			j &= 255
 			k &= 255
-			var gi0 = this.gradP[i + this.perm[j + this.perm[k]]]
-			var gi1 = this.gradP[i + i1 + this.perm[j + j1 + this.perm[k + k1]]]
-			var gi2 = this.gradP[i + i2 + this.perm[j + j2 + this.perm[k + k2]]]
-			var gi3 = this.gradP[i + 1 + this.perm[j + 1 + this.perm[k + 1]]]
+			let gi0 = this.gradP[i + this.perm[j + this.perm[k]]]
+			let gi1 = this.gradP[i + i1 + this.perm[j + j1 + this.perm[k + k1]]]
+			let gi2 = this.gradP[i + i2 + this.perm[j + j2 + this.perm[k + k2]]]
+			let gi3 = this.gradP[i + 1 + this.perm[j + 1 + this.perm[k + 1]]]
 
 			// Calculate the contribution from the four corners
-			var t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0
+			let t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0
 			if (t0 < 0) {
 				n0 = 0
 			} else {
 				t0 *= t0
 				n0 = t0 * t0 * gi0.dot3(x0, y0, z0) // (x,y) of grad3 used for 2D gradient
 			}
-			var t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1
+			let t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1
 			if (t1 < 0) {
 				n1 = 0
 			} else {
 				t1 *= t1
 				n1 = t1 * t1 * gi1.dot3(x1, y1, z1)
 			}
-			var t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2
+			let t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2
 			if (t2 < 0) {
 				n2 = 0
 			} else {
 				t2 *= t2
 				n2 = t2 * t2 * gi2.dot3(x2, y2, z2)
 			}
-			var t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3
+			let t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3
 			if (t3 < 0) {
 				n3 = 0
 			} else {
@@ -290,7 +290,7 @@ export default () => {
 		// 2D Perlin Noise
 		this.perlin2 = (x, y) => {
 			// Find unit grid cell containing point
-			var X = Math.floor(x),
+			let X = Math.floor(x),
 				Y = Math.floor(y)
 			// Get relative xy coordinates of point within that cell
 			x = x - X
@@ -300,13 +300,13 @@ export default () => {
 			Y = Y & 255
 
 			// Calculate noise contributions from each of the four corners
-			var n00 = this.gradP[X + this.perm[Y]].dot2(x, y)
-			var n01 = this.gradP[X + this.perm[Y + 1]].dot2(x, y - 1)
-			var n10 = this.gradP[X + 1 + this.perm[Y]].dot2(x - 1, y)
-			var n11 = this.gradP[X + 1 + this.perm[Y + 1]].dot2(x - 1, y - 1)
+			let n00 = this.gradP[X + this.perm[Y]].dot2(x, y)
+			let n01 = this.gradP[X + this.perm[Y + 1]].dot2(x, y - 1)
+			let n10 = this.gradP[X + 1 + this.perm[Y]].dot2(x - 1, y)
+			let n11 = this.gradP[X + 1 + this.perm[Y + 1]].dot2(x - 1, y - 1)
 
 			// Compute the fade curve value for x
-			var u = this.fade(x)
+			let u = this.fade(x)
 
 			// Interpolate the four results
 			return this.lerp(this.lerp(n00, n10, u), this.lerp(n01, n11, u), this.fade(y))
@@ -315,7 +315,7 @@ export default () => {
 		// 3D Perlin Noise
 		this.perlin3 = (x, y, z) => {
 			// Find unit grid cell containing point
-			var X = Math.floor(x),
+			let X = Math.floor(x),
 				Y = Math.floor(y),
 				Z = Math.floor(z)
 			// Get relative xyz coordinates of point within that cell
@@ -328,35 +328,35 @@ export default () => {
 			Z = Z & 255
 
 			// Calculate noise contributions from each of the eight corners
-			var n000 = this.gradP[X + this.perm[Y + this.perm[Z]]].dot3(x, y, z)
-			var n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(x, y, z - 1)
-			var n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(x, y - 1, z)
-			var n011 = this.gradP[X + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
+			let n000 = this.gradP[X + this.perm[Y + this.perm[Z]]].dot3(x, y, z)
+			let n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(x, y, z - 1)
+			let n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(x, y - 1, z)
+			let n011 = this.gradP[X + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
 				x,
 				y - 1,
 				z - 1
 			)
-			var n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(x - 1, y, z)
-			var n101 = this.gradP[X + 1 + this.perm[Y + this.perm[Z + 1]]].dot3(
+			let n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(x - 1, y, z)
+			let n101 = this.gradP[X + 1 + this.perm[Y + this.perm[Z + 1]]].dot3(
 				x - 1,
 				y,
 				z - 1
 			)
-			var n110 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z]]].dot3(
+			let n110 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z]]].dot3(
 				x - 1,
 				y - 1,
 				z
 			)
-			var n111 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
+			let n111 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
 				x - 1,
 				y - 1,
 				z - 1
 			)
 
 			// Compute the fade curve value for x, y, z
-			var u = this.fade(x)
-			var v = this.fade(y)
-			var w = this.fade(z)
+			let u = this.fade(x)
+			let v = this.fade(y)
+			let w = this.fade(z)
 
 			// Interpolate
 			return this.lerp(
@@ -459,116 +459,144 @@ export default () => {
 				} = e.data
 
 				const generator = new Generator(seed, noiseConstant, height)
-				const blocks = new Uint16Array(size * size * size)
+				const blocks = new Uint16Array((size + 2) * (size + 2) * (size + 2))
 
 				const set = (i, j, k, v) =>
 					(blocks[i * stride[0] + j * stride[1] + k * stride[2]] = v)
 				const get = (i, j, k) =>
 					blocks[i * stride[0] + j * stride[1] + k * stride[2]]
 
-				for (let x = 0; x < size; x++)
-					for (let z = 0; z < size; z++)
-						for (let y = 0; y < size; y++)
+				for (let x = 0; x < size + 2; x++)
+					for (let z = 0; z < size + 2; z++)
+						for (let y = 0; y < size + 2; y++) {
+							// -1 for the offset
+							const pos = [
+								coordx * size + x - 1,
+								coordy * size + y - 1,
+								coordz * size + z - 1
+							]
 							set(
 								x,
 								z,
 								y,
-								changedBlocks[
-									getCoordsRepresentation(
-										coordx * size + x,
-										coordy * size + y,
-										coordz * size + z
-									)
-								] ||
-									generator.getBlockInfo(
-										coordx * size + x,
-										coordy * size + y,
-										coordz * size + z
-									)
+								changedBlocks[getCoordsRepresentation(...pos)] ||
+									generator.getBlockInfo(...pos)
 							)
+						}
 
-				const dims = [size, size, size]
+				// TODO: SET SIZE TO (SIZE + 2) FOR NEIGHBOR TESTING!
 
-				let quads = []
+				/** GREEDY RIGHT BELOW */
+				const dims = [size + 2, size + 2, size + 2]
+
+				let mask = new Int32Array(4096)
+
+				const quads = []
+
+				//Sweep over 3-axes
 				for (let d = 0; d < 3; ++d) {
-					let i,
-						j,
-						k,
-						l,
-						w,
-						h,
-						u = (d + 1) % 3,
-						v = (d + 2) % 3,
-						x = [0, 0, 0],
-						q = [0, 0, 0],
-						mask = new Int32Array(dims[u] * dims[v])
+					// prettier-ignore
+					let i, j, k, l, w, W, h, n, c,
+                        u = (d + 1) % 3, v = (d + 2) % 3,
+                        x = [0, 0, 0], q = [0, 0, 0],
+                        du = [0, 0, 0], dv = [0, 0, 0],
+                        dimsD = dims[d], dimsU = dims[u],
+                        dimsV = dims[v], xd
+
+					if (mask.length < dimsU * dimsV) mask = new Int32Array(dimsU * dimsV)
+
 					q[d] = 1
-					for (x[d] = -1; x[d] < dims[d]; ) {
-						//Compute mask
-						let n = 0
-						for (x[v] = 0; x[v] < dims[v]; ++x[v])
-							for (x[u] = 0; x[u] < dims[u]; ++x[u]) {
-								/*eslint eqeqeq: ["off"]*/
-								mask[n++] =
-									(0 <= x[d] ? get(x[0], x[1], x[2]) : false) !=
-									(x[d] < dims[d] - 1
-										? get(x[0] + q[0], x[1] + q[1], x[2] + q[2])
-										: false)
-							}
-						//Increment x[d]
-						++x[d]
-						//Generate mesh for mask using lexicographic ordering
+					x[d] = -1
+
+					// Compute mask
+					while (x[d] < dimsD) {
+						xd = x[d]
 						n = 0
-						for (j = 0; j < dims[v]; ++j)
-							for (i = 0; i < dims[u]; ) {
-								if (mask[n]) {
-									//Compute width
-									for (w = 1; mask[n + w] && i + w < dims[u]; ++w) {}
-									//Compute height (this is slightly awkward
-									let done = false
-									for (h = 1; j + h < dims[v]; ++h) {
-										for (k = 0; k < w; ++k) {
-											if (!mask[n + k + h * dims[u]]) {
-												done = true
-												break
-											}
-										}
-										if (done) {
-											break
-										}
-									}
-									//Add quad
-									x[u] = i
-									x[v] = j
-									let du = [0, 0, 0]
-									du[u] = w
-									let dv = [0, 0, 0]
-									dv[v] = h
-									quads.push([
-										[x[0], x[1], x[2]],
-										[x[0] + du[0], x[1] + du[1], x[2] + du[2]],
-										[
-											x[0] + du[0] + dv[0],
-											x[1] + du[1] + dv[1],
-											x[2] + du[2] + dv[2]
-										],
-										[x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]],
-										2,
-										d // axis
-									])
-									//Zero-out mask
-									for (l = 0; l < h; ++l)
-										for (k = 0; k < w; ++k) {
-											mask[n + k + l * dims[u]] = false
-										}
-									//Increment counters and continue
-									i += w
-									n += w
-								} else {
-									++i
-									++n
+
+						for (x[v] = 0; x[v] < dimsV; ++x[v]) {
+							for (x[u] = 0; x[u] < dimsU; ++x[u], ++n) {
+								// ignoring neighbors
+								if (xd === -1 || xd === dimsD - 1) {
+									mask[n] = 0
+									continue
 								}
+
+								let a = xd >= 0 && get(x[0], x[1], x[2]),
+									b =
+										xd < dimsD - 1 &&
+										get(x[0] + q[0], x[1] + q[1], x[2] + q[2])
+
+								if (a ? b : !b) {
+									mask[n] = 0
+									continue
+								}
+								mask[n] = a ? a : b
 							}
+						}
+
+						++x[d]
+
+						// Generate mesh for mask using lexicographic ordering
+						n = 0
+						for (j = 0; j < dimsV; ++j) {
+							for (i = 0; i < dimsU; ) {
+								c = mask[n]
+								if (!c) {
+									i++
+									n++
+									continue
+								}
+
+								//Compute width
+								w = 1
+								while (c === mask[n + w] && i + w < dimsU) w++
+
+								//Compute height (this is slightly awkward)
+								for (h = 1; j + h < dimsV; ++h) {
+									k = 0
+									while (k < w && c === mask[n + k + h * dimsU]) k++
+									if (k < w) break
+								}
+
+								// Add quad
+								// The du/dv arrays are reused/reset
+								// for each iteration.
+								du[d] = 0
+								dv[d] = 0
+								x[u] = i
+								x[v] = j
+
+								dv[v] = h
+								dv[u] = 0
+								du[u] = w
+								du[v] = 0
+
+								quads.push([
+									[x[0], x[1], x[2]],
+									[x[0] + du[0], x[1] + du[1], x[2] + du[2]],
+									[
+										x[0] + du[0] + dv[0],
+										x[1] + du[1] + dv[1],
+										x[2] + du[2] + dv[2]
+									],
+									[x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]],
+									c, // type
+									d // axis
+								])
+
+								//Zero-out mask
+								W = n + w
+								for (l = 0; l < h; ++l) {
+									for (k = n; k < W; ++k) {
+										mask[k + l * dimsU] = 0
+									}
+								}
+
+								//Increment counters and continue
+								i += w
+								n += w
+							}
+						}
 					}
 				}
 
