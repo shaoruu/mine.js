@@ -93,7 +93,8 @@ export default {
 		posY: 30,
 		posZ: 0,
 		horzD: 3,
-		vertD: 2
+		vertD: 2,
+		fetchDst: 5
 	},
 	controls: {
 		autoRotate: true,

@@ -4,9 +4,17 @@ import PointerLockControls from '../../../Utils/PointerLockControls'
 import Config from '../../../Data/Config'
 import Helpers from '../../../Utils/Helpers'
 
+const size = Config.chunk.size,
+	dimension = Config.block.dimension,
+	fetchDst = Config.player.fetchDst,
+	inertia = Config.player.inertia,
+	horz_speed = Config.player.speed.horizontal,
+	vert_speed = Config.player.speed.vertical,
+	coordinateDec = Config.player.coordinateDec
+
 // Controls based on orbit controls
 export default class Controls {
-	constructor(camera, scene, container, blocker, initPos, initDirs) {
+	constructor(camera, scene, world, container, blocker, initPos, initDirs) {
 		// Orbit controls first needs to pass in THREE to constructor
 		this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
 
@@ -14,6 +22,11 @@ export default class Controls {
 
 		this.velocity = new THREE.Vector3()
 		this.direction = new THREE.Vector3()
+
+		/** CONNECTIONS TO OUTER SPACE */
+		this.scene = scene
+		this.camera = camera
+		this.world = world
 
 		this.movements = {
 			moveForward: false,
@@ -33,10 +46,14 @@ export default class Controls {
 		this._initListeners()
 		scene.add(this.getObject())
 
+		// Setting up raycasting
+		this.raycaster = new THREE.Raycaster()
+		this.raycaster.far = fetchDst * dimension
+
 		// CONSTANTS
-		this.INERTIA = Config.player.inertia
-		this.HORIZONTAL_SPEED = Config.player.speed.horizontal
-		this.VERTICAL_SPEED = Config.player.speed.vertical
+		this.INERTIA = inertia
+		this.HORIZONTAL_SPEED = horz_speed
+		this.VERTICAL_SPEED = vert_speed
 	}
 
 	update = () => {
@@ -82,33 +99,47 @@ export default class Controls {
 		this.prevTime = now
 	}
 
+	getMouse = () => this.threeControls.getMouse()
+	getLookingBlock = () => {
+		this.raycaster.setFromCamera(this.getMouse(), this.camera)
+
+		// Getting chunk position
+		const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.getCoordinates()),
+			chunkMesh = this.world.getMeshByCoords(coordx, coordy, coordz)
+
+		if (!chunkMesh) return null
+
+		const objs = this.raycaster.intersectObject(chunkMesh)
+		if (objs.length === 0) return null
+
+		const { point } = objs[objs.length - 1]
+
+		// Global Block Coords
+		const gbc = Helpers.toGlobalBlock(point)
+
+		// Chunk Coords and Block Coords
+		const cc = Helpers.toChunkCoords(gbc),
+			bc = Helpers.toBlockCoords(gbc)
+
+		// Calculating block position
+		const chunkDim = size * dimension
+
+		return {
+			x: cc.coordx * chunkDim + bc.x * dimension,
+			y: cc.coordy * chunkDim + bc.y * dimension,
+			z: cc.coordz * chunkDim + bc.z * dimension
+		}
+	}
 	getObject = () => this.threeControls.getObject()
 	getCoordinates = () => {
 		const position = this.threeControls.getObject().position.clone()
-		position.x /= Config.block.dimension
-		position.y /= Config.block.dimension
-		position.z /= Config.block.dimension
-		position.x =
-			Math.round(position.x * Math.pow(10, Config.player.coordinateDec)) /
-			Math.pow(10, Config.player.coordinateDec)
-		position.y =
-			Math.round(position.y * Math.pow(10, Config.player.coordinateDec)) /
-			Math.pow(10, Config.player.coordinateDec)
-		position.z =
-			Math.round(position.z * Math.pow(10, Config.player.coordinateDec)) /
-			Math.pow(10, Config.player.coordinateDec)
-		return position
+
+		return Helpers.roundPos(Helpers.toGlobalBlock(position), coordinateDec)
 	}
 	getDirections = () => {
 		return {
-			dirx: Helpers.round(
-				this.threeControls.getPitch().rotation.x,
-				Config.player.coordinateDec
-			),
-			diry: Helpers.round(
-				this.threeControls.getObject().rotation.y,
-				Config.player.coordinateDec
-			)
+			dirx: Helpers.round(this.threeControls.getPitch().rotation.x, coordinateDec),
+			diry: Helpers.round(this.threeControls.getObject().rotation.y, coordinateDec)
 		}
 	}
 

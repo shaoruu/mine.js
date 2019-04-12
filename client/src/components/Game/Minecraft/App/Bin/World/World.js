@@ -93,9 +93,11 @@ class World {
 
 					// To reach here means the chunk is loaded and meshed.
 					updatedChunks[tempChunk.name] = true
+
 					if (!tempChunk.isLoaded) {
 						const mesh = tempChunk.getMesh()
 						if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
+
 						tempChunk.mark()
 					}
 				}
@@ -171,6 +173,14 @@ class World {
 
 	updateChanged = ({ type, x, y, z }) => {
 		// TODO Update dictionary `changedBlocks` and mark chunks for new update
+	}
+
+	getMeshByCoords = (cx, cy, cz) => {
+		const temp = this.chunks[Helpers.getCoordsRepresentation(cx, cy, cz)]
+
+		if (!temp) return null
+
+		return temp.loading ? null : temp.getMesh()
 	}
 
 	_digestChunks = chunks => {

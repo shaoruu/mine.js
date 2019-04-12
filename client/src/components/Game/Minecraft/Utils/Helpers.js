@@ -1,6 +1,9 @@
 import * as THREE from 'three'
 import Config from '../Data/Config'
 
+const size = Config.chunk.size,
+	dimension = Config.block.dimension
+
 export default class Helpers {
 	static mergeMeshes = (meshes, toBufferGeometry = true) => {
 		let finalGeometry,
@@ -126,11 +129,43 @@ export default class Helpers {
 	}
 
 	/**
-	 * Converting player position to chunk position
+	 * Rounding precision of position
+	 * @param { object } position - position to round contianing x, y and z.
+	 */
+	static roundPos = ({ x, y, z }, dec) => {
+		x = Math.round(x * Math.pow(10, dec)) / Math.pow(10, dec)
+		y = Math.round(y * Math.pow(10, dec)) / Math.pow(10, dec)
+		z = Math.round(z * Math.pow(10, dec)) / Math.pow(10, dec)
+		return { x, y, z }
+	}
+
+	/**
+	 * Converting global coordinates to global block coordinates.
+	 */
+	static toGlobalBlock = ({ x, y, z }) => ({
+		x: x / dimension,
+		y: y / dimension,
+		z: z / dimension
+	})
+
+	/**
+	 * Converting global *block* position to chunk position (remember to convert to global block coords first!)
 	 */
 	static toChunkCoords = ({ x, y, z }) => ({
-		coordx: Math.floor(x / Config.chunk.size),
-		coordy: Math.floor(y / Config.chunk.size),
-		coordz: Math.floor(z / Config.chunk.size)
+		coordx: Math.floor(x / size),
+		coordy: Math.floor(y / size),
+		coordz: Math.floor(z / size)
 	})
+
+	/**
+	 * Converting global position to block coords within chunk
+	 */
+	static toBlockCoords = ({ x, y, z }) => {
+		const { coordx, coordy, coordz } = this.toChunkCoords({ x, y, z })
+		return {
+			x: Math.floor(x - coordx * size),
+			y: Math.floor(y - coordy * size),
+			z: Math.floor(z - coordz * size)
+		}
+	}
 }

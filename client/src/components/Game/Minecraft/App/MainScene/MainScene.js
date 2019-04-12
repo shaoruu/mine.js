@@ -12,6 +12,8 @@ import { Hint } from '../../../../Utils'
 import Config from '../../Data/Config'
 import Helpers from '../../Utils/Helpers'
 
+const dimension = Config.block.dimension
+
 class MainScene extends Component {
 	constructor(props) {
 		super(props)
@@ -48,6 +50,9 @@ class MainScene extends Component {
 		this.scene.background = new THREE.Color(Config.fog.color)
 		this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
 
+		// World Initialization
+		this.world = new World(this.scene, this.worldData)
+
 		// Main renderer constructor
 		this.renderer = new Renderer(this.scene, this.mount)
 
@@ -62,6 +67,7 @@ class MainScene extends Component {
 		this.player = new Player(
 			this.camera.threeCamera,
 			this.scene,
+			this.world,
 			this.mount,
 			this.blocker,
 			this.initPos,
@@ -112,8 +118,6 @@ class MainScene extends Component {
 	}
 
 	init = () => {
-		this.world = new World(this.scene, this.worldData)
-
 		window.addEventListener('resize', this.onWindowResize, false)
 		if (!this.frameId) this.frameId = window.requestAnimationFrame(this.animate)
 	}
@@ -136,6 +140,28 @@ class MainScene extends Component {
 
 	update = () => {
 		this.player.update()
+
+		const coords = this.player.getLookingBlock()
+		if (coords) {
+			const { x, y, z } = coords
+			const obj = this.scene.getObjectByName('wireframe')
+			if (obj) this.scene.remove(obj)
+
+			const box = new THREE.BoxGeometry(dimension, dimension, dimension)
+			const wireframe = new THREE.WireframeGeometry(box)
+			const lineSegs = new THREE.LineSegments(wireframe)
+			lineSegs.position.x = x
+			lineSegs.position.y = y
+			lineSegs.position.z = z
+
+			const actualBox = new THREE.BoxHelper(lineSegs)
+			actualBox.name = 'wireframe'
+
+			this.scene.add(actualBox)
+		} else {
+			const obj = this.scene.getObjectByName('wireframe')
+			if (obj) this.scene.remove(obj)
+		}
 	}
 
 	renderScene = () => {
@@ -146,6 +172,7 @@ class MainScene extends Component {
 		const { coordx, coordy, coordz } = Helpers.toChunkCoords(
 			this.player.getCoordinates()
 		)
+
 		// 	currChunk = Helpers.getCoordsRepresentation(coordx, coordy, coordz)
 
 		// if (this.currChunk !== currChunk) {
