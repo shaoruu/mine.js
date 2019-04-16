@@ -61,31 +61,25 @@ class Chunk {
 		const meshes = []
 
 		for (let quad of quads) {
-			const [v0, v1, v2, v3, type, axis] = quad
+			const [v0, v1, v2, v3, type, axis, sMax, tMax] = quad
 
 			const { side, top } = this.materialManager.get(type)
 
 			const geo = new THREE.Geometry()
 
-			let material, sMax, tMax
+			let material
 			switch (axis) {
 				case 0:
 					material = side
 					pushVertices(geo, [v0, v1, v2, v3])
-					sMax = Helpers.calcDis(v0, v1)
-					tMax = Helpers.calcDis(v1, v2)
 					break
 				case 1:
 					material = side
 					pushVertices(geo, [v3, v0, v1, v2])
-					sMax = Helpers.calcDis(v1, v2)
-					tMax = Helpers.calcDis(v0, v1)
 					break
 				default:
 					material = top
 					pushVertices(geo, [v0, v1, v2, v3])
-					sMax = Helpers.calcDis(v0, v1)
-					tMax = Helpers.calcDis(v1, v2)
 					break
 			}
 
@@ -93,6 +87,8 @@ class Chunk {
 
 			Helpers.boxUnwrapUVs(geo)
 			Helpers.updateTextureParams(geo, 0, sMax, 0, tMax)
+
+			geo.computeFaceNormals()
 
 			const mesh = new THREE.Mesh(geo, material)
 

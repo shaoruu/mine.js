@@ -369,6 +369,13 @@ export default () => {
 	function getCoordsRepresentation(x, y, z, semi = false) {
 		return `${x}:${y}:${z}${semi ? ';' : ''}`
 	}
+	function calcDis(v1, v2) {
+		return Math.sqrt(
+			Math.abs(v1[0] - v2[0]) * Math.abs(v1[0] - v2[0]) +
+				Math.abs(v1[1] - v2[1]) * Math.abs(v1[1] - v2[1]) +
+				Math.abs(v1[2] - v2[2]) * Math.abs(v1[2] - v2[2])
+		)
+	}
 	function Generator(seed, noiseConstant, height) {
 		this.noise = new Noise(seed)
 
@@ -571,17 +578,37 @@ export default () => {
 								du[u] = w
 								du[v] = 0
 
-								quads.push([
-									[x[0], x[1], x[2]],
-									[x[0] + du[0], x[1] + du[1], x[2] + du[2]],
-									[
+								let sMax, tMax
+								const v0 = [x[0], x[1], x[2]],
+									v1 = [x[0] + du[0], x[1] + du[1], x[2] + du[2]],
+									v2 = [
 										x[0] + du[0] + dv[0],
 										x[1] + du[1] + dv[1],
 										x[2] + du[2] + dv[2]
 									],
-									[x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]],
+									v3 = [x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]]
+								switch (d) {
+									case 1: {
+										sMax = calcDis(v1, v2)
+										tMax = calcDis(v0, v1)
+										break
+									}
+									default: {
+										sMax = calcDis(v0, v1)
+										tMax = calcDis(v1, v2)
+										break
+									}
+								}
+
+								quads.push([
+									v0,
+									v1,
+									v2,
+									v3,
 									c, // type
-									d // axis
+									d, // axis
+									sMax,
+									tMax
 								])
 
 								//Zero-out mask

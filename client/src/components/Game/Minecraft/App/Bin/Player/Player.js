@@ -125,9 +125,9 @@ export default class Controls {
 		const chunkDim = size * dimension
 
 		return {
-			x: cc.coordx * chunkDim + bc.x * dimension,
-			y: cc.coordy * chunkDim + bc.y * dimension,
-			z: cc.coordz * chunkDim + bc.z * dimension
+			x: cc.coordx * chunkDim + bc.x * dimension - dimension / 2,
+			y: cc.coordy * chunkDim + bc.y * dimension - dimension / 2,
+			z: cc.coordz * chunkDim + bc.z * dimension - dimension / 2
 		}
 	}
 	getObject = () => this.threeControls.getObject()

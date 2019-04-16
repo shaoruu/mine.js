@@ -85,8 +85,8 @@ export default {
 	player: {
 		inertia: 5.0,
 		speed: {
-			horizontal: 800,
-			vertical: 1000
+			horizontal: 1600,
+			vertical: 2000
 		},
 		coordinateDec: 2,
 		posX: 0,
@@ -167,6 +167,6 @@ export default {
 		height: 50
 	},
 	world: {
-		noiseConstant: 40
+		noiseConstant: 50
 	}
 }

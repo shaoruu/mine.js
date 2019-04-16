@@ -143,9 +143,9 @@ export default class Helpers {
 	 * Converting global coordinates to global block coordinates.
 	 */
 	static toGlobalBlock = ({ x, y, z }) => ({
-		x: x / dimension,
-		y: y / dimension,
-		z: z / dimension
+		x: Math.floor(x / dimension),
+		y: Math.floor(y / dimension),
+		z: Math.floor(z / dimension)
 	})
 
 	/**

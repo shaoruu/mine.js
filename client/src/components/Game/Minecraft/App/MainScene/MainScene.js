@@ -11,6 +11,7 @@ import { WORLD_QUERY, BLOCK_SUBSCRIPTION } from '../../../../../lib/graphql'
 import { Hint } from '../../../../Utils'
 import Config from '../../Data/Config'
 import Helpers from '../../Utils/Helpers'
+import crosshair from '../../../../../assets/gui/crosshair.png'
 
 const dimension = Config.block.dimension
 
@@ -141,27 +142,27 @@ class MainScene extends Component {
 	update = () => {
 		this.player.update()
 
-		const coords = this.player.getLookingBlock()
-		if (coords) {
-			const { x, y, z } = coords
-			const obj = this.scene.getObjectByName('wireframe')
-			if (obj) this.scene.remove(obj)
+		// const coords = this.player.getLookingBlock()
+		// if (coords) {
+		// 	const { x, y, z } = coords
+		// 	const obj = this.scene.getObjectByName('wireframe')
+		// 	if (obj) this.scene.remove(obj)
 
-			const box = new THREE.BoxGeometry(dimension, dimension, dimension)
-			const wireframe = new THREE.WireframeGeometry(box)
-			const lineSegs = new THREE.LineSegments(wireframe)
-			lineSegs.position.x = x
-			lineSegs.position.y = y
-			lineSegs.position.z = z
+		// 	const box = new THREE.BoxGeometry(dimension, dimension, dimension)
+		// 	const wireframe = new THREE.WireframeGeometry(box)
+		// 	const lineSegs = new THREE.LineSegments(wireframe)
+		// 	lineSegs.position.x = x
+		// 	lineSegs.position.y = y
+		// 	lineSegs.position.z = z
 
-			const actualBox = new THREE.BoxHelper(lineSegs)
-			actualBox.name = 'wireframe'
+		// 	const actualBox = new THREE.BoxHelper(lineSegs)
+		// 	actualBox.name = 'wireframe'
 
-			this.scene.add(actualBox)
-		} else {
-			const obj = this.scene.getObjectByName('wireframe')
-			if (obj) this.scene.remove(obj)
-		}
+		// 	this.scene.add(actualBox)
+		// } else {
+		// 	const obj = this.scene.getObjectByName('wireframe')
+		// 	if (obj) this.scene.remove(obj)
+		// }
 	}
 
 	renderScene = () => {
@@ -238,6 +239,11 @@ class MainScene extends Component {
 										<div
 											className={classes.blocker}
 											ref={blocker => (this.blocker = blocker)}
+										/>
+										<img
+											src={crosshair}
+											alt=""
+											className={classes.crosshair}
 										/>
 										<Subscription
 											subscription={BLOCK_SUBSCRIPTION}
