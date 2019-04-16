@@ -13,8 +13,6 @@ import Config from '../../Data/Config'
 import Helpers from '../../Utils/Helpers'
 import crosshair from '../../../../../assets/gui/crosshair.png'
 
-const dimension = Config.block.dimension
-
 class MainScene extends Component {
 	constructor(props) {
 		super(props)
@@ -28,7 +26,8 @@ class MainScene extends Component {
 		this.updatePlayer = null
 	}
 
-	handleQueryComplete = () => {
+	handleQueryComplete = worldData => {
+		console.log('handleQueryComplete')
 		// Prerequisites
 		window.requestAnimationFrame =
 			window.requestAnimationFrame ||
@@ -46,13 +45,27 @@ class MainScene extends Component {
 				clearTimeout(requestID)
 			} //fall back
 
+		// Player setup
+		this.currentPlayer = worldData.players.find(
+			ele => ele.user.username === this.props.username
+		)
+		this.initPos = {
+			x: this.currentPlayer.x,
+			y: this.currentPlayer.y,
+			z: this.currentPlayer.z
+		}
+		this.initDirs = {
+			dirx: this.currentPlayer.dirx,
+			diry: this.currentPlayer.diry
+		}
+
 		// Main scene creation
 		this.scene = new THREE.Scene()
 		this.scene.background = new THREE.Color(Config.fog.color)
 		this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
 
 		// World Initialization
-		this.world = new World(this.scene, this.worldData)
+		this.world = new World(this.scene, worldData)
 
 		// Main renderer constructor
 		this.renderer = new Renderer(this.scene, this.mount)
@@ -74,9 +87,6 @@ class MainScene extends Component {
 			this.initPos,
 			this.initDirs
 		)
-
-		// Marking Player Chunk Coords
-		this.currChunk = ''
 
 		// Stats creation
 		this.stats = new Stats()
@@ -110,7 +120,7 @@ class MainScene extends Component {
 				})
 			}
 		}, 200)
-		this.requestChunkCall = setInterval(() => this.updateWorld(), 1000)
+		this.requestChunkCall = setInterval(() => this.updateWorld(), 800)
 	}
 
 	componentWillUnmount() {
@@ -141,28 +151,6 @@ class MainScene extends Component {
 
 	update = () => {
 		this.player.update()
-
-		// const coords = this.player.getLookingBlock()
-		// if (coords) {
-		// 	const { x, y, z } = coords
-		// 	const obj = this.scene.getObjectByName('wireframe')
-		// 	if (obj) this.scene.remove(obj)
-
-		// 	const box = new THREE.BoxGeometry(dimension, dimension, dimension)
-		// 	const wireframe = new THREE.WireframeGeometry(box)
-		// 	const lineSegs = new THREE.LineSegments(wireframe)
-		// 	lineSegs.position.x = x
-		// 	lineSegs.position.y = y
-		// 	lineSegs.position.z = z
-
-		// 	const actualBox = new THREE.BoxHelper(lineSegs)
-		// 	actualBox.name = 'wireframe'
-
-		// 	this.scene.add(actualBox)
-		// } else {
-		// 	const obj = this.scene.getObjectByName('wireframe')
-		// 	if (obj) this.scene.remove(obj)
-		// }
 	}
 
 	renderScene = () => {
@@ -174,16 +162,11 @@ class MainScene extends Component {
 			this.player.getCoordinates()
 		)
 
-		// 	currChunk = Helpers.getCoordsRepresentation(coordx, coordy, coordz)
-
-		// if (this.currChunk !== currChunk) {
-		// this.currChunk = currChunk
 		this.world.requestMeshUpdate({
 			coordx,
 			coordy,
 			coordz
 		})
-		// }
 	}
 
 	onWindowResize = () => {
@@ -192,7 +175,7 @@ class MainScene extends Component {
 	}
 
 	render() {
-		const { username, id: worldId } = this.props
+		const { id: worldId } = this.props
 
 		return (
 			<Query
@@ -200,32 +183,18 @@ class MainScene extends Component {
 				variables={{ query: worldId }}
 				onError={err => console.error(err)}
 				fetchPolicy="network-only"
-				onCompleted={() => this.handleQueryComplete()}>
+				onCompleted={({ world }) => {
+					this.worldData = world
+					this.handleQueryComplete(world)
+				}}>
 				{({ loading, data }) => {
 					if (loading) return <Hint text="Loading world..." />
 					if (!data) return <Hint text="World not found." />
 
-					const { world } = data
-
-					this.worldData = world
-					this.currentPlayer = world.players.find(
-						ele => ele.user.username === username
-					)
-					this.initPos = {
-						x: this.currentPlayer.x,
-						y: this.currentPlayer.y,
-						z: this.currentPlayer.z
-					}
-					this.initDirs = {
-						dirx: this.currentPlayer.dirx,
-						diry: this.currentPlayer.diry
-					}
-
 					return (
 						<Mutation
 							mutation={UPDATE_PLAYER_MUTATION}
-							onError={err => console.error(err)}
-							onCompleted={({ updatePlayer: { x, y, z } }) => {}}>
+							onError={err => console.error(err)}>
 							{updatePlayer => {
 								this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
 

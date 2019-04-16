@@ -116,10 +116,6 @@ const Mutation = {
 			}
 		})
 
-		/**
-		 * TODO: Implement chunk generation and blocks here.
-		 */
-		// Chunk generation around player
 		return prisma.mutation.updateWorld(
 			{
 				where: { id: world.id },

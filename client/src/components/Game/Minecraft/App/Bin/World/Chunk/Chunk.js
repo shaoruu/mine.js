@@ -109,6 +109,7 @@ class Chunk {
 
 	setGrid = blocks => (this.grid.data = blocks)
 
+	getBlockByCoords = (x, y, z) => this.grid.get(x + 1, z + 1, y + 1) // avoid passing in neighbors
 	getMesh = () => this.mesh
 	mark = () => (this.isLoaded = true)
 	unmark = () => (this.isLoaded = false)

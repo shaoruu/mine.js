@@ -12,8 +12,6 @@ const size = Config.block.dimension
 const PointerLockControls = function(camera, domElement, initPos, initDirs) {
 	let scope = this
 
-	const mouse = new THREE.Vector2()
-
 	this.domElement = domElement || document.body
 	this.isLocked = false
 
@@ -33,9 +31,6 @@ const PointerLockControls = function(camera, domElement, initPos, initDirs) {
 
 	function onMouseMove(event) {
 		if (scope.isLocked === false) return
-
-		mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
 
 		let movementX =
 			event.movementX || event.mozMovementX || event.webkitMovementX || 0
@@ -86,10 +81,6 @@ const PointerLockControls = function(camera, domElement, initPos, initDirs) {
 
 	this.getPitch = function() {
 		return pitchObject
-	}
-
-	this.getMouse = function() {
-		return mouse
 	}
 
 	this.getDirection = (function() {

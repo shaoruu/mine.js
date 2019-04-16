@@ -491,8 +491,6 @@ export default () => {
 							)
 						}
 
-				// TODO: SET SIZE TO (SIZE + 2) FOR NEIGHBOR TESTING!
-
 				/** GREEDY RIGHT BELOW */
 				const dims = [size + 2, size + 2, size + 2]
 

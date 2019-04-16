@@ -175,12 +175,10 @@ class World {
 		// TODO Update dictionary `changedBlocks` and mark chunks for new update
 	}
 
-	getMeshByCoords = (cx, cy, cz) => {
+	getChunkByCoords = (cx, cy, cz) => {
 		const temp = this.chunks[Helpers.getCoordsRepresentation(cx, cy, cz)]
 
-		if (!temp) return null
-
-		return temp.loading ? null : temp.getMesh()
+		return temp || null
 	}
 
 	_digestChunks = chunks => {

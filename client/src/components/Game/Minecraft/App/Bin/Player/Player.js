@@ -39,6 +39,20 @@ export default class Controls {
 
 		this.blocker = blocker
 
+		// Centered to middle of screen
+		this.fakeMouse = new THREE.Vector2(0, 0)
+
+		const box = new THREE.BoxGeometry(
+			dimension + 0.2,
+			dimension + 0.2,
+			dimension + 0.2
+		)
+		const wireframe = new THREE.WireframeGeometry(box)
+		this.highlighter = new THREE.LineSegments(wireframe)
+
+		this.boxhelper = new THREE.BoxHelper(this.highlighter, 0x070707)
+		this.boxhelper.name = 'wireframe'
+
 		this.init(scene)
 	}
 
@@ -54,10 +68,16 @@ export default class Controls {
 		this.INERTIA = inertia
 		this.HORIZONTAL_SPEED = horz_speed
 		this.VERTICAL_SPEED = vert_speed
+
+		// Adding wireframe
+		this.scene.add(this.boxhelper)
+		this.isWireframed = true
 	}
 
 	update = () => {
 		const now = performance.now()
+
+		/** Updating player position */
 		if (this.threeControls.isLocked) {
 			const delta = (now - this.prevTime) / 1000
 
@@ -96,39 +116,101 @@ export default class Controls {
 			object.translateY(this.velocity.y * delta)
 			object.translateZ(this.velocity.z * delta)
 		}
+
+		/** Updating targetted block */
+		const coords = this.getLookingBlockInfo()
+		if (coords) {
+			const { x, y, z } = coords
+
+			if (
+				x !== this.highlighter.position.x ||
+				y !== this.highlighter.position.y ||
+				z !== this.highlighter.position.z
+			) {
+				this.highlighter.position.x = x
+				this.highlighter.position.y = y
+				this.highlighter.position.z = z
+			}
+
+			this.boxhelper.setFromObject(this.highlighter)
+			if (!this.isWireframed) this.scene.add(this.boxhelper)
+		} else {
+			const obj = this.scene.getObjectByName('wireframe')
+			if (obj) {
+				this.scene.remove(obj)
+				this.isWireframed = false
+			}
+		}
+
 		this.prevTime = now
 	}
 
-	getMouse = () => this.threeControls.getMouse()
-	getLookingBlock = () => {
-		this.raycaster.setFromCamera(this.getMouse(), this.camera)
+	getLookingBlockInfo = () => {
+		this.raycaster.setFromCamera(this.fakeMouse, this.camera)
 
 		// Getting chunk position
-		const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.getCoordinates()),
-			chunkMesh = this.world.getMeshByCoords(coordx, coordy, coordz)
+		const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.getCoordinates())
 
-		if (!chunkMesh) return null
+		const chunks = [
+			[coordx, coordy, coordz],
+			[coordx - 1, coordy, coordz],
+			[coordx + 1, coordy, coordz],
+			[coordx, coordy - 1, coordz],
+			[coordx, coordy + 1, coordz],
+			[coordx, coordy, coordz - 1],
+			[coordx, coordy, coordz + 1]
+		]
+			.map(coords => this.world.getChunkByCoords(coords[0], coords[1], coords[2]))
+			.filter(c => c)
+			.map(c => c.getMesh())
+			.filter(m => m)
 
-		const objs = this.raycaster.intersectObject(chunkMesh)
+		if (!chunks.length) return null
+
+		const objs = this.raycaster.intersectObjects(chunks)
 		if (objs.length === 0) return null
 
-		const { point } = objs[objs.length - 1]
+		const {
+			point,
+			face: { normal }
+		} = objs[0]
 
 		// Global Block Coords
-		const gbc = Helpers.toGlobalBlock(point)
+		const gbc = Helpers.toGlobalBlock(point, true)
 
 		// Chunk Coords and Block Coords
-		const cc = Helpers.toChunkCoords(gbc),
+		const { coordx: cx, coordy: cy, coordz: cz } = Helpers.toChunkCoords(gbc),
+			pChunk = this.world.getChunkByCoords(cx, cy, cz),
 			bc = Helpers.toBlockCoords(gbc)
 
-		// Calculating block position
 		const chunkDim = size * dimension
 
-		return {
-			x: cc.coordx * chunkDim + bc.x * dimension - dimension / 2,
-			y: cc.coordy * chunkDim + bc.y * dimension - dimension / 2,
-			z: cc.coordz * chunkDim + bc.z * dimension - dimension / 2
+		let blockCoord = {
+			x: cx * chunkDim + bc.x * dimension + dimension / 2,
+			y: cy * chunkDim + bc.y * dimension + dimension / 2,
+			z: cz * chunkDim + bc.z * dimension + dimension / 2
 		}
+
+		/*eslint eqeqeq: ["off"]*/
+		if (Math.abs(normal.x).toFixed(1) == 1) {
+			// y-z plane
+			if (Boolean(pChunk.getBlockByCoords(bc.x - 1, bc.y, bc.z)))
+				blockCoord.x = cx * chunkDim + (bc.x - 1) * dimension + dimension / 2
+		} else if (Math.abs(normal.y).toFixed(1) == 1) {
+			// x-z plane
+			if (Boolean(pChunk.getBlockByCoords(bc.x, bc.y - 1, bc.z)))
+				blockCoord.y = cy * chunkDim + (bc.y - 1) * dimension + dimension / 2
+		} else if (Math.abs(normal.z).toFixed(1) == 1) {
+			// x-y plane
+			if (Boolean(pChunk.getBlockByCoords(bc.x, bc.y, bc.z - 1)))
+				blockCoord.z = cz * chunkDim + (bc.z - 1) * dimension + dimension / 2
+		}
+
+		blockCoord.x -= 0.1
+		blockCoord.y -= 0.1
+		blockCoord.z -= 0.1
+
+		return blockCoord
 	}
 	getObject = () => this.threeControls.getObject()
 	getCoordinates = () => {

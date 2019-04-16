@@ -103,16 +103,6 @@ export default class Helpers {
 	}
 
 	/**
-	 * Calculates distance between two vec3's
-	 */
-	static calcDis = (v1, v2) =>
-		Math.sqrt(
-			Math.abs(v1[0] - v2[0]) * Math.abs(v1[0] - v2[0]) +
-				Math.abs(v1[1] - v2[1]) * Math.abs(v1[1] - v2[1]) +
-				Math.abs(v1[2] - v2[2]) * Math.abs(v1[2] - v2[2])
-		)
-
-	/**
 	 * Update geometry's UV (s, t) values.
 	 */
 	static updateTextureParams = (geo, sMin, sMax, tMin, tMax) => {
@@ -142,11 +132,18 @@ export default class Helpers {
 	/**
 	 * Converting global coordinates to global block coordinates.
 	 */
-	static toGlobalBlock = ({ x, y, z }) => ({
-		x: Math.floor(x / dimension),
-		y: Math.floor(y / dimension),
-		z: Math.floor(z / dimension)
-	})
+	static toGlobalBlock = ({ x, y, z }, isRound = false) =>
+		isRound
+			? {
+					x: Math.floor(x / dimension),
+					y: Math.floor(y / dimension),
+					z: Math.floor(z / dimension)
+			  }
+			: {
+					x: x / dimension,
+					y: y / dimension,
+					z: z / dimension
+			  }
 
 	/**
 	 * Converting global *block* position to chunk position (remember to convert to global block coords first!)
