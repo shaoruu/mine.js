@@ -132,8 +132,8 @@ export default class Helpers {
 	/**
 	 * Converting global coordinates to global block coordinates.
 	 */
-	static toGlobalBlock = ({ x, y, z }, isRound = false) =>
-		isRound
+	static toGlobalBlock = ({ x, y, z }, isFloor = false) =>
+		isFloor
 			? {
 					x: Math.floor(x / dimension),
 					y: Math.floor(y / dimension),

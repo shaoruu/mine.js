@@ -449,14 +449,147 @@ export default () => {
 		this.getNoise = (x, y, z) =>
 			this.noise.perlin3(x, y, z) - (y * noiseConstant * 2) / height + 1
 	}
+	function calcQuads(get, dims) {
+		let mask = new Int32Array(4096)
+
+		const quads = []
+
+		//Sweep over 3-axes
+		for (let d = 0; d < 3; ++d) {
+			// prettier-ignore
+			let i, j, k, l, w, W, h, n, c,
+                        u = (d + 1) % 3, v = (d + 2) % 3,
+                        x = [0, 0, 0], q = [0, 0, 0],
+                        du = [0, 0, 0], dv = [0, 0, 0],
+                        dimsD = dims[d], dimsU = dims[u],
+                        dimsV = dims[v], xd
+
+			if (mask.length < dimsU * dimsV) mask = new Int32Array(dimsU * dimsV)
+
+			q[d] = 1
+			x[d] = -1
+
+			// Compute mask
+			while (x[d] < dimsD) {
+				xd = x[d]
+				n = 0
+
+				for (x[v] = 0; x[v] < dimsV; ++x[v]) {
+					for (x[u] = 0; x[u] < dimsU; ++x[u], ++n) {
+						// ignoring neighbors
+						if (xd === -1 || xd === dimsD - 1) {
+							mask[n] = 0
+							continue
+						}
+
+						let a = xd >= 0 && get(x[0], x[1], x[2]),
+							b =
+								xd < dimsD - 1 &&
+								get(x[0] + q[0], x[1] + q[1], x[2] + q[2])
+
+						if (a ? b : !b) {
+							mask[n] = 0
+							continue
+						}
+						mask[n] = a ? a : b
+					}
+				}
+
+				++x[d]
+
+				// Generate mesh for mask using lexicographic ordering
+				n = 0
+				for (j = 0; j < dimsV; ++j) {
+					for (i = 0; i < dimsU; ) {
+						c = mask[n]
+						if (!c) {
+							i++
+							n++
+							continue
+						}
+
+						//Compute width
+						w = 1
+						while (c === mask[n + w] && i + w < dimsU) w++
+
+						//Compute height (this is slightly awkward)
+						for (h = 1; j + h < dimsV; ++h) {
+							k = 0
+							while (k < w && c === mask[n + k + h * dimsU]) k++
+							if (k < w) break
+						}
+
+						// Add quad
+						// The du/dv arrays are reused/reset
+						// for each iteration.
+						du[d] = 0
+						dv[d] = 0
+						x[u] = i
+						x[v] = j
+
+						dv[v] = h
+						dv[u] = 0
+						du[u] = w
+						du[v] = 0
+
+						let sMax, tMax
+						const v0 = [x[0], x[1], x[2]],
+							v1 = [x[0] + du[0], x[1] + du[1], x[2] + du[2]],
+							v2 = [
+								x[0] + du[0] + dv[0],
+								x[1] + du[1] + dv[1],
+								x[2] + du[2] + dv[2]
+							],
+							v3 = [x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]]
+						switch (d) {
+							case 1: {
+								sMax = calcDis(v1, v2)
+								tMax = calcDis(v0, v1)
+								break
+							}
+							default: {
+								sMax = calcDis(v0, v1)
+								tMax = calcDis(v1, v2)
+								break
+							}
+						}
+
+						quads.push([
+							v0,
+							v1,
+							v2,
+							v3,
+							c, // type
+							d, // axis
+							sMax,
+							tMax
+						])
+
+						//Zero-out mask
+						W = n + w
+						for (l = 0; l < h; ++l) {
+							for (k = n; k < W; ++k) {
+								mask[k + l * dimsU] = 0
+							}
+						}
+
+						//Increment counters and continue
+						i += w
+						n += w
+					}
+				}
+			}
+		}
+		return quads
+	}
 
 	self.addEventListener('message', e => {
 		if (!e) return
 
-		const { ACTION } = e.data
-		if (!ACTION) throw new Error('Action not specified.')
+		const { cmd } = e.data
+		if (!cmd) throw new Error('Command not specified.')
 
-		switch (ACTION) {
+		switch (cmd) {
 			case 'GET_CHUNK': {
 				const {
 					seed,
@@ -494,138 +627,31 @@ export default () => {
 				/** GREEDY RIGHT BELOW */
 				const dims = [size + 2, size + 2, size + 2]
 
-				let mask = new Int32Array(4096)
+				const quads = calcQuads(get, dims)
 
-				const quads = []
+				postMessage({ cmd, blocks, quads, chunkName })
+				break
+			}
+			case 'BREAK_BLOCK': {
+				const {
+					blocks,
+					coords,
+					configs: { stride, chunkName, size }
+				} = e.data
 
-				//Sweep over 3-axes
-				for (let d = 0; d < 3; ++d) {
-					// prettier-ignore
-					let i, j, k, l, w, W, h, n, c,
-                        u = (d + 1) % 3, v = (d + 2) % 3,
-                        x = [0, 0, 0], q = [0, 0, 0],
-                        du = [0, 0, 0], dv = [0, 0, 0],
-                        dimsD = dims[d], dimsU = dims[u],
-                        dimsV = dims[v], xd
+				const dims = [size + 2, size + 2, size + 2]
+				const { x, y, z } = coords
 
-					if (mask.length < dimsU * dimsV) mask = new Int32Array(dimsU * dimsV)
+				const set = (i, j, k, v) =>
+					(blocks[i * stride[0] + j * stride[1] + k * stride[2]] = v)
+				const get = (i, j, k) =>
+					blocks[i * stride[0] + j * stride[1] + k * stride[2]]
 
-					q[d] = 1
-					x[d] = -1
+				set(x + 1, z + 1, y + 1, 0)
 
-					// Compute mask
-					while (x[d] < dimsD) {
-						xd = x[d]
-						n = 0
+				const quads = calcQuads(get, dims)
 
-						for (x[v] = 0; x[v] < dimsV; ++x[v]) {
-							for (x[u] = 0; x[u] < dimsU; ++x[u], ++n) {
-								// ignoring neighbors
-								if (xd === -1 || xd === dimsD - 1) {
-									mask[n] = 0
-									continue
-								}
-
-								let a = xd >= 0 && get(x[0], x[1], x[2]),
-									b =
-										xd < dimsD - 1 &&
-										get(x[0] + q[0], x[1] + q[1], x[2] + q[2])
-
-								if (a ? b : !b) {
-									mask[n] = 0
-									continue
-								}
-								mask[n] = a ? a : b
-							}
-						}
-
-						++x[d]
-
-						// Generate mesh for mask using lexicographic ordering
-						n = 0
-						for (j = 0; j < dimsV; ++j) {
-							for (i = 0; i < dimsU; ) {
-								c = mask[n]
-								if (!c) {
-									i++
-									n++
-									continue
-								}
-
-								//Compute width
-								w = 1
-								while (c === mask[n + w] && i + w < dimsU) w++
-
-								//Compute height (this is slightly awkward)
-								for (h = 1; j + h < dimsV; ++h) {
-									k = 0
-									while (k < w && c === mask[n + k + h * dimsU]) k++
-									if (k < w) break
-								}
-
-								// Add quad
-								// The du/dv arrays are reused/reset
-								// for each iteration.
-								du[d] = 0
-								dv[d] = 0
-								x[u] = i
-								x[v] = j
-
-								dv[v] = h
-								dv[u] = 0
-								du[u] = w
-								du[v] = 0
-
-								let sMax, tMax
-								const v0 = [x[0], x[1], x[2]],
-									v1 = [x[0] + du[0], x[1] + du[1], x[2] + du[2]],
-									v2 = [
-										x[0] + du[0] + dv[0],
-										x[1] + du[1] + dv[1],
-										x[2] + du[2] + dv[2]
-									],
-									v3 = [x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]]
-								switch (d) {
-									case 1: {
-										sMax = calcDis(v1, v2)
-										tMax = calcDis(v0, v1)
-										break
-									}
-									default: {
-										sMax = calcDis(v0, v1)
-										tMax = calcDis(v1, v2)
-										break
-									}
-								}
-
-								quads.push([
-									v0,
-									v1,
-									v2,
-									v3,
-									c, // type
-									d, // axis
-									sMax,
-									tMax
-								])
-
-								//Zero-out mask
-								W = n + w
-								for (l = 0; l < h; ++l) {
-									for (k = n; k < W; ++k) {
-										mask[k + l * dimsU] = 0
-									}
-								}
-
-								//Increment counters and continue
-								i += w
-								n += w
-							}
-						}
-					}
-				}
-
-				postMessage({ ACTION, blocks, quads, chunkName })
+				postMessage({ cmd, quads, coords, chunkName })
 				break
 			}
 			default:

@@ -37,13 +37,17 @@ class World {
 		this.worker = new WebWorker(worker)
 		this.setupWorker()
 
+		// World Change Helpers
+		this.targetBlock = null
+		this.potentialBlock = null
+
 		this.initWorld(changedBlocks)
 	}
 
 	setupWorker = () => {
 		this.worker.addEventListener('message', ({ data }) => {
-			const { ACTION } = data
-			switch (ACTION) {
+			const { cmd } = data
+			switch (cmd) {
 				case 'GET_CHUNK': {
 					const { quads, blocks, chunkName } = data
 					const temp = this.chunks[chunkName]
@@ -51,6 +55,21 @@ class World {
 					temp.combineMesh(temp.meshQuads(quads)).then(
 						() => (temp.loading = false)
 					)
+					break
+				}
+				case 'BREAK_BLOCK': {
+					const {
+						quads,
+						coords: { x, y, z },
+						chunkName
+					} = data
+					const temp = this.chunks[chunkName]
+					temp.combineMesh(temp.meshQuads(quads)).then(() => {
+						const obj = this.scene.getObjectByName(chunkName)
+						if (obj) this.scene.remove(obj)
+						this.scene.add(temp.getMesh())
+						temp.setBlock(x, y, z, 0)
+					})
 					break
 				}
 				default:
@@ -123,7 +142,7 @@ class World {
 		this.chunks[newChunk.name] = newChunk
 
 		this.worker.postMessage({
-			ACTION: 'GET_CHUNK',
+			cmd: 'GET_CHUNK',
 			seed: this.seed,
 			changedBlocks: this.changedBlocks,
 			configs: {
@@ -171,6 +190,29 @@ class World {
 		return blocks
 	}
 
+	breakBlock = () => {
+		if (!this.targetBlock) return // do nothing if no blocks are selected
+
+		const {
+			chunk: { cx, cy, cz },
+			block
+		} = this.targetBlock
+
+		const targetChunk = this.getChunkByCoords(cx, cy, cz)
+		// TODO change changedBlocks
+
+		this.worker.postMessage({
+			cmd: 'BREAK_BLOCK',
+			blocks: targetChunk.grid.data,
+			coords: block,
+			configs: {
+				size,
+				stride: targetChunk.grid.stride,
+				chunkName: targetChunk.name
+			}
+		})
+	}
+
 	updateChanged = ({ type, x, y, z }) => {
 		// TODO Update dictionary `changedBlocks` and mark chunks for new update
 	}
@@ -180,6 +222,9 @@ class World {
 
 		return temp || null
 	}
+
+	setPotential = potential => (this.potentialBlock = potential)
+	setTarget = target => (this.targetBlock = target)
 
 	_digestChunks = chunks => {
 		Helpers.log('Loading Existing Chunks...')

@@ -26,8 +26,7 @@ class MainScene extends Component {
 		this.updatePlayer = null
 	}
 
-	handleQueryComplete = worldData => {
-		console.log('handleQueryComplete')
+	handleQueryComplete = () => {
 		// Prerequisites
 		window.requestAnimationFrame =
 			window.requestAnimationFrame ||
@@ -46,7 +45,7 @@ class MainScene extends Component {
 			} //fall back
 
 		// Player setup
-		this.currentPlayer = worldData.players.find(
+		this.currentPlayer = this.worldData.players.find(
 			ele => ele.user.username === this.props.username
 		)
 		this.initPos = {
@@ -65,7 +64,7 @@ class MainScene extends Component {
 		this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
 
 		// World Initialization
-		this.world = new World(this.scene, worldData)
+		this.world = new World(this.scene, this.worldData)
 
 		// Main renderer constructor
 		this.renderer = new Renderer(this.scene, this.mount)
@@ -185,7 +184,8 @@ class MainScene extends Component {
 				fetchPolicy="network-only"
 				onCompleted={({ world }) => {
 					this.worldData = world
-					this.handleQueryComplete(world)
+					if (this.mount) this.handleQueryComplete()
+					else this.waitingForMount = true
 				}}>
 				{({ loading, data }) => {
 					if (loading) return <Hint text="Loading world..." />
@@ -197,14 +197,19 @@ class MainScene extends Component {
 							onError={err => console.error(err)}>
 							{updatePlayer => {
 								this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
-
 								return (
 									<div
 										style={{
 											width: '100%',
 											height: '100%'
 										}}
-										ref={mount => (this.mount = mount)}>
+										ref={mount => {
+											this.mount = mount
+											if (this.waitingForMount) {
+												this.waitingForMount = false
+												this.handleQueryComplete()
+											}
+										}}>
 										<div
 											className={classes.blocker}
 											ref={blocker => (this.blocker = blocker)}

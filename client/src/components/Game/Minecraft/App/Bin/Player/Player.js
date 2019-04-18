@@ -37,15 +37,17 @@ export default class Controls {
 			moveUp: false
 		}
 
+		this.mousePressed = false
+
 		this.blocker = blocker
 
 		// Centered to middle of screen
 		this.fakeMouse = new THREE.Vector2(0, 0)
 
 		const box = new THREE.BoxGeometry(
-			dimension + 0.2,
-			dimension + 0.2,
-			dimension + 0.2
+			dimension + 0.24,
+			dimension + 0.24,
+			dimension + 0.24
 		)
 		const wireframe = new THREE.WireframeGeometry(box)
 		this.highlighter = new THREE.LineSegments(wireframe)
@@ -77,7 +79,6 @@ export default class Controls {
 	update = () => {
 		const now = performance.now()
 
-		/** Updating player position */
 		if (this.threeControls.isLocked) {
 			const delta = (now - this.prevTime) / 1000
 
@@ -90,6 +91,8 @@ export default class Controls {
 				moveForward,
 				moveBackward
 			} = this.movements
+
+			if (this.mousePressed) this.world.breakBlock()
 
 			// Update velocity with inertia
 			this.velocity.x -= this.velocity.x * this.INERTIA * delta
@@ -118,9 +121,15 @@ export default class Controls {
 		}
 
 		/** Updating targetted block */
-		const coords = this.getLookingBlockInfo()
-		if (coords) {
-			const { x, y, z } = coords
+		const blockInfo = this.getLookingBlockInfo()
+		if (blockInfo) {
+			const { target, targetwf, potential } = blockInfo
+
+			// Signal to world
+			this.world.setTarget(target)
+			this.world.setPotential(potential)
+
+			const { x, y, z } = targetwf
 
 			if (
 				x !== this.highlighter.position.x ||
@@ -136,6 +145,11 @@ export default class Controls {
 			if (!this.isWireframed) this.scene.add(this.boxhelper)
 		} else {
 			const obj = this.scene.getObjectByName('wireframe')
+
+			// Clearing world potentials
+			this.world.setTarget(null)
+			this.world.setPotential(null)
+
 			if (obj) {
 				this.scene.remove(obj)
 				this.isWireframed = false
@@ -185,32 +199,48 @@ export default class Controls {
 
 		const chunkDim = size * dimension
 
-		let blockCoord = {
+		// Target for wireframe
+		let targetwf = {
 			x: cx * chunkDim + bc.x * dimension + dimension / 2,
 			y: cy * chunkDim + bc.y * dimension + dimension / 2,
 			z: cz * chunkDim + bc.z * dimension + dimension / 2
 		}
 
-		/*eslint eqeqeq: ["off"]*/
-		if (Math.abs(normal.x).toFixed(1) == 1) {
-			// y-z plane
-			if (Boolean(pChunk.getBlockByCoords(bc.x - 1, bc.y, bc.z)))
-				blockCoord.x = cx * chunkDim + (bc.x - 1) * dimension + dimension / 2
-		} else if (Math.abs(normal.y).toFixed(1) == 1) {
-			// x-z plane
-			if (Boolean(pChunk.getBlockByCoords(bc.x, bc.y - 1, bc.z)))
-				blockCoord.y = cy * chunkDim + (bc.y - 1) * dimension + dimension / 2
-		} else if (Math.abs(normal.z).toFixed(1) == 1) {
-			// x-y plane
-			if (Boolean(pChunk.getBlockByCoords(bc.x, bc.y, bc.z - 1)))
-				blockCoord.z = cz * chunkDim + (bc.z - 1) * dimension + dimension / 2
+		let target = {
+			chunk: { cx, cy, cz },
+			block: { ...bc }
 		}
 
-		blockCoord.x -= 0.1
-		blockCoord.y -= 0.1
-		blockCoord.z -= 0.1
+		let potential = {
+			chunk: { cx, cy, cz },
+			block: { ...bc }
+		}
 
-		return blockCoord
+		/*eslint eqeqeq: ["off"]*/
+		if (Math.abs(normal.x).toFixed(1) == 1)
+			if (Boolean(pChunk.getBlock(bc.x - 1, bc.y, bc.z))) {
+				// y-z plane
+				targetwf.x = cx * chunkDim + (bc.x - 1) * dimension + dimension / 2
+				target.block.x -= 1
+			} else potential.block.x -= 1
+		else if (Math.abs(normal.y).toFixed(1) == 1)
+			if (Boolean(pChunk.getBlock(bc.x, bc.y - 1, bc.z))) {
+				// x-z plane
+				targetwf.y = cy * chunkDim + (bc.y - 1) * dimension + dimension / 2
+				target.block.y -= 1
+			} else potential.block.y -= 1
+		else if (Math.abs(normal.z).toFixed(1) == 1)
+			if (Boolean(pChunk.getBlock(bc.x, bc.y, bc.z - 1))) {
+				// x-y plane
+				targetwf.z = cz * chunkDim + (bc.z - 1) * dimension + dimension / 2
+				target.block.z -= 1
+			} else potential.block.z -= 1
+
+		targetwf.x -= 0.12
+		targetwf.y -= 0.12
+		targetwf.z -= 0.12
+
+		return { target, targetwf, potential }
 	}
 	getObject = () => this.threeControls.getObject()
 	getCoordinates = () => {
@@ -243,9 +273,8 @@ export default class Controls {
 			this.blocker.style.display = 'block'
 		})
 
-		let onKeyDown = event => {
+		const onKeyDown = event => {
 			if (event.shiftKey) this.movements.moveDown = true
-
 			switch (event.keyCode) {
 				case 38: // up
 				case 87: // w
@@ -275,7 +304,7 @@ export default class Controls {
 			}
 		}
 
-		let onKeyUp = event => {
+		const onKeyUp = event => {
 			switch (event.keyCode) {
 				case 38: // up
 				case 87: // w
@@ -307,7 +336,12 @@ export default class Controls {
 			}
 		}
 
+		const onMouseDown = () => (this.mousePressed = true)
+		const onMouseUp = () => (this.mousePressed = false)
+
 		document.addEventListener('keydown', onKeyDown, false)
 		document.addEventListener('keyup', onKeyUp, false)
+		document.addEventListener('mousedown', onMouseDown, false)
+		document.addEventListener('mouseup', onMouseUp, false)
 	}
 }
