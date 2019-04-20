@@ -309,7 +309,11 @@ export default () => {
 			let u = this.fade(x)
 
 			// Interpolate the four results
-			return this.lerp(this.lerp(n00, n10, u), this.lerp(n01, n11, u), this.fade(y))
+			return this.lerp(
+				this.lerp(n00, n10, u),
+				this.lerp(n01, n11, u),
+				this.fade(y)
+			)
 		}
 
 		// 3D Perlin Noise
@@ -329,14 +333,26 @@ export default () => {
 
 			// Calculate noise contributions from each of the eight corners
 			let n000 = this.gradP[X + this.perm[Y + this.perm[Z]]].dot3(x, y, z)
-			let n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(x, y, z - 1)
-			let n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(x, y - 1, z)
+			let n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(
+				x,
+				y,
+				z - 1
+			)
+			let n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(
+				x,
+				y - 1,
+				z
+			)
 			let n011 = this.gradP[X + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
 				x,
 				y - 1,
 				z - 1
 			)
-			let n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(x - 1, y, z)
+			let n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(
+				x - 1,
+				y,
+				z
+			)
 			let n101 = this.gradP[X + 1 + this.perm[Y + this.perm[Z + 1]]].dot3(
 				x - 1,
 				y,
@@ -368,13 +384,6 @@ export default () => {
 	}
 	function getCoordsRepresentation(x, y, z, semi = false) {
 		return `${x}:${y}:${z}${semi ? ';' : ''}`
-	}
-	function calcDis(v1, v2) {
-		return Math.sqrt(
-			Math.abs(v1[0] - v2[0]) * Math.abs(v1[0] - v2[0]) +
-				Math.abs(v1[1] - v2[1]) * Math.abs(v1[1] - v2[1]) +
-				Math.abs(v1[2] - v2[2]) * Math.abs(v1[2] - v2[2])
-		)
 	}
 	function Generator(seed, noiseConstant, height) {
 		this.noise = new Noise(seed)
@@ -450,137 +459,63 @@ export default () => {
 			this.noise.perlin3(x, y, z) - (y * noiseConstant * 2) / height + 1
 	}
 	function calcQuads(get, dims) {
-		let mask = new Int32Array(4096)
+		const planes = [],
+			materials = { top: 'top', side: 'side', bottom: 'bottom' }
 
-		const quads = []
+		for (let x = 1; x < dims[0] - 1; x++) {
+			for (let z = 1; z < dims[1] - 1; z++) {
+				for (let y = 1; y < dims[2] - 1; y++) {
+					// dismiss air
+					if (get(x, z, y) === 0) continue
 
-		//Sweep over 3-axes
-		for (let d = 0; d < 3; ++d) {
-			// prettier-ignore
-			let i, j, k, l, w, W, h, n, c,
-                        u = (d + 1) % 3, v = (d + 2) % 3,
-                        x = [0, 0, 0], q = [0, 0, 0],
-                        du = [0, 0, 0], dv = [0, 0, 0],
-                        dimsD = dims[d], dimsU = dims[u],
-                        dimsV = dims[v], xd
+					const type = get(x, z, y)
 
-			if (mask.length < dimsU * dimsV) mask = new Int32Array(dimsU * dimsV)
-
-			q[d] = 1
-			x[d] = -1
-
-			// Compute mask
-			while (x[d] < dimsD) {
-				xd = x[d]
-				n = 0
-
-				for (x[v] = 0; x[v] < dimsV; ++x[v]) {
-					for (x[u] = 0; x[u] < dimsU; ++x[u], ++n) {
-						// ignoring neighbors
-						if (xd === -1 || xd === dimsD - 1) {
-							mask[n] = 0
-							continue
-						}
-
-						let a = xd >= 0 && get(x[0], x[1], x[2]),
-							b =
-								xd < dimsD - 1 &&
-								get(x[0] + q[0], x[1] + q[1], x[2] + q[2])
-
-						if (a ? b : !b) {
-							mask[n] = 0
-							continue
-						}
-						mask[n] = a ? a : b
-					}
-				}
-
-				++x[d]
-
-				// Generate mesh for mask using lexicographic ordering
-				n = 0
-				for (j = 0; j < dimsV; ++j) {
-					for (i = 0; i < dimsU; ) {
-						c = mask[n]
-						if (!c) {
-							i++
-							n++
-							continue
-						}
-
-						//Compute width
-						w = 1
-						while (c === mask[n + w] && i + w < dimsU) w++
-
-						//Compute height (this is slightly awkward)
-						for (h = 1; j + h < dimsV; ++h) {
-							k = 0
-							while (k < w && c === mask[n + k + h * dimsU]) k++
-							if (k < w) break
-						}
-
-						// Add quad
-						// The du/dv arrays are reused/reset
-						// for each iteration.
-						du[d] = 0
-						dv[d] = 0
-						x[u] = i
-						x[v] = j
-
-						dv[v] = h
-						dv[u] = 0
-						du[u] = w
-						du[v] = 0
-
-						let sMax, tMax
-						const v0 = [x[0], x[1], x[2]],
-							v1 = [x[0] + du[0], x[1] + du[1], x[2] + du[2]],
-							v2 = [
-								x[0] + du[0] + dv[0],
-								x[1] + du[1] + dv[1],
-								x[2] + du[2] + dv[2]
-							],
-							v3 = [x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]]
-						switch (d) {
-							case 1: {
-								sMax = calcDis(v1, v2)
-								tMax = calcDis(v0, v1)
-								break
-							}
-							default: {
-								sMax = calcDis(v0, v1)
-								tMax = calcDis(v1, v2)
-								break
-							}
-						}
-
-						quads.push([
-							v0,
-							v1,
-							v2,
-							v3,
-							c, // type
-							d, // axis
-							sMax,
-							tMax
+					// TOP
+					if (get(x, z, y + 1) === 0)
+						planes.push([
+							[x, y + 0.5, z],
+							['rotateX', (Math.PI * 3) / 2],
+							type,
+							materials.top
 						])
 
-						//Zero-out mask
-						W = n + w
-						for (l = 0; l < h; ++l) {
-							for (k = n; k < W; ++k) {
-								mask[k + l * dimsU] = 0
-							}
-						}
+					// SIDES
+					if (get(x + 1, z, y) === 0)
+						planes.push([
+							[x + 0.5, y, z],
+							['rotateY', Math.PI / 2],
+							type,
+							materials.side
+						])
+					if (get(x, z + 1, y) === 0)
+						planes.push([[x, y, z + 0.5], null, type, materials.side])
+					if (get(x - 1, z, y) === 0)
+						planes.push([
+							[x - 0.5, y, z],
+							['rotateY', (Math.PI * 3) / 2],
+							type,
+							materials.side
+						])
+					if (get(x, z - 1, y) === 0)
+						planes.push([
+							[x, y, z - 0.5],
+							['rotateY', Math.PI],
+							type,
+							materials.side
+						])
 
-						//Increment counters and continue
-						i += w
-						n += w
-					}
+					// BOTTOM
+					if (get(x, z, y - 1) === 0)
+						planes.push([
+							[x, y - 0.5, z],
+							['rotateX', Math.PI / 2],
+							type,
+							materials.bottom
+						])
 				}
 			}
 		}
-		return quads
+		return planes
 	}
 
 	self.addEventListener('message', e => {
@@ -615,16 +550,15 @@ export default () => {
 								coordy * size + y - 1,
 								coordz * size + z - 1
 							]
-							set(
-								x,
-								z,
-								y,
-								changedBlocks[getCoordsRepresentation(...pos)] ||
-									generator.getBlockInfo(...pos)
-							)
+
+							const cb = changedBlocks[getCoordsRepresentation(...pos)],
+								value =
+									typeof cb === 'number' ? cb : generator.getBlockInfo(...pos)
+
+							set(x, z, y, value)
 						}
 
-				/** GREEDY RIGHT BELOW */
+				/** MESHING RIGHT BELOW */
 				const dims = [size + 2, size + 2, size + 2]
 
 				const quads = calcQuads(get, dims)
@@ -634,24 +568,25 @@ export default () => {
 			}
 			case 'BREAK_BLOCK': {
 				const {
-					blocks,
-					coords,
+					data,
+					block,
+					type,
 					configs: { stride, chunkName, size }
 				} = e.data
 
 				const dims = [size + 2, size + 2, size + 2]
-				const { x, y, z } = coords
 
 				const set = (i, j, k, v) =>
-					(blocks[i * stride[0] + j * stride[1] + k * stride[2]] = v)
+					(data[i * stride[0] + j * stride[1] + k * stride[2]] = v)
 				const get = (i, j, k) =>
-					blocks[i * stride[0] + j * stride[1] + k * stride[2]]
+					data[i * stride[0] + j * stride[1] + k * stride[2]]
 
-				set(x + 1, z + 1, y + 1, 0)
+				const { x, y, z } = block
+				set(x + 1, z + 1, y + 1, type)
 
 				const quads = calcQuads(get, dims)
 
-				postMessage({ cmd, quads, coords, chunkName })
+				postMessage({ cmd, quads, block, type, chunkName })
 				break
 			}
 			default:

@@ -15,6 +15,7 @@ type Mutation {
 	# WORLD
 	createWorld(data: CreateWorldInput!): World!
 	updatePlayer(data: UpdatePlayerInput!): Player!
+	updateBlock(data: UpdateBlockInput!): Boolean!
 }
 
 type Subscription {
@@ -55,6 +56,7 @@ type Player {
 }
 
 type Block {
+	representation: String!
 	type: Int!
 	world: World!
 	x: Int!
@@ -92,6 +94,14 @@ input UpdatePlayerInput {
 	z: Float
 	dirx: Float
 	diry: Float
+}
+
+input UpdateBlockInput {
+	worldId: ID!
+	type: Int!
+	x: Int!
+	y: Int!
+	z: Int!
 }
 
 type AuthPayload {

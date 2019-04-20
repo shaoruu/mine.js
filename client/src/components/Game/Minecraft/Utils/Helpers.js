@@ -132,12 +132,12 @@ export default class Helpers {
 	/**
 	 * Converting global coordinates to global block coordinates.
 	 */
-	static toGlobalBlock = ({ x, y, z }, isFloor = false) =>
-		isFloor
+	static toGlobalBlock = ({ x, y, z }, isRound = false) =>
+		isRound
 			? {
-					x: Math.floor(x / dimension),
-					y: Math.floor(y / dimension),
-					z: Math.floor(z / dimension)
+					x: Math.round(x / dimension),
+					y: Math.round(y / dimension),
+					z: Math.round(z / dimension)
 			  }
 			: {
 					x: x / dimension,

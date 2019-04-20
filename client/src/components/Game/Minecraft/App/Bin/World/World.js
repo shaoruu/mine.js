@@ -6,6 +6,7 @@ import Helpers from '../../../Utils/Helpers'
 import worker from './World.worker'
 import WebWorker from '../../Bin/WebWorker/WebWorker'
 import BlockMaterials from './Chunk/Block/BlockMaterials'
+import { UPDATE_BLOCK_MUTATION } from '../../../../../../lib/graphql'
 
 const size = Config.chunk.size,
 	height = Config.chunk.height,
@@ -14,11 +15,12 @@ const size = Config.chunk.size,
 	noiseConstant = Config.world.noiseConstant
 
 class World {
-	constructor(scene, worldData) {
+	constructor(id, scene, worldData, apolloClient) {
 		const { seed, name, changedBlocks } = worldData
 
 		this.chunkDimension = Config.chunk.size * Config.block.dimension
 
+		this.id = id
 		this.seed = seed
 		this.name = name
 
@@ -41,6 +43,9 @@ class World {
 		this.targetBlock = null
 		this.potentialBlock = null
 
+		// Server Communicatin
+		this.apolloClient = apolloClient
+
 		this.initWorld(changedBlocks)
 	}
 
@@ -52,15 +57,16 @@ class World {
 					const { quads, blocks, chunkName } = data
 					const temp = this.chunks[chunkName]
 					temp.setGrid(blocks)
-					temp.combineMesh(temp.meshQuads(quads)).then(
-						() => (temp.loading = false)
-					)
+					temp
+						.combineMesh(temp.meshQuads(quads))
+						.then(() => (temp.loading = false))
 					break
 				}
 				case 'BREAK_BLOCK': {
 					const {
 						quads,
-						coords: { x, y, z },
+						block: { x, y, z },
+						type,
 						chunkName
 					} = data
 					const temp = this.chunks[chunkName]
@@ -68,7 +74,8 @@ class World {
 						const obj = this.scene.getObjectByName(chunkName)
 						if (obj) this.scene.remove(obj)
 						this.scene.add(temp.getMesh())
-						temp.setBlock(x, y, z, 0)
+						temp.setBlock(x, y, z, type)
+						temp.untagBusyBlock(x, y, z)
 					})
 					break
 				}
@@ -89,7 +96,7 @@ class World {
 		if (changedBlocks)
 			// TYPE = ID
 			changedBlocks.forEach(({ type, x, y, z }) => {
-				this.changedBlocks[Helpers.getCoordsRepresentation(x, y, z)] = type
+				this.registerChangedBlock(type, x, y, z)
 			})
 	}
 
@@ -195,26 +202,68 @@ class World {
 
 		const {
 			chunk: { cx, cy, cz },
-			block
+			block,
+			neighbors
 		} = this.targetBlock
 
 		const targetChunk = this.getChunkByCoords(cx, cy, cz)
-		// TODO change changedBlocks
 
-		this.worker.postMessage({
-			cmd: 'BREAK_BLOCK',
-			blocks: targetChunk.grid.data,
-			coords: block,
-			configs: {
-				size,
-				stride: targetChunk.grid.stride,
-				chunkName: targetChunk.name
-			}
-		})
-	}
+		const { x, y, z } = block
+		if (targetChunk.checkBusyBlock(x, y, z)) return
+		else targetChunk.tagBusyBlock(x, y, z)
 
-	updateChanged = ({ type, x, y, z }) => {
-		// TODO Update dictionary `changedBlocks` and mark chunks for new update
+		// Communicating with server
+		const mappedPos = { x: cx * size + x, y: cy * size + y, z: cz * size + z }
+		this.apolloClient
+			.mutate({
+				mutation: UPDATE_BLOCK_MUTATION,
+				variables: {
+					worldId: this.id,
+					type: 0,
+					...mappedPos
+				}
+			})
+			.then(() => {
+				this.registerChangedBlock(0, mappedPos.x, mappedPos.y, mappedPos.z) // kinda unnecessary
+
+				this.worker.postMessage({
+					cmd: 'BREAK_BLOCK',
+					data: targetChunk.grid.data,
+					block,
+					type: 0,
+					configs: {
+						size,
+						stride: targetChunk.grid.stride,
+						chunkName: targetChunk.name
+					}
+				})
+
+				/** Handling neighbor chunks */
+				if (neighbors.length !== 0) {
+					neighbors.forEach(n => {
+						const {
+							chunk: { cx: ncx, cy: ncy, cz: ncz },
+							block
+						} = n
+
+						const neighborChunk = this.getChunkByCoords(ncx, ncy, ncz)
+
+						// This is just registering the outer layer of neighbor as 0
+						this.worker.postMessage({
+							cmd: 'BREAK_BLOCK',
+							data: neighborChunk.grid.data,
+							block,
+							type: 0,
+							configs: {
+								size,
+								stride: neighborChunk.grid.stride,
+								chunkName: neighborChunk.name
+							}
+						})
+					})
+				}
+			})
+			.catch(err => console.error(err))
 	}
 
 	getChunkByCoords = (cx, cy, cz) => {
@@ -223,6 +272,9 @@ class World {
 		return temp || null
 	}
 
+	registerChangedBlock = (type, x, y, z) => {
+		this.changedBlocks[Helpers.getCoordsRepresentation(x, y, z)] = type
+	}
 	setPotential = potential => (this.potentialBlock = potential)
 	setTarget = target => (this.targetBlock = target)
 

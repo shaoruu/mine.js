@@ -1,5 +1,5 @@
 # source: http://localhost:4466
-# timestamp: Sat Apr 06 2019 11:25:09 GMT+0800 (Taipei Standard Time)
+# timestamp: Sat Apr 20 2019 23:58:13 GMT+0800 (CST)
 
 type AggregateBlock {
   count: Int!
@@ -23,6 +23,7 @@ type BatchPayload {
 }
 
 type Block {
+  representation: String!
   type: Int!
   world: World!
   x: Int!
@@ -41,6 +42,7 @@ type BlockConnection {
 }
 
 input BlockCreateInput {
+  representation: String!
   type: Int!
   x: Int!
   y: Int!
@@ -50,9 +52,11 @@ input BlockCreateInput {
 
 input BlockCreateManyWithoutWorldInput {
   create: [BlockCreateWithoutWorldInput!]
+  connect: [BlockWhereUniqueInput!]
 }
 
 input BlockCreateWithoutWorldInput {
+  representation: String!
   type: Int!
   x: Int!
   y: Int!
@@ -69,6 +73,8 @@ type BlockEdge {
 }
 
 enum BlockOrderByInput {
+  representation_ASC
+  representation_DESC
   type_ASC
   type_DESC
   x_ASC
@@ -86,6 +92,7 @@ enum BlockOrderByInput {
 }
 
 type BlockPreviousValues {
+  representation: String!
   type: Int!
   x: Int!
   y: Int!
@@ -101,6 +108,46 @@ input BlockScalarWhereInput {
 
   """Logical NOT on all given filters combined by AND."""
   NOT: [BlockScalarWhereInput!]
+  representation: String
+
+  """All values that are not equal to given value."""
+  representation_not: String
+
+  """All values that are contained in given list."""
+  representation_in: [String!]
+
+  """All values that are not contained in given list."""
+  representation_not_in: [String!]
+
+  """All values less than the given value."""
+  representation_lt: String
+
+  """All values less than or equal the given value."""
+  representation_lte: String
+
+  """All values greater than the given value."""
+  representation_gt: String
+
+  """All values greater than or equal the given value."""
+  representation_gte: String
+
+  """All values containing the given string."""
+  representation_contains: String
+
+  """All values not containing the given string."""
+  representation_not_contains: String
+
+  """All values starting with the given string."""
+  representation_starts_with: String
+
+  """All values not starting with the given string."""
+  representation_not_starts_with: String
+
+  """All values ending with the given string."""
+  representation_ends_with: String
+
+  """All values not ending with the given string."""
+  representation_not_ends_with: String
   type: Int
 
   """All values that are not equal to given value."""
@@ -208,9 +255,7 @@ input BlockSubscriptionWhereInput {
   """Logical NOT on all given filters combined by AND."""
   NOT: [BlockSubscriptionWhereInput!]
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
+  """The subscription event gets dispatched when it's listed in mutation_in"""
   mutation_in: [MutationType!]
 
   """
@@ -230,7 +275,17 @@ input BlockSubscriptionWhereInput {
   node: BlockWhereInput
 }
 
+input BlockUpdateInput {
+  representation: String
+  type: Int
+  x: Int
+  y: Int
+  z: Int
+  world: WorldUpdateOneRequiredWithoutChangedBlocksInput
+}
+
 input BlockUpdateManyDataInput {
+  representation: String
   type: Int
   x: Int
   y: Int
@@ -238,6 +293,7 @@ input BlockUpdateManyDataInput {
 }
 
 input BlockUpdateManyMutationInput {
+  representation: String
   type: Int
   x: Int
   y: Int
@@ -246,13 +302,38 @@ input BlockUpdateManyMutationInput {
 
 input BlockUpdateManyWithoutWorldInput {
   create: [BlockCreateWithoutWorldInput!]
+  connect: [BlockWhereUniqueInput!]
+  set: [BlockWhereUniqueInput!]
+  disconnect: [BlockWhereUniqueInput!]
+  delete: [BlockWhereUniqueInput!]
+  update: [BlockUpdateWithWhereUniqueWithoutWorldInput!]
   updateMany: [BlockUpdateManyWithWhereNestedInput!]
   deleteMany: [BlockScalarWhereInput!]
+  upsert: [BlockUpsertWithWhereUniqueWithoutWorldInput!]
 }
 
 input BlockUpdateManyWithWhereNestedInput {
   where: BlockScalarWhereInput!
   data: BlockUpdateManyDataInput!
+}
+
+input BlockUpdateWithoutWorldDataInput {
+  representation: String
+  type: Int
+  x: Int
+  y: Int
+  z: Int
+}
+
+input BlockUpdateWithWhereUniqueWithoutWorldInput {
+  where: BlockWhereUniqueInput!
+  data: BlockUpdateWithoutWorldDataInput!
+}
+
+input BlockUpsertWithWhereUniqueWithoutWorldInput {
+  where: BlockWhereUniqueInput!
+  update: BlockUpdateWithoutWorldDataInput!
+  create: BlockCreateWithoutWorldInput!
 }
 
 input BlockWhereInput {
@@ -264,6 +345,46 @@ input BlockWhereInput {
 
   """Logical NOT on all given filters combined by AND."""
   NOT: [BlockWhereInput!]
+  representation: String
+
+  """All values that are not equal to given value."""
+  representation_not: String
+
+  """All values that are contained in given list."""
+  representation_in: [String!]
+
+  """All values that are not contained in given list."""
+  representation_not_in: [String!]
+
+  """All values less than the given value."""
+  representation_lt: String
+
+  """All values less than or equal the given value."""
+  representation_lte: String
+
+  """All values greater than the given value."""
+  representation_gt: String
+
+  """All values greater than or equal the given value."""
+  representation_gte: String
+
+  """All values containing the given string."""
+  representation_contains: String
+
+  """All values not containing the given string."""
+  representation_not_contains: String
+
+  """All values starting with the given string."""
+  representation_starts_with: String
+
+  """All values not starting with the given string."""
+  representation_not_starts_with: String
+
+  """All values ending with the given string."""
+  representation_ends_with: String
+
+  """All values not ending with the given string."""
+  representation_not_ends_with: String
   type: Int
 
   """All values that are not equal to given value."""
@@ -355,6 +476,10 @@ input BlockWhereInput {
   world: WorldWhereInput
 }
 
+input BlockWhereUniqueInput {
+  representation: String
+}
+
 scalar DateTime
 
 enum Gamemode {
@@ -379,12 +504,15 @@ type Mutation {
   createUser(data: UserCreateInput!): User!
   createWorld(data: WorldCreateInput!): World!
   updatePlayer(data: PlayerUpdateInput!, where: PlayerWhereUniqueInput!): Player
+  updateBlock(data: BlockUpdateInput!, where: BlockWhereUniqueInput!): Block
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updateWorld(data: WorldUpdateInput!, where: WorldWhereUniqueInput!): World
   deletePlayer(where: PlayerWhereUniqueInput!): Player
+  deleteBlock(where: BlockWhereUniqueInput!): Block
   deleteUser(where: UserWhereUniqueInput!): User
   deleteWorld(where: WorldWhereUniqueInput!): World
   upsertPlayer(where: PlayerWhereUniqueInput!, create: PlayerCreateInput!, update: PlayerUpdateInput!): Player!
+  upsertBlock(where: BlockWhereUniqueInput!, create: BlockCreateInput!, update: BlockUpdateInput!): Block!
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertWorld(where: WorldWhereUniqueInput!, create: WorldCreateInput!, update: WorldUpdateInput!): World!
   updateManyPlayers(data: PlayerUpdateManyMutationInput!, where: PlayerWhereInput): BatchPayload!
@@ -739,9 +867,7 @@ input PlayerSubscriptionWhereInput {
   """Logical NOT on all given filters combined by AND."""
   NOT: [PlayerSubscriptionWhereInput!]
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
+  """The subscription event gets dispatched when it's listed in mutation_in"""
   mutation_in: [MutationType!]
 
   """
@@ -1049,6 +1175,7 @@ type Query {
   users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
   worlds(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [World]!
   player(where: PlayerWhereUniqueInput!): Player
+  block(where: BlockWhereUniqueInput!): Block
   user(where: UserWhereUniqueInput!): User
   world(where: WorldWhereUniqueInput!): World
   playersConnection(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PlayerConnection!
@@ -1152,9 +1279,7 @@ input UserSubscriptionWhereInput {
   """Logical NOT on all given filters combined by AND."""
   NOT: [UserSubscriptionWhereInput!]
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
+  """The subscription event gets dispatched when it's listed in mutation_in"""
   mutation_in: [MutationType!]
 
   """
@@ -1658,9 +1783,7 @@ input WorldSubscriptionWhereInput {
   """Logical NOT on all given filters combined by AND."""
   NOT: [WorldSubscriptionWhereInput!]
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
+  """The subscription event gets dispatched when it's listed in mutation_in"""
   mutation_in: [MutationType!]
 
   """
@@ -1721,11 +1844,24 @@ input WorldUpdateManyWithWhereNestedInput {
   data: WorldUpdateManyDataInput!
 }
 
+input WorldUpdateOneRequiredWithoutChangedBlocksInput {
+  create: WorldCreateWithoutChangedBlocksInput
+  connect: WorldWhereUniqueInput
+  update: WorldUpdateWithoutChangedBlocksDataInput
+  upsert: WorldUpsertWithoutChangedBlocksInput
+}
+
 input WorldUpdateOneRequiredWithoutPlayersInput {
   create: WorldCreateWithoutPlayersInput
   connect: WorldWhereUniqueInput
   update: WorldUpdateWithoutPlayersDataInput
   upsert: WorldUpsertWithoutPlayersInput
+}
+
+input WorldUpdateWithoutChangedBlocksDataInput {
+  name: String
+  seed: String
+  players: PlayerUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateWithoutPlayersDataInput {
@@ -1737,6 +1873,11 @@ input WorldUpdateWithoutPlayersDataInput {
 input WorldUpdateWithWhereUniqueNestedInput {
   where: WorldWhereUniqueInput!
   data: WorldUpdateDataInput!
+}
+
+input WorldUpsertWithoutChangedBlocksInput {
+  update: WorldUpdateWithoutChangedBlocksDataInput!
+  create: WorldCreateWithoutChangedBlocksInput!
 }
 
 input WorldUpsertWithoutPlayersInput {

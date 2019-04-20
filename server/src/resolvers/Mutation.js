@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import getUserId from '../utils/getUserId'
 import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
+import getBlockRepresentation from '../utils/getBlockRepresentation'
 
 const Mutation = {
 	async createUser(parent, args, { prisma }, info) {
@@ -132,8 +133,6 @@ const Mutation = {
 		const playerId = args.data.id
 		delete args.data.id
 
-		console.log(args.data.x, args.data.y, args.data.z)
-
 		return prisma.mutation.updatePlayer(
 			{
 				where: {
@@ -145,6 +144,35 @@ const Mutation = {
 			},
 			info
 		)
+	},
+	async updateBlock(parent, args, { prisma }, info) {
+		const { x, y, z, type, worldId } = args.data
+
+		console.log(x, y, z)
+
+		const repr = getBlockRepresentation(worldId, x, y, z)
+
+		await prisma.mutation.upsertBlock({
+			where: {
+				representation: repr
+			},
+			create: {
+				representation: repr,
+				type,
+				x,
+				y,
+				z,
+				world: {
+					connect: {
+						id: worldId
+					}
+				}
+			},
+			update: {
+				type
+			}
+		})
+		return true
 	}
 }
 

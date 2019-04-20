@@ -23,6 +23,8 @@ class Chunk {
 		this.grid = new ndarray(arr, [size + 2, size + 2, size + 2])
 
 		this.isLoaded = false
+
+		this.blocksInProgress = {}
 	}
 
 	/**
@@ -43,7 +45,7 @@ class Chunk {
 	/** Generate THREE meshes and store them into an array. */
 	meshQuads = quads => {
 		// Avoiding extra work.
-		if (quads === undefined || quads.length === 0) return []
+		if (quads === undefined || quads.length === 0) return null
 
 		// const quads = quads || this.genQuads()
 
@@ -52,45 +54,26 @@ class Chunk {
 		 */
 		const mapVecToWorld = vec => [
 			this.origin.x * size * dimension + (vec[0] - 1) * dimension,
-			this.origin.y * size * dimension + (vec[2] - 1) * dimension,
-			this.origin.z * size * dimension + (vec[1] - 1) * dimension
+			this.origin.y * size * dimension + (vec[1] - 1) * dimension,
+			this.origin.z * size * dimension + (vec[2] - 1) * dimension
 		]
-		const pushVertices = (geo, arr) =>
-			(geo.vertices = arr.map(v => new THREE.Vector3(...mapVecToWorld(v))))
 
 		const meshes = []
 
 		for (let quad of quads) {
-			const [v0, v1, v2, v3, type, axis, sMax, tMax] = quad
+			const [coords, rotation, type, material] = quad
 
-			const { side, top } = this.materialManager.get(type)
-
-			const geo = new THREE.Geometry()
-
-			let material
-			switch (axis) {
-				case 0:
-					material = side
-					pushVertices(geo, [v0, v1, v2, v3])
-					break
-				case 1:
-					material = side
-					pushVertices(geo, [v3, v0, v1, v2])
-					break
-				default:
-					material = top
-					pushVertices(geo, [v0, v1, v2, v3])
-					break
-			}
-
-			geo.faces.push(new THREE.Face3(0, 1, 3), new THREE.Face3(1, 2, 3))
-
-			Helpers.boxUnwrapUVs(geo)
-			Helpers.updateTextureParams(geo, 0, sMax, 0, tMax)
-
+			const geo = new THREE.PlaneGeometry(dimension, dimension)
 			geo.computeFaceNormals()
 
-			const mesh = new THREE.Mesh(geo, material)
+			const meshMat = this.materialManager.get(type)[material]
+
+			const mesh = new THREE.Mesh(geo, meshMat)
+
+			if (rotation) mesh[rotation[0]](rotation[1])
+
+			const globalCoords = mapVecToWorld(coords)
+			mesh.position.set(...globalCoords)
 
 			meshes.push(mesh)
 		}
@@ -101,6 +84,8 @@ class Chunk {
 	/** Calculate mesh and merge them together */
 	combineMesh = async meshes => {
 		// console.time('Block Combination')
+		if (!meshes) return
+
 		this.mesh = Helpers.mergeMeshes(meshes)
 		this.mesh.name = this.name
 		this.mesh.isChunk = true
@@ -115,6 +100,13 @@ class Chunk {
 	getMesh = () => this.mesh
 	mark = () => (this.isLoaded = true)
 	unmark = () => (this.isLoaded = false)
+
+	checkBusyBlock = (x, y, z) =>
+		this.blocksInProgress[Helpers.getCoordsRepresentation(x, y, z)]
+	tagBusyBlock = (x, y, z) =>
+		(this.blocksInProgress[Helpers.getCoordsRepresentation(x, y, z)] = true)
+	untagBusyBlock = (x, y, z) =>
+		delete this.blocksInProgress[Helpers.getCoordsRepresentation(x, y, z)]
 
 	getChunkRepresentation = () =>
 		Helpers.getCoordsRepresentation(this.origin.x, this.origin.y, this.origin.z)

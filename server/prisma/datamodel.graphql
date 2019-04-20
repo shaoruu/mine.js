@@ -31,6 +31,7 @@ type World {
 }
 
 type Block {
+	representation: String! @unique
 	type: Int!
 	world: World! @relation(name: "BlocksToWorld", onDelete: SET_NULL)
 	x: Int!

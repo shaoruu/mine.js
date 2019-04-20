@@ -6,7 +6,7 @@ import Stats from 'stats-js'
 import { Camera, Light, Player, Renderer } from '../Bin'
 import classes from './MainScene.module.css'
 import World from '../Bin/World/World'
-import { UPDATE_PLAYER_MUTATION } from '../../../../../lib/graphql/mutations'
+import { UPDATE_PLAYER_MUTATION } from '../../../../../lib/graphql'
 import { WORLD_QUERY, BLOCK_SUBSCRIPTION } from '../../../../../lib/graphql'
 import { Hint } from '../../../../Utils'
 import Config from '../../Data/Config'
@@ -61,10 +61,19 @@ class MainScene extends Component {
 		// Main scene creation
 		this.scene = new THREE.Scene()
 		this.scene.background = new THREE.Color(Config.fog.color)
-		this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
+		this.scene.fog = new THREE.Fog(
+			Config.fog.color,
+			Config.fog.near,
+			Config.fog.far
+		)
 
 		// World Initialization
-		this.world = new World(this.scene, this.worldData)
+		this.world = new World(
+			this.props.id,
+			this.scene,
+			this.worldData,
+			this.client
+		)
 
 		// Main renderer constructor
 		this.renderer = new Renderer(this.scene, this.mount)
@@ -119,7 +128,7 @@ class MainScene extends Component {
 				})
 			}
 		}, 200)
-		this.requestChunkCall = setInterval(() => this.updateWorld(), 800)
+		this.requestChunkCall = setInterval(() => this.updateWorld(), 500)
 	}
 
 	componentWillUnmount() {
@@ -186,7 +195,8 @@ class MainScene extends Component {
 					this.worldData = world
 					if (this.mount) this.handleQueryComplete()
 					else this.waitingForMount = true
-				}}>
+				}}
+			>
 				{({ loading, data }) => {
 					if (loading) return <Hint text="Loading world..." />
 					if (!data) return <Hint text="World not found." />
@@ -194,9 +204,12 @@ class MainScene extends Component {
 					return (
 						<Mutation
 							mutation={UPDATE_PLAYER_MUTATION}
-							onError={err => console.error(err)}>
-							{updatePlayer => {
+							onError={err => console.error(err)}
+						>
+							{(updatePlayer, { client }) => {
 								this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
+								this.client = client
+
 								return (
 									<div
 										style={{
@@ -209,22 +222,19 @@ class MainScene extends Component {
 												this.waitingForMount = false
 												this.handleQueryComplete()
 											}
-										}}>
+										}}
+									>
 										<div
 											className={classes.blocker}
 											ref={blocker => (this.blocker = blocker)}
 										/>
-										<img
-											src={crosshair}
-											alt=""
-											className={classes.crosshair}
-										/>
+										<img src={crosshair} alt="" className={classes.crosshair} />
 										<Subscription
 											subscription={BLOCK_SUBSCRIPTION}
 											variables={{ worldId }}
-											onSubscriptionData={({
-												subscriptionData: { data }
-											}) => this.world.updateChanged(data)}
+											onSubscriptionData={({ subscriptionData: { data } }) =>
+												this.world.updateChanged(data)
+											}
 										/>
 									</div>
 								)

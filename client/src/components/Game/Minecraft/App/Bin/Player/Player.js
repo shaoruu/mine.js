@@ -16,7 +16,12 @@ const size = Config.chunk.size,
 export default class Controls {
 	constructor(camera, scene, world, container, blocker, initPos, initDirs) {
 		// Orbit controls first needs to pass in THREE to constructor
-		this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
+		this.threeControls = new PointerLockControls(
+			camera,
+			container,
+			initPos,
+			initDirs
+		)
 
 		this.prevTime = performance.now()
 
@@ -123,11 +128,10 @@ export default class Controls {
 		/** Updating targetted block */
 		const blockInfo = this.getLookingBlockInfo()
 		if (blockInfo) {
-			const { target, targetwf, potential } = blockInfo
+			const { target, targetwf } = blockInfo
 
 			// Signal to world
 			this.world.setTarget(target)
-			this.world.setPotential(potential)
 
 			const { x, y, z } = targetwf
 
@@ -163,7 +167,9 @@ export default class Controls {
 		this.raycaster.setFromCamera(this.fakeMouse, this.camera)
 
 		// Getting chunk position
-		const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.getCoordinates())
+		const { coordx, coordy, coordz } = Helpers.toChunkCoords(
+			this.getCoordinates()
+		)
 
 		const chunks = [
 			[coordx, coordy, coordz],
@@ -174,7 +180,9 @@ export default class Controls {
 			[coordx, coordy, coordz - 1],
 			[coordx, coordy, coordz + 1]
 		]
-			.map(coords => this.world.getChunkByCoords(coords[0], coords[1], coords[2]))
+			.map(coords =>
+				this.world.getChunkByCoords(coords[0], coords[1], coords[2])
+			)
 			.filter(c => c)
 			.map(c => c.getMesh())
 			.filter(m => m)
@@ -194,53 +202,82 @@ export default class Controls {
 
 		// Chunk Coords and Block Coords
 		const { coordx: cx, coordy: cy, coordz: cz } = Helpers.toChunkCoords(gbc),
-			pChunk = this.world.getChunkByCoords(cx, cy, cz),
 			bc = Helpers.toBlockCoords(gbc)
 
 		const chunkDim = size * dimension
 
 		// Target for wireframe
 		let targetwf = {
-			x: cx * chunkDim + bc.x * dimension + dimension / 2,
-			y: cy * chunkDim + bc.y * dimension + dimension / 2,
-			z: cz * chunkDim + bc.z * dimension + dimension / 2
+			x: cx * chunkDim + bc.x * dimension,
+			y: cy * chunkDim + bc.y * dimension,
+			z: cz * chunkDim + bc.z * dimension
 		}
 
 		let target = {
 			chunk: { cx, cy, cz },
-			block: { ...bc }
+			block: { ...bc },
+			neighbors: []
 		}
 
-		let potential = {
-			chunk: { cx, cy, cz },
-			block: { ...bc }
-		}
-
-		/*eslint eqeqeq: ["off"]*/
-		if (Math.abs(normal.x).toFixed(1) == 1)
-			if (Boolean(pChunk.getBlock(bc.x - 1, bc.y, bc.z))) {
+		/*eslint eqeqeq: "off"*/
+		let axis, chunkxis
+		if (Math.abs(normal.x).toFixed(1) == 1) {
+			axis = 'x'
+			chunkxis = 'cx'
+			if (normal.x >= 1) {
 				// y-z plane
-				targetwf.x = cx * chunkDim + (bc.x - 1) * dimension + dimension / 2
+				targetwf.x = cx * chunkDim + (bc.x - 1) * dimension
 				target.block.x -= 1
-			} else potential.block.x -= 1
-		else if (Math.abs(normal.y).toFixed(1) == 1)
-			if (Boolean(pChunk.getBlock(bc.x, bc.y - 1, bc.z))) {
+			}
+		} else if (Math.abs(normal.y).toFixed(1) == 1) {
+			axis = 'y'
+			chunkxis = 'cy'
+			if (normal.y >= 1) {
 				// x-z plane
-				targetwf.y = cy * chunkDim + (bc.y - 1) * dimension + dimension / 2
+				targetwf.y = cy * chunkDim + (bc.y - 1) * dimension
 				target.block.y -= 1
-			} else potential.block.y -= 1
-		else if (Math.abs(normal.z).toFixed(1) == 1)
-			if (Boolean(pChunk.getBlock(bc.x, bc.y, bc.z - 1))) {
+			}
+		} else if (Math.abs(normal.z).toFixed(1) == 1) {
+			axis = 'z'
+			chunkxis = 'cz'
+			if (normal.z >= 1) {
 				// x-y plane
-				targetwf.z = cz * chunkDim + (bc.z - 1) * dimension + dimension / 2
+				targetwf.z = cz * chunkDim + (bc.z - 1) * dimension
 				target.block.z -= 1
-			} else potential.block.z -= 1
+			}
+		}
+
+		/** adjusting target and potential to correct chunks */
+		if (target.block[axis] < 0) {
+			target.block[axis] = size - 1
+			target.chunk[chunkxis] -= 1
+		} else if (target.block[axis] > size - 1) {
+			target.block[axis] = 0
+			target.chunk[chunkxis] += 1
+		}
+
+		const axes = [['x', 'cx'], ['y', 'cy'], ['z', 'cz']]
+		axes.forEach(([a, c]) => {
+			const neighbor = {
+				chunk: { ...target.chunk },
+				block: { ...target.block }
+			}
+			if (target.block[a] === 0) {
+				neighbor.chunk[c] -= 1
+				neighbor.block[a] = size
+				target.neighbors.push(neighbor)
+			} else if (target.block[a] === size - 1) {
+				neighbor.chunk[c] += 1
+				neighbor.block[a] = -1
+				target.neighbors.push(neighbor)
+			}
+		})
 
 		targetwf.x -= 0.12
 		targetwf.y -= 0.12
 		targetwf.z -= 0.12
 
-		return { target, targetwf, potential }
+		return { target, targetwf }
 	}
 	getObject = () => this.threeControls.getObject()
 	getCoordinates = () => {
@@ -250,8 +287,14 @@ export default class Controls {
 	}
 	getDirections = () => {
 		return {
-			dirx: Helpers.round(this.threeControls.getPitch().rotation.x, coordinateDec),
-			diry: Helpers.round(this.threeControls.getObject().rotation.y, coordinateDec)
+			dirx: Helpers.round(
+				this.threeControls.getPitch().rotation.x,
+				coordinateDec
+			),
+			diry: Helpers.round(
+				this.threeControls.getObject().rotation.y,
+				coordinateDec
+			)
 		}
 	}
 

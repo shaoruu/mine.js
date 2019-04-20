@@ -23,7 +23,6 @@ class BlockMaterials {
 			texture.wrapT = THREE.RepeatWrapping
 			texture.magFilter = THREE.NearestFilter
 			texture.minFilter = THREE.NearestMipMapLinearFilter
-			texture.flipY = true
 
 			var material = new THREE.MeshStandardMaterial({
 				map: texture,

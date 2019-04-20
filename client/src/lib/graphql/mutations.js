@@ -6,7 +6,9 @@ import * as Yup from 'yup'
  */
 export const REGISTER_MUTATION = gql`
 	mutation Register($username: String!, $email: String!, $password: String!) {
-		createUser(data: { username: $username, email: $email, password: $password }) {
+		createUser(
+			data: { username: $username, email: $email, password: $password }
+		) {
 			token
 		}
 	}
@@ -37,11 +39,25 @@ export const UPDATE_PLAYER_MUTATION = gql`
 		$dirx: Float
 		$diry: Float
 	) {
-		updatePlayer(data: { id: $id, x: $x, y: $y, z: $z, dirx: $dirx, diry: $diry }) {
+		updatePlayer(
+			data: { id: $id, x: $x, y: $y, z: $z, dirx: $dirx, diry: $diry }
+		) {
 			x
 			y
 			z
 		}
+	}
+`
+
+export const UPDATE_BLOCK_MUTATION = gql`
+	mutation UpdateBlock(
+		$worldId: ID!
+		$type: Int!
+		$x: Int!
+		$y: Int!
+		$z: Int!
+	) {
+		updateBlock(data: { worldId: $worldId, type: $type, x: $x, y: $y, z: $z })
 	}
 `
 
