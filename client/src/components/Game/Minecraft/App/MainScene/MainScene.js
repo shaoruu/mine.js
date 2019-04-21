@@ -12,7 +12,7 @@ import { Hint } from '../../../../Utils'
 import Config from '../../Data/Config'
 import Helpers from '../../Utils/Helpers'
 import crosshair from '../../../../../assets/gui/crosshair.png'
-import BlockMaterials from '../Bin/World/Chunk/Block/BlockMaterials'
+import MaterialManager from '../../Utils/MaterialManager'
 
 class MainScene extends Component {
 	constructor(props) {
@@ -46,7 +46,7 @@ class MainScene extends Component {
 			} //fall back
 
 		// Load textures
-		this.materialManager = new BlockMaterials()
+		this.materialManager = new MaterialManager()
 		this.loadTextures()
 
 		// Player setup

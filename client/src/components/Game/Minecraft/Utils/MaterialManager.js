@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-class BlockMaterials {
+class MaterialManager {
 	constructor() {
 		this.loader = new THREE.TextureLoader()
 
@@ -41,4 +41,4 @@ class BlockMaterials {
 	getImage = id => this.images[id]
 }
 
-export default BlockMaterials
+export default MaterialManager

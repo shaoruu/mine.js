@@ -56,6 +56,16 @@ export default {
 				side: require('../../../../assets/blocks/diamond_block.png'),
 				top: require('../../../../assets/blocks/diamond_block.png'),
 				bottom: require('../../../../assets/blocks/diamond_block.png')
+			},
+			80: {
+				side: require('../../../../assets/blocks/snow.png'),
+				top: require('../../../../assets/blocks/snow.png'),
+				bottom: require('../../../../assets/blocks/snow.png')
+			},
+			81: {
+				side: require('../../../../assets/blocks/cactus_side.png'),
+				top: require('../../../../assets/blocks/cactus_top.png'),
+				bottom: require('../../../../assets/blocks/cactus_bottom.png')
 			}
 		}
 	},
