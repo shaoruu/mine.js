@@ -1,12 +1,11 @@
 import Helpers from '../../../../../Utils/Helpers'
-import Slot from './Slot/Slot'
+import InventoryCommon from '../BaseClass/InventoryCommon'
 
-class Hotbar {
+class Hotbar extends InventoryCommon {
 	constructor(cursor, data, materialManager) {
-		this.selectedIndex = cursor
+		super(9, materialManager)
 
-		this.items = []
-		this.materialManager = materialManager
+		this.selectedIndex = cursor
 
 		this.init(data)
 	}
@@ -25,19 +24,15 @@ class Hotbar {
 			alignItems: 'center'
 		})
 
-		for (let i = 0; i < 9; i++) {
-			this.items.push(new Slot())
-			wrapper.appendChild(this.items[i].getUI())
-		}
-
 		// sample data: [{ type: 1, count: 23 }, {}, {}, {}, {}, {}, {}, {}, {}]
 		data.forEach((slot, index) => {
+			wrapper.appendChild(this.items[index].getUI())
+
 			if (!slot.type) return
 
 			const { type, count } = slot
-			const { side: texture } = this.materialManager.getImage(type)
 
-			this.items[index].set(texture, count)
+			this.items[index].init(type, count)
 		})
 
 		this.items[this.selectedIndex].select()

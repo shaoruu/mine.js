@@ -64,7 +64,13 @@ export default class Controls {
 		this.blocker = blocker
 
 		const { cursor, data } = inventory
-		this.inventory = new Inventory(container, materialManager, cursor, data)
+		this.inventory = new Inventory(
+			container,
+			materialManager,
+			cursor,
+			data,
+			this.mutateSelf
+		)
 
 		// Centered to middle of screen
 		this.fakeMouse = new THREE.Vector2(0, 0)
@@ -307,6 +313,21 @@ export default class Controls {
 		}
 	}
 
+	mutateSelf = obj => {
+		this.mutatePlayer({
+			variables: {
+				id: this.id,
+				...obj
+			}
+		})
+	}
+
+	obtain = (type, count) => {
+		// TODO: implement if inventory is full
+
+		this.inventory.add(type, count)
+	}
+
 	// Private Methods
 	_initListeners = () => {
 		this.blocker.addEventListener(
@@ -339,12 +360,7 @@ export default class Controls {
 				case 57:
 					const index = event.keyCode - 49
 					if (this.inventory.getCursor() !== index) {
-						this.mutatePlayer({
-							variables: {
-								id: this.id,
-								cursor: index
-							}
-						})
+						this.mutateSelf({ cursor: index })
 						this.inventory.switchHotbar(index)
 					}
 					break

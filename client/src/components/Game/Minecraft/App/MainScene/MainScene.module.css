@@ -13,8 +13,8 @@
 	position: absolute;
 	z-index: 1;
 	margin: auto;
-	width: 2vw;
-	height: 2vw;
+	width: 4vh;
+	height: 4vh;
 	left: 50%;
 	top: 50%;
 	transform: translate(-50%, -50%);

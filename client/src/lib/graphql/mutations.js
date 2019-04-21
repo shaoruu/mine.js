@@ -39,6 +39,7 @@ export const UPDATE_PLAYER_MUTATION = gql`
 		$dirx: Float
 		$diry: Float
 		$cursor: Int
+		$data: String
 	) {
 		updatePlayer(
 			data: {
@@ -49,6 +50,7 @@ export const UPDATE_PLAYER_MUTATION = gql`
 				dirx: $dirx
 				diry: $diry
 				cursor: $cursor
+				data: $data
 			}
 		) {
 			x

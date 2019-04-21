@@ -102,6 +102,7 @@ input UpdatePlayerInput {
 	dirx: Float
 	diry: Float
 	cursor: Int
+	data: String
 }
 
 input UpdateBlockInput {

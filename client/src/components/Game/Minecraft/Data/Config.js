@@ -11,6 +11,9 @@ export default {
 	dpr: 1,
 	duration: 500,
 	textures: {
+		gui: {
+			crosshair: require('../../../../assets/gui/crosshair.png')
+		},
 		blocks: {
 			1: {
 				side: require('../../../../assets/blocks/stone.png'),

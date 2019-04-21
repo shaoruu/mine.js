@@ -3,16 +3,17 @@ import { Mutation, Query, Subscription } from 'react-apollo'
 import * as THREE from 'three'
 import Stats from 'stats-js'
 
-import { Camera, Light, Player, Renderer } from '../Bin'
+import { Camera, Light, Player, Renderer, World } from '../Bin'
 import classes from './MainScene.module.css'
-import World from '../Bin/World/World'
-import { UPDATE_PLAYER_MUTATION } from '../../../../../lib/graphql'
-import { WORLD_QUERY, BLOCK_SUBSCRIPTION } from '../../../../../lib/graphql'
 import { Hint } from '../../../../Utils'
 import Config from '../../Data/Config'
 import Helpers from '../../Utils/Helpers'
-import crosshair from '../../../../../assets/gui/crosshair.png'
 import MaterialManager from '../../Utils/MaterialManager'
+import {
+	WORLD_QUERY,
+	BLOCK_SUBSCRIPTION,
+	UPDATE_PLAYER_MUTATION
+} from '../../../../../lib/graphql'
 
 class MainScene extends Component {
 	constructor(props) {
@@ -72,15 +73,6 @@ class MainScene extends Component {
 			Config.fog.far
 		)
 
-		// World Initialization
-		this.world = new World(
-			this.props.id,
-			this.scene,
-			this.worldData,
-			this.client,
-			this.materialManager
-		)
-
 		// Main renderer constructor
 		this.renderer = new Renderer(this.scene, this.mount)
 
@@ -90,6 +82,19 @@ class MainScene extends Component {
 		this.light.place('hemi')
 		this.light.place('ambient')
 		this.light.place('point')
+
+		// Stats creation
+		this.stats = new Stats()
+		this.mount.appendChild(this.stats.dom)
+
+		// World Initialization
+		this.world = new World(
+			this.props.id,
+			this.scene,
+			this.worldData,
+			this.client,
+			this.materialManager
+		)
 
 		// Player initialization
 		this.player = new Player(
@@ -106,9 +111,7 @@ class MainScene extends Component {
 			this.updatePlayer
 		)
 
-		// Stats creation
-		this.stats = new Stats()
-		this.mount.appendChild(this.stats.dom)
+		this.world.setPlayer(this.player)
 
 		this.init()
 
@@ -243,7 +246,11 @@ class MainScene extends Component {
 											className={classes.blocker}
 											ref={blocker => (this.blocker = blocker)}
 										/>
-										<img src={crosshair} alt="" className={classes.crosshair} />
+										<img
+											src={Config.textures.gui.crosshair}
+											alt=""
+											className={classes.crosshair}
+										/>
 										<Subscription
 											subscription={BLOCK_SUBSCRIPTION}
 											variables={{ worldId }}

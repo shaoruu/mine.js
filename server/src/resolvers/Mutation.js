@@ -143,13 +143,12 @@ const Mutation = {
 		const cursor = args.data.cursor
 		delete args.data.cursor
 
-		const cursorUpdate = {}
-		if (cursor)
-			cursorUpdate.inventory = {
-				update: {
-					cursor
-				}
-			}
+		const data = args.data.data
+		delete args.data.data
+
+		const inventoryUpdate = { inventory: { update: { cursor, data } } }
+		if (!cursor) delete inventoryUpdate.cursor
+		if (!data) delete inventoryUpdate.data
 
 		return prisma.mutation.updatePlayer(
 			{
@@ -158,7 +157,7 @@ const Mutation = {
 				},
 				data: {
 					...args.data,
-					...cursorUpdate
+					...inventoryUpdate
 				}
 			},
 			info

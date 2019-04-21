@@ -43,10 +43,27 @@ class Inventory {
 		}
 	}
 
+	add = (type, count) => {
+		if (count === 0) return
+
+		let leftover = this.hotbar.add(type, count)
+		// if (leftover) leftover = this.backpack.add(type, count)
+
+		// This means inventory is changed.
+		if (leftover !== count) {
+			// TODO: implement backpack
+			const newInventory = `ARMOR:0;0;0;0|BACKPACK:0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;|${this.hotbar.getDatabaseRepresentation(
+				'HOTBAR'
+			)}`
+			this.updatePlayer({ data: newInventory })
+		}
+	}
+
 	getCursor = () => this.hotbar.selectedIndex
 
 	_digestInventory = data => {
 		// Default data: "ARMOR:(0;) * 4|BACKPACK:(0,0;) * 27|HOTBAR:(0,0;) * 9"
+		console.log(data)
 		const inventory = data.split('|')
 
 		const armor = inventory[0]

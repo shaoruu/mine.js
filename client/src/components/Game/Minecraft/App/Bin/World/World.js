@@ -75,6 +75,7 @@ class World {
 						if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
 						temp.setBlock(x, y, z, type)
 						temp.untagBusyBlock(x, y, z)
+						this.targetBlock = null
 					})
 					break
 				}
@@ -221,6 +222,11 @@ class World {
 					...mappedBlock
 				}
 			})
+			.then(() => {
+				const type = targetChunk.getBlock(x, y, z)
+				if (type === 0) return
+				this.player.obtain(type, 1)
+			})
 			.catch(err => console.error(err))
 	}
 
@@ -296,6 +302,7 @@ class World {
 	}
 	setPotential = potential => (this.potentialBlock = potential)
 	setTarget = target => (this.targetBlock = target)
+	setPlayer = player => (this.player = player)
 
 	_digestChunks = chunks => {
 		Helpers.log('Loading Existing Chunks...')
