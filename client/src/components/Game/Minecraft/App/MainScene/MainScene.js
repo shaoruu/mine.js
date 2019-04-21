@@ -229,13 +229,13 @@ class MainScene extends Component {
 											ref={blocker => (this.blocker = blocker)}
 										/>
 										<img src={crosshair} alt="" className={classes.crosshair} />
-										<Subscription
+										{/* <Subscription
 											subscription={BLOCK_SUBSCRIPTION}
 											variables={{ worldId }}
 											onSubscriptionData={({ subscriptionData: { data } }) =>
-												this.world.updateChanged(data)
+												// TODO handle other player's blocks
 											}
-										/>
+										/> */}
 									</div>
 								)
 							}}
