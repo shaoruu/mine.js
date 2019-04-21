@@ -20,6 +20,7 @@ type Player {
 	z: Float!
 	dirx: Float!
 	diry: Float!
+	inventory: Inventory! @relation(name: "InventoryToPlayer", onDelete: CASCADE)
 }
 
 type World {
@@ -37,6 +38,14 @@ type Block {
 	x: Int!
 	y: Int!
 	z: Int!
+}
+
+# Inventory is essentailly a ndarray 4 * 9 of items
+# cursor is what the player is holding (1 - 9)
+type Inventory {
+	player: Player! @relation(name: "InventoryToPlayer", onDelete: CASCADE)
+	cursor: Int!
+	data: String!
 }
 
 enum Gamemode {

@@ -12,6 +12,7 @@ import { Hint } from '../../../../Utils'
 import Config from '../../Data/Config'
 import Helpers from '../../Utils/Helpers'
 import crosshair from '../../../../../assets/gui/crosshair.png'
+import BlockMaterials from '../Bin/World/Chunk/Block/BlockMaterials'
 
 class MainScene extends Component {
 	constructor(props) {
@@ -44,6 +45,10 @@ class MainScene extends Component {
 				clearTimeout(requestID)
 			} //fall back
 
+		// Load textures
+		this.materialManager = new BlockMaterials()
+		this.loadTextures()
+
 		// Player setup
 		this.currentPlayer = this.worldData.players.find(
 			ele => ele.user.username === this.props.username
@@ -72,7 +77,8 @@ class MainScene extends Component {
 			this.props.id,
 			this.scene,
 			this.worldData,
-			this.client
+			this.client,
+			this.materialManager
 		)
 
 		// Main renderer constructor
@@ -87,13 +93,17 @@ class MainScene extends Component {
 
 		// Player initialization
 		this.player = new Player(
+			this.currentPlayer.id,
 			this.camera.threeCamera,
 			this.scene,
 			this.world,
 			this.mount,
 			this.blocker,
 			this.initPos,
-			this.initDirs
+			this.initDirs,
+			this.materialManager,
+			this.currentPlayer.inventory,
+			this.updatePlayer
 		)
 
 		// Stats creation
@@ -129,6 +139,11 @@ class MainScene extends Component {
 			}
 		}, 200)
 		this.requestChunkCall = setInterval(() => this.updateWorld(), 500)
+	}
+
+	loadTextures = () => {
+		for (let key in Config.textures.blocks)
+			this.materialManager.load(key, Config.textures.blocks[key])
 	}
 
 	componentWillUnmount() {

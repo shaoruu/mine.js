@@ -38,9 +38,18 @@ export const UPDATE_PLAYER_MUTATION = gql`
 		$z: Float
 		$dirx: Float
 		$diry: Float
+		$cursor: Int
 	) {
 		updatePlayer(
-			data: { id: $id, x: $x, y: $y, z: $z, dirx: $dirx, diry: $diry }
+			data: {
+				id: $id
+				x: $x
+				y: $y
+				z: $z
+				dirx: $dirx
+				diry: $diry
+				cursor: $cursor
+			}
 		) {
 			x
 			y

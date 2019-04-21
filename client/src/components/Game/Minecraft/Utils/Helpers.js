@@ -165,4 +165,7 @@ export default class Helpers {
 			z: Math.floor(z - coordz * size)
 		}
 	}
+
+	static applyStyle = (ele, styles) =>
+		Object.keys(styles).forEach(key => (ele.style[key] = styles[key]))
 }

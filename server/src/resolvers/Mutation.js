@@ -113,7 +113,14 @@ const Mutation = {
 				y: 40,
 				z: 0,
 				dirx: 0,
-				diry: 0
+				diry: 0,
+				inventory: {
+					create: {
+						cursor: 0,
+						data:
+							'ARMOR:0;0;0;0;|BACKPACK:0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;|HOTBAR:0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;'
+					}
+				}
 			}
 		})
 
@@ -133,13 +140,25 @@ const Mutation = {
 		const playerId = args.data.id
 		delete args.data.id
 
+		const cursor = args.data.cursor
+		delete args.data.cursor
+
+		const cursorUpdate = {}
+		if (cursor)
+			cursorUpdate.inventory = {
+				update: {
+					cursor
+				}
+			}
+
 		return prisma.mutation.updatePlayer(
 			{
 				where: {
 					id: playerId
 				},
 				data: {
-					...args.data
+					...args.data,
+					...cursorUpdate
 				}
 			},
 			info

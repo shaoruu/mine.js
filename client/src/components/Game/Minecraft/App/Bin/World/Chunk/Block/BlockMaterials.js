@@ -5,6 +5,7 @@ class BlockMaterials {
 		this.loader = new THREE.TextureLoader()
 
 		this.materials = {}
+		this.images = {}
 	}
 
 	/**
@@ -16,7 +17,9 @@ class BlockMaterials {
 	 * }
 	 */
 	load = (id, sources) => {
+		this.images[id] = {}
 		this.materials[id] = {}
+
 		for (let key in sources) {
 			const texture = this.loader.load(sources[key])
 			texture.wrapS = THREE.RepeatWrapping
@@ -29,11 +32,13 @@ class BlockMaterials {
 				side: THREE.DoubleSide
 			})
 
+			this.images[id][key] = sources[key]
 			this.materials[id][key] = material
 		}
 	}
 
 	get = id => this.materials[id]
+	getImage = id => this.images[id]
 }
 
 export default BlockMaterials

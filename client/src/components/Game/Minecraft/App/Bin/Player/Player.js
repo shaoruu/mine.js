@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import PointerLockControls from '../../../Utils/PointerLockControls'
 import Config from '../../../Data/Config'
 import Helpers from '../../../Utils/Helpers'
+import Inventory from './Inventory/Inventory'
 
 const size = Config.chunk.size,
 	dimension = Config.block.dimension,
@@ -14,7 +15,21 @@ const size = Config.chunk.size,
 
 // Controls based on orbit controls
 export default class Controls {
-	constructor(camera, scene, world, container, blocker, initPos, initDirs) {
+	constructor(
+		id,
+		camera,
+		scene,
+		world,
+		container,
+		blocker,
+		initPos,
+		initDirs,
+		materialManager,
+		inventory,
+		mutatePlayer
+	) {
+		this.id = id
+
 		// Orbit controls first needs to pass in THREE to constructor
 		this.threeControls = new PointerLockControls(
 			camera,
@@ -22,6 +37,8 @@ export default class Controls {
 			initPos,
 			initDirs
 		)
+
+		this.mutatePlayer = mutatePlayer
 
 		this.prevTime = performance.now()
 
@@ -45,6 +62,9 @@ export default class Controls {
 		this.mousePressed = false
 
 		this.blocker = blocker
+
+		const { cursor, data } = inventory
+		this.inventory = new Inventory(container, materialManager, cursor, data)
 
 		// Centered to middle of screen
 		this.fakeMouse = new THREE.Vector2(0, 0)
@@ -308,6 +328,27 @@ export default class Controls {
 		const onKeyDown = event => {
 			if (event.shiftKey) this.movements.moveDown = true
 			switch (event.keyCode) {
+				case 49:
+				case 50:
+				case 51:
+				case 52:
+				case 53:
+				case 54:
+				case 55:
+				case 56:
+				case 57:
+					const index = event.keyCode - 49
+					if (this.inventory.getCursor() !== index) {
+						this.mutatePlayer({
+							variables: {
+								id: this.id,
+								cursor: index
+							}
+						})
+						this.inventory.switchHotbar(index)
+					}
+					break
+
 				case 38: // up
 				case 87: // w
 					this.movements.moveForward = true

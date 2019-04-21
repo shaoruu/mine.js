@@ -53,6 +53,7 @@ type Player {
 	z: Float!
 	dirx: Float!
 	diry: Float!
+	inventory: Inventory!
 }
 
 type Block {
@@ -62,6 +63,12 @@ type Block {
 	x: Int!
 	y: Int!
 	z: Int!
+}
+
+type Inventory {
+	player: Player!
+	cursor: Int!
+	data: String!
 }
 
 input CreateUserInput {
@@ -94,6 +101,7 @@ input UpdatePlayerInput {
 	z: Float
 	dirx: Float
 	diry: Float
+	cursor: Int
 }
 
 input UpdateBlockInput {

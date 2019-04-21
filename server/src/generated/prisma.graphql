@@ -1,7 +1,11 @@
 # source: http://localhost:4466
-# timestamp: Sat Apr 20 2019 23:58:13 GMT+0800 (CST)
+# timestamp: Sun Apr 21 2019 17:01:05 GMT+0800 (CST)
 
 type AggregateBlock {
+  count: Int!
+}
+
+type AggregateInventory {
   count: Int!
 }
 
@@ -489,6 +493,196 @@ enum Gamemode {
   SPECTATOR
 }
 
+type Inventory {
+  player: Player!
+  cursor: Int!
+  data: String!
+}
+
+"""A connection to a list of items."""
+type InventoryConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of edges."""
+  edges: [InventoryEdge]!
+  aggregate: AggregateInventory!
+}
+
+input InventoryCreateInput {
+  cursor: Int!
+  data: String!
+  player: PlayerCreateOneWithoutInventoryInput!
+}
+
+input InventoryCreateOneWithoutPlayerInput {
+  create: InventoryCreateWithoutPlayerInput
+}
+
+input InventoryCreateWithoutPlayerInput {
+  cursor: Int!
+  data: String!
+}
+
+"""An edge in a connection."""
+type InventoryEdge {
+  """The item at the end of the edge."""
+  node: Inventory!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+enum InventoryOrderByInput {
+  cursor_ASC
+  cursor_DESC
+  data_ASC
+  data_DESC
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type InventoryPreviousValues {
+  cursor: Int!
+  data: String!
+}
+
+type InventorySubscriptionPayload {
+  mutation: MutationType!
+  node: Inventory
+  updatedFields: [String!]
+  previousValues: InventoryPreviousValues
+}
+
+input InventorySubscriptionWhereInput {
+  """Logical AND on all given filters."""
+  AND: [InventorySubscriptionWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [InventorySubscriptionWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [InventorySubscriptionWhereInput!]
+
+  """The subscription event gets dispatched when it's listed in mutation_in"""
+  mutation_in: [MutationType!]
+
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: InventoryWhereInput
+}
+
+input InventoryUpdateManyMutationInput {
+  cursor: Int
+  data: String
+}
+
+input InventoryUpdateOneRequiredWithoutPlayerInput {
+  create: InventoryCreateWithoutPlayerInput
+  update: InventoryUpdateWithoutPlayerDataInput
+  upsert: InventoryUpsertWithoutPlayerInput
+}
+
+input InventoryUpdateWithoutPlayerDataInput {
+  cursor: Int
+  data: String
+}
+
+input InventoryUpsertWithoutPlayerInput {
+  update: InventoryUpdateWithoutPlayerDataInput!
+  create: InventoryCreateWithoutPlayerInput!
+}
+
+input InventoryWhereInput {
+  """Logical AND on all given filters."""
+  AND: [InventoryWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [InventoryWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [InventoryWhereInput!]
+  cursor: Int
+
+  """All values that are not equal to given value."""
+  cursor_not: Int
+
+  """All values that are contained in given list."""
+  cursor_in: [Int!]
+
+  """All values that are not contained in given list."""
+  cursor_not_in: [Int!]
+
+  """All values less than the given value."""
+  cursor_lt: Int
+
+  """All values less than or equal the given value."""
+  cursor_lte: Int
+
+  """All values greater than the given value."""
+  cursor_gt: Int
+
+  """All values greater than or equal the given value."""
+  cursor_gte: Int
+  data: String
+
+  """All values that are not equal to given value."""
+  data_not: String
+
+  """All values that are contained in given list."""
+  data_in: [String!]
+
+  """All values that are not contained in given list."""
+  data_not_in: [String!]
+
+  """All values less than the given value."""
+  data_lt: String
+
+  """All values less than or equal the given value."""
+  data_lte: String
+
+  """All values greater than the given value."""
+  data_gt: String
+
+  """All values greater than or equal the given value."""
+  data_gte: String
+
+  """All values containing the given string."""
+  data_contains: String
+
+  """All values not containing the given string."""
+  data_not_contains: String
+
+  """All values starting with the given string."""
+  data_starts_with: String
+
+  """All values not starting with the given string."""
+  data_not_starts_with: String
+
+  """All values ending with the given string."""
+  data_ends_with: String
+
+  """All values not ending with the given string."""
+  data_not_ends_with: String
+  player: PlayerWhereInput
+}
+
 """Raw JSON value"""
 scalar Json
 
@@ -501,6 +695,7 @@ scalar Long
 type Mutation {
   createPlayer(data: PlayerCreateInput!): Player!
   createBlock(data: BlockCreateInput!): Block!
+  createInventory(data: InventoryCreateInput!): Inventory!
   createUser(data: UserCreateInput!): User!
   createWorld(data: WorldCreateInput!): World!
   updatePlayer(data: PlayerUpdateInput!, where: PlayerWhereUniqueInput!): Player
@@ -517,10 +712,12 @@ type Mutation {
   upsertWorld(where: WorldWhereUniqueInput!, create: WorldCreateInput!, update: WorldUpdateInput!): World!
   updateManyPlayers(data: PlayerUpdateManyMutationInput!, where: PlayerWhereInput): BatchPayload!
   updateManyBlocks(data: BlockUpdateManyMutationInput!, where: BlockWhereInput): BatchPayload!
+  updateManyInventories(data: InventoryUpdateManyMutationInput!, where: InventoryWhereInput): BatchPayload!
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   updateManyWorlds(data: WorldUpdateManyMutationInput!, where: WorldWhereInput): BatchPayload!
   deleteManyPlayers(where: PlayerWhereInput): BatchPayload!
   deleteManyBlocks(where: BlockWhereInput): BatchPayload!
+  deleteManyInventories(where: InventoryWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyWorlds(where: WorldWhereInput): BatchPayload!
   executeRaw(database: PrismaDatabase, query: String!): Json!
@@ -565,6 +762,7 @@ type Player implements Node {
   z: Float!
   dirx: Float!
   diry: Float!
+  inventory: Inventory!
 }
 
 """A connection to a list of items."""
@@ -588,11 +786,30 @@ input PlayerCreateInput {
   diry: Float!
   user: UserCreateOneInput!
   world: WorldCreateOneWithoutPlayersInput!
+  inventory: InventoryCreateOneWithoutPlayerInput!
 }
 
 input PlayerCreateManyWithoutWorldInput {
   create: [PlayerCreateWithoutWorldInput!]
   connect: [PlayerWhereUniqueInput!]
+}
+
+input PlayerCreateOneWithoutInventoryInput {
+  create: PlayerCreateWithoutInventoryInput
+  connect: PlayerWhereUniqueInput
+}
+
+input PlayerCreateWithoutInventoryInput {
+  isAdmin: Boolean!
+  gamemode: Gamemode!
+  lastLogin: DateTime
+  x: Float!
+  y: Float!
+  z: Float!
+  dirx: Float!
+  diry: Float!
+  user: UserCreateOneInput!
+  world: WorldCreateOneWithoutPlayersInput!
 }
 
 input PlayerCreateWithoutWorldInput {
@@ -605,6 +822,7 @@ input PlayerCreateWithoutWorldInput {
   dirx: Float!
   diry: Float!
   user: UserCreateOneInput!
+  inventory: InventoryCreateOneWithoutPlayerInput!
 }
 
 """An edge in a connection."""
@@ -898,6 +1116,7 @@ input PlayerUpdateInput {
   diry: Float
   user: UserUpdateOneRequiredInput
   world: WorldUpdateOneRequiredWithoutPlayersInput
+  inventory: InventoryUpdateOneRequiredWithoutPlayerInput
 }
 
 input PlayerUpdateManyDataInput {
@@ -949,6 +1168,7 @@ input PlayerUpdateWithoutWorldDataInput {
   dirx: Float
   diry: Float
   user: UserUpdateOneRequiredInput
+  inventory: InventoryUpdateOneRequiredWithoutPlayerInput
 }
 
 input PlayerUpdateWithWhereUniqueWithoutWorldInput {
@@ -1159,6 +1379,7 @@ input PlayerWhereInput {
   diry_gte: Float
   user: UserWhereInput
   world: WorldWhereInput
+  inventory: InventoryWhereInput
 }
 
 input PlayerWhereUniqueInput {
@@ -1172,6 +1393,7 @@ enum PrismaDatabase {
 type Query {
   players(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Player]!
   blocks(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Block]!
+  inventories(where: InventoryWhereInput, orderBy: InventoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Inventory]!
   users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
   worlds(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [World]!
   player(where: PlayerWhereUniqueInput!): Player
@@ -1180,6 +1402,7 @@ type Query {
   world(where: WorldWhereUniqueInput!): World
   playersConnection(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PlayerConnection!
   blocksConnection(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BlockConnection!
+  inventoriesConnection(where: InventoryWhereInput, orderBy: InventoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): InventoryConnection!
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   worldsConnection(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): WorldConnection!
 
@@ -1193,6 +1416,7 @@ type Query {
 type Subscription {
   player(where: PlayerSubscriptionWhereInput): PlayerSubscriptionPayload
   block(where: BlockSubscriptionWhereInput): BlockSubscriptionPayload
+  inventory(where: InventorySubscriptionWhereInput): InventorySubscriptionPayload
   user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
   world(where: WorldSubscriptionWhereInput): WorldSubscriptionPayload
 }

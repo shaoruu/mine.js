@@ -5,7 +5,6 @@ import Chunk from './Chunk/Chunk'
 import Helpers from '../../../Utils/Helpers'
 import worker from './World.worker'
 import WebWorker from '../../Bin/WebWorker/WebWorker'
-import BlockMaterials from './Chunk/Block/BlockMaterials'
 import { UPDATE_BLOCK_MUTATION } from '../../../../../../lib/graphql'
 
 const size = Config.chunk.size,
@@ -15,7 +14,7 @@ const size = Config.chunk.size,
 	noiseConstant = Config.world.noiseConstant
 
 class World {
-	constructor(id, scene, worldData, apolloClient) {
+	constructor(id, scene, worldData, apolloClient, materialManager) {
 		const { seed, name, changedBlocks } = worldData
 
 		this.chunkDimension = Config.chunk.size * Config.block.dimension
@@ -31,13 +30,12 @@ class World {
 		this.chunks = {}
 		this.changedBlocks = {}
 
-		// Loaders
-		this.materialManager = new BlockMaterials()
-		this.loadTextures()
-
 		// Workers
 		this.worker = new WebWorker(worker)
 		this.setupWorker()
+
+		// Texture
+		this.materialManager = materialManager
 
 		// World Change Helpers
 		this.targetBlock = null

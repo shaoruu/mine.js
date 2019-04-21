@@ -50,6 +50,10 @@ export const WORLD_QUERY = gql`
 				z
 				dirx
 				diry
+				inventory {
+					cursor
+					data
+				}
 			}
 		}
 	}
