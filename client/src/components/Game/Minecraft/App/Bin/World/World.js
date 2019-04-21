@@ -73,7 +73,8 @@ class World {
 					temp.combineMesh(temp.meshQuads(quads)).then(() => {
 						const obj = this.scene.getObjectByName(chunkName)
 						if (obj) this.scene.remove(obj)
-						this.scene.add(temp.getMesh())
+						const mesh = temp.getMesh()
+						if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
 						temp.setBlock(x, y, z, type)
 						temp.untagBusyBlock(x, y, z)
 					})
@@ -203,7 +204,7 @@ class World {
 		const {
 			chunk: { cx, cy, cz },
 			block,
-			neighbors
+			mappedBlock
 		} = this.targetBlock
 
 		const targetChunk = this.getChunkByCoords(cx, cy, cz)
@@ -213,57 +214,77 @@ class World {
 		else targetChunk.tagBusyBlock(x, y, z)
 
 		// Communicating with server
-		const mappedPos = { x: cx * size + x, y: cy * size + y, z: cz * size + z }
 		this.apolloClient
 			.mutate({
 				mutation: UPDATE_BLOCK_MUTATION,
 				variables: {
 					worldId: this.id,
 					type: 0,
-					...mappedPos
-				}
-			})
-			.then(() => {
-				this.registerChangedBlock(0, mappedPos.x, mappedPos.y, mappedPos.z) // kinda unnecessary
-
-				this.worker.postMessage({
-					cmd: 'BREAK_BLOCK',
-					data: targetChunk.grid.data,
-					block,
-					type: 0,
-					configs: {
-						size,
-						stride: targetChunk.grid.stride,
-						chunkName: targetChunk.name
-					}
-				})
-
-				/** Handling neighbor chunks */
-				if (neighbors.length !== 0) {
-					neighbors.forEach(n => {
-						const {
-							chunk: { cx: ncx, cy: ncy, cz: ncz },
-							block
-						} = n
-
-						const neighborChunk = this.getChunkByCoords(ncx, ncy, ncz)
-
-						// This is just registering the outer layer of neighbor as 0
-						this.worker.postMessage({
-							cmd: 'BREAK_BLOCK',
-							data: neighborChunk.grid.data,
-							block,
-							type: 0,
-							configs: {
-								size,
-								stride: neighborChunk.grid.stride,
-								chunkName: neighborChunk.name
-							}
-						})
-					})
+					...mappedBlock
 				}
 			})
 			.catch(err => console.error(err))
+	}
+
+	updateChanged = ({ block }) => {
+		if (!block) return
+		const { node } = block
+
+		const { coordx, coordy, coordz } = Helpers.toChunkCoords(node),
+			chunkBlock = Helpers.toBlockCoords(node),
+			{ type, x: mx, y: my, z: mz } = node
+
+		const targetChunk = this.getChunkByCoords(coordx, coordy, coordz)
+
+		this.registerChangedBlock(type, mx, my, mz)
+
+		this.worker.postMessage({
+			cmd: 'BREAK_BLOCK',
+			data: targetChunk.grid.data,
+			block: chunkBlock,
+			type,
+			configs: {
+				size,
+				stride: targetChunk.grid.stride,
+				chunkName: targetChunk.name
+			}
+		})
+
+		// Checking for neighboring blocks.
+		const axes = [['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']]
+		axes.forEach(([a, c]) => {
+			const nc = { coordx, coordy, coordz },
+				nb = { ...chunkBlock }
+			let shouldWork = false
+
+			if (chunkBlock[a] === 0) {
+				nc[c] -= 1
+				nb[a] = size
+				shouldWork = true
+			} else if (chunkBlock[a] === size - 1) {
+				nc[c] += 1
+				nb[a] = -1
+				shouldWork = true
+			}
+			if (shouldWork) {
+				const neighborChunk = this.getChunkByCoords(
+					nc.coordx,
+					nc.coordy,
+					nc.coordz
+				)
+				this.worker.postMessage({
+					cmd: 'BREAK_BLOCK',
+					data: neighborChunk.grid.data,
+					block: nb,
+					type,
+					configs: {
+						size,
+						stride: neighborChunk.grid.stride,
+						chunkName: neighborChunk.name
+					}
+				})
+			}
+		})
 	}
 
 	getChunkByCoords = (cx, cy, cz) => {

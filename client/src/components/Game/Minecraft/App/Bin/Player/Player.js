@@ -256,22 +256,11 @@ export default class Controls {
 			target.chunk[chunkxis] += 1
 		}
 
-		const axes = [['x', 'cx'], ['y', 'cy'], ['z', 'cz']]
-		axes.forEach(([a, c]) => {
-			const neighbor = {
-				chunk: { ...target.chunk },
-				block: { ...target.block }
-			}
-			if (target.block[a] === 0) {
-				neighbor.chunk[c] -= 1
-				neighbor.block[a] = size
-				target.neighbors.push(neighbor)
-			} else if (target.block[a] === size - 1) {
-				neighbor.chunk[c] += 1
-				neighbor.block[a] = -1
-				target.neighbors.push(neighbor)
-			}
-		})
+		target.mappedBlock = {
+			x: target.chunk.cx * size + target.block.x,
+			y: target.chunk.cy * size + target.block.y,
+			z: target.chunk.cz * size + target.block.z
+		}
 
 		targetwf.x -= 0.12
 		targetwf.y -= 0.12

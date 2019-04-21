@@ -57,7 +57,15 @@ export const UPDATE_BLOCK_MUTATION = gql`
 		$y: Int!
 		$z: Int!
 	) {
-		updateBlock(data: { worldId: $worldId, type: $type, x: $x, y: $y, z: $z })
+		updateBlock(data: { worldId: $worldId, type: $type, x: $x, y: $y, z: $z }) {
+			world {
+				id
+			}
+			x
+			y
+			z
+			type
+		}
 	}
 `
 

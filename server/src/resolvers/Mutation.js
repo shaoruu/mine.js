@@ -145,34 +145,36 @@ const Mutation = {
 			info
 		)
 	},
-	async updateBlock(parent, args, { prisma }, info) {
+	updateBlock(parent, args, { prisma }, info) {
 		const { x, y, z, type, worldId } = args.data
 
 		console.log(x, y, z)
 
 		const repr = getBlockRepresentation(worldId, x, y, z)
 
-		await prisma.mutation.upsertBlock({
-			where: {
-				representation: repr
-			},
-			create: {
-				representation: repr,
-				type,
-				x,
-				y,
-				z,
-				world: {
-					connect: {
-						id: worldId
+		return prisma.mutation.upsertBlock(
+			{
+				where: {
+					representation: repr
+				},
+				create: {
+					representation: repr,
+					type,
+					x,
+					y,
+					z,
+					world: {
+						connect: {
+							id: worldId
+						}
 					}
+				},
+				update: {
+					type
 				}
 			},
-			update: {
-				type
-			}
-		})
-		return true
+			info
+		)
 	}
 }
 
