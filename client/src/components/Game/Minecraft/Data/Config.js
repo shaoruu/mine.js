@@ -117,13 +117,13 @@ export default {
 		}
 	},
 	ambientLight: {
-		enabled: true,
+		enabled: false,
 		color: 0xf0f0f0
 	},
 	directionalLight: {
 		enabled: true,
 		color: 0xf0f0f0,
-		intensity: 0.2,
+		intensity: 1,
 		x: 0,
 		y: 1,
 		z: 0

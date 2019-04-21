@@ -24,7 +24,7 @@ class BlockMaterials {
 			texture.magFilter = THREE.NearestFilter
 			texture.minFilter = THREE.NearestMipMapLinearFilter
 
-			var material = new THREE.MeshStandardMaterial({
+			var material = new THREE.MeshLambertMaterial({
 				map: texture,
 				side: THREE.DoubleSide
 			})
