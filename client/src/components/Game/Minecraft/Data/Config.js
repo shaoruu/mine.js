@@ -10,6 +10,19 @@ export default {
 	maxAnisotropy: 1,
 	dpr: 1,
 	duration: 500,
+	dictionary: {
+		block: {
+			1: {
+				name: 'stone'
+			},
+			2: {
+				name: 'grass'
+			},
+			3: {
+				name: 'dirt'
+			}
+		}
+	},
 	textures: {
 		gui: {
 			crosshair: require('../../../../assets/gui/crosshair.png')

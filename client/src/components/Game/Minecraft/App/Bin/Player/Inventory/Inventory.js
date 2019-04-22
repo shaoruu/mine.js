@@ -52,6 +52,7 @@ class Inventory {
 		// This means inventory is changed.
 		if (leftover !== count) {
 			// TODO: implement backpack
+			this.updateInventory()
 		}
 	}
 
@@ -73,7 +74,6 @@ class Inventory {
 
 	_digestInventory = data => {
 		// Default data: "ARMOR:(0;) * 4|BACKPACK:(0,0;) * 27|HOTBAR:(0,0;) * 9"
-		console.log(data)
 		const inventory = data.split('|')
 
 		const armor = inventory[0]

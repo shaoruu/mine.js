@@ -29,8 +29,6 @@ class InventoryCommon {
 			}
 		}
 
-		if (tempCount === 0) console.log('wtf')
-
 		for (let i = 0; i < this.items.length; i++) {
 			const slot = this.items[i]
 			if (slot.isEmpty) {

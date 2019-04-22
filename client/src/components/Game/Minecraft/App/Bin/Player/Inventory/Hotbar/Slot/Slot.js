@@ -78,7 +78,6 @@ class Slot {
 		return leftover < 0 ? 0 : leftover
 	}
 	take = amount => {
-		console.log(amount)
 		this.count -= amount
 		if (this.count <= 0) this.reset()
 		this.update()
