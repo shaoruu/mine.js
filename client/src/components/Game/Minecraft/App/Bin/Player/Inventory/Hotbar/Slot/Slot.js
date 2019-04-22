@@ -4,6 +4,7 @@ class Slot {
 	constructor(materialManager) {
 		this.gui = {
 			wrapper: document.createElement('div'),
+			itemWrapper: document.createElement('div'),
 			item: document.createElement('img'),
 			count: document.createElement('p')
 		}
@@ -24,7 +25,7 @@ class Slot {
 			webkitUserSelect: 'none'
 		})
 
-		Helpers.applyStyle(this.gui.item, {
+		Helpers.applyStyle(this.gui.itemWrapper, {
 			display: 'block',
 			backgroundColor: 'rgba(0, 0, 0, 0.3)',
 			border: '3px #605D5E solid',
@@ -34,19 +35,25 @@ class Slot {
 			webkitUserSelect: 'none'
 		})
 
+		Helpers.applyStyle(this.gui.item, {
+			width: '100%',
+			height: '100%'
+		})
+
 		Helpers.applyStyle(this.gui.count, {
 			display: 'inline',
 			position: 'absolute',
 			bottom: '3px',
 			right: '3px',
-			fontSize: '1.2em',
+			fontSize: '15px',
 			fontWeight: '300',
 			color: '#eeeeee',
-			fontFamily: "'Londrina Solid', cursive",
+			fontFamily: 'Minecraft',
 			webkitUserSelect: 'none'
 		})
 
-		this.gui.wrapper.appendChild(this.gui.item)
+		this.gui.itemWrapper.appendChild(this.gui.item)
+		this.gui.wrapper.appendChild(this.gui.itemWrapper)
 		this.gui.wrapper.appendChild(this.gui.count)
 	}
 
@@ -84,11 +91,12 @@ class Slot {
 	}
 
 	reset = () => {
-		this.init(0, 0)
+		this.setType(0)
+		this.setCount(0)
 	}
 	update = () => {
 		this.setGuiCount(this.count)
-		this.setType(this.type)
+		this.setGuiItem(this.type)
 	}
 
 	getUI = () => this.gui.wrapper
@@ -101,24 +109,33 @@ class Slot {
 		return this.count === 64
 	}
 
-	setType = (type, isSetTexture = true) => {
+	setType = type => {
 		this.type = type
-
-		if (!isSetTexture) return
-
-		const image = this.materialManager.getImage(type)
-		this.setTexture(image)
+		this.setGuiItem(type)
 	}
 	setCount = count => {
 		this.count = count
 		this.setGuiCount(count)
 	}
 	setGuiCount = count => (this.gui.count.innerHTML = count <= 1 ? '' : count)
-	setTexture = image => (this.gui.item.src = image ? image.side : '')
+	setGuiItem = type => {
+		if (type === 0) this.setTexture(null)
+		else {
+			const image = this.materialManager.getImage(type)
+			this.setTexture(image)
+		}
+	}
+	setTexture = image => {
+		if (!image) Helpers.applyStyle(this.gui.item, { opacity: 0 })
+		else {
+			Helpers.applyStyle(this.gui.item, { opacity: 1 })
+			this.gui.item.src = image.side
+		}
+	}
 
 	select = () => {
-		Helpers.applyStyle(this.gui.item, {
-			border: '4px #c4c4c4 solid'
+		Helpers.applyStyle(this.gui.itemWrapper, {
+			border: '3px #c4c4c4 solid'
 		})
 		Helpers.applyStyle(this.gui.wrapper, {
 			border: '1px black solid'
@@ -126,8 +143,8 @@ class Slot {
 	}
 
 	deselect = () => {
-		Helpers.applyStyle(this.gui.item, {
-			border: '3px #605D5E solid'
+		Helpers.applyStyle(this.gui.itemWrapper, {
+			border: '4px #605D5E solid'
 		})
 		Helpers.applyStyle(this.gui.wrapper, {
 			border: '1px grey solid'

@@ -25,11 +25,8 @@ class Hotbar extends InventoryCommon {
 			webkitUserSelect: 'none'
 		})
 
-		// sample data: [{ type: 1, count: 23 }, {}, {}, {}, {}, {}, {}, {}, {}]
 		data.forEach((slot, index) => {
 			wrapper.appendChild(this.items[index].getUI())
-
-			if (!slot.type) return
 
 			const { type, count } = slot
 
