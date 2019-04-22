@@ -31,7 +31,12 @@ export default class Controls {
 		this.id = id
 
 		// Orbit controls first needs to pass in THREE to constructor
-		this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
+		this.threeControls = new PointerLockControls(
+			camera,
+			container,
+			initPos,
+			initDirs
+		)
 
 		this.mutatePlayer = mutatePlayer
 
@@ -68,12 +73,12 @@ export default class Controls {
 		)
 
 		// Centered to middle of screen
-		this.fakeMouse = new THREE.Vector2(0, 0)
+		this.fakeMouse = new THREE.Vector2(0.0, 0.0)
 
 		const box = new THREE.BoxGeometry(
-			dimension + 0.24,
-			dimension + 0.24,
-			dimension + 0.24
+			dimension + 0.1,
+			dimension + 0.1,
+			dimension + 0.1
 		)
 		const wireframe = new THREE.WireframeGeometry(box)
 		this.highlighter = new THREE.LineSegments(wireframe)
@@ -201,7 +206,9 @@ export default class Controls {
 		this.raycaster.setFromCamera(this.fakeMouse, this.camera)
 
 		// Getting chunk position
-		const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.getCoordinates())
+		const { coordx, coordy, coordz } = Helpers.toChunkCoords(
+			this.getCoordinates()
+		)
 
 		const chunks = [
 			[coordx, coordy, coordz],
@@ -212,7 +219,9 @@ export default class Controls {
 			[coordx, coordy, coordz - 1],
 			[coordx, coordy, coordz + 1]
 		]
-			.map(coords => this.world.getChunkByCoords(coords[0], coords[1], coords[2]))
+			.map(coords =>
+				this.world.getChunkByCoords(coords[0], coords[1], coords[2])
+			)
 			.filter(c => c)
 			.map(c => c.getMesh())
 			.filter(m => m)
@@ -228,7 +237,10 @@ export default class Controls {
 		} = objs[0]
 
 		// Global Block Coords
-		const gbc = Helpers.toGlobalBlock(point, true)
+		const gbc = Helpers.toGlobalBlock(
+			{ x: point.x.toFixed(2), y: point.y.toFixed(2), z: point.z.toFixed(2) },
+			true
+		)
 
 		// Chunk Coords and Block Coords
 		const { coordx: cx, coordy: cy, coordz: cz } = Helpers.toChunkCoords(gbc),
@@ -299,9 +311,9 @@ export default class Controls {
 			potential.chunk[chunkxis] += 1
 		}
 
-		targetwf.x -= 0.12
-		targetwf.y -= 0.12
-		targetwf.z -= 0.12
+		targetwf.x -= 0.05
+		targetwf.y -= 0.05
+		targetwf.z -= 0.05
 
 		return { target, targetwf, potential }
 	}
@@ -313,8 +325,14 @@ export default class Controls {
 	}
 	getDirections = () => {
 		return {
-			dirx: Helpers.round(this.threeControls.getPitch().rotation.x, coordinateDec),
-			diry: Helpers.round(this.threeControls.getObject().rotation.y, coordinateDec)
+			dirx: Helpers.round(
+				this.threeControls.getPitch().rotation.x,
+				coordinateDec
+			),
+			diry: Helpers.round(
+				this.threeControls.getObject().rotation.y,
+				coordinateDec
+			)
 		}
 	}
 

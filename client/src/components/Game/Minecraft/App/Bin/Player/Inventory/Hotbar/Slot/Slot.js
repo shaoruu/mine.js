@@ -2,13 +2,6 @@ import Helpers from '../../../../../../Utils/Helpers'
 
 class Slot {
 	constructor(materialManager) {
-		this.gui = {
-			wrapper: document.createElement('div'),
-			itemWrapper: document.createElement('div'),
-			item: document.createElement('img'),
-			count: document.createElement('p')
-		}
-
 		this.count = 0
 		this.type = 0
 
@@ -18,6 +11,13 @@ class Slot {
 	}
 
 	initDoms = () => {
+		this.gui = {
+			wrapper: document.createElement('div'),
+			itemWrapper: document.createElement('div'),
+			item: document.createElement('img'),
+			count: document.createElement('p')
+		}
+
 		Helpers.applyStyle(this.gui.wrapper, {
 			display: 'block',
 			position: 'relative',
@@ -138,7 +138,7 @@ class Slot {
 			border: '3px #c4c4c4 solid'
 		})
 		Helpers.applyStyle(this.gui.wrapper, {
-			border: '1px black solid'
+			border: '1px #141414 solid'
 		})
 	}
 
