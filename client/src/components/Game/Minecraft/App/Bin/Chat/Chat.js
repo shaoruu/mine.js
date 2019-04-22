@@ -1,5 +1,7 @@
 class Chat {
 	constructor() {
+		this.messages = []
+
 		this.initDom()
 	}
 
