@@ -105,8 +105,8 @@ export default {
 		posX: 0,
 		posY: 30,
 		posZ: 0,
-		horzD: 3,
-		vertD: 2,
+		horzD: 2,
+		vertD: 1,
 		fetchDst: 5
 	},
 	controls: {
@@ -176,7 +176,7 @@ export default {
 		dimension: 30
 	},
 	chunk: {
-		size: 16,
+		size: 20,
 		height: 50
 	},
 	world: {

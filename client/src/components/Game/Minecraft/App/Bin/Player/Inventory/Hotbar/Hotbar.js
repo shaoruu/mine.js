@@ -21,7 +21,8 @@ class Hotbar extends InventoryCommon {
 			display: 'flex',
 			flexDirection: 'row',
 			justifyContent: 'center',
-			alignItems: 'center'
+			alignItems: 'center',
+			webkitUserSelect: 'none'
 		})
 
 		// sample data: [{ type: 1, count: 23 }, {}, {}, {}, {}, {}, {}, {}, {}]
@@ -41,6 +42,11 @@ class Hotbar extends InventoryCommon {
 	}
 
 	getGui = () => this.element
+	getHand = () => this.items[this.selectedIndex].type
+
+	takeFromHand = amount => {
+		this.items[this.selectedIndex].take(amount)
+	}
 
 	select = index => {
 		this.items[this.selectedIndex].deselect()

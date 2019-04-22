@@ -20,7 +20,8 @@ class Slot {
 		Helpers.applyStyle(this.gui.wrapper, {
 			display: 'block',
 			position: 'relative',
-			border: '1px grey solid'
+			border: '1px grey solid',
+			webkitUserSelect: 'none'
 		})
 
 		Helpers.applyStyle(this.gui.item, {
@@ -29,7 +30,8 @@ class Slot {
 			border: '3px #605D5E solid',
 			padding: '3px',
 			width: '40px',
-			height: '40px'
+			height: '40px',
+			webkitUserSelect: 'none'
 		})
 
 		Helpers.applyStyle(this.gui.count, {
@@ -40,7 +42,8 @@ class Slot {
 			fontSize: '1.2em',
 			fontWeight: '300',
 			color: '#eeeeee',
-			fontFamily: "'Londrina Solid', cursive"
+			fontFamily: "'Londrina Solid', cursive",
+			webkitUserSelect: 'none'
 		})
 
 		this.gui.wrapper.appendChild(this.gui.item)
@@ -73,6 +76,20 @@ class Slot {
 		this.setCount(c)
 
 		return leftover < 0 ? 0 : leftover
+	}
+	take = amount => {
+		console.log(amount)
+		this.count -= amount
+		if (this.count <= 0) this.reset()
+		this.update()
+	}
+
+	reset = () => {
+		this.init(0, 0)
+	}
+	update = () => {
+		this.setGuiCount(this.count)
+		this.setType(this.type)
 	}
 
 	getUI = () => this.gui.wrapper

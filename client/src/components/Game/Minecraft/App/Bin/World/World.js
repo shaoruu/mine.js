@@ -55,9 +55,9 @@ class World {
 					const { quads, blocks, chunkName } = data
 					const temp = this.chunks[chunkName]
 					temp.setGrid(blocks)
-					temp
-						.combineMesh(temp.meshQuads(quads))
-						.then(() => (temp.loading = false))
+					temp.combineMesh(temp.meshQuads(quads)).then(
+						() => (temp.loading = false)
+					)
 					break
 				}
 				case 'BREAK_BLOCK': {
@@ -69,13 +69,19 @@ class World {
 					} = data
 					const temp = this.chunks[chunkName]
 					temp.combineMesh(temp.meshQuads(quads)).then(() => {
+						// Remove old then add new to scene
 						const obj = this.scene.getObjectByName(chunkName)
 						if (obj) this.scene.remove(obj)
 						const mesh = temp.getMesh()
 						if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
+
+						// Alter grid adta
 						temp.setBlock(x, y, z, type)
 						temp.untagBusyBlock(x, y, z)
+
+						// Reset everything
 						this.targetBlock = null
+						this.potentialBlock = null
 					})
 					break
 				}
@@ -200,17 +206,41 @@ class World {
 	breakBlock = () => {
 		if (!this.targetBlock) return // do nothing if no blocks are selected
 
+		const todo = obtainedType => {
+			if (obtainedType === 0) return
+			this.player.obtain(obtainedType, 1)
+		}
+
+		this.updateBlock(0, this.targetBlock, todo)
+	}
+
+	placeBlock = type => {
+		if (!this.potentialBlock) return
+
+		const todo = () => {
+			this.player.takeFromHand(1)
+		}
+
+		this.updateBlock(type, this.potentialBlock, todo)
+	}
+
+	updateBlock = (type, blockData, todo) => {
 		const {
 			chunk: { cx, cy, cz },
-			block,
-			mappedBlock
-		} = this.targetBlock
+			block
+		} = blockData
 
-		const targetChunk = this.getChunkByCoords(cx, cy, cz)
+		const mappedBlock = {
+			x: cx * size + block.x,
+			y: cy * size + block.y,
+			z: cz * size + block.z
+		}
+
+		const parentChunk = this.getChunkByCoords(cx, cy, cz)
 
 		const { x, y, z } = block
-		if (targetChunk.checkBusyBlock(x, y, z)) return
-		else targetChunk.tagBusyBlock(x, y, z)
+		if (parentChunk.checkBusyBlock(x, y, z)) return
+		else parentChunk.tagBusyBlock(x, y, z)
 
 		// Communicating with server
 		this.apolloClient
@@ -218,14 +248,13 @@ class World {
 				mutation: UPDATE_BLOCK_MUTATION,
 				variables: {
 					worldId: this.id,
-					type: 0,
+					type,
 					...mappedBlock
 				}
 			})
 			.then(() => {
-				const type = targetChunk.getBlock(x, y, z)
-				if (type === 0) return
-				this.player.obtain(type, 1)
+				const obtainedType = parentChunk.getBlock(x, y, z)
+				todo(obtainedType)
 			})
 			.catch(err => console.error(err))
 	}

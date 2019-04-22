@@ -31,7 +31,7 @@ class Inventory {
 			display: 'flex',
 			flexDirection: 'row',
 			justifyContent: 'center',
-			userSelect: 'none'
+			webkitUserSelect: 'none'
 		})
 
 		container.appendChild(wrapper)
@@ -52,14 +52,24 @@ class Inventory {
 		// This means inventory is changed.
 		if (leftover !== count) {
 			// TODO: implement backpack
-			const newInventory = `ARMOR:0;0;0;0|BACKPACK:0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;|${this.hotbar.getDatabaseRepresentation(
-				'HOTBAR'
-			)}`
-			this.updatePlayer({ data: newInventory })
 		}
 	}
 
 	getCursor = () => this.hotbar.selectedIndex
+	getHand = () => this.hotbar.getHand()
+
+	takeFromHand = amount => {
+		this.hotbar.takeFromHand(amount)
+		this.updateInventory()
+	}
+
+	// Update on server
+	updateInventory = () => {
+		const newInventory = `ARMOR:0;0;0;0|BACKPACK:0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;|${this.hotbar.getDatabaseRepresentation(
+			'HOTBAR'
+		)}`
+		this.updatePlayer({ data: newInventory })
+	}
 
 	_digestInventory = data => {
 		// Default data: "ARMOR:(0;) * 4|BACKPACK:(0,0;) * 27|HOTBAR:(0,0;) * 9"

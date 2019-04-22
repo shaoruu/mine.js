@@ -31,12 +31,7 @@ export default class Controls {
 		this.id = id
 
 		// Orbit controls first needs to pass in THREE to constructor
-		this.threeControls = new PointerLockControls(
-			camera,
-			container,
-			initPos,
-			initDirs
-		)
+		this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
 
 		this.mutatePlayer = mutatePlayer
 
@@ -59,7 +54,7 @@ export default class Controls {
 			moveUp: false
 		}
 
-		this.mousePressed = false
+		this.mouseKey = null
 
 		this.blocker = blocker
 
@@ -123,7 +118,19 @@ export default class Controls {
 				moveBackward
 			} = this.movements
 
-			if (this.mousePressed) this.world.breakBlock()
+			if (typeof this.mouseKey === 'number') {
+				switch (this.mouseKey) {
+					case 0: // Left Key
+						this.world.breakBlock()
+						break
+					case 2: // Right Key
+						const type = this.inventory.getHand()
+						if (type) this.world.placeBlock(type)
+						break
+					default:
+						break
+				}
+			}
 
 			// Update velocity with inertia
 			this.velocity.x -= this.velocity.x * this.INERTIA * delta
@@ -154,10 +161,11 @@ export default class Controls {
 		/** Updating targetted block */
 		const blockInfo = this.getLookingBlockInfo()
 		if (blockInfo) {
-			const { target, targetwf } = blockInfo
+			const { target, targetwf, potential } = blockInfo
 
 			// Signal to world
 			this.world.setTarget(target)
+			this.world.setPotential(potential)
 
 			const { x, y, z } = targetwf
 
@@ -193,9 +201,7 @@ export default class Controls {
 		this.raycaster.setFromCamera(this.fakeMouse, this.camera)
 
 		// Getting chunk position
-		const { coordx, coordy, coordz } = Helpers.toChunkCoords(
-			this.getCoordinates()
-		)
+		const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.getCoordinates())
 
 		const chunks = [
 			[coordx, coordy, coordz],
@@ -206,9 +212,7 @@ export default class Controls {
 			[coordx, coordy, coordz - 1],
 			[coordx, coordy, coordz + 1]
 		]
-			.map(coords =>
-				this.world.getChunkByCoords(coords[0], coords[1], coords[2])
-			)
+			.map(coords => this.world.getChunkByCoords(coords[0], coords[1], coords[2]))
 			.filter(c => c)
 			.map(c => c.getMesh())
 			.filter(m => m)
@@ -245,6 +249,11 @@ export default class Controls {
 			neighbors: []
 		}
 
+		let potential = {
+			chunk: { cx, cy, cz },
+			block: { ...bc }
+		}
+
 		/*eslint eqeqeq: "off"*/
 		let axis, chunkxis
 		if (Math.abs(normal.x).toFixed(1) == 1) {
@@ -254,7 +263,7 @@ export default class Controls {
 				// y-z plane
 				targetwf.x = cx * chunkDim + (bc.x - 1) * dimension
 				target.block.x -= 1
-			}
+			} else potential.block.x -= 1
 		} else if (Math.abs(normal.y).toFixed(1) == 1) {
 			axis = 'y'
 			chunkxis = 'cy'
@@ -262,7 +271,7 @@ export default class Controls {
 				// x-z plane
 				targetwf.y = cy * chunkDim + (bc.y - 1) * dimension
 				target.block.y -= 1
-			}
+			} else potential.block.y -= 1
 		} else if (Math.abs(normal.z).toFixed(1) == 1) {
 			axis = 'z'
 			chunkxis = 'cz'
@@ -270,7 +279,7 @@ export default class Controls {
 				// x-y plane
 				targetwf.z = cz * chunkDim + (bc.z - 1) * dimension
 				target.block.z -= 1
-			}
+			} else potential.block.z -= 1
 		}
 
 		/** adjusting target and potential to correct chunks */
@@ -282,17 +291,19 @@ export default class Controls {
 			target.chunk[chunkxis] += 1
 		}
 
-		target.mappedBlock = {
-			x: target.chunk.cx * size + target.block.x,
-			y: target.chunk.cy * size + target.block.y,
-			z: target.chunk.cz * size + target.block.z
+		if (potential.block[axis] < 0) {
+			potential.block[axis] = size - 1
+			potential.chunk[chunkxis] -= 1
+		} else if (potential.block[axis] > size - 1) {
+			potential.block[axis] = 0
+			potential.chunk[chunkxis] += 1
 		}
 
 		targetwf.x -= 0.12
 		targetwf.y -= 0.12
 		targetwf.z -= 0.12
 
-		return { target, targetwf }
+		return { target, targetwf, potential }
 	}
 	getObject = () => this.threeControls.getObject()
 	getCoordinates = () => {
@@ -302,14 +313,8 @@ export default class Controls {
 	}
 	getDirections = () => {
 		return {
-			dirx: Helpers.round(
-				this.threeControls.getPitch().rotation.x,
-				coordinateDec
-			),
-			diry: Helpers.round(
-				this.threeControls.getObject().rotation.y,
-				coordinateDec
-			)
+			dirx: Helpers.round(this.threeControls.getPitch().rotation.x, coordinateDec),
+			diry: Helpers.round(this.threeControls.getObject().rotation.y, coordinateDec)
 		}
 	}
 
@@ -322,10 +327,15 @@ export default class Controls {
 		})
 	}
 
+	// Add item to inventory
 	obtain = (type, count) => {
 		// TODO: implement if inventory is full
 
 		this.inventory.add(type, count)
+	}
+	// Remove item from hand
+	takeFromHand = amount => {
+		this.inventory.takeFromHand(amount)
 	}
 
 	// Private Methods
@@ -425,8 +435,8 @@ export default class Controls {
 			}
 		}
 
-		const onMouseDown = () => (this.mousePressed = true)
-		const onMouseUp = () => (this.mousePressed = false)
+		const onMouseDown = e => (this.mouseKey = e.button)
+		const onMouseUp = () => (this.mouseKey = null)
 
 		document.addEventListener('keydown', onKeyDown, false)
 		document.addEventListener('keyup', onKeyUp, false)
