@@ -67,11 +67,7 @@ class MainScene extends Component {
 		// Main scene creation
 		this.scene = new THREE.Scene()
 		this.scene.background = new THREE.Color(Config.fog.color)
-		this.scene.fog = new THREE.Fog(
-			Config.fog.color,
-			Config.fog.near,
-			Config.fog.far
-		)
+		this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
 
 		// Main renderer constructor
 		this.renderer = new Renderer(this.scene, this.mount)
@@ -213,8 +209,7 @@ class MainScene extends Component {
 					this.worldData = world
 					if (this.mount) this.handleQueryComplete()
 					else this.waitingForMount = true
-				}}
-			>
+				}}>
 				{({ loading, data }) => {
 					if (loading) return <Hint text="Loading world..." />
 					if (!data) return <Hint text="World not found." />
@@ -222,8 +217,7 @@ class MainScene extends Component {
 					return (
 						<Mutation
 							mutation={UPDATE_PLAYER_MUTATION}
-							onError={err => console.error(err)}
-						>
+							onError={err => console.error(err)}>
 							{(updatePlayer, { client }) => {
 								this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
 								this.client = client
@@ -240,8 +234,7 @@ class MainScene extends Component {
 												this.waitingForMount = false
 												this.handleQueryComplete()
 											}
-										}}
-									>
+										}}>
 										<div
 											className={classes.blocker}
 											ref={blocker => (this.blocker = blocker)}
@@ -254,9 +247,9 @@ class MainScene extends Component {
 										<Subscription
 											subscription={BLOCK_SUBSCRIPTION}
 											variables={{ worldId }}
-											onSubscriptionData={({ subscriptionData: { data } }) =>
-												this.world.updateChanged(data)
-											}
+											onSubscriptionData={({
+												subscriptionData: { data }
+											}) => this.world.updateChanged(data)}
 										/>
 									</div>
 								)

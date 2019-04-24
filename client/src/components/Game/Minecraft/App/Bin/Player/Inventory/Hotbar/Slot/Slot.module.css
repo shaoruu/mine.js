@@ -1,0 +1,33 @@
+.wrapper {
+	display: block;
+	position: relative;
+	border: 1px grey solid;
+	-webkit-user-select: none;
+}
+
+.itemWrapper {
+	display: block;
+	background-color: rgba(0, 0, 0, 0.3);
+	border: 3px #605d5e solid;
+	padding: 3px;
+	width: 40px;
+	height: 40px;
+	-webkit-user-select: none;
+}
+
+.item {
+	width: 100%;
+	height: 100%;
+}
+
+.count {
+	display: inline;
+	position: absolute;
+	bottom: 3px;
+	right: 3px;
+	font-size: 15px;
+	font-weight: 300;
+	color: #eeeeee;
+	font-family: 'Minecraft';
+	-webkit-user-select: none;
+}

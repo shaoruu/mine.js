@@ -1,4 +1,5 @@
 import Helpers from '../../../../../../Utils/Helpers'
+import classes from './Slot.module.css'
 
 class Slot {
 	constructor(materialManager) {
@@ -18,39 +19,13 @@ class Slot {
 			count: document.createElement('p')
 		}
 
-		Helpers.applyStyle(this.gui.wrapper, {
-			display: 'block',
-			position: 'relative',
-			border: '1px grey solid',
-			webkitUserSelect: 'none'
-		})
+		Helpers.applyStyle(this.gui.wrapper, classes.wrapper)
 
-		Helpers.applyStyle(this.gui.itemWrapper, {
-			display: 'block',
-			backgroundColor: 'rgba(0, 0, 0, 0.3)',
-			border: '3px #605D5E solid',
-			padding: '3px',
-			width: '40px',
-			height: '40px',
-			webkitUserSelect: 'none'
-		})
+		Helpers.applyStyle(this.gui.itemWrapper, classes.itemWrapper)
 
-		Helpers.applyStyle(this.gui.item, {
-			width: '100%',
-			height: '100%'
-		})
+		Helpers.applyStyle(this.gui.item, classes.item)
 
-		Helpers.applyStyle(this.gui.count, {
-			display: 'inline',
-			position: 'absolute',
-			bottom: '3px',
-			right: '3px',
-			fontSize: '15px',
-			fontWeight: '300',
-			color: '#eeeeee',
-			fontFamily: 'Minecraft',
-			webkitUserSelect: 'none'
-		})
+		Helpers.applyStyle(this.gui.count, classes.count)
 
 		this.gui.itemWrapper.appendChild(this.gui.item)
 		this.gui.wrapper.appendChild(this.gui.itemWrapper)

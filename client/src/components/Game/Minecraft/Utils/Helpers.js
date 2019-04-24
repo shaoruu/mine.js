@@ -166,6 +166,9 @@ export default class Helpers {
 		}
 	}
 
-	static applyStyle = (ele, styles) =>
-		Object.keys(styles).forEach(key => (ele.style[key] = styles[key]))
+	static applyStyle = (ele, s) => {
+		if (typeof s === 'object')
+			Object.keys(s).forEach(key => (ele.style[key] = s[key]))
+		else ele.classList.add(s)
+	}
 }

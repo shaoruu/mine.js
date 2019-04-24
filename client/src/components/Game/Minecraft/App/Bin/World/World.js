@@ -14,7 +14,7 @@ const size = Config.chunk.size,
 	noiseConstant = Config.world.noiseConstant
 
 class World {
-	constructor(id, scene, worldData, apolloClient, materialManager) {
+	constructor(id,scene, worldData, apolloClient, materialManager) {
 		const { seed, name, changedBlocks } = worldData
 
 		this.chunkDimension = Config.chunk.size * Config.block.dimension

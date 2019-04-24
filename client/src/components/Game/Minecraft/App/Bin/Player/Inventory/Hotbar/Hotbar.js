@@ -1,3 +1,4 @@
+import classes from './Hotbar.module.css'
 import Helpers from '../../../../../Utils/Helpers'
 import InventoryCommon from '../BaseClass/InventoryCommon'
 
@@ -14,16 +15,7 @@ class Hotbar extends InventoryCommon {
 	init = data => {
 		const wrapper = document.createElement('div')
 
-		Helpers.applyStyle(wrapper, {
-			alignSelf: 'flex-end',
-
-			margin: '15px',
-			display: 'flex',
-			flexDirection: 'row',
-			justifyContent: 'center',
-			alignItems: 'center',
-			webkitUserSelect: 'none'
-		})
+		Helpers.applyStyle(wrapper, classes.wrapper)
 
 		data.forEach((slot, index) => {
 			wrapper.appendChild(this.items[index].getUI())

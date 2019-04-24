@@ -4,6 +4,7 @@ import PointerLockControls from '../../../Utils/PointerLockControls'
 import Config from '../../../Data/Config'
 import Helpers from '../../../Utils/Helpers'
 import Inventory from './Inventory/Inventory'
+import Chat from '../Chat/Chat'
 
 const size = Config.chunk.size,
 	dimension = Config.block.dimension,
@@ -30,14 +31,6 @@ export default class Controls {
 	) {
 		this.id = id
 
-		// Orbit controls first needs to pass in THREE to constructor
-		this.threeControls = new PointerLockControls(
-			camera,
-			container,
-			initPos,
-			initDirs
-		)
-
 		this.mutatePlayer = mutatePlayer
 
 		this.prevTime = performance.now()
@@ -45,10 +38,24 @@ export default class Controls {
 		this.velocity = new THREE.Vector3()
 		this.direction = new THREE.Vector3()
 
+		// Chat
+		this.chat = new Chat(container)
+
 		/** CONNECTIONS TO OUTER SPACE */
 		this.scene = scene
 		this.camera = camera
 		this.world = world
+
+		// Orbit controls first needs to pass in THREE to constructor
+		this.threeControls = new PointerLockControls(
+			camera,
+			container,
+			this.chat,
+			initPos,
+			initDirs
+		)
+
+		this.chat.addControlListener(this.threeControls)
 
 		this.movements = {
 			moveForward: false,
@@ -206,9 +213,7 @@ export default class Controls {
 		this.raycaster.setFromCamera(this.fakeMouse, this.camera)
 
 		// Getting chunk position
-		const { coordx, coordy, coordz } = Helpers.toChunkCoords(
-			this.getCoordinates()
-		)
+		const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.getCoordinates())
 
 		const chunks = [
 			[coordx, coordy, coordz],
@@ -219,9 +224,7 @@ export default class Controls {
 			[coordx, coordy, coordz - 1],
 			[coordx, coordy, coordz + 1]
 		]
-			.map(coords =>
-				this.world.getChunkByCoords(coords[0], coords[1], coords[2])
-			)
+			.map(coords => this.world.getChunkByCoords(coords[0], coords[1], coords[2]))
 			.filter(c => c)
 			.map(c => c.getMesh())
 			.filter(m => m)
@@ -325,14 +328,8 @@ export default class Controls {
 	}
 	getDirections = () => {
 		return {
-			dirx: Helpers.round(
-				this.threeControls.getPitch().rotation.x,
-				coordinateDec
-			),
-			diry: Helpers.round(
-				this.threeControls.getObject().rotation.y,
-				coordinateDec
-			)
+			dirx: Helpers.round(this.threeControls.getPitch().rotation.x, coordinateDec),
+			diry: Helpers.round(this.threeControls.getObject().rotation.y, coordinateDec)
 		}
 	}
 
@@ -448,12 +445,19 @@ export default class Controls {
 				case 16: // shift
 					this.movements.moveDown = false
 					break
+				case 84:
+				case 116: // T
+					this.chat.toggle()
+					document.exitPointerLock()
+					break
 				default:
 					break
 			}
 		}
 
-		const onMouseDown = e => (this.mouseKey = e.button)
+		const onMouseDown = e => {
+			if (!this.chat.enabled) this.mouseKey = e.button
+		}
 		const onMouseUp = () => (this.mouseKey = null)
 
 		document.addEventListener('keydown', onKeyDown, false)

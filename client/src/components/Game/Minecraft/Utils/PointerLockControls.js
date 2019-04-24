@@ -9,7 +9,7 @@ import Config from '../Data/Config'
 
 const size = Config.block.dimension
 
-const PointerLockControls = function(camera, domElement, initPos, initDirs) {
+const PointerLockControls = function(camera, domElement, chat, initPos, initDirs) {
 	let scope = this
 
 	this.domElement = domElement || document.body
@@ -30,7 +30,7 @@ const PointerLockControls = function(camera, domElement, initPos, initDirs) {
 	let PI_2 = Math.PI / 2
 
 	function onMouseMove(event) {
-		if (scope.isLocked === false) return
+		if (!scope.isLocked || chat.enabled) return
 
 		let movementX =
 			event.movementX || event.mozMovementX || event.webkitMovementX || 0
@@ -44,7 +44,8 @@ const PointerLockControls = function(camera, domElement, initPos, initDirs) {
 	}
 
 	function onPointerlockChange() {
-		if (document.pointerLockElement === scope.domElement) {
+		if (chat.enabled) scope.isLocked = true
+		else if (document.pointerLockElement === scope.domElement) {
 			scope.dispatchEvent({ type: 'lock' })
 
 			scope.isLocked = true

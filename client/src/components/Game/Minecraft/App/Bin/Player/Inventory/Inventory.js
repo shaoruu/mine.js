@@ -2,6 +2,7 @@ import Armor from './Armor/Armor'
 import Backpack from './Backpack/Backpack'
 import Hotbar from './Hotbar/Hotbar'
 import Helpers from '../../../../Utils/Helpers'
+import classes from './Inventory.module.css'
 
 class Inventory {
 	constructor(container, materialManager, cursor, data, updatePlayer) {
@@ -23,16 +24,7 @@ class Inventory {
 
 		wrapper.appendChild(this.hotbar.getGui())
 
-		Helpers.applyStyle(wrapper, {
-			position: 'fixed',
-			top: '0',
-			width: '100vw',
-			height: '100vh',
-			display: 'flex',
-			flexDirection: 'row',
-			justifyContent: 'center',
-			webkitUserSelect: 'none'
-		})
+		Helpers.applyStyle(wrapper, classes.wrapper)
 
 		container.appendChild(wrapper)
 	}
