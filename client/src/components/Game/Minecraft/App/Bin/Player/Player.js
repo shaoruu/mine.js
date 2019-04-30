@@ -481,6 +481,7 @@ export default class Controls {
 					break
 
 				case 27: // esc
+					// TODO: Fix bug in firefox
 					if (this.chat.enabled) {
 						this.chat.disable()
 						if (!this.threeControls.isLocked) this.threeControls.lock()
