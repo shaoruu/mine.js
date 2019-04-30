@@ -1,5 +1,5 @@
 class Backpack {
-	constructor() {}
+	// constructor() {}
 }
 
 export default Backpack

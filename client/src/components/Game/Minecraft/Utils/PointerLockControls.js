@@ -30,7 +30,7 @@ const PointerLockControls = function(camera, domElement, chat, initPos, initDirs
 	let PI_2 = Math.PI / 2
 
 	function onMouseMove(event) {
-		if (!scope.isLocked || chat.enabled) return
+		if (!scope.isLocked) return
 
 		let movementX =
 			event.movementX || event.mozMovementX || event.webkitMovementX || 0
@@ -44,16 +44,21 @@ const PointerLockControls = function(camera, domElement, chat, initPos, initDirs
 	}
 
 	function onPointerlockChange() {
-		if (chat.enabled) scope.isLocked = true
-		else if (document.pointerLockElement === scope.domElement) {
-			scope.dispatchEvent({ type: 'lock' })
+		scope.isLocked = !scope.isLocked
 
-			scope.isLocked = true
-		} else {
+		if (document.pointerLockElement !== scope.domElement)
 			scope.dispatchEvent({ type: 'unlock' })
 
-			scope.isLocked = false
-		}
+		// if (chat.enabled) scope.isLocked = false
+		// else if (document.pointerLockElement === scope.domElement) {
+		// 	scope.dispatchEvent({ type: 'lock' })
+
+		// 	scope.isLocked = true
+		// } else {
+		// 	scope.dispatchEvent({ type: 'unlock' })
+
+		// 	scope.isLocked = false
+		// }
 	}
 
 	function onPointerlockError() {

@@ -8,7 +8,7 @@ import Chat from '../Chat/Chat'
 
 const size = Config.chunk.size,
 	dimension = Config.block.dimension,
-	fetchDst = Config.player.fetchDst,
+	reachDst = Config.player.reachDst,
 	inertia = Config.player.inertia,
 	horz_speed = Config.player.speed.horizontal,
 	vert_speed = Config.player.speed.vertical,
@@ -102,7 +102,7 @@ export default class Controls {
 
 		// Setting up raycasting
 		this.raycaster = new THREE.Raycaster()
-		this.raycaster.far = fetchDst * dimension
+		this.raycaster.far = reachDst * dimension
 
 		// CONSTANTS
 		this.INERTIA = inertia
@@ -117,7 +117,7 @@ export default class Controls {
 	update = () => {
 		const now = performance.now()
 
-		if (this.threeControls.isLocked) {
+		if (this.threeControls.isLocked || this.chat.enabled) {
 			const delta = (now - this.prevTime) / 1000
 
 			// Extract movement info for later convenience
@@ -358,98 +358,135 @@ export default class Controls {
 		this.blocker.addEventListener(
 			'click',
 			() => {
+				this.blocker.style.display = 'none'
 				this.threeControls.lock()
 			},
 			false
 		)
 
-		this.threeControls.addEventListener('lock', () => {
-			this.blocker.style.display = 'none'
-		})
+		// this.threeControls.addEventListener('lock', () => {
+		// 	this.blocker.style.display = 'none'
+		// })
 
 		this.threeControls.addEventListener('unlock', () => {
-			this.blocker.style.display = 'block'
+			if (!this.chat.enabled) this.blocker.style.display = 'block'
 		})
 
 		const onKeyDown = event => {
-			if (event.shiftKey) this.movements.moveDown = true
-			switch (event.keyCode) {
-				case 49:
-				case 50:
-				case 51:
-				case 52:
-				case 53:
-				case 54:
-				case 55:
-				case 56:
-				case 57:
-					const index = event.keyCode - 49
-					if (this.inventory.getCursor() !== index) {
-						this.mutateSelf({ cursor: index })
-						this.inventory.switchHotbar(index)
-					}
-					break
+			// TODO: Convert this to a switch statement for game state
+			if (this.chat.enabled) {
+				switch (event.keyCode) {
+					case 13: // enter
+						this.chat.handleEnter()
+						break
 
-				case 38: // up
-				case 87: // w
-					this.movements.moveForward = true
-					break
+					case 40: // down
+						break
 
-				case 37: // left
-				case 65: // a
-					this.movements.moveLeft = true
-					break
+					case 38: // up
+						break
 
-				case 40: // down
-				case 83: // s
-					this.movements.moveBackward = true
-					break
+					case 37: // left
+						if (this.chat.enabled) this.chat.input.moveLeft()
+						break
 
-				case 39: // right
-				case 68: // d
-					this.movements.moveRight = true
-					break
+					case 39: // right
+						if (this.chat.enabled) this.chat.input.moveRight()
+						break
 
-				case 32: // space
-					this.movements.moveUp = true
-					break
-				default:
-					break
+					default:
+						if (this.chat.enabled) {
+							const char = String.fromCharCode(event.keyCode)
+							this.chat.input.insert(char)
+						}
+						break
+				}
+			} else {
+				switch (event.keyCode) {
+					case 49:
+					case 50:
+					case 51:
+					case 52:
+					case 53:
+					case 54:
+					case 55:
+					case 56:
+					case 57: // number keys
+						const index = event.keyCode - 49
+						if (this.inventory.getCursor() !== index) {
+							this.mutateSelf({ cursor: index })
+							this.inventory.switchHotbar(index)
+						}
+						break
+
+					case 87: // w
+						this.movements.moveForward = true
+						break
+
+					case 65: // a
+						this.movements.moveLeft = true
+						break
+
+					case 83: // s
+						this.movements.moveBackward = true
+						break
+
+					case 68: // d
+						this.movements.moveRight = true
+						break
+
+					case 32: // space
+						this.movements.moveUp = true
+						break
+
+					case 16: // shift
+						this.movements.moveDown = true
+						break
+
+					case 84: // T
+						this.chat.enable()
+						this.threeControls.unlock()
+						break
+
+					default:
+						break
+				}
 			}
 		}
 
 		const onKeyUp = event => {
 			switch (event.keyCode) {
-				case 38: // up
 				case 87: // w
 					this.movements.moveForward = false
 					break
 
-				case 37: // left
 				case 65: // a
 					this.movements.moveLeft = false
 					break
 
-				case 40: // down
 				case 83: // s
 					this.movements.moveBackward = false
 					break
 
-				case 39: // right
 				case 68: // d
 					this.movements.moveRight = false
 					break
+
 				case 32: // space
 					this.movements.moveUp = false
 					break
+
 				case 16: // shift
 					this.movements.moveDown = false
 					break
-				case 84:
-				case 116: // T
-					this.chat.toggle()
-					document.exitPointerLock()
+
+				case 27: // esc
+					if (this.chat.enabled) {
+						this.chat.disable()
+						if (!this.threeControls.isLocked) this.threeControls.lock()
+					} else this.blocker.style.display = 'block'
 					break
+
 				default:
 					break
 			}

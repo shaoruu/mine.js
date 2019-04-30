@@ -1,5 +1,5 @@
 class Armor {
-	constructor() {}
+	// constructor() {}
 }
 
 export default Armor

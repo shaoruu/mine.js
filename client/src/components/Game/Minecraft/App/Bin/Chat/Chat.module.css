@@ -10,7 +10,7 @@
 
 .messagesWrapper {
 	position: fixed;
-	bottom: 0;
+	bottom: 45px;
 	left: 0;
 	z-index: 3;
 	width: 500px;
