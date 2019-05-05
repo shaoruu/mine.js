@@ -1,15 +1,15 @@
 import Slot from '../Hotbar/Slot/Slot'
 
 class InventoryCommon {
-	constructor(maxLength, materialManager) {
+	constructor(maxLength, resourceManager) {
 		this.items = []
 
-		this.initSlots(maxLength, materialManager)
+		this.initSlots(maxLength, resourceManager)
 	}
 
-	initSlots = (maxLength, materialManager) => {
+	initSlots = (maxLength, resourceManager) => {
 		for (let i = 0; i < maxLength; i++) {
-			this.items.push(new Slot(materialManager))
+			this.items.push(new Slot(resourceManager))
 		}
 	}
 

@@ -11,7 +11,7 @@ const Worlds = withRouter(({ history, subpage }) => {
 	return (
 		<Query
 			query={MY_WORLDS_QUERY}
-			onError={err => console.log(err)}
+			onError={err => console.error(err)}
 			fetchPolicy="network-only">
 			{({ loading, data }) => {
 				if (loading) return <Hint />

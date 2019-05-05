@@ -309,11 +309,7 @@ export default () => {
 			let u = this.fade(x)
 
 			// Interpolate the four results
-			return this.lerp(
-				this.lerp(n00, n10, u),
-				this.lerp(n01, n11, u),
-				this.fade(y)
-			)
+			return this.lerp(this.lerp(n00, n10, u), this.lerp(n01, n11, u), this.fade(y))
 		}
 
 		// 3D Perlin Noise
@@ -333,26 +329,14 @@ export default () => {
 
 			// Calculate noise contributions from each of the eight corners
 			let n000 = this.gradP[X + this.perm[Y + this.perm[Z]]].dot3(x, y, z)
-			let n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(
-				x,
-				y,
-				z - 1
-			)
-			let n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(
-				x,
-				y - 1,
-				z
-			)
+			let n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(x, y, z - 1)
+			let n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(x, y - 1, z)
 			let n011 = this.gradP[X + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
 				x,
 				y - 1,
 				z - 1
 			)
-			let n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(
-				x - 1,
-				y,
-				z
-			)
+			let n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(x - 1, y, z)
 			let n101 = this.gradP[X + 1 + this.perm[Y + this.perm[Z + 1]]].dot3(
 				x - 1,
 				y,
@@ -466,52 +450,27 @@ export default () => {
 			for (let z = 1; z < dims[1] - 1; z++) {
 				for (let y = 1; y < dims[2] - 1; y++) {
 					// dismiss air
-					if (get(x, z, y) === 0) continue
-
 					const type = get(x, z, y)
+
+					if (type === 0) continue
 
 					// TOP
 					if (get(x, z, y + 1) === 0)
-						planes.push([
-							[x, y + 0.5, z],
-							['rotateX', (Math.PI * 3) / 2],
-							type,
-							materials.top
-						])
+						planes.push([[x, y + 0.5, z], 'py', type, materials.top])
 
 					// SIDES
 					if (get(x + 1, z, y) === 0)
-						planes.push([
-							[x + 0.5, y, z],
-							['rotateY', Math.PI / 2],
-							type,
-							materials.side
-						])
+						planes.push([[x + 0.5, y, z], 'px', type, materials.side])
 					if (get(x, z + 1, y) === 0)
-						planes.push([[x, y, z + 0.5], null, type, materials.side])
+						planes.push([[x, y, z + 0.5], 'pz', type, materials.side])
 					if (get(x - 1, z, y) === 0)
-						planes.push([
-							[x - 0.5, y, z],
-							['rotateY', (Math.PI * 3) / 2],
-							type,
-							materials.side
-						])
+						planes.push([[x - 0.5, y, z], 'nx', type, materials.side])
 					if (get(x, z - 1, y) === 0)
-						planes.push([
-							[x, y, z - 0.5],
-							['rotateY', Math.PI],
-							type,
-							materials.side
-						])
+						planes.push([[x, y, z - 0.5], 'nz', type, materials.side])
 
 					// BOTTOM
 					if (get(x, z, y - 1) === 0)
-						planes.push([
-							[x, y - 0.5, z],
-							['rotateX', Math.PI / 2],
-							type,
-							materials.bottom
-						])
+						planes.push([[x, y - 0.5, z], 'ny', type, materials.bottom])
 				}
 			}
 		}
@@ -525,6 +484,9 @@ export default () => {
 		if (!cmd) throw new Error('Command not specified.')
 
 		switch (cmd) {
+			case 'BOOT':
+				postMessage({ cmd })
+				break
 			case 'GET_CHUNK': {
 				const {
 					seed,
@@ -553,7 +515,9 @@ export default () => {
 
 							const cb = changedBlocks[getCoordsRepresentation(...pos)],
 								value =
-									typeof cb === 'number' ? cb : generator.getBlockInfo(...pos)
+									typeof cb === 'number'
+										? cb
+										: generator.getBlockInfo(...pos)
 
 							set(x, z, y, value)
 						}
@@ -561,12 +525,18 @@ export default () => {
 				/** MESHING RIGHT BELOW */
 				const dims = [size + 2, size + 2, size + 2]
 
+				if (blocks.find(ele => ele)) {
+					const quads = calcQuads(get, dims)
+
+					postMessage({ cmd, blocks, quads, chunkName })
+				} else postMessage({ cmd, blocks, quads: [], chunkName })
+
 				const quads = calcQuads(get, dims)
 
 				postMessage({ cmd, blocks, quads, chunkName })
 				break
 			}
-			case 'BREAK_BLOCK': {
+			case 'UPDATE_BLOCK': {
 				const {
 					data,
 					block,
@@ -584,9 +554,12 @@ export default () => {
 				const { x, y, z } = block
 				set(x + 1, z + 1, y + 1, type)
 
-				const quads = calcQuads(get, dims)
+				if (data.find(ele => ele)) {
+					const quads = calcQuads(get, dims)
 
-				postMessage({ cmd, quads, block, type, chunkName })
+					postMessage({ cmd, quads, block, type, chunkName })
+				} else postMessage({ cmd, quads: [], block, type, chunkName })
+
 				break
 			}
 			default:

@@ -3,8 +3,8 @@ import Helpers from '../../../../../Utils/Helpers'
 import InventoryCommon from '../BaseClass/InventoryCommon'
 
 class Hotbar extends InventoryCommon {
-	constructor(cursor, data, materialManager) {
-		super(9, materialManager)
+	constructor(cursor, data, resourceManager) {
+		super(9, resourceManager)
 
 		this.selectedIndex = cursor
 

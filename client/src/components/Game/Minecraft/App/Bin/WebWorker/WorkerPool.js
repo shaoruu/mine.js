@@ -1,0 +1,48 @@
+import WebWorker from './WebWorker'
+// import Config from '../../../Data/Config'
+
+function WorkerPool(code, callback) {
+	let availables = []
+
+	const jobs = [],
+		workers = []
+
+	// TESTING STAGE: navigator.hardwareConcurrency || Config.world.maxWorkerCount
+	const maxWorkers = 1
+
+	for (let i = 0; i < maxWorkers; i++) {
+		const newWorker = new WebWorker(code)
+
+		newWorker.addEventListener('message', e => {
+			if (e.cmd !== 'BOOT') callback(e)
+
+			nextJob(i)
+		})
+
+		workers.push(newWorker)
+
+		// Booting up worker
+		newWorker.postMessage({ cmd: 'BOOT' })
+	}
+
+	// job: object containing specific actions to do for worker
+	this.queueJob = job => {
+		jobs.push(job)
+		if (availables.length > 0) nextJob(availables.splice(0, 1))
+	}
+
+	function nextJob(index) {
+		// No job
+		if (!jobs.length) {
+			availables.push(index)
+			return
+		}
+
+		const job = jobs.shift(),
+			worker = workers[index]
+
+		worker.postMessage(job)
+	}
+}
+
+export default WorkerPool

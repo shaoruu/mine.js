@@ -8,12 +8,12 @@ import classes from './MainScene.module.css'
 import { Hint } from '../../../../Utils'
 import Config from '../../Data/Config'
 import Helpers from '../../Utils/Helpers'
-import MaterialManager from '../../Utils/MaterialManager'
 import {
 	WORLD_QUERY,
 	BLOCK_SUBSCRIPTION,
 	UPDATE_PLAYER_MUTATION
 } from '../../../../../lib/graphql'
+import ResourceManager from '../../Data/ResourceManager/ResourceManager'
 
 class MainScene extends Component {
 	constructor(props) {
@@ -26,6 +26,10 @@ class MainScene extends Component {
 		this.prevDirs = {}
 
 		this.updatePlayer = null
+
+		// Load textures
+		this.resourceManager = new ResourceManager()
+		this.resourceManager.initialize()
 	}
 
 	handleQueryComplete = () => {
@@ -45,10 +49,6 @@ class MainScene extends Component {
 			function(requestID) {
 				clearTimeout(requestID)
 			} //fall back
-
-		// Load textures
-		this.materialManager = new MaterialManager()
-		this.loadTextures()
 
 		// Player setup
 		this.currentPlayer = this.worldData.players.find(
@@ -89,7 +89,7 @@ class MainScene extends Component {
 			this.scene,
 			this.worldData,
 			this.client,
-			this.materialManager
+			this.resourceManager
 		)
 
 		// Player initialization
@@ -102,7 +102,7 @@ class MainScene extends Component {
 			this.blocker,
 			this.initPos,
 			this.initDirs,
-			this.materialManager,
+			this.resourceManager,
 			this.currentPlayer.inventory,
 			this.updatePlayer
 		)
@@ -137,12 +137,8 @@ class MainScene extends Component {
 				})
 			}
 		}, 200)
-		this.requestChunkCall = setInterval(() => this.updateWorld(), 500)
-	}
 
-	loadTextures = () => {
-		for (let key in Config.textures.blocks)
-			this.materialManager.load(key, Config.textures.blocks[key])
+		this.updateWorldCall = setInterval(() => this.updateWorld(), 500)
 	}
 
 	componentWillUnmount() {
@@ -158,7 +154,7 @@ class MainScene extends Component {
 	terminate = () => {
 		window.cancelAnimationFrame(this.frameId)
 		clearInterval(this.updatePosCall)
-		clearInterval(this.requestChunkCall)
+		clearInterval(this.updateWorldCall)
 	}
 
 	animate = () => {
@@ -240,7 +236,9 @@ class MainScene extends Component {
 											ref={blocker => (this.blocker = blocker)}
 										/>
 										<img
-											src={Config.textures.gui.crosshair}
+											src={this.resourceManager.getGuiImg(
+												'crosshair'
+											)}
 											alt=""
 											className={classes.crosshair}
 										/>

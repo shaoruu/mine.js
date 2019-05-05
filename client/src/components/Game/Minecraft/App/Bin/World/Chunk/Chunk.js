@@ -1,5 +1,4 @@
 import ndarray from 'ndarray'
-import * as THREE from 'three'
 
 import Config from '../../../../Data/Config'
 import Helpers from '../../../../Utils/Helpers'
@@ -8,9 +7,9 @@ const size = Config.chunk.size,
 	dimension = Config.block.dimension
 
 class Chunk {
-	constructor(materialManager, { origin }) {
+	constructor(resourceManager, { origin }) {
 		// Inheritted Managers
-		this.materialManager = materialManager
+		this.resourceManager = resourceManager
 
 		// Member Initialization
 		this.origin = origin
@@ -47,8 +46,6 @@ class Chunk {
 		// Avoiding extra work.
 		if (quads === undefined || quads.length === 0) return null
 
-		// const quads = quads || this.genQuads()
-
 		/**
 		 * Internal functions for convenience
 		 */
@@ -61,21 +58,13 @@ class Chunk {
 		const meshes = []
 
 		for (let quad of quads) {
-			const [coords, rotation, type, material] = quad
-
-			const geo = new THREE.PlaneGeometry(dimension, dimension)
-			geo.computeFaceNormals()
-
-			const meshMat = this.materialManager.get(type)[material]
-
-			const mesh = new THREE.Mesh(geo, meshMat)
-
-			if (rotation) mesh[rotation[0]](rotation[1])
+			const [coords, geo, type, material] = quad
 
 			const globalCoords = mapVecToWorld(coords)
-			mesh.position.set(...globalCoords)
 
-			meshes.push(mesh)
+			const mat = this.resourceManager.getBlockMat(type)[material]
+
+			meshes.push({ geo, pos: globalCoords, mat })
 		}
 
 		return meshes
@@ -86,7 +75,7 @@ class Chunk {
 		// console.time('Block Combination')
 		if (!meshes) return
 
-		this.mesh = Helpers.mergeMeshes(meshes)
+		this.mesh = Helpers.mergeMeshes(meshes, this.resourceManager)
 		this.mesh.name = this.name
 		this.mesh.isChunk = true
 		// console.timeEnd('Block Combination')

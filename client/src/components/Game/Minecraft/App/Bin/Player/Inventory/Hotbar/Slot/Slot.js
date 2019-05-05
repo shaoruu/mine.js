@@ -2,11 +2,11 @@ import Helpers from '../../../../../../Utils/Helpers'
 import classes from './Slot.module.css'
 
 class Slot {
-	constructor(materialManager) {
+	constructor(resourceManager) {
 		this.count = 0
 		this.type = 0
 
-		this.materialManager = materialManager
+		this.resourceManager = resourceManager
 
 		this.initDoms()
 	}
@@ -96,7 +96,7 @@ class Slot {
 	setGuiItem = type => {
 		if (type === 0) this.setTexture(null)
 		else {
-			const image = this.materialManager.getImage(type)
+			const image = this.resourceManager.getBlockImg(type)
 			this.setTexture(image)
 		}
 	}

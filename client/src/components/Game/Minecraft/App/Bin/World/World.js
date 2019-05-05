@@ -4,8 +4,8 @@ import Config from '../../../Data/Config'
 import Chunk from './Chunk/Chunk'
 import Helpers from '../../../Utils/Helpers'
 import worker from './World.worker'
-import WebWorker from '../../Bin/WebWorker/WebWorker'
 import { UPDATE_BLOCK_MUTATION } from '../../../../../../lib/graphql'
+import WorkerPool from '../WebWorker/WorkerPool'
 
 const size = Config.chunk.size,
 	height = Config.chunk.height,
@@ -14,7 +14,7 @@ const size = Config.chunk.size,
 	noiseConstant = Config.world.noiseConstant
 
 class World {
-	constructor(id,scene, worldData, apolloClient, materialManager) {
+	constructor(id, scene, worldData, apolloClient, resourceManager) {
 		const { seed, name, changedBlocks } = worldData
 
 		this.chunkDimension = Config.chunk.size * Config.block.dimension
@@ -31,11 +31,12 @@ class World {
 		this.changedBlocks = {}
 
 		// Workers
-		this.worker = new WebWorker(worker)
-		this.setupWorker()
+		this.setupWorkerConfigs()
+		this.workerPool = new WorkerPool(worker, this.workerCallback)
+		// this.worker = new WebWorker(worker)
 
 		// Texture
-		this.materialManager = materialManager
+		this.resourceManager = resourceManager
 
 		// World Change Helpers
 		this.targetBlock = null
@@ -47,26 +48,30 @@ class World {
 		this.initWorld(changedBlocks)
 	}
 
-	setupWorker = () => {
-		this.worker.addEventListener('message', ({ data }) => {
+	setupWorkerConfigs = () => {
+		// Initializing worker callback for later usage
+		this.workerCallback = ({ data }) => {
+			// console.time('workerCallback')
 			const { cmd } = data
 			switch (cmd) {
 				case 'GET_CHUNK': {
 					const { quads, blocks, chunkName } = data
 					const temp = this.chunks[chunkName]
+
 					temp.setGrid(blocks)
 					temp.combineMesh(temp.meshQuads(quads)).then(
 						() => (temp.loading = false)
 					)
 					break
 				}
-				case 'BREAK_BLOCK': {
+				case 'UPDATE_BLOCK': {
 					const {
 						quads,
 						block: { x, y, z },
 						type,
 						chunkName
 					} = data
+
 					const temp = this.chunks[chunkName]
 					temp.combineMesh(temp.meshQuads(quads)).then(() => {
 						// Remove old then add new to scene
@@ -83,19 +88,14 @@ class World {
 						this.targetBlock = null
 						this.potentialBlock = null
 					})
+
 					break
 				}
 				default:
 					break
 			}
-		})
-	}
-
-	loadTextures = () => {
-		Helpers.log('Loading Textures...')
-		for (let key in Config.textures.blocks)
-			this.materialManager.load(key, Config.textures.blocks[key])
-		Helpers.log('Finished Loading Textures.')
+			// console.timeEnd('workerCallback')
+		}
 	}
 
 	initWorld = changedBlocks => {
@@ -121,7 +121,7 @@ class World {
 						})
 						continue
 					}
-					if (tempChunk.loading) continue // Chunk worker is working on it
+					if (tempChunk.loading) continue // Chunk workers are working on it
 
 					// To reach here means the chunk is loaded and meshed.
 					updatedChunks[tempChunk.name] = true
@@ -144,8 +144,8 @@ class World {
 		shouldBeRemoved.forEach(obj => this.scene.remove(obj))
 	}
 
-	registerChunk = ({ coordx, coordy, coordz }) => {
-		const newChunk = new Chunk(this.materialManager, {
+	registerChunk = async ({ coordx, coordy, coordz }) => {
+		const newChunk = new Chunk(this.resourceManager, {
 			origin: {
 				x: coordx,
 				y: coordy,
@@ -154,7 +154,7 @@ class World {
 		})
 		this.chunks[newChunk.name] = newChunk
 
-		this.worker.postMessage({
+		this.workerPool.queueJob({
 			cmd: 'GET_CHUNK',
 			seed: this.seed,
 			changedBlocks: this.changedBlocks,
@@ -271,8 +271,8 @@ class World {
 
 		this.registerChangedBlock(type, mx, my, mz)
 
-		this.worker.postMessage({
-			cmd: 'BREAK_BLOCK',
+		this.workerPool.queueJob({
+			cmd: 'UPDATE_BLOCK',
 			data: targetChunk.grid.data,
 			block: chunkBlock,
 			type,
@@ -305,8 +305,9 @@ class World {
 					nc.coordy,
 					nc.coordz
 				)
-				this.worker.postMessage({
-					cmd: 'BREAK_BLOCK',
+
+				this.workerPool.queueJob({
+					cmd: 'UPDATE_BLOCK',
 					data: neighborChunk.grid.data,
 					block: nb,
 					type,
@@ -333,14 +334,6 @@ class World {
 	setTarget = target => (this.targetBlock = target)
 	setPlayer = player => (this.player = player)
 
-	_digestChunks = chunks => {
-		Helpers.log('Loading Existing Chunks...')
-		for (let chunk of chunks) {
-			this.registerChunk(chunk)
-			console.log('chunk loaded.')
-		}
-		Helpers.log('Finished Loading Existing Chunks.')
-	}
 	_digestBlocks = blocks => {
 		// console.time('Blocks Digestion')
 		return blocks

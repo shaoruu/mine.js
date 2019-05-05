@@ -5,32 +5,35 @@ const size = Config.chunk.size,
 	dimension = Config.block.dimension
 
 export default class Helpers {
-	static mergeMeshes = (meshes, toBufferGeometry = true) => {
+	static mergeMeshes = (meshes, resourceManager, toBufferGeometry = true) => {
 		let finalGeometry,
 			materials = [],
 			mergedGeometry = new THREE.Geometry(),
 			mergedMesh
 
-		meshes.forEach((mesh, index) => {
-			mesh.updateMatrix()
-			mesh.geometry.faces.forEach(function(face) {
-				face.materialIndex = 0
-			})
-			mergedGeometry.merge(mesh.geometry, mesh.matrix, index)
-			materials.push(mesh.material)
-		})
+		const matrix = new THREE.Matrix4()
 
-		mergedGeometry.groupsNeedUpdate = true
+		// const start = performance.now()
+		for (let i = 0; i < meshes.length; i++) {
+			const { geo, pos, mat } = meshes[i]
 
-		if (toBufferGeometry) {
-			finalGeometry = new THREE.BufferGeometry().fromGeometry(mergedGeometry)
-		} else {
-			finalGeometry = mergedGeometry
+			matrix.makeTranslation(...pos)
+
+			mergedGeometry.merge(resourceManager.getBlockGeo(geo), matrix, i)
+			materials.push(mat)
 		}
+		// const end = performance.now()
+		// if (end - start > 1) console.log(meshes)
+
+		// mergedGeometry.groupsNeedUpdate = true
+
+		if (toBufferGeometry)
+			finalGeometry = new THREE.BufferGeometry().fromGeometry(mergedGeometry)
+		else finalGeometry = mergedGeometry
 
 		mergedMesh = new THREE.Mesh(finalGeometry, materials)
 		mergedMesh.geometry.computeFaceNormals()
-		mergedMesh.geometry.computeVertexNormals()
+		// mergedMesh.geometry.computeVertexNormals()
 
 		return mergedMesh
 	}

@@ -5,14 +5,14 @@ import Helpers from '../../../../Utils/Helpers'
 import classes from './Inventory.module.css'
 
 class Inventory {
-	constructor(container, materialManager, cursor, data, updatePlayer) {
+	constructor(container, resourceManager, cursor, data, updatePlayer) {
 		const { hotbar } = this._digestInventory(data)
 
 		this.armor = new Armor()
 
 		this.backpack = new Backpack()
 
-		this.hotbar = new Hotbar(cursor, hotbar, materialManager)
+		this.hotbar = new Hotbar(cursor, hotbar, resourceManager)
 
 		this.updatePlayer = updatePlayer
 

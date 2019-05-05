@@ -25,7 +25,7 @@ export default class Controls {
 		blocker,
 		initPos,
 		initDirs,
-		materialManager,
+		resourceManager,
 		inventory,
 		mutatePlayer
 	) {
@@ -73,7 +73,7 @@ export default class Controls {
 		const { cursor, data } = inventory
 		this.inventory = new Inventory(
 			container,
-			materialManager,
+			resourceManager,
 			cursor,
 			data,
 			this.mutateSelf
