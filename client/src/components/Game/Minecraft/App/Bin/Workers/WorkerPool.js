@@ -1,20 +1,19 @@
 import WebWorker from './WebWorker'
 import Config from '../../../Data/Config'
 
-function WorkerPool(code, callback) {
+function WorkerPool(code, world) {
   let availables = []
 
   const jobs = [],
     workers = []
 
-  const maxWorkers =
-    navigator.hardwareConcurrency || Config.world.maxWorkerCount
+  const maxWorkers = navigator.hardwareConcurrency || Config.world.maxWorkerCount
 
   for (let i = 0; i < maxWorkers; i++) {
     const newWorker = new WebWorker(code)
 
     newWorker.addEventListener('message', e => {
-      if (e.cmd !== 'BOOT') callback(e)
+      if (e.cmd !== 'BOOT') world.appendWorkerTask(world.workerCallback, e)
 
       nextJob(i)
     })

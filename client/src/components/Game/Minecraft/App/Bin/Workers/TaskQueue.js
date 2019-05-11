@@ -3,35 +3,35 @@ class TaskQueue {
     this.tasks = []
   }
 
-  addTask = (context, task, argument = null) => {
+  addTask = (task, argument = null) => {
+    const shouldCall = this.tasks.length === 0
+
     this.tasks.push({
-      context,
       task,
       argument
     })
 
-    window.requestAnimationFrame(this.processTask)
+    if (shouldCall) window.requestAnimationFrame(this.nextTask)
   }
 
-  addTasks = (context, tasks) => {
+  addTasks = tasks => {
     tasks.forEach(([task, argument]) => {
       this.tasks.push({
-        context,
         task,
         argument
       })
     })
-    window.requestAnimationFrame(this.processTask)
+    window.requestAnimationFrame(this.nextTask)
   }
 
-  processTask = () => {
+  nextTask = () => {
     if (this.tasks.length === 0) return
 
-    const { context, task, argument } = this.tasks.shift()
+    const { task, argument } = this.tasks.shift()
 
-    task.call(context, argument)
+    task(argument)
 
-    if (this.tasks.length) window.requestAnimationFrame(this.processTask)
+    if (this.tasks.length) window.requestAnimationFrame(this.nextTask)
   }
 }
 

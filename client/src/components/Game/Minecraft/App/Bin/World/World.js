@@ -33,7 +33,7 @@ class World {
 
     // Workers
     this.setupWorkerConfigs()
-    this.workerPool = new WorkerPool(worker, this.workerCallback)
+    this.workerPool = new WorkerPool(worker, this)
     this.workerTaskHandler = new TaskQueue() // This is handle/schedule all the tasks from worker callback
 
     // Texture
@@ -59,8 +59,8 @@ class World {
           const { quads, blocks, chunkName } = data
           const temp = this.chunks[chunkName]
 
-          temp.setGrid(blocks)
-          this.workerTaskHandler.addTasks(temp, [
+          this.workerTaskHandler.addTasks([
+            [temp.setGrid, blocks],
             [temp.meshQuads, quads],
             [temp.combineMesh],
             [temp.markAsFinishedLoading]
@@ -76,24 +76,21 @@ class World {
           } = data
 
           const temp = this.chunks[chunkName]
-          this.workerTaskHandler.addTasks(temp, [
-            [temp.meshQuads, quads],
-            [temp.combineMesh]
-          ])
-          this.workerTaskHandler.addTask(this, () => {
+          this.workerTaskHandler.addTasks([[temp.meshQuads, quads], [temp.combineMesh]])
+          this.workerTaskHandler.addTask(() => {
             // Remove old then add new to scene
             const obj = this.scene.getObjectByName(chunkName)
             if (obj) this.scene.remove(obj)
             const mesh = temp.getMesh()
             if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
 
+            // Change chunk data
+            temp.setBlock(x, y, z, type)
+            temp.untagBusyBlock(x, y, z)
+
             // Reset everything
             this.targetBlock = null
             this.potentialBlock = null
-          })
-          this.workerTaskHandler.addTask(this, () => {
-            temp.setBlock(x, y, z, type)
-            temp.untagBusyBlock(x, y, z)
           })
 
           break
@@ -307,11 +304,7 @@ class World {
         shouldWork = true
       }
       if (shouldWork) {
-        const neighborChunk = this.getChunkByCoords(
-          nc.coordx,
-          nc.coordy,
-          nc.coordz
-        )
+        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
 
         this.workerPool.queueJob({
           cmd: 'UPDATE_BLOCK',
@@ -340,6 +333,8 @@ class World {
   setPotential = potential => (this.potentialBlock = potential)
   setTarget = target => (this.targetBlock = target)
   setPlayer = player => (this.player = player)
+  appendWorkerTask = (task, argument = null) =>
+    this.workerTaskHandler.addTask(task, argument)
 
   _digestBlocks = blocks => {
     // console.time('Blocks Digestion')
