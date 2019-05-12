@@ -12,13 +12,20 @@ export default {
   duration: 500,
   dictionary: {
     block: {
+      0: {
+        id: 0,
+        name: 'air'
+      },
       1: {
+        id: 1,
         name: 'stone'
       },
       2: {
+        id: 2,
         name: 'grass'
       },
       3: {
+        id: 3,
         name: 'dirt'
       }
     }

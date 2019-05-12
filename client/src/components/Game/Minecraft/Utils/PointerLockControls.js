@@ -9,110 +9,106 @@ import Config from '../Data/Config'
 
 const size = Config.block.dimension
 
-const PointerLockControls = function(camera, domElement, chat, initPos, initDirs) {
-	let scope = this
+const PointerLockControls = function(camera, domElement, initPos, initDirs) {
+  let scope = this
 
-	this.domElement = domElement || document.body
-	this.isLocked = false
+  this.domElement = domElement || document.body
+  this.isLocked = false
 
-	camera.rotation.set(0, 0, 0)
+  camera.rotation.set(0, 0, 0)
 
-	let pitchObject = new THREE.Object3D()
-	pitchObject.add(camera)
+  let pitchObject = new THREE.Object3D()
+  pitchObject.add(camera)
 
-	let yawObject = new THREE.Object3D()
-	yawObject.position.set(initPos.x * size, initPos.y * size, initPos.z * size)
-	yawObject.add(pitchObject)
+  let yawObject = new THREE.Object3D()
+  yawObject.position.set(initPos.x * size, initPos.y * size, initPos.z * size)
+  yawObject.add(pitchObject)
 
-	pitchObject.rotation.x = initDirs.dirx
-	yawObject.rotation.y = initDirs.diry
+  pitchObject.rotation.x = initDirs.dirx
+  yawObject.rotation.y = initDirs.diry
 
-	let PI_2 = Math.PI / 2
+  let PI_2 = Math.PI / 2
 
-	function onMouseMove(event) {
-		if (!scope.isLocked) return
+  function onMouseMove(event) {
+    if (!scope.isLocked) return
 
-		let movementX =
-			event.movementX || event.mozMovementX || event.webkitMovementX || 0
-		let movementY =
-			event.movementY || event.mozMovementY || event.webkitMovementY || 0
+    let movementX =
+      event.movementX || event.mozMovementX || event.webkitMovementX || 0
+    let movementY =
+      event.movementY || event.mozMovementY || event.webkitMovementY || 0
 
-		yawObject.rotation.y -= movementX * 0.002
-		pitchObject.rotation.x -= movementY * 0.002
+    yawObject.rotation.y -= movementX * 0.002
+    pitchObject.rotation.x -= movementY * 0.002
 
-		pitchObject.rotation.x = Math.max(-PI_2, Math.min(PI_2, pitchObject.rotation.x))
-	}
+    pitchObject.rotation.x = Math.max(
+      -PI_2,
+      Math.min(PI_2, pitchObject.rotation.x)
+    )
+  }
 
-	function onPointerlockChange() {
-		scope.isLocked = !scope.isLocked
+  function onPointerlockChange() {
+    scope.isLocked = !scope.isLocked
 
-		if (document.pointerLockElement !== scope.domElement)
-			scope.dispatchEvent({ type: 'unlock' })
+    if (document.pointerLockElement !== scope.domElement)
+      scope.dispatchEvent({ type: 'unlock' })
+  }
 
-		// if (chat.enabled) scope.isLocked = false
-		// else if (document.pointerLockElement === scope.domElement) {
-		// 	scope.dispatchEvent({ type: 'lock' })
+  function onPointerlockError() {
+    console.error('THREE.PointerLockControls: Unable to use Pointer Lock API')
+  }
 
-		// 	scope.isLocked = true
-		// } else {
-		// 	scope.dispatchEvent({ type: 'unlock' })
+  this.connect = function() {
+    document.addEventListener('mousemove', onMouseMove, false)
+    document.addEventListener('pointerlockchange', onPointerlockChange, false)
+    document.addEventListener('pointerlockerror', onPointerlockError, false)
+  }
 
-		// 	scope.isLocked = false
-		// }
-	}
+  this.disconnect = function() {
+    document.removeEventListener('mousemove', onMouseMove, false)
+    document.removeEventListener(
+      'pointerlockchange',
+      onPointerlockChange,
+      false
+    )
+    document.removeEventListener('pointerlockerror', onPointerlockError, false)
+  }
 
-	function onPointerlockError() {
-		console.error('THREE.PointerLockControls: Unable to use Pointer Lock API')
-	}
+  this.dispose = function() {
+    this.disconnect()
+  }
 
-	this.connect = function() {
-		document.addEventListener('mousemove', onMouseMove, false)
-		document.addEventListener('pointerlockchange', onPointerlockChange, false)
-		document.addEventListener('pointerlockerror', onPointerlockError, false)
-	}
+  this.getObject = function() {
+    return yawObject
+  }
 
-	this.disconnect = function() {
-		document.removeEventListener('mousemove', onMouseMove, false)
-		document.removeEventListener('pointerlockchange', onPointerlockChange, false)
-		document.removeEventListener('pointerlockerror', onPointerlockError, false)
-	}
+  this.getPitch = function() {
+    return pitchObject
+  }
 
-	this.dispose = function() {
-		this.disconnect()
-	}
+  this.getDirection = (function() {
+    // assumes the camera itself is not rotated
 
-	this.getObject = function() {
-		return yawObject
-	}
+    let direction = new THREE.Vector3(0, 0, -1)
+    let rotation = new THREE.Euler(0, 0, 0, 'YXZ')
 
-	this.getPitch = function() {
-		return pitchObject
-	}
+    return function(v) {
+      rotation.set(pitchObject.rotation.x, yawObject.rotation.y, 0)
 
-	this.getDirection = (function() {
-		// assumes the camera itself is not rotated
+      v.copy(direction).applyEuler(rotation)
 
-		let direction = new THREE.Vector3(0, 0, -1)
-		let rotation = new THREE.Euler(0, 0, 0, 'YXZ')
+      return v
+    }
+  })()
 
-		return function(v) {
-			rotation.set(pitchObject.rotation.x, yawObject.rotation.y, 0)
+  this.lock = function() {
+    this.domElement.requestPointerLock()
+  }
 
-			v.copy(direction).applyEuler(rotation)
+  this.unlock = function() {
+    document.exitPointerLock()
+  }
 
-			return v
-		}
-	})()
-
-	this.lock = function() {
-		this.domElement.requestPointerLock()
-	}
-
-	this.unlock = function() {
-		document.exitPointerLock()
-	}
-
-	this.connect()
+  this.connect()
 }
 
 PointerLockControls.prototype = Object.create(THREE.EventDispatcher.prototype)

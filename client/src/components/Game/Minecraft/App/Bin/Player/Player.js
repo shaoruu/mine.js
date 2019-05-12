@@ -50,7 +50,6 @@ export default class Controls {
     this.threeControls = new PointerLockControls(
       camera,
       container,
-      this.chat,
       initPos,
       initDirs
     )
@@ -103,78 +102,6 @@ export default class Controls {
     // Setting up raycasting for block tracing and collisions
     this.raycaster = new THREE.Raycaster()
     this.raycaster.far = reachDst * dimension
-    this.colliRays = {
-      pxu: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(1, 0, 0)
-        ),
-        length: dimension * 0.3
-      },
-      pxd: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(1, 0, 0)
-        ),
-        length: dimension * 0.3
-      },
-      nxu: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(-1, 0, 0)
-        ),
-        length: dimension * 0.3
-      },
-      nxd: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(-1, 0, 0)
-        ),
-        length: dimension * 0.3
-      },
-      pyu: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(0, 1, 0)
-        ),
-        length: dimension * 0.2
-      },
-      nyd: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(0, -1, 0)
-        ),
-        length: dimension * 0.7
-      },
-      pzu: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(0, 0, 1)
-        ),
-        length: dimension * 0.3
-      },
-      pzd: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(0, 0, 1)
-        ),
-        length: dimension * 0.3
-      },
-      nzu: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(0, 0, -1)
-        ),
-        length: dimension * 0.3
-      },
-      nzd: {
-        raycaster: new THREE.Raycaster(
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(0, 0, -1)
-        ),
-        length: dimension * 0.3
-      }
-    }
 
     // CONSTANTS
     this.INERTIA = inertia
@@ -189,36 +116,9 @@ export default class Controls {
   update = () => {
     const now = performance.now()
 
-    const collisions = {
-      pxu: false,
-      pxd: false,
-      nxu: false,
-      nxd: false,
-      pyu: false,
-      nyd: false,
-      pzu: false,
-      pzd: false,
-      nzu: false,
-      nzd: false
-    }
-
-    for (let dir in this.colliRays) {
-      const { raycaster, length } = this.colliRays[dir]
-      const cameraPos = this.threeControls.getObject().position.clone()
-
-      if (dir.toString().includes('d')) {
-        cameraPos.y -= dimension
-        raycaster.ray.origin.copy(cameraPos)
-      }
-      const intersections = raycaster.intersectObjects(
-        this.getNearbyChunkMeshes()
-      )
-
-      if (intersections.length > 0 && intersections[0].distance < length)
-        collisions[dir] = true
-    }
-
     if (this.threeControls.isLocked || this.chat.enabled) {
+      const object = this.threeControls.getObject()
+
       const delta = (now - this.prevTime) / 1000
 
       // Extract movement info for later convenience
@@ -257,24 +157,7 @@ export default class Controls {
       if (up || down)
         this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
 
-      if (
-        (this.velocity.x <= 0 && (collisions.nxu || collisions.nxd)) ||
-        (this.velocity.x > 0 && (collisions.pxu || collisions.pxd))
-      )
-        this.velocity.x = 0
-      if (
-        (this.velocity.y <= 0 && collisions.nyd) ||
-        (this.velocity.y > 0 && collisions.pyu)
-      )
-        this.velocity.y = 0
-      if (
-        (this.velocity.z <= 0 && (collisions.nzu || collisions.nzd)) ||
-        (this.velocity.z > 0 && (collisions.pzu || collisions.pzd))
-      )
-        this.velocity.z = 0
-
       // Translation of player
-      const object = this.getObject()
       object.translateX(this.velocity.x * delta)
       object.translateY(this.velocity.y * delta)
       object.translateZ(this.velocity.z * delta)
@@ -361,7 +244,7 @@ export default class Controls {
 
     // Global Block Coords
     const gbc = Helpers.toGlobalBlock(
-      { x: point.x.toFixed(2), y: point.y.toFixed(2), z: point.z.toFixed(2) },
+      { x: point.x, y: point.y, z: point.z },
       true
     )
 

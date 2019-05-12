@@ -76,7 +76,10 @@ class World {
           } = data
 
           const temp = this.chunks[chunkName]
-          this.workerTaskHandler.addTasks([[temp.meshQuads, quads], [temp.combineMesh]])
+          this.workerTaskHandler.addTasks([
+            [temp.meshQuads, quads],
+            [temp.combineMesh]
+          ])
           this.workerTaskHandler.addTask(() => {
             // Remove old then add new to scene
             const obj = this.scene.getObjectByName(chunkName)
@@ -275,19 +278,7 @@ class World {
 
     this.registerChangedBlock(type, mx, my, mz)
 
-    this.workerPool.queueJob({
-      cmd: 'UPDATE_BLOCK',
-      data: targetChunk.grid.data,
-      block: chunkBlock,
-      type,
-      configs: {
-        size,
-        stride: targetChunk.grid.stride,
-        chunkName: targetChunk.name
-      }
-    })
-
-    // Checking for neighboring blocks.
+    // Checking for neighboring blocks FIRST.
     const axes = [['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']]
     axes.forEach(([a, c]) => {
       const nc = { coordx, coordy, coordz },
@@ -304,7 +295,11 @@ class World {
         shouldWork = true
       }
       if (shouldWork) {
-        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
+        const neighborChunk = this.getChunkByCoords(
+          nc.coordx,
+          nc.coordy,
+          nc.coordz
+        )
 
         this.workerPool.queueJob({
           cmd: 'UPDATE_BLOCK',
@@ -317,6 +312,18 @@ class World {
             chunkName: neighborChunk.name
           }
         })
+      }
+    })
+
+    this.workerPool.queueJob({
+      cmd: 'UPDATE_BLOCK',
+      data: targetChunk.grid.data,
+      block: chunkBlock,
+      type,
+      configs: {
+        size,
+        stride: targetChunk.grid.stride,
+        chunkName: targetChunk.name
       }
     })
   }
@@ -335,31 +342,17 @@ class World {
   setPlayer = player => (this.player = player)
   appendWorkerTask = (task, argument = null) =>
     this.workerTaskHandler.addTask(task, argument)
-
-  _digestBlocks = blocks => {
-    // console.time('Blocks Digestion')
-    return blocks
-      .slice(0, -1)
-      .split(';')
-      .map(og => {
-        const ele = og.split(':')
-        const id = parseInt(ele[0])
-        const coords = ele[1].split(','),
-          position = {
-            x: parseInt(coords[0]),
-            y: parseInt(coords[1]),
-            z: parseInt(coords[2])
-          }
-        return {
-          id,
-          position
-        }
-      })
-    // console.timeEnd('Blocks Digestion')
-  }
-  _handleMeshCombining = meshGroup => {
-    this.mesh = Helpers.mergeMeshes(meshGroup)
-    this.mesh.name = this.name
+  getBlockInfoByTHREECoords = ({ x, y, z }) => {
+    const gbc = Helpers.toGlobalBlock({ x, y, z }, true)
+    const { coordx, coordy, coordz } = Helpers.toChunkCoords(gbc),
+      { x: bx, y: by, z: bz } = Helpers.toBlockCoords(gbc)
+    const chunk = this.chunks[
+      Helpers.getCoordsRepresentation(coordx, coordy, coordz)
+    ]
+    const id = chunk.getBlock(bx, by, bz)
+    const info = Config.dictionary.block[id]
+    if (!info) return null
+    return info
   }
 }
 
