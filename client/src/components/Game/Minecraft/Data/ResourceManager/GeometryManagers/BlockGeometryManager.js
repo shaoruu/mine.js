@@ -16,6 +16,7 @@ class BlockGeometryManager {
       this.geometries[key] = new THREE.PlaneGeometry(dimension, dimension)
       const { func, rotation } = rBlock[key]
       if (func) this.geometries[key][func](rotation)
+      this.geometries[key].computeFaceNormals()
     }
   }
 

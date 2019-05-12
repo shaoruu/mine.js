@@ -274,27 +274,22 @@ class World {
       chunkBlock = Helpers.toBlockCoords(node),
       { type, x: mx, y: my, z: mz } = node
 
-    const targetChunk = this.getChunkByCoords(coordx, coordy, coordz)
-
-    this.registerChangedBlock(type, mx, my, mz)
-
     // Checking for neighboring blocks FIRST.
-    const axes = [['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']]
-    axes.forEach(([a, c]) => {
+    ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
       const nc = { coordx, coordy, coordz },
         nb = { ...chunkBlock }
-      let shouldWork = false
+      let neighborAffected = false
 
-      if (chunkBlock[a] === 0) {
+      if (nb[a] === 0) {
         nc[c] -= 1
         nb[a] = size
-        shouldWork = true
-      } else if (chunkBlock[a] === size - 1) {
+        neighborAffected = true
+      } else if (nb[a] === size - 1) {
         nc[c] += 1
         nb[a] = -1
-        shouldWork = true
+        neighborAffected = true
       }
-      if (shouldWork) {
+      if (neighborAffected) {
         const neighborChunk = this.getChunkByCoords(
           nc.coordx,
           nc.coordy,
@@ -314,6 +309,10 @@ class World {
         })
       }
     })
+
+    const targetChunk = this.getChunkByCoords(coordx, coordy, coordz)
+
+    this.registerChangedBlock(type, mx, my, mz)
 
     this.workerPool.queueJob({
       cmd: 'UPDATE_BLOCK',

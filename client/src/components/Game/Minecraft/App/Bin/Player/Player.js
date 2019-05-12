@@ -235,7 +235,10 @@ export default class Controls {
     if (!chunks.length) return null
 
     const objs = this.raycaster.intersectObjects(chunks)
-    if (objs.length === 0) return null
+    if (objs.length === 0 || objs[0].distance > reachDst * dimension)
+      return null
+
+    console.log('damn boi')
 
     const {
       point,
@@ -372,10 +375,6 @@ export default class Controls {
       },
       false
     )
-
-    // this.threeControls.addEventListener('lock', () => {
-    // 	this.blocker.style.display = 'none'
-    // })
 
     this.threeControls.addEventListener('unlock', () => {
       if (!this.chat.enabled) this.blocker.style.display = 'block'

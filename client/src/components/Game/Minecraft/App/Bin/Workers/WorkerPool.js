@@ -7,7 +7,8 @@ function WorkerPool(code, world) {
   const jobs = [],
     workers = []
 
-  const maxWorkers = navigator.hardwareConcurrency || Config.world.maxWorkerCount
+  const maxWorkers =
+    navigator.hardwareConcurrency || Config.world.maxWorkerCount
 
   for (let i = 0; i < maxWorkers; i++) {
     const newWorker = new WebWorker(code)
@@ -27,7 +28,7 @@ function WorkerPool(code, world) {
   // job: object containing specific actions to do for worker
   this.queueJob = job => {
     jobs.push(job)
-    if (availables.length > 0) nextJob(availables.splice(0, 1))
+    if (availables.length > 0) nextJob(availables.shift())
   }
 
   function nextJob(index) {

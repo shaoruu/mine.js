@@ -54,6 +54,7 @@ export default {
     posZ: 0
   },
   player: {
+    height: 50, // px
     inertia: 5.0,
     speed: {
       horizontal: 1600,
