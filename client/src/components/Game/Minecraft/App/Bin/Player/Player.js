@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import raycast from 'fast-voxel-raycast'
 
 import PointerLockControls from '../../../Utils/PointerLockControls'
 import Config from '../../../Data/Config'
@@ -15,7 +16,7 @@ const size = Config.chunk.size,
   coordinateDec = Config.player.coordinateDec
 
 // Controls based on orbit controls
-export default class Controls {
+export default class Player {
   constructor(
     id,
     camera,
@@ -117,8 +118,6 @@ export default class Controls {
     const now = performance.now()
 
     if (this.threeControls.isLocked || this.chat.enabled) {
-      const object = this.threeControls.getObject()
-
       const delta = (now - this.prevTime) / 1000
 
       // Extract movement info for later convenience
@@ -158,6 +157,7 @@ export default class Controls {
         this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
 
       // Translation of player
+      const object = this.threeControls.getObject()
       object.translateX(this.velocity.x * delta)
       object.translateY(this.velocity.y * delta)
       object.translateZ(this.velocity.z * delta)
@@ -202,52 +202,31 @@ export default class Controls {
     this.prevTime = now
   }
 
-  getNearbyChunkMeshes = () => {
-    const { coordx, coordy, coordz } = Helpers.toChunkCoords(
-      this.getCoordinates()
+  getLookingBlockInfo = () => {
+    const object = this.threeControls.getObject()
+
+    const camDir = new THREE.Vector3()
+    this.camera.getWorldDirection(camDir)
+    camDir.normalize()
+
+    const camPos = object.position
+
+    const point = [],
+      normal = []
+    const result = raycast(
+      this.world.getVoxelByCoords,
+      [camPos.x, camPos.y, camPos.z],
+      [camDir.x, camDir.y, camDir.z],
+      reachDst * dimension,
+      point,
+      normal
     )
 
-    const chunks = [
-      [coordx, coordy, coordz],
-      [coordx - 1, coordy, coordz],
-      [coordx + 1, coordy, coordz],
-      [coordx, coordy - 1, coordz],
-      [coordx, coordy + 1, coordz],
-      [coordx, coordy, coordz - 1],
-      [coordx, coordy, coordz + 1]
-    ]
-      .map(coords =>
-        this.world.getChunkByCoords(coords[0], coords[1], coords[2])
-      )
-      .filter(c => c)
-      .map(c => c.getMesh())
-      .filter(m => m)
-
-    return chunks
-  }
-
-  getLookingBlockInfo = () => {
-    this.raycaster.setFromCamera(this.fakeMouse, this.camera)
-
-    // Getting chunk position
-    const chunks = this.getNearbyChunkMeshes()
-
-    if (!chunks.length) return null
-
-    const objs = this.raycaster.intersectObjects(chunks)
-    if (objs.length === 0 || objs[0].distance > reachDst * dimension)
-      return null
-
-    console.log('damn boi')
-
-    const {
-      point,
-      face: { normal }
-    } = objs[0]
+    if (!result) return null
 
     // Global Block Coords
     const gbc = Helpers.toGlobalBlock(
-      { x: point.x, y: point.y, z: point.z },
+      { x: point[0], y: point[1], z: point[2] },
       true
     )
 
@@ -277,26 +256,26 @@ export default class Controls {
 
     /*eslint eqeqeq: "off"*/
     let axis, chunkxis
-    if (Math.abs(normal.x).toFixed(1) == 1) {
+    if (Math.abs(normal[0]).toFixed(1) == 1) {
       axis = 'x'
       chunkxis = 'cx'
-      if (normal.x >= 1) {
+      if (normal[0] >= 1) {
         // y-z plane
         targetwf.x = cx * chunkDim + (bc.x - 1) * dimension
         target.block.x -= 1
       } else potential.block.x -= 1
-    } else if (Math.abs(normal.y).toFixed(1) == 1) {
+    } else if (Math.abs(normal[1]).toFixed(1) == 1) {
       axis = 'y'
       chunkxis = 'cy'
-      if (normal.y >= 1) {
+      if (normal[1] >= 1) {
         // x-z plane
         targetwf.y = cy * chunkDim + (bc.y - 1) * dimension
         target.block.y -= 1
       } else potential.block.y -= 1
-    } else if (Math.abs(normal.z).toFixed(1) == 1) {
+    } else if (Math.abs(normal[2]).toFixed(1) == 1) {
       axis = 'z'
       chunkxis = 'cz'
-      if (normal.z >= 1) {
+      if (normal[2] >= 1) {
         // x-y plane
         targetwf.z = cz * chunkDim + (bc.z - 1) * dimension
         target.block.z -= 1

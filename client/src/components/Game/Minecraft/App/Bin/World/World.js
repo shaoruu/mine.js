@@ -88,9 +88,12 @@ class World {
           } = data
 
           const temp = this.chunks[chunkName]
-          this.workerTaskHandler.addTasks([[temp.meshQuads, quads], [temp.combineMesh]], {
-            prioritized: true
-          })
+          this.workerTaskHandler.addTasks(
+            [[temp.meshQuads, quads], [temp.combineMesh]],
+            {
+              prioritized: true
+            }
+          )
           this.workerTaskHandler.addTask(() => {
             // Remove old then add new to scene
             const obj = this.scene.getObjectByName(chunkName)
@@ -270,7 +273,11 @@ class World {
         neighborAffected = true
       }
       if (neighborAffected) {
-        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
+        const neighborChunk = this.getChunkByCoords(
+          nc.coordx,
+          nc.coordy,
+          nc.coordz
+        )
 
         this.workerPool.queueJob(
           {
@@ -323,15 +330,19 @@ class World {
   setPlayer = player => (this.player = player)
   appendWorkerTask = (task, argument = null) =>
     this.workerTaskHandler.addTask(task, argument)
-  getBlockInfoByTHREECoords = ({ x, y, z }) => {
+  getVoxelByCoords = (x, y, z) => {
     const gbc = Helpers.toGlobalBlock({ x, y, z }, true)
     const { coordx, coordy, coordz } = Helpers.toChunkCoords(gbc),
       { x: bx, y: by, z: bz } = Helpers.toBlockCoords(gbc)
-    const chunk = this.chunks[Helpers.getCoordsRepresentation(coordx, coordy, coordz)]
+    const chunk = this.chunks[
+      Helpers.getCoordsRepresentation(coordx, coordy, coordz)
+    ]
+    if (!chunk) {
+      console.log('whoopsie')
+      return 0
+    }
     const id = chunk.getBlock(bx, by, bz)
-    const info = Config.dictionary.block[id]
-    if (!info) return null
-    return info
+    return id
   }
 }
 
