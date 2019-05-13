@@ -7,7 +7,7 @@ function WorkerPool(code, world) {
   const jobs = [],
     workers = []
 
-  let prioritizeIndex = 0
+  let prioirityIndex = 0
 
   // TODO: Figure out what's wrong with this
   const maxWorkers = 1
@@ -31,8 +31,8 @@ function WorkerPool(code, world) {
   // job: object containing specific actions to do for worker
   this.queueJob = (job, prioritized = false) => {
     if (prioritized) {
-      jobs.splice(prioritizeIndex, 0, job)
-      prioritizeIndex++
+      jobs.splice(prioirityIndex, 0, job)
+      prioirityIndex++
     } else jobs.push(job)
     if (availables.length > 0) nextJob(availables.shift())
   }
@@ -49,7 +49,7 @@ function WorkerPool(code, world) {
 
     worker.postMessage(job)
 
-    if (prioritizeIndex) prioritizeIndex--
+    if (prioirityIndex) prioirityIndex--
   }
 }
 
