@@ -83,7 +83,6 @@ class World {
           const {
             quads,
             block: { x, y, z },
-            type,
             chunkName
           } = data
 

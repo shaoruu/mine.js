@@ -116,51 +116,51 @@ export default class Player {
   update = () => {
     const now = performance.now()
 
-    if (this.threeControls.isLocked || this.chat.enabled) {
-      const delta = (now - this.prevTime) / 1000
+    let delta = (now - this.prevTime) / 1000
 
-      // Extract movement info for later convenience
-      const { up, down, left, right, forward, backward } = this.movements
+    if (delta > 1) delta = 0.01
 
-      if (typeof this.mouseKey === 'number') {
-        switch (this.mouseKey) {
-          case 0: // Left Key
-            this.world.breakBlock()
-            break
-          case 2: // Right Key
-            const type = this.inventory.getHand()
-            if (type) this.world.placeBlock(type)
-            break
-          default:
-            break
-        }
+    // Extract movement info for later convenience
+    const { up, down, left, right, forward, backward } = this.movements
+
+    if (typeof this.mouseKey === 'number') {
+      switch (this.mouseKey) {
+        case 0: // Left Key
+          this.world.breakBlock()
+          break
+        case 2: // Right Key
+          const type = this.inventory.getHand()
+          if (type) this.world.placeBlock(type)
+          break
+        default:
+          break
       }
-
-      // Update velocity with inertia
-      this.velocity.x -= this.velocity.x * this.INERTIA * delta
-      this.velocity.y -= this.velocity.y * this.INERTIA * delta
-      this.velocity.z -= this.velocity.z * this.INERTIA * delta
-
-      // Update direction with movements
-      this.direction.x = Number(left) - Number(right)
-      this.direction.y = Number(down) - Number(up)
-      this.direction.z = Number(forward) - Number(backward)
-      this.direction.normalize() // this ensures consistent movements in all directions
-
-      // Update velocity again according to direction
-      if (forward || backward)
-        this.velocity.z -= this.direction.z * this.HORIZONTAL_SPEED * delta
-      if (left || right)
-        this.velocity.x -= this.direction.x * this.HORIZONTAL_SPEED * delta
-      if (up || down)
-        this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
-
-      // Translation of player
-      const object = this.threeControls.getObject()
-      object.translateX(this.velocity.x * delta)
-      object.translateY(this.velocity.y * delta)
-      object.translateZ(this.velocity.z * delta)
     }
+
+    // Update velocity with inertia
+    this.velocity.x -= this.velocity.x * this.INERTIA * delta
+    this.velocity.y -= this.velocity.y * this.INERTIA * delta
+    this.velocity.z -= this.velocity.z * this.INERTIA * delta
+
+    // Update direction with movements
+    this.direction.x = Number(left) - Number(right)
+    this.direction.y = Number(down) - Number(up)
+    this.direction.z = Number(forward) - Number(backward)
+    this.direction.normalize() // this ensures consistent movements in all directions
+
+    // Update velocity again according to direction
+    if (forward || backward)
+      this.velocity.z -= this.direction.z * this.HORIZONTAL_SPEED * delta
+    if (left || right)
+      this.velocity.x -= this.direction.x * this.HORIZONTAL_SPEED * delta
+    if (up || down)
+      this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
+
+    // Translation of player
+    const object = this.threeControls.getObject()
+    object.translateX(this.velocity.x * delta)
+    object.translateY(this.velocity.y * delta)
+    object.translateZ(this.velocity.z * delta)
 
     /** Updating targetted block */
     const blockInfo = this.getLookingBlockInfo()
@@ -355,7 +355,10 @@ export default class Player {
     )
 
     this.threeControls.addEventListener('unlock', () => {
-      if (!this.chat.enabled) this.blocker.style.display = 'block'
+      this._resetMovements()
+      if (!this.chat.enabled) {
+        this.blocker.style.display = 'block'
+      }
     })
 
     const onKeyDown = event => {
@@ -388,6 +391,8 @@ export default class Player {
             break
         }
       } else {
+        if (!this.threeControls.isLocked) return
+
         switch (event.keyCode) {
           case 49:
           case 50:
@@ -489,4 +494,13 @@ export default class Player {
     document.addEventListener('mousedown', onMouseDown, false)
     document.addEventListener('mouseup', onMouseUp, false)
   }
+  _resetMovements = () =>
+    (this.movements = {
+      forward: false,
+      backward: false,
+      left: false,
+      right: false,
+      down: false,
+      up: false
+    })
 }

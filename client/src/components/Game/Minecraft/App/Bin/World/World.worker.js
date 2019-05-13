@@ -560,19 +560,14 @@ export default () => {
 
         const dims = [size + 2, size + 2, size + 2]
 
-        const set = (i, j, k, v) =>
-          (data[i * stride[0] + j * stride[1] + k * stride[2]] = v)
         const get = (i, j, k) =>
           data[i * stride[0] + j * stride[1] + k * stride[2]]
-
-        const { x, y, z } = block
-        set(x + 1, z + 1, y + 1, type)
 
         if (data.find(ele => ele)) {
           const quads = calcQuads(get, dims)
 
           postMessage({ cmd, quads, block, type, chunkName })
-        } else postMessage({ cmd, quads: [], block, type, chunkName })
+        } else postMessage({ cmd, quads: [], block, chunkName })
 
         break
       }

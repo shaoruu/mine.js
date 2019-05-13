@@ -39,16 +39,16 @@ class MainScene extends Component {
       window.mozRequestAnimationFrame ||
       window.webkitRequestAnimationFrame ||
       window.msRequestAnimationFrame ||
-      function(f) {
+      (f => {
         return setTimeout(f, 1000 / 60)
-      } // simulate calling code 60
+      }) // simulate calling code 60
 
     window.cancelAnimationFrame =
       window.cancelAnimationFrame ||
       window.mozCancelAnimationFrame ||
-      function(requestID) {
+      (requestID => {
         clearTimeout(requestID)
-      } //fall back
+      }) //fall back
 
     // Player setup
     this.currentPlayer = this.worldData.players.find(
@@ -67,7 +67,11 @@ class MainScene extends Component {
     // Main scene creation
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(Config.fog.color)
-    this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
+    this.scene.fog = new THREE.Fog(
+      Config.fog.color,
+      Config.fog.near,
+      Config.fog.far
+    )
 
     // Main renderer constructor
     this.renderer = new Renderer(this.scene, this.mount)
@@ -163,7 +167,8 @@ class MainScene extends Component {
 
     this.renderScene()
     this.stats.end()
-    if (!document.webkitHidden) this.frameId = window.requestAnimationFrame(this.animate)
+    if (!document.webkitHidden)
+      this.frameId = window.requestAnimationFrame(this.animate)
   }
 
   update = () => {
@@ -175,7 +180,9 @@ class MainScene extends Component {
   }
 
   updateWorld = () => {
-    const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.player.getCoordinates())
+    const { coordx, coordy, coordz } = Helpers.toChunkCoords(
+      this.player.getCoordinates()
+    )
 
     this.world.requestMeshUpdate({
       coordx,
@@ -202,7 +209,8 @@ class MainScene extends Component {
           this.worldData = world
           if (this.mount) this.handleQueryComplete()
           else this.waitingForMount = true
-        }}>
+        }}
+      >
         {({ loading, data }) => {
           if (loading) return <Hint text="Loading world..." />
           if (!data) return <Hint text="World not found." />
@@ -210,7 +218,8 @@ class MainScene extends Component {
           return (
             <Mutation
               mutation={UPDATE_PLAYER_MUTATION}
-              onError={err => console.error(err)}>
+              onError={err => console.error(err)}
+            >
               {(updatePlayer, { client }) => {
                 this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
                 this.client = client
@@ -227,7 +236,8 @@ class MainScene extends Component {
                         this.waitingForMount = false
                         this.handleQueryComplete()
                       }
-                    }}>
+                    }}
+                  >
                     <div
                       className={classes.blocker}
                       ref={blocker => (this.blocker = blocker)}
