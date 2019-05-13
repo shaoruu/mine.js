@@ -1,6 +1,7 @@
 class TaskQueue {
   constructor() {
     this.tasks = []
+    this.priorityIndex = 0
   }
 
   addTask = (task, argument = null, configs = {}) => {
@@ -8,12 +9,12 @@ class TaskQueue {
 
     const { prioritized } = configs
 
-    if (prioritized) this.tasks.unshift({ task, argument })
-    else
-      this.tasks.push({
-        task,
-        argument
-      })
+    const formattedTask = { task, argument }
+
+    if (prioritized) {
+      this.tasks.splice(this.priorityIndex, 0, formattedTask)
+      this.priorityIndex++
+    } else this.tasks.push(formattedTask)
 
     if (shouldCall) window.requestAnimationFrame(this.nextTask)
   }
@@ -21,16 +22,11 @@ class TaskQueue {
   addTasks = (tasks, configs = {}) => {
     const { prioritized } = configs
     tasks.forEach(([task, argument]) => {
-      if (prioritized)
-        this.tasks.unshift({
-          task,
-          argument
-        })
-      else
-        this.tasks.push({
-          task,
-          argument
-        })
+      const formattedTask = { task, argument }
+      if (prioritized) {
+        this.tasks.splice(this.priorityIndex, 0, formattedTask)
+        this.priorityIndex++
+      } else this.tasks.push(formattedTask)
     })
     window.requestAnimationFrame(this.nextTask)
   }
@@ -41,6 +37,8 @@ class TaskQueue {
     const { task, argument } = this.tasks.shift()
 
     task(argument)
+
+    if (this.priorityIndex) this.priorityIndex--
 
     if (this.tasks.length) window.requestAnimationFrame(this.nextTask)
   }
