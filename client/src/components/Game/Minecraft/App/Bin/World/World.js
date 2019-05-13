@@ -100,9 +100,6 @@ class World {
             if (obj) this.scene.remove(obj)
             const mesh = temp.getMesh()
             if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
-
-            // Change chunk data
-            temp.setBlock(x, y, z, type)
             temp.untagBusyBlock(x, y, z)
 
             // Reset everything
@@ -282,12 +279,18 @@ class World {
       chunkBlock = Helpers.toBlockCoords(node),
       { type, x: mx, y: my, z: mz } = node
 
+    const targetChunk = this.getChunkByCoords(coordx, coordy, coordz)
+    targetChunk.setBlock(chunkBlock.x, chunkBlock.y, chunkBlock.z, type)
+
+    this.registerChangedBlock(type, mx, my, mz)
+
     // Checking for neighboring blocks FIRST.
     ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
       const nc = { coordx, coordy, coordz },
         nb = { ...chunkBlock }
       let neighborAffected = false
 
+      // If block is either on 0 or size, that means it has effects on neighboring chunks too.
       if (nb[a] === 0) {
         nc[c] -= 1
         nb[a] = size
@@ -303,6 +306,9 @@ class World {
           nc.coordy,
           nc.coordz
         )
+
+        // Setting neighbor's block that represents self.
+        neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
 
         this.workerPool.queueJob(
           {
@@ -320,10 +326,6 @@ class World {
         )
       }
     })
-
-    const targetChunk = this.getChunkByCoords(coordx, coordy, coordz)
-
-    this.registerChangedBlock(type, mx, my, mz)
 
     this.workerPool.queueJob(
       {
@@ -357,12 +359,9 @@ class World {
     const chunk = this.chunks[
       Helpers.getCoordsRepresentation(coordx, coordy, coordz)
     ]
-    if (!chunk) {
-      Helpers.log('Target chunk not found.')
-      return 0
-    }
-    const id = chunk.getBlock(bx, by, bz)
-    return id
+    if (!chunk) return 0
+
+    return chunk.getBlock(bx, by, bz)
   }
 }
 

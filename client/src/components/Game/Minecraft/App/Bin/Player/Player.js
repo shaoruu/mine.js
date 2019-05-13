@@ -15,7 +15,6 @@ const size = Config.chunk.size,
   vert_speed = Config.player.speed.vertical,
   coordinateDec = Config.player.coordinateDec
 
-// Controls based on orbit controls
 export default class Player {
   constructor(
     id,
