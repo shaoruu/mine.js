@@ -60,6 +60,10 @@ export default {
       horizontal: 1600,
       vertical: 2000
     },
+    maxSpeed: {
+      horizontal: 700,
+      vertical: 800
+    },
     coordinateDec: 2,
     posX: 0,
     posY: 30,

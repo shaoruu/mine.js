@@ -13,7 +13,9 @@ const size = Config.chunk.size,
   inertia = Config.player.inertia,
   horz_speed = Config.player.speed.horizontal,
   vert_speed = Config.player.speed.vertical,
-  coordinateDec = Config.player.coordinateDec
+  coordinateDec = Config.player.coordinateDec,
+  horz_max_speed = Config.player.maxSpeed.horizontal,
+  vert_max_speed = Config.player.maxSpeed.vertical
 
 export default class Player {
   constructor(
@@ -118,7 +120,7 @@ export default class Player {
 
     let delta = (now - this.prevTime) / 1000
 
-    if (delta > 1) delta = 0.01
+    if (delta > 0.5) delta = 0.01
 
     // Extract movement info for later convenience
     const { up, down, left, right, forward, backward } = this.movements
@@ -155,6 +157,16 @@ export default class Player {
       this.velocity.x -= this.direction.x * this.HORIZONTAL_SPEED * delta
     if (up || down)
       this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
+
+    if (this.velocity.x > horz_max_speed) this.velocity.x = horz_max_speed
+    else if (this.velocity.x < -horz_max_speed)
+      this.velocity.x = -horz_max_speed
+    if (this.velocity.y > vert_max_speed) this.velocity.y = vert_max_speed
+    else if (this.velocity.y < -vert_max_speed)
+      this.velocity.y = -vert_max_speed
+    if (this.velocity.z > horz_max_speed) this.velocity.z = horz_max_speed
+    else if (this.velocity.z < -horz_max_speed)
+      this.velocity.z = -horz_max_speed
 
     // Translation of player
     const object = this.threeControls.getObject()
@@ -485,7 +497,8 @@ export default class Player {
     }
 
     const onMouseDown = e => {
-      if (!this.chat.enabled) this.mouseKey = e.button
+      if (!this.chat.enabled && this.threeControls.isLocked)
+        this.mouseKey = e.button
     }
     const onMouseUp = () => (this.mouseKey = null)
 
