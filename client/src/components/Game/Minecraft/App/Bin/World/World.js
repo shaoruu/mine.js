@@ -49,12 +49,24 @@ class World {
     this.initWorld(changedBlocks)
   }
 
+  /**
+   * Register changed blocks into this.changedBlocks for later quads generation
+   * @param {Object[]} changedBlocks - Blocks saved in backend.
+   */
+  initWorld = changedBlocks => {
+    if (changedBlocks)
+      // TYPE = ID
+      changedBlocks.forEach(({ type, x, y, z }) => {
+        this.registerChangedBlock(type, x, y, z)
+      })
+  }
+
+  /**
+   * Initialize worker callback to handle worker's finished data
+   */
   setupWorkerConfigs = () => {
-    // Initializing worker callback for later usage
     this.workerCallback = ({ data }) => {
-      // console.time('workerCallback')
-      const { cmd } = data
-      switch (cmd) {
+      switch (data.cmd) {
         case 'GET_CHUNK': {
           const { quads, blocks, chunkName } = data
           const temp = this.chunks[chunkName]
@@ -76,10 +88,9 @@ class World {
           } = data
 
           const temp = this.chunks[chunkName]
-          this.workerTaskHandler.addTasks([
-            [temp.meshQuads, quads],
-            [temp.combineMesh]
-          ])
+          this.workerTaskHandler.addTasks([[temp.meshQuads, quads], [temp.combineMesh]], {
+            prioritized: true
+          })
           this.workerTaskHandler.addTask(() => {
             // Remove old then add new to scene
             const obj = this.scene.getObjectByName(chunkName)
@@ -101,18 +112,14 @@ class World {
         default:
           break
       }
-      // console.timeEnd('workerCallback')
     }
   }
 
-  initWorld = changedBlocks => {
-    if (changedBlocks)
-      // TYPE = ID
-      changedBlocks.forEach(({ type, x, y, z }) => {
-        this.registerChangedBlock(type, x, y, z)
-      })
-  }
-
+  /**
+   * Called every x milliseconds to check for fresh generated chunk meshes.
+   * @param {Object} chunkCoordinates - contains coordx, coordy and coordz, representing
+   *                                the chunk-coordinates of the player's location.
+   */
   requestMeshUpdate = ({ coordx, coordy, coordz }) => {
     const updatedChunks = {}
 
@@ -151,7 +158,12 @@ class World {
     shouldBeRemoved.forEach(obj => this.scene.remove(obj))
   }
 
-  registerChunk = async ({ coordx, coordy, coordz }) => {
+  /**
+   * Creates a Chunk instance and add chuck generation to worker's task stack.
+   * @param {Object} chunkCoordinates - contains coordx, coordy and coordz representing the
+   *                                    coordinates of the chunk to generate.
+   */
+  registerChunk = ({ coordx, coordy, coordz }) => {
     const newChunk = new Chunk(this.resourceManager, {
       origin: {
         x: coordx,
@@ -176,38 +188,6 @@ class World {
     })
 
     return newChunk
-  }
-
-  generateBlocks = (coordx, coordy, coordz) => {
-    const blocks = []
-
-    // ! THIS IS WHERE CHUNK GENERATING HAPPENS FOR SINGLE CHUNK!
-    for (let x = 0; x < size; x++)
-      for (let z = 0; z < size; z++)
-        for (let y = 0; y < size; y++) {
-          blocks.push({
-            position: {
-              x,
-              y,
-              z
-            },
-            id:
-              this.changedBlocks[
-                Helpers.getCoordsRepresentation(
-                  coordx * size + x,
-                  coordy * size + y,
-                  coordz * size + z
-                )
-              ] ||
-              this.generator.getBlockInfo(
-                coordx * size + x,
-                coordy * size + y,
-                coordz * size + z
-              )
-          })
-        }
-
-    return blocks
   }
 
   breakBlock = () => {
@@ -290,23 +270,22 @@ class World {
         neighborAffected = true
       }
       if (neighborAffected) {
-        const neighborChunk = this.getChunkByCoords(
-          nc.coordx,
-          nc.coordy,
-          nc.coordz
-        )
+        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
 
-        this.workerPool.queueJob({
-          cmd: 'UPDATE_BLOCK',
-          data: neighborChunk.grid.data,
-          block: nb,
-          type,
-          configs: {
-            size,
-            stride: neighborChunk.grid.stride,
-            chunkName: neighborChunk.name
-          }
-        })
+        this.workerPool.queueJob(
+          {
+            cmd: 'UPDATE_BLOCK',
+            data: neighborChunk.grid.data,
+            block: nb,
+            type,
+            configs: {
+              size,
+              stride: neighborChunk.grid.stride,
+              chunkName: neighborChunk.name
+            }
+          },
+          true
+        )
       }
     })
 
@@ -314,17 +293,20 @@ class World {
 
     this.registerChangedBlock(type, mx, my, mz)
 
-    this.workerPool.queueJob({
-      cmd: 'UPDATE_BLOCK',
-      data: targetChunk.grid.data,
-      block: chunkBlock,
-      type,
-      configs: {
-        size,
-        stride: targetChunk.grid.stride,
-        chunkName: targetChunk.name
-      }
-    })
+    this.workerPool.queueJob(
+      {
+        cmd: 'UPDATE_BLOCK',
+        data: targetChunk.grid.data,
+        block: chunkBlock,
+        type,
+        configs: {
+          size,
+          stride: targetChunk.grid.stride,
+          chunkName: targetChunk.name
+        }
+      },
+      true
+    )
   }
 
   getChunkByCoords = (cx, cy, cz) => {
@@ -345,9 +327,7 @@ class World {
     const gbc = Helpers.toGlobalBlock({ x, y, z }, true)
     const { coordx, coordy, coordz } = Helpers.toChunkCoords(gbc),
       { x: bx, y: by, z: bz } = Helpers.toBlockCoords(gbc)
-    const chunk = this.chunks[
-      Helpers.getCoordsRepresentation(coordx, coordy, coordz)
-    ]
+    const chunk = this.chunks[Helpers.getCoordsRepresentation(coordx, coordy, coordz)]
     const id = chunk.getBlock(bx, by, bz)
     const info = Config.dictionary.block[id]
     if (!info) return null

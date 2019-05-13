@@ -1,5 +1,5 @@
 import WebWorker from './WebWorker'
-import Config from '../../../Data/Config'
+// import Config from '../../../Data/Config'
 
 function WorkerPool(code, world) {
   let availables = []
@@ -7,8 +7,11 @@ function WorkerPool(code, world) {
   const jobs = [],
     workers = []
 
-  const maxWorkers =
-    navigator.hardwareConcurrency || Config.world.maxWorkerCount
+  let prioritizeIndex = 0
+
+  // TODO: Figure out what's wrong with this
+  const maxWorkers = 1
+  // navigator.hardwareConcurrency || Config.world.maxWorkerCount
 
   for (let i = 0; i < maxWorkers; i++) {
     const newWorker = new WebWorker(code)
@@ -26,8 +29,11 @@ function WorkerPool(code, world) {
   }
 
   // job: object containing specific actions to do for worker
-  this.queueJob = job => {
-    jobs.push(job)
+  this.queueJob = (job, prioritized = false) => {
+    if (prioritized) {
+      jobs.splice(prioritizeIndex, 0, job)
+      prioritizeIndex++
+    } else jobs.push(job)
     if (availables.length > 0) nextJob(availables.shift())
   }
 
@@ -42,6 +48,8 @@ function WorkerPool(code, world) {
       worker = workers[index]
 
     worker.postMessage(job)
+
+    if (prioritizeIndex) prioritizeIndex--
   }
 }
 

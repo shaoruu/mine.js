@@ -3,23 +3,34 @@ class TaskQueue {
     this.tasks = []
   }
 
-  addTask = (task, argument = null) => {
+  addTask = (task, argument = null, configs = {}) => {
     const shouldCall = this.tasks.length === 0
 
-    this.tasks.push({
-      task,
-      argument
-    })
+    const { prioritized } = configs
 
-    if (shouldCall) window.requestAnimationFrame(this.nextTask)
-  }
-
-  addTasks = tasks => {
-    tasks.forEach(([task, argument]) => {
+    if (prioritized) this.tasks.unshift({ task, argument })
+    else
       this.tasks.push({
         task,
         argument
       })
+
+    if (shouldCall) window.requestAnimationFrame(this.nextTask)
+  }
+
+  addTasks = (tasks, configs = {}) => {
+    const { prioritized } = configs
+    tasks.forEach(([task, argument]) => {
+      if (prioritized)
+        this.tasks.unshift({
+          task,
+          argument
+        })
+      else
+        this.tasks.push({
+          task,
+          argument
+        })
     })
     window.requestAnimationFrame(this.nextTask)
   }
