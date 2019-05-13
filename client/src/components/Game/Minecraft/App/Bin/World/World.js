@@ -193,6 +193,10 @@ class World {
     return newChunk
   }
 
+  /**
+   * Stacks the tasks of breaking a block and regenerating the chunk
+   * mesh onto the task queue and hands the player the broken block.
+   */
   breakBlock = () => {
     if (!this.targetBlock) return // do nothing if no blocks are selected
 
@@ -204,6 +208,10 @@ class World {
     this.updateBlock(0, this.targetBlock, todo)
   }
 
+  /**
+   * Stacks the tasks of placing a block and regenerating the chunk
+   * mesh onto the task queue and takes a block from the players hand.
+   */
   placeBlock = type => {
     if (!this.potentialBlock) return
 
@@ -214,6 +222,16 @@ class World {
     this.updateBlock(type, this.potentialBlock, todo)
   }
 
+  /**
+   * General function controlling the worker task distribution
+   * of placing/breaking blocks.
+   *
+   * @param {Int} type - Type of the prompted block.
+   * @param {Object} blockData - Information about the prompted block
+   *                    such as chunk coordinates and block position.
+   * @param {Function} todo - Callback to be called after notifying the
+   *                    workers about the changes to regenerate.
+   */
   updateBlock = (type, blockData, todo) => {
     const {
       chunk: { cx, cy, cz },
@@ -249,6 +267,13 @@ class World {
       .catch(err => console.error(err))
   }
 
+  /**
+   * Handles new subscription data from block subscription
+   * for the entire world. Closely related to backend processes.
+   *
+   * @param {Object} blockInfo - Object containing attribute of "block"
+   *                             straight from the GraphQL subscription.
+   */
   updateChanged = ({ block }) => {
     if (!block) return
     const { node } = block
@@ -316,15 +341,10 @@ class World {
     )
   }
 
-  getChunkByCoords = (cx, cy, cz) => {
-    const temp = this.chunks[Helpers.getCoordsRepresentation(cx, cy, cz)]
-
-    return temp || null
-  }
-
-  registerChangedBlock = (type, x, y, z) => {
-    this.changedBlocks[Helpers.getCoordsRepresentation(x, y, z)] = type
-  }
+  getChunkByCoords = (cx, cy, cz) =>
+    this.chunks[Helpers.getCoordsRepresentation(cx, cy, cz)] || null
+  registerChangedBlock = (type, x, y, z) =>
+    (this.changedBlocks[Helpers.getCoordsRepresentation(x, y, z)] = type)
   setPotential = potential => (this.potentialBlock = potential)
   setTarget = target => (this.targetBlock = target)
   setPlayer = player => (this.player = player)
@@ -338,7 +358,7 @@ class World {
       Helpers.getCoordsRepresentation(coordx, coordy, coordz)
     ]
     if (!chunk) {
-      console.log('whoopsie')
+      Helpers.log('Target chunk not found.')
       return 0
     }
     const id = chunk.getBlock(bx, by, bz)
