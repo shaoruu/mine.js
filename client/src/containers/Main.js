@@ -14,19 +14,6 @@ import Register from './Register/Register'
 import Layout from '../hoc/Layout/Layout'
 
 class Main extends Component {
-  componentDidMount() {
-    window.addEventListener('beforeunload', this.closingHandler, false)
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('beforeunload', this.closingHandler, false)
-  }
-
-  closingHandler = ev => {
-    ev.preventDefault()
-    return (ev.returnValue = 'Are you sure you want to close?')
-  }
-
   render() {
     return (
       <Layout>

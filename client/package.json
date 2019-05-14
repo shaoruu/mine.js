@@ -25,6 +25,7 @@
 		"stats-js": "^1.0.0",
 		"subscriptions-transport-ws": "^0.9.16",
 		"three": "^0.102.1",
+		"voxel-aabb-sweep": "^0.5.0",
 		"voxel-engine": "^0.20.2",
 		"yup": "^0.27.0"
 	},

@@ -145,9 +145,14 @@ class MainScene extends Component {
     this.updateWorldCall = setInterval(() => this.updateWorld(), 300)
   }
 
+  componentDidMount() {
+    window.addEventListener('beforeunload', this.closingHandler, false)
+  }
+
   componentWillUnmount() {
     this.terminate()
     this.mount.removeChild(this.renderer.threeRenderer.domElement)
+    window.removeEventListener('beforeunload', this.closingHandler, false)
   }
 
   init = () => {
@@ -189,6 +194,11 @@ class MainScene extends Component {
       coordy,
       coordz
     })
+  }
+
+  closingHandler = ev => {
+    ev.preventDefault()
+    return (ev.returnValue = 'Are you sure you want to close?')
   }
 
   onWindowResize = () => {
