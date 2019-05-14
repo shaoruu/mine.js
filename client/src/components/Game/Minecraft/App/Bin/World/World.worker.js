@@ -309,11 +309,7 @@ export default () => {
       let u = this.fade(x)
 
       // Interpolate the four results
-      return this.lerp(
-        this.lerp(n00, n10, u),
-        this.lerp(n01, n11, u),
-        this.fade(y)
-      )
+      return this.lerp(this.lerp(n00, n10, u), this.lerp(n01, n11, u), this.fade(y))
     }
 
     // 3D Perlin Noise
@@ -333,36 +329,12 @@ export default () => {
 
       // Calculate noise contributions from each of the eight corners
       let n000 = this.gradP[X + this.perm[Y + this.perm[Z]]].dot3(x, y, z)
-      let n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(
-        x,
-        y,
-        z - 1
-      )
-      let n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(
-        x,
-        y - 1,
-        z
-      )
-      let n011 = this.gradP[X + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
-        x,
-        y - 1,
-        z - 1
-      )
-      let n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(
-        x - 1,
-        y,
-        z
-      )
-      let n101 = this.gradP[X + 1 + this.perm[Y + this.perm[Z + 1]]].dot3(
-        x - 1,
-        y,
-        z - 1
-      )
-      let n110 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z]]].dot3(
-        x - 1,
-        y - 1,
-        z
-      )
+      let n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(x, y, z - 1)
+      let n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(x, y - 1, z)
+      let n011 = this.gradP[X + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(x, y - 1, z - 1)
+      let n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(x - 1, y, z)
+      let n101 = this.gradP[X + 1 + this.perm[Y + this.perm[Z + 1]]].dot3(x - 1, y, z - 1)
+      let n110 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z]]].dot3(x - 1, y - 1, z)
       let n111 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
         x - 1,
         y - 1,
@@ -463,8 +435,8 @@ export default () => {
       materials = { top: 'top', side: 'side', bottom: 'bottom' }
 
     for (let x = 1; x < dims[0] - 1; x++) {
-      for (let z = 1; z < dims[1] - 1; z++) {
-        for (let y = 1; y < dims[2] - 1; y++) {
+      for (let z = 1; z < dims[2] - 1; z++) {
+        for (let y = 1; y < dims[1] - 1; y++) {
           // dismiss air
           const type = get(x, z, y)
 
@@ -516,8 +488,7 @@ export default () => {
 
         const set = (i, j, k, v) =>
           (blocks[i * stride[0] + j * stride[1] + k * stride[2]] = v)
-        const get = (i, j, k) =>
-          blocks[i * stride[0] + j * stride[1] + k * stride[2]]
+        const get = (i, j, k) => blocks[i * stride[0] + j * stride[1] + k * stride[2]]
 
         for (let x = 0; x < size + 2; x++)
           for (let z = 0; z < size + 2; z++)
@@ -530,8 +501,7 @@ export default () => {
               ]
 
               const cb = changedBlocks[getCoordsRepresentation(...pos)],
-                value =
-                  typeof cb === 'number' ? cb : generator.getBlockInfo(...pos)
+                value = typeof cb === 'number' ? cb : generator.getBlockInfo(...pos)
 
               set(x, z, y, value)
             }
@@ -554,19 +524,16 @@ export default () => {
         const {
           data,
           block,
-          type,
           configs: { stride, chunkName, size }
         } = e.data
 
-        const dims = [size + 2, size + 2, size + 2]
-
-        const get = (i, j, k) =>
-          data[i * stride[0] + j * stride[1] + k * stride[2]]
-
         if (data.find(ele => ele)) {
+          const dims = [size + 2, size + 2, size + 2]
+          const get = (i, j, k) => data[i * stride[0] + j * stride[1] + k * stride[2]]
+
           const quads = calcQuads(get, dims)
 
-          postMessage({ cmd, quads, block, type, chunkName })
+          postMessage({ cmd, quads, block, chunkName })
         } else postMessage({ cmd, quads: [], block, chunkName })
 
         break
@@ -574,8 +541,6 @@ export default () => {
       default:
         break
     }
-
-    // postMessage(a.x)
   })
   /* eslint-enable no-restricted-globals, eslint-disable-line */
 }

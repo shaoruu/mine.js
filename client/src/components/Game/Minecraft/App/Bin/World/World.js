@@ -87,24 +87,24 @@ class World {
           } = data
 
           const temp = this.chunks[chunkName]
-          this.workerTaskHandler.addTasks(
-            [[temp.meshQuads, quads], [temp.combineMesh]],
-            {
-              prioritized: true
-            }
-          )
-          this.workerTaskHandler.addTask(() => {
-            // Remove old then add new to scene
-            const obj = this.scene.getObjectByName(chunkName)
-            if (obj) this.scene.remove(obj)
-            const mesh = temp.getMesh()
-            if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
-            temp.untagBusyBlock(x, y, z)
-
-            // Reset everything
-            this.targetBlock = null
-            this.potentialBlock = null
+          this.workerTaskHandler.addTasks([[temp.meshQuads, quads], [temp.combineMesh]], {
+            prioritized: true
           })
+          this.workerTaskHandler.addTask(
+            () => {
+              // Remove old then add new to scene
+              const obj = this.scene.getObjectByName(chunkName)
+              if (obj) this.scene.remove(obj)
+              const mesh = temp.getMesh()
+              if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
+              temp.untagBusyBlock(x, y, z)
+
+              // Reset everything
+              this.targetBlock = null
+              this.potentialBlock = null
+            },
+            { prioritized: true }
+          )
 
           break
         }
@@ -300,11 +300,7 @@ class World {
         neighborAffected = true
       }
       if (neighborAffected) {
-        const neighborChunk = this.getChunkByCoords(
-          nc.coordx,
-          nc.coordy,
-          nc.coordz
-        )
+        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
 
         // Setting neighbor's block that represents self.
         neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
@@ -314,7 +310,6 @@ class World {
             cmd: 'UPDATE_BLOCK',
             data: neighborChunk.grid.data,
             block: nb,
-            type,
             configs: {
               size,
               stride: neighborChunk.grid.stride,
@@ -331,7 +326,6 @@ class World {
         cmd: 'UPDATE_BLOCK',
         data: targetChunk.grid.data,
         block: chunkBlock,
-        type,
         configs: {
           size,
           stride: targetChunk.grid.stride,
@@ -355,9 +349,7 @@ class World {
     const gbc = Helpers.toGlobalBlock({ x, y, z }, true)
     const { coordx, coordy, coordz } = Helpers.toChunkCoords(gbc),
       { x: bx, y: by, z: bz } = Helpers.toBlockCoords(gbc)
-    const chunk = this.chunks[
-      Helpers.getCoordsRepresentation(coordx, coordy, coordz)
-    ]
+    const chunk = this.chunks[Helpers.getCoordsRepresentation(coordx, coordy, coordz)]
     if (!chunk) return 0
 
     return chunk.getBlock(bx, by, bz)

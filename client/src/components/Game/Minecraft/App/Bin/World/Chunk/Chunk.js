@@ -44,7 +44,7 @@ class Chunk {
   /** Generate THREE meshes and store them into an array. */
   meshQuads = quads => {
     // Avoiding extra work.
-    if (quads === undefined || quads.length === 0) return null
+    if (quads === undefined || quads.length === 0) this.mesh = null
 
     /**
      * Internal functions for convenience
@@ -73,7 +73,10 @@ class Chunk {
   /** Calculate mesh and merge them together */
   combineMesh = () => {
     // console.time('Block Combination')
-    if (!this.meshes || this.meshes.length === 0) return
+    if (!this.meshes || this.meshes.length === 0) {
+      this.mesh = null
+      return
+    }
 
     this.mesh = Helpers.mergeMeshes(this.meshes, this.resourceManager)
     this.mesh.name = this.name

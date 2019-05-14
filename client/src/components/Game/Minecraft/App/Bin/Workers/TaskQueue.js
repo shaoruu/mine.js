@@ -21,6 +21,7 @@ class TaskQueue {
 
   addTasks = (tasks, configs = {}) => {
     const { prioritized } = configs
+
     tasks.forEach(([task, argument]) => {
       const formattedTask = { task, argument }
       if (prioritized) {
@@ -28,6 +29,7 @@ class TaskQueue {
         this.priorityIndex++
       } else this.tasks.push(formattedTask)
     })
+
     window.requestAnimationFrame(this.nextTask)
   }
 
