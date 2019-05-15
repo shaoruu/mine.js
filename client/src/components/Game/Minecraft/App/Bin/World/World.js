@@ -345,7 +345,7 @@ class World {
   setPlayer = player => (this.player = player)
   appendWorkerTask = (task, argument = null) =>
     this.workerTaskHandler.addTask(task, argument)
-  getVoxelByCoords = (x, y, z) => {
+  getVoxelByWorldCoords = (x, y, z) => {
     const gbc = Helpers.toGlobalBlock({ x, y, z }, true)
     const { coordx, coordy, coordz } = Helpers.toChunkCoords(gbc),
       { x: bx, y: by, z: bz } = Helpers.toBlockCoords(gbc)

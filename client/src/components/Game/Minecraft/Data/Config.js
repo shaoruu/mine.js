@@ -64,6 +64,12 @@ export default {
       horizontal: 700,
       vertical: 800
     },
+    aabb: {
+      // Based on block dimension
+      width: 0.8,
+      height: 1.8,
+      depth: 0.8
+    },
     coordinateDec: 2,
     posX: 0,
     posY: 30,

@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 import raycast from 'fast-voxel-raycast'
+import sweep from 'voxel-aabb-sweep'
+import aabb from 'aabb-3d'
 
 import PointerLockControls from '../../../Utils/PointerLockControls'
 import Config from '../../../Data/Config'
@@ -11,6 +13,9 @@ const size = Config.chunk.size,
   dimension = Config.block.dimension,
   reachDst = Config.player.reachDst,
   inertia = Config.player.inertia,
+  pWidth = Config.player.aabb.width,
+  pHeight = Config.player.aabb.height,
+  pDepth = Config.player.aabb.depth,
   horz_speed = Config.player.speed.horizontal,
   vert_speed = Config.player.speed.vertical,
   coordinateDec = Config.player.coordinateDec,
@@ -49,12 +54,7 @@ export default class Player {
     this.world = world
 
     // Orbit controls first needs to pass in THREE to constructor
-    this.threeControls = new PointerLockControls(
-      camera,
-      container,
-      initPos,
-      initDirs
-    )
+    this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
 
     this.chat.addControlListener(this.threeControls)
 
@@ -83,11 +83,7 @@ export default class Player {
     // Centered to middle of screen
     this.fakeMouse = new THREE.Vector2(0.0, 0.0)
 
-    const box = new THREE.BoxGeometry(
-      dimension + 0.1,
-      dimension + 0.1,
-      dimension + 0.1
-    )
+    const box = new THREE.BoxGeometry(dimension + 0.1, dimension + 0.1, dimension + 0.1)
     const wireframe = new THREE.WireframeGeometry(box)
     this.highlighter = new THREE.LineSegments(wireframe)
 
@@ -116,15 +112,14 @@ export default class Player {
   }
 
   update = () => {
-    const now = performance.now()
+    this.handleKeyInputs()
 
-    let delta = (now - this.prevTime) / 1000
+    this.handleMovements()
 
-    if (delta > 0.5) delta = 0.01
+    this.updateTPBlocks()
+  }
 
-    // Extract movement info for later convenience
-    const { up, down, left, right, forward, backward } = this.movements
-
+  handleKeyInputs = () => {
     if (typeof this.mouseKey === 'number') {
       switch (this.mouseKey) {
         case 0: // Left Key
@@ -138,6 +133,18 @@ export default class Player {
           break
       }
     }
+  }
+
+  handleMovements = () => {
+    const object = this.threeControls.getObject()
+    const now = performance.now()
+
+    let delta = (now - this.prevTime) / 1000
+
+    if (delta > 0.5) delta = 0.01
+
+    // Extract movement info for later convenience
+    const { up, down, left, right, forward, backward } = this.movements
 
     // Update velocity with inertia
     this.velocity.x -= this.velocity.x * this.INERTIA * delta
@@ -153,27 +160,48 @@ export default class Player {
     // Update velocity again according to direction
     if (forward || backward)
       this.velocity.z -= this.direction.z * this.HORIZONTAL_SPEED * delta
-    if (left || right)
-      this.velocity.x -= this.direction.x * this.HORIZONTAL_SPEED * delta
-    if (up || down)
-      this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
+    if (left || right) this.velocity.x -= this.direction.x * this.HORIZONTAL_SPEED * delta
+    if (up || down) this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
 
     if (this.velocity.x > horz_max_speed) this.velocity.x = horz_max_speed
-    else if (this.velocity.x < -horz_max_speed)
-      this.velocity.x = -horz_max_speed
+    else if (this.velocity.x < -horz_max_speed) this.velocity.x = -horz_max_speed
     if (this.velocity.y > vert_max_speed) this.velocity.y = vert_max_speed
-    else if (this.velocity.y < -vert_max_speed)
-      this.velocity.y = -vert_max_speed
+    else if (this.velocity.y < -vert_max_speed) this.velocity.y = -vert_max_speed
     if (this.velocity.z > horz_max_speed) this.velocity.z = horz_max_speed
-    else if (this.velocity.z < -horz_max_speed)
-      this.velocity.z = -horz_max_speed
+    else if (this.velocity.z < -horz_max_speed) this.velocity.z = -horz_max_speed
+
+    // AABB
+    // const pAABB = aabb(
+    //   [object.position.x, object.position.y - pHeight * dimension, object.position.z],
+    //   [pWidth * dimension, pHeight * dimension, pDepth * dimension]
+    // )
+
+    // const vector = [this.velocity.x, this.velocity.y, this.velocity.z]
+
+    // const dist = sweep(
+    //   this.world.getVoxelByWorldCoords,
+    //   pAABB,
+    //   vector,
+    //   (dist, axis, dir, vec) => {
+    //     vector[axis] = 0
+    //     return true
+    //   },
+    //   true
+    // )
+
+    // this.velocity.x = vector[0]
+    // this.velocity.y = vector[1]
+    // this.velocity.z = vector[2]
 
     // Translation of player
-    const object = this.threeControls.getObject()
     object.translateX(this.velocity.x * delta)
     object.translateY(this.velocity.y * delta)
     object.translateZ(this.velocity.z * delta)
 
+    this.prevTime = now
+  }
+
+  updateTPBlocks = () => {
     /** Updating targetted block */
     const blockInfo = this.getLookingBlockInfo()
     if (blockInfo) {
@@ -209,8 +237,6 @@ export default class Player {
         this.isWireframed = false
       }
     }
-
-    this.prevTime = now
   }
 
   getLookingBlockInfo = () => {
@@ -225,7 +251,7 @@ export default class Player {
     const point = [],
       normal = []
     const result = raycast(
-      this.world.getVoxelByCoords,
+      this.world.getVoxelByWorldCoords,
       [camPos.x, camPos.y, camPos.z],
       [camDir.x, camDir.y, camDir.z],
       reachDst * dimension,
@@ -236,10 +262,7 @@ export default class Player {
     if (!result) return null
 
     // Global Block Coords
-    const gbc = Helpers.toGlobalBlock(
-      { x: point[0], y: point[1], z: point[2] },
-      true
-    )
+    const gbc = Helpers.toGlobalBlock({ x: point[0], y: point[1], z: point[2] }, true)
 
     // Chunk Coords and Block Coords
     const { coordx: cx, coordy: cy, coordz: cz } = Helpers.toChunkCoords(gbc),
@@ -317,21 +340,15 @@ export default class Player {
     return { target, targetwf, potential }
   }
   getObject = () => this.threeControls.getObject()
-  getCoordinates = () => {
+  getCoordinates = (dec = coordinateDec) => {
     const position = this.threeControls.getObject().position.clone()
 
-    return Helpers.roundPos(Helpers.toGlobalBlock(position), coordinateDec)
+    return Helpers.roundPos(Helpers.toGlobalBlock(position), dec)
   }
   getDirections = () => {
     return {
-      dirx: Helpers.round(
-        this.threeControls.getPitch().rotation.x,
-        coordinateDec
-      ),
-      diry: Helpers.round(
-        this.threeControls.getObject().rotation.y,
-        coordinateDec
-      )
+      dirx: Helpers.round(this.threeControls.getPitch().rotation.x, coordinateDec),
+      diry: Helpers.round(this.threeControls.getObject().rotation.y, coordinateDec)
     }
   }
 
@@ -497,8 +514,7 @@ export default class Player {
     }
 
     const onMouseDown = e => {
-      if (!this.chat.enabled && this.threeControls.isLocked)
-        this.mouseKey = e.button
+      if (!this.chat.enabled && this.threeControls.isLocked) this.mouseKey = e.button
     }
     const onMouseUp = () => (this.mouseKey = null)
 
