@@ -87,9 +87,12 @@ class World {
           } = data
 
           const temp = this.chunks[chunkName]
-          this.workerTaskHandler.addTasks([[temp.meshQuads, quads], [temp.combineMesh]], {
-            prioritized: true
-          })
+          this.workerTaskHandler.addTasks(
+            [[temp.meshQuads, quads], [temp.combineMesh]],
+            {
+              prioritized: true
+            }
+          )
           this.workerTaskHandler.addTask(
             () => {
               // Remove old then add new to scene
@@ -300,7 +303,11 @@ class World {
         neighborAffected = true
       }
       if (neighborAffected) {
-        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
+        const neighborChunk = this.getChunkByCoords(
+          nc.coordx,
+          nc.coordy,
+          nc.coordz
+        )
 
         // Setting neighbor's block that represents self.
         neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
@@ -347,9 +354,14 @@ class World {
     this.workerTaskHandler.addTask(task, argument)
   getVoxelByWorldCoords = (x, y, z) => {
     const gbc = Helpers.toGlobalBlock({ x, y, z }, true)
-    const { coordx, coordy, coordz } = Helpers.toChunkCoords(gbc),
-      { x: bx, y: by, z: bz } = Helpers.toBlockCoords(gbc)
-    const chunk = this.chunks[Helpers.getCoordsRepresentation(coordx, coordy, coordz)]
+    return this.getVoxelByVoxelCoords(gbc.x, gbc.y, gbc.z)
+  }
+  getVoxelByVoxelCoords = (x, y, z) => {
+    const { coordx, coordy, coordz } = Helpers.toChunkCoords({ x, y, z }),
+      { x: bx, y: by, z: bz } = Helpers.toBlockCoords({ x, y, z })
+    const chunk = this.chunks[
+      Helpers.getCoordsRepresentation(coordx, coordy, coordz)
+    ]
     if (!chunk) return 0
 
     return chunk.getBlock(bx, by, bz)

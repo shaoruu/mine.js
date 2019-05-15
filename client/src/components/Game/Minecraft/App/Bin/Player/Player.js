@@ -54,7 +54,12 @@ export default class Player {
     this.world = world
 
     // Orbit controls first needs to pass in THREE to constructor
-    this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
+    this.threeControls = new PointerLockControls(
+      camera,
+      container,
+      initPos,
+      initDirs
+    )
 
     this.chat.addControlListener(this.threeControls)
 
@@ -83,7 +88,11 @@ export default class Player {
     // Centered to middle of screen
     this.fakeMouse = new THREE.Vector2(0.0, 0.0)
 
-    const box = new THREE.BoxGeometry(dimension + 0.1, dimension + 0.1, dimension + 0.1)
+    const box = new THREE.BoxGeometry(
+      dimension + 0.1,
+      dimension + 0.1,
+      dimension + 0.1
+    )
     const wireframe = new THREE.WireframeGeometry(box)
     this.highlighter = new THREE.LineSegments(wireframe)
 
@@ -132,6 +141,7 @@ export default class Player {
         default:
           break
       }
+      this.mouseKey = null
     }
   }
 
@@ -160,40 +170,65 @@ export default class Player {
     // Update velocity again according to direction
     if (forward || backward)
       this.velocity.z -= this.direction.z * this.HORIZONTAL_SPEED * delta
-    if (left || right) this.velocity.x -= this.direction.x * this.HORIZONTAL_SPEED * delta
-    if (up || down) this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
+    if (left || right)
+      this.velocity.x -= this.direction.x * this.HORIZONTAL_SPEED * delta
+    if (up || down)
+      this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
 
     if (this.velocity.x > horz_max_speed) this.velocity.x = horz_max_speed
-    else if (this.velocity.x < -horz_max_speed) this.velocity.x = -horz_max_speed
+    else if (this.velocity.x < -horz_max_speed)
+      this.velocity.x = -horz_max_speed
     if (this.velocity.y > vert_max_speed) this.velocity.y = vert_max_speed
-    else if (this.velocity.y < -vert_max_speed) this.velocity.y = -vert_max_speed
+    else if (this.velocity.y < -vert_max_speed)
+      this.velocity.y = -vert_max_speed
     if (this.velocity.z > horz_max_speed) this.velocity.z = horz_max_speed
-    else if (this.velocity.z < -horz_max_speed) this.velocity.z = -horz_max_speed
+    else if (this.velocity.z < -horz_max_speed)
+      this.velocity.z = -horz_max_speed
 
-    // AABB
-    // const pAABB = aabb(
-    //   [object.position.x, object.position.y - pHeight * dimension, object.position.z],
-    //   [pWidth * dimension, pHeight * dimension, pDepth * dimension]
+    // // AABB
+    // const playerPos = (() => {
+    //   const temp = this.getCoordinates(5)
+    //   temp.x -= pWidth / 2
+    //   temp.y -= pHeight
+    //   temp.z -= pDepth / 2
+    //   return temp
+    // })()
+
+    // const pAABB = new aabb(
+    //   [playerPos.x, playerPos.y, playerPos.z],
+    //   [pWidth, pHeight, pDepth]
     // )
 
-    // const vector = [this.velocity.x, this.velocity.y, this.velocity.z]
+    // const temp = this.velocity.clone().addScalar(1 / dimension)
+
+    // const vector = [-temp.x, temp.y, -temp.z]
+
+    // let isCollide = false,
+    //   ax
+
+    // const asd = []
 
     // const dist = sweep(
-    //   this.world.getVoxelByWorldCoords,
+    //   this.world.getVoxelByVoxelCoords,
     //   pAABB,
     //   vector,
     //   (dist, axis, dir, vec) => {
-    //     vector[axis] = 0
+    //     if (dist <= 0.3) {
+    //       isCollide = true
+    //       ax = axis
+    //       asd.push(axis)
+    //     }
+    //     console.log(dist)
     //     return true
-    //   },
-    //   true
+    //   }
     // )
 
-    // this.velocity.x = vector[0]
-    // this.velocity.y = vector[1]
-    // this.velocity.z = vector[2]
+    // // Translation of player
+    // if (isCollide) {
+    //   const tempDict = { 0: 'x', 1: 'y', 2: 'z' }
+    //   this.velocity[tempDict[ax]] = 0
+    // }
 
-    // Translation of player
     object.translateX(this.velocity.x * delta)
     object.translateY(this.velocity.y * delta)
     object.translateZ(this.velocity.z * delta)
@@ -262,7 +297,10 @@ export default class Player {
     if (!result) return null
 
     // Global Block Coords
-    const gbc = Helpers.toGlobalBlock({ x: point[0], y: point[1], z: point[2] }, true)
+    const gbc = Helpers.toGlobalBlock(
+      { x: point[0], y: point[1], z: point[2] },
+      true
+    )
 
     // Chunk Coords and Block Coords
     const { coordx: cx, coordy: cy, coordz: cz } = Helpers.toChunkCoords(gbc),
@@ -347,8 +385,14 @@ export default class Player {
   }
   getDirections = () => {
     return {
-      dirx: Helpers.round(this.threeControls.getPitch().rotation.x, coordinateDec),
-      diry: Helpers.round(this.threeControls.getObject().rotation.y, coordinateDec)
+      dirx: Helpers.round(
+        this.threeControls.getPitch().rotation.x,
+        coordinateDec
+      ),
+      diry: Helpers.round(
+        this.threeControls.getObject().rotation.y,
+        coordinateDec
+      )
     }
   }
 
@@ -514,14 +558,13 @@ export default class Player {
     }
 
     const onMouseDown = e => {
-      if (!this.chat.enabled && this.threeControls.isLocked) this.mouseKey = e.button
+      if (!this.chat.enabled && this.threeControls.isLocked)
+        this.mouseKey = e.button
     }
-    const onMouseUp = () => (this.mouseKey = null)
 
     document.addEventListener('keydown', onKeyDown, false)
     document.addEventListener('keyup', onKeyUp, false)
     document.addEventListener('mousedown', onMouseDown, false)
-    document.addEventListener('mouseup', onMouseUp, false)
   }
   _resetMovements = () =>
     (this.movements = {
