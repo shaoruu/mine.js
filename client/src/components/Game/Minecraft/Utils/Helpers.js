@@ -136,9 +136,9 @@ export default class Helpers {
    * Converting global coordinates to global block coordinates.
    */
   static toGlobalBlock = ({ x, y, z }, isRound = false) => {
-    x = x.toFixed(2)
-    y = y.toFixed(2)
-    z = z.toFixed(2)
+    x = parseFloat(x.toFixed(10))
+    y = parseFloat(y.toFixed(10))
+    z = parseFloat(z.toFixed(10))
     return isRound
       ? {
           x: Math.round(x / dimension),
@@ -178,4 +178,6 @@ export default class Helpers {
       Object.keys(s).forEach(key => (ele.style[key] = s[key]))
     else ele.classList.add(s)
   }
+
+  static toRadian = degree => (degree * Math.PI) / 180
 }

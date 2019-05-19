@@ -1,7 +1,5 @@
 import * as THREE from 'three'
 import raycast from 'fast-voxel-raycast'
-import sweep from 'voxel-aabb-sweep'
-import aabb from 'aabb-3d'
 
 import PointerLockControls from '../../../Utils/PointerLockControls'
 import Config from '../../../Data/Config'
@@ -12,15 +10,15 @@ import Chat from '../Chat/Chat'
 const size = Config.chunk.size,
   dimension = Config.block.dimension,
   reachDst = Config.player.reachDst,
-  inertia = Config.player.inertia,
   pWidth = Config.player.aabb.width,
   pHeight = Config.player.aabb.height,
   pDepth = Config.player.aabb.depth,
-  horz_speed = Config.player.speed.horizontal,
-  vert_speed = Config.player.speed.vertical,
   coordinateDec = Config.player.coordinateDec,
   horz_max_speed = Config.player.maxSpeed.horizontal,
-  vert_max_speed = Config.player.maxSpeed.vertical
+  vert_max_speed = Config.player.maxSpeed.vertical,
+  INERTIA = Config.player.inertia,
+  HORIZONTAL_ACC = Config.player.acceleration.horizontal,
+  VERITCAL_ACC = Config.player.acceleration.vertical
 
 export default class Player {
   constructor(
@@ -43,7 +41,7 @@ export default class Player {
     this.prevTime = performance.now()
 
     this.velocity = new THREE.Vector3()
-    this.direction = new THREE.Vector3()
+    this.acceleration = new THREE.Vector3()
 
     // Chat
     this.chat = new Chat(container)
@@ -110,14 +108,12 @@ export default class Player {
     this.raycaster = new THREE.Raycaster()
     this.raycaster.far = reachDst * dimension
 
-    // CONSTANTS
-    this.INERTIA = inertia
-    this.HORIZONTAL_SPEED = horz_speed
-    this.VERTICAL_SPEED = vert_speed
-
     // Adding wireframe
     this.scene.add(this.boxhelper)
     this.isWireframed = true
+
+    // TEMPS
+    this.restrained = { x: null, y: null, z: null }
   }
 
   update = () => {
@@ -153,27 +149,15 @@ export default class Player {
 
     if (delta > 0.5) delta = 0.01
 
-    // Extract movement info for later convenience
-    const { up, down, left, right, forward, backward } = this.movements
+    this.calculateAccelerations()
 
     // Update velocity with inertia
-    this.velocity.x -= this.velocity.x * this.INERTIA * delta
-    this.velocity.y -= this.velocity.y * this.INERTIA * delta
-    this.velocity.z -= this.velocity.z * this.INERTIA * delta
+    this.velocity.x -= this.velocity.x * INERTIA * delta
+    this.velocity.y -= this.velocity.y * INERTIA * delta
+    this.velocity.z -= this.velocity.z * INERTIA * delta
 
-    // Update direction with movements
-    this.direction.x = Number(left) - Number(right)
-    this.direction.y = Number(down) - Number(up)
-    this.direction.z = Number(forward) - Number(backward)
-    this.direction.normalize() // this ensures consistent movements in all directions
-
-    // Update velocity again according to direction
-    if (forward || backward)
-      this.velocity.z -= this.direction.z * this.HORIZONTAL_SPEED * delta
-    if (left || right)
-      this.velocity.x -= this.direction.x * this.HORIZONTAL_SPEED * delta
-    if (up || down)
-      this.velocity.y -= this.direction.y * this.VERTICAL_SPEED * delta
+    this.velocity.add(this.acceleration)
+    this.acceleration.set(0.0, 0.0, 0.0)
 
     if (this.velocity.x > horz_max_speed) this.velocity.x = horz_max_speed
     else if (this.velocity.x < -horz_max_speed)
@@ -185,53 +169,166 @@ export default class Player {
     else if (this.velocity.z < -horz_max_speed)
       this.velocity.z = -horz_max_speed
 
-    // // AABB
-    // const playerPos = (() => {
-    //   const temp = this.getCoordinates(5)
-    //   temp.x -= pWidth / 2
-    //   temp.y -= pHeight
-    //   temp.z -= pDepth / 2
-    //   return temp
-    // })()
+    // AABB
+    const playerPos = (() => {
+      const temp = this.getCoordinates(10)
+      temp.x -= pWidth / 2
+      temp.y -= pHeight
+      temp.z -= pDepth / 2
+      return temp
+    })()
+    const scaledVel = this.velocity.clone().multiplyScalar(delta / dimension)
 
-    // const pAABB = new aabb(
-    //   [playerPos.x, playerPos.y, playerPos.z],
-    //   [pWidth, pHeight, pDepth]
-    // )
+    const EPSILON = 1 / 1024
 
-    // const temp = this.velocity.clone().addScalar(1 / dimension)
+    // X-AXIS COLLISION
+    if (scaledVel.x !== 0) {
+      const min_x = playerPos.x
+      const max_x = playerPos.x + pWidth
+      const min_y = Math.round(playerPos.y)
+      const max_y = Math.round(playerPos.y + pHeight)
+      const min_z = Math.round(playerPos.z)
+      const max_z = Math.round(playerPos.z + pDepth)
 
-    // const vector = [-temp.x, temp.y, -temp.z]
+      let start_x, end_x
+      if (scaledVel.x > 0) {
+        // console.log('posx')
+        start_x = max_x
+        end_x = max_x + scaledVel.x
 
-    // let isCollide = false,
-    //   ax
+        for (let pos_x = start_x; pos_x <= end_x; pos_x++) {
+          let voxelExists = false
+          for (let y = min_y; y <= max_y; y++) {
+            if (voxelExists) break
+            for (let z = min_z; z <= max_z; z++)
+              if (
+                this.world.getVoxelByVoxelCoords(
+                  Math.round(pos_x),
+                  Math.round(y),
+                  Math.round(z)
+                )
+              ) {
+                voxelExists = true
+                console.log('x')
+                break
+              }
+          }
 
-    // const asd = []
+          if (voxelExists) {
+            playerPos.x = Math.floor(pos_x) - EPSILON
+            console.log(playerPos.x)
+            scaledVel.x = 0
+            break
+          }
+        }
+      } else {
+        start_x = min_x
+        end_x = min_x - scaledVel.x
 
-    // const dist = sweep(
-    //   this.world.getVoxelByVoxelCoords,
-    //   pAABB,
-    //   vector,
-    //   (dist, axis, dir, vec) => {
-    //     if (dist <= 0.3) {
-    //       isCollide = true
-    //       ax = axis
-    //       asd.push(axis)
-    //     }
-    //     console.log(dist)
-    //     return true
-    //   }
-    // )
+        for (let pos_x = start_x; pos_x <= end_x; pos_x++) {
+          let voxelExists = false
+          for (let y = min_y; y <= max_y; y++) {
+            if (voxelExists) break
+            for (let z = min_z; z <= max_z; z++)
+              if (this.world.getVoxelByVoxelCoords(pos_x | 0, y | 0, z | 0)) {
+                voxelExists = true
+                console.log('x')
+                break
+              }
+          }
 
-    // // Translation of player
-    // if (isCollide) {
-    //   const tempDict = { 0: 'x', 1: 'y', 2: 'z' }
-    //   this.velocity[tempDict[ax]] = 0
-    // }
+          if (voxelExists) {
+            playerPos.x = Math.floor(pos_x) + pWidth + EPSILON
+            console.log(playerPos.x)
+            scaledVel.x = 0
+            break
+          }
+        }
+      }
+    }
 
-    object.translateX(this.velocity.x * delta)
-    object.translateY(this.velocity.y * delta)
-    object.translateZ(this.velocity.z * delta)
+    // Z-AXIS COLLISION
+    if (scaledVel.x !== 0 && scaledVel.z !== 0) {
+      const min_x = Math.round(playerPos.x)
+      const max_x = Math.round(playerPos.x + pWidth)
+      const min_y = Math.round(playerPos.y)
+      const max_y = Math.round(playerPos.y + pHeight)
+      const min_z = playerPos.z
+      const max_z = playerPos.z + pDepth
+
+      let start_z, end_z
+      if (scaledVel.z > 0) {
+        // console.log('posx')
+        start_z = max_z
+        end_z = max_z + scaledVel.z
+
+        for (let pos_z = start_z; pos_z <= end_z; pos_z++) {
+          let voxelExists = false
+          for (let x = min_x; x <= max_x; x++) {
+            if (voxelExists) break
+            for (let y = min_y; y <= max_y; y++)
+              if (
+                this.world.getVoxelByVoxelCoords(
+                  Math.round(x),
+                  Math.round(y),
+                  Math.round(pos_z)
+                )
+              ) {
+                voxelExists = true
+                console.log('z')
+                break
+              }
+          }
+
+          if (voxelExists) {
+            playerPos.z = Math.floor(pos_z) - EPSILON
+            console.log(playerPos.z)
+            scaledVel.z = 0
+            break
+          }
+        }
+      } else {
+        start_z = min_z + scaledVel.z
+        end_z = min_z
+
+        for (let pos_z = start_z; pos_z <= end_z; pos_z++) {
+          let voxelExists = false
+          for (let x = min_x; x <= max_x; x++) {
+            if (voxelExists) break
+            for (let y = min_y; y <= max_y; y++)
+              if (this.world.getVoxelByVoxelCoords(x | 0, y | 0, pos_z | 0)) {
+                voxelExists = true
+                console.log('z')
+                break
+              }
+          }
+
+          if (voxelExists) {
+            playerPos.z = Math.floor(pos_z) + pDepth + EPSILON
+            console.log(playerPos.z)
+            scaledVel.z = 0
+            break
+          }
+        }
+      }
+    }
+
+    playerPos.z += scaledVel.z
+    playerPos.x += scaledVel.x
+
+    scaledVel.multiplyScalar(dimension / delta)
+    this.velocity.copy(scaledVel)
+
+    const position = object.position
+    position.set(
+      playerPos.x + pWidth / 2,
+      playerPos.y + pHeight,
+      playerPos.z + pDepth / 2
+    )
+    position.multiplyScalar(dimension)
+    // object.translateX(scaledVel.x)
+    // object.translateY(scaledVel.y)
+    // object.translateZ(scaledVel.z)
 
     this.prevTime = now
   }
@@ -271,6 +368,39 @@ export default class Player {
         this.scene.remove(obj)
         this.isWireframed = false
       }
+    }
+  }
+
+  calculateAccelerations = () => {
+    const { diry } = this.getDirections()
+
+    // Extract movement info for later convenience
+    const { up, down, left, right, forward, backward } = this.movements
+
+    if (up)
+      // TODO: add fly/land mode here
+      this.acceleration.y += VERITCAL_ACC
+    else if (down) this.acceleration.y -= VERITCAL_ACC
+
+    if (left) {
+      this.acceleration.x += -Math.sin(diry + Math.PI / 2) * HORIZONTAL_ACC
+      this.acceleration.z += -Math.cos(diry + Math.PI / 2) * HORIZONTAL_ACC
+    }
+
+    if (right) {
+      this.acceleration.x += Math.sin(diry + Math.PI / 2) * HORIZONTAL_ACC
+      this.acceleration.z += Math.cos(diry + Math.PI / 2) * HORIZONTAL_ACC
+    }
+
+    if (forward) {
+      // TODO: implement sprint here.
+      this.acceleration.x += -Math.sin(diry) * HORIZONTAL_ACC
+      this.acceleration.z += -Math.cos(diry) * HORIZONTAL_ACC
+    }
+
+    if (backward) {
+      this.acceleration.x += Math.sin(diry) * HORIZONTAL_ACC
+      this.acceleration.z += Math.cos(diry) * HORIZONTAL_ACC
     }
   }
 

@@ -56,9 +56,9 @@ export default {
   player: {
     height: 50, // px
     inertia: 5.0,
-    speed: {
-      horizontal: 1600,
-      vertical: 2000
+    acceleration: {
+      horizontal: 25,
+      vertical: 22
     },
     maxSpeed: {
       horizontal: 700,
@@ -66,9 +66,9 @@ export default {
     },
     aabb: {
       // Based on block dimension
-      width: 0.8,
+      width: 0.6,
       height: 1.8,
-      depth: 0.8
+      depth: 0.6
     },
     coordinateDec: 2,
     posX: 0,
