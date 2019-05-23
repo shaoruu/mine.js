@@ -309,7 +309,11 @@ export default () => {
       let u = this.fade(x)
 
       // Interpolate the four results
-      return this.lerp(this.lerp(n00, n10, u), this.lerp(n01, n11, u), this.fade(y))
+      return this.lerp(
+        this.lerp(n00, n10, u),
+        this.lerp(n01, n11, u),
+        this.fade(y)
+      )
     }
 
     // 3D Perlin Noise
@@ -329,12 +333,36 @@ export default () => {
 
       // Calculate noise contributions from each of the eight corners
       let n000 = this.gradP[X + this.perm[Y + this.perm[Z]]].dot3(x, y, z)
-      let n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(x, y, z - 1)
-      let n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(x, y - 1, z)
-      let n011 = this.gradP[X + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(x, y - 1, z - 1)
-      let n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(x - 1, y, z)
-      let n101 = this.gradP[X + 1 + this.perm[Y + this.perm[Z + 1]]].dot3(x - 1, y, z - 1)
-      let n110 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z]]].dot3(x - 1, y - 1, z)
+      let n001 = this.gradP[X + this.perm[Y + this.perm[Z + 1]]].dot3(
+        x,
+        y,
+        z - 1
+      )
+      let n010 = this.gradP[X + this.perm[Y + 1 + this.perm[Z]]].dot3(
+        x,
+        y - 1,
+        z
+      )
+      let n011 = this.gradP[X + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
+        x,
+        y - 1,
+        z - 1
+      )
+      let n100 = this.gradP[X + 1 + this.perm[Y + this.perm[Z]]].dot3(
+        x - 1,
+        y,
+        z
+      )
+      let n101 = this.gradP[X + 1 + this.perm[Y + this.perm[Z + 1]]].dot3(
+        x - 1,
+        y,
+        z - 1
+      )
+      let n110 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z]]].dot3(
+        x - 1,
+        y - 1,
+        z
+      )
       let n111 = this.gradP[X + 1 + this.perm[Y + 1 + this.perm[Z + 1]]].dot3(
         x - 1,
         y - 1,
@@ -442,23 +470,47 @@ export default () => {
 
           if (type === 0) continue
 
+          const wx = x - 1,
+            wy = y - 1,
+            wz = z - 1
+
           // TOP
           if (get(x, z, y + 1) === 0)
-            planes.push([[x, y + 0.5, z], 'py', type, materials.top])
+            planes.push([
+              [wx + 0.5, wy + 1, wz + 0.5],
+              'py',
+              type,
+              materials.top
+            ])
 
           // SIDES
           if (get(x + 1, z, y) === 0)
-            planes.push([[x + 0.5, y, z], 'px', type, materials.side])
+            planes.push([
+              [wx + 1, wy + 0.5, wz + 0.5],
+              'px',
+              type,
+              materials.side
+            ])
           if (get(x, z + 1, y) === 0)
-            planes.push([[x, y, z + 0.5], 'pz', type, materials.side])
+            planes.push([
+              [wx + 0.5, wy + 0.5, wz + 1],
+              'pz',
+              type,
+              materials.side
+            ])
           if (get(x - 1, z, y) === 0)
-            planes.push([[x - 0.5, y, z], 'nx', type, materials.side])
+            planes.push([[wx, wy + 0.5, wz + 0.5], 'nx', type, materials.side])
           if (get(x, z - 1, y) === 0)
-            planes.push([[x, y, z - 0.5], 'nz', type, materials.side])
+            planes.push([[wx + 0.5, wy + 0.5, wz], 'nz', type, materials.side])
 
           // BOTTOM
           if (get(x, z, y - 1) === 0)
-            planes.push([[x, y - 0.5, z], 'ny', type, materials.bottom])
+            planes.push([
+              [wx + 0.5, wy, wz + 0.5],
+              'ny',
+              type,
+              materials.bottom
+            ])
         }
       }
     }
@@ -488,7 +540,8 @@ export default () => {
 
         const set = (i, j, k, v) =>
           (blocks[i * stride[0] + j * stride[1] + k * stride[2]] = v)
-        const get = (i, j, k) => blocks[i * stride[0] + j * stride[1] + k * stride[2]]
+        const get = (i, j, k) =>
+          blocks[i * stride[0] + j * stride[1] + k * stride[2]]
 
         for (let x = 0; x < size + 2; x++)
           for (let z = 0; z < size + 2; z++)
@@ -501,7 +554,8 @@ export default () => {
               ]
 
               const cb = changedBlocks[getCoordsRepresentation(...pos)],
-                value = typeof cb === 'number' ? cb : generator.getBlockInfo(...pos)
+                value =
+                  typeof cb === 'number' ? cb : generator.getBlockInfo(...pos)
 
               set(x, z, y, value)
             }
@@ -529,7 +583,8 @@ export default () => {
 
         if (data.find(ele => ele)) {
           const dims = [size + 2, size + 2, size + 2]
-          const get = (i, j, k) => data[i * stride[0] + j * stride[1] + k * stride[2]]
+          const get = (i, j, k) =>
+            data[i * stride[0] + j * stride[1] + k * stride[2]]
 
           const quads = calcQuads(get, dims)
 

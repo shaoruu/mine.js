@@ -57,8 +57,8 @@ export default {
     height: 50, // px
     inertia: 5.0,
     acceleration: {
-      horizontal: 25,
-      vertical: 22
+      horizontal: 22,
+      vertical: 19
     },
     maxSpeed: {
       horizontal: 700,
@@ -66,9 +66,10 @@ export default {
     },
     aabb: {
       // Based on block dimension
-      width: 0.6,
-      height: 1.8,
-      depth: 0.6
+      width: 0.5,
+      eye2toe: 1.5,
+      eye2top: 0.3,
+      depth: 0.5
     },
     coordinateDec: 2,
     posX: 0,
@@ -142,7 +143,7 @@ export default {
     z: 0.75
   },
   block: {
-    dimension: 30
+    dimension: 25
   },
   chunk: {
     size: 8,

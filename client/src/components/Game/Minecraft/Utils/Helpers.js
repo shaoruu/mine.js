@@ -135,15 +135,15 @@ export default class Helpers {
   /**
    * Converting global coordinates to global block coordinates.
    */
-  static toGlobalBlock = ({ x, y, z }, isRound = false) => {
+  static toGlobalBlock = ({ x, y, z }, floor = true) => {
     x = parseFloat(x.toFixed(10))
     y = parseFloat(y.toFixed(10))
     z = parseFloat(z.toFixed(10))
-    return isRound
+    return floor
       ? {
-          x: Math.round(x / dimension),
-          y: Math.round(y / dimension),
-          z: Math.round(z / dimension)
+          x: Math.floor(x / dimension),
+          y: Math.floor(y / dimension),
+          z: Math.floor(z / dimension)
         }
       : {
           x: x / dimension,
@@ -180,4 +180,13 @@ export default class Helpers {
   }
 
   static toRadian = degree => (degree * Math.PI) / 180
+
+  static mapVecToWorldCoords = (origin, vec) => [
+    origin.x * size * dimension + vec[0] * dimension,
+    origin.y * size * dimension + vec[1] * dimension,
+    origin.z * size * dimension + vec[2] * dimension
+  ]
+
+  static equals = (float1, float2, epsilon = 1e-5) =>
+    Math.abs(float1 - float2) < epsilon
 }

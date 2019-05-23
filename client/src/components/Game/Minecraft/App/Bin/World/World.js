@@ -353,7 +353,7 @@ class World {
   appendWorkerTask = (task, argument = null) =>
     this.workerTaskHandler.addTask(task, argument)
   getVoxelByWorldCoords = (x, y, z) => {
-    const gbc = Helpers.toGlobalBlock({ x, y, z }, true)
+    const gbc = Helpers.toGlobalBlock({ x, y, z })
     return this.getVoxelByVoxelCoords(gbc.x, gbc.y, gbc.z)
   }
   getVoxelByVoxelCoords = (x, y, z) => {

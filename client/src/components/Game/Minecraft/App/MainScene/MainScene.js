@@ -117,7 +117,7 @@ class MainScene extends Component {
 
     /** Called every 200ms to update player position with server. */
     this.updatePosCall = setInterval(() => {
-      const playerCoords = this.player.getCoordinates(),
+      const playerCoords = this.player.getNormalizedCamPos(),
         playerDirs = this.player.getDirections()
 
       // Making sure no values are null
@@ -186,7 +186,7 @@ class MainScene extends Component {
 
   updateWorld = () => {
     const { coordx, coordy, coordz } = Helpers.toChunkCoords(
-      this.player.getCoordinates()
+      this.player.getNormalizedCamPos()
     )
 
     this.world.requestMeshUpdate({

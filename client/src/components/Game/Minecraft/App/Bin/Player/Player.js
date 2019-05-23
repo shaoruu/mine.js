@@ -11,7 +11,8 @@ const size = Config.chunk.size,
   dimension = Config.block.dimension,
   reachDst = Config.player.reachDst,
   pWidth = Config.player.aabb.width,
-  pHeight = Config.player.aabb.height,
+  pEye2Toe = Config.player.aabb.eye2toe,
+  pEye2Top = Config.player.aabb.eye2top,
   pDepth = Config.player.aabb.depth,
   coordinateDec = Config.player.coordinateDec,
   horz_max_speed = Config.player.maxSpeed.horizontal,
@@ -169,166 +170,7 @@ export default class Player {
     else if (this.velocity.z < -horz_max_speed)
       this.velocity.z = -horz_max_speed
 
-    // AABB
-    const playerPos = (() => {
-      const temp = this.getCoordinates(10)
-      temp.x -= pWidth / 2
-      temp.y -= pHeight
-      temp.z -= pDepth / 2
-      return temp
-    })()
-    const scaledVel = this.velocity.clone().multiplyScalar(delta / dimension)
-
-    const EPSILON = 1 / 1024
-
-    // X-AXIS COLLISION
-    if (scaledVel.x !== 0) {
-      const min_x = playerPos.x
-      const max_x = playerPos.x + pWidth
-      const min_y = Math.round(playerPos.y)
-      const max_y = Math.round(playerPos.y + pHeight)
-      const min_z = Math.round(playerPos.z)
-      const max_z = Math.round(playerPos.z + pDepth)
-
-      let start_x, end_x
-      if (scaledVel.x > 0) {
-        // console.log('posx')
-        start_x = max_x
-        end_x = max_x + scaledVel.x
-
-        for (let pos_x = start_x; pos_x <= end_x; pos_x++) {
-          let voxelExists = false
-          for (let y = min_y; y <= max_y; y++) {
-            if (voxelExists) break
-            for (let z = min_z; z <= max_z; z++)
-              if (
-                this.world.getVoxelByVoxelCoords(
-                  Math.round(pos_x),
-                  Math.round(y),
-                  Math.round(z)
-                )
-              ) {
-                voxelExists = true
-                console.log('x')
-                break
-              }
-          }
-
-          if (voxelExists) {
-            playerPos.x = Math.floor(pos_x) - EPSILON
-            console.log(playerPos.x)
-            scaledVel.x = 0
-            break
-          }
-        }
-      } else {
-        start_x = min_x
-        end_x = min_x - scaledVel.x
-
-        for (let pos_x = start_x; pos_x <= end_x; pos_x++) {
-          let voxelExists = false
-          for (let y = min_y; y <= max_y; y++) {
-            if (voxelExists) break
-            for (let z = min_z; z <= max_z; z++)
-              if (this.world.getVoxelByVoxelCoords(pos_x | 0, y | 0, z | 0)) {
-                voxelExists = true
-                console.log('x')
-                break
-              }
-          }
-
-          if (voxelExists) {
-            playerPos.x = Math.floor(pos_x) + pWidth + EPSILON
-            console.log(playerPos.x)
-            scaledVel.x = 0
-            break
-          }
-        }
-      }
-    }
-
-    // Z-AXIS COLLISION
-    if (scaledVel.x !== 0 && scaledVel.z !== 0) {
-      const min_x = Math.round(playerPos.x)
-      const max_x = Math.round(playerPos.x + pWidth)
-      const min_y = Math.round(playerPos.y)
-      const max_y = Math.round(playerPos.y + pHeight)
-      const min_z = playerPos.z
-      const max_z = playerPos.z + pDepth
-
-      let start_z, end_z
-      if (scaledVel.z > 0) {
-        // console.log('posx')
-        start_z = max_z
-        end_z = max_z + scaledVel.z
-
-        for (let pos_z = start_z; pos_z <= end_z; pos_z++) {
-          let voxelExists = false
-          for (let x = min_x; x <= max_x; x++) {
-            if (voxelExists) break
-            for (let y = min_y; y <= max_y; y++)
-              if (
-                this.world.getVoxelByVoxelCoords(
-                  Math.round(x),
-                  Math.round(y),
-                  Math.round(pos_z)
-                )
-              ) {
-                voxelExists = true
-                console.log('z')
-                break
-              }
-          }
-
-          if (voxelExists) {
-            playerPos.z = Math.floor(pos_z) - EPSILON
-            console.log(playerPos.z)
-            scaledVel.z = 0
-            break
-          }
-        }
-      } else {
-        start_z = min_z + scaledVel.z
-        end_z = min_z
-
-        for (let pos_z = start_z; pos_z <= end_z; pos_z++) {
-          let voxelExists = false
-          for (let x = min_x; x <= max_x; x++) {
-            if (voxelExists) break
-            for (let y = min_y; y <= max_y; y++)
-              if (this.world.getVoxelByVoxelCoords(x | 0, y | 0, pos_z | 0)) {
-                voxelExists = true
-                console.log('z')
-                break
-              }
-          }
-
-          if (voxelExists) {
-            playerPos.z = Math.floor(pos_z) + pDepth + EPSILON
-            console.log(playerPos.z)
-            scaledVel.z = 0
-            break
-          }
-        }
-      }
-    }
-
-    playerPos.z += scaledVel.z
-    playerPos.x += scaledVel.x
-
-    scaledVel.multiplyScalar(dimension / delta)
-    this.velocity.copy(scaledVel)
-
-    const position = object.position
-    position.set(
-      playerPos.x + pWidth / 2,
-      playerPos.y + pHeight,
-      playerPos.z + pDepth / 2
-    )
-    position.multiplyScalar(dimension)
-    // object.translateX(scaledVel.x)
-    // object.translateY(scaledVel.y)
-    // object.translateZ(scaledVel.z)
+    this.handleCollisionsAndMovements(delta)
 
     this.prevTime = now
   }
@@ -404,6 +246,167 @@ export default class Player {
     }
   }
 
+  handleCollisionsAndMovements = delta => {
+    // AABB
+    const playerPos = this.getNormalizedCamPos(10)
+    const scaledVel = this.velocity.clone().multiplyScalar(delta / dimension)
+
+    const EPSILON = 1 / 1024
+
+    let newX, newY, newZ
+
+    // X-AXIS COLLISION
+    if (!Helpers.equals(scaledVel.x, 0)) {
+      const min_x = playerPos.x - pWidth / 2
+      const max_x = playerPos.x + pWidth / 2
+      const min_y = Math.floor(playerPos.y - pEye2Toe)
+      const max_y = Math.floor(playerPos.y + pEye2Top)
+      const min_z = Math.floor(playerPos.z - pDepth / 2)
+      const max_z = Math.floor(playerPos.z + pDepth / 2)
+
+      const isPos = scaledVel.x > 0
+
+      let start_x, end_x
+      if (scaledVel.x > 0) {
+        console.log('posx')
+        start_x = max_x
+        end_x = max_x + scaledVel.x
+      } else {
+        start_x = min_x + scaledVel.x
+        end_x = min_x
+      }
+
+      for (
+        let pos_x = isPos ? end_x : start_x;
+        isPos ? pos_x >= start_x : pos_x <= end_x;
+        isPos ? pos_x-- : pos_x++
+      ) {
+        let voxelExists = false
+        for (let y = min_y; y <= max_y; y++) {
+          if (voxelExists) break
+          for (let z = min_z; z <= max_z; z++)
+            if (this.world.getVoxelByVoxelCoords(Math.floor(pos_x), y, z)) {
+              voxelExists = true
+              break
+            }
+        }
+
+        if (voxelExists) {
+          if (scaledVel.x > 0) newX = Math.floor(pos_x) - pWidth / 2 - EPSILON
+          else newX = Math.floor(pos_x) + pWidth / 2 + 1 + EPSILON
+          // console.log(playerPos.x)
+          scaledVel.x = 0
+          break
+        }
+      }
+    }
+
+    // Y-AXIS COLLISION
+    if (!Helpers.equals(scaledVel.y, 0)) {
+      const min_y = playerPos.y - pEye2Toe
+      const max_y = playerPos.y + pEye2Top
+      const min_x = Math.floor(playerPos.x - pWidth / 2)
+      const max_x = Math.floor(playerPos.x + pWidth / 2)
+      const min_z = Math.floor(playerPos.z - pDepth / 2)
+      const max_z = Math.floor(playerPos.z + pDepth / 2)
+
+      const isPos = scaledVel.y > 0
+
+      let start_y, end_y
+      if (scaledVel.y > 0) {
+        console.log('posy')
+        start_y = max_y
+        end_y = max_y + scaledVel.y
+      } else {
+        start_y = min_y + scaledVel.y
+        end_y = min_y
+      }
+
+      for (
+        let pos_y = isPos ? end_y : start_y;
+        isPos ? pos_y >= start_y : pos_y <= end_y;
+        isPos ? pos_y-- : pos_y++
+      ) {
+        let voxelExists = false
+        for (let x = min_x; x <= max_x; x++) {
+          if (voxelExists) break
+          for (let z = min_z; z <= max_z; z++)
+            if (this.world.getVoxelByVoxelCoords(x, Math.floor(pos_y), z)) {
+              voxelExists = true
+              break
+            }
+        }
+
+        if (voxelExists) {
+          if (scaledVel.y > 0) newY = Math.floor(pos_y) - pEye2Top - EPSILON
+          else newY = Math.floor(pos_y) + 1 + pEye2Toe + EPSILON
+          scaledVel.y = 0
+          break
+        }
+      }
+    }
+
+    // Z-AXIS COLLISION
+    if (!Helpers.equals(scaledVel.z, 0)) {
+      const min_z = playerPos.z - pDepth / 2
+      const max_z = playerPos.z + pDepth / 2
+      const min_x = Math.floor(playerPos.x - pWidth / 2)
+      const max_x = Math.floor(playerPos.x + pWidth / 2)
+      const min_y = Math.floor(playerPos.y - pEye2Toe)
+      const max_y = Math.floor(playerPos.y + pEye2Top)
+
+      const isPos = scaledVel.z > 0
+
+      let start_z, end_z
+      if (scaledVel.z > 0) {
+        console.log('posz')
+        start_z = max_z
+        end_z = max_z + scaledVel.z
+      } else {
+        start_z = min_z + scaledVel.z
+        end_z = min_z
+      }
+
+      for (
+        let pos_z = isPos ? end_z : start_z;
+        isPos ? pos_z >= start_z : pos_z <= end_z;
+        isPos ? pos_z-- : pos_z++
+      ) {
+        let voxelExists = false
+        for (let x = min_x; x <= max_x; x++) {
+          if (voxelExists) break
+          for (let y = min_y; y <= max_y; y++)
+            if (this.world.getVoxelByVoxelCoords(x, y, Math.floor(pos_z))) {
+              voxelExists = true
+              break
+            }
+        }
+
+        if (voxelExists) {
+          if (scaledVel.z > 0) newZ = Math.floor(pos_z) - pDepth / 2 - EPSILON
+          else newZ = Math.floor(pos_z) + pDepth / 2 + 1 + EPSILON
+          scaledVel.z = 0
+          break
+        }
+      }
+    }
+
+    if (newX) playerPos.x = newX
+    if (newY) playerPos.y = newY
+    if (newZ) playerPos.z = newZ
+
+    playerPos.x += scaledVel.x
+    playerPos.y += scaledVel.y
+    playerPos.z += scaledVel.z
+
+    scaledVel.multiplyScalar(dimension / delta)
+    this.velocity.copy(scaledVel)
+
+    const position = this.getObject().position
+    position.set(playerPos.x, playerPos.y, playerPos.z)
+    position.multiplyScalar(dimension)
+  }
+
   getLookingBlockInfo = () => {
     const object = this.threeControls.getObject()
 
@@ -427,10 +430,7 @@ export default class Player {
     if (!result) return null
 
     // Global Block Coords
-    const gbc = Helpers.toGlobalBlock(
-      { x: point[0], y: point[1], z: point[2] },
-      true
-    )
+    const gbc = Helpers.toGlobalBlock({ x: point[0], y: point[1], z: point[2] })
 
     // Chunk Coords and Block Coords
     const { coordx: cx, coordy: cy, coordz: cz } = Helpers.toChunkCoords(gbc),
@@ -501,17 +501,31 @@ export default class Player {
       potential.chunk[chunkxis] += 1
     }
 
-    targetwf.x -= 0.05
-    targetwf.y -= 0.05
-    targetwf.z -= 0.05
+    // add 0.5 to fix center of geometry offset.
+    const offset = 0.5 * dimension
+
+    targetwf.x -= 0.05 - offset
+    targetwf.y -= 0.05 - offset
+    targetwf.z -= 0.05 - offset
 
     return { target, targetwf, potential }
   }
   getObject = () => this.threeControls.getObject()
-  getCoordinates = (dec = coordinateDec) => {
+  getNormalizedCamPos = (dec = coordinateDec) => {
+    // Normalized as in normalized to world coordinates
+
     const position = this.threeControls.getObject().position.clone()
 
-    return Helpers.roundPos(Helpers.toGlobalBlock(position), dec)
+    return Helpers.roundPos(Helpers.toGlobalBlock(position, false), dec)
+  }
+  getCoordinates = (dec = coordinateDec) => {
+    /**
+     * This is essentially where the foot of the player is
+     */
+    const camPos = this.getNormalizedCamPos(dec)
+    camPos.y -= pEye2Toe
+
+    return camPos
   }
   getDirections = () => {
     return {

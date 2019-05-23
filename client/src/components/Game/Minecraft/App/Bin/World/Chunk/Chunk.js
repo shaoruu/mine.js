@@ -49,18 +49,13 @@ class Chunk {
     /**
      * Internal functions for convenience
      */
-    const mapVecToWorld = vec => [
-      this.origin.x * size * dimension + (vec[0] - 1) * dimension,
-      this.origin.y * size * dimension + (vec[1] - 1) * dimension,
-      this.origin.z * size * dimension + (vec[2] - 1) * dimension
-    ]
 
     const meshes = []
 
     for (let quad of quads) {
       const [coords, geo, type, material] = quad
 
-      const globalCoords = mapVecToWorld(coords)
+      const globalCoords = Helpers.mapVecToWorldCoords(this.origin, coords)
 
       const mat = this.resourceManager.getBlockMat(type)[material]
 
