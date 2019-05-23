@@ -143,7 +143,6 @@ export default class Player {
   }
 
   handleMovements = () => {
-    const object = this.threeControls.getObject()
     const now = performance.now()
 
     let delta = (now - this.prevTime) / 1000
@@ -268,7 +267,6 @@ export default class Player {
 
       let start_x, end_x
       if (scaledVel.x > 0) {
-        console.log('posx')
         start_x = max_x
         end_x = max_x + scaledVel.x
       } else {
@@ -314,7 +312,6 @@ export default class Player {
 
       let start_y, end_y
       if (scaledVel.y > 0) {
-        console.log('posy')
         start_y = max_y
         end_y = max_y + scaledVel.y
       } else {
@@ -359,7 +356,6 @@ export default class Player {
 
       let start_z, end_z
       if (scaledVel.z > 0) {
-        console.log('posz')
         start_z = max_z
         end_z = max_z + scaledVel.z
       } else {

@@ -3,8 +3,7 @@ import ndarray from 'ndarray'
 import Config from '../../../../Data/Config'
 import Helpers from '../../../../Utils/Helpers'
 
-const size = Config.chunk.size,
-  dimension = Config.block.dimension
+const size = Config.chunk.size
 
 class Chunk {
   constructor(resourceManager, { origin }) {
