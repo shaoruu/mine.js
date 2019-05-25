@@ -152,5 +152,8 @@ export default {
   world: {
     noiseConstant: 50,
     maxWorkerCount: 4
+  },
+  keyboard: {
+    spaceDelta: 300 // ms
   }
 }

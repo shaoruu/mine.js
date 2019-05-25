@@ -5,9 +5,11 @@
 
 import * as THREE from 'three'
 
-import Config from '../Data/Config'
+import Config from '../../../../Data/Config'
 
-const size = Config.block.dimension
+const size = Config.block.dimension,
+  P_I_2_TOE = Config.player.aabb.eye2toe,
+  DIMENSION = Config.block.dimension
 
 const PointerLockControls = function(camera, domElement, initPos, initDirs) {
   let scope = this
@@ -21,7 +23,11 @@ const PointerLockControls = function(camera, domElement, initPos, initDirs) {
   pitchObject.add(camera)
 
   let yawObject = new THREE.Object3D()
-  yawObject.position.set(initPos.x * size, initPos.y * size, initPos.z * size)
+  yawObject.position.set(
+    initPos.x * size,
+    initPos.y * size + P_I_2_TOE * DIMENSION,
+    initPos.z * size
+  )
   yawObject.add(pitchObject)
 
   pitchObject.rotation.x = initDirs.dirx

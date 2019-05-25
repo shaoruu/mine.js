@@ -7,6 +7,7 @@ import worker from './World.worker'
 import { UPDATE_BLOCK_MUTATION } from '../../../../../../lib/graphql'
 import WorkerPool from '../Workers/WorkerPool'
 import TaskQueue from '../Workers/TaskQueue'
+import Chat from '../Chat/Chat'
 
 const size = Config.chunk.size,
   height = Config.chunk.height,
@@ -15,10 +16,13 @@ const size = Config.chunk.size,
   noiseConstant = Config.world.noiseConstant
 
 class World {
-  constructor(id, scene, worldData, apolloClient, resourceManager) {
+  constructor(id, scene, worldData, apolloClient, resourceManager, container) {
     const { seed, name, changedBlocks } = worldData
 
     this.chunkDimension = Config.chunk.size * Config.block.dimension
+
+    // Chat
+    this.chat = new Chat(container)
 
     this.id = id
     this.seed = seed

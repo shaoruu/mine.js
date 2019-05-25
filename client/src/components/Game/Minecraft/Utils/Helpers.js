@@ -187,6 +187,6 @@ export default class Helpers {
     origin.z * size * dimension + vec[2] * dimension
   ]
 
-  static equals = (float1, float2, epsilon = 1e-5) =>
+  static approxEquals = (float1, float2, epsilon = 1e-5) =>
     Math.abs(float1 - float2) < epsilon
 }
