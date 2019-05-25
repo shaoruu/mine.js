@@ -1,16 +1,9 @@
-import * as THREE from 'three'
-import raycast from 'fast-voxel-raycast'
-
 import Config from '../../../Data/Config'
-import Helpers from '../../../Utils/Helpers'
 import Inventory from './Inventory/Inventory'
 import PlayerControls from './Controls/PlayerControls'
 import PlayerViewpoint from './Controls/PlayerViewpoint'
 
-const size = Config.chunk.size,
-  dimension = Config.block.dimension,
-  reachDst = Config.player.reachDst,
-  P_I_2_TOE = Config.player.aabb.eye2toe,
+const P_I_2_TOE = Config.player.aabb.eye2toe,
   COORD_DEC = Config.player.coordinateDec
 
 export default class Player {
@@ -28,24 +21,9 @@ export default class Player {
     mutatePlayer,
     chat
   ) {
-    this.state = {
-      isFlying: true
-    }
-
     this.id = id
 
     this.mutatePlayer = mutatePlayer
-
-    this.prevTime = performance.now()
-
-    this.velocity = new THREE.Vector3()
-    this.acceleration = new THREE.Vector3()
-
-    /** CONNECTIONS TO OUTER SPACE */
-    this.scene = scene
-    this.camera = camera
-    this.world = world
-    this.chat = chat
 
     // Control center
     this.controls = new PlayerControls(
@@ -60,8 +38,6 @@ export default class Player {
     )
     this.viewpoint = new PlayerViewpoint(scene, camera, this.controls, world)
 
-    this.chat.addControlListener(this.controls.threeControls)
-
     this.inventory = new Inventory(
       container,
       resourceManager,
@@ -69,6 +45,8 @@ export default class Player {
       data,
       this.mutateSelf
     )
+
+    this.chat.addControlListener(this.controls.threeControls)
 
     scene.add(this.controls.getObject())
   }
