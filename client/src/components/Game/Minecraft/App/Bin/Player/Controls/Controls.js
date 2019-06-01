@@ -3,20 +3,32 @@ import * as THREE from 'three'
 import PointerLockControls from './PointerLockControls'
 import Config from '../../../../Data/Config'
 import Helpers from '../../../../Utils/Helpers'
+import Stateful from '../../../../Utils/Stateful'
+import Keyboard from './Keyboard'
 
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal,
   VERT_MAX_SPEED = Config.player.maxSpeed.vertical,
   INERTIA = Config.player.inertia,
-  HORIZONTAL_ACC = Config.player.acceleration.horizontal,
+  FORW_BACK_ACC = Config.player.acceleration.forwardbackward,
+  LEFT_RIGHT_ACC = Config.player.acceleration.leftright,
   VERITCAL_ACC = Config.player.acceleration.vertical,
+  JUMP_ACC = Config.player.acceleration.jump,
+  FRICTION_COEF = Config.player.frictionCoef,
   COORD_DEC = Config.player.coordinateDec,
   DIMENSION = Config.block.dimension,
   P_WIDTH = Config.player.aabb.width,
   P_DEPTH = Config.player.aabb.depth,
   P_I_2_TOE = Config.player.aabb.eye2toe,
-  P_I_2_TOP = Config.player.aabb.eye2top
+  P_I_2_TOP = Config.player.aabb.eye2top,
+  {
+    movements: MOVEMENT_KEYS,
+    inventory: INVENTORY_KEYS,
+    multiplayer: MULTIPLAYER_KEYS
+  } = Config.keyboard,
+  GRAVITY = Config.world.gravity,
+  SPRINT_FACTOR = Config.player.sprintFactor
 
-class PlayerControls {
+class PlayerControls extends Stateful {
   constructor(
     player,
     world,
@@ -27,6 +39,14 @@ class PlayerControls {
     initPos,
     initDirs
   ) {
+    super()
+
+    this.state = {
+      isOnGround: false,
+      isJumped: false,
+      isSprinting: false
+    }
+
     // Controls
     this.threeControls = new PointerLockControls(
       camera,
@@ -50,6 +70,8 @@ class PlayerControls {
 
     // Keyboard & mouse
     this.mouseKey = null
+    this.keyboard = new Keyboard()
+    this.keyboard.initialize()
 
     // Connections to outer space
     this.player = player
@@ -68,6 +90,7 @@ class PlayerControls {
       'click',
       () => {
         this.blocker.style.display = 'none'
+        this.keyboard.setScope('in-game')
         this.threeControls.lock()
       },
       false
@@ -78,14 +101,15 @@ class PlayerControls {
       () => {
         this._resetMovements()
         if (!this.chat.enabled) {
+          this.keyboard.setScope('blocked')
           this.blocker.style.display = 'block'
         }
       },
       false
     )
 
-    document.addEventListener('keydown', this._handleKeyDown, false)
-    document.addEventListener('keyup', this._handleKeyUp, false)
+    // Register Game Keys
+    this._registerKeys()
     document.addEventListener('mousedown', this._handleMouseDown, false)
   }
 
@@ -140,6 +164,7 @@ class PlayerControls {
   }
   _handleMovements = () => {
     const now = performance.now()
+    const { isOnGround } = this.state
 
     let delta = (now - this.prevTime) / 1000
 
@@ -149,11 +174,13 @@ class PlayerControls {
 
     // Update velocity with inertia
     this.vel.x -= this.vel.x * INERTIA * delta
-    this.vel.y -= this.vel.y * INERTIA * delta
+    if (!isOnGround) this.vel.y -= this.vel.y * INERTIA * delta
     this.vel.z -= this.vel.z * INERTIA * delta
 
     this.vel.add(this.acc)
     this.acc.set(0.0, 0.0, 0.0)
+
+    if (isOnGround) this.vel.y += GRAVITY
 
     if (this.vel.x > HORZ_MAX_SPEED) this.vel.x = HORZ_MAX_SPEED
     else if (this.vel.x < -HORZ_MAX_SPEED) this.vel.x = -HORZ_MAX_SPEED
@@ -168,40 +195,64 @@ class PlayerControls {
   }
   _calculateAccelerations = () => {
     const { diry } = this.getDirections()
+    const { isOnGround, isJumped, isSprinting } = this.state
 
     // Extract movement info for later convenience
     const { up, down, left, right, forward, backward } = this.movements
 
-    if (up)
+    const forw_back_acc =
+      FORW_BACK_ACC *
+      (isOnGround ? FRICTION_COEF : 1) *
+      (isSprinting ? SPRINT_FACTOR : 1)
+    const left_right_acc =
+      LEFT_RIGHT_ACC * (isOnGround && !isJumped ? FRICTION_COEF ** 2 : 1)
+    const vert_acc = VERITCAL_ACC * (isOnGround ? FRICTION_COEF : 1)
+
+    if (up) {
       // TODO: add fly/land mode here
-      this.acc.y += VERITCAL_ACC
-    else if (down) this.acc.y -= VERITCAL_ACC
+      if (!isOnGround) this.acc.y += vert_acc
+      else if (!isJumped) {
+        this.vel.y += JUMP_ACC
+        this.setState({ isJumped: true })
+      }
+    } else if (down) {
+      // TODO: shifting
+      if (!isOnGround) this.acc.y -= vert_acc
+    }
 
     if (left) {
-      this.acc.x += -Math.sin(diry + Math.PI / 2) * HORIZONTAL_ACC
-      this.acc.z += -Math.cos(diry + Math.PI / 2) * HORIZONTAL_ACC
+      this.acc.x += -Math.sin(diry + Math.PI / 2) * left_right_acc
+      this.acc.z += -Math.cos(diry + Math.PI / 2) * left_right_acc
     }
 
     if (right) {
-      this.acc.x += Math.sin(diry + Math.PI / 2) * HORIZONTAL_ACC
-      this.acc.z += Math.cos(diry + Math.PI / 2) * HORIZONTAL_ACC
+      this.acc.x += Math.sin(diry + Math.PI / 2) * left_right_acc
+      this.acc.z += Math.cos(diry + Math.PI / 2) * left_right_acc
     }
 
     if (forward) {
       // TODO: implement sprint here.
-      this.acc.x += -Math.sin(diry) * HORIZONTAL_ACC
-      this.acc.z += -Math.cos(diry) * HORIZONTAL_ACC
+      this.acc.x += -Math.sin(diry) * forw_back_acc
+      this.acc.z += -Math.cos(diry) * forw_back_acc
     }
 
     if (backward) {
-      this.acc.x += Math.sin(diry) * HORIZONTAL_ACC
-      this.acc.z += Math.cos(diry) * HORIZONTAL_ACC
+      this.acc.x += Math.sin(diry) * forw_back_acc
+      this.acc.z += Math.cos(diry) * forw_back_acc
     }
   }
   _handleCollisions = delta => {
+    const { isOnGround, isJumped } = this.state
+
     // AABB
     const playerPos = this.getNormalizedCamPos(10)
     const scaledVel = this.vel.clone().multiplyScalar(delta / DIMENSION)
+
+    const coefPow = isJumped ? 1.8 : 2
+    if (isOnGround) {
+      scaledVel.x *= FRICTION_COEF ** coefPow
+      scaledVel.z *= FRICTION_COEF ** coefPow
+    }
 
     const EPSILON = 1 / 1024
 
@@ -289,7 +340,10 @@ class PlayerControls {
 
         if (voxelExists) {
           if (scaledVel.y > 0) newY = Math.floor(pos_y) - P_I_2_TOP - EPSILON
-          else newY = Math.floor(pos_y) + 1 + P_I_2_TOE + EPSILON
+          else {
+            this.setState({ isOnGround: true, isJumped: false })
+            newY = Math.floor(pos_y) + 1 + P_I_2_TOE + EPSILON
+          }
 
           scaledVel.y = 0
           break
@@ -356,131 +410,128 @@ class PlayerControls {
     position.set(playerPos.x, playerPos.y, playerPos.z)
     position.multiplyScalar(DIMENSION)
   }
-  _handleKeyDown = event => {
-    // TODO: Convert this to a switch statement for game state
-    if (this.chat.enabled) {
-      switch (event.keyCode) {
-        case 13: // enter
-          this.chat.handleEnter()
-          break
+  _registerKeys = () => {
+    /**
+     * CHAT KEYS ('chat-enabled')
+     */
+    this.keyboard.registerKey(13, 'chat-enabled', this.chat.handleEnter)
+    // this.keyboard.registerKey(38, ) // up
+    // this.keyboard.registerKey(40, ) // down
+    this.keyboard.registerKey(37, 'chat-enabled', this.chat.input.left)
+    this.keyboard.registerKey(39, 'chat-enabled', this.chat.input.right)
 
-        case 40: // down
-          break
+    this.keyboard.setScopeDefaultHandler('chat-enabled', event => {
+      const char = String.fromCharCode(event.keyCode)
+      this.chat.input.insert(char)
+    })
 
-        case 38: // up
-          break
-
-        case 37: // left
-          if (this.chat.enabled) this.chat.input.left()
-          break
-
-        case 39: // right
-          if (this.chat.enabled) this.chat.input.right()
-          break
-
-        default:
-          if (this.chat.enabled) {
-            const char = String.fromCharCode(event.keyCode)
-            this.chat.input.insert(char)
-          }
-          break
-      }
-    } else {
-      if (!this.threeControls.isLocked) return
-
-      switch (event.keyCode) {
-        case 49:
-        case 50:
-        case 51:
-        case 52:
-        case 53:
-        case 54:
-        case 55:
-        case 56:
-        case 57: // number keys
-          const index = event.keyCode - 49
-          if (this.inventory.getCursor() !== index) {
-            this.mutateSelf({ cursor: index })
-            this.inventory.switchHotbar(index)
-          }
-          break
-
-        case 87: // w
-          this.movements.forward = true
-          break
-
-        case 65: // a
-          this.movements.left = true
-          break
-
-        case 83: // s
-          this.movements.backward = true
-          break
-
-        case 68: // d
-          this.movements.right = true
-          break
-
-        case 32: {
-          // space
-          this.movements.up = true
-          break
+    /**
+     * IN-GAME KEYS ('in-game')
+     */
+    this.keyboard.registerIndexedKeyGroup(
+      [
+        INVENTORY_KEYS.h1,
+        INVENTORY_KEYS.h2,
+        INVENTORY_KEYS.h3,
+        INVENTORY_KEYS.h4,
+        INVENTORY_KEYS.h5,
+        INVENTORY_KEYS.h6,
+        INVENTORY_KEYS.h7,
+        INVENTORY_KEYS.h8,
+        INVENTORY_KEYS.h9
+      ],
+      'in-game',
+      index => {
+        if (this.player.inventory.getCursor() !== index) {
+          this.player.mutateSelf({ cursor: index })
+          this.player.inventory.switchHotbar(index)
         }
-
-        case 16: // shift
-          this.movements.down = true
-          break
-
-        case 84: // T
-          this.chat.enable()
-          this.threeControls.unlock()
-          break
-
-        default:
-          break
       }
-    }
-  }
-  _handleKeyUp = event => {
-    switch (event.keyCode) {
-      case 87: // w
+    )
+
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.forward,
+      'in-game',
+      () => (this.movements.forward = true),
+      () => {
         this.movements.forward = false
-        break
+        this.setState({ isSprinting: false })
+      },
+      () => this.setState({ isSprinting: true }),
+      { immediate: true }
+    )
 
-      case 65: // a
-        this.movements.left = false
-        break
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.backward,
+      'in-game',
+      () => (this.movements.backward = true),
+      () => (this.movements.backward = false)
+    )
 
-      case 83: // s
-        this.movements.backward = false
-        break
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.left,
+      'in-game',
+      () => (this.movements.left = true),
+      () => (this.movements.left = false)
+    )
 
-      case 68: // d
-        this.movements.right = false
-        break
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.right,
+      'in-game',
+      () => (this.movements.right = true),
+      () => (this.movements.right = false)
+    )
 
-      case 32: {
-        // space
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.jump,
+      'in-game',
+      () => {
+        this.movements.up = true
+      },
+      () => {
         this.movements.up = false
-        break
-      }
+      },
+      () => this.setState({ isOnGround: false })
+    )
 
-      case 16: // shift
-        this.movements.down = false
-        break
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.sneak,
+      'in-game',
+      () => (this.movements.down = true),
+      () => (this.movements.down = false)
+    )
 
-      case 27: // esc
-        // TODO: Fix bug in firefox
+    this.keyboard.registerKey(MULTIPLAYER_KEYS.openChat, 'in-game', () => {
+      this.chat.enable()
+      this.threeControls.unlock()
+    })
+
+    this.keyboard.registerKey(
+      27, // esc
+      'in-game',
+      null,
+      () => {
         if (this.chat.enabled) {
           this.chat.disable()
           if (!this.threeControls.isLocked) this.threeControls.lock()
         } else this.blocker.style.display = 'block'
-        break
+      }
+    )
 
-      default:
-        break
-    }
+    /**
+     * Default ('default')
+     */
+    this.keyboard.registerKey(
+      27, // esc
+      'blocked',
+      null,
+      () => {
+        this.threeControls.lock()
+        this.keyboard.setScope('in-game')
+      }
+    )
   }
+
   _handleMouseDown = e => {
     if (!this.chat.enabled && this.threeControls.isLocked)
       this.mouseKey = e.button

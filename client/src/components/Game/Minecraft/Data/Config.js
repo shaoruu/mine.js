@@ -45,7 +45,7 @@ export default {
     far: 2500
   },
   camera: {
-    fov: 75,
+    fov: 102,
     near: 1,
     far: 2500,
     aspect: 1,
@@ -57,8 +57,10 @@ export default {
     height: 50, // px
     inertia: 5.0,
     acceleration: {
-      horizontal: 22,
-      vertical: 19
+      forwardbackward: 28,
+      leftright: 23,
+      vertical: 26,
+      jump: 190
     },
     maxSpeed: {
       horizontal: 700,
@@ -67,8 +69,8 @@ export default {
     aabb: {
       // Based on block dimension
       width: 0.5,
-      eye2toe: 1.5,
-      eye2top: 0.3,
+      eye2toe: 1.6,
+      eye2top: 0.2,
       depth: 0.5
     },
     coordinateDec: 2,
@@ -77,7 +79,9 @@ export default {
     posZ: 0,
     horzD: 5,
     vertD: 3,
-    reachDst: 7
+    reachDst: 7,
+    frictionCoef: 0.95,
+    sprintFactor: 1.6
   },
   controls: {
     autoRotate: true,
@@ -151,9 +155,32 @@ export default {
   },
   world: {
     noiseConstant: 50,
-    maxWorkerCount: 4
+    maxWorkerCount: 4,
+    gravity: -9.8
   },
   keyboard: {
-    spaceDelta: 300 // ms
+    movements: {
+      forward: 87,
+      backward: 83,
+      left: 65,
+      right: 68,
+      sneak: 16,
+      jump: 32
+    },
+    inventory: {
+      h1: 49,
+      h2: 50,
+      h3: 51,
+      h4: 52,
+      h5: 53,
+      h6: 54,
+      h7: 55,
+      h8: 56,
+      h9: 57
+    },
+    multiplayer: {
+      openChat: 84
+    },
+    dblTimeout: 100 //ms
   }
 }

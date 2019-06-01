@@ -1,7 +1,7 @@
 import Config from '../../../Data/Config'
 import Inventory from './Inventory/Inventory'
-import PlayerControls from './Controls/PlayerControls'
-import PlayerViewpoint from './Controls/PlayerViewpoint'
+import PlayerControls from './Controls/Controls'
+import PlayerViewpoint from './Controls/Viewport'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe,
   COORD_DEC = Config.player.coordinateDec
@@ -46,8 +46,7 @@ export default class Player {
       this.mutateSelf
     )
 
-    this.chat.addControlListener(this.controls.threeControls)
-
+    chat.addControlListener(this.controls.threeControls)
     scene.add(this.controls.getObject())
   }
 

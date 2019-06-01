@@ -17,6 +17,7 @@
 		"graphql-tag": "^2.10.1",
 		"greedy-mesher": "^1.0.3",
 		"js-string-compression": "^1.0.1",
+		"keymaster": "^1.6.2",
 		"ndarray": "^1.0.18",
 		"react": "^16.8.4",
 		"react-apollo": "^2.5.2",
