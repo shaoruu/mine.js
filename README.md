@@ -40,6 +40,32 @@ Javascript.
 - Save worlds
 - Database support
 
+# Installation
+
+Before cloning the repo or doing anything, be sure to install [docker](https://www.docker.com/) and [node](https://nodejs.org/en/) on your computer. After that, run the following commands:
+
+```bash
+# Clone the repo
+git clone https://github.com/ian13456/minecraft.js.git
+
+# Download packages for server and client with:
+npm install
+
+# Start docker containers
+cd server/prisma
+docker-compose up -d
+
+# Start backend service
+cd server
+npm start
+
+# Start frontend service
+cd client
+npm start
+```
+
+After these commands, visit `localhost:3000`
+
 # To-do's
 
 - Lighting
@@ -51,3 +77,5 @@ Javascript.
 - Trivial things such as
   - Block breaking cooldowns
   - Special items (swords, pickaxes)
+- Better UI designs
+- Dockerize the entire project altogether
