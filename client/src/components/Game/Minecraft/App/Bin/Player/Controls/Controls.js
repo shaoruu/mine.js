@@ -86,25 +86,11 @@ class PlayerControls extends Stateful {
   }
 
   initListeners = () => {
-    this.blocker.addEventListener(
-      'click',
-      () => {
-        this.blocker.style.display = 'none'
-        this.keyboard.setScope('in-game')
-        this.threeControls.lock()
-      },
-      false
-    )
+    this.blocker.addEventListener('click', () => this._unblockGame(), false)
 
     this.threeControls.addEventListener(
       'unlock',
-      () => {
-        this._resetMovements()
-        if (!this.chat.enabled) {
-          this.keyboard.setScope('blocked')
-          this.blocker.style.display = 'block'
-        }
-      },
+      () => this._blockGame(),
       false
     )
 
@@ -525,16 +511,26 @@ class PlayerControls extends Stateful {
       27, // esc
       'blocked',
       null,
-      () => {
-        this.threeControls.lock()
-        this.keyboard.setScope('in-game')
-      }
+      () => this._unblockGame()
     )
   }
 
   _handleMouseDown = e => {
     if (!this.chat.enabled && this.threeControls.isLocked)
       this.mouseKey = e.button
+  }
+
+  _unblockGame = () => {
+    this.blocker.style.display = 'none'
+    this.keyboard.setScope('in-game')
+    this.threeControls.lock()
+  }
+  _blockGame = () => {
+    this._resetMovements()
+    if (!this.chat.enabled) {
+      this.keyboard.setScope('blocked')
+      this.blocker.style.display = 'block'
+    }
   }
 }
 
