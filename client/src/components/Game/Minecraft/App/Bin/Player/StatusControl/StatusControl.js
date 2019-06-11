@@ -39,6 +39,10 @@ class StatusControl {
     this.state.isOnGround = true
   }
 
+  registerSprint = () => (this.state.isSprinting = true)
+
+  registerWalk = () => (this.state.isSprinting = false)
+
   get shouldFriction() {
     return !this.state.flying || !this.state.hasJumped
   }
@@ -57,6 +61,10 @@ class StatusControl {
 
   get isOnGround() {
     return this.state.isOnGround
+  }
+
+  get isSprinting() {
+    return this.state.isSprinting
   }
 }
 

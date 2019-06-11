@@ -57,6 +57,7 @@ export default {
     height: 50, // px
     inertia: 5.0,
     fricIntertia: 13.0,
+    sprintFactor: 3,
     acceleration: {
       forwardbackward: 28,
       leftright: 23,

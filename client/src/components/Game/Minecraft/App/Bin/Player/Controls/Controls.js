@@ -10,6 +10,7 @@ const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal,
   VERT_MAX_SPEED = Config.player.maxSpeed.vertical,
   INERTIA = Config.player.inertia,
   FRIC_INERTIA = Config.player.fricIntertia,
+  SPRINT_FACTOR = Config.player.sprintFactor,
   FORW_BACK_ACC = Config.player.acceleration.forwardbackward,
   LEFT_RIGHT_ACC = Config.player.acceleration.leftright,
   VERITCAL_ACC = Config.player.acceleration.vertical,
@@ -195,9 +196,9 @@ class Controls extends Stateful {
       () => (this.movements.forward = true),
       () => {
         this.movements.forward = false
-        this.setState({ isSprinting: false })
+        this.status.registerWalk()
       },
-      () => this.setState({ isSprinting: true }),
+      this.status.registerSprint,
       { immediate: true }
     )
 
@@ -287,7 +288,8 @@ class Controls extends Stateful {
   _handleMovements = () => {
     const now = performance.now()
     const isFlying = this.status.isFlying,
-      shouldGravity = this.status.shouldGravity
+      shouldGravity = this.status.shouldGravity,
+      isSprinting = this.status.isSprinting
 
     let delta = (now - this.prevTime) / 1000
 
@@ -296,9 +298,15 @@ class Controls extends Stateful {
     this._calculateAccelerations()
 
     // Update velocity with inertia
-    this.vel.x -= this.vel.x * (isFlying ? INERTIA : FRIC_INERTIA) * delta
+    this.vel.x -=
+      this.vel.x *
+      (isFlying ? INERTIA : FRIC_INERTIA / (isSprinting ? SPRINT_FACTOR : 1)) *
+      delta
     if (!shouldGravity) this.vel.y -= this.vel.y * INERTIA * delta
-    this.vel.z -= this.vel.z * (isFlying ? INERTIA : FRIC_INERTIA) * delta
+    this.vel.z -=
+      this.vel.z *
+      (isFlying ? INERTIA : FRIC_INERTIA / (isSprinting ? SPRINT_FACTOR : 1)) *
+      delta
 
     this.vel.add(this.acc)
     this.acc.set(0.0, 0.0, 0.0)

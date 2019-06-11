@@ -4,6 +4,7 @@ class State {
     this.flying = flying
     this.hasJumped = false
     this.isOnGround = true
+    this.isSprinting = false
   }
 
   set = obj => {
