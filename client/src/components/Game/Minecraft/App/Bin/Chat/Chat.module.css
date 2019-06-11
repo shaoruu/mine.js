@@ -1,20 +1,21 @@
 .wrapper {
-	position: fixed;
-	top: 0;
-	z-index: 2;
-	visibility: hidden; /* Hidden at first */
-	width: 100vw;
-	height: 100vh;
-	-webkit-user-select: none;
+  position: fixed;
+  top: 0;
+  z-index: 2;
+  visibility: hidden; /* Hidden at first */
+  width: 100vw;
+  height: 100vh;
+  -webkit-user-select: none;
 }
 
 .messagesWrapper {
-	position: fixed;
-	bottom: 45px;
-	left: 0;
-	z-index: 3;
-	width: 500px;
-	height: 500px;
-	background: black;
-	background-color: rgba(0, 0, 0, 0.3);
+  position: fixed;
+  bottom: 75px;
+  left: 0;
+  z-index: 3;
+  width: 600px;
+  height: 500px;
+  margin-left: 5px;
+  background: black;
+  background-color: #00000081;
 }

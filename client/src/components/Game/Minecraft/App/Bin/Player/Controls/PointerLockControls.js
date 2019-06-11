@@ -33,7 +33,9 @@ const PointerLockControls = function(camera, domElement, initPos, initDirs) {
   pitchObject.rotation.x = initDirs.dirx
   yawObject.rotation.y = initDirs.diry
 
-  let PI_2 = Math.PI / 2
+  let shouldFireEvent = true
+
+  const PI_2 = Math.PI / 2
 
   function onMouseMove(event) {
     if (!scope.isLocked) return
@@ -55,8 +57,10 @@ const PointerLockControls = function(camera, domElement, initPos, initDirs) {
   function onPointerlockChange() {
     scope.isLocked = !scope.isLocked
 
-    if (document.pointerLockElement !== scope.domElement)
+    if (document.pointerLockElement !== scope.domElement && shouldFireEvent)
       scope.dispatchEvent({ type: 'unlock' })
+
+    shouldFireEvent = true
   }
 
   function onPointerlockError() {
@@ -106,11 +110,13 @@ const PointerLockControls = function(camera, domElement, initPos, initDirs) {
     }
   })()
 
-  this.lock = function() {
+  this.lock = function(fireEvent = true) {
+    shouldFireEvent = fireEvent
     this.domElement.requestPointerLock()
   }
 
-  this.unlock = function() {
+  this.unlock = function(fireEvent = true) {
+    shouldFireEvent = fireEvent
     document.exitPointerLock()
   }
 

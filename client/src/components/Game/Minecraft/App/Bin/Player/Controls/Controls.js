@@ -9,11 +9,12 @@ import Keyboard from './Keyboard'
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal,
   VERT_MAX_SPEED = Config.player.maxSpeed.vertical,
   INERTIA = Config.player.inertia,
+  FRIC_INERTIA = Config.player.fricIntertia,
   FORW_BACK_ACC = Config.player.acceleration.forwardbackward,
   LEFT_RIGHT_ACC = Config.player.acceleration.leftright,
   VERITCAL_ACC = Config.player.acceleration.vertical,
   JUMP_ACC = Config.player.acceleration.jump,
-  FRICTION_COEF = Config.player.frictionCoef,
+  GRAVITY = Config.world.gravity,
   COORD_DEC = Config.player.coordinateDec,
   DIMENSION = Config.block.dimension,
   P_WIDTH = Config.player.aabb.width,
@@ -24,13 +25,12 @@ const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal,
     movements: MOVEMENT_KEYS,
     inventory: INVENTORY_KEYS,
     multiplayer: MULTIPLAYER_KEYS
-  } = Config.keyboard,
-  GRAVITY = Config.world.gravity,
-  SPRINT_FACTOR = Config.player.sprintFactor
+  } = Config.keyboard
 
-class PlayerControls extends Stateful {
+class Controls extends Stateful {
   constructor(
     player,
+    status,
     world,
     chat,
     camera,
@@ -40,12 +40,6 @@ class PlayerControls extends Stateful {
     initDirs
   ) {
     super()
-
-    this.state = {
-      isOnGround: false,
-      isJumped: false,
-      isSprinting: false
-    }
 
     // Controls
     this.threeControls = new PointerLockControls(
@@ -75,6 +69,7 @@ class PlayerControls extends Stateful {
 
     // Connections to outer space
     this.player = player
+    this.status = status
     this.world = world
     this.chat = chat
     this.blocker = blocker
@@ -86,13 +81,9 @@ class PlayerControls extends Stateful {
   }
 
   initListeners = () => {
-    this.blocker.addEventListener('click', () => this._unblockGame(), false)
+    this.blocker.addEventListener('click', this._unblockGame, false)
 
-    this.threeControls.addEventListener(
-      'unlock',
-      () => this._blockGame(),
-      false
-    )
+    this.threeControls.addEventListener('unlock', this._blockGame, false)
 
     // Register Game Keys
     this._registerKeys()
@@ -132,6 +123,7 @@ class PlayerControls extends Stateful {
       down: false,
       up: false
     })
+
   _handleMouseInputs = () => {
     if (typeof this.mouseKey === 'number') {
       switch (this.mouseKey) {
@@ -148,9 +140,154 @@ class PlayerControls extends Stateful {
       this.mouseKey = null
     }
   }
+
+  _registerKeys = () => {
+    /**
+     * CHAT KEYS ('chat')
+     */
+    this.keyboard.registerKey(13, 'chat', this.chat.handleEnter)
+    // this.keyboard.registerKey(38, ) // up
+    // this.keyboard.registerKey(40, ) // down
+    this.keyboard.registerKey(37, 'chat', this.chat.input.moveLeft)
+    this.keyboard.registerKey(39, 'chat', this.chat.input.moveRight)
+
+    this.keyboard.registerKey(
+      27,
+      'chat',
+      this.chat.disable,
+      this._unblockGame,
+      undefined,
+      { repeat: false }
+    )
+
+    this.keyboard.setScopeDefaultHandler('chat', event => {
+      const char = String.fromCharCode(event.keyCode)
+      this.chat.input.insert(char)
+    })
+
+    /**
+     * moving KEYS ('moving')
+     */
+    this.keyboard.registerIndexedKeyGroup(
+      [
+        INVENTORY_KEYS.h1,
+        INVENTORY_KEYS.h2,
+        INVENTORY_KEYS.h3,
+        INVENTORY_KEYS.h4,
+        INVENTORY_KEYS.h5,
+        INVENTORY_KEYS.h6,
+        INVENTORY_KEYS.h7,
+        INVENTORY_KEYS.h8,
+        INVENTORY_KEYS.h9
+      ],
+      'moving',
+      index => {
+        if (this.player.inventory.getCursor() !== index) {
+          this.player.mutateSelf({ cursor: index })
+          this.player.inventory.switchHotbar(index)
+        }
+      }
+    )
+
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.forward,
+      'moving',
+      () => (this.movements.forward = true),
+      () => {
+        this.movements.forward = false
+        this.setState({ isSprinting: false })
+      },
+      () => this.setState({ isSprinting: true }),
+      { immediate: true }
+    )
+
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.backward,
+      'moving',
+      () => (this.movements.backward = true),
+      () => (this.movements.backward = false)
+    )
+
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.left,
+      'moving',
+      () => (this.movements.left = true),
+      () => (this.movements.left = false)
+    )
+
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.right,
+      'moving',
+      () => (this.movements.right = true),
+      () => (this.movements.right = false)
+    )
+
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.jump,
+      'moving',
+      () => {
+        this.movements.up = true
+      },
+      () => {
+        this.movements.up = false
+      }
+    )
+
+    this.keyboard.registerKey(
+      MOVEMENT_KEYS.sneak,
+      'moving',
+      () => (this.movements.down = true),
+      () => (this.movements.down = false)
+    )
+
+    this.keyboard.registerKey(MULTIPLAYER_KEYS.openChat, 'moving', () => {
+      this.chat.enable()
+      this.threeControls.unlock()
+      this.keyboard.setScope('chat')
+    })
+
+    // this.keyboard.registerKey(
+    //   27, // esc
+    //   'moving',
+    //   undefined,
+    //   () => {
+    //     this.blocker.style.display = 'block'
+    //   },
+    //   undefined,
+    //   { repeat: false }
+    // )
+
+    /**
+     * Not in game ('menu')
+     */
+    this.keyboard.registerKey(
+      27, // esc
+      'menu',
+      undefined,
+      this._unblockGame,
+      undefined,
+      { repeat: false }
+    )
+  }
+
+  _unblockGame = () => {
+    this.blocker.style.display = 'none'
+    this.keyboard.setScope('moving')
+    this.threeControls.lock()
+  }
+
+  _blockGame = () => {
+    this._resetMovements()
+    if (!this.chat.enabled) {
+      this.keyboard.setScope('menu')
+      this.blocker.style.display = 'block'
+    }
+  }
+
   _handleMovements = () => {
     const now = performance.now()
-    const { isOnGround } = this.state
+    const isFlying = this.status.isFlying,
+      shouldGravity = this.status.shouldGravity
 
     let delta = (now - this.prevTime) / 1000
 
@@ -159,14 +296,15 @@ class PlayerControls extends Stateful {
     this._calculateAccelerations()
 
     // Update velocity with inertia
-    this.vel.x -= this.vel.x * INERTIA * delta
-    if (!isOnGround) this.vel.y -= this.vel.y * INERTIA * delta
-    this.vel.z -= this.vel.z * INERTIA * delta
+    this.vel.x -= this.vel.x * (isFlying ? INERTIA : FRIC_INERTIA) * delta
+    if (!shouldGravity) this.vel.y -= this.vel.y * INERTIA * delta
+    this.vel.z -= this.vel.z * (isFlying ? INERTIA : FRIC_INERTIA) * delta
 
     this.vel.add(this.acc)
     this.acc.set(0.0, 0.0, 0.0)
 
-    if (isOnGround) this.vel.y += GRAVITY
+    // APPLY GRAVITY
+    if (shouldGravity && !this.freshlyJumped) this.vel.y += GRAVITY
 
     if (this.vel.x > HORZ_MAX_SPEED) this.vel.x = HORZ_MAX_SPEED
     else if (this.vel.x < -HORZ_MAX_SPEED) this.vel.x = -HORZ_MAX_SPEED
@@ -178,67 +316,51 @@ class PlayerControls extends Stateful {
     this._handleCollisions(delta)
 
     this.prevTime = now
+    this.freshlyJumped = false
   }
+
   _calculateAccelerations = () => {
     const { diry } = this.getDirections()
-    const { isOnGround, isJumped, isSprinting } = this.state
 
     // Extract movement info for later convenience
     const { up, down, left, right, forward, backward } = this.movements
 
-    const forw_back_acc =
-      FORW_BACK_ACC *
-      (isOnGround ? FRICTION_COEF : 1) *
-      (isSprinting ? SPRINT_FACTOR : 1)
-    const left_right_acc =
-      LEFT_RIGHT_ACC * (isOnGround && !isJumped ? FRICTION_COEF ** 2 : 1)
-    const vert_acc = VERITCAL_ACC * (isOnGround ? FRICTION_COEF : 1)
-
     if (up) {
-      // TODO: add fly/land mode here
-      if (!isOnGround) this.acc.y += vert_acc
-      else if (!isJumped) {
-        this.vel.y += JUMP_ACC
-        this.setState({ isJumped: true })
+      if (this.status.isFlying) this.acc.y += VERITCAL_ACC
+      else if (this.status.canJump) {
+        // SURVIVAL MODE
+        this.acc.y += JUMP_ACC
+        this.freshlyJumped = true
+        this.status.registerJump()
       }
-    } else if (down) {
-      // TODO: shifting
-      if (!isOnGround) this.acc.y -= vert_acc
-    }
+    } else if (down) this.acc.y -= VERITCAL_ACC
 
     if (left) {
-      this.acc.x += -Math.sin(diry + Math.PI / 2) * left_right_acc
-      this.acc.z += -Math.cos(diry + Math.PI / 2) * left_right_acc
+      this.acc.x += -Math.sin(diry + Math.PI / 2) * LEFT_RIGHT_ACC
+      this.acc.z += -Math.cos(diry + Math.PI / 2) * LEFT_RIGHT_ACC
     }
 
     if (right) {
-      this.acc.x += Math.sin(diry + Math.PI / 2) * left_right_acc
-      this.acc.z += Math.cos(diry + Math.PI / 2) * left_right_acc
+      this.acc.x += Math.sin(diry + Math.PI / 2) * LEFT_RIGHT_ACC
+      this.acc.z += Math.cos(diry + Math.PI / 2) * LEFT_RIGHT_ACC
     }
 
     if (forward) {
       // TODO: implement sprint here.
-      this.acc.x += -Math.sin(diry) * forw_back_acc
-      this.acc.z += -Math.cos(diry) * forw_back_acc
+      this.acc.x += -Math.sin(diry) * FORW_BACK_ACC
+      this.acc.z += -Math.cos(diry) * FORW_BACK_ACC
     }
 
     if (backward) {
-      this.acc.x += Math.sin(diry) * forw_back_acc
-      this.acc.z += Math.cos(diry) * forw_back_acc
+      this.acc.x += Math.sin(diry) * FORW_BACK_ACC
+      this.acc.z += Math.cos(diry) * FORW_BACK_ACC
     }
   }
-  _handleCollisions = delta => {
-    const { isOnGround, isJumped } = this.state
 
+  _handleCollisions = delta => {
     // AABB
     const playerPos = this.getNormalizedCamPos(10)
     const scaledVel = this.vel.clone().multiplyScalar(delta / DIMENSION)
-
-    const coefPow = isJumped ? 1.8 : 2
-    if (isOnGround) {
-      scaledVel.x *= FRICTION_COEF ** coefPow
-      scaledVel.z *= FRICTION_COEF ** coefPow
-    }
 
     const EPSILON = 1 / 1024
 
@@ -282,7 +404,6 @@ class PlayerControls extends Stateful {
         if (voxelExists) {
           if (scaledVel.x > 0) newX = Math.floor(pos_x) - P_WIDTH / 2 - EPSILON
           else newX = Math.floor(pos_x) + P_WIDTH / 2 + 1 + EPSILON
-          // console.log(playerPos.x)
           scaledVel.x = 0
           break
         }
@@ -327,7 +448,7 @@ class PlayerControls extends Stateful {
         if (voxelExists) {
           if (scaledVel.y > 0) newY = Math.floor(pos_y) - P_I_2_TOP - EPSILON
           else {
-            this.setState({ isOnGround: true, isJumped: false })
+            this.status.registerLand()
             newY = Math.floor(pos_y) + 1 + P_I_2_TOE + EPSILON
           }
 
@@ -396,142 +517,11 @@ class PlayerControls extends Stateful {
     position.set(playerPos.x, playerPos.y, playerPos.z)
     position.multiplyScalar(DIMENSION)
   }
-  _registerKeys = () => {
-    /**
-     * CHAT KEYS ('chat-enabled')
-     */
-    this.keyboard.registerKey(13, 'chat-enabled', this.chat.handleEnter)
-    // this.keyboard.registerKey(38, ) // up
-    // this.keyboard.registerKey(40, ) // down
-    this.keyboard.registerKey(37, 'chat-enabled', this.chat.input.left)
-    this.keyboard.registerKey(39, 'chat-enabled', this.chat.input.right)
-
-    this.keyboard.setScopeDefaultHandler('chat-enabled', event => {
-      const char = String.fromCharCode(event.keyCode)
-      this.chat.input.insert(char)
-    })
-
-    /**
-     * IN-GAME KEYS ('in-game')
-     */
-    this.keyboard.registerIndexedKeyGroup(
-      [
-        INVENTORY_KEYS.h1,
-        INVENTORY_KEYS.h2,
-        INVENTORY_KEYS.h3,
-        INVENTORY_KEYS.h4,
-        INVENTORY_KEYS.h5,
-        INVENTORY_KEYS.h6,
-        INVENTORY_KEYS.h7,
-        INVENTORY_KEYS.h8,
-        INVENTORY_KEYS.h9
-      ],
-      'in-game',
-      index => {
-        if (this.player.inventory.getCursor() !== index) {
-          this.player.mutateSelf({ cursor: index })
-          this.player.inventory.switchHotbar(index)
-        }
-      }
-    )
-
-    this.keyboard.registerKey(
-      MOVEMENT_KEYS.forward,
-      'in-game',
-      () => (this.movements.forward = true),
-      () => {
-        this.movements.forward = false
-        this.setState({ isSprinting: false })
-      },
-      () => this.setState({ isSprinting: true }),
-      { immediate: true }
-    )
-
-    this.keyboard.registerKey(
-      MOVEMENT_KEYS.backward,
-      'in-game',
-      () => (this.movements.backward = true),
-      () => (this.movements.backward = false)
-    )
-
-    this.keyboard.registerKey(
-      MOVEMENT_KEYS.left,
-      'in-game',
-      () => (this.movements.left = true),
-      () => (this.movements.left = false)
-    )
-
-    this.keyboard.registerKey(
-      MOVEMENT_KEYS.right,
-      'in-game',
-      () => (this.movements.right = true),
-      () => (this.movements.right = false)
-    )
-
-    this.keyboard.registerKey(
-      MOVEMENT_KEYS.jump,
-      'in-game',
-      () => {
-        this.movements.up = true
-      },
-      () => {
-        this.movements.up = false
-      },
-      () => this.setState({ isOnGround: false })
-    )
-
-    this.keyboard.registerKey(
-      MOVEMENT_KEYS.sneak,
-      'in-game',
-      () => (this.movements.down = true),
-      () => (this.movements.down = false)
-    )
-
-    this.keyboard.registerKey(MULTIPLAYER_KEYS.openChat, 'in-game', () => {
-      this.chat.enable()
-      this.threeControls.unlock()
-    })
-
-    this.keyboard.registerKey(
-      27, // esc
-      'in-game',
-      null,
-      () => {
-        if (this.chat.enabled) {
-          this.chat.disable()
-          if (!this.threeControls.isLocked) this.threeControls.lock()
-        } else this.blocker.style.display = 'block'
-      }
-    )
-
-    /**
-     * Default ('default')
-     */
-    this.keyboard.registerKey(
-      27, // esc
-      'blocked',
-      null,
-      () => this._unblockGame()
-    )
-  }
 
   _handleMouseDown = e => {
     if (!this.chat.enabled && this.threeControls.isLocked)
       this.mouseKey = e.button
   }
-
-  _unblockGame = () => {
-    this.blocker.style.display = 'none'
-    this.keyboard.setScope('in-game')
-    this.threeControls.lock()
-  }
-  _blockGame = () => {
-    this._resetMovements()
-    if (!this.chat.enabled) {
-      this.keyboard.setScope('blocked')
-      this.blocker.style.display = 'block'
-    }
-  }
 }
 
-export default PlayerControls
+export default Controls

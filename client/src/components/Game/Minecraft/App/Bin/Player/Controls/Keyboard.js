@@ -33,7 +33,7 @@ class Keyboard {
             keyState.onPressed(e)
         } else if (keyState.onPressed) {
           if (
-            (!keyState.config.repeat && keyState.isPressed !== true) ||
+            (!keyState.config.repeat && !keyState.state.isPressed) ||
             keyState.config.repeat
           )
             keyState.onPressed(e)

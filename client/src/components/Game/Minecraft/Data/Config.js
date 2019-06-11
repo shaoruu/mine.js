@@ -56,6 +56,7 @@ export default {
   player: {
     height: 50, // px
     inertia: 5.0,
+    fricIntertia: 13.0,
     acceleration: {
       forwardbackward: 28,
       leftright: 23,
@@ -80,7 +81,6 @@ export default {
     horzD: 5,
     vertD: 3,
     reachDst: 7,
-    frictionCoef: 0.95,
     sprintFactor: 1.6
   },
   controls: {
@@ -104,8 +104,9 @@ export default {
     }
   },
   ambientLight: {
-    enabled: false,
-    color: 0xf0f0f0
+    enabled: true,
+    color: 0xffffff,
+    intensity: 2
   },
   directionalLight: {
     enabled: true,

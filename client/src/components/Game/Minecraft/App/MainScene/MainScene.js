@@ -79,9 +79,9 @@ class MainScene extends Component {
     // Components instantiations
     this.camera = new Camera(this.renderer.threeRenderer)
     this.light = new Light(this.scene)
-    this.light.place('hemi')
+    // this.light.place('hemi')
     this.light.place('ambient')
-    this.light.place('point')
+    // this.light.place('point')
 
     // Stats creation
     this.stats = new Stats()
@@ -100,6 +100,7 @@ class MainScene extends Component {
     // Player initialization
     this.player = new Player(
       this.currentPlayer.id,
+      this.currentPlayer.gamemode,
       this.camera.threeCamera,
       this.scene,
       this.world,
@@ -179,7 +180,7 @@ class MainScene extends Component {
   }
 
   update = () => {
-    this.player.update()
+    if (this.world.isReady) this.player.update()
   }
 
   renderScene = () => {

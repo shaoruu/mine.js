@@ -1,5 +1,7 @@
 .character {
-	font-size: 15px;
-	font-weight: 300;
-	font-family: 'Minecraft';
+  font-size: 15px;
+  font-weight: 300;
+  font-family: 'Minecraft';
+  color: white;
+  height: 17px;
 }

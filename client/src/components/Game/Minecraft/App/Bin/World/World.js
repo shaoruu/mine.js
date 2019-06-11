@@ -50,6 +50,9 @@ class World {
     // Server Communicatin
     this.apolloClient = apolloClient
 
+    // FOR PREPARATION
+    this.isReady = false
+
     this.initWorld(changedBlocks)
   }
 
@@ -129,6 +132,8 @@ class World {
   requestMeshUpdate = ({ coordx, coordy, coordz }) => {
     const updatedChunks = {}
 
+    let allGood = true
+
     for (let x = coordx - horzD; x <= coordx + horzD; x++)
       for (let z = coordz - horzD; z <= coordz + horzD; z++)
         for (let y = coordy - vertD; y <= coordy + vertD; y++) {
@@ -139,9 +144,13 @@ class World {
               coordy: y,
               coordz: z
             })
+            allGood = false
             continue
           }
-          if (tempChunk.loading) continue // Chunk workers are working on it
+          if (tempChunk.loading) {
+            allGood = false
+            continue // Chunk workers are working on it
+          }
 
           // To reach here means the chunk is loaded and meshed.
           updatedChunks[tempChunk.name] = true
@@ -162,6 +171,8 @@ class World {
       }
     })
     shouldBeRemoved.forEach(obj => this.scene.remove(obj))
+
+    if (!this.isReady && allGood) this.isReady = true
   }
 
   /**

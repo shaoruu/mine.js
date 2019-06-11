@@ -1,10 +1,14 @@
 .wrapper {
-	position: fixed;
-	bottom: 0;
-	left: 0;
-	width: 500px;
-	height: 30px;
-	background: rgba(0, 0, 0, 0.3);
-	visibility: hidden;
-	overflow-x: scroll;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: calc(100% - 10px);
+  margin: 5px;
+  height: 29px;
+  background: #00000081;
+  visibility: hidden;
+  padding: 5px;
+  z-index: 3;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
