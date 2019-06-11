@@ -57,12 +57,13 @@ export default {
     height: 50, // px
     inertia: 5.0,
     fricIntertia: 13.0,
-    sprintFactor: 3,
+    inAirInertia: 15,
+    sprintFactor: 1.6,
     acceleration: {
-      forwardbackward: 28,
-      leftright: 23,
+      forward: 28,
+      other_horz: 20,
       vertical: 26,
-      jump: 190
+      jump: 170
     },
     maxSpeed: {
       horizontal: 700,
@@ -81,8 +82,7 @@ export default {
     posZ: 0,
     horzD: 5,
     vertD: 3,
-    reachDst: 7,
-    sprintFactor: 1.6
+    reachDst: 7
   },
   controls: {
     autoRotate: true,
@@ -183,6 +183,9 @@ export default {
     multiplayer: {
       openChat: 84
     },
-    dblTimeout: 100 //ms
+    dblTimeout: 200 //ms
+  },
+  background: {
+    color: 0xdbe8ff
   }
 }

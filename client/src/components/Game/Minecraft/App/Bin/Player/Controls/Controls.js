@@ -10,9 +10,10 @@ const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal,
   VERT_MAX_SPEED = Config.player.maxSpeed.vertical,
   INERTIA = Config.player.inertia,
   FRIC_INERTIA = Config.player.fricIntertia,
+  IN_AIR_INERTIA = Config.player.inAirInertia,
   SPRINT_FACTOR = Config.player.sprintFactor,
-  FORW_BACK_ACC = Config.player.acceleration.forwardbackward,
-  LEFT_RIGHT_ACC = Config.player.acceleration.leftright,
+  FORW_ACC = Config.player.acceleration.forward,
+  OTHER_HORZ_ACC = Config.player.acceleration.other_horz,
   VERITCAL_ACC = Config.player.acceleration.vertical,
   JUMP_ACC = Config.player.acceleration.jump,
   GRAVITY = Config.world.gravity,
@@ -226,12 +227,13 @@ class Controls extends Stateful {
     this.keyboard.registerKey(
       MOVEMENT_KEYS.jump,
       'moving',
+      () => (this.movements.up = true),
+      () => (this.movements.up = false),
       () => {
-        this.movements.up = true
+        if (this.status.canFly && this.status.isCreative)
+          this.status.toggleFly()
       },
-      () => {
-        this.movements.up = false
-      }
+      { immediate: true }
     )
 
     this.keyboard.registerKey(
@@ -247,17 +249,6 @@ class Controls extends Stateful {
       this.keyboard.setScope('chat')
     })
 
-    // this.keyboard.registerKey(
-    //   27, // esc
-    //   'moving',
-    //   undefined,
-    //   () => {
-    //     this.blocker.style.display = 'block'
-    //   },
-    //   undefined,
-    //   { repeat: false }
-    // )
-
     /**
      * Not in game ('menu')
      */
@@ -269,6 +260,12 @@ class Controls extends Stateful {
       undefined,
       { repeat: false }
     )
+
+    /**
+     * DEV TOOLS
+     */
+    this.keyboard.registerKey(66, 'moving', this.status.toggleSprint)
+    this.keyboard.registerKey(78, 'moving', this.status.toggleFly)
   }
 
   _unblockGame = () => {
@@ -288,6 +285,7 @@ class Controls extends Stateful {
   _handleMovements = () => {
     const now = performance.now()
     const isFlying = this.status.isFlying,
+      isOnGround = this.status.isOnGround,
       shouldGravity = this.status.shouldGravity,
       isSprinting = this.status.isSprinting
 
@@ -300,12 +298,18 @@ class Controls extends Stateful {
     // Update velocity with inertia
     this.vel.x -=
       this.vel.x *
-      (isFlying ? INERTIA : FRIC_INERTIA / (isSprinting ? SPRINT_FACTOR : 1)) *
+      (isFlying
+        ? INERTIA
+        : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) /
+          (isSprinting ? SPRINT_FACTOR : 1)) *
       delta
     if (!shouldGravity) this.vel.y -= this.vel.y * INERTIA * delta
     this.vel.z -=
       this.vel.z *
-      (isFlying ? INERTIA : FRIC_INERTIA / (isSprinting ? SPRINT_FACTOR : 1)) *
+      (isFlying
+        ? INERTIA
+        : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) /
+          (isSprinting ? SPRINT_FACTOR : 1)) *
       delta
 
     this.vel.add(this.acc)
@@ -344,24 +348,24 @@ class Controls extends Stateful {
     } else if (down) this.acc.y -= VERITCAL_ACC
 
     if (left) {
-      this.acc.x += -Math.sin(diry + Math.PI / 2) * LEFT_RIGHT_ACC
-      this.acc.z += -Math.cos(diry + Math.PI / 2) * LEFT_RIGHT_ACC
+      this.acc.x += -Math.sin(diry + Math.PI / 2) * OTHER_HORZ_ACC
+      this.acc.z += -Math.cos(diry + Math.PI / 2) * OTHER_HORZ_ACC
     }
 
     if (right) {
-      this.acc.x += Math.sin(diry + Math.PI / 2) * LEFT_RIGHT_ACC
-      this.acc.z += Math.cos(diry + Math.PI / 2) * LEFT_RIGHT_ACC
+      this.acc.x += Math.sin(diry + Math.PI / 2) * OTHER_HORZ_ACC
+      this.acc.z += Math.cos(diry + Math.PI / 2) * OTHER_HORZ_ACC
     }
 
     if (forward) {
       // TODO: implement sprint here.
-      this.acc.x += -Math.sin(diry) * FORW_BACK_ACC
-      this.acc.z += -Math.cos(diry) * FORW_BACK_ACC
+      this.acc.x += -Math.sin(diry) * FORW_ACC
+      this.acc.z += -Math.cos(diry) * FORW_ACC
     }
 
     if (backward) {
-      this.acc.x += Math.sin(diry) * FORW_BACK_ACC
-      this.acc.z += Math.cos(diry) * FORW_BACK_ACC
+      this.acc.x += Math.sin(diry) * OTHER_HORZ_ACC
+      this.acc.z += Math.cos(diry) * OTHER_HORZ_ACC
     }
   }
 
@@ -374,138 +378,142 @@ class Controls extends Stateful {
 
     let newX, newY, newZ
 
-    // X-AXIS COLLISION
-    if (!Helpers.approxEquals(scaledVel.x, 0)) {
-      const min_x = playerPos.x - P_WIDTH / 2
-      const max_x = playerPos.x + P_WIDTH / 2
-      const min_y = Math.floor(playerPos.y - P_I_2_TOE)
-      const max_y = Math.floor(playerPos.y + P_I_2_TOP)
-      const min_z = Math.floor(playerPos.z - P_DEPTH / 2)
-      const max_z = Math.floor(playerPos.z + P_DEPTH / 2)
+    if (!this.status.isSpectator) {
+      // X-AXIS COLLISION
+      if (!Helpers.approxEquals(scaledVel.x, 0)) {
+        const min_x = playerPos.x - P_WIDTH / 2
+        const max_x = playerPos.x + P_WIDTH / 2
+        const min_y = Math.floor(playerPos.y - P_I_2_TOE)
+        const max_y = Math.floor(playerPos.y + P_I_2_TOP)
+        const min_z = Math.floor(playerPos.z - P_DEPTH / 2)
+        const max_z = Math.floor(playerPos.z + P_DEPTH / 2)
 
-      const isPos = scaledVel.x > 0
+        const isPos = scaledVel.x > 0
 
-      let start_x, end_x
-      if (scaledVel.x > 0) {
-        start_x = max_x
-        end_x = max_x + scaledVel.x
-      } else {
-        start_x = min_x + scaledVel.x
-        end_x = min_x
-      }
-
-      for (
-        let pos_x = isPos ? end_x : start_x;
-        isPos ? pos_x >= start_x : pos_x <= end_x;
-        isPos ? pos_x-- : pos_x++
-      ) {
-        let voxelExists = false
-        for (let y = min_y; y <= max_y; y++) {
-          if (voxelExists) break
-          for (let z = min_z; z <= max_z; z++)
-            if (this.world.getVoxelByVoxelCoords(Math.floor(pos_x), y, z)) {
-              voxelExists = true
-              break
-            }
+        let start_x, end_x
+        if (scaledVel.x > 0) {
+          start_x = max_x
+          end_x = max_x + scaledVel.x
+        } else {
+          start_x = min_x + scaledVel.x
+          end_x = min_x
         }
 
-        if (voxelExists) {
-          if (scaledVel.x > 0) newX = Math.floor(pos_x) - P_WIDTH / 2 - EPSILON
-          else newX = Math.floor(pos_x) + P_WIDTH / 2 + 1 + EPSILON
-          scaledVel.x = 0
-          break
-        }
-      }
-    }
-
-    // Y-AXIS COLLISION
-    if (!Helpers.approxEquals(scaledVel.y, 0)) {
-      const min_y = playerPos.y - P_I_2_TOE
-      const max_y = playerPos.y + P_I_2_TOP
-      const min_x = Math.floor(playerPos.x - P_WIDTH / 2)
-      const max_x = Math.floor(playerPos.x + P_WIDTH / 2)
-      const min_z = Math.floor(playerPos.z - P_DEPTH / 2)
-      const max_z = Math.floor(playerPos.z + P_DEPTH / 2)
-
-      const isPos = scaledVel.y > 0
-
-      let start_y, end_y
-      if (scaledVel.y > 0) {
-        start_y = max_y
-        end_y = max_y + scaledVel.y
-      } else {
-        start_y = min_y + scaledVel.y
-        end_y = min_y
-      }
-
-      for (
-        let pos_y = isPos ? end_y : start_y;
-        isPos ? pos_y >= start_y : pos_y <= end_y;
-        isPos ? pos_y-- : pos_y++
-      ) {
-        let voxelExists = false
-        for (let x = min_x; x <= max_x; x++) {
-          if (voxelExists) break
-          for (let z = min_z; z <= max_z; z++)
-            if (this.world.getVoxelByVoxelCoords(x, Math.floor(pos_y), z)) {
-              voxelExists = true
-              break
-            }
-        }
-
-        if (voxelExists) {
-          if (scaledVel.y > 0) newY = Math.floor(pos_y) - P_I_2_TOP - EPSILON
-          else {
-            this.status.registerLand()
-            newY = Math.floor(pos_y) + 1 + P_I_2_TOE + EPSILON
+        for (
+          let pos_x = isPos ? end_x : start_x;
+          isPos ? pos_x >= start_x : pos_x <= end_x;
+          isPos ? pos_x-- : pos_x++
+        ) {
+          let voxelExists = false
+          for (let y = min_y; y <= max_y; y++) {
+            if (voxelExists) break
+            for (let z = min_z; z <= max_z; z++)
+              if (this.world.getVoxelByVoxelCoords(Math.floor(pos_x), y, z)) {
+                voxelExists = true
+                break
+              }
           }
 
-          scaledVel.y = 0
-          break
+          if (voxelExists) {
+            if (scaledVel.x > 0)
+              newX = Math.floor(pos_x) - P_WIDTH / 2 - EPSILON
+            else newX = Math.floor(pos_x) + P_WIDTH / 2 + 1 + EPSILON
+            scaledVel.x = 0
+            break
+          }
         }
       }
-    }
 
-    // Z-AXIS COLLISION
-    if (!Helpers.approxEquals(scaledVel.z, 0)) {
-      const min_z = playerPos.z - P_DEPTH / 2
-      const max_z = playerPos.z + P_DEPTH / 2
-      const min_x = Math.floor(playerPos.x - P_WIDTH / 2)
-      const max_x = Math.floor(playerPos.x + P_WIDTH / 2)
-      const min_y = Math.floor(playerPos.y - P_I_2_TOE)
-      const max_y = Math.floor(playerPos.y + P_I_2_TOP)
+      // Y-AXIS COLLISION
+      if (!Helpers.approxEquals(scaledVel.y, 0)) {
+        const min_y = playerPos.y - P_I_2_TOE
+        const max_y = playerPos.y + P_I_2_TOP
+        const min_x = Math.floor(playerPos.x - P_WIDTH / 2)
+        const max_x = Math.floor(playerPos.x + P_WIDTH / 2)
+        const min_z = Math.floor(playerPos.z - P_DEPTH / 2)
+        const max_z = Math.floor(playerPos.z + P_DEPTH / 2)
 
-      const isPos = scaledVel.z > 0
+        const isPos = scaledVel.y > 0
 
-      let start_z, end_z
-      if (scaledVel.z > 0) {
-        start_z = max_z
-        end_z = max_z + scaledVel.z
-      } else {
-        start_z = min_z + scaledVel.z
-        end_z = min_z
-      }
+        let start_y, end_y
+        if (scaledVel.y > 0) {
+          start_y = max_y
+          end_y = max_y + scaledVel.y
+        } else {
+          start_y = min_y + scaledVel.y
+          end_y = min_y
+        }
 
-      for (
-        let pos_z = isPos ? end_z : start_z;
-        isPos ? pos_z >= start_z : pos_z <= end_z;
-        isPos ? pos_z-- : pos_z++
-      ) {
-        let voxelExists = false
-        for (let x = min_x; x <= max_x; x++) {
-          if (voxelExists) break
-          for (let y = min_y; y <= max_y; y++)
-            if (this.world.getVoxelByVoxelCoords(x, y, Math.floor(pos_z))) {
-              voxelExists = true
-              break
+        for (
+          let pos_y = isPos ? end_y : start_y;
+          isPos ? pos_y >= start_y : pos_y <= end_y;
+          isPos ? pos_y-- : pos_y++
+        ) {
+          let voxelExists = false
+          for (let x = min_x; x <= max_x; x++) {
+            if (voxelExists) break
+            for (let z = min_z; z <= max_z; z++)
+              if (this.world.getVoxelByVoxelCoords(x, Math.floor(pos_y), z)) {
+                voxelExists = true
+                break
+              }
+          }
+
+          if (voxelExists) {
+            if (scaledVel.y > 0) newY = Math.floor(pos_y) - P_I_2_TOP - EPSILON
+            else {
+              this.status.registerLand()
+              newY = Math.floor(pos_y) + 1 + P_I_2_TOE + EPSILON
             }
+
+            scaledVel.y = 0
+            break
+          }
+        }
+      }
+
+      // Z-AXIS COLLISION
+      if (!Helpers.approxEquals(scaledVel.z, 0)) {
+        const min_z = playerPos.z - P_DEPTH / 2
+        const max_z = playerPos.z + P_DEPTH / 2
+        const min_x = Math.floor(playerPos.x - P_WIDTH / 2)
+        const max_x = Math.floor(playerPos.x + P_WIDTH / 2)
+        const min_y = Math.floor(playerPos.y - P_I_2_TOE)
+        const max_y = Math.floor(playerPos.y + P_I_2_TOP)
+
+        const isPos = scaledVel.z > 0
+
+        let start_z, end_z
+        if (scaledVel.z > 0) {
+          start_z = max_z
+          end_z = max_z + scaledVel.z
+        } else {
+          start_z = min_z + scaledVel.z
+          end_z = min_z
         }
 
-        if (voxelExists) {
-          if (scaledVel.z > 0) newZ = Math.floor(pos_z) - P_DEPTH / 2 - EPSILON
-          else newZ = Math.floor(pos_z) + P_DEPTH / 2 + 1 + EPSILON
-          scaledVel.z = 0
-          break
+        for (
+          let pos_z = isPos ? end_z : start_z;
+          isPos ? pos_z >= start_z : pos_z <= end_z;
+          isPos ? pos_z-- : pos_z++
+        ) {
+          let voxelExists = false
+          for (let x = min_x; x <= max_x; x++) {
+            if (voxelExists) break
+            for (let y = min_y; y <= max_y; y++)
+              if (this.world.getVoxelByVoxelCoords(x, y, Math.floor(pos_z))) {
+                voxelExists = true
+                break
+              }
+          }
+
+          if (voxelExists) {
+            if (scaledVel.z > 0)
+              newZ = Math.floor(pos_z) - P_DEPTH / 2 - EPSILON
+            else newZ = Math.floor(pos_z) + P_DEPTH / 2 + 1 + EPSILON
+            scaledVel.z = 0
+            break
+          }
         }
       }
     }

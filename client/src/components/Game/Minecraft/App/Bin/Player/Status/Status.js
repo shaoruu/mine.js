@@ -1,6 +1,6 @@
 import State from './State/State'
 
-class StatusControl {
+class Status {
   constructor(gamemode, player) {
     this.gamemode = gamemode
 
@@ -43,6 +43,12 @@ class StatusControl {
 
   registerWalk = () => (this.state.isSprinting = false)
 
+  registerFly = () => (this.state.flying = true)
+
+  toggleFly = () => (this.state.flying = !this.state.flying)
+
+  toggleSprint = () => (this.state.isSprinting = !this.state.isSprinting)
+
   get shouldFriction() {
     return !this.state.flying || !this.state.hasJumped
   }
@@ -59,6 +65,10 @@ class StatusControl {
     return !this.state.hasJumped
   }
 
+  get canFly() {
+    return this.gamemode === 'CREATIVE' || this.gamemode === 'SPECTATOR'
+  }
+
   get isOnGround() {
     return this.state.isOnGround
   }
@@ -66,6 +76,18 @@ class StatusControl {
   get isSprinting() {
     return this.state.isSprinting
   }
+
+  get isSurvival() {
+    return this.gamemode === 'SURVIVAL'
+  }
+
+  get isCreative() {
+    return this.gamemode === 'CREATIVE'
+  }
+
+  get isSpectator() {
+    return this.gamemode === 'SPECTATOR'
+  }
 }
 
-export default StatusControl
+export default Status

@@ -8,7 +8,7 @@ const DIMENSION = Config.block.dimension,
   REACT_DST = Config.player.reachDst,
   SIZE = Config.chunk.size
 
-class PlayerViewpoint {
+class Viewpoint {
   constructor(scene, camera, controls, world) {
     // Connection to outerspace
     this.scene = scene
@@ -181,4 +181,4 @@ class PlayerViewpoint {
   }
 }
 
-export default PlayerViewpoint
+export default Viewpoint

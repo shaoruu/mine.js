@@ -1,8 +1,8 @@
 import Config from '../../../Data/Config'
 import Inventory from './Inventory/Inventory'
 import PlayerControls from './Controls/Controls'
-import PlayerViewpoint from './Controls/Viewport'
-import StatusControl from './StatusControl/StatusControl'
+import PlayerViewport from './Controls/Viewport'
+import Status from './Status/Status'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe,
   COORD_DEC = Config.player.coordinateDec
@@ -27,12 +27,12 @@ export default class Player {
 
     this.mutatePlayer = mutatePlayer
 
-    this.statusControl = new StatusControl(gamemode, this)
+    this.status = new Status(gamemode, this)
 
     // Control center
     this.controls = new PlayerControls(
       this,
-      this.statusControl,
+      this.status,
       world,
       chat,
       camera,
@@ -41,7 +41,8 @@ export default class Player {
       initPos,
       initDirs
     )
-    this.viewpoint = new PlayerViewpoint(scene, camera, this.controls, world)
+    if (!this.status.isSpectator)
+      this.viewpoint = new PlayerViewport(scene, camera, this.controls, world)
 
     this.inventory = new Inventory(
       container,
@@ -56,7 +57,8 @@ export default class Player {
 
   update = () => {
     this.controls.tick()
-    this.viewpoint.updateTPBlocks()
+
+    if (!this.status.isSpectator) this.viewpoint.updateTPBlocks()
   }
 
   getCoordinates = (dec = COORD_DEC) => {

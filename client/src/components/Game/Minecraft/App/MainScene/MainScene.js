@@ -66,7 +66,7 @@ class MainScene extends Component {
 
     // Main scene creation
     this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(Config.fog.color)
+    this.scene.background = new THREE.Color(Config.background.color)
     this.scene.fog = new THREE.Fog(
       Config.fog.color,
       Config.fog.near,
