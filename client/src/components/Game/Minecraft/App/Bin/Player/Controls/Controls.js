@@ -99,6 +99,8 @@ class Controls extends Stateful {
     document.addEventListener('mouseup', this._handleMouseUp, false)
   }
 
+  registerViewport = viewport => (this.viewport = viewport)
+
   tick = () => {
     this._handleMouseInputs()
     this._handleMovements()
@@ -108,6 +110,7 @@ class Controls extends Stateful {
     if (this.breakBlockCountdown) {
       clearInterval(this.breakBlockCountdown)
       this.breakBlockCountdown = undefined
+      this.viewport.removeBBFromScene()
     }
   }
 
@@ -208,7 +211,9 @@ class Controls extends Stateful {
     // TODO: TOOLS
     const interval = (BLOCK_DICTIONARY[type].break.hand * 1000) / 9
 
-    let counter = 9
+    this.viewport.addBB2Scene()
+
+    let counter = 10
 
     this.breakBlockCountdown = setInterval(() => {
       counter--
@@ -217,6 +222,8 @@ class Controls extends Stateful {
         this.stopBreakingBlock()
         return
       }
+
+      this.viewport.incrementBBStage()
 
       // CHANGE TEXTURE
     }, interval)

@@ -34,6 +34,33 @@ class Viewpoint {
 
     this.scene.add(this.boxhelper)
     this.isWireframed = true
+
+    /**
+     * BLOCK BREAKING ANIMATION
+     */
+    const resources = this.resourceManager.getBlockMat('breaking')
+    this.materialStages = []
+
+    this.materialStages.push([])
+
+    for (let i = 0; i <= 8; i++) {
+      const temp = resources[i]
+      temp.transparent = true
+
+      this.materialStages.push([temp, temp, temp, temp, temp, temp])
+    }
+
+    console.log(this.materialStages)
+
+    this.bbIndex = 0
+
+    const tempGeo = new THREE.BoxBufferGeometry(
+      DIMENSION + 0.2,
+      DIMENSION + 0.2,
+      DIMENSION + 0.2
+    )
+    this.bb = new THREE.Mesh(tempGeo, this.materialStages[this.bbIndex])
+    this.bb.name = 'bb'
   }
 
   updateTPBlocks = () => {
@@ -59,6 +86,8 @@ class Viewpoint {
 
         this.boxhelper.setFromObject(this.highlighter)
 
+        this.bb.position.set(x, y, z)
+
         this.controls.stopBreakingBlock()
       }
 
@@ -75,6 +104,31 @@ class Viewpoint {
         this.isWireframed = false
       }
     }
+  }
+
+  addBB2Scene = () => this.scene.add(this.bb)
+
+  removeBBFromScene = () => {
+    const obj = this.scene.getObjectByName('bb')
+
+    if (obj) this.scene.remove(obj)
+
+    this.bbIndex = 0
+    this.bb.material = this.materialStages[this.bbIndex]
+  }
+
+  incrementBBStage = () => {
+    if (this.bbIndex >= 8) return
+    this.bbIndex++
+
+    this.bb.material = this.materialStages[this.bbIndex]
+  }
+
+  decrementBBStage = () => {
+    if (this.bbIndex <= 0) return
+    this.bbIndex++
+
+    this.bb.material = this.materialStages[this.bbIndex]
   }
 
   /**

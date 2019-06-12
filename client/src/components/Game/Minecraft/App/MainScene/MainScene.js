@@ -100,7 +100,7 @@ class MainScene extends Component {
     // Player initialization
     this.player = new Player(
       this.currentPlayer.id,
-      'CREATIVE',
+      this.currentPlayer.gamemode,
       this.camera.threeCamera,
       this.scene,
       this.world,

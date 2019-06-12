@@ -97,8 +97,7 @@ export default {
         5: require('../../../../../assets/blocks/destroy_stage_5.png'),
         6: require('../../../../../assets/blocks/destroy_stage_6.png'),
         7: require('../../../../../assets/blocks/destroy_stage_7.png'),
-        8: require('../../../../../assets/blocks/destroy_stage_8.png'),
-        9: require('../../../../../assets/blocks/destroy_stage_9.png')
+        8: require('../../../../../assets/blocks/destroy_stage_8.png')
       }
     }
   }

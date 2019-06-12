@@ -41,14 +41,16 @@ export default class Player {
       initPos,
       initDirs
     )
-    if (!this.status.isSpectator)
-      this.viewpoint = new PlayerViewport(
+    if (!this.status.isSpectator) {
+      this.viewport = new PlayerViewport(
         scene,
         camera,
         this.controls,
         world,
         resourceManager
       )
+      this.controls.registerViewport(this.viewport)
+    }
 
     this.inventory = new Inventory(
       container,
@@ -64,7 +66,7 @@ export default class Player {
   update = () => {
     this.controls.tick()
 
-    if (!this.status.isSpectator) this.viewpoint.updateTPBlocks()
+    if (!this.status.isSpectator) this.viewport.updateTPBlocks()
   }
 
   getCoordinates = (dec = COORD_DEC) => {
