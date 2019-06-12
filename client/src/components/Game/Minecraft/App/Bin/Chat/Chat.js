@@ -35,7 +35,6 @@ class Chat {
 
   handleEnter = () => {
     console.log(this.input.entireLine)
-    this.input.reset()
   }
 
   getGui = () => this.gui.textbox
@@ -44,10 +43,13 @@ class Chat {
   }
 
   enable = () => {
+    if (this.disappearTimer) clearTimeout(this.disappearTimer)
+
     this.state.enabled = true
 
     const enabledStyle = {
-      visibility: 'visible'
+      opacity: '1',
+      transition: 'all 0s ease 0s'
     }
 
     Helpers.applyStyle(this.gui.wrapper, enabledStyle)
@@ -59,11 +61,20 @@ class Chat {
     this.input.reset()
 
     const disabledStyle = {
-      visibility: 'hidden'
-    }
+        transition: 'opacity 1s ease-out',
+        opacity: '0'
+      },
+      halfDisabledStyle = {
+        opacity: '0.8'
+      }
 
-    Helpers.applyStyle(this.gui.wrapper, disabledStyle)
     Helpers.applyStyle(this.input.getGUI(), disabledStyle)
+    Helpers.applyStyle(this.gui.wrapper, halfDisabledStyle)
+
+    this.disappearTimer = setTimeout(() => {
+      Helpers.applyStyle(this.gui.wrapper, disabledStyle)
+      this.disappearTimer = undefined
+    }, 3000)
   }
 
   toggle = () => {

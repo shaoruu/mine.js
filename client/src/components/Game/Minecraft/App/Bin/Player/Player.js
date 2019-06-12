@@ -42,7 +42,13 @@ export default class Player {
       initDirs
     )
     if (!this.status.isSpectator)
-      this.viewpoint = new PlayerViewport(scene, camera, this.controls, world)
+      this.viewpoint = new PlayerViewport(
+        scene,
+        camera,
+        this.controls,
+        world,
+        resourceManager
+      )
 
     this.inventory = new Inventory(
       container,

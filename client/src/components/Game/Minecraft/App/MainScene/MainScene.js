@@ -100,7 +100,7 @@ class MainScene extends Component {
     // Player initialization
     this.player = new Player(
       this.currentPlayer.id,
-      this.currentPlayer.gamemode,
+      'CREATIVE',
       this.camera.threeCamera,
       this.scene,
       this.world,
@@ -201,7 +201,7 @@ class MainScene extends Component {
 
   closingHandler = ev => {
     ev.preventDefault()
-    return (ev.returnValue = 'Are you sure you want to close?')
+    ev.returnValue = 'Are you sure you want to close?'
   }
 
   onWindowResize = () => {

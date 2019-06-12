@@ -9,12 +9,13 @@ const DIMENSION = Config.block.dimension,
   SIZE = Config.chunk.size
 
 class Viewpoint {
-  constructor(scene, camera, controls, world) {
+  constructor(scene, camera, controls, world, resourceManager) {
     // Connection to outerspace
     this.scene = scene
     this.camera = camera
     this.controls = controls
     this.world = world
+    this.resourceManager = resourceManager
 
     this.initGeoms()
   }
@@ -41,11 +42,11 @@ class Viewpoint {
     if (blockInfo) {
       const { target, targetwf, potential } = blockInfo
 
+      const { x, y, z } = targetwf
+
       // Signal to world
       this.world.setTarget(target)
       this.world.setPotential(potential)
-
-      const { x, y, z } = targetwf
 
       if (
         x !== this.highlighter.position.x ||
@@ -55,9 +56,12 @@ class Viewpoint {
         this.highlighter.position.x = x
         this.highlighter.position.y = y
         this.highlighter.position.z = z
+
+        this.boxhelper.setFromObject(this.highlighter)
+
+        this.controls.stopBreakingBlock()
       }
 
-      this.boxhelper.setFromObject(this.highlighter)
       if (!this.isWireframed) this.scene.add(this.boxhelper)
     } else {
       const obj = this.scene.getObjectByName('wireframe')

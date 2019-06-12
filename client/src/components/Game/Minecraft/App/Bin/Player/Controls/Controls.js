@@ -9,6 +9,7 @@ import Keyboard from './Keyboard'
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal,
   VERT_MAX_SPEED = Config.player.maxSpeed.vertical,
   INERTIA = Config.player.inertia,
+  SPECTATOR_INERTIA = Config.player.inertia,
   FRIC_INERTIA = Config.player.fricIntertia,
   IN_AIR_INERTIA = Config.player.inAirInertia,
   SPRINT_FACTOR = Config.player.sprintFactor,
@@ -23,6 +24,7 @@ const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal,
   P_DEPTH = Config.player.aabb.depth,
   P_I_2_TOE = Config.player.aabb.eye2toe,
   P_I_2_TOP = Config.player.aabb.eye2top,
+  BLOCK_DICTIONARY = Config.dictionary.block,
   {
     movements: MOVEMENT_KEYS,
     inventory: INVENTORY_KEYS,
@@ -76,6 +78,10 @@ class Controls extends Stateful {
     this.chat = chat
     this.blocker = blocker
 
+    // Internal checks
+    this.canBreakBlock = true
+    this.canPlaceBlock = true
+
     // Others
     this.prevTime = performance.now()
 
@@ -90,11 +96,19 @@ class Controls extends Stateful {
     // Register Game Keys
     this._registerKeys()
     document.addEventListener('mousedown', this._handleMouseDown, false)
+    document.addEventListener('mouseup', this._handleMouseUp, false)
   }
 
   tick = () => {
     this._handleMouseInputs()
     this._handleMovements()
+  }
+
+  stopBreakingBlock = () => {
+    if (this.breakBlockCountdown) {
+      clearInterval(this.breakBlockCountdown)
+      this.breakBlockCountdown = undefined
+    }
   }
 
   /**
@@ -129,25 +143,100 @@ class Controls extends Stateful {
   _handleMouseInputs = () => {
     if (typeof this.mouseKey === 'number') {
       switch (this.mouseKey) {
-        case 0: // Left Key
-          this.world.breakBlock()
+        case 0: {
+          // Left Key
+          if (this.status.isCreative && this.canBreakBlock) {
+            this.world.breakBlock(false)
+
+            this.canBreakBlock = false
+            setTimeout(() => {
+              this.canBreakBlock = true
+            }, 200)
+          } else if (this.status.isSurvival && !this.breakBlockCountdown)
+            this._startBreakingBlock()
           break
-        case 2: // Right Key
+        }
+        case 2: {
+          // Right Key
+          if (!this.canPlaceBlock) break
+
           const type = this.player.inventory.getHand()
-          if (type) this.world.placeBlock(type)
+
+          if (!type) return
+
+          // TODO: CHECK IF BLOCK IS PLACABLE
+          if (this.status.isCreative) this.world.placeBlock(type, false)
+          else if (this.status.isSurvival) this.world.placeBlock(type)
+
+          this.canPlaceBlock = false
+          setTimeout(() => {
+            this.canPlaceBlock = true
+          }, 200)
+
           break
+        }
         default:
           break
       }
-      this.mouseKey = null
     }
+  }
+
+  _handleMouseDown = e => {
+    if (!this.chat.enabled && this.threeControls.isLocked)
+      this.mouseKey = e.button
+  }
+
+  _handleMouseUp = e => {
+    if (!this.chat.enabled && this.threeControls.isLocked) {
+      this.mouseKey = null
+      if (e.button === 0) this.stopBreakingBlock()
+      if (this.status.isCreative) {
+        this.canBreakBlock = true
+        this.canPlaceBlock = true
+      }
+    }
+  }
+
+  _startBreakingBlock = () => {
+    const info = this.world.getTargetBlockInfo()
+
+    if (!info) return
+
+    const { type } = info
+
+    if (type === 0) return
+    // TODO: TOOLS
+    const interval = (BLOCK_DICTIONARY[type].break.hand * 1000) / 9
+
+    let counter = 9
+
+    this.breakBlockCountdown = setInterval(() => {
+      counter--
+      if (counter === 0) {
+        this.world.breakBlock()
+        this.stopBreakingBlock()
+        return
+      }
+
+      // CHANGE TEXTURE
+    }, interval)
   }
 
   _registerKeys = () => {
     /**
      * CHAT KEYS ('chat')
      */
-    this.keyboard.registerKey(13, 'chat', this.chat.handleEnter)
+    this.keyboard.registerKey(
+      13,
+      'chat',
+      () => {
+        this.chat.handleEnter()
+        this.chat.disable()
+      },
+      this._unblockGame,
+      undefined,
+      { repeat: false }
+    )
     // this.keyboard.registerKey(38, ) // up
     // this.keyboard.registerKey(40, ) // down
     this.keyboard.registerKey(37, 'chat', this.chat.input.moveLeft)
@@ -287,7 +376,8 @@ class Controls extends Stateful {
     const isFlying = this.status.isFlying,
       isOnGround = this.status.isOnGround,
       shouldGravity = this.status.shouldGravity,
-      isSprinting = this.status.isSprinting
+      isSprinting = this.status.isSprinting,
+      isSpectator = this.status.isSpectator
 
     let delta = (now - this.prevTime) / 1000
 
@@ -299,7 +389,9 @@ class Controls extends Stateful {
     this.vel.x -=
       this.vel.x *
       (isFlying
-        ? INERTIA
+        ? isSpectator
+          ? SPECTATOR_INERTIA
+          : INERTIA
         : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) /
           (isSprinting ? SPRINT_FACTOR : 1)) *
       delta
@@ -307,7 +399,9 @@ class Controls extends Stateful {
     this.vel.z -=
       this.vel.z *
       (isFlying
-        ? INERTIA
+        ? isSpectator
+          ? SPECTATOR_INERTIA
+          : INERTIA
         : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) /
           (isSprinting ? SPRINT_FACTOR : 1)) *
       delta
@@ -374,157 +468,18 @@ class Controls extends Stateful {
     const playerPos = this.getNormalizedCamPos(10)
     const scaledVel = this.vel.clone().multiplyScalar(delta / DIMENSION)
 
-    const EPSILON = 1 / 1024
-
-    let newX, newY, newZ
-
     if (!this.status.isSpectator) {
-      // X-AXIS COLLISION
-      if (!Helpers.approxEquals(scaledVel.x, 0)) {
-        const min_x = playerPos.x - P_WIDTH / 2
-        const max_x = playerPos.x + P_WIDTH / 2
-        const min_y = Math.floor(playerPos.y - P_I_2_TOE)
-        const max_y = Math.floor(playerPos.y + P_I_2_TOP)
-        const min_z = Math.floor(playerPos.z - P_DEPTH / 2)
-        const max_z = Math.floor(playerPos.z + P_DEPTH / 2)
+      const EPSILON = 1 / 1024
 
-        const isPos = scaledVel.x > 0
-
-        let start_x, end_x
-        if (scaledVel.x > 0) {
-          start_x = max_x
-          end_x = max_x + scaledVel.x
-        } else {
-          start_x = min_x + scaledVel.x
-          end_x = min_x
-        }
-
-        for (
-          let pos_x = isPos ? end_x : start_x;
-          isPos ? pos_x >= start_x : pos_x <= end_x;
-          isPos ? pos_x-- : pos_x++
-        ) {
-          let voxelExists = false
-          for (let y = min_y; y <= max_y; y++) {
-            if (voxelExists) break
-            for (let z = min_z; z <= max_z; z++)
-              if (this.world.getVoxelByVoxelCoords(Math.floor(pos_x), y, z)) {
-                voxelExists = true
-                break
-              }
-          }
-
-          if (voxelExists) {
-            if (scaledVel.x > 0)
-              newX = Math.floor(pos_x) - P_WIDTH / 2 - EPSILON
-            else newX = Math.floor(pos_x) + P_WIDTH / 2 + 1 + EPSILON
-            scaledVel.x = 0
-            break
-          }
-        }
+      if (Math.abs(scaledVel.x) > Math.abs(scaledVel.z)) {
+        this._handleXCollision(playerPos, scaledVel, EPSILON)
+        this._handleZCollision(playerPos, scaledVel, EPSILON)
+      } else {
+        this._handleZCollision(playerPos, scaledVel, EPSILON)
+        this._handleXCollision(playerPos, scaledVel, EPSILON)
       }
-
-      // Y-AXIS COLLISION
-      if (!Helpers.approxEquals(scaledVel.y, 0)) {
-        const min_y = playerPos.y - P_I_2_TOE
-        const max_y = playerPos.y + P_I_2_TOP
-        const min_x = Math.floor(playerPos.x - P_WIDTH / 2)
-        const max_x = Math.floor(playerPos.x + P_WIDTH / 2)
-        const min_z = Math.floor(playerPos.z - P_DEPTH / 2)
-        const max_z = Math.floor(playerPos.z + P_DEPTH / 2)
-
-        const isPos = scaledVel.y > 0
-
-        let start_y, end_y
-        if (scaledVel.y > 0) {
-          start_y = max_y
-          end_y = max_y + scaledVel.y
-        } else {
-          start_y = min_y + scaledVel.y
-          end_y = min_y
-        }
-
-        for (
-          let pos_y = isPos ? end_y : start_y;
-          isPos ? pos_y >= start_y : pos_y <= end_y;
-          isPos ? pos_y-- : pos_y++
-        ) {
-          let voxelExists = false
-          for (let x = min_x; x <= max_x; x++) {
-            if (voxelExists) break
-            for (let z = min_z; z <= max_z; z++)
-              if (this.world.getVoxelByVoxelCoords(x, Math.floor(pos_y), z)) {
-                voxelExists = true
-                break
-              }
-          }
-
-          if (voxelExists) {
-            if (scaledVel.y > 0) newY = Math.floor(pos_y) - P_I_2_TOP - EPSILON
-            else {
-              this.status.registerLand()
-              newY = Math.floor(pos_y) + 1 + P_I_2_TOE + EPSILON
-            }
-
-            scaledVel.y = 0
-            break
-          }
-        }
-      }
-
-      // Z-AXIS COLLISION
-      if (!Helpers.approxEquals(scaledVel.z, 0)) {
-        const min_z = playerPos.z - P_DEPTH / 2
-        const max_z = playerPos.z + P_DEPTH / 2
-        const min_x = Math.floor(playerPos.x - P_WIDTH / 2)
-        const max_x = Math.floor(playerPos.x + P_WIDTH / 2)
-        const min_y = Math.floor(playerPos.y - P_I_2_TOE)
-        const max_y = Math.floor(playerPos.y + P_I_2_TOP)
-
-        const isPos = scaledVel.z > 0
-
-        let start_z, end_z
-        if (scaledVel.z > 0) {
-          start_z = max_z
-          end_z = max_z + scaledVel.z
-        } else {
-          start_z = min_z + scaledVel.z
-          end_z = min_z
-        }
-
-        for (
-          let pos_z = isPos ? end_z : start_z;
-          isPos ? pos_z >= start_z : pos_z <= end_z;
-          isPos ? pos_z-- : pos_z++
-        ) {
-          let voxelExists = false
-          for (let x = min_x; x <= max_x; x++) {
-            if (voxelExists) break
-            for (let y = min_y; y <= max_y; y++)
-              if (this.world.getVoxelByVoxelCoords(x, y, Math.floor(pos_z))) {
-                voxelExists = true
-                break
-              }
-          }
-
-          if (voxelExists) {
-            if (scaledVel.z > 0)
-              newZ = Math.floor(pos_z) - P_DEPTH / 2 - EPSILON
-            else newZ = Math.floor(pos_z) + P_DEPTH / 2 + 1 + EPSILON
-            scaledVel.z = 0
-            break
-          }
-        }
-      }
+      this._handleYCollision(playerPos, scaledVel, EPSILON)
     }
-
-    if (newX) playerPos.x = newX
-    if (newY) playerPos.y = newY
-    if (newZ) playerPos.z = newZ
-
-    playerPos.x += scaledVel.x
-    playerPos.y += scaledVel.y
-    playerPos.z += scaledVel.z
 
     scaledVel.multiplyScalar(DIMENSION / delta)
     this.vel.copy(scaledVel)
@@ -534,9 +489,161 @@ class Controls extends Stateful {
     position.multiplyScalar(DIMENSION)
   }
 
-  _handleMouseDown = e => {
-    if (!this.chat.enabled && this.threeControls.isLocked)
-      this.mouseKey = e.button
+  _handleXCollision = (playerPos, scaledVel, EPSILON) => {
+    // X-AXIS COLLISION
+    let newX
+
+    if (!Helpers.approxEquals(scaledVel.x, 0)) {
+      const min_x = playerPos.x - P_WIDTH / 2
+      const max_x = playerPos.x + P_WIDTH / 2
+      const min_y = Math.floor(playerPos.y - P_I_2_TOE)
+      const max_y = Math.floor(playerPos.y + P_I_2_TOP)
+      const min_z = Math.floor(playerPos.z - P_DEPTH / 2)
+      const max_z = Math.floor(playerPos.z + P_DEPTH / 2)
+
+      const isPos = scaledVel.x > 0
+
+      let start_x, end_x
+      if (scaledVel.x > 0) {
+        start_x = max_x
+        end_x = max_x + scaledVel.x
+      } else {
+        start_x = min_x + scaledVel.x
+        end_x = min_x
+      }
+
+      for (
+        let pos_x = isPos ? end_x : start_x;
+        isPos ? pos_x >= start_x : pos_x <= end_x;
+        isPos ? pos_x-- : pos_x++
+      ) {
+        let voxelExists = false
+        for (let y = min_y; y <= max_y; y++) {
+          if (voxelExists) break
+          for (let z = min_z; z <= max_z; z++)
+            if (this.world.getVoxelByVoxelCoords(Math.floor(pos_x), y, z)) {
+              voxelExists = true
+              break
+            }
+        }
+
+        if (voxelExists) {
+          if (scaledVel.x > 0) newX = Math.floor(pos_x) - P_WIDTH / 2 - EPSILON
+          else newX = Math.floor(pos_x) + P_WIDTH / 2 + 1 + EPSILON
+          scaledVel.x = 0
+          break
+        }
+      }
+    }
+
+    if (newX) playerPos.x = newX
+    playerPos.x += scaledVel.x
+  }
+
+  _handleYCollision = (playerPos, scaledVel, EPSILON) => {
+    // Y-AXIS COLLISION
+    let newY
+
+    if (!Helpers.approxEquals(scaledVel.y, 0)) {
+      const min_y = playerPos.y - P_I_2_TOE
+      const max_y = playerPos.y + P_I_2_TOP
+      const min_x = Math.floor(playerPos.x - P_WIDTH / 2)
+      const max_x = Math.floor(playerPos.x + P_WIDTH / 2)
+      const min_z = Math.floor(playerPos.z - P_DEPTH / 2)
+      const max_z = Math.floor(playerPos.z + P_DEPTH / 2)
+
+      const isPos = scaledVel.y > 0
+
+      let start_y, end_y
+      if (scaledVel.y > 0) {
+        start_y = max_y
+        end_y = max_y + scaledVel.y
+      } else {
+        start_y = min_y + scaledVel.y
+        end_y = min_y
+      }
+
+      for (
+        let pos_y = isPos ? end_y : start_y;
+        isPos ? pos_y >= start_y : pos_y <= end_y;
+        isPos ? pos_y-- : pos_y++
+      ) {
+        let voxelExists = false
+        for (let x = min_x; x <= max_x; x++) {
+          if (voxelExists) break
+          for (let z = min_z; z <= max_z; z++)
+            if (this.world.getVoxelByVoxelCoords(x, Math.floor(pos_y), z)) {
+              voxelExists = true
+              break
+            }
+        }
+
+        if (voxelExists) {
+          if (scaledVel.y > 0) newY = Math.floor(pos_y) - P_I_2_TOP - EPSILON
+          else {
+            this.status.registerLand()
+            newY = Math.floor(pos_y) + 1 + P_I_2_TOE + EPSILON
+          }
+
+          scaledVel.y = 0
+          break
+        }
+      }
+    }
+
+    if (newY) playerPos.y = newY
+    playerPos.y += scaledVel.y
+  }
+
+  _handleZCollision = (playerPos, scaledVel, EPSILON) => {
+    // Z-AXIS COLLISION
+    let newZ
+
+    if (!Helpers.approxEquals(scaledVel.z, 0)) {
+      const min_z = playerPos.z - P_DEPTH / 2
+      const max_z = playerPos.z + P_DEPTH / 2
+      const min_x = Math.floor(playerPos.x - P_WIDTH / 2)
+      const max_x = Math.floor(playerPos.x + P_WIDTH / 2)
+      const min_y = Math.floor(playerPos.y - P_I_2_TOE)
+      const max_y = Math.floor(playerPos.y + P_I_2_TOP)
+
+      const isPos = scaledVel.z > 0
+
+      let start_z, end_z
+      if (scaledVel.z > 0) {
+        start_z = max_z
+        end_z = max_z + scaledVel.z
+      } else {
+        start_z = min_z + scaledVel.z
+        end_z = min_z
+      }
+
+      for (
+        let pos_z = isPos ? end_z : start_z;
+        isPos ? pos_z >= start_z : pos_z <= end_z;
+        isPos ? pos_z-- : pos_z++
+      ) {
+        let voxelExists = false
+        for (let x = min_x; x <= max_x; x++) {
+          if (voxelExists) break
+          for (let y = min_y; y <= max_y; y++)
+            if (this.world.getVoxelByVoxelCoords(x, y, Math.floor(pos_z))) {
+              voxelExists = true
+              break
+            }
+        }
+
+        if (voxelExists) {
+          if (scaledVel.z > 0) newZ = Math.floor(pos_z) - P_DEPTH / 2 - EPSILON
+          else newZ = Math.floor(pos_z) + P_DEPTH / 2 + 1 + EPSILON
+          scaledVel.z = 0
+          break
+        }
+      }
+    }
+
+    if (newZ) playerPos.z = newZ
+    playerPos.z += scaledVel.z
   }
 }
 

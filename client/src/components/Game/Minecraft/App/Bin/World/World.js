@@ -9,17 +9,15 @@ import WorkerPool from '../Workers/WorkerPool'
 import TaskQueue from '../Workers/TaskQueue'
 import Chat from '../Chat/Chat'
 
-const size = Config.chunk.size,
-  height = Config.chunk.height,
-  horzD = Config.player.horzD,
-  vertD = Config.player.vertD,
-  noiseConstant = Config.world.noiseConstant
+const SIZE = Config.chunk.size,
+  HEIGHT = Config.chunk.height,
+  HORZ_D = Config.player.horzD,
+  VERT_D = Config.player.vertD,
+  NOISE_CONSTANT = Config.world.noiseConstant
 
 class World {
   constructor(id, scene, worldData, apolloClient, resourceManager, container) {
     const { seed, name, changedBlocks } = worldData
-
-    this.chunkDimension = Config.chunk.size * Config.block.dimension
 
     // Chat
     this.chat = new Chat(container)
@@ -134,9 +132,9 @@ class World {
 
     let allGood = true
 
-    for (let x = coordx - horzD; x <= coordx + horzD; x++)
-      for (let z = coordz - horzD; z <= coordz + horzD; z++)
-        for (let y = coordy - vertD; y <= coordy + vertD; y++) {
+    for (let x = coordx - HORZ_D; x <= coordx + HORZ_D; x++)
+      for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++)
+        for (let y = coordy - VERT_D; y <= coordy + VERT_D; y++) {
           let tempChunk = this.chunks[Helpers.getCoordsRepresentation(x, y, z)]
           if (!tempChunk) {
             this.registerChunk({
@@ -195,9 +193,9 @@ class World {
       seed: this.seed,
       changedBlocks: this.changedBlocks,
       configs: {
-        noiseConstant,
-        size,
-        height,
+        noiseConstant: NOISE_CONSTANT,
+        size: SIZE,
+        height: HEIGHT,
         stride: newChunk.grid.stride,
         chunkName: newChunk.name
       },
@@ -211,11 +209,11 @@ class World {
    * Stacks the tasks of breaking a block and regenerating the chunk
    * mesh onto the task queue and hands the player the broken block.
    */
-  breakBlock = () => {
+  breakBlock = (shouldGetBlock = true) => {
     if (!this.targetBlock) return // do nothing if no blocks are selected
 
     const todo = obtainedType => {
-      if (obtainedType === 0) return
+      if (obtainedType === 0 || !shouldGetBlock) return
       this.player.obtain(obtainedType, 1)
     }
 
@@ -226,11 +224,11 @@ class World {
    * Stacks the tasks of placing a block and regenerating the chunk
    * mesh onto the task queue and takes a block from the players hand.
    */
-  placeBlock = type => {
+  placeBlock = (type, shouldTakeBlock = true) => {
     if (!this.potentialBlock) return
 
     const todo = () => {
-      this.player.takeFromHand(1)
+      if (shouldTakeBlock) this.player.takeFromHand(1)
     }
 
     this.updateBlock(type, this.potentialBlock, todo)
@@ -253,9 +251,9 @@ class World {
     } = blockData
 
     const mappedBlock = {
-      x: cx * size + block.x,
-      y: cy * size + block.y,
-      z: cz * size + block.z
+      x: cx * SIZE + block.x,
+      y: cy * SIZE + block.y,
+      z: cz * SIZE + block.z
     }
 
     const parentChunk = this.getChunkByCoords(cx, cy, cz)
@@ -310,9 +308,9 @@ class World {
       // If block is either on 0 or size, that means it has effects on neighboring chunks too.
       if (nb[a] === 0) {
         nc[c] -= 1
-        nb[a] = size
+        nb[a] = SIZE
         neighborAffected = true
-      } else if (nb[a] === size - 1) {
+      } else if (nb[a] === SIZE - 1) {
         nc[c] += 1
         nb[a] = -1
         neighborAffected = true
@@ -333,7 +331,7 @@ class World {
             data: neighborChunk.grid.data,
             block: nb,
             configs: {
-              size,
+              size: SIZE,
               stride: neighborChunk.grid.stride,
               chunkName: neighborChunk.name
             }
@@ -349,7 +347,7 @@ class World {
         data: targetChunk.grid.data,
         block: chunkBlock,
         configs: {
-          size,
+          size: SIZE,
           stride: targetChunk.grid.stride,
           chunkName: targetChunk.name
         }
@@ -370,6 +368,25 @@ class World {
   getVoxelByWorldCoords = (x, y, z) => {
     const gbc = Helpers.toGlobalBlock({ x, y, z })
     return this.getVoxelByVoxelCoords(gbc.x, gbc.y, gbc.z)
+  }
+  getTargetBlockInfo = () => {
+    if (!this.targetBlock) {
+      console.log('no target block')
+      return null
+    }
+
+    const { chunk, block } = this.targetBlock
+
+    const { x, y, z } = block,
+      { cx, cy, cz } = chunk
+
+    const parentChunk = this.getChunkByCoords(cx, cy, cz)
+
+    return {
+      block,
+      chunk,
+      type: parentChunk.getBlock(x, y, z)
+    }
   }
   getVoxelByVoxelCoords = (x, y, z) => {
     const { coordx, coordy, coordz } = Helpers.toChunkCoords({ x, y, z }),

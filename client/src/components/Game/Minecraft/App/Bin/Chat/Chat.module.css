@@ -2,9 +2,13 @@
   position: fixed;
   top: 0;
   z-index: 2;
-  visibility: hidden; /* Hidden at first */
+  opacity: 0;
+  /* visibility: hidden; Hidden at first */
   width: 100vw;
   height: 100vh;
+}
+
+.wrapper * {
   -webkit-user-select: none;
 }
 

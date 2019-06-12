@@ -18,15 +18,24 @@ export default {
       },
       1: {
         id: 1,
-        name: 'stone'
+        name: 'stone',
+        break: {
+          hand: 7.5
+        }
       },
       2: {
         id: 2,
-        name: 'grass'
+        name: 'grass',
+        break: {
+          hand: 0.75
+        }
       },
       3: {
         id: 3,
-        name: 'dirt'
+        name: 'dirt',
+        break: {
+          hand: 0.75
+        }
       }
     }
   },
@@ -57,13 +66,14 @@ export default {
     height: 50, // px
     inertia: 5.0,
     fricIntertia: 13.0,
-    inAirInertia: 15,
-    sprintFactor: 1.6,
+    inAirInertia: 14,
+    sprintFactor: 1.7,
+    spectatorInertia: 2,
     acceleration: {
       forward: 28,
       other_horz: 20,
       vertical: 26,
-      jump: 170
+      jump: 175
     },
     maxSpeed: {
       horizontal: 700,
