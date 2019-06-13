@@ -8,7 +8,7 @@ export default ({ data: worlds, selectedIndex, setSelectedIndex }) => {
     return new Date(b.lastPlayed) - new Date(a.lastPlayed)
   })
 
-  return worlds.length ? (
+  return (
     <ul className={classes.wrapper}>
       {worlds.map(ele => (
         <WorldItem
@@ -19,7 +19,5 @@ export default ({ data: worlds, selectedIndex, setSelectedIndex }) => {
         />
       ))}
     </ul>
-  ) : (
-    <h1>no world</h1>
   )
 }

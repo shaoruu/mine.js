@@ -19,6 +19,7 @@
 		"js-string-compression": "^1.0.1",
 		"keymaster": "^1.6.2",
 		"ndarray": "^1.0.18",
+		"randomstring": "^1.1.5",
 		"react": "^16.8.4",
 		"react-apollo": "^2.5.2",
 		"react-dom": "^16.8.4",

@@ -80,6 +80,12 @@ export const UPDATE_BLOCK_MUTATION = gql`
   }
 `
 
+export const DELETE_WORLD_MUTATION = gql`
+  mutation deleteWorld($worldId: ID!) {
+    deleteWorld(worldId: $worldId)
+  }
+`
+
 /**
  * Validation Schemas
  */
@@ -104,5 +110,5 @@ export const LOGIN_SCHEMA = Yup.object().shape({
 
 export const CREATE_WORLD_SCHEMA = Yup.object().shape({
   name: Yup.string().required('Name is required.'),
-  seed: Yup.string().required('Seed is required.')
+  seed: Yup.string()
 })

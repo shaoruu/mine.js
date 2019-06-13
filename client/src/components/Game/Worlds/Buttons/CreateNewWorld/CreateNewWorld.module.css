@@ -1,0 +1,75 @@
+.wrapper {
+  font-family: Minecraft;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  position: relative;
+}
+
+.title {
+  font-weight: 300;
+  font-size: 20px;
+  margin-top: 30px;
+  margin-bottom: 25px;
+  color: white;
+}
+
+.inputField {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  color: gray;
+  margin: 20px;
+}
+
+.inputField input {
+  width: 500px;
+  line-height: 36px;
+  background: black;
+  color: white;
+  font-family: Minecraft;
+  padding: 5px;
+  border: 2px solid rgb(151, 151, 151);
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+.inputField input:active,
+.inputField input:focus {
+  outline: none;
+}
+
+.gamemode {
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gamemode button {
+  width: 360px;
+}
+
+.gamemode p {
+  margin-top: 10px;
+  max-width: 400px;
+  text-align: center;
+  color: gray;
+}
+
+.finalButts {
+  position: fixed;
+  bottom: 0;
+  margin-bottom: 25px;
+  justify-self: flex-end;
+  display: flex;
+  justify-content: space-between;
+  width: 500px;
+}
+
+.finalButts button {
+  width: 230px;
+}

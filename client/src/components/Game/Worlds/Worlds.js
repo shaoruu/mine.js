@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
-import { Query } from 'react-apollo'
+import { Query, Mutation } from 'react-apollo'
 import { withRouter } from 'react-router'
 
-import { MY_WORLDS_QUERY } from '../../../lib/graphql'
+import { MY_WORLDS_QUERY, DELETE_WORLD_MUTATION } from '../../../lib/graphql'
 import WorldList from './WorldList/WorldList'
 import CreateNewWorld from './Buttons/CreateNewWorld/CreateNewWorld'
 import { Hint } from '../../Utils'
@@ -22,23 +22,9 @@ class Worlds extends Component {
     const { subpage, history } = this.props
 
     return (
-      <Query
-        query={MY_WORLDS_QUERY}
-        onError={err => console.error(err)}
-        fetchPolicy="network-only"
-      >
+      <Query query={MY_WORLDS_QUERY} onError={err => console.error(err)}>
         {({ loading, data }) => {
           if (loading) return <Hint />
-
-          const { myWorlds } = data
-
-          const selectionStyle = [classes.button]
-          if (selectedIndex !== 0 && !selectedIndex)
-            selectionStyle.push(classes.disabledButton)
-          else {
-            selectionStyle.length = 0
-            selectionStyle.push(sharedStyles.button)
-          }
 
           let render = null
           switch (subpage) {
@@ -47,6 +33,8 @@ class Worlds extends Component {
               break
             case undefined:
             case '':
+              const { myWorlds } = data
+
               render = (
                 <div className={classes.wrapper}>
                   <h1 className={classes.title}>Select World</h1>
@@ -59,7 +47,7 @@ class Worlds extends Component {
                     <div className={classes.buttonGroup}>
                       <button
                         id="play-selected-world"
-                        className={selectionStyle.join(' ')}
+                        className={sharedStyles.button}
                         disabled={!selectedIndex}
                         onClick={() => {
                           history.push(`/game/minecraft/${selectedIndex}`)
@@ -76,9 +64,27 @@ class Worlds extends Component {
                       </button>
                     </div>
                     <div className={classes.buttonGroup}>
-                      <button id="delete" className={selectionStyle.join(' ')}>
-                        Delete
-                      </button>
+                      <Mutation mutation={DELETE_WORLD_MUTATION}>
+                        {deleteWorld => (
+                          <button
+                            id="delete"
+                            className={sharedStyles.button}
+                            disabled={!selectedIndex}
+                            onClick={() => {
+                              deleteWorld({
+                                variables: {
+                                  worldId: selectedIndex
+                                },
+                                refetchQueries: [{ query: MY_WORLDS_QUERY }]
+                              })
+                              this.setSelectedIndex(null)
+                            }}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </Mutation>
+
                       <button
                         className={sharedStyles.button}
                         onClick={() => history.push('/game/start')}

@@ -50,8 +50,6 @@ class Viewpoint {
       this.materialStages.push([temp, temp, temp, temp, temp, temp])
     }
 
-    console.log(this.materialStages)
-
     this.bbIndex = 0
 
     const tempGeo = new THREE.BoxBufferGeometry(

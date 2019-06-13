@@ -16,6 +16,7 @@ type Mutation {
   createWorld(data: CreateWorldInput!): World!
   updatePlayer(data: UpdatePlayerInput!): Player!
   updateBlock(data: UpdateBlockInput!): Block!
+  deleteWorld(worldId: ID!): Boolean!
 }
 
 type Subscription {
