@@ -166,7 +166,7 @@ export default {
     height: 50
   },
   world: {
-    noiseConstant: 50,
+    noiseConstant: 25,
     maxWorkerCount: 4,
     gravity: -9.8
   },

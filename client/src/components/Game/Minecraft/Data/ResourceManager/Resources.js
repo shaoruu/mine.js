@@ -1,4 +1,5 @@
-// TODO: move texture loading over
+// RESOURCE PACK SOURCE: http://www.9minecraft.net/soft-bits-resource-pack/
+
 export default {
   geometries: {
     block: {
