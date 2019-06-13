@@ -59,4 +59,4 @@ const Start = withRouter(props => {
   )
 })
 
-export { Start }
+export default Start

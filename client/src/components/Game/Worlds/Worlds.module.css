@@ -1,2 +1,60 @@
 .wrapper {
+  font-family: Minecraft;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  font-weight: 400;
+  font-size: 24px;
+  text-align: center;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.buttonGroupGroup {
+  margin-top: 20px;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: space-between;
+  width: 550px;
+}
+
+.buttonGroup button {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  width: 260px;
+}
+
+.button {
+  font-family: 'Minecraft';
+  border: none;
+  border-left: 1px rgba(221, 221, 221, 0.74) solid;
+  border-top: 1px rgba(221, 221, 221, 0.74) solid;
+  border-right: 2px rgb(70, 70, 70) solid;
+  border-bottom: 2px rgb(70, 70, 70) solid;
+  box-shadow: 0 0 2px 2px black;
+  color: white;
+  height: 35px;
+  font-size: 15px;
+  background: #5b5b5c;
+  border-radius: 3px;
+  cursor: not-allowed;
+}
+
+.button:active,
+.button:focus {
+  outline: none;
+}
+
+.disabledButton {
+  color: #898989;
+  background: #181818;
+  border: none;
+  border: black solid 1px;
 }

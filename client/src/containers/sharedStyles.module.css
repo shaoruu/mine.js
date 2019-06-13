@@ -19,6 +19,7 @@
   color: #f8f6a4;
 }
 
+.button:focus,
 .button:active {
   outline: none;
 }

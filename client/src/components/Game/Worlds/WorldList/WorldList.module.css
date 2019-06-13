@@ -1,0 +1,11 @@
+.wrapper {
+  background-color: rgba(1, 1, 1, 0.486);
+  height: 75vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0px 0px 15px 0px #000000;
+  list-style: none;
+}

@@ -6,4 +6,4 @@ const Minecraft = ({ id, username }) => {
   return <MainScene id={id} username={username} />
 }
 
-export { Minecraft }
+export default Minecraft

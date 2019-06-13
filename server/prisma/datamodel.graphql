@@ -1,56 +1,57 @@
 type User {
-	id: ID! @unique
-	username: String! @unique
-	email: String! @unique
-	password: String!
-	worlds: [World!]!
-	updatedAt: DateTime!
-	createdAt: DateTime!
+  id: ID! @unique
+  username: String! @unique
+  email: String! @unique
+  password: String!
+  worlds: [World!]!
+  updatedAt: DateTime!
+  createdAt: DateTime!
 }
 
 type Player {
-	id: ID! @unique
-	isAdmin: Boolean!
-	gamemode: Gamemode!
-	user: User!
-	world: World! @relation(name: "PlayersToWorld", onDelete: SET_NULL)
-	lastLogin: DateTime
-	x: Float!
-	y: Float!
-	z: Float!
-	dirx: Float!
-	diry: Float!
-	inventory: Inventory! @relation(name: "InventoryToPlayer", onDelete: CASCADE)
+  id: ID! @unique
+  isAdmin: Boolean!
+  gamemode: Gamemode!
+  user: User!
+  world: World! @relation(name: "PlayersToWorld", onDelete: SET_NULL)
+  lastLogin: DateTime
+  x: Float!
+  y: Float!
+  z: Float!
+  dirx: Float!
+  diry: Float!
+  inventory: Inventory! @relation(name: "InventoryToPlayer", onDelete: CASCADE)
 }
 
 type World {
-	id: ID! @unique
-	name: String!
-	seed: String!
-	changedBlocks: [Block!]! @relation(name: "BlocksToWorld", onDelete: CASCADE)
-	players: [Player!]! @relation(name: "PlayersToWorld", onDelete: CASCADE)
+  id: ID! @unique
+  name: String!
+  seed: String!
+  lastPlayed: DateTime!
+  changedBlocks: [Block!]! @relation(name: "BlocksToWorld", onDelete: CASCADE)
+  players: [Player!]! @relation(name: "PlayersToWorld", onDelete: CASCADE)
 }
 
 type Block {
-	representation: String! @unique
-	type: Int!
-	world: World! @relation(name: "BlocksToWorld", onDelete: SET_NULL)
-	x: Int!
-	y: Int!
-	z: Int!
+  representation: String! @unique
+  type: Int!
+  world: World! @relation(name: "BlocksToWorld", onDelete: SET_NULL)
+  x: Int!
+  y: Int!
+  z: Int!
 }
 
 # Inventory is essentailly a ndarray 4 * 9 of items
 # cursor is what the player is holding (1 - 9)
 type Inventory {
-	player: Player! @relation(name: "InventoryToPlayer", onDelete: CASCADE)
-	cursor: Int!
-	data: String!
+  player: Player! @relation(name: "InventoryToPlayer", onDelete: CASCADE)
+  cursor: Int!
+  data: String!
 }
 
 enum Gamemode {
-	SURVIVAL
-	CREATIVE
-	ADVENTURE
-	SPECTATOR
+  SURVIVAL
+  CREATIVE
+  ADVENTURE
+  SPECTATOR
 }

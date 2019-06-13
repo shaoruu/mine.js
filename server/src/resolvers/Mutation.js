@@ -87,6 +87,7 @@ const Mutation = {
     const world = await prisma.mutation.createWorld(
       {
         data: {
+          lastPlayed: new Date().toISOString(),
           name,
           seed
         }

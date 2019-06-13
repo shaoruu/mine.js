@@ -1,137 +1,138 @@
 type Query {
-	users(query: String, first: Int, skip: Int, after: String): [User!]!
-	me: User!
-	myWorlds(first: Int, skip: Int, after: String): [World!]!
-	world(query: String!): World!
+  users(query: String, first: Int, skip: Int, after: String): [User!]!
+  me: User!
+  myWorlds(first: Int, skip: Int, after: String): [World!]!
+  world(query: String!): World!
 }
 
 type Mutation {
-	# USER
-	createUser(data: CreateUserInput!): AuthPayload!
-	login(data: LoginUserInput!): AuthPayload!
-	deleteUser: User!
-	updateUser(data: UpdateUserInput!): User!
+  # USER
+  createUser(data: CreateUserInput!): AuthPayload!
+  login(data: LoginUserInput!): AuthPayload!
+  deleteUser: User!
+  updateUser(data: UpdateUserInput!): User!
 
-	# WORLD
-	createWorld(data: CreateWorldInput!): World!
-	updatePlayer(data: UpdatePlayerInput!): Player!
-	updateBlock(data: UpdateBlockInput!): Block!
+  # WORLD
+  createWorld(data: CreateWorldInput!): World!
+  updatePlayer(data: UpdatePlayerInput!): Player!
+  updateBlock(data: UpdateBlockInput!): Block!
 }
 
 type Subscription {
-	# Chunks
-	block(worldId: ID!): BlockSubscriptionPayload!
+  # Chunks
+  block(worldId: ID!): BlockSubscriptionPayload!
 }
 
 type User {
-	id: ID!
-	username: String!
-	email: String!
-	password: String!
-	worlds: [World!]!
-	updatedAt: String!
-	createdAt: String!
+  id: ID!
+  username: String!
+  email: String!
+  password: String!
+  worlds: [World!]!
+  updatedAt: String!
+  createdAt: String!
 }
 
 type World {
-	id: ID!
-	name: String!
-	seed: String!
-	changedBlocks: [Block!]!
-	players: [Player!]!
+  id: ID!
+  name: String!
+  seed: String!
+  lastPlayed: String!
+  changedBlocks: [Block!]!
+  players: [Player!]!
 }
 
 type Player {
-	id: ID!
-	isAdmin: Boolean!
-	gamemode: String!
-	user: User!
-	world: World!
-	lastLogin: String
-	x: Float!
-	y: Float!
-	z: Float!
-	dirx: Float!
-	diry: Float!
-	inventory: Inventory!
+  id: ID!
+  isAdmin: Boolean!
+  gamemode: String!
+  user: User!
+  world: World!
+  lastLogin: String
+  x: Float!
+  y: Float!
+  z: Float!
+  dirx: Float!
+  diry: Float!
+  inventory: Inventory!
 }
 
 type Block {
-	representation: String!
-	type: Int!
-	world: World!
-	x: Int!
-	y: Int!
-	z: Int!
+  representation: String!
+  type: Int!
+  world: World!
+  x: Int!
+  y: Int!
+  z: Int!
 }
 
 type Inventory {
-	player: Player!
-	cursor: Int!
-	data: String!
+  player: Player!
+  cursor: Int!
+  data: String!
 }
 
 input CreateUserInput {
-	email: String!
-	password: String!
-	username: String!
+  email: String!
+  password: String!
+  username: String!
 }
 
 input LoginUserInput {
-	email: String!
-	password: String!
+  email: String!
+  password: String!
 }
 
 input UpdateUserInput {
-	username: String
-	email: String
-	password: String
+  username: String
+  email: String
+  password: String
 }
 
 input CreateWorldInput {
-	name: String!
-	seed: String!
-	gamemode: Gamemode!
+  name: String!
+  seed: String!
+  gamemode: Gamemode!
 }
 
 input UpdatePlayerInput {
-	id: ID!
-	x: Float
-	y: Float
-	z: Float
-	dirx: Float
-	diry: Float
-	cursor: Int
-	data: String
+  id: ID!
+  x: Float
+  y: Float
+  z: Float
+  dirx: Float
+  diry: Float
+  cursor: Int
+  data: String
 }
 
 input UpdateBlockInput {
-	worldId: ID!
-	type: Int!
-	x: Int!
-	y: Int!
-	z: Int!
+  worldId: ID!
+  type: Int!
+  x: Int!
+  y: Int!
+  z: Int!
 }
 
 type AuthPayload {
-	token: String!
-	user: User!
+  token: String!
+  user: User!
 }
 
 enum Gamemode {
-	SURVIVAL
-	CREATIVE
-	ADVENTURE
-	SPECTATOR
+  SURVIVAL
+  CREATIVE
+  ADVENTURE
+  SPECTATOR
 }
 
 enum MutationType {
-	CREATED
-	UPDATED
-	DELETED
+  CREATED
+  UPDATED
+  DELETED
 }
 
 type BlockSubscriptionPayload {
-	mutation: MutationType!
-	node: Block
+  mutation: MutationType!
+  node: Block
 }

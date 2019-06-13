@@ -1,17 +1,25 @@
 import React from 'react'
+
+import classes from './WorldList.module.css'
 import WorldItem from './WorldItem/WorldItem'
 
-export default ({ data: worlds }) => {
-	return worlds.length ? (
-		<div>
-			<h3>Worlds</h3>
-			<ul>
-				{worlds.map(ele => (
-					<WorldItem key={ele.id} {...ele} />
-				))}
-			</ul>
-		</div>
-	) : (
-		<h1>no world</h1>
-	)
+export default ({ data: worlds, selectedIndex, setSelectedIndex }) => {
+  worlds.sort((a, b) => {
+    return new Date(b.lastPlayed) - new Date(a.lastPlayed)
+  })
+
+  return worlds.length ? (
+    <ul className={classes.wrapper}>
+      {worlds.map(ele => (
+        <WorldItem
+          key={ele.id}
+          {...ele}
+          setSelectedIndex={setSelectedIndex}
+          selectedIndex={selectedIndex}
+        />
+      ))}
+    </ul>
+  ) : (
+    <h1>no world</h1>
+  )
 }

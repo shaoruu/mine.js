@@ -1,5 +1,5 @@
 # source: http://localhost:4466
-# timestamp: Sun Apr 21 2019 17:01:05 GMT+0800 (CST)
+# timestamp: Thu Jun 13 2019 22:25:56 GMT+0800 (CST)
 
 type AggregateBlock {
   count: Int!
@@ -1783,6 +1783,7 @@ type World implements Node {
   id: ID!
   name: String!
   seed: String!
+  lastPlayed: DateTime!
   changedBlocks(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Block!]
   players(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Player!]
 }
@@ -1800,6 +1801,7 @@ type WorldConnection {
 input WorldCreateInput {
   name: String!
   seed: String!
+  lastPlayed: DateTime!
   changedBlocks: BlockCreateManyWithoutWorldInput
   players: PlayerCreateManyWithoutWorldInput
 }
@@ -1822,12 +1824,14 @@ input WorldCreateOneWithoutPlayersInput {
 input WorldCreateWithoutChangedBlocksInput {
   name: String!
   seed: String!
+  lastPlayed: DateTime!
   players: PlayerCreateManyWithoutWorldInput
 }
 
 input WorldCreateWithoutPlayersInput {
   name: String!
   seed: String!
+  lastPlayed: DateTime!
   changedBlocks: BlockCreateManyWithoutWorldInput
 }
 
@@ -1847,6 +1851,8 @@ enum WorldOrderByInput {
   name_DESC
   seed_ASC
   seed_DESC
+  lastPlayed_ASC
+  lastPlayed_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -1857,6 +1863,7 @@ type WorldPreviousValues {
   id: ID!
   name: String!
   seed: String!
+  lastPlayed: DateTime!
 }
 
 input WorldScalarWhereInput {
@@ -1988,6 +1995,28 @@ input WorldScalarWhereInput {
 
   """All values not ending with the given string."""
   seed_not_ends_with: String
+  lastPlayed: DateTime
+
+  """All values that are not equal to given value."""
+  lastPlayed_not: DateTime
+
+  """All values that are contained in given list."""
+  lastPlayed_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  lastPlayed_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  lastPlayed_lt: DateTime
+
+  """All values less than or equal the given value."""
+  lastPlayed_lte: DateTime
+
+  """All values greater than the given value."""
+  lastPlayed_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  lastPlayed_gte: DateTime
 }
 
 type WorldSubscriptionPayload {
@@ -2030,6 +2059,7 @@ input WorldSubscriptionWhereInput {
 input WorldUpdateDataInput {
   name: String
   seed: String
+  lastPlayed: DateTime
   changedBlocks: BlockUpdateManyWithoutWorldInput
   players: PlayerUpdateManyWithoutWorldInput
 }
@@ -2037,6 +2067,7 @@ input WorldUpdateDataInput {
 input WorldUpdateInput {
   name: String
   seed: String
+  lastPlayed: DateTime
   changedBlocks: BlockUpdateManyWithoutWorldInput
   players: PlayerUpdateManyWithoutWorldInput
 }
@@ -2044,6 +2075,7 @@ input WorldUpdateInput {
 input WorldUpdateManyDataInput {
   name: String
   seed: String
+  lastPlayed: DateTime
 }
 
 input WorldUpdateManyInput {
@@ -2061,6 +2093,7 @@ input WorldUpdateManyInput {
 input WorldUpdateManyMutationInput {
   name: String
   seed: String
+  lastPlayed: DateTime
 }
 
 input WorldUpdateManyWithWhereNestedInput {
@@ -2085,12 +2118,14 @@ input WorldUpdateOneRequiredWithoutPlayersInput {
 input WorldUpdateWithoutChangedBlocksDataInput {
   name: String
   seed: String
+  lastPlayed: DateTime
   players: PlayerUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateWithoutPlayersDataInput {
   name: String
   seed: String
+  lastPlayed: DateTime
   changedBlocks: BlockUpdateManyWithoutWorldInput
 }
 
@@ -2244,6 +2279,28 @@ input WorldWhereInput {
 
   """All values not ending with the given string."""
   seed_not_ends_with: String
+  lastPlayed: DateTime
+
+  """All values that are not equal to given value."""
+  lastPlayed_not: DateTime
+
+  """All values that are contained in given list."""
+  lastPlayed_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  lastPlayed_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  lastPlayed_lt: DateTime
+
+  """All values less than or equal the given value."""
+  lastPlayed_lte: DateTime
+
+  """All values greater than the given value."""
+  lastPlayed_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  lastPlayed_gte: DateTime
   changedBlocks_every: BlockWhereInput
   changedBlocks_some: BlockWhereInput
   changedBlocks_none: BlockWhereInput
