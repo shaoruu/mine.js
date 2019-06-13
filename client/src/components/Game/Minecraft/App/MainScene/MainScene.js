@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { Mutation, Query, Subscription } from 'react-apollo'
 import * as THREE from 'three'
 import Stats from 'stats-js'
+import { withRouter } from 'react-router'
 
 import { Camera, Light, Player, Renderer, World } from '../Bin'
 import classes from './MainScene.module.css'
@@ -14,6 +15,7 @@ import {
   UPDATE_PLAYER_MUTATION
 } from '../../../../../lib/graphql'
 import ResourceManager from '../../Data/ResourceManager/ResourceManager'
+import sharedStyles from '../../../../../containers/sharedStyles.module.css'
 
 class MainScene extends Component {
   constructor(props) {
@@ -201,7 +203,7 @@ class MainScene extends Component {
 
   closingHandler = ev => {
     ev.preventDefault()
-    ev.returnValue = 'Are you sure you want to close?'
+    // ev.returnValue = 'Are you sure you want to close?'
   }
 
   onWindowResize = () => {
@@ -210,7 +212,7 @@ class MainScene extends Component {
   }
 
   render() {
-    const { id: worldId } = this.props
+    const { id: worldId, history } = this.props
 
     return (
       <Query
@@ -254,7 +256,20 @@ class MainScene extends Component {
                     <div
                       className={classes.blocker}
                       ref={blocker => (this.blocker = blocker)}
-                    />
+                    >
+                      <h1 className={classes.title}>Game Menu</h1>
+                      <div className={classes.menu}>
+                        <button className={sharedStyles.button}>
+                          Back to Game
+                        </button>
+                        <button
+                          className={sharedStyles.button}
+                          onClick={() => history.push('/game/start')}
+                        >
+                          Save and Quit to Title
+                        </button>
+                      </div>
+                    </div>
                     <img
                       src={this.resourceManager.getGuiImg('crosshair')}
                       alt=""
@@ -278,4 +293,4 @@ class MainScene extends Component {
   }
 }
 
-export default MainScene
+export default withRouter(MainScene)

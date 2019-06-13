@@ -374,7 +374,7 @@ class Controls extends Stateful {
     this._resetMovements()
     if (!this.chat.enabled) {
       this.keyboard.setScope('menu')
-      this.blocker.style.display = 'block'
+      this.blocker.style.display = 'flex'
     }
   }
 
