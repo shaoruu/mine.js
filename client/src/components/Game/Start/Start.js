@@ -11,6 +11,14 @@ const Start = withRouter(props => {
   const { history } = props
   const node = useRef()
 
+  const possibleMessages = [
+    'magic!',
+    'browser!',
+    'beta!',
+    'ian13456!',
+    'FreshKoala!'
+  ]
+
   useEffect(() => {
     setTimeout(() => (node.current.style.opacity = '1'), 100)
   })
@@ -34,7 +42,14 @@ const Start = withRouter(props => {
           showFullscreenCtrl: false
         }}
       />
-      <img src={logo} alt="MinecraftJS" className={classes.logo} />
+      <div className={classes.logoWrapper}>
+        <img src={logo} alt="MinecraftJS" className={classes.logo} />
+        <span>
+          {possibleMessages[
+            Math.floor(Math.random() * possibleMessages.length)
+          ].toUpperCase()}
+        </span>
+      </div>
       <button
         className={`${sharedStyles.button} ${classes.play}`}
         onClick={() => history.push('/game/worlds')}

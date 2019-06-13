@@ -17,9 +17,29 @@
   z-index: 1;
 }
 
+.logoWrapper {
+  z-index: 2;
+  margin-bottom: 20px;
+  position: relative;
+  max-height: 300px;
+}
+
+.logoWrapper span {
+  position: absolute;
+  bottom: 35px;
+  right: -25px;
+  font-size: 23px;
+  color: rgb(251, 255, 0);
+  font-family: Minecraft;
+  text-shadow: 4px 4px black;
+  transform: rotate(-15deg);
+  text-align: center;
+  z-index: 3;
+  animation: LOGO_SPAN 0.5s infinite;
+}
+
 .logo {
   width: 650px;
-  margin-bottom: 20px;
   z-index: 2;
 }
 
@@ -64,4 +84,16 @@
 .options_butt {
   width: 240px;
   margin: 10px 0;
+}
+
+@keyframes LOGO_SPAN {
+  0% {
+    font-size: 23px;
+  }
+  50% {
+    font-size: 25px;
+  }
+  /* 100% {
+    font-size: 25px;
+  } */
 }
