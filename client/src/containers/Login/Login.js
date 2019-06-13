@@ -37,8 +37,7 @@ class Login extends Component {
             history.push('/home')
           })
         }}
-        onError={error => console.error(error)}
-      >
+        onError={error => console.error(error)}>
         {(login, { error, loading }) => {
           return loading || authHint ? (
             <Hint />
@@ -49,7 +48,7 @@ class Login extends Component {
               onSubmit={(values, { setSubmitting, setErrors }) => {
                 login({
                   variables: {
-                    email: values.email.toLowerCase(),
+                    email: values.email.toLowerCase().trim(),
                     password: values.password
                   }
                 }).then(
@@ -89,9 +88,8 @@ class Login extends Component {
                           placeholder="Email"
                         />
                         <span>
-                          {(touched.email && errors.email
-                            ? errors.email
-                            : '') || (error ? 'Wrong credentials.' : '')}
+                          {(touched.email && errors.email ? errors.email : '') ||
+                            (error ? 'Wrong credentials.' : '')}
                         </span>
                       </div>
                     </div>
@@ -111,17 +109,13 @@ class Login extends Component {
                           placeholder="Password"
                         />
                         <span>
-                          {touched.password && !!errors.password
-                            ? errors.password
-                            : ''}
+                          {touched.password && !!errors.password ? errors.password : ''}
                         </span>
                       </div>
                     </div>
 
                     <div className={classes.navigations}>
-                      <p onClick={() => history.push('/register')}>
-                        Need account?
-                      </p>
+                      <p onClick={() => history.push('/register')}>Need account?</p>
                       <button
                         type="submit"
                         disabled={
@@ -130,8 +124,7 @@ class Login extends Component {
                           isSubmitting ||
                           !!(errors.email && touched.email) ||
                           !!(errors.password && touched.password)
-                        }
-                      >
+                        }>
                         Login
                       </button>
                     </div>

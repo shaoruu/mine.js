@@ -6,9 +6,7 @@ import * as Yup from 'yup'
  */
 export const REGISTER_MUTATION = gql`
   mutation Register($username: String!, $email: String!, $password: String!) {
-    createUser(
-      data: { username: $username, email: $email, password: $password }
-    ) {
+    createUser(data: { username: $username, email: $email, password: $password }) {
       token
     }
   }
@@ -61,13 +59,7 @@ export const UPDATE_PLAYER_MUTATION = gql`
 `
 
 export const UPDATE_BLOCK_MUTATION = gql`
-  mutation UpdateBlock(
-    $worldId: ID!
-    $type: Int!
-    $x: Int!
-    $y: Int!
-    $z: Int!
-  ) {
+  mutation UpdateBlock($worldId: ID!, $type: Int!, $x: Int!, $y: Int!, $z: Int!) {
     updateBlock(data: { worldId: $worldId, type: $type, x: $x, y: $y, z: $z }) {
       world {
         id
@@ -91,7 +83,9 @@ export const DELETE_WORLD_MUTATION = gql`
  */
 export const REGISTER_SCHEMA = Yup.object().shape({
   username: Yup.string()
+    .min(2, 'Username cannot be less than 2 characters.')
     .max(16, 'Username cannot be more than 16 characters.')
+    .matches(/^[a-z0-9_]{2,16}$/i, 'Invalid Characters')
     .required('Username is required.'),
   email: Yup.string()
     .email('Please enter an email.')

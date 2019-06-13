@@ -32,10 +32,11 @@
   color: rgb(251, 255, 0);
   font-family: Minecraft;
   text-shadow: 4px 4px black;
-  transform: rotate(-15deg);
   text-align: center;
   z-index: 3;
-  animation: LOGO_SPAN 0.5s infinite;
+  animation: LOGO_SPAN 0.25s;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
 }
 
 .logo {
@@ -88,10 +89,10 @@
 
 @keyframes LOGO_SPAN {
   0% {
-    font-size: 23px;
+    transform: scale(0.875) rotate(-20deg);
   }
-  50% {
-    font-size: 25px;
+  100% {
+    transform: scale(1) rotate(-20deg);
   }
   /* 100% {
     font-size: 25px;

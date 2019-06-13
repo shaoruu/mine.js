@@ -6,7 +6,7 @@
 }
 
 .logo {
-  width: 750px;
+  width: 650px;
 }
 
 .inputFields {
@@ -61,8 +61,8 @@
 }
 
 .wrappedInputField span {
-  font-size: 18.75px;
-  margin: 3.75px;
+  font-size: 10px;
+  margin: 3px;
   color: red;
 }
 

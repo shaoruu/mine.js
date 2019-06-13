@@ -35,8 +35,7 @@ class Register extends Component {
             history.push('/home')
           })
         }}
-        onError={error => console.error(error)}
-      >
+        onError={error => console.error(error)}>
         {(register, { error, loading }) =>
           loading || authHint ? (
             <Hint />
@@ -47,8 +46,8 @@ class Register extends Component {
               onSubmit={(values, { setSubmitting }) => {
                 register({
                   variables: {
-                    username: values.username.toLowerCase(),
-                    email: values.email.toLowerCase(),
+                    username: values.username.toLowerCase().trim(),
+                    email: values.email.toLowerCase().trim(),
                     password: values.password
                   }
                 })
@@ -80,9 +79,7 @@ class Register extends Component {
                           placeholder="Username"
                         />
                         <span>
-                          {(touched.username && errors.username
-                            ? errors.username
-                            : '') ||
+                          {(touched.username && errors.username ? errors.username : '') ||
                             (error && error.message.includes('name = username')
                               ? 'Username taken.'
                               : '')}
@@ -103,9 +100,7 @@ class Register extends Component {
                           placeholder="Email"
                         />
                         <span>
-                          {(touched.email && errors.email
-                            ? errors.email
-                            : '') ||
+                          {(touched.email && errors.email ? errors.email : '') ||
                             (error && error.message.includes('name = email')
                               ? 'Email already registered.'
                               : '')}
@@ -128,9 +123,7 @@ class Register extends Component {
                           placeholder="Password"
                         />
                         <span>
-                          {touched.password && errors.password
-                            ? errors.password
-                            : ''}
+                          {touched.password && errors.password ? errors.password : ''}
                         </span>
                       </div>
                     </div>
@@ -149,8 +142,7 @@ class Register extends Component {
                           !!(errors.email && touched.email) ||
                           !!(errors.username && touched.username) ||
                           !!(errors.password && touched.password)
-                        }
-                      >
+                        }>
                         Register
                       </button>
                     </div>
