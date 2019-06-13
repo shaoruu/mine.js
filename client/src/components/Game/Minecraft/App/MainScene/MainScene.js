@@ -231,61 +231,63 @@ class MainScene extends Component {
           if (!data) return <Hint text="World not found." />
 
           return (
-            <Mutation
-              mutation={UPDATE_PLAYER_MUTATION}
-              onError={err => console.error(err)}
-            >
-              {(updatePlayer, { client }) => {
-                this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
-                this.client = client
+            <>
+              <Mutation
+                mutation={UPDATE_PLAYER_MUTATION}
+                onError={err => console.error(err)}
+              >
+                {(updatePlayer, { client }) => {
+                  this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
+                  this.client = client
 
-                return (
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%'
-                    }}
-                    ref={mount => {
-                      this.mount = mount
-                      if (this.waitingForMount) {
-                        this.waitingForMount = false
-                        this.handleQueryComplete()
-                      }
-                    }}
-                  >
+                  return (
                     <div
-                      className={classes.blocker}
-                      ref={blocker => (this.blocker = blocker)}
+                      style={{
+                        width: '100%',
+                        height: '100%'
+                      }}
+                      ref={mount => {
+                        this.mount = mount
+                        if (this.waitingForMount) {
+                          this.waitingForMount = false
+                          this.handleQueryComplete()
+                        }
+                      }}
                     >
-                      <h1 className={classes.title}>Game Menu</h1>
-                      <div className={classes.menu}>
-                        <button className={sharedStyles.button}>
-                          Back to Game
-                        </button>
-                        <button
-                          className={sharedStyles.button}
-                          onClick={() => history.push('/game/start')}
-                        >
-                          Save and Quit to Title
-                        </button>
+                      <div
+                        className={classes.blocker}
+                        ref={blocker => (this.blocker = blocker)}
+                      >
+                        <h1 className={classes.title}>Game Menu</h1>
+                        <div className={classes.menu}>
+                          <button className={sharedStyles.button}>
+                            Back to Game
+                          </button>
+                          <button
+                            className={sharedStyles.button}
+                            onClick={() => history.push('/game/start')}
+                          >
+                            Save and Quit to Title
+                          </button>
+                        </div>
                       </div>
+                      <img
+                        src={this.resourceManager.getGuiImg('crosshair')}
+                        alt=""
+                        className={classes.crosshair}
+                      />
+                      <Subscription
+                        subscription={BLOCK_SUBSCRIPTION}
+                        variables={{ worldId }}
+                        onSubscriptionData={({ subscriptionData: { data } }) =>
+                          this.world.updateChanged(data)
+                        }
+                      />
                     </div>
-                    <img
-                      src={this.resourceManager.getGuiImg('crosshair')}
-                      alt=""
-                      className={classes.crosshair}
-                    />
-                    <Subscription
-                      subscription={BLOCK_SUBSCRIPTION}
-                      variables={{ worldId }}
-                      onSubscriptionData={({ subscriptionData: { data } }) =>
-                        this.world.updateChanged(data)
-                      }
-                    />
-                  </div>
-                )
-              }}
-            </Mutation>
+                  )
+                }}
+              </Mutation>
+            </>
           )
         }}
       </Query>

@@ -6,7 +6,8 @@ import randomstring from 'randomstring'
 
 import {
   CREATE_WORLD_MUTATION,
-  CREATE_WORLD_SCHEMA
+  CREATE_WORLD_SCHEMA,
+  MY_WORLDS_QUERY
 } from '../../../../../lib/graphql'
 import { Hint } from '../../../../Utils'
 import classes from './CreateNewWorld.module.css'
@@ -59,7 +60,8 @@ const CreateNewWorld = withRouter(({ history }) => {
                   name: values.name,
                   seed: !!values.seed ? values.seed : randomstring.generate(),
                   gamemode: gamemodes[gamemode]
-                }
+                },
+                refetchQueries: [{ query: MY_WORLDS_QUERY }]
               })
               setSubmitting(false)
             }}

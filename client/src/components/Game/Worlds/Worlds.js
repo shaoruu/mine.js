@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Query, Mutation } from 'react-apollo'
+import { Query, Mutation, withApollo } from 'react-apollo'
 import { withRouter } from 'react-router'
 
 import { MY_WORLDS_QUERY, DELETE_WORLD_MUTATION } from '../../../lib/graphql'
@@ -19,12 +19,20 @@ class Worlds extends Component {
   render() {
     const { selectedIndex } = this.state
 
-    const { subpage, history } = this.props
+    const { subpage, history, client } = this.props
 
     return (
-      <Query query={MY_WORLDS_QUERY} onError={err => console.error(err)}>
+      <Query
+        query={MY_WORLDS_QUERY}
+        onError={err => console.error(err)}
+        fetchPolicy="network-only"
+      >
         {({ loading, data }) => {
           if (loading) return <Hint />
+
+          data.myWorlds.sort((a, b) => {
+            return new Date(b.lastPlayed) - new Date(a.lastPlayed)
+          })
 
           let render = null
           switch (subpage) {
@@ -50,8 +58,9 @@ class Worlds extends Component {
                         className={sharedStyles.button}
                         disabled={!selectedIndex}
                         onClick={() => {
+                          client.clearStore()
+                          // client.refetch({query: MY_WORLDS_QUERY})
                           history.push(`/game/minecraft/${selectedIndex}`)
-                          console.log('shit')
                         }}
                       >
                         Play Selected World
@@ -107,4 +116,4 @@ class Worlds extends Component {
   }
 }
 
-export default withRouter(Worlds)
+export default withApollo(withRouter(Worlds))
