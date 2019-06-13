@@ -203,7 +203,7 @@ class MainScene extends Component {
 
   closingHandler = ev => {
     ev.preventDefault()
-    // ev.returnValue = 'Are you sure you want to close?'
+    ev.returnValue = 'Are you sure you want to close?'
   }
 
   onWindowResize = () => {
