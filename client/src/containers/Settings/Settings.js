@@ -3,13 +3,21 @@
  * - REPRESENTS: LAUNCHER SETTINGS
  */
 
-import React, { Component } from 'react'
-import { withRouter } from 'react-router-dom'
+import React from 'react'
+import { withRouter } from 'react-router'
 
-class Settings extends Component {
-  render() {
-    return <h1>Settings</h1>
-  }
+import classes from './Settings.module.css'
+import sharedStyles from '../sharedStyles.module.css'
+
+const Settings = ({ history }) => {
+  return (
+    <div className={classes.wrapper}>
+      <h1>Settings [COMING SOON]</h1>
+      <button className={sharedStyles.button} onClick={() => history.goBack()}>
+        Go Back
+      </button>
+    </div>
+  )
 }
 
 export default withRouter(Settings)

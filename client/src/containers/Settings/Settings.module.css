@@ -1,0 +1,12 @@
+.wrapper {
+  font-family: Minecraft;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wrapper button {
+  margin-top: 20px;
+  width: 100px;
+}

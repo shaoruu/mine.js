@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
 import ReactPannellum from 'react-pannellum'
 
@@ -9,8 +9,14 @@ import panorama from '../../../assets/gui/Panorama.jpg'
 
 const Start = withRouter(props => {
   const { history } = props
+  const node = useRef()
+
+  useEffect(() => {
+    setTimeout(() => (node.current.style.opacity = '1'), 100)
+  })
+
   return (
-    <div className={classes.wrapper}>
+    <div ref={node} className={classes.wrapper}>
       <ReactPannellum
         id="firstScene"
         sceneId="firstScene"

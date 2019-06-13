@@ -7,11 +7,8 @@ import sharedStyles from '../../../containers/sharedStyles.module.css'
 const Options = ({ history }) => {
   return (
     <div className={classes.wrapper}>
-      <h1>options [COMING SOON]</h1>
-      <button
-        className={sharedStyles.button}
-        onClick={() => history.push('/game/start')}
-      >
+      <h1>Options [COMING SOON]</h1>
+      <button className={sharedStyles.button} onClick={() => history.goBack()}>
         Go Back
       </button>
     </div>
