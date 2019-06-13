@@ -1,0 +1,65 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.panorama {
+  position: fixed;
+  top: 0;
+  width: 100% !important;
+  height: 100% !important;
+  filter: blur(8px);
+  z-index: 1;
+}
+
+.logo {
+  width: 650px;
+  margin-bottom: 20px;
+  z-index: 2;
+}
+
+.play {
+  width: 500px;
+  margin: 10px 0;
+  z-index: 2;
+}
+
+.coming_soon {
+  color: rgb(251, 255, 9);
+  cursor: not-allowed;
+}
+
+.button {
+  font-family: 'Minecraft';
+  border: none;
+  border-left: 1px rgba(221, 221, 221, 0.74) solid;
+  border-top: 1px rgba(221, 221, 221, 0.74) solid;
+  border-right: 2px rgb(70, 70, 70) solid;
+  border-bottom: 2px rgb(70, 70, 70) solid;
+  box-shadow: 0 0 2px 2px black;
+  color: white;
+  height: 35px;
+  font-size: 15px;
+  background: #5b5b5c;
+  border-radius: 3px;
+}
+
+.button:active,
+.button:focus {
+  outline: none;
+}
+
+.options {
+  width: 500px;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+}
+
+.options_butt {
+  width: 240px;
+  margin: 10px 0;
+}

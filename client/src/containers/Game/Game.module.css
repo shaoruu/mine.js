@@ -1,0 +1,9 @@
+.wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-size: 48px 48px;
+  box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.589);
+}

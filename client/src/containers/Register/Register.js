@@ -8,113 +8,161 @@ import { Mutation, withApollo } from 'react-apollo'
 import { withRouter, Redirect } from 'react-router-dom'
 import { Formik } from 'formik'
 
-import { REGISTER_MUTATION } from '../../lib/graphql'
+import { REGISTER_MUTATION, REGISTER_SCHEMA } from '../../lib/graphql'
 import { setCookie, removeAllCookies } from '../../lib/utils'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 import { Hint } from '../../components/Utils'
+import classes from './Register.module.css'
+import logo from '../../assets/gui/MinecraftJS_register.png'
 
 class Register extends Component {
-	render() {
-		const { client, history, isAuth, loading: authHint } = this.props
+  render() {
+    const { client, history, isAuth, loading: authHint } = this.props
 
-		if (isAuth) return <Redirect to="/home" />
+    if (isAuth) return <Redirect to="/home" />
 
-		return (
-			<Mutation
-				mutation={REGISTER_MUTATION}
-				onCompleted={data => {
-					removeAllCookies()
+    return (
+      <Mutation
+        mutation={REGISTER_MUTATION}
+        onCompleted={data => {
+          removeAllCookies()
 
-					setCookie(data.createUser.token)
+          setCookie(data.createUser.token)
 
-					// Force a reload of all current queries now that user is
-					// logged in
-					client.cache.reset().then(() => {
-						history.push('/home')
-					})
-				}}
-				onError={error => console.error(error)}>
-				{(register, { error, loading }) =>
-					loading || authHint ? (
-						<Hint />
-					) : (
-						<Formik
-							initialValues={{ username: '', email: '', password: '' }}
-							validationSchema={REGISTER_MUTATION}
-							onSubmit={(values, { setSubmitting }) => {
-								register({
-									variables: {
-										username: values.username.toLowerCase(),
-										email: values.email.toLowerCase(),
-										password: values.password
-									}
-								})
-								setSubmitting(false)
-							}}
-							render={({
-								values,
-								errors,
-								touched,
-								handleChange,
-								handleBlur,
-								handleSubmit,
-								isSubmitting
-							}) => (
-								<form onSubmit={handleSubmit}>
-									<h1>Regsiter an account for Minecraft</h1>
-									<input
-										id="username"
-										name="username"
-										value={values.username}
-										label="username"
-										onChange={handleChange}
-										onBlur={handleBlur}
-										placeholder="Username"
-									/>
-									<input
-										id="email"
-										name="email"
-										value={values.email}
-										label="email"
-										onChange={handleChange}
-										onBlur={handleBlur}
-										placeholder="Email"
-									/>
-									<input
-										id="password"
-										name="password"
-										value={values.password}
-										type="password"
-										autoComplete="current-password"
-										label="Password"
-										onChange={handleChange}
-										onBlur={handleBlur}
-										placeholder="Password"
-									/>
-									<button
-										type="submit"
-										disabled={
-											!values.email ||
-											!values.username ||
-											!values.password ||
-											isSubmitting ||
-											!!(errors.email && touched.email) ||
-											!!(errors.username && touched.username) ||
-											!!(errors.password && touched.password)
-										}>
-										Register
-									</button>
-									<button onClick={() => history.push('/login')}>
-										Login
-									</button>
-								</form>
-							)}
-						/>
-					)
-				}
-			</Mutation>
-		)
-	}
+          // Force a reload of all current queries now that user is
+          // logged in
+          client.cache.reset().then(() => {
+            history.push('/home')
+          })
+        }}
+        onError={error => console.error(error)}
+      >
+        {(register, { error, loading }) =>
+          loading || authHint ? (
+            <Hint />
+          ) : (
+            <Formik
+              initialValues={{ username: '', email: '', password: '' }}
+              validationSchema={REGISTER_SCHEMA}
+              onSubmit={(values, { setSubmitting }) => {
+                register({
+                  variables: {
+                    username: values.username.toLowerCase(),
+                    email: values.email.toLowerCase(),
+                    password: values.password
+                  }
+                })
+                setSubmitting(false)
+              }}
+              render={({
+                values,
+                errors,
+                touched,
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                isSubmitting
+              }) => (
+                <form onSubmit={handleSubmit} className={classes.wrapper}>
+                  <img src={logo} alt="MinecraftJS" className={classes.logo} />
+
+                  <div className={classes.inputFields}>
+                    <div className={classes.inputField}>
+                      <h1>Username</h1>
+                      <div className={classes.wrappedInputField}>
+                        <input
+                          id="username"
+                          name="username"
+                          value={values.username}
+                          label="username"
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          placeholder="Username"
+                        />
+                        <span>
+                          {(touched.username && errors.username
+                            ? errors.username
+                            : '') ||
+                            (error && error.message.includes('name = username')
+                              ? 'Username taken.'
+                              : '')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={classes.inputField}>
+                      <h1>Email</h1>
+                      <div className={classes.wrappedInputField}>
+                        <input
+                          id="email"
+                          name="email"
+                          value={values.email}
+                          label="email"
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          placeholder="Email"
+                        />
+                        <span>
+                          {(touched.email && errors.email
+                            ? errors.email
+                            : '') ||
+                            (error && error.message.includes('name = email')
+                              ? 'Email already registered.'
+                              : '')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={classes.inputField}>
+                      <h1>Password</h1>
+                      <div className={classes.wrappedInputField}>
+                        <input
+                          id="password"
+                          name="password"
+                          value={values.password}
+                          type="password"
+                          autoComplete="current-password"
+                          label="Password"
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          placeholder="Password"
+                        />
+                        <span>
+                          {touched.password && errors.password
+                            ? errors.password
+                            : ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={classes.navigations}>
+                      <p onClick={() => history.push('/login')}>
+                        Already have an account?
+                      </p>
+                      <button
+                        type="submit"
+                        disabled={
+                          !values.email ||
+                          !values.username ||
+                          !values.password ||
+                          isSubmitting ||
+                          !!(errors.email && touched.email) ||
+                          !!(errors.username && touched.username) ||
+                          !!(errors.password && touched.password)
+                        }
+                      >
+                        Register
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            />
+          )
+        }
+      </Mutation>
+    )
+  }
 }
 
 export default withAuthGuard(withRouter(withApollo(Register)))

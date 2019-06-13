@@ -1,4 +1,4 @@
-// RESOURCE PACK SOURCE: http://www.9minecraft.net/soft-bits-resource-pack/
+// RESOURCE PACK SOURCE: https://www.planetminecraft.com/texture_pack/modern-hd-pack-64x-ctm-better-skies/
 
 export default {
   geometries: {

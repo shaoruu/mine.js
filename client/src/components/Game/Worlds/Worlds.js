@@ -6,44 +6,45 @@ import { MY_WORLDS_QUERY } from '../../../lib/graphql'
 import WorldList from './WorldList/WorldList'
 import CreateNewWorld from './Buttons/CreateNewWorld/CreateNewWorld'
 import { Hint } from '../../Utils'
+import classes from './Worlds.module.css'
 
 const Worlds = withRouter(({ history, subpage }) => {
-	return (
-		<Query
-			query={MY_WORLDS_QUERY}
-			onError={err => console.error(err)}
-			fetchPolicy="network-only">
-			{({ loading, data }) => {
-				if (loading) return <Hint />
+  return (
+    <Query
+      query={MY_WORLDS_QUERY}
+      onError={err => console.error(err)}
+      fetchPolicy="network-only"
+    >
+      {({ loading, data }) => {
+        if (loading) return <Hint />
 
-				const { myWorlds } = data
+        const { myWorlds } = data
 
-				let render = null
-				switch (subpage) {
-					case 'create':
-						render = <CreateNewWorld />
-						break
-					case undefined:
-					case '':
-						render = (
-							<div>
-								<WorldList data={myWorlds} />
-								<button
-									onClick={() => history.push('/game/worlds/create')}>
-									Create New World
-								</button>
-							</div>
-						)
-						break
-					default:
-						render = <Redirect to="/game/worlds" />
-						break
-				}
+        let render = null
+        switch (subpage) {
+          case 'create':
+            render = <CreateNewWorld />
+            break
+          case undefined:
+          case '':
+            render = (
+              <div className={classes.wrapper}>
+                <WorldList data={myWorlds} />
+                <button onClick={() => history.push('/game/worlds/create')}>
+                  Create New World
+                </button>
+              </div>
+            )
+            break
+          default:
+            render = <Redirect to="/game/worlds" />
+            break
+        }
 
-				return render
-			}}
-		</Query>
-	)
+        return render
+      }}
+    </Query>
+  )
 })
 
 export { Worlds }

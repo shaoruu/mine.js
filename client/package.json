@@ -22,6 +22,7 @@
 		"react": "^16.8.4",
 		"react-apollo": "^2.5.2",
 		"react-dom": "^16.8.4",
+		"react-pannellum": "^0.1.6",
 		"react-router-dom": "^4.4.0",
 		"react-scripts": "2.1.8",
 		"stats-js": "^1.0.0",

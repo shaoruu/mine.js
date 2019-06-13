@@ -9,6 +9,8 @@ import { withRouter, Redirect } from 'react-router-dom'
 import { Minecraft, Start, Worlds, Options } from '../../components/Game'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 import { Hint } from '../../components/Utils'
+import bg from '../../assets/gui/options_background_2.png'
+import classes from './Game.module.css'
 
 class Game extends Component {
   render() {
@@ -43,7 +45,14 @@ class Game extends Component {
         break
     }
 
-    return render
+    return (
+      <div
+        style={{ backgroundImage: `url(${bg})` }}
+        className={classes.wrapper}
+      >
+        {render}
+      </div>
+    )
   }
 }
 

@@ -1,18 +1,62 @@
 import React from 'react'
 import { withRouter } from 'react-router-dom'
+import ReactPannellum from 'react-pannellum'
+
+import classes from './Start.module.css'
+import sharedStyles from '../../../containers/sharedStyles.module.css'
+import logo from '../../../assets/gui/MinecraftJS_logo.png'
+import panorama from '../../../assets/gui/Panorama.jpg'
 
 const Start = withRouter(props => {
-	const { history } = props
-	return (
-		<div>
-			<h1>Minecraft</h1>
-			<div>
-				<button onClick={() => history.push('/game/worlds')}>Play</button>
-				<button onClick={() => history.push('/game/options')}>Options</button>
-				<button onClick={() => history.push('/home')}>Quit Game</button>
-			</div>
-		</div>
-	)
+  const { history } = props
+  return (
+    <div className={classes.wrapper}>
+      <ReactPannellum
+        id="firstScene"
+        sceneId="firstScene"
+        imageSource={panorama}
+        className={classes.panorama}
+        config={{
+          autoRotate: -3,
+          autoLoad: true,
+          showZoomCtrl: false,
+          keyboardZoom: false,
+          mouseZoom: false,
+          draggable: false,
+          disableKeyboardCtrl: true,
+          showControls: false,
+          showFullscreenCtrl: false
+        }}
+      />
+      <img src={logo} alt="MinecraftJS" className={classes.logo} />
+      <button
+        className={`${sharedStyles.button} ${classes.play}`}
+        onClick={() => history.push('/game/worlds')}
+      >
+        Singleplayer
+      </button>
+      <button
+        className={`${classes.button} ${classes.play} ${classes.coming_soon}`}
+        disabled
+      >
+        Multiplayer (COMING SOON)
+      </button>
+      <div className={classes.options}>
+        <button
+          className={`${sharedStyles.button} ${classes.options_butt}`}
+          onClick={() => history.push('/game/options')}
+        >
+          Options
+        </button>
+        <button
+          className={`${sharedStyles.button} ${classes.options_butt}`}
+          onClick={() => history.push('/home')}
+        >
+          Quit Game
+        </button>
+      </div>
+    </div>
+  )
 })
 
 export { Start }
