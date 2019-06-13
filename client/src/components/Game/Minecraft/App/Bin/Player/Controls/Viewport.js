@@ -103,6 +103,8 @@ class Viewpoint {
         this.scene.remove(obj)
         this.isWireframed = false
       }
+
+      this.controls.stopBreakingBlock()
     }
   }
 
