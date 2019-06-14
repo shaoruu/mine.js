@@ -96,13 +96,13 @@ class MainScene extends Component {
       this.worldData,
       this.client,
       this.resourceManager,
-      this.mount
+      this.mount,
+      this.currentPlayer.user.username
     )
 
     // Player initialization
     this.player = new Player(
-      this.currentPlayer.id,
-      this.currentPlayer.gamemode,
+      this.currentPlayer,
       this.camera.threeCamera,
       this.scene,
       this.world,
@@ -228,7 +228,7 @@ class MainScene extends Component {
           else this.waitingForMount = true
         }}
       >
-        {({ loading, data }) => {
+        {({ client, loading, data }) => {
           if (loading) return <Hint text="Loading world..." />
           if (!data)
             return (

@@ -8,6 +8,13 @@ type User {
   createdAt: DateTime!
 }
 
+type Message {
+  world: World! @relation(name: "MessagesToWorld", onDelete: SET_NULL)
+  type: MessageType!
+  sender: String
+  body: String!
+}
+
 type Player {
   id: ID! @unique
   isAdmin: Boolean!
@@ -30,6 +37,7 @@ type World {
   lastPlayed: DateTime!
   changedBlocks: [Block!]! @relation(name: "BlocksToWorld", onDelete: CASCADE)
   players: [Player!]! @relation(name: "PlayersToWorld", onDelete: CASCADE)
+  messages: [Message!]! @relation(name: "MessagesToWorld", onDelete: CASCADE)
 }
 
 type Block {
@@ -54,4 +62,9 @@ enum Gamemode {
   CREATIVE
   ADVENTURE
   SPECTATOR
+}
+
+enum MessageType {
+  PLAYER
+  SERVER
 }

@@ -6,7 +6,9 @@ import * as Yup from 'yup'
  */
 export const REGISTER_MUTATION = gql`
   mutation Register($username: String!, $email: String!, $password: String!) {
-    createUser(data: { username: $username, email: $email, password: $password }) {
+    createUser(
+      data: { username: $username, email: $email, password: $password }
+    ) {
       token
     }
   }
@@ -59,7 +61,13 @@ export const UPDATE_PLAYER_MUTATION = gql`
 `
 
 export const UPDATE_BLOCK_MUTATION = gql`
-  mutation UpdateBlock($worldId: ID!, $type: Int!, $x: Int!, $y: Int!, $z: Int!) {
+  mutation UpdateBlock(
+    $worldId: ID!
+    $type: Int!
+    $x: Int!
+    $y: Int!
+    $z: Int!
+  ) {
     updateBlock(data: { worldId: $worldId, type: $type, x: $x, y: $y, z: $z }) {
       world {
         id
@@ -73,8 +81,16 @@ export const UPDATE_BLOCK_MUTATION = gql`
 `
 
 export const DELETE_WORLD_MUTATION = gql`
-  mutation deleteWorld($worldId: ID!) {
+  mutation DeleteWorld($worldId: ID!) {
     deleteWorld(worldId: $worldId)
+  }
+`
+
+export const RUN_COMMAND_MUTATION = gql`
+  mutation RunCommand($username: String!, $worldId: ID!, $command: String!) {
+    runCommand(
+      data: { username: $username, worldId: $worldId, command: $command }
+    )
   }
 `
 

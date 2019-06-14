@@ -1,11 +1,15 @@
 # source: http://localhost:4466
-# timestamp: Thu Jun 13 2019 22:25:56 GMT+0800 (CST)
+# timestamp: Fri Jun 14 2019 15:37:29 GMT+0800 (CST)
 
 type AggregateBlock {
   count: Int!
 }
 
 type AggregateInventory {
+  count: Int!
+}
+
+type AggregateMessage {
   count: Int!
 }
 
@@ -692,7 +696,340 @@ Long can represent values between -(2^63) and 2^63 - 1.
 """
 scalar Long
 
+type Message {
+  world: World!
+  type: MessageType!
+  sender: String
+  body: String!
+}
+
+"""A connection to a list of items."""
+type MessageConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of edges."""
+  edges: [MessageEdge]!
+  aggregate: AggregateMessage!
+}
+
+input MessageCreateInput {
+  type: MessageType!
+  sender: String
+  body: String!
+  world: WorldCreateOneWithoutMessagesInput!
+}
+
+input MessageCreateManyWithoutWorldInput {
+  create: [MessageCreateWithoutWorldInput!]
+}
+
+input MessageCreateWithoutWorldInput {
+  type: MessageType!
+  sender: String
+  body: String!
+}
+
+"""An edge in a connection."""
+type MessageEdge {
+  """The item at the end of the edge."""
+  node: Message!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+enum MessageOrderByInput {
+  type_ASC
+  type_DESC
+  sender_ASC
+  sender_DESC
+  body_ASC
+  body_DESC
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type MessagePreviousValues {
+  type: MessageType!
+  sender: String
+  body: String!
+}
+
+input MessageScalarWhereInput {
+  """Logical AND on all given filters."""
+  AND: [MessageScalarWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [MessageScalarWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [MessageScalarWhereInput!]
+  type: MessageType
+
+  """All values that are not equal to given value."""
+  type_not: MessageType
+
+  """All values that are contained in given list."""
+  type_in: [MessageType!]
+
+  """All values that are not contained in given list."""
+  type_not_in: [MessageType!]
+  sender: String
+
+  """All values that are not equal to given value."""
+  sender_not: String
+
+  """All values that are contained in given list."""
+  sender_in: [String!]
+
+  """All values that are not contained in given list."""
+  sender_not_in: [String!]
+
+  """All values less than the given value."""
+  sender_lt: String
+
+  """All values less than or equal the given value."""
+  sender_lte: String
+
+  """All values greater than the given value."""
+  sender_gt: String
+
+  """All values greater than or equal the given value."""
+  sender_gte: String
+
+  """All values containing the given string."""
+  sender_contains: String
+
+  """All values not containing the given string."""
+  sender_not_contains: String
+
+  """All values starting with the given string."""
+  sender_starts_with: String
+
+  """All values not starting with the given string."""
+  sender_not_starts_with: String
+
+  """All values ending with the given string."""
+  sender_ends_with: String
+
+  """All values not ending with the given string."""
+  sender_not_ends_with: String
+  body: String
+
+  """All values that are not equal to given value."""
+  body_not: String
+
+  """All values that are contained in given list."""
+  body_in: [String!]
+
+  """All values that are not contained in given list."""
+  body_not_in: [String!]
+
+  """All values less than the given value."""
+  body_lt: String
+
+  """All values less than or equal the given value."""
+  body_lte: String
+
+  """All values greater than the given value."""
+  body_gt: String
+
+  """All values greater than or equal the given value."""
+  body_gte: String
+
+  """All values containing the given string."""
+  body_contains: String
+
+  """All values not containing the given string."""
+  body_not_contains: String
+
+  """All values starting with the given string."""
+  body_starts_with: String
+
+  """All values not starting with the given string."""
+  body_not_starts_with: String
+
+  """All values ending with the given string."""
+  body_ends_with: String
+
+  """All values not ending with the given string."""
+  body_not_ends_with: String
+}
+
+type MessageSubscriptionPayload {
+  mutation: MutationType!
+  node: Message
+  updatedFields: [String!]
+  previousValues: MessagePreviousValues
+}
+
+input MessageSubscriptionWhereInput {
+  """Logical AND on all given filters."""
+  AND: [MessageSubscriptionWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [MessageSubscriptionWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [MessageSubscriptionWhereInput!]
+
+  """The subscription event gets dispatched when it's listed in mutation_in"""
+  mutation_in: [MutationType!]
+
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: MessageWhereInput
+}
+
+enum MessageType {
+  PLAYER
+  SERVER
+}
+
+input MessageUpdateManyDataInput {
+  type: MessageType
+  sender: String
+  body: String
+}
+
+input MessageUpdateManyMutationInput {
+  type: MessageType
+  sender: String
+  body: String
+}
+
+input MessageUpdateManyWithoutWorldInput {
+  create: [MessageCreateWithoutWorldInput!]
+  updateMany: [MessageUpdateManyWithWhereNestedInput!]
+  deleteMany: [MessageScalarWhereInput!]
+}
+
+input MessageUpdateManyWithWhereNestedInput {
+  where: MessageScalarWhereInput!
+  data: MessageUpdateManyDataInput!
+}
+
+input MessageWhereInput {
+  """Logical AND on all given filters."""
+  AND: [MessageWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [MessageWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [MessageWhereInput!]
+  type: MessageType
+
+  """All values that are not equal to given value."""
+  type_not: MessageType
+
+  """All values that are contained in given list."""
+  type_in: [MessageType!]
+
+  """All values that are not contained in given list."""
+  type_not_in: [MessageType!]
+  sender: String
+
+  """All values that are not equal to given value."""
+  sender_not: String
+
+  """All values that are contained in given list."""
+  sender_in: [String!]
+
+  """All values that are not contained in given list."""
+  sender_not_in: [String!]
+
+  """All values less than the given value."""
+  sender_lt: String
+
+  """All values less than or equal the given value."""
+  sender_lte: String
+
+  """All values greater than the given value."""
+  sender_gt: String
+
+  """All values greater than or equal the given value."""
+  sender_gte: String
+
+  """All values containing the given string."""
+  sender_contains: String
+
+  """All values not containing the given string."""
+  sender_not_contains: String
+
+  """All values starting with the given string."""
+  sender_starts_with: String
+
+  """All values not starting with the given string."""
+  sender_not_starts_with: String
+
+  """All values ending with the given string."""
+  sender_ends_with: String
+
+  """All values not ending with the given string."""
+  sender_not_ends_with: String
+  body: String
+
+  """All values that are not equal to given value."""
+  body_not: String
+
+  """All values that are contained in given list."""
+  body_in: [String!]
+
+  """All values that are not contained in given list."""
+  body_not_in: [String!]
+
+  """All values less than the given value."""
+  body_lt: String
+
+  """All values less than or equal the given value."""
+  body_lte: String
+
+  """All values greater than the given value."""
+  body_gt: String
+
+  """All values greater than or equal the given value."""
+  body_gte: String
+
+  """All values containing the given string."""
+  body_contains: String
+
+  """All values not containing the given string."""
+  body_not_contains: String
+
+  """All values starting with the given string."""
+  body_starts_with: String
+
+  """All values not starting with the given string."""
+  body_not_starts_with: String
+
+  """All values ending with the given string."""
+  body_ends_with: String
+
+  """All values not ending with the given string."""
+  body_not_ends_with: String
+  world: WorldWhereInput
+}
+
 type Mutation {
+  createMessage(data: MessageCreateInput!): Message!
   createPlayer(data: PlayerCreateInput!): Player!
   createBlock(data: BlockCreateInput!): Block!
   createInventory(data: InventoryCreateInput!): Inventory!
@@ -710,11 +1047,13 @@ type Mutation {
   upsertBlock(where: BlockWhereUniqueInput!, create: BlockCreateInput!, update: BlockUpdateInput!): Block!
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertWorld(where: WorldWhereUniqueInput!, create: WorldCreateInput!, update: WorldUpdateInput!): World!
+  updateManyMessages(data: MessageUpdateManyMutationInput!, where: MessageWhereInput): BatchPayload!
   updateManyPlayers(data: PlayerUpdateManyMutationInput!, where: PlayerWhereInput): BatchPayload!
   updateManyBlocks(data: BlockUpdateManyMutationInput!, where: BlockWhereInput): BatchPayload!
   updateManyInventories(data: InventoryUpdateManyMutationInput!, where: InventoryWhereInput): BatchPayload!
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   updateManyWorlds(data: WorldUpdateManyMutationInput!, where: WorldWhereInput): BatchPayload!
+  deleteManyMessages(where: MessageWhereInput): BatchPayload!
   deleteManyPlayers(where: PlayerWhereInput): BatchPayload!
   deleteManyBlocks(where: BlockWhereInput): BatchPayload!
   deleteManyInventories(where: InventoryWhereInput): BatchPayload!
@@ -1391,6 +1730,7 @@ enum PrismaDatabase {
 }
 
 type Query {
+  messages(where: MessageWhereInput, orderBy: MessageOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Message]!
   players(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Player]!
   blocks(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Block]!
   inventories(where: InventoryWhereInput, orderBy: InventoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Inventory]!
@@ -1400,6 +1740,7 @@ type Query {
   block(where: BlockWhereUniqueInput!): Block
   user(where: UserWhereUniqueInput!): User
   world(where: WorldWhereUniqueInput!): World
+  messagesConnection(where: MessageWhereInput, orderBy: MessageOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MessageConnection!
   playersConnection(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PlayerConnection!
   blocksConnection(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BlockConnection!
   inventoriesConnection(where: InventoryWhereInput, orderBy: InventoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): InventoryConnection!
@@ -1414,6 +1755,7 @@ type Query {
 }
 
 type Subscription {
+  message(where: MessageSubscriptionWhereInput): MessageSubscriptionPayload
   player(where: PlayerSubscriptionWhereInput): PlayerSubscriptionPayload
   block(where: BlockSubscriptionWhereInput): BlockSubscriptionPayload
   inventory(where: InventorySubscriptionWhereInput): InventorySubscriptionPayload
@@ -1786,6 +2128,7 @@ type World implements Node {
   lastPlayed: DateTime!
   changedBlocks(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Block!]
   players(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Player!]
+  messages(where: MessageWhereInput, orderBy: MessageOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Message!]
 }
 
 """A connection to a list of items."""
@@ -1804,6 +2147,7 @@ input WorldCreateInput {
   lastPlayed: DateTime!
   changedBlocks: BlockCreateManyWithoutWorldInput
   players: PlayerCreateManyWithoutWorldInput
+  messages: MessageCreateManyWithoutWorldInput
 }
 
 input WorldCreateManyInput {
@@ -1813,6 +2157,11 @@ input WorldCreateManyInput {
 
 input WorldCreateOneWithoutChangedBlocksInput {
   create: WorldCreateWithoutChangedBlocksInput
+  connect: WorldWhereUniqueInput
+}
+
+input WorldCreateOneWithoutMessagesInput {
+  create: WorldCreateWithoutMessagesInput
   connect: WorldWhereUniqueInput
 }
 
@@ -1826,6 +2175,15 @@ input WorldCreateWithoutChangedBlocksInput {
   seed: String!
   lastPlayed: DateTime!
   players: PlayerCreateManyWithoutWorldInput
+  messages: MessageCreateManyWithoutWorldInput
+}
+
+input WorldCreateWithoutMessagesInput {
+  name: String!
+  seed: String!
+  lastPlayed: DateTime!
+  changedBlocks: BlockCreateManyWithoutWorldInput
+  players: PlayerCreateManyWithoutWorldInput
 }
 
 input WorldCreateWithoutPlayersInput {
@@ -1833,6 +2191,7 @@ input WorldCreateWithoutPlayersInput {
   seed: String!
   lastPlayed: DateTime!
   changedBlocks: BlockCreateManyWithoutWorldInput
+  messages: MessageCreateManyWithoutWorldInput
 }
 
 """An edge in a connection."""
@@ -2062,6 +2421,7 @@ input WorldUpdateDataInput {
   lastPlayed: DateTime
   changedBlocks: BlockUpdateManyWithoutWorldInput
   players: PlayerUpdateManyWithoutWorldInput
+  messages: MessageUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateInput {
@@ -2070,6 +2430,7 @@ input WorldUpdateInput {
   lastPlayed: DateTime
   changedBlocks: BlockUpdateManyWithoutWorldInput
   players: PlayerUpdateManyWithoutWorldInput
+  messages: MessageUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateManyDataInput {
@@ -2120,6 +2481,7 @@ input WorldUpdateWithoutChangedBlocksDataInput {
   seed: String
   lastPlayed: DateTime
   players: PlayerUpdateManyWithoutWorldInput
+  messages: MessageUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateWithoutPlayersDataInput {
@@ -2127,6 +2489,7 @@ input WorldUpdateWithoutPlayersDataInput {
   seed: String
   lastPlayed: DateTime
   changedBlocks: BlockUpdateManyWithoutWorldInput
+  messages: MessageUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateWithWhereUniqueNestedInput {
@@ -2307,6 +2670,9 @@ input WorldWhereInput {
   players_every: PlayerWhereInput
   players_some: PlayerWhereInput
   players_none: PlayerWhereInput
+  messages_every: MessageWhereInput
+  messages_some: MessageWhereInput
+  messages_none: MessageWhereInput
 }
 
 input WorldWhereUniqueInput {

@@ -9,8 +9,7 @@ const P_I_2_TOE = Config.player.aabb.eye2toe,
 
 export default class Player {
   constructor(
-    id,
-    gamemode,
+    playerData,
     camera,
     scene,
     world,
@@ -24,6 +23,8 @@ export default class Player {
     mutatePlayer,
     chat
   ) {
+    const { id, gamemode } = playerData
+
     this.id = id
 
     this.mutatePlayer = mutatePlayer

@@ -1,14 +1,17 @@
 import classes from './Chat.module.css'
 import Helpers from '../../../Utils/Helpers'
-import ChatInput from './ChatInput/ChatInput'
+import { RUN_COMMAND_MUTATION } from '../../../../../../lib/graphql'
 
 class Chat {
-  constructor(container) {
+  constructor(username, worldId, container, apolloClient) {
     this.state = {
       enabled: false
     }
 
     this.messages = []
+    this.username = username
+    this.worldId = worldId
+    this.apolloClient = apolloClient
 
     this.initDom(container)
   }
@@ -43,7 +46,59 @@ class Chat {
   }
 
   handleEnter = () => {
-    console.log(this.getInput())
+    const value = this.getInput()
+
+    this.apolloClient.mutate({
+      mutation: RUN_COMMAND_MUTATION,
+      variables: {
+        worldId: this.worldId,
+        username: this.username,
+        command: value
+      }
+    })
+
+    // if (value.startsWith('/')) {
+    //   const args = value.substr(1).split(' ')
+
+    //   switch (args[0]) {
+    //     case 'gamemode': {
+    //       switch (args[1]) {
+    //         case 's':
+    //         case 'survival':
+    //         case '0': {
+    //           // TEMP
+
+    //           console.log('going survival')
+    //           break
+    //         }
+
+    //         case 'c':
+    //         case 'creative':
+    //         case '1': {
+    //           // TEMP
+
+    //           console.log('going creative')
+    //           break
+    //         }
+
+    //         case 'sp':
+    //         case 'spectator':
+    //         case '3': {
+    //           // TEMP
+
+    //           console.log('going spectator')
+    //           break
+    //         }
+
+    //         default:
+    //           break
+    //       }
+    //       break
+    //     }
+    //     default:
+    //       break
+    //   }
+    // }
   }
 
   getGui = () => this.gui.textbox

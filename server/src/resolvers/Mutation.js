@@ -196,6 +196,17 @@ const Mutation = {
   async deleteWorld(parent, args, { prisma }, info) {
     await prisma.mutation.deleteWorld({ where: { id: args.worldId } })
     return true
+  },
+  async runCommand(
+    parent,
+    {
+      data: { username, worldId, command }
+    },
+    { prisma },
+    info
+  ) {
+    console.log(command)
+    return true
   }
 }
 

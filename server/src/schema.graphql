@@ -17,11 +17,13 @@ type Mutation {
   updatePlayer(data: UpdatePlayerInput!): Player!
   updateBlock(data: UpdateBlockInput!): Block!
   deleteWorld(worldId: ID!): Boolean!
+  runCommand(data: RunCommandInput!): Boolean!
 }
 
 type Subscription {
   # Chunks
   block(worldId: ID!): BlockSubscriptionPayload!
+  message(worldId: ID!): MessageSubscriptionPayload!
 }
 
 type User {
@@ -41,6 +43,13 @@ type World {
   lastPlayed: String!
   changedBlocks: [Block!]!
   players: [Player!]!
+}
+
+type Message {
+  world: World!
+  type: MessageType!
+  sender: String
+  body: String!
 }
 
 type Player {
@@ -115,6 +124,12 @@ input UpdateBlockInput {
   z: Int!
 }
 
+input RunCommandInput {
+  username: String!
+  worldId: ID!
+  command: String!
+}
+
 type AuthPayload {
   token: String!
   user: User!
@@ -133,7 +148,17 @@ enum MutationType {
   DELETED
 }
 
+enum MessageType {
+  PLAYER
+  SERVER
+}
+
 type BlockSubscriptionPayload {
   mutation: MutationType!
   node: Block
+}
+
+type MessageSubscriptionPayload {
+  mutation: MutationType!
+  node: Message
 }

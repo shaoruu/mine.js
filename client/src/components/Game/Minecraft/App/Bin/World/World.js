@@ -16,11 +16,19 @@ const SIZE = Config.chunk.size,
   NOISE_CONSTANT = Config.world.noiseConstant
 
 class World {
-  constructor(id, scene, worldData, apolloClient, resourceManager, container) {
+  constructor(
+    id,
+    scene,
+    worldData,
+    apolloClient,
+    resourceManager,
+    container,
+    username
+  ) {
     const { seed, name, changedBlocks } = worldData
 
     // Chat
-    this.chat = new Chat(container)
+    this.chat = new Chat(username, id, container, apolloClient)
 
     this.id = id
     this.seed = seed
@@ -370,10 +378,7 @@ class World {
     return this.getVoxelByVoxelCoords(gbc.x, gbc.y, gbc.z)
   }
   getTargetBlockInfo = () => {
-    if (!this.targetBlock) {
-      console.log('no target block')
-      return null
-    }
+    if (!this.targetBlock) return null
 
     const { chunk, block } = this.targetBlock
 
