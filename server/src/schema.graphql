@@ -24,6 +24,7 @@ type Subscription {
   # Chunks
   block(worldId: ID!): BlockSubscriptionPayload!
   message(worldId: ID!): MessageSubscriptionPayload!
+  player(username: String!): PlayerSubscriptionPayload!
 }
 
 type User {
@@ -161,4 +162,9 @@ type BlockSubscriptionPayload {
 type MessageSubscriptionPayload {
   mutation: MutationType!
   node: Message
+}
+
+type PlayerSubscriptionPayload {
+  mutation: MutationType!
+  node: Player
 }

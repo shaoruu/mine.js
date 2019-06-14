@@ -19,7 +19,7 @@ class Logout extends Component {
         {client => {
           if (process.browser) if (isAuth) signout(client)
           removeAllCookies()
-          return <Redirect to="/login" />
+          return <Redirect to="/home" />
         }}
       </ApolloConsumer>
     )

@@ -28,6 +28,22 @@ const Subscription = {
         info
       })
     }
+  },
+  player: {
+    subscribe(parent, { username }, { prisma }, info) {
+      return prisma.subscription.player(
+        {
+          where: {
+            node: {
+              user: {
+                username: username
+              }
+            }
+          }
+        },
+        info
+      )
+    }
   }
 }
 

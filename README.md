@@ -4,15 +4,37 @@ MinecraftJS brings the best-selling PC game "Minecraft" into the web with the po
 
 # Motivation
 
-Having to open an additional app to play a game is sometimes too tiring. Therefore, we thought it'd be interesting to somehow implement Minecraft with javascript, essentially bringing the whole Minecraft game into the web. This not only takes away the tedious process of installing the game, it also brings the entire game to players with a couple clicks.
+Having to open an additional app to play a game is sometimes too tiring. Therefore, I thought it'd be interesting to somehow implement Minecraft with javascript, essentially bringing the whole Minecraft game into the web. This not only takes away the tedious process of installing the game, it also brings the entire game to players within a couple clicks.
 
 # Screenshots
 
-Simple and working terrain generation
-![](https://i.imgur.com/KMg9TUs.png)
+These are some screenshots taken directly from the project.
 
-Ability to build and break blocks
-![](https://i.imgur.com/vRnmoMQ.png)
+## User Authentication
+
+![](https://i.imgur.com/1jwIc4x.jpg)
+
+![](https://i.imgur.com/VKyEP2F.jpg)
+
+![](https://i.imgur.com/GUyan19.jpg)
+
+![](https://i.imgur.com/u52JZ3n.jpg)
+
+## Neatly Styled Game UI
+
+![](https://i.imgur.com/YoVA8P6.jpg)
+
+![](https://i.imgur.com/du58Ifa.png)
+
+## Simple and Working Terrain Generation <small>(props to [FreshKoala](https://github.com/mrprokoala))</small>
+
+![](https://i.imgur.com/RbwUMwe.jpg)
+
+![](https://i.imgur.com/sPJ6DE5.jpg)
+
+## Awesome Gameplay
+
+![](https://i.imgur.com/Xw5u4Lx.jpg)
 
 # Build Stack
 
