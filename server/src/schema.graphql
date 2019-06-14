@@ -126,7 +126,7 @@ input UpdateBlockInput {
 }
 
 input RunCommandInput {
-  username: String!
+  playerId: ID!
   worldId: ID!
   command: String!
 }

@@ -3,13 +3,13 @@ import Helpers from '../../../Utils/Helpers'
 import { RUN_COMMAND_MUTATION } from '../../../../../../lib/graphql'
 
 class Chat {
-  constructor(username, worldId, container, apolloClient) {
+  constructor(playerId, worldId, container, apolloClient) {
     this.state = {
       enabled: false
     }
 
     this.messages = []
-    this.username = username
+    this.playerId = playerId
     this.worldId = worldId
     this.apolloClient = apolloClient
 
@@ -52,53 +52,14 @@ class Chat {
       mutation: RUN_COMMAND_MUTATION,
       variables: {
         worldId: this.worldId,
-        username: this.username,
+        playerId: this.playerId,
         command: value
       }
     })
+  }
 
-    // if (value.startsWith('/')) {
-    //   const args = value.substr(1).split(' ')
-
-    //   switch (args[0]) {
-    //     case 'gamemode': {
-    //       switch (args[1]) {
-    //         case 's':
-    //         case 'survival':
-    //         case '0': {
-    //           // TEMP
-
-    //           console.log('going survival')
-    //           break
-    //         }
-
-    //         case 'c':
-    //         case 'creative':
-    //         case '1': {
-    //           // TEMP
-
-    //           console.log('going creative')
-    //           break
-    //         }
-
-    //         case 'sp':
-    //         case 'spectator':
-    //         case '3': {
-    //           // TEMP
-
-    //           console.log('going spectator')
-    //           break
-    //         }
-
-    //         default:
-    //           break
-    //       }
-    //       break
-    //     }
-    //     default:
-    //       break
-    //   }
-    // }
+  addMessage = data => {
+    console.log(data)
   }
 
   getGui = () => this.gui.textbox

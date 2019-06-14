@@ -200,12 +200,82 @@ const Mutation = {
   async runCommand(
     parent,
     {
-      data: { username, worldId, command }
+      data: { playerId, worldId, command }
     },
     { prisma },
     info
   ) {
-    console.log(command)
+    if (command.startsWith('/')) {
+      const args = command
+        .substr(1)
+        .split(' ')
+        .filter(ele => !!ele)
+
+      switch (args[0]) {
+        case 'gamemode': {
+          switch (args[1]) {
+            case 's':
+            case 'survival':
+            case '0': {
+              if (args[2]) {
+                // do something else
+              } else {
+                prisma.mutation.updatePlayer({
+                  data: {
+                    gamemode: 'SURVIVAL'
+                  },
+                  where: { id: playerId }
+                })
+              }
+
+              break
+            }
+
+            case 'c':
+            case 'creative':
+            case '1': {
+              if (args[2]) {
+                // do something else
+              } else {
+                prisma.mutation.updatePlayer({
+                  data: {
+                    gamemode: 'CREATIVE'
+                  },
+                  where: { id: playerId }
+                })
+              }
+
+              break
+            }
+
+            case 'sp':
+            case 'spectator':
+            case '3': {
+              if (args[2]) {
+                // do something else
+              } else {
+                prisma.mutation.updatePlayer({
+                  data: {
+                    gamemode: 'SPECTATOR'
+                  },
+                  where: { id: playerId }
+                })
+              }
+
+              break
+            }
+
+            default:
+              break
+          }
+          break
+        }
+        default:
+          break
+      }
+    } else {
+      // NORMAL MESSAGE
+    }
     return true
   }
 }

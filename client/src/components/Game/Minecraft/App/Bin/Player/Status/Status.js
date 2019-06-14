@@ -49,6 +49,11 @@ class Status {
 
   toggleSprint = () => (this.state.isSprinting = !this.state.isSprinting)
 
+  setGamemode = gamemode => {
+    this.gamemode = gamemode
+    this.initializeState()
+  }
+
   get shouldFriction() {
     return !this.state.flying || !this.state.hasJumped
   }

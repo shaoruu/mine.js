@@ -47,12 +47,7 @@ class Controls extends Stateful {
     super()
 
     // Controls
-    this.threeControls = new PointerLockControls(
-      camera,
-      container,
-      initPos,
-      initDirs
-    )
+    this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
 
     // Physics
     this.vel = new THREE.Vector3(0, 0, 0)
@@ -187,8 +182,7 @@ class Controls extends Stateful {
   }
 
   _handleMouseDown = e => {
-    if (!this.chat.enabled && this.threeControls.isLocked)
-      this.mouseKey = e.button
+    if (!this.chat.enabled && this.threeControls.isLocked) this.mouseKey = e.button
   }
 
   _handleMouseUp = e => {
@@ -321,8 +315,7 @@ class Controls extends Stateful {
       () => (this.movements.up = true),
       () => (this.movements.up = false),
       () => {
-        if (this.status.canFly && this.status.isCreative)
-          this.status.toggleFly()
+        if (this.status.canFly && this.status.isCreative) this.status.toggleFly()
       },
       { immediate: true }
     )
@@ -476,18 +469,16 @@ class Controls extends Stateful {
     const playerPos = this.getNormalizedCamPos(10)
     const scaledVel = this.vel.clone().multiplyScalar(delta / DIMENSION)
 
-    if (!this.status.isSpectator) {
-      const EPSILON = 1 / 1024
+    const EPSILON = 1 / 1024
 
-      if (Math.abs(scaledVel.x) > Math.abs(scaledVel.z)) {
-        this._handleXCollision(playerPos, scaledVel, EPSILON)
-        this._handleZCollision(playerPos, scaledVel, EPSILON)
-      } else {
-        this._handleZCollision(playerPos, scaledVel, EPSILON)
-        this._handleXCollision(playerPos, scaledVel, EPSILON)
-      }
-      this._handleYCollision(playerPos, scaledVel, EPSILON)
+    if (Math.abs(scaledVel.x) > Math.abs(scaledVel.z)) {
+      this._handleXCollision(playerPos, scaledVel, EPSILON)
+      this._handleZCollision(playerPos, scaledVel, EPSILON)
+    } else {
+      this._handleZCollision(playerPos, scaledVel, EPSILON)
+      this._handleXCollision(playerPos, scaledVel, EPSILON)
     }
+    this._handleYCollision(playerPos, scaledVel, EPSILON)
 
     scaledVel.multiplyScalar(DIMENSION / delta)
     this.vel.copy(scaledVel)
@@ -501,7 +492,7 @@ class Controls extends Stateful {
     // X-AXIS COLLISION
     let newX
 
-    if (!Helpers.approxEquals(scaledVel.x, 0)) {
+    if (!Helpers.approxEquals(scaledVel.x, 0) && !this.status.isSpectator) {
       const min_x = playerPos.x - P_WIDTH / 2
       const max_x = playerPos.x + P_WIDTH / 2
       const min_y = Math.floor(playerPos.y - P_I_2_TOE)
@@ -552,7 +543,7 @@ class Controls extends Stateful {
     // Y-AXIS COLLISION
     let newY
 
-    if (!Helpers.approxEquals(scaledVel.y, 0)) {
+    if (!Helpers.approxEquals(scaledVel.y, 0) && !this.status.isSpectator) {
       const min_y = playerPos.y - P_I_2_TOE
       const max_y = playerPos.y + P_I_2_TOP
       const min_x = Math.floor(playerPos.x - P_WIDTH / 2)
@@ -607,7 +598,7 @@ class Controls extends Stateful {
     // Z-AXIS COLLISION
     let newZ
 
-    if (!Helpers.approxEquals(scaledVel.z, 0)) {
+    if (!Helpers.approxEquals(scaledVel.z, 0) && !this.status.isSpectator) {
       const min_z = playerPos.z - P_DEPTH / 2
       const max_z = playerPos.z + P_DEPTH / 2
       const min_x = Math.floor(playerPos.x - P_WIDTH / 2)

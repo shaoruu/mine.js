@@ -44,16 +44,15 @@ export default class Player {
       initPos,
       initDirs
     )
-    if (!this.status.isSpectator) {
-      this.viewport = new PlayerViewport(
-        scene,
-        camera,
-        this.controls,
-        world,
-        resourceManager
-      )
-      this.controls.registerViewport(this.viewport)
-    }
+
+    this.viewport = new PlayerViewport(
+      scene,
+      camera,
+      this.controls,
+      world,
+      resourceManager
+    )
+    this.controls.registerViewport(this.viewport)
 
     this.inventory = new Inventory(
       container,
@@ -97,5 +96,13 @@ export default class Player {
   // Remove item from hand
   takeFromHand = amount => {
     this.inventory.takeFromHand(amount)
+  }
+
+  handleUpdate = ({
+    player: {
+      node: { gamemode }
+    }
+  }) => {
+    if (gamemode !== this.status.gamemode) this.status.setGamemode(gamemode)
   }
 }

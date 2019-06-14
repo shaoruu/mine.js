@@ -12,7 +12,9 @@ import Helpers from '../../Utils/Helpers'
 import {
   WORLD_QUERY,
   BLOCK_SUBSCRIPTION,
-  UPDATE_PLAYER_MUTATION
+  UPDATE_PLAYER_MUTATION,
+  MESSAGE_SUBSCRIPTION,
+  PLAYER_SUBSCRIPTION
 } from '../../../../../lib/graphql'
 import ResourceManager from '../../Data/ResourceManager/ResourceManager'
 import sharedStyles from '../../../../../containers/sharedStyles.module.css'
@@ -69,11 +71,7 @@ class MainScene extends Component {
     // Main scene creation
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(Config.background.color)
-    this.scene.fog = new THREE.Fog(
-      Config.fog.color,
-      Config.fog.near,
-      Config.fog.far
-    )
+    this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
 
     // Main renderer constructor
     this.renderer = new Renderer(this.scene, this.mount)
@@ -97,7 +95,7 @@ class MainScene extends Component {
       this.client,
       this.resourceManager,
       this.mount,
-      this.currentPlayer.user.username
+      this.currentPlayer.id
     )
 
     // Player initialization
@@ -157,8 +155,7 @@ class MainScene extends Component {
 
   componentWillUnmount() {
     this.terminate()
-    if (this.mount)
-      this.mount.removeChild(this.renderer.threeRenderer.domElement)
+    if (this.mount) this.mount.removeChild(this.renderer.threeRenderer.domElement)
     window.removeEventListener('beforeunload', this.closingHandler, false)
   }
 
@@ -179,8 +176,7 @@ class MainScene extends Component {
 
     this.renderScene()
     this.stats.end()
-    if (!document.webkitHidden)
-      this.frameId = window.requestAnimationFrame(this.animate)
+    if (!document.webkitHidden) this.frameId = window.requestAnimationFrame(this.animate)
   }
 
   update = () => {
@@ -192,9 +188,7 @@ class MainScene extends Component {
   }
 
   updateWorld = () => {
-    const { coordx, coordy, coordz } = Helpers.toChunkCoords(
-      this.player.getCoordinates()
-    )
+    const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.player.getCoordinates())
 
     this.world.requestMeshUpdate({
       coordx,
@@ -214,7 +208,7 @@ class MainScene extends Component {
   }
 
   render() {
-    const { id: worldId, history } = this.props
+    const { id: worldId, history, username } = this.props
 
     return (
       <Query
@@ -226,9 +220,8 @@ class MainScene extends Component {
           this.worldData = world
           if (this.mount) this.handleQueryComplete()
           else this.waitingForMount = true
-        }}
-      >
-        {({ client, loading, data }) => {
+        }}>
+        {({ loading, data }) => {
           if (loading) return <Hint text="Loading world..." />
           if (!data)
             return (
@@ -236,8 +229,7 @@ class MainScene extends Component {
                 <Hint text="World not found." />
                 <button
                   className={sharedStyles.button}
-                  onClick={() => history.push('/game/start')}
-                >
+                  onClick={() => history.push('/game/start')}>
                   Home
                 </button>
               </div>
@@ -247,8 +239,7 @@ class MainScene extends Component {
             <>
               <Mutation
                 mutation={UPDATE_PLAYER_MUTATION}
-                onError={err => console.error(err)}
-              >
+                onError={err => console.error(err)}>
                 {(updatePlayer, { client }) => {
                   this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
                   this.client = client
@@ -265,24 +256,20 @@ class MainScene extends Component {
                           this.waitingForMount = false
                           this.handleQueryComplete()
                         }
-                      }}
-                    >
+                      }}>
                       <div
                         className={classes.blocker}
-                        ref={blocker => (this.blocker = blocker)}
-                      >
+                        ref={blocker => (this.blocker = blocker)}>
                         <h1 className={classes.title}>Game Menu</h1>
                         <div className={classes.menu}>
                           <button
                             className={sharedStyles.button}
-                            ref={button => (this.button = button)}
-                          >
+                            ref={button => (this.button = button)}>
                             Back to Game
                           </button>
                           <button
                             className={sharedStyles.button}
-                            onClick={() => history.push('/game/start')}
-                          >
+                            onClick={() => history.push('/game/start')}>
                             Save and Quit to Title
                           </button>
                         </div>
@@ -297,6 +284,20 @@ class MainScene extends Component {
                         variables={{ worldId }}
                         onSubscriptionData={({ subscriptionData: { data } }) =>
                           this.world.updateChanged(data)
+                        }
+                      />
+                      <Subscription
+                        subscription={MESSAGE_SUBSCRIPTION}
+                        variables={{ worldId }}
+                        onSubscriptiondata={({ subscriptionData: { data } }) =>
+                          this.world.chat.addMessage(data)
+                        }
+                      />
+                      <Subscription
+                        subscription={PLAYER_SUBSCRIPTION}
+                        variables={{ username }}
+                        onSubscriptionData={({ subscriptionData: { data } }) =>
+                          this.player.handleUpdate(data)
                         }
                       />
                     </div>

@@ -13,4 +13,8 @@ export {
   RUN_COMMAND_MUTATION
 } from './mutations'
 
-export { BLOCK_SUBSCRIPTION } from './subscriptions'
+export {
+  BLOCK_SUBSCRIPTION,
+  MESSAGE_SUBSCRIPTION,
+  PLAYER_SUBSCRIPTION
+} from './subscriptions'
