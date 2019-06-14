@@ -191,7 +191,8 @@ export default {
       h9: 57
     },
     multiplayer: {
-      openChat: 84
+      openChat: 84,
+      openCommand: 191
     },
     dblTimeout: 200 //ms
   },

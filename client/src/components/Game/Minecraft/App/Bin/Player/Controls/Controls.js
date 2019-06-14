@@ -248,8 +248,6 @@ class Controls extends Stateful {
     )
     // this.keyboard.registerKey(38, ) // up
     // this.keyboard.registerKey(40, ) // down
-    this.keyboard.registerKey(37, 'chat', this.chat.input.moveLeft)
-    this.keyboard.registerKey(39, 'chat', this.chat.input.moveRight)
 
     this.keyboard.registerKey(
       27,
@@ -259,11 +257,6 @@ class Controls extends Stateful {
       undefined,
       { repeat: false }
     )
-
-    this.keyboard.setScopeDefaultHandler('chat', event => {
-      const char = String.fromCharCode(event.keyCode)
-      this.chat.input.insert(char)
-    })
 
     /**
      * moving KEYS ('moving')
@@ -342,8 +335,14 @@ class Controls extends Stateful {
     )
 
     this.keyboard.registerKey(MULTIPLAYER_KEYS.openChat, 'moving', () => {
-      this.chat.enable()
       this.threeControls.unlock()
+      this.chat.enable()
+      this.keyboard.setScope('chat')
+    })
+
+    this.keyboard.registerKey(MULTIPLAYER_KEYS.openCommand, 'moving', () => {
+      this.threeControls.unlock()
+      this.chat.enable(false)
       this.keyboard.setScope('chat')
     })
 

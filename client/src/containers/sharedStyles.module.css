@@ -11,6 +11,7 @@
   font-size: 15px;
   background: #5b5b5c;
   border-radius: 3px;
+  text-shadow: 3px 3px 0px #424242;
   cursor: pointer;
 }
 
