@@ -108,6 +108,7 @@ class MainScene extends Component {
       this.world,
       this.mount,
       this.blocker,
+      this.button,
       this.initPos,
       this.initDirs,
       this.resourceManager,
@@ -156,7 +157,8 @@ class MainScene extends Component {
 
   componentWillUnmount() {
     this.terminate()
-    this.mount.removeChild(this.renderer.threeRenderer.domElement)
+    if (this.mount)
+      this.mount.removeChild(this.renderer.threeRenderer.domElement)
     window.removeEventListener('beforeunload', this.closingHandler, false)
   }
 
@@ -228,7 +230,18 @@ class MainScene extends Component {
       >
         {({ loading, data }) => {
           if (loading) return <Hint text="Loading world..." />
-          if (!data) return <Hint text="World not found." />
+          if (!data)
+            return (
+              <div className={classes.world_not_found}>
+                <Hint text="World not found." />
+                <button
+                  className={sharedStyles.button}
+                  onClick={() => history.push('/game/start')}
+                >
+                  Home
+                </button>
+              </div>
+            )
 
           return (
             <>
@@ -260,7 +273,10 @@ class MainScene extends Component {
                       >
                         <h1 className={classes.title}>Game Menu</h1>
                         <div className={classes.menu}>
-                          <button className={sharedStyles.button}>
+                          <button
+                            className={sharedStyles.button}
+                            ref={button => (this.button = button)}
+                          >
                             Back to Game
                           </button>
                           <button

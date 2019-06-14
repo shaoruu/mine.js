@@ -16,6 +16,7 @@ export default class Player {
     world,
     container,
     blocker,
+    button,
     initPos,
     initDirs,
     resourceManager,
@@ -38,6 +39,7 @@ export default class Player {
       camera,
       container,
       blocker,
+      button,
       initPos,
       initDirs
     )

@@ -1,8 +1,8 @@
 .world_item {
   cursor: pointer;
   width: 400px;
-  height: 70px;
-  border: 1px solid transparent;
+  height: 72px;
+  border: 2px solid transparent;
   display: flex;
   flex-direction: column;
   padding: 8px;

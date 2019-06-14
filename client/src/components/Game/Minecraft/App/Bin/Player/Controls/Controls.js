@@ -40,6 +40,7 @@ class Controls extends Stateful {
     camera,
     container,
     blocker,
+    button,
     initPos,
     initDirs
   ) {
@@ -77,6 +78,7 @@ class Controls extends Stateful {
     this.world = world
     this.chat = chat
     this.blocker = blocker
+    this.button = button
 
     // Internal checks
     this.canBreakBlock = true
@@ -89,7 +91,7 @@ class Controls extends Stateful {
   }
 
   initListeners = () => {
-    this.blocker.addEventListener('click', this._unblockGame, false)
+    this.button.addEventListener('click', this._unblockGame, false)
 
     this.threeControls.addEventListener('unlock', this._blockGame, false)
 

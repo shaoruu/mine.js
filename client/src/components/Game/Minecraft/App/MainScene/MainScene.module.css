@@ -46,3 +46,15 @@
   transform: translate(-50%, -50%);
   user-select: none;
 }
+
+.world_not_found {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.world_not_found button {
+  margin-top: 10px;
+  width: 100px;
+}
