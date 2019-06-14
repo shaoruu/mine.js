@@ -26,7 +26,7 @@ These are some screenshots taken directly from the project.
 
 ![](https://i.imgur.com/du58Ifa.png)
 
-## Simple and Working Terrain Generation <small>(props to [FreshKoala](https://github.com/mrprokoala))</small>
+## Working Terrain Generation (props to [FreshKoala](https://github.com/mrprokoala))
 
 ![](https://i.imgur.com/RbwUMwe.jpg)
 
