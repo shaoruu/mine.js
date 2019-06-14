@@ -25,7 +25,7 @@ class Main extends Component {
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route path="/home" component={Home} />
-          <Route path="/" component={() => <Redirect to="/login" />} />
+          <Route path="/" component={() => <Redirect to="/home" />} />
         </Switch>
       </Layout>
     )
