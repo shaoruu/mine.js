@@ -24,7 +24,10 @@ type Subscription {
   # Chunks
   block(worldId: ID!): BlockSubscriptionPayload!
   message(worldId: ID!): MessageSubscriptionPayload!
-  player(username: String!): PlayerSubscriptionPayload!
+  player(
+    username: String!
+    updatedFields_contains_some: [String!]
+  ): PlayerSubscriptionPayload!
 }
 
 type User {

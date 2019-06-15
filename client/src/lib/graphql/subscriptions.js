@@ -28,8 +28,14 @@ export const MESSAGE_SUBSCRIPTION = gql`
 `
 
 export const PLAYER_SUBSCRIPTION = gql`
-  subscription Player($username: String!) {
-    player(username: $username) {
+  subscription Player(
+    $username: String!
+    $updatedFields_contains_some: [String!]
+  ) {
+    player(
+      username: $username
+      updatedFields_contains_some: $updatedFields_contains_some
+    ) {
       mutation
       node {
         gamemode

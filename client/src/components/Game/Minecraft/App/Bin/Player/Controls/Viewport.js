@@ -38,7 +38,7 @@ class Viewpoint {
     /**
      * BLOCK BREAKING ANIMATION
      */
-    const resources = this.resourceManager.getBlockMat('breaking')
+    const resources = this.resourceManager.getSpecialBlockMat('breaking')
     this.materialStages = []
 
     this.materialStages.push([])

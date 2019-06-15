@@ -56,7 +56,7 @@ class Chunk {
 
       const globalCoords = Helpers.mapVecToWorldCoords(this.origin, coords)
 
-      const mat = this.resourceManager.getBlockMat(type)[material]
+      const mat = this.resourceManager.getBlockMat(type, geo, material)
 
       meshes.push({ geo, pos: globalCoords, mat })
     }

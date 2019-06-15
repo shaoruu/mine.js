@@ -1,3 +1,5 @@
+const defaultArray = []
+
 const Subscription = {
   block: {
     subscribe(parent, { worldId }, { prisma }, info) {
@@ -30,13 +32,20 @@ const Subscription = {
     }
   },
   player: {
-    subscribe(parent, { username }, { prisma }, info) {
+    subscribe(
+      parent,
+      { username, updatedFields_contains_some },
+      { prisma },
+      info
+    ) {
       return prisma.subscription.player(
         {
           where: {
+            updatedFields_contains_some:
+              updatedFields_contains_some || defaultArray,
             node: {
               user: {
-                username: username
+                username
               }
             }
           }

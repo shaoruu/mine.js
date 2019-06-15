@@ -17,15 +17,15 @@ export default {
       },
       nx: {
         func: 'rotateY',
-        rotation: -Math.PI / 2
+        rotation: Math.PI / 2
       },
       ny: {
         func: 'rotateX',
-        rotation: Math.PI / 2
+        rotation: -Math.PI / 2
       },
       nz: {
-        func: 'rotateY',
-        rotation: Math.PI
+        func: null,
+        rotation: null
       }
     }
   },
@@ -88,7 +88,9 @@ export default {
         side: require('../../../../../assets/blocks/cactus_side.png'),
         top: require('../../../../../assets/blocks/cactus_top.png'),
         bottom: require('../../../../../assets/blocks/cactus_bottom.png')
-      },
+      }
+    },
+    specialBlocks: {
       breaking: {
         0: require('../../../../../assets/blocks/destroy_stage_0.png'),
         1: require('../../../../../assets/blocks/destroy_stage_1.png'),

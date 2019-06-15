@@ -100,6 +100,7 @@ class Chat {
     Helpers.applyStyle(this.gui.input, disabledStyle)
     Helpers.applyStyle(this.gui.wrapper, halfDisabledStyle)
 
+    this.blurInput()
     this.resetInput()
 
     this.disappearTimer = setTimeout(() => {
@@ -122,6 +123,8 @@ class Chat {
   getInput = () => this.gui.input.value
 
   focusInput = () => this.gui.input.focus()
+
+  blurInput = () => this.gui.input.blur()
 }
 
 export default Chat
