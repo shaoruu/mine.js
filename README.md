@@ -26,7 +26,7 @@ These are some screenshots taken directly from the project.
 
 ![](https://i.imgur.com/du58Ifa.png)
 
-## Working Terrain Generation (props to [FreshKoala](https://github.com/mrprokoala))
+## Working Terrain Generation (props to [FreshKoala](https://github.com/balta-z-r)
 
 ![](https://i.imgur.com/RbwUMwe.jpg)
 
