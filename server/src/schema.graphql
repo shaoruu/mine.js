@@ -154,6 +154,7 @@ enum MutationType {
 }
 
 enum MessageType {
+  ERROR
   PLAYER
   SERVER
 }

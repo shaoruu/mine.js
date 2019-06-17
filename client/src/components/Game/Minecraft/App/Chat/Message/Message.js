@@ -5,13 +5,18 @@ export default function(type, sender, body) {
   const wrapper = document.createElement('div')
   const message = document.createElement('p')
 
+  message.innerHTML = body
+
   switch (type) {
+    case 'ERROR':
+      Helpers.applyStyle(message, {
+        color: 'red'
+      })
+      break
     case 'SERVER':
-      message.innerHTML = body
       break
     case 'PLAYER':
       message.innerHTML = `&lt;${sender}&gt;&nbsp;&nbsp;${body}`
-      console.log(message.innerHTML)
       break
     default:
       break

@@ -69,6 +69,7 @@ enum Gamemode {
 }
 
 enum MessageType {
+  ERROR
   PLAYER
   SERVER
 }

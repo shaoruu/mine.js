@@ -103,7 +103,8 @@ class MainScene extends Component {
       this.client,
       this.resourceManager,
       this.mount,
-      this.currentPlayer.id
+      this.currentPlayer.id,
+      this.currentPlayer.y - Number.MIN_SAFE_INTEGER <= 5
     )
 
     // Player initialization

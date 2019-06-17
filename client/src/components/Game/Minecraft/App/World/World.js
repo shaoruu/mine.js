@@ -13,7 +13,10 @@ const SIZE = Config.chunk.size,
   HEIGHT = Config.chunk.height,
   HORZ_D = Config.player.horzD,
   VERT_D = Config.player.vertD,
-  NOISE_CONSTANT = Config.world.noiseConstant
+  NOISE_CONSTANT = Config.world.noiseConstant,
+  P_I_2_TOE = Config.player.aabb.eye2toe,
+  P_I_2_TOP = Config.player.aabb.eye2top,
+  DIMENSION = Config.block.dimension
 
 class World {
   constructor(
@@ -23,7 +26,8 @@ class World {
     apolloClient,
     resourceManager,
     container,
-    playerId
+    playerId,
+    isBrandNew
   ) {
     const { seed, name, changedBlocks } = worldData
 
@@ -58,6 +62,7 @@ class World {
 
     // FOR PREPARATION
     this.isReady = false
+    this.isBrandNew = isBrandNew
 
     this.initWorld(changedBlocks)
   }
@@ -71,6 +76,15 @@ class World {
       // TYPE = ID
       changedBlocks.forEach(({ type, x, y, z }) => {
         this.registerChangedBlock(type, x, y, z)
+      })
+
+    if (this.isBrandNew)
+      this.workerPool.queueJob({
+        cmd: 'GET_HIGHEST',
+        x: 0,
+        z: 0,
+        seed: this.seed,
+        size: SIZE
       })
   }
 
@@ -90,6 +104,17 @@ class World {
             [temp.combineMesh],
             [temp.markAsFinishedLoading]
           ])
+          break
+        }
+        case 'GET_HIGHEST': {
+          const { h } = data
+          const position = this.player.position
+
+          this.player.setPosition(
+            position.x + DIMENSION / 2,
+            (h + P_I_2_TOE + P_I_2_TOP) * DIMENSION,
+            position.z + DIMENSION / 2
+          )
           break
         }
         case 'UPDATE_BLOCK': {

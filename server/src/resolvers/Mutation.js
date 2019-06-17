@@ -5,6 +5,8 @@ import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
 import getBlockRepresentation from '../utils/getBlockRepresentation'
 
+const DEFAULT_MESSAGE = 'Unknown command. Try /help for a list of commands.'
+
 const Mutation = {
   async createUser(parent, args, { prisma }, info) {
     const password = await hashPassword(args.data.password)
@@ -111,7 +113,7 @@ const Mutation = {
           }
         },
         x: 0,
-        y: 40,
+        y: Number.MIN_SAFE_INTEGER,
         z: 0,
         dirx: 0,
         diry: 0,
@@ -205,9 +207,9 @@ const Mutation = {
     { prisma },
     info
   ) {
-    let type = 'SERVER',
+    let type = 'ERROR',
       sender = '',
-      body = ''
+      body = DEFAULT_MESSAGE
 
     const {
       user: { username }
@@ -232,6 +234,8 @@ const Mutation = {
 
       switch (args[0]) {
         case 'gamemode': {
+          let isError = false
+
           switch (args[1]) {
             case 's':
             case 'survival':
@@ -285,11 +289,14 @@ const Mutation = {
             }
 
             default:
+              isError = true
               break
           }
 
-          type = 'SERVER'
-          body = `${username}'s gamemode has been updated.`
+          if (!isError) {
+            type = 'SERVER'
+            body = `${username}'s gamemode has been updated.`
+          }
 
           break
         }

@@ -108,4 +108,11 @@ export default class Player {
   }) => {
     if (gamemode !== this.status.gamemode) this.status.setGamemode(gamemode)
   }
+
+  get position() {
+    return this.controls.getObject().position
+  }
+  setPosition = (x, y, z) => this.controls.getObject().position.set(x, y, z)
+  setHeight = y => this.controls.getObject().position.setY(y)
+  getHeight = () => this.controls.getObject().position.y
 }

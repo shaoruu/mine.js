@@ -19,7 +19,7 @@ class Worlds extends Component {
   render() {
     const { selectedIndex } = this.state
 
-    const { subpage, history, client } = this.props
+    const { subpage, history } = this.props
 
     return (
       <Query
@@ -58,8 +58,6 @@ class Worlds extends Component {
                         className={sharedStyles.button}
                         disabled={!selectedIndex}
                         onClick={() => {
-                          client.clearStore()
-                          // client.refetch({query: MY_WORLDS_QUERY})
                           history.push(`/game/minecraft/${selectedIndex}`)
                         }}
                       >
