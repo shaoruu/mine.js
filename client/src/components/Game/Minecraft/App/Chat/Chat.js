@@ -49,6 +49,8 @@ class Chat {
   handleEnter = () => {
     const value = this.getInput()
 
+    if (value.split(' ').filter(ele => ele).length === 0) return
+
     this.apolloClient.mutate({
       mutation: RUN_COMMAND_MUTATION,
       variables: {
