@@ -1,10 +1,10 @@
 import * as THREE from 'three'
 
-import Config from '../../../Data/Config'
+import Config from '../../Data/Config'
 import Chunk from './Chunk/Chunk'
-import Helpers from '../../../Utils/Helpers'
+import Helpers from '../../Utils/Helpers'
 import worker from './World.worker'
-import { UPDATE_BLOCK_MUTATION } from '../../../../../../lib/graphql'
+import { UPDATE_BLOCK_MUTATION } from '../../../../../lib/graphql'
 import WorkerPool from '../Workers/WorkerPool'
 import TaskQueue from '../Workers/TaskQueue'
 import Chat from '../Chat/Chat'
@@ -16,7 +16,15 @@ const SIZE = Config.chunk.size,
   NOISE_CONSTANT = Config.world.noiseConstant
 
 class World {
-  constructor(id, scene, worldData, apolloClient, resourceManager, container, playerId) {
+  constructor(
+    id,
+    scene,
+    worldData,
+    apolloClient,
+    resourceManager,
+    container,
+    playerId
+  ) {
     const { seed, name, changedBlocks } = worldData
 
     // Chat
@@ -92,9 +100,12 @@ class World {
           } = data
 
           const temp = this.chunks[chunkName]
-          this.workerTaskHandler.addTasks([[temp.meshQuads, quads], [temp.combineMesh]], {
-            prioritized: true
-          })
+          this.workerTaskHandler.addTasks(
+            [[temp.meshQuads, quads], [temp.combineMesh]],
+            {
+              prioritized: true
+            }
+          )
           this.workerTaskHandler.addTask(
             () => {
               // Remove old then add new to scene
@@ -313,7 +324,11 @@ class World {
         neighborAffected = true
       }
       if (neighborAffected) {
-        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
+        const neighborChunk = this.getChunkByCoords(
+          nc.coordx,
+          nc.coordy,
+          nc.coordz
+        )
 
         // Setting neighbor's block that represents self.
         neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
@@ -381,7 +396,9 @@ class World {
   getVoxelByVoxelCoords = (x, y, z) => {
     const { coordx, coordy, coordz } = Helpers.toChunkCoords({ x, y, z }),
       { x: bx, y: by, z: bz } = Helpers.toBlockCoords({ x, y, z })
-    const chunk = this.chunks[Helpers.getCoordsRepresentation(coordx, coordy, coordz)]
+    const chunk = this.chunks[
+      Helpers.getCoordsRepresentation(coordx, coordy, coordz)
+    ]
     if (!chunk) return 0
 
     return chunk.getBlock(bx, by, bz)

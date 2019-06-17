@@ -1,5 +1,5 @@
-import Helpers from '../../../../Utils/Helpers'
-import Config from '../../../../Data/Config'
+import Helpers from '../../../Utils/Helpers'
+import Config from '../../../Data/Config'
 
 class Keyboard {
   constructor() {

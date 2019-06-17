@@ -65,15 +65,15 @@ export default {
   player: {
     height: 50, // px
     inertia: 5.0,
-    fricIntertia: 13.0,
-    inAirInertia: 14,
+    fricIntertia: 15.0,
+    inAirInertia: 16,
     sprintFactor: 1.7,
     spectatorInertia: 2,
     acceleration: {
-      forward: 28,
-      other_horz: 20,
-      vertical: 26,
-      jump: 175
+      forward: 25,
+      other_horz: 18,
+      vertical: 25,
+      jump: 160
     },
     maxSpeed: {
       horizontal: 700,
@@ -90,7 +90,7 @@ export default {
     posX: 0,
     posY: 30,
     posZ: 0,
-    horzD: 5,
+    horzD: 4,
     vertD: 3,
     reachDst: 7
   },
@@ -159,7 +159,7 @@ export default {
     z: 0.75
   },
   block: {
-    dimension: 25
+    dimension: 16
   },
   chunk: {
     size: 8,
@@ -168,7 +168,7 @@ export default {
   world: {
     noiseConstant: 25,
     maxWorkerCount: 4,
-    gravity: -9.8
+    gravity: -9
   },
   keyboard: {
     movements: {

@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import raycast from 'fast-voxel-raycast'
 
-import Config from '../../../../Data/Config'
-import Helpers from '../../../../Utils/Helpers'
+import Config from '../../../Data/Config'
+import Helpers from '../../../Utils/Helpers'
 
 const DIMENSION = Config.block.dimension,
   REACT_DST = Config.player.reachDst,
@@ -21,7 +21,11 @@ class Viewpoint {
   }
 
   initGeoms = () => {
-    const box = new THREE.BoxGeometry(DIMENSION + 0.1, DIMENSION + 0.1, DIMENSION + 0.1)
+    const box = new THREE.BoxGeometry(
+      DIMENSION + 0.1,
+      DIMENSION + 0.1,
+      DIMENSION + 0.1
+    )
     const wireframe = new THREE.WireframeGeometry(box)
     this.highlighter = new THREE.LineSegments(wireframe)
 

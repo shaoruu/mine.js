@@ -5,7 +5,7 @@
 
 import * as THREE from 'three'
 
-import Config from '../../../../Data/Config'
+import Config from '../../../Data/Config'
 
 const size = Config.block.dimension,
   P_I_2_TOE = Config.player.aabb.eye2toe,

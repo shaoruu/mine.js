@@ -1,4 +1,4 @@
-import Config from '../../../Data/Config'
+import Config from '../../Data/Config'
 import Inventory from './Inventory/Inventory'
 import PlayerControls from './Controls/Controls'
 import PlayerViewport from './Controls/Viewport'

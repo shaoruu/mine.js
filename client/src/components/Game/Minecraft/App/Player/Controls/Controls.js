@@ -1,9 +1,9 @@
 import * as THREE from 'three'
 
 import PointerLockControls from './PointerLockControls'
-import Config from '../../../../Data/Config'
-import Helpers from '../../../../Utils/Helpers'
-import Stateful from '../../../../Utils/Stateful'
+import Config from '../../../Data/Config'
+import Helpers from '../../../Utils/Helpers'
+import Stateful from '../../../Utils/Stateful'
 import Keyboard from './Keyboard'
 
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal,
@@ -47,7 +47,12 @@ class Controls extends Stateful {
     super()
 
     // Controls
-    this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
+    this.threeControls = new PointerLockControls(
+      camera,
+      container,
+      initPos,
+      initDirs
+    )
 
     // Physics
     this.vel = new THREE.Vector3(0, 0, 0)
@@ -182,7 +187,8 @@ class Controls extends Stateful {
   }
 
   _handleMouseDown = e => {
-    if (!this.chat.enabled && this.threeControls.isLocked) this.mouseKey = e.button
+    if (!this.chat.enabled && this.threeControls.isLocked)
+      this.mouseKey = e.button
   }
 
   _handleMouseUp = e => {
@@ -315,7 +321,8 @@ class Controls extends Stateful {
       () => (this.movements.up = true),
       () => (this.movements.up = false),
       () => {
-        if (this.status.canFly && this.status.isCreative) this.status.toggleFly()
+        if (this.status.canFly && this.status.isCreative)
+          this.status.toggleFly()
       },
       { immediate: true }
     )

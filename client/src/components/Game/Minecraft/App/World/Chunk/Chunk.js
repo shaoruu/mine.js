@@ -1,7 +1,7 @@
 import ndarray from 'ndarray'
 
-import Config from '../../../../Data/Config'
-import Helpers from '../../../../Utils/Helpers'
+import Config from '../../../Data/Config'
+import Helpers from '../../../Utils/Helpers'
 
 const size = Config.chunk.size
 

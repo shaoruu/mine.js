@@ -1,6 +1,6 @@
 import classes from './Chat.module.css'
-import Helpers from '../../../Utils/Helpers'
-import { RUN_COMMAND_MUTATION } from '../../../../../../lib/graphql'
+import Helpers from '../../Utils/Helpers'
+import { RUN_COMMAND_MUTATION } from '../../../../../lib/graphql'
 
 class Chat {
   constructor(playerId, worldId, container, apolloClient) {
