@@ -41,6 +41,7 @@ class Keyboard {
 
         keyState.state.isPressed = true
       } catch (err) {
+        console.log(err)
         Helpers.log(`Failed to execute onPressed() for key ${e.keyCode}`)
       }
     })

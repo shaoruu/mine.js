@@ -79,6 +79,7 @@ class Controls extends Stateful {
     this.chat = chat
     this.blocker = blocker
     this.button = button
+    this.camera = camera
 
     // Internal checks
     this.canBreakBlock = true

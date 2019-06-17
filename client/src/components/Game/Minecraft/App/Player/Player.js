@@ -26,6 +26,7 @@ export default class Player {
     const { id, gamemode } = playerData
 
     this.id = id
+    this.camera = camera
 
     this.mutatePlayer = mutatePlayer
 
@@ -67,6 +68,7 @@ export default class Player {
 
   update = () => {
     this.controls.tick()
+    this.status.tick()
 
     if (!this.status.isSpectator) this.viewport.updateTPBlocks()
     else if (this.viewport.isWireframed) this.viewport.removeTPBlocks()

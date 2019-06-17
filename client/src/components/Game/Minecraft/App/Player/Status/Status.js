@@ -1,4 +1,11 @@
+import TWEEN from '@tweenjs/tween.js'
+
 import State from './State/State'
+import Config from '../../../Data/Config'
+
+const SPRINT_FOV_DELTA = Config.camera.sprintFovDelta,
+  REGULAR_FOV = Config.camera.fov,
+  SPECTATOR_FOV = Config.camera.spectatorFov
 
 class Status {
   constructor(gamemode, player) {
@@ -11,6 +18,7 @@ class Status {
 
   initializeState = () => {
     let flying = false
+    let FOV = REGULAR_FOV
     switch (this.gamemode) {
       case 'SURVIVAL':
         flying = false
@@ -20,12 +28,18 @@ class Status {
         break
       case 'SPECTATOR':
         flying = true
+        FOV = SPECTATOR_FOV
         break
       default:
         break
     }
 
     this.state = new State(flying)
+    this._tweenCameraFOV(FOV)
+  }
+
+  tick = () => {
+    TWEEN.update()
   }
 
   registerJump = () => {
@@ -39,9 +53,17 @@ class Status {
     this.state.isOnGround = true
   }
 
-  registerSprint = () => (this.state.isSprinting = true)
+  registerSprint = () => {
+    this.state.isSprinting = true
 
-  registerWalk = () => (this.state.isSprinting = false)
+    this._tweenCameraFOV(this.gamemodeFOV + SPRINT_FOV_DELTA)
+  }
+
+  registerWalk = () => {
+    this.state.isSprinting = false
+
+    this._tweenCameraFOV(this.gamemodeFOV, 100)
+  }
 
   registerFly = () => (this.state.flying = true)
 
@@ -92,6 +114,21 @@ class Status {
 
   get isSpectator() {
     return this.gamemode === 'SPECTATOR'
+  }
+
+  get gamemodeFOV() {
+    return this.isSpectator ? SPECTATOR_FOV : REGULAR_FOV
+  }
+
+  _tweenCameraFOV = (fov, time = 200) => {
+    const fovObj = { fov: this.player.camera.fov }
+
+    const sprintTween = new TWEEN.Tween(fovObj).to({ fov }, time)
+    sprintTween.onUpdate(() => {
+      this.player.camera.fov = fovObj.fov
+      this.player.camera.updateProjectionMatrix()
+    })
+    sprintTween.start()
   }
 }
 

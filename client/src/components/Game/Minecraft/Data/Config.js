@@ -60,7 +60,9 @@ export default {
     aspect: 1,
     posX: 0,
     posY: 0,
-    posZ: 0
+    posZ: 0,
+    sprintFovDelta: 15,
+    spectatorFov: 130
   },
   player: {
     height: 50, // px
