@@ -21,11 +21,7 @@ class Viewpoint {
   }
 
   initGeoms = () => {
-    const box = new THREE.BoxGeometry(
-      DIMENSION + 0.1,
-      DIMENSION + 0.1,
-      DIMENSION + 0.1
-    )
+    const box = new THREE.BoxGeometry(DIMENSION + 0.1, DIMENSION + 0.1, DIMENSION + 0.1)
     const wireframe = new THREE.WireframeGeometry(box)
     this.highlighter = new THREE.LineSegments(wireframe)
 
@@ -89,18 +85,12 @@ class Viewpoint {
         this.controls.stopBreakingBlock()
       }
 
-      if (!this.isWireframed) this.scene.add(this.boxhelper)
-    } else {
-      const obj = this.scene.getObjectByName('wireframe')
-
-      // Clearing world potentials
-      this.world.setTarget(null)
-      this.world.setPotential(null)
-
-      if (obj) {
-        this.scene.remove(obj)
-        this.isWireframed = false
+      if (!this.isWireframed) {
+        this.scene.add(this.boxhelper)
+        this.isWireframed = true
       }
+    } else {
+      this.removeTPBlocks()
 
       this.controls.stopBreakingBlock()
     }
@@ -129,6 +119,19 @@ class Viewpoint {
     this.bbIndex++
 
     this.bb.material = this.materialStages[this.bbIndex]
+  }
+
+  removeTPBlocks = () => {
+    const obj = this.scene.getObjectByName('wireframe')
+
+    // Clearing world potentials
+    this.world.setTarget(null)
+    this.world.setPotential(null)
+
+    if (obj) {
+      this.scene.remove(obj)
+      this.isWireframed = false
+    }
   }
 
   /**

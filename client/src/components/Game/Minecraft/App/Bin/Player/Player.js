@@ -69,6 +69,7 @@ export default class Player {
     this.controls.tick()
 
     if (!this.status.isSpectator) this.viewport.updateTPBlocks()
+    else if (this.viewport.isWireframed) this.viewport.removeTPBlocks()
   }
 
   getCoordinates = (dec = COORD_DEC) => {
