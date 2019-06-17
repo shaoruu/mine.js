@@ -205,6 +205,25 @@ const Mutation = {
     { prisma },
     info
   ) {
+    let type = 'SERVER',
+      sender = '',
+      body = ''
+
+    const {
+      user: { username }
+    } = await prisma.query.player(
+      {
+        where: {
+          id: playerId
+        }
+      },
+      `{
+        user {
+          username
+        }
+      }`
+    )
+
     if (command.startsWith('/')) {
       const args = command
         .substr(1)
@@ -220,7 +239,7 @@ const Mutation = {
               if (args[2]) {
                 // do something else
               } else {
-                prisma.mutation.updatePlayer({
+                await prisma.mutation.updatePlayer({
                   data: {
                     gamemode: 'SURVIVAL'
                   },
@@ -237,7 +256,7 @@ const Mutation = {
               if (args[2]) {
                 // do something else
               } else {
-                prisma.mutation.updatePlayer({
+                await prisma.mutation.updatePlayer({
                   data: {
                     gamemode: 'CREATIVE'
                   },
@@ -254,7 +273,7 @@ const Mutation = {
               if (args[2]) {
                 // do something else
               } else {
-                prisma.mutation.updatePlayer({
+                await prisma.mutation.updatePlayer({
                   data: {
                     gamemode: 'SPECTATOR'
                   },
@@ -268,6 +287,10 @@ const Mutation = {
             default:
               break
           }
+
+          type = 'SERVER'
+          body = `${username}'s gamemode has been updated.`
+
           break
         }
         default:
@@ -275,7 +298,24 @@ const Mutation = {
       }
     } else {
       // NORMAL MESSAGE
+      type = 'PLAYER'
+      sender = username
+      body = command
     }
+
+    await prisma.mutation.createMessage({
+      data: {
+        type,
+        sender,
+        body,
+        world: {
+          connect: {
+            id: worldId
+          }
+        }
+      }
+    })
+
     return true
   }
 }

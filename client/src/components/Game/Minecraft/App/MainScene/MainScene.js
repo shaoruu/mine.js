@@ -308,7 +308,7 @@ class MainScene extends Component {
                       <Subscription
                         subscription={MESSAGE_SUBSCRIPTION}
                         variables={{ worldId }}
-                        onSubscriptiondata={({ subscriptionData: { data } }) =>
+                        onSubscriptionData={({ subscriptionData: { data } }) =>
                           this.world.chat.addMessage(data)
                         }
                       />
@@ -316,6 +316,7 @@ class MainScene extends Component {
                         subscription={PLAYER_SUBSCRIPTION}
                         variables={{
                           username,
+                          worldId,
                           updatedFields_contains_some: ['gamemode']
                         }}
                         onSubscriptionData={({ subscriptionData: { data } }) =>

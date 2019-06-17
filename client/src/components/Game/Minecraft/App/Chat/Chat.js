@@ -1,6 +1,7 @@
 import classes from './Chat.module.css'
 import Helpers from '../../Utils/Helpers'
 import { RUN_COMMAND_MUTATION } from '../../../../../lib/graphql'
+import Message from './Message/Message'
 
 class Chat {
   constructor(playerId, worldId, container, apolloClient) {
@@ -59,7 +60,15 @@ class Chat {
   }
 
   addMessage = data => {
-    console.log(data)
+    const {
+      message: {
+        node: { type, sender, body }
+      }
+    } = data
+    const newMessage = new Message(type, sender, body)
+
+    this.messages.push(newMessage)
+    this.gui.messagesWrapper.appendChild(newMessage.getGui())
   }
 
   getGui = () => this.gui.textbox
@@ -113,8 +122,6 @@ class Chat {
     if (this.state.enabled) this.disable()
     else this.enable()
   }
-
-  addMessage = ({ sender, body }) => {}
 
   resetInput = () => (this.gui.input.value = '')
 

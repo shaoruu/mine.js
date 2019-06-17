@@ -26,6 +26,7 @@ type Subscription {
   message(worldId: ID!): MessageSubscriptionPayload!
   player(
     username: String!
+    worldId: ID!
     updatedFields_contains_some: [String!]
   ): PlayerSubscriptionPayload!
 }

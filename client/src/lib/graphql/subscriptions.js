@@ -30,10 +30,12 @@ export const MESSAGE_SUBSCRIPTION = gql`
 export const PLAYER_SUBSCRIPTION = gql`
   subscription Player(
     $username: String!
+    $worldId: ID!
     $updatedFields_contains_some: [String!]
   ) {
     player(
       username: $username
+      worldId: $worldId
       updatedFields_contains_some: $updatedFields_contains_some
     ) {
       mutation

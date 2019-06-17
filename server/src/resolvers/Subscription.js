@@ -19,22 +19,24 @@ const Subscription = {
   },
   message: {
     subscribe(parent, { worldId }, { prisma }, info) {
-      return prisma.subscription.message({
-        where: {
-          node: {
-            world: {
-              id: worldId
+      return prisma.subscription.message(
+        {
+          where: {
+            node: {
+              world: {
+                id: worldId
+              }
             }
           }
         },
         info
-      })
+      )
     }
   },
   player: {
     subscribe(
       parent,
-      { username, updatedFields_contains_some },
+      { username, worldId, updatedFields_contains_some },
       { prisma },
       info
     ) {
@@ -46,6 +48,9 @@ const Subscription = {
             node: {
               user: {
                 username
+              },
+              world: {
+                id: worldId
               }
             }
           }

@@ -1,5 +1,5 @@
 # source: http://localhost:4466
-# timestamp: Fri Jun 14 2019 15:37:29 GMT+0800 (CST)
+# timestamp: Mon Jun 17 2019 18:56:49 GMT+0800 (CST)
 
 type AggregateBlock {
   count: Int!
@@ -30,7 +30,8 @@ type BatchPayload {
   count: Long!
 }
 
-type Block {
+type Block implements Node {
+  id: ID!
   representation: String!
   type: Int!
   world: World!
@@ -50,6 +51,7 @@ type BlockConnection {
 }
 
 input BlockCreateInput {
+  id: ID
   representation: String!
   type: Int!
   x: Int!
@@ -64,6 +66,7 @@ input BlockCreateManyWithoutWorldInput {
 }
 
 input BlockCreateWithoutWorldInput {
+  id: ID
   representation: String!
   type: Int!
   x: Int!
@@ -81,6 +84,8 @@ type BlockEdge {
 }
 
 enum BlockOrderByInput {
+  id_ASC
+  id_DESC
   representation_ASC
   representation_DESC
   type_ASC
@@ -91,15 +96,10 @@ enum BlockOrderByInput {
   y_DESC
   z_ASC
   z_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type BlockPreviousValues {
+  id: ID!
   representation: String!
   type: Int!
   x: Int!
@@ -116,6 +116,46 @@ input BlockScalarWhereInput {
 
   """Logical NOT on all given filters combined by AND."""
   NOT: [BlockScalarWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
   representation: String
 
   """All values that are not equal to given value."""
@@ -353,6 +393,46 @@ input BlockWhereInput {
 
   """Logical NOT on all given filters combined by AND."""
   NOT: [BlockWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
   representation: String
 
   """All values that are not equal to given value."""
@@ -485,6 +565,7 @@ input BlockWhereInput {
 }
 
 input BlockWhereUniqueInput {
+  id: ID
   representation: String
 }
 
@@ -497,7 +578,8 @@ enum Gamemode {
   SPECTATOR
 }
 
-type Inventory {
+type Inventory implements Node {
+  id: ID!
   player: Player!
   cursor: Int!
   data: String!
@@ -514,6 +596,7 @@ type InventoryConnection {
 }
 
 input InventoryCreateInput {
+  id: ID
   cursor: Int!
   data: String!
   player: PlayerCreateOneWithoutInventoryInput!
@@ -521,9 +604,11 @@ input InventoryCreateInput {
 
 input InventoryCreateOneWithoutPlayerInput {
   create: InventoryCreateWithoutPlayerInput
+  connect: InventoryWhereUniqueInput
 }
 
 input InventoryCreateWithoutPlayerInput {
+  id: ID
   cursor: Int!
   data: String!
 }
@@ -538,19 +623,16 @@ type InventoryEdge {
 }
 
 enum InventoryOrderByInput {
+  id_ASC
+  id_DESC
   cursor_ASC
   cursor_DESC
   data_ASC
   data_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type InventoryPreviousValues {
+  id: ID!
   cursor: Int!
   data: String!
 }
@@ -592,6 +674,12 @@ input InventorySubscriptionWhereInput {
   node: InventoryWhereInput
 }
 
+input InventoryUpdateInput {
+  cursor: Int
+  data: String
+  player: PlayerUpdateOneRequiredWithoutInventoryInput
+}
+
 input InventoryUpdateManyMutationInput {
   cursor: Int
   data: String
@@ -599,6 +687,7 @@ input InventoryUpdateManyMutationInput {
 
 input InventoryUpdateOneRequiredWithoutPlayerInput {
   create: InventoryCreateWithoutPlayerInput
+  connect: InventoryWhereUniqueInput
   update: InventoryUpdateWithoutPlayerDataInput
   upsert: InventoryUpsertWithoutPlayerInput
 }
@@ -622,6 +711,46 @@ input InventoryWhereInput {
 
   """Logical NOT on all given filters combined by AND."""
   NOT: [InventoryWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
   cursor: Int
 
   """All values that are not equal to given value."""
@@ -687,6 +816,10 @@ input InventoryWhereInput {
   player: PlayerWhereInput
 }
 
+input InventoryWhereUniqueInput {
+  id: ID
+}
+
 """Raw JSON value"""
 scalar Json
 
@@ -696,7 +829,8 @@ Long can represent values between -(2^63) and 2^63 - 1.
 """
 scalar Long
 
-type Message {
+type Message implements Node {
+  id: ID!
   world: World!
   type: MessageType!
   sender: String
@@ -714,6 +848,7 @@ type MessageConnection {
 }
 
 input MessageCreateInput {
+  id: ID
   type: MessageType!
   sender: String
   body: String!
@@ -722,9 +857,11 @@ input MessageCreateInput {
 
 input MessageCreateManyWithoutWorldInput {
   create: [MessageCreateWithoutWorldInput!]
+  connect: [MessageWhereUniqueInput!]
 }
 
 input MessageCreateWithoutWorldInput {
+  id: ID
   type: MessageType!
   sender: String
   body: String!
@@ -740,21 +877,18 @@ type MessageEdge {
 }
 
 enum MessageOrderByInput {
+  id_ASC
+  id_DESC
   type_ASC
   type_DESC
   sender_ASC
   sender_DESC
   body_ASC
   body_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type MessagePreviousValues {
+  id: ID!
   type: MessageType!
   sender: String
   body: String!
@@ -769,6 +903,46 @@ input MessageScalarWhereInput {
 
   """Logical NOT on all given filters combined by AND."""
   NOT: [MessageScalarWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
   type: MessageType
 
   """All values that are not equal to given value."""
@@ -903,6 +1077,13 @@ enum MessageType {
   SERVER
 }
 
+input MessageUpdateInput {
+  type: MessageType
+  sender: String
+  body: String
+  world: WorldUpdateOneRequiredWithoutMessagesInput
+}
+
 input MessageUpdateManyDataInput {
   type: MessageType
   sender: String
@@ -917,13 +1098,36 @@ input MessageUpdateManyMutationInput {
 
 input MessageUpdateManyWithoutWorldInput {
   create: [MessageCreateWithoutWorldInput!]
+  connect: [MessageWhereUniqueInput!]
+  set: [MessageWhereUniqueInput!]
+  disconnect: [MessageWhereUniqueInput!]
+  delete: [MessageWhereUniqueInput!]
+  update: [MessageUpdateWithWhereUniqueWithoutWorldInput!]
   updateMany: [MessageUpdateManyWithWhereNestedInput!]
   deleteMany: [MessageScalarWhereInput!]
+  upsert: [MessageUpsertWithWhereUniqueWithoutWorldInput!]
 }
 
 input MessageUpdateManyWithWhereNestedInput {
   where: MessageScalarWhereInput!
   data: MessageUpdateManyDataInput!
+}
+
+input MessageUpdateWithoutWorldDataInput {
+  type: MessageType
+  sender: String
+  body: String
+}
+
+input MessageUpdateWithWhereUniqueWithoutWorldInput {
+  where: MessageWhereUniqueInput!
+  data: MessageUpdateWithoutWorldDataInput!
+}
+
+input MessageUpsertWithWhereUniqueWithoutWorldInput {
+  where: MessageWhereUniqueInput!
+  update: MessageUpdateWithoutWorldDataInput!
+  create: MessageCreateWithoutWorldInput!
 }
 
 input MessageWhereInput {
@@ -935,6 +1139,46 @@ input MessageWhereInput {
 
   """Logical NOT on all given filters combined by AND."""
   NOT: [MessageWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
   type: MessageType
 
   """All values that are not equal to given value."""
@@ -1028,37 +1272,47 @@ input MessageWhereInput {
   world: WorldWhereInput
 }
 
+input MessageWhereUniqueInput {
+  id: ID
+}
+
 type Mutation {
   createMessage(data: MessageCreateInput!): Message!
   createPlayer(data: PlayerCreateInput!): Player!
   createBlock(data: BlockCreateInput!): Block!
   createInventory(data: InventoryCreateInput!): Inventory!
-  createUser(data: UserCreateInput!): User!
   createWorld(data: WorldCreateInput!): World!
+  createUser(data: UserCreateInput!): User!
+  updateMessage(data: MessageUpdateInput!, where: MessageWhereUniqueInput!): Message
   updatePlayer(data: PlayerUpdateInput!, where: PlayerWhereUniqueInput!): Player
   updateBlock(data: BlockUpdateInput!, where: BlockWhereUniqueInput!): Block
-  updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
+  updateInventory(data: InventoryUpdateInput!, where: InventoryWhereUniqueInput!): Inventory
   updateWorld(data: WorldUpdateInput!, where: WorldWhereUniqueInput!): World
+  updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
+  deleteMessage(where: MessageWhereUniqueInput!): Message
   deletePlayer(where: PlayerWhereUniqueInput!): Player
   deleteBlock(where: BlockWhereUniqueInput!): Block
-  deleteUser(where: UserWhereUniqueInput!): User
+  deleteInventory(where: InventoryWhereUniqueInput!): Inventory
   deleteWorld(where: WorldWhereUniqueInput!): World
+  deleteUser(where: UserWhereUniqueInput!): User
+  upsertMessage(where: MessageWhereUniqueInput!, create: MessageCreateInput!, update: MessageUpdateInput!): Message!
   upsertPlayer(where: PlayerWhereUniqueInput!, create: PlayerCreateInput!, update: PlayerUpdateInput!): Player!
   upsertBlock(where: BlockWhereUniqueInput!, create: BlockCreateInput!, update: BlockUpdateInput!): Block!
-  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
+  upsertInventory(where: InventoryWhereUniqueInput!, create: InventoryCreateInput!, update: InventoryUpdateInput!): Inventory!
   upsertWorld(where: WorldWhereUniqueInput!, create: WorldCreateInput!, update: WorldUpdateInput!): World!
+  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   updateManyMessages(data: MessageUpdateManyMutationInput!, where: MessageWhereInput): BatchPayload!
   updateManyPlayers(data: PlayerUpdateManyMutationInput!, where: PlayerWhereInput): BatchPayload!
   updateManyBlocks(data: BlockUpdateManyMutationInput!, where: BlockWhereInput): BatchPayload!
   updateManyInventories(data: InventoryUpdateManyMutationInput!, where: InventoryWhereInput): BatchPayload!
-  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   updateManyWorlds(data: WorldUpdateManyMutationInput!, where: WorldWhereInput): BatchPayload!
+  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   deleteManyMessages(where: MessageWhereInput): BatchPayload!
   deleteManyPlayers(where: PlayerWhereInput): BatchPayload!
   deleteManyBlocks(where: BlockWhereInput): BatchPayload!
   deleteManyInventories(where: InventoryWhereInput): BatchPayload!
-  deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyWorlds(where: WorldWhereInput): BatchPayload!
+  deleteManyUsers(where: UserWhereInput): BatchPayload!
   executeRaw(database: PrismaDatabase, query: String!): Json!
 }
 
@@ -1115,6 +1369,7 @@ type PlayerConnection {
 }
 
 input PlayerCreateInput {
+  id: ID
   isAdmin: Boolean!
   gamemode: Gamemode!
   lastLogin: DateTime
@@ -1139,6 +1394,7 @@ input PlayerCreateOneWithoutInventoryInput {
 }
 
 input PlayerCreateWithoutInventoryInput {
+  id: ID
   isAdmin: Boolean!
   gamemode: Gamemode!
   lastLogin: DateTime
@@ -1152,6 +1408,7 @@ input PlayerCreateWithoutInventoryInput {
 }
 
 input PlayerCreateWithoutWorldInput {
+  id: ID
   isAdmin: Boolean!
   gamemode: Gamemode!
   lastLogin: DateTime
@@ -1192,10 +1449,6 @@ enum PlayerOrderByInput {
   dirx_DESC
   diry_ASC
   diry_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type PlayerPreviousValues {
@@ -1497,6 +1750,26 @@ input PlayerUpdateManyWithWhereNestedInput {
   data: PlayerUpdateManyDataInput!
 }
 
+input PlayerUpdateOneRequiredWithoutInventoryInput {
+  create: PlayerCreateWithoutInventoryInput
+  connect: PlayerWhereUniqueInput
+  update: PlayerUpdateWithoutInventoryDataInput
+  upsert: PlayerUpsertWithoutInventoryInput
+}
+
+input PlayerUpdateWithoutInventoryDataInput {
+  isAdmin: Boolean
+  gamemode: Gamemode
+  lastLogin: DateTime
+  x: Float
+  y: Float
+  z: Float
+  dirx: Float
+  diry: Float
+  user: UserUpdateOneRequiredInput
+  world: WorldUpdateOneRequiredWithoutPlayersInput
+}
+
 input PlayerUpdateWithoutWorldDataInput {
   isAdmin: Boolean
   gamemode: Gamemode
@@ -1513,6 +1786,11 @@ input PlayerUpdateWithoutWorldDataInput {
 input PlayerUpdateWithWhereUniqueWithoutWorldInput {
   where: PlayerWhereUniqueInput!
   data: PlayerUpdateWithoutWorldDataInput!
+}
+
+input PlayerUpsertWithoutInventoryInput {
+  update: PlayerUpdateWithoutInventoryDataInput!
+  create: PlayerCreateWithoutInventoryInput!
 }
 
 input PlayerUpsertWithWhereUniqueWithoutWorldInput {
@@ -1734,18 +2012,20 @@ type Query {
   players(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Player]!
   blocks(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Block]!
   inventories(where: InventoryWhereInput, orderBy: InventoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Inventory]!
-  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
   worlds(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [World]!
+  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
+  message(where: MessageWhereUniqueInput!): Message
   player(where: PlayerWhereUniqueInput!): Player
   block(where: BlockWhereUniqueInput!): Block
-  user(where: UserWhereUniqueInput!): User
+  inventory(where: InventoryWhereUniqueInput!): Inventory
   world(where: WorldWhereUniqueInput!): World
+  user(where: UserWhereUniqueInput!): User
   messagesConnection(where: MessageWhereInput, orderBy: MessageOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MessageConnection!
   playersConnection(where: PlayerWhereInput, orderBy: PlayerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PlayerConnection!
   blocksConnection(where: BlockWhereInput, orderBy: BlockOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BlockConnection!
   inventoriesConnection(where: InventoryWhereInput, orderBy: InventoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): InventoryConnection!
-  usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   worldsConnection(where: WorldWhereInput, orderBy: WorldOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): WorldConnection!
+  usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
 
   """Fetches an object given its ID"""
   node(
@@ -1759,8 +2039,8 @@ type Subscription {
   player(where: PlayerSubscriptionWhereInput): PlayerSubscriptionPayload
   block(where: BlockSubscriptionWhereInput): BlockSubscriptionPayload
   inventory(where: InventorySubscriptionWhereInput): InventorySubscriptionPayload
-  user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
   world(where: WorldSubscriptionWhereInput): WorldSubscriptionPayload
+  user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
 }
 
 type User implements Node {
@@ -1784,6 +2064,7 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   username: String!
   email: String!
   password: String!
@@ -2142,6 +2423,7 @@ type WorldConnection {
 }
 
 input WorldCreateInput {
+  id: ID
   name: String!
   seed: String!
   lastPlayed: DateTime!
@@ -2171,6 +2453,7 @@ input WorldCreateOneWithoutPlayersInput {
 }
 
 input WorldCreateWithoutChangedBlocksInput {
+  id: ID
   name: String!
   seed: String!
   lastPlayed: DateTime!
@@ -2179,6 +2462,7 @@ input WorldCreateWithoutChangedBlocksInput {
 }
 
 input WorldCreateWithoutMessagesInput {
+  id: ID
   name: String!
   seed: String!
   lastPlayed: DateTime!
@@ -2187,6 +2471,7 @@ input WorldCreateWithoutMessagesInput {
 }
 
 input WorldCreateWithoutPlayersInput {
+  id: ID
   name: String!
   seed: String!
   lastPlayed: DateTime!
@@ -2212,10 +2497,6 @@ enum WorldOrderByInput {
   seed_DESC
   lastPlayed_ASC
   lastPlayed_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type WorldPreviousValues {
@@ -2469,6 +2750,13 @@ input WorldUpdateOneRequiredWithoutChangedBlocksInput {
   upsert: WorldUpsertWithoutChangedBlocksInput
 }
 
+input WorldUpdateOneRequiredWithoutMessagesInput {
+  create: WorldCreateWithoutMessagesInput
+  connect: WorldWhereUniqueInput
+  update: WorldUpdateWithoutMessagesDataInput
+  upsert: WorldUpsertWithoutMessagesInput
+}
+
 input WorldUpdateOneRequiredWithoutPlayersInput {
   create: WorldCreateWithoutPlayersInput
   connect: WorldWhereUniqueInput
@@ -2482,6 +2770,14 @@ input WorldUpdateWithoutChangedBlocksDataInput {
   lastPlayed: DateTime
   players: PlayerUpdateManyWithoutWorldInput
   messages: MessageUpdateManyWithoutWorldInput
+}
+
+input WorldUpdateWithoutMessagesDataInput {
+  name: String
+  seed: String
+  lastPlayed: DateTime
+  changedBlocks: BlockUpdateManyWithoutWorldInput
+  players: PlayerUpdateManyWithoutWorldInput
 }
 
 input WorldUpdateWithoutPlayersDataInput {
@@ -2500,6 +2796,11 @@ input WorldUpdateWithWhereUniqueNestedInput {
 input WorldUpsertWithoutChangedBlocksInput {
   update: WorldUpdateWithoutChangedBlocksDataInput!
   create: WorldCreateWithoutChangedBlocksInput!
+}
+
+input WorldUpsertWithoutMessagesInput {
+  update: WorldUpdateWithoutMessagesDataInput!
+  create: WorldCreateWithoutMessagesInput!
 }
 
 input WorldUpsertWithoutPlayersInput {
