@@ -57,22 +57,26 @@ export default () => {
     // This isn't a very good seeding function, but it works ok. It supports 2^16
     // different seed values. Write something better if you need more seeds.
     this.seed = seed => {
-      if (seed > 0 && seed < 1) {
-        // Scale the seed out
-        seed *= 65536
+      let hash = 0,
+        chr
+      if (seed.length === 0) return hash
+
+      for (let i = 0; i < seed.length; i++) {
+        chr = seed.charCodeAt(i)
+        hash = (hash << 5) - hash + chr
+        hash |= 0
       }
 
-      seed = Math.floor(seed)
-      if (seed < 256) {
-        seed |= seed << 8
-      }
+      if (hash > 0 && hash < 1) hash *= 65536
+
+      hash = Math.floor(hash)
 
       for (let i = 0; i < 256; i++) {
         let v
         if (i & 1) {
-          v = this.p[i] ^ (seed & 255)
+          v = this.p[i] ^ (hash & 255)
         } else {
-          v = this.p[i] ^ ((seed >> 8) & 255)
+          v = this.p[i] ^ ((hash >> 8) & 255)
         }
 
         this.perm[i] = this.perm[i + 256] = v

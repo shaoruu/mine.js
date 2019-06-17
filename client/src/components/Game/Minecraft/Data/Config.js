@@ -75,7 +75,7 @@ export default {
       forward: 25,
       other_horz: 18,
       vertical: 25,
-      jump: 160
+      jump: 140
     },
     maxSpeed: {
       horizontal: 700,
