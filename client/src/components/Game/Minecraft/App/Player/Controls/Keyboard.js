@@ -101,6 +101,28 @@ class Keyboard {
     this.keyStates[scope][keyCode] = keyState
   }
 
+  registerKeys = (
+    keyArr,
+    scope,
+    onPressed,
+    onReleased = undefined,
+    onDblPressed = undefined,
+    config
+  ) => {
+    for (let i = 0; i < keyArr.length; i++) {
+      const keyCode = keyArr[i]
+
+      this.registerKey(
+        keyCode,
+        scope,
+        onPressed,
+        onReleased,
+        onDblPressed,
+        config
+      )
+    }
+  }
+
   registerIndexedKeyGroup = (group, scope, onPressed) => {
     const wrapped = event => {
       const index = group.indexOf(event.keyCode)

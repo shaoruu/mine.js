@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { Mutation, Query, Subscription } from 'react-apollo'
 import * as THREE from 'three'
-import Stats from 'stats-js'
 import { withRouter } from 'react-router'
 
 import Camera from '../Camera/Camera'
@@ -22,6 +21,7 @@ import {
 } from '../../../../../lib/graphql'
 import ResourceManager from '../../Data/ResourceManager/ResourceManager'
 import sharedStyles from '../../../../../containers/sharedStyles.module.css'
+import Debug from '../Debug/Debug'
 
 class MainScene extends Component {
   constructor(props) {
@@ -91,10 +91,6 @@ class MainScene extends Component {
     this.light.place('ambient')
     // this.light.place('point')
 
-    // Stats creation
-    this.stats = new Stats()
-    this.mount.appendChild(this.stats.dom)
-
     // World Initialization
     this.world = new World(
       this.props.id,
@@ -125,6 +121,11 @@ class MainScene extends Component {
     )
 
     this.world.setPlayer(this.player)
+
+    // Debug creation
+    this.debug = new Debug(this.player, this.world)
+    this.mount.appendChild(this.debug.getGui())
+    this.player.controls.addDebugControl(this.debug)
 
     this.init()
 
@@ -181,11 +182,10 @@ class MainScene extends Component {
   }
 
   animate = () => {
-    this.stats.begin()
     this.update()
+    this.debug.update()
 
     this.renderScene()
-    this.stats.end()
     if (!document.webkitHidden)
       this.frameId = window.requestAnimationFrame(this.animate)
   }

@@ -117,6 +117,8 @@ class Controls extends Stateful {
     }
   }
 
+  addDebugControl = debug => (this.debug = debug)
+
   /**
    * Getters
    */
@@ -346,6 +348,9 @@ class Controls extends Stateful {
       this.chat.enable(false)
       this.keyboard.setScope('chat')
     })
+
+    // F3 with 'x' as backup
+    this.keyboard.registerKeys([114, 88], 'moving', () => this.debug.toggle())
 
     /**
      * Not in game ('menu')

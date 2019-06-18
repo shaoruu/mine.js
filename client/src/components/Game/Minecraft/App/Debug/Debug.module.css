@@ -1,0 +1,37 @@
+.wrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  display: none;
+}
+
+.wrapper p {
+  color: white;
+  padding: 2px;
+  background-color: rgba(128, 128, 128, 0.472);
+  font-family: Minecraft;
+}
+
+.leftPanel {
+  padding: 5px 8px;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.rightPanel {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.coords {
+}
+
+.fps {
+}

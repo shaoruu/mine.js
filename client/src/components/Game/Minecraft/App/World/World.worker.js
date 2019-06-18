@@ -99,10 +99,15 @@ export default () => {
 
       hash = Math.floor(hash)
 
-      this.noise = new Noise(hash)
+      this.seed = hash
+    }
+
+    const initNoises = () => {
+      this.noise = new Noise(this.seed)
     }
 
     initSeed(seed)
+    initNoises()
 
     this.getHeight = (x, z) => {
       let totalValue = 0.0
