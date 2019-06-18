@@ -19,6 +19,9 @@ class Status {
   initializeState = () => {
     let flying = false
     let FOV = REGULAR_FOV
+
+    this.player.freshlyJumped = false
+
     switch (this.gamemode) {
       case 'SURVIVAL':
         break
