@@ -179,10 +179,14 @@ export default () => {
 
     switch (cmd) {
       case 'BOOT':
+        const { config } = e.data
+        self.config = config
+
         postMessage({ cmd })
         break
       case 'GET_HIGHEST': {
-        const { x, z, seed, size } = e.data
+        const { x, z } = e.data
+        const { seed, size } = self.config
 
         const tempGen = new Generator(seed, size)
         postMessage({ cmd, h: tempGen.getHeight(x, z) })
@@ -191,11 +195,11 @@ export default () => {
       }
       case 'GET_CHUNK': {
         const {
-          seed,
           changedBlocks,
-          configs: { size, stride, chunkName },
+          chunkName,
           coords: { coordx, coordy, coordz }
         } = e.data
+        const { seed, size, stride } = self.config
 
         const generator = new Generator(seed, size)
         const blocks = new Uint16Array((size + 2) * (size + 2) * (size + 2))
@@ -221,11 +225,8 @@ export default () => {
         break
       }
       case 'UPDATE_BLOCK': {
-        const {
-          data,
-          block,
-          configs: { stride, chunkName, size }
-        } = e.data
+        const { data, block, chunkName } = e.data
+        const { size, stride } = self.config
 
         if (data.find(ele => ele)) {
           const dims = [size + 2, size + 2, size + 2]

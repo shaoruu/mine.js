@@ -11,6 +11,7 @@ const size = Config.block.dimension,
   P_I_2_TOE = Config.player.aabb.eye2toe,
   DIMENSION = Config.block.dimension
 
+// https://cdn-images-1.medium.com/max/1400/1*BOwbHOyhLlo7jM_NfoQwEQ.png
 const PointerLockControls = function(camera, domElement, initPos, initDirs) {
   let scope = this
 

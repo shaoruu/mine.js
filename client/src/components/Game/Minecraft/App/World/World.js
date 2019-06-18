@@ -47,7 +47,11 @@ class World {
 
     // Workers
     this.setupWorkerConfigs()
-    this.workerPool = new WorkerPool(worker, this)
+    this.workerPool = new WorkerPool(worker, this, {
+      seed,
+      size: SIZE,
+      stride: [(SIZE + 2) ** 2, SIZE + 2, 1]
+    })
     this.workerTaskHandler = new TaskQueue() // This is handle/schedule all the tasks from worker callback
 
     // Texture
@@ -82,9 +86,7 @@ class World {
       this.workerPool.queueJob({
         cmd: 'GET_HIGHEST',
         x: 0,
-        z: 0,
-        seed: this.seed,
-        size: SIZE
+        z: 0
       })
   }
 
@@ -223,15 +225,8 @@ class World {
 
     this.workerPool.queueJob({
       cmd: 'GET_CHUNK',
-      seed: this.seed,
       changedBlocks: this.changedBlocks,
-      configs: {
-        noiseConstant: NOISE_CONSTANT,
-        size: SIZE,
-        height: HEIGHT,
-        stride: newChunk.grid.stride,
-        chunkName: newChunk.name
-      },
+      chunkName: newChunk.name,
       coords: { coordx, coordy, coordz }
     })
 
@@ -363,11 +358,7 @@ class World {
             cmd: 'UPDATE_BLOCK',
             data: neighborChunk.grid.data,
             block: nb,
-            configs: {
-              size: SIZE,
-              stride: neighborChunk.grid.stride,
-              chunkName: neighborChunk.name
-            }
+            chunkName: neighborChunk.name
           },
           true
         )
@@ -379,11 +370,7 @@ class World {
         cmd: 'UPDATE_BLOCK',
         data: targetChunk.grid.data,
         block: chunkBlock,
-        configs: {
-          size: SIZE,
-          stride: targetChunk.grid.stride,
-          chunkName: targetChunk.name
-        }
+        chunkName: targetChunk.name
       },
       true
     )

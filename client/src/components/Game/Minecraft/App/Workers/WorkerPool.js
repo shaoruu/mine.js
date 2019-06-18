@@ -1,7 +1,7 @@
 import WebWorker from './WebWorker'
 // import Config from '../../../Data/Config'
 
-function WorkerPool(code, world) {
+function WorkerPool(code, world, config) {
   let availables = []
 
   const jobs = [],
@@ -25,7 +25,7 @@ function WorkerPool(code, world) {
     workers.push(newWorker)
 
     // Booting up worker
-    newWorker.postMessage({ cmd: 'BOOT' })
+    newWorker.postMessage({ cmd: 'BOOT', config })
   }
 
   // job: object containing specific actions to do for worker
