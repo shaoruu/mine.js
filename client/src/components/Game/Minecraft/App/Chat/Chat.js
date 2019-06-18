@@ -2,6 +2,7 @@ import classes from './Chat.module.css'
 import Helpers from '../../Utils/Helpers'
 import { RUN_COMMAND_MUTATION } from '../../../../../lib/graphql'
 import Message from './Message/Message'
+import ChatHistory from './ChatHistory/ChatHistory'
 
 class Chat {
   constructor(playerId, worldId, container, apolloClient) {
@@ -13,6 +14,8 @@ class Chat {
     this.playerId = playerId
     this.worldId = worldId
     this.apolloClient = apolloClient
+
+    this.chatHistory = new ChatHistory(this)
 
     this.initDom(container)
   }
@@ -59,6 +62,21 @@ class Chat {
         command: value
       }
     })
+
+    this.chatHistory.add(value)
+    this.chatHistory.getReady()
+  }
+
+  handleUp = () => {
+    const previous = this.chatHistory.previous()
+
+    if (Helpers.isString(previous)) this.setInput(previous)
+  }
+
+  handleDown = () => {
+    const next = this.chatHistory.next()
+
+    if (Helpers.isString(next)) this.setInput(next)
   }
 
   addMessage = data => {

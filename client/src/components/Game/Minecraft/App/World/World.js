@@ -10,10 +10,8 @@ import TaskQueue from '../Workers/TaskQueue'
 import Chat from '../Chat/Chat'
 
 const SIZE = Config.chunk.size,
-  HEIGHT = Config.chunk.height,
   HORZ_D = Config.player.horzD,
   VERT_D = Config.player.vertD,
-  NOISE_CONSTANT = Config.world.noiseConstant,
   P_I_2_TOE = Config.player.aabb.eye2toe,
   P_I_2_TOP = Config.player.aabb.eye2top,
   DIMENSION = Config.block.dimension

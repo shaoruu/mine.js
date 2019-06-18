@@ -249,8 +249,8 @@ class Controls extends Stateful {
       undefined,
       { repeat: false }
     )
-    // this.keyboard.registerKey(38, ) // up
-    // this.keyboard.registerKey(40, ) // down
+    this.keyboard.registerKey(38, 'chat', this.chat.handleUp) // up
+    this.keyboard.registerKey(40, 'chat', this.chat.handleDown) // down
 
     this.keyboard.registerKey(
       27,

@@ -189,4 +189,6 @@ export default class Helpers {
 
   static approxEquals = (float1, float2, epsilon = 1e-5) =>
     Math.abs(float1 - float2) < epsilon
+
+  static isString = test => typeof test === 'string'
 }

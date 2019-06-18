@@ -62,7 +62,7 @@ class Status {
   registerWalk = () => {
     this.state.isSprinting = false
 
-    this._tweenCameraFOV(this.gamemodeFOV, 100)
+    this._tweenCameraFOV(this.gamemodeFOV)
   }
 
   registerFly = () => (this.state.flying = true)
