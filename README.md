@@ -11,6 +11,7 @@ Having to open an additional app to play a game is sometimes too tiring. Therefo
 These are some screenshots taken directly from the project.
 
 ## User Authentication
+
 ![](https://i.imgur.com/1jwIc4x.jpg)
 
 ![](https://i.imgur.com/VKyEP2F.jpg)
@@ -20,11 +21,13 @@ These are some screenshots taken directly from the project.
 ![](https://i.imgur.com/u52JZ3n.jpg)
 
 ## Neatly Styled Game UI
+
 ![](https://i.imgur.com/YoVA8P6.jpg)
 
 ![](https://i.imgur.com/du58Ifa.png)
 
-## Simple and Working Terrain Generation <small>(props to [FreshKoala](https://github.com/mrprokoala))</small>
+## Simple and Working Terrain Generation <small>(props to [FreshKoala](https://github.com/balta-z-r))</small>
+
 ![](https://i.imgur.com/RbwUMwe.jpg)
 
 ![](https://i.imgur.com/sPJ6DE5.jpg)
@@ -39,25 +42,25 @@ Javascript.
 
 ## Frontend
 
-* [react.js](https://reactjs.org/)
-* [react-router](https://github.com/ReactTraining/react-router)
-* [apollo](https://www.apollographql.com/)
+- [react.js](https://reactjs.org/)
+- [react-router](https://github.com/ReactTraining/react-router)
+- [apollo](https://www.apollographql.com/)
 
 ## Backend
 
-* [prisma](https://www.prisma.io/docs/1.34/get-started/01-setting-up-prisma-new-database-TYPESCRIPT-t002/)
-* [graphql-yoga](https://github.com/prisma/graphql-yoga)
+- [prisma](https://www.prisma.io/docs/1.34/get-started/01-setting-up-prisma-new-database-TYPESCRIPT-t002/)
+- [graphql-yoga](https://github.com/prisma/graphql-yoga)
 
 ## Authentication
 
-* [bcryptjs](https://github.com/dcodeIO/bcrypt.js/)
-* [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken#readme)
+- [bcryptjs](https://github.com/dcodeIO/bcrypt.js/)
+- [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken#readme)
 
 # Features
 
-* Player registration
-* Save worlds
-* Database support
+- Player registration
+- Save worlds
+- Database support
 
 # Installation
 
@@ -87,14 +90,14 @@ After these commands, visit `localhost:3000`
 
 # To-do's
 
-* [ ] Lighting
-* [ ] Chat system
-* [ ] Command system
-* [ ] Better terrain generation (caves)
-* [ ] Random structures (villages)
-* [ ] Inventory system
-* [ ] Trivial things such as
-    * [ ] Block breaking cooldowns
-    * [ ] Special items (swords, pickaxes)
-* [x] Better UI designs
-* [ ] Dockerize the entire project altogether
+- [ ] Lighting
+- [ ] Chat system
+- [ ] Command system
+- [ ] Better terrain generation (caves)
+- [ ] Random structures (villages)
+- [ ] Inventory system
+- [ ] Trivial things such as
+  - [ ] Block breaking cooldowns
+  - [ ] Special items (swords, pickaxes)
+- [x] Better UI designs
+- [ ] Dockerize the entire project altogether
