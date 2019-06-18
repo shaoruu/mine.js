@@ -106,7 +106,7 @@ export default class Player {
       node: { gamemode }
     }
   }) => {
-    if (gamemode !== this.status.gamemode) this.status.setGamemode(gamemode)
+    this.status.setGamemode(gamemode)
   }
 
   get position() {

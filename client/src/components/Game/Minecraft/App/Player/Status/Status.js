@@ -21,7 +21,6 @@ class Status {
     let FOV = REGULAR_FOV
     switch (this.gamemode) {
       case 'SURVIVAL':
-        flying = false
         break
       case 'CREATIVE':
         flying = true
