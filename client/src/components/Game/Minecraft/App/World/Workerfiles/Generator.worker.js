@@ -9,7 +9,7 @@ export default () => {
       maxWorldHeight = 256,
       waterLevel = 62,
       scale = 1,
-      octaves = 5,
+      octaves = 2,
       persistance = 0.5,
       lacunarity = 2,
       heightOffset = 2.5,
@@ -101,12 +101,13 @@ export default () => {
             }
 
             if (tempy > maxWorldHeight || tempy <= 0) blockId = 0
-            else if (tempy <= waterLevel) blockId = 1
             else {
               const isSolid = isSolidAt(tempx, tempy, tempz)
 
               if (isSolid) {
                 blockId = 57
+              } else if (tempy <= waterLevel) {
+                blockId = 1
               }
             }
 

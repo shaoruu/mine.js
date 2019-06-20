@@ -4,9 +4,8 @@ import Config from '../../Data/Config'
 import Chunk from './Chunk/Chunk'
 import Helpers from '../../Utils/Helpers'
 import Workerfiles from './Workerfiles'
+import { TaskQueue, WorkerPool } from '../WorkerUtils'
 import { UPDATE_BLOCK_MUTATION } from '../../../../../lib/graphql'
-import WorkerPool from '../Workers/WorkerPool'
-import TaskQueue from '../Workers/TaskQueue'
 import Chat from '../Chat/Chat'
 
 const SIZE = Config.chunk.size,
