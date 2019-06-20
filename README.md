@@ -26,7 +26,7 @@ These are some screenshots taken directly from the project.
 
 ![](https://i.imgur.com/du58Ifa.png)
 
-## Simple and Working Terrain Generation <small>(props to [FreshKoala](https://github.com/balta-z-r))</small>
+## Simple and Working Terrain Generation <small>(props to [FreshKoala](https://github.com/mrprokoala))</small>
 
 ![](https://i.imgur.com/RbwUMwe.jpg)
 
@@ -64,7 +64,7 @@ Javascript.
 
 # Installation
 
-Before cloning the repo or doing anything, be sure to install [docker](https://www.docker.com/) and [node](https://nodejs.org/en/) on your computer. After that, run the following commands:
+Before cloning the repo or doing anything, be sure to install [docker](https://www.docker.com/), [node](https://nodejs.org/en/), [prisma-cli](https://www.prisma.io/docs/prisma-cli-and-configuration/using-the-prisma-cli-alx4/) and [graphql-cli](https://github.com/graphql-cli/graphql-cli#install) on your computer. After that, run the following commands:
 
 ```bash
 # Clone the repo
@@ -73,12 +73,14 @@ git clone https://github.com/ian13456/minecraft.js.git
 # Download packages for server and client with:
 npm install
 
-# Start docker containers
+# Start docker containers and deploy prisma
 cd server/prisma
 docker-compose up -d
+prisma deploy
 
-# Start backend service
+# Fetch prisma generated schema and start backend service
 cd server
+npm run get-schema
 npm start
 
 # Start frontend service
