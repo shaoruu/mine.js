@@ -61,7 +61,7 @@ class World {
     this.targetBlock = null
     this.potentialBlock = null
 
-    // Server Communicatin
+    // Server Communication
     this.apolloClient = apolloClient
 
     // FOR PREPARATION
@@ -82,12 +82,13 @@ class World {
         this.registerChangedBlock(type, x, y, z)
       })
 
-    if (this.isBrandNew)
+    if (this.isBrandNew) {
       this.workerPool.queueJob({
         cmd: 'GET_HIGHEST',
         x: 0,
         z: 0
       })
+    }
   }
 
   /**

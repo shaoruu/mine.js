@@ -84,7 +84,7 @@ export default () => {
       persistance = 0.5,
       lacunarity = 2,
       heightOffset = 2.5,
-      amplifier = 4
+      amplifier = 1
     } = {}
 
     const initSeed = seed => {
@@ -115,12 +115,20 @@ export default () => {
 
     const getNoise = (x, y, z) => this.octavePerlin3(x, y, z) - (y * 4) / scale
 
-    const isSolidAt = (x, y, z) => getNoise(x, y, z) >= -0.2
+    const isSolidAt = (x, y, z) =>
+      getNoise((x * scale) / 100, (y * scale) / 100, (z * scale) / 100) >= -0.2
 
     initSeed(seed)
     initNoises()
 
-    this.getHighestBlock = (x, z) => {}
+    this.getHighestBlock = (x, z) => {
+      for (let y = maxWorldHeight; y >= 0; y--) {
+        const isSolid = isSolidAt(x, y, z)
+
+        if (isSolid) return y + 1
+      }
+      return 0
+    }
 
     this.octavePerlin3 = (x, y, z) => {
       let total = 0,
@@ -163,14 +171,10 @@ export default () => {
               continue
             }
 
-            if (tempy > maxWorldHeight) blockId = 0
+            if (tempy > maxWorldHeight || tempy <= 0) blockId = 0
             else if (tempy <= waterLevel) blockId = 1
             else {
-              const x2 = (tempx * scale) / 100
-              const y2 = (tempy * scale) / 100
-              const z2 = (tempz * scale) / 100
-
-              const isSolid = isSolidAt(x2, y2, z2)
+              const isSolid = isSolidAt(tempx, tempy, tempz)
 
               if (isSolid) {
                 blockId = 57
