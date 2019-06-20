@@ -155,7 +155,13 @@ export default () => {
 
             const tempx = offsets[0] + x,
               tempy = offsets[1] + y,
-              tempz = offsets[2] + z
+              tempz = offsets[2] + z,
+              cb = changedBlocks[getCoordsRepresentation(tempx, tempy, tempz)]
+
+            if (typeof cb === 'number') {
+              set(x, z, y, cb)
+              continue
+            }
 
             if (tempy > maxWorldHeight) blockId = 0
             else if (tempy <= waterLevel) blockId = 1
