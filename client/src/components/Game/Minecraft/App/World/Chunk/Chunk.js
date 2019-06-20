@@ -36,13 +36,13 @@ class Chunk {
     const meshes = []
 
     for (let i = 0; i < quads.length; i++) {
-      const [coords, geo, type, material] = quads[i]
+      const [coords, geo, type, material, lighting, smoothLighting] = quads[i]
 
       const globalCoords = Helpers.mapVecToWorldCoords(this.origin, coords)
 
       const mat = this.resourceManager.getBlockMat(type, geo, material)
 
-      meshes.push({ geo, pos: globalCoords, mat })
+      meshes.push({ geo, pos: globalCoords, mat, lighting, smoothLighting })
     }
 
     this.meshes = meshes

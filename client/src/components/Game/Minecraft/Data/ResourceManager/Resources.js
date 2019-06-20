@@ -26,7 +26,31 @@ export default {
       nz: {
         func: null,
         rotation: null
-      }
+      },
+      px2: {
+        func: ['rotateY', 'rotateX'],
+        rotation: [Math.PI / 2, Math.PI / 2]
+      },
+      py2: {
+        func: ['rotateX', 'rotateY'],
+        rotation: [-Math.PI / 2, Math.PI / 2]
+      },
+      pz2: {
+        func: 'rotateZ',
+        rotation: Math.PI / 2
+      },
+      nx2: {
+        func: ['rotateY', 'rotateX'],
+        rotation: [Math.PI / 2, Math.PI / 2]
+      },
+      ny2: {
+        func: ['rotateX', 'rotateY'],
+        rotation: [-Math.PI / 2, Math.PI / 2]
+      },
+      nz2: {
+        func: 'rotateZ',
+        rotation: Math.PI / 2
+      },
     }
   },
   textures: {
@@ -103,5 +127,9 @@ export default {
         8: require('../../../../../assets/blocks/destroy_stage_8.png')
       }
     }
+  },
+  lighting: {
+    day: [14, 19, 23, 28, 34, 41, 48, 57, 67, 79, 93, 110, 132, 160, 197, 250],
+    night: []
   }
 }

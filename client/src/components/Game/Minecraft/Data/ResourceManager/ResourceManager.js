@@ -22,6 +22,7 @@ class ResourceManager {
   getSpecialBlockMat = id => this.blockMatManager.getSpecial(id)
   getBlockImg = id => Resources.textures.blocks[id]
   getBlockGeo = key => this.blockGeoManager.get(key)
+  getBlockGeoWLighting = (key, lighting, smoothLighting) => this.blockGeoManager.getWLighting(key, lighting, smoothLighting)
   getGuiImg = key => Resources.textures.gui[key]
 }
 

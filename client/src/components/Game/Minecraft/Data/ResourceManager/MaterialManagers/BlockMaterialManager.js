@@ -29,21 +29,42 @@ class BlockMaterialManager {
         texture.magFilter = THREE.NearestFilter
         texture.minFilter = THREE.NearestMipMapLinearFilter
 
-        const frontSide = new THREE.MeshStandardMaterial({
+        const frontSide = new THREE.MeshLambertMaterial({
+          map: texture,
+          side: THREE.FrontSide,
+          vertexColors: THREE.VertexColors
+        }),
+          backSide = new THREE.MeshLambertMaterial({
             map: texture,
-            side: THREE.FrontSide
-          }),
-          backSide = new THREE.MeshStandardMaterial({
-            map: texture,
-            side: THREE.BackSide
+            side: THREE.BackSide,
+            vertexColors: THREE.VertexColors
           })
 
-        if (key === '2' && keyword === 'top') frontSide.color.setHex(0x93e074)
+        texture.center.set(0.5, 0.5)
+        texture.rotation = (Math.PI / 2)
+
+        texture.updateMatrix()
+
+        const frontSideRotated = new THREE.MeshLambertMaterial({
+          map: texture,
+          side: THREE.FrontSide,
+          vertexColors: THREE.VertexColors
+        }),
+          backSideRotated = new THREE.MeshLambertMaterial({
+            map: texture,
+            side: THREE.BackSide,
+            vertexColors: THREE.VertexColors
+          })
+
+        if (key === '2' && keyword === 'top') {
+          frontSide.color.setHex(0x93e074)
+          frontSideRotated.color.setHex(0x93e074)
+        }
 
         this.images[key][keyword] = sources[keyword]
         this.materials[key][keyword] = {
-          frontSide,
-          backSide
+          frontSide: [frontSide, frontSideRotated],
+          backSide: [backSide, backSideRotated]
         }
       }
     }
@@ -63,9 +84,10 @@ class BlockMaterialManager {
         texture.magFilter = THREE.NearestFilter
         texture.minFilter = THREE.NearestMipMapLinearFilter
 
-        const material = new THREE.MeshStandardMaterial({
+        const material = new THREE.MeshLambertMaterial({
           map: texture,
-          side: THREE.DoubleSide
+          side: THREE.DoubleSide,
+          vertexColors: THREE.VertexColors
         })
 
         this.images[key][keyword] = sources[keyword]
@@ -75,8 +97,21 @@ class BlockMaterialManager {
   }
 
   get = (id, geoType, material) => {
-    if (geoType.includes('p')) return this.materials[id][material].frontSide
-    return this.materials[id][material].backSide
+    if (geoType.includes('p')) {
+      if (geoType.includes('2')) {
+        return this.materials[id][material].frontSide[1]
+      } else {
+        return this.materials[id][material].frontSide[0]
+      }
+
+    } else {
+      if (geoType.includes('2')) {
+        return this.materials[id][material].backSide[1]
+      } else {
+        return this.materials[id][material].backSide[0]
+      }
+    }
+
   }
   getSpecial = id => this.materials[id]
   getImage = id => this.images[id]

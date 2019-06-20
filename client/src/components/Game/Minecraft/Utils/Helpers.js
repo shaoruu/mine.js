@@ -15,11 +15,11 @@ export default class Helpers {
 
     // const start = performance.now()
     for (let i = 0; i < meshes.length; i++) {
-      const { geo, pos, mat } = meshes[i]
+      const { geo, pos, mat, lighting, smoothLighting } = meshes[i]
 
       matrix.makeTranslation(...pos)
 
-      mergedGeometry.merge(resourceManager.getBlockGeo(geo), matrix, i)
+      mergedGeometry.merge(resourceManager.getBlockGeoWLighting(geo, lighting, smoothLighting), matrix, i)
       materials.push(mat)
     }
     // const end = performance.now()
@@ -32,7 +32,7 @@ export default class Helpers {
     else finalGeometry = mergedGeometry
 
     mergedMesh = new THREE.Mesh(finalGeometry, materials)
-    mergedMesh.geometry.computeFaceNormals()
+    // mergedMesh.geometry.computeFaceNormals()
     // mergedMesh.geometry.computeVertexNormals()
 
     return mergedMesh
@@ -81,11 +81,11 @@ export default class Helpers {
           ? vcross.x > vcross.z
             ? 'x'
             : vcross.y > vcross.z
-            ? 'y'
-            : vcross.y > vcross.z
+              ? 'y'
+              : vcross.y > vcross.z
           : vcross.y > vcross.z
-          ? 'y'
-          : 'z'
+            ? 'y'
+            : 'z'
       //Take the other two axis from the largest axis
       let uAxis = majorAxis === 'x' ? 'y' : majorAxis === 'y' ? 'x' : 'x'
       let vAxis = majorAxis === 'x' ? 'z' : majorAxis === 'y' ? 'z' : 'y'
@@ -141,15 +141,15 @@ export default class Helpers {
     z = parseFloat(z.toFixed(10))
     return floor
       ? {
-          x: Math.floor(x / dimension),
-          y: Math.floor(y / dimension),
-          z: Math.floor(z / dimension)
-        }
+        x: Math.floor(x / dimension),
+        y: Math.floor(y / dimension),
+        z: Math.floor(z / dimension)
+      }
       : {
-          x: x / dimension,
-          y: y / dimension,
-          z: z / dimension
-        }
+        x: x / dimension,
+        y: y / dimension,
+        z: z / dimension
+      }
   }
 
   /**

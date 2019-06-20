@@ -8,7 +8,7 @@ export default () => {
     return `${x}:${y}:${z}${semi ? ';' : ''}`
   }
 
-  function calcQuads(get, dims) {
+  function calcQuads(get, getLighting, getSmoothLightingSide, dims) {
     const planes = [],
       materials = { top: 'top', side: 'side', bottom: 'bottom' }
 
@@ -25,45 +25,87 @@ export default () => {
             wz = z - 1
 
           // TOP
-          if (get(x, z, y + 1) === 0)
+          if (get(x, z, y + 1) === 0) {
+            const smoothLightingSide = getSmoothLightingSide(wx, wz, wy, 0)
+            const geo = smoothLightingSide[2][0] !== 1 ? 'py' : 'py2'
             planes.push([
               [wx + 0.5, wy + 1, wz + 0.5],
-              'py',
+              geo,
               type,
-              materials.top
-            ])
+              materials.top,
+              getLighting(wx, wz, wy, 0),
+              smoothLightingSide
+            ]);
+          }
+
 
           // SIDES
-          if (get(x + 1, z, y) === 0)
+          if (get(x + 1, z, y) === 0) {
+            const smoothLightingSide = getSmoothLightingSide(wx, wz, wy, 1)
+            const geo = smoothLightingSide[2][0] !== 1 ? 'px' : 'px2'
             planes.push([
               [wx + 1, wy + 0.5, wz + 0.5],
-              'px',
+              geo,
               type,
-              materials.side
-            ])
-          if (get(x, z + 1, y) === 0)
+              materials.side,
+              getLighting(wx, wz, wy, 1),
+              smoothLightingSide
+            ]);
+          }
+
+          if (get(x, z + 1, y) === 0) {
+            const smoothLightingSide = getSmoothLightingSide(wx, wz, wy, 2)
+            const geo = smoothLightingSide[2][0] !== 1 ? 'pz' : 'pz2'
             planes.push([
               [wx + 0.5, wy + 0.5, wz + 1],
-              'pz',
+              geo,
               type,
-              materials.side
-            ])
-          if (get(x - 1, z, y) === 0)
-            planes.push([[wx, wy + 0.5, wz + 0.5], 'nx', type, materials.side])
-          if (get(x, z - 1, y) === 0)
-            planes.push([[wx + 0.5, wy + 0.5, wz], 'nz', type, materials.side])
+              materials.side,
+              getLighting(wx, wz, wy, 2),
+              smoothLightingSide
+            ]);
+          }
+
+          if (get(wx, z, y) === 0) {
+            const smoothLightingSide = getSmoothLightingSide(wx, wz, wy, 3)
+            const geo = smoothLightingSide[2][0] !== 1 ? 'nx' : 'nx2'
+            planes.push([
+              [wx, wy + 0.5, wz + 0.5],
+              geo,
+              type,
+              materials.side,
+              getLighting(wx, wz, wy, 3),
+              smoothLightingSide,
+            ]);
+          }
+
+          if (get(x, wz, y) === 0) {
+            const smoothLightingSide = getSmoothLightingSide(wx, wz, wy, 4)
+            const geo = smoothLightingSide[2][0] !== 1 ? 'nz' : 'nz2'
+            planes.push([
+              [wx + 0.5, wy + 0.5, wz],
+              geo,
+              type,
+              materials.side,
+              getLighting(wx, wz, wy, 4),
+              smoothLightingSide
+            ]);
+          }
+
 
           // BOTTOM
-          if (get(x, z, y - 1) === 0)
+          if (get(x, z, wy) === 0)
             planes.push([
               [wx + 0.5, wy, wz + 0.5],
-              'ny',
+              "ny",
               type,
-              materials.bottom
-            ])
+              materials.bottom,
+              getLighting(wx, wz, wy, 5),
+              getSmoothLightingSide(wx, wz, wy, 5)
+            ]);
         }
       }
     }
-    return planes
+    return planes;
   }
 }

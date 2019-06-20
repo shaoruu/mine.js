@@ -23,7 +23,7 @@
     "react-dom": "^16.8.4",
     "react-outside-click-handler": "^1.2.3",
     "react-pannellum": "^0.1.6",
-    "react-router-dom": "^4.4.0",
+    "react-router-dom": "^5.0.1",
     "react-scripts": "2.1.8",
     "stats-js": "^1.0.0",
     "subscriptions-transport-ws": "^0.9.16",
