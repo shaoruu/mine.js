@@ -1,3 +1,6 @@
+/** Environment Variables */
+import dotenv from 'dotenv'
+
 /** Basis */
 import React from 'react'
 import ReactDOM from 'react-dom'
@@ -20,49 +23,51 @@ import * as serviceWorker from './serviceWorker'
 import Main from './containers/Main'
 import { getToken } from './lib/utils'
 
+dotenv.config()
+
 const httpLink = createHttpLink({
-	uri: 'http://localhost:4000',
-	credentials: 'same-origin'
+  uri: 'http://localhost:4000',
+  credentials: 'same-origin'
 })
 
 const link = split(
-	({ query }) => {
-		const { kind, operation } = getMainDefinition(query)
-		return kind === 'OperationDefinition' && operation === 'subscription'
-	},
-	new WebSocketLink({
-		uri: 'ws://localhost:4000',
-		options: {
-			reconnect: true
-		}
-	}),
-	httpLink
+  ({ query }) => {
+    const { kind, operation } = getMainDefinition(query)
+    return kind === 'OperationDefinition' && operation === 'subscription'
+  },
+  new WebSocketLink({
+    uri: 'ws://localhost:4000',
+    options: {
+      reconnect: true
+    }
+  }),
+  httpLink
 )
 
 const authLink = setContext((_, { headers }) => {
-	const token = getToken()
-	return {
-		headers: {
-			...headers,
-			authorization: token ? `Bearer ${token}` : ''
-		}
-	}
+  const token = getToken()
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : ''
+    }
+  }
 })
 
 const apolloClient = new ApolloClient({
-	connectToDevTools: process.browser,
-	ssrMode: !process.browser,
-	ssrForceFetchDelay: 100,
-	link: authLink.concat(link),
-	cache: new InMemoryCache().restore({})
+  connectToDevTools: process.browser,
+  ssrMode: !process.browser,
+  ssrForceFetchDelay: 100,
+  link: authLink.concat(link),
+  cache: new InMemoryCache().restore({})
 })
 
 const main = (
-	<ApolloProvider client={apolloClient}>
-		<BrowserRouter>
-			<Main />
-		</BrowserRouter>
-	</ApolloProvider>
+  <ApolloProvider client={apolloClient}>
+    <BrowserRouter>
+      <Main />
+    </BrowserRouter>
+  </ApolloProvider>
 )
 
 ReactDOM.render(main, document.getElementById('root'))

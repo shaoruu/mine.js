@@ -92,8 +92,8 @@ export default {
     posX: 0,
     posY: 30,
     posZ: 0,
-    horzD: 4,
-    vertD: 3,
+    horzD: 5,
+    vertD: 4,
     reachDst: 7
   },
   controls: {
@@ -170,7 +170,44 @@ export default {
   world: {
     noiseConstant: 25,
     maxWorkerCount: 4,
-    gravity: -9
+    gravity: -9,
+    worldConfigs: {
+      waterLevel: 62,
+      biomes: {
+        DESERT: {
+          chance: 0.2,
+          octaves: 9,
+          amplitude: 80,
+          smoothness: 335,
+          heightOffset: -7,
+          roughness: 0.56
+        },
+        GRASSLAND: {
+          chance: 0.35,
+          octaves: 9,
+          amplitude: 85,
+          smoothness: 235,
+          heightOffset: -20,
+          roughness: 0.51
+        },
+        LIGHTFOREST: {
+          chance: 0.25,
+          octaves: 5,
+          amplitude: 100,
+          smoothness: 195,
+          heightOffset: -32,
+          roughness: 0.52
+        },
+        OCEAN: {
+          chance: 0.2,
+          octaves: 7,
+          amplitude: 43,
+          smoothness: 55,
+          heightOffset: 0,
+          roughness: 0.5
+        }
+      }
+    }
   },
   keyboard: {
     movements: {

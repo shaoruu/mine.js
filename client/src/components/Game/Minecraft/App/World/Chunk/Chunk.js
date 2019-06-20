@@ -7,7 +7,7 @@ const size = Config.chunk.size
 
 class Chunk {
   constructor(resourceManager, { origin }) {
-    // Inheritted Managers
+    // Inherited Managers
     this.resourceManager = resourceManager
 
     // Member Initialization
@@ -24,22 +24,6 @@ class Chunk {
 
     this.blocksInProgress = {}
   }
-
-  /**
-   * Register block data onto grid
-   * @param {array} blocks - Array of blocks to initialze chunk.
-   */
-  initGrid = blocks => {
-    for (let block of blocks) {
-      const {
-        id,
-        position: { x, y, z }
-      } = block
-
-      this.grid.set(x, z, y, id)
-    }
-  }
-
   /** Generate THREE meshes and store them into an array. */
   meshQuads = quads => {
     // Avoiding extra work.
@@ -51,8 +35,8 @@ class Chunk {
 
     const meshes = []
 
-    for (let quad of quads) {
-      const [coords, geo, type, material] = quad
+    for (let i = 0; i < quads.length; i++) {
+      const [coords, geo, type, material] = quads[i]
 
       const globalCoords = Helpers.mapVecToWorldCoords(this.origin, coords)
 

@@ -2,7 +2,7 @@ import Helpers from '../../Utils/Helpers'
 import classes from './Debug.module.css'
 
 function Debug(player, world) {
-  let display = false
+  let display = process.env.NODE_ENV === 'development'
 
   const wrapper = document.createElement('div'),
     leftPanel = document.createElement('div'),
@@ -29,6 +29,8 @@ function Debug(player, world) {
 
   wrapper.appendChild(leftPanel)
   wrapper.appendChild(rightPanel)
+
+  if (display) Helpers.applyStyle(wrapper, { display: 'block' })
 
   const calcFPS = (function() {
     let lastLoop = new Date().getMilliseconds(),

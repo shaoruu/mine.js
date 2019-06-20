@@ -14,7 +14,8 @@ const SIZE = Config.chunk.size,
   VERT_D = Config.player.vertD,
   P_I_2_TOE = Config.player.aabb.eye2toe,
   P_I_2_TOP = Config.player.aabb.eye2top,
-  DIMENSION = Config.block.dimension
+  DIMENSION = Config.block.dimension,
+  WORLD_GENERATION_CONFIG = Config.world.worldConfigs
 
 class World {
   constructor(
@@ -48,7 +49,8 @@ class World {
     this.workerPool = new WorkerPool(worker, this, {
       seed,
       size: SIZE,
-      stride: [(SIZE + 2) ** 2, SIZE + 2, 1]
+      stride: [(SIZE + 2) ** 2, SIZE + 2, 1],
+      generation: WORLD_GENERATION_CONFIG
     })
     this.workerTaskHandler = new TaskQueue() // This is handle/schedule all the tasks from worker callback
 

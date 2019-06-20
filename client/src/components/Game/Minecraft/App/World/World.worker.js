@@ -75,14 +75,17 @@ export default () => {
   /**
    * FUNCTIONAL CLASS DECLARATIONS FOR WORKER-SCOPE
    */
-  function Generator(seed, size, config = {}) {
+  function Generator(seed, size) {
     const {
-      octaves = 7,
-      amplitude = 70,
-      smoothness = 235,
-      heightOffset = -5,
-      roughness = 0.53
-    } = config
+      maxWorldHeight = 256,
+      waterLevel = 62,
+      scale = 1,
+      octaves = 5,
+      persistance = 0.5,
+      lacunarity = 2,
+      heightOffset = 2.5,
+      amplifier = 4
+    } = {}
 
     const initSeed = seed => {
       let hash = 0,
@@ -104,75 +107,74 @@ export default () => {
 
     const initNoises = () => {
       this.noise = new Noise(this.seed)
+
+      // BIOMES
+      this.rainfall = new Noise(this.seed * 2)
+      this.temp = new Noise(this.seed / 2)
     }
+
+    const getNoise = (x, y, z) => this.octavePerlin3(x, y, z) - (y * 4) / scale
+
+    const isSolidAt = (x, y, z) => getNoise(x, y, z) >= -0.2
 
     initSeed(seed)
     initNoises()
 
-    this.getHeight = (x, z) => {
-      let totalValue = 0.0
+    this.getHighestBlock = (x, z) => {}
 
-      for (let i = 0; i < octaves - 1; i++) {
-        const freq = 2 ** i,
-          amp = roughness ** i
+    this.octavePerlin3 = (x, y, z) => {
+      let total = 0,
+        frequency = 1,
+        amplitude = 1,
+        maxVal = 0
 
-        totalValue +=
-          this.noise.perlin2((x * freq) / smoothness, (z * freq) / smoothness) *
-          amp
+      for (let i = 0; i < octaves; i++) {
+        total +=
+          this.noise.perlin3(
+            x * frequency * scale,
+            y * frequency * scale,
+            z * frequency * scale
+          ) * amplitude
+
+        maxVal += amplitude
+
+        amplitude *= persistance
+        frequency *= lacunarity
       }
 
-      const val = (totalValue / 2.1 + 1.2) * amplitude + heightOffset
-      return val > 0 ? val : 1
-    }
-
-    this.setBlocks = (set, heightMap, offsets, changedBlocks) => {
-      for (let y = 0; y < size + 2; y++) {
-        for (let x = 0; x < size + 2; x++) {
-          for (let z = 0; z < size + 2; z++) {
-            const height = heightMap[x][z],
-              actualY = offsets[1] + y,
-              cb =
-                changedBlocks[
-                  getCoordsRepresentation(
-                    offsets[0] + x,
-                    actualY,
-                    offsets[2] + z
-                  )
-                ]
-            let value = 0
-
-            if (typeof cb === 'number') {
-              value = cb
-            } else if (actualY === height) {
-              value = 2
-            } else if (actualY > height - 3 && actualY <= height - 1) {
-              value = 3
-            } else if (actualY < height) {
-              value = 1
-            }
-
-            set(x, z, y, value)
-          }
-        }
-      }
+      return (total / maxVal) * amplifier + heightOffset
     }
 
     this.setVoxelData = (set, coordx, coordy, coordz, changedBlocks) => {
-      const heightMap = new Array(size + 2)
-      for (let i = 0; i < size + 2; i++) heightMap[i] = new Array(size + 2)
-
       const offsets = [coordx * size - 1, coordy * size - 1, coordz * size - 1]
 
-      for (let x = 0; x < size + 2; x++)
+      for (let x = 0; x < size + 2; x++) {
         for (let z = 0; z < size + 2; z++) {
-          const posx = offsets[0] + x,
-            posz = offsets[2] + z
+          for (let y = 0; y < size + 2; y++) {
+            let blockId
 
-          const h = this.getHeight(posx, posz)
-          heightMap[x][z] = Math.floor(h)
+            const tempx = offsets[0] + x,
+              tempy = offsets[1] + y,
+              tempz = offsets[2] + z
+
+            if (tempy > maxWorldHeight) blockId = 0
+            else if (tempy <= waterLevel) blockId = 1
+            else {
+              const x2 = (tempx * scale) / 100
+              const y2 = (tempy * scale) / 100
+              const z2 = (tempz * scale) / 100
+
+              const isSolid = isSolidAt(x2, y2, z2)
+
+              if (isSolid) {
+                blockId = 57
+              }
+            }
+
+            set(x, z, y, blockId)
+          }
         }
-
-      this.setBlocks(set, heightMap, offsets, changedBlocks)
+      }
     }
   }
 
@@ -187,14 +189,14 @@ export default () => {
         const { config } = e.data
         self.config = config
 
+        self.generator = new Generator(config.seed, config.size)
+
         postMessage({ cmd })
         break
       case 'GET_HIGHEST': {
         const { x, z } = e.data
-        const { seed, size } = self.config
 
-        const tempGen = new Generator(seed, size)
-        postMessage({ cmd, h: tempGen.getHeight(x, z) })
+        postMessage({ cmd, h: self.generator.getHighestBlock(x, z) })
 
         break
       }
@@ -204,9 +206,8 @@ export default () => {
           chunkName,
           coords: { coordx, coordy, coordz }
         } = e.data
-        const { seed, size, stride } = self.config
+        const { size, stride } = self.config
 
-        const generator = new Generator(seed, size)
         const blocks = new Uint16Array((size + 2) * (size + 2) * (size + 2))
 
         const set = (i, j, k, v) =>
@@ -214,7 +215,7 @@ export default () => {
         const get = (i, j, k) =>
           blocks[i * stride[0] + j * stride[1] + k * stride[2]]
 
-        generator.setVoxelData(set, coordx, coordy, coordz, changedBlocks)
+        self.generator.setVoxelData(set, coordx, coordy, coordz, changedBlocks)
         /** MESHING RIGHT BELOW */
         const dims = [size + 2, size + 2, size + 2]
 
