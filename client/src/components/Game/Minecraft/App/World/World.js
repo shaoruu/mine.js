@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import Config from '../../Data/Config'
 import Chunk from './Chunk/Chunk'
 import Helpers from '../../Utils/Helpers'
-import worker from './World.worker'
+import Workerfiles from './Workerfiles'
 import { UPDATE_BLOCK_MUTATION } from '../../../../../lib/graphql'
 import WorkerPool from '../Workers/WorkerPool'
 import TaskQueue from '../Workers/TaskQueue'
@@ -46,7 +46,7 @@ class World {
 
     // Workers
     this.setupWorkerConfigs()
-    this.workerPool = new WorkerPool(worker, this, {
+    this.workerPool = new WorkerPool(Workerfiles, this, {
       seed,
       size: SIZE,
       stride: [(SIZE + 2) ** 2, SIZE + 2, 1],
