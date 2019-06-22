@@ -395,7 +395,6 @@ export default () => {
           pzColorsFace1[2] = c === 0 ? shadow : light
 
           output[2] = [pzColorsFace0, pzColorsFace1, [0, 0, 0]]
-          // output[2] = [[light, light, light], [light, shadow, light], [0, 0, 0]]
         }
       }
       if (nx === 0) {
@@ -416,7 +415,6 @@ export default () => {
           nx2ColorsFace1[2] = c === 0 ? shadow : light
 
           output[3] = [nx2ColorsFace0, nx2ColorsFace1, [1, 1, 1]]
-          // output[3] = [[light, light, light], [light, shadow, light], [1, 1, 1]]
         } else {
           const nxColorsFace0 = new Uint16Array(3)
           nxColorsFace0[0] = c === 0 ? shadow : light
@@ -429,7 +427,6 @@ export default () => {
           nxColorsFace1[2] = d === 0 ? shadow : light
 
           output[3] = [nxColorsFace0, nxColorsFace1, [0, 0, 0]]
-          // output[3] = [[light, light, light], [light, shadow, light], [0, 0, 0]]
         }
       }
 
@@ -499,7 +496,7 @@ export default () => {
       else {
         const isSolid = isSolidAt(x, y, z)
         if (isSolid) {
-          return 2
+          return 17
         } else if (y <= waterLevel) {
           return 1
         }

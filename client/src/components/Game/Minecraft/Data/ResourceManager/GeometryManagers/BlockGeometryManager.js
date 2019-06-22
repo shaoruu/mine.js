@@ -16,30 +16,6 @@ class BlockGeometryManager {
     for (let key in rBlock) {
       this.geometries[key] = new THREE.PlaneGeometry(dimension, dimension)
       const { func, rotation } = rBlock[key]
-      switch (key) {
-        case 'px':
-        case 'nx':
-        case 'pz':
-        case 'nz':
-        case 'px2':
-        case 'nx2':
-        case 'pz2':
-        case 'nz2':
-          this.geometries[key].faceVertexUvs[0][0][0].y = 0.5
-          this.geometries[key].faceVertexUvs[0][0][2].y = 0.5
-          this.geometries[key].faceVertexUvs[0][1][2].y = 0.5
-          break
-        case 'py':
-        case 'ny':
-        case 'py2':
-        case 'ny2':
-          this.geometries[key].faceVertexUvs[0][0][1].y = 0.5
-          this.geometries[key].faceVertexUvs[0][1][0].y = 0.5
-          this.geometries[key].faceVertexUvs[0][1][1].y = 0.5
-          break
-        default:
-          break
-      }
       // this.geometries[key].computeFaceNormals()
       if (func && Array.isArray(func)) {
         for (let i = 0; i < func.length; i++) {
@@ -54,26 +30,21 @@ class BlockGeometryManager {
   get = key => this.geometries[key]
 
   getWLighting = (key, lighting, smoothLighting) => {
+    const slDifference = 250
+
     const light = new THREE.Color(
       `rgb(${rLighting[lighting]},${rLighting[lighting]},${
-        rLighting[lighting]
+      rLighting[lighting]
       })`
     )
     const shadow =
-      lighting > 0
+      rLighting[lighting] - slDifference >= 0
         ? new THREE.Color(
-            `rgb(${rLighting[lighting - 1]},${rLighting[lighting - 1]},${
-              rLighting[lighting - 1]
-            })`
-          )
-        : light
-    // const slDifference = 50
-
-    // const light = new THREE.Color(`rgb(${lighting},${lighting},${lighting})`)
-    // const shadow = lighting - slDifference > 0 ? new THREE.Color(`rgb(${lighting - slDifference},${lighting - slDifference},${lighting - slDifference})`) : new THREE.Color(`rgb(0,0,0)`)
-
-    // const light = new THREE.Color(0xffffff);
-    // const shadow = new THREE.Color(0x505050);
+          `rgb(${rLighting[lighting] - slDifference},${rLighting[lighting] - slDifference},${
+          rLighting[lighting] - slDifference
+          })`
+        )
+        : new THREE.Color(`rgb(0,0,0)`)
 
     const geo = this.geometries[key]
 
@@ -108,8 +79,8 @@ class BlockGeometryManager {
             smoothLighting[m][n] === 1
               ? shadow
               : smoothLighting[m][n] === 2
-              ? light
-              : shadow
+                ? light
+                : shadow
         }
         geo.faces[m].vertexColors = colors
       }

@@ -28,6 +28,7 @@ class BlockMaterialManager {
         texture.wrapT = THREE.RepeatWrapping
         texture.magFilter = THREE.NearestFilter
         texture.minFilter = THREE.NearestMipMapLinearFilter
+        texture.repeat.set(1, 1)
 
         const frontSide = new THREE.MeshLambertMaterial({
           map: texture,
@@ -40,18 +41,24 @@ class BlockMaterialManager {
             vertexColors: THREE.VertexColors
           })
 
-        texture.center.set(0.5, 0.5)
-        texture.rotation = (Math.PI / 2)
+        const rotatedTexture = this.loader.load(sources[keyword])
+        rotatedTexture.wrapS = THREE.RepeatWrapping
+        rotatedTexture.wrapT = THREE.RepeatWrapping
+        rotatedTexture.magFilter = THREE.NearestFilter
+        rotatedTexture.minFilter = THREE.NearestMipMapLinearFilter
+        rotatedTexture.repeat.set(1, 1)
+        rotatedTexture.center.set(0.5, 0.5)
+        rotatedTexture.rotation = -Math.PI / 2
 
-        texture.updateMatrix()
+        // console.log(texture, rotatedTexture)
 
         const frontSideRotated = new THREE.MeshLambertMaterial({
-          map: texture,
+          map: rotatedTexture,
           side: THREE.FrontSide,
           vertexColors: THREE.VertexColors
         }),
           backSideRotated = new THREE.MeshLambertMaterial({
-            map: texture,
+            map: rotatedTexture,
             side: THREE.BackSide,
             vertexColors: THREE.VertexColors
           })
