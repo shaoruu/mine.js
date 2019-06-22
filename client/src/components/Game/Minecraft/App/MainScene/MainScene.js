@@ -58,6 +58,49 @@ class MainScene extends Component {
         clearTimeout(requestID)
       }) //fall back
 
+    /**
+     * Behaves the same as setInterval except uses requestAnimationFrame() where possible for better performance
+     * @param {function} fn The callback function
+     * @param {int} delay The delay in milliseconds
+     */
+    window.requestInterval = function(fn, delay) {
+      var start = performance.now(),
+        handle = {}
+      function loop() {
+        handle.value = window.requestAnimationFrame(loop)
+        var current = performance.now(),
+          delta = current - start
+        if (delta >= delay) {
+          fn.call()
+          start = performance.now()
+        }
+      }
+      handle.value = window.requestAnimationFrame(loop)
+      return handle
+    }
+
+    /**
+     * Behaves the same as clearInterval except uses cancelRequestAnimationFrame() where possible for better performance
+     * @param {int|object} fn The callback function
+     */
+    window.clearRequestInterval = function(handle) {
+      window.cancelAnimationFrame
+        ? window.cancelAnimationFrame(handle.value)
+        : window.webkitCancelAnimationFrame
+        ? window.webkitCancelAnimationFrame(handle.value)
+        : window.webkitCancelRequestAnimationFrame
+        ? window.webkitCancelRequestAnimationFrame(
+            handle.value
+          ) /* Support for legacy API */
+        : window.mozCancelRequestAnimationFrame
+        ? window.mozCancelRequestAnimationFrame(handle.value)
+        : window.oCancelRequestAnimationFrame
+        ? window.oCancelRequestAnimationFrame(handle.value)
+        : window.msCancelRequestAnimationFrame
+        ? window.msCancelRequestAnimationFrame(handle.value)
+        : clearInterval(handle)
+    }
+
     // Player setup
     this.currentPlayer = this.worldData.players.find(
       ele => ele.user.username === this.props.username
@@ -130,7 +173,7 @@ class MainScene extends Component {
     this.init()
 
     /** Called every 200ms to update player position with server. */
-    this.updatePosCall = setInterval(() => {
+    this.updatePosCall = window.requestInterval(() => {
       const playerCoords = this.player.getCoordinates(),
         playerDirs = this.player.getDirections()
 
@@ -156,7 +199,7 @@ class MainScene extends Component {
       }
     }, 200)
 
-    this.updateWorldCall = setInterval(() => this.updateWorld(), 300)
+    this.updateWorldCall = window.requestInterval(() => this.updateWorld(), 300)
   }
 
   componentDidMount() {
@@ -177,8 +220,8 @@ class MainScene extends Component {
 
   terminate = () => {
     window.cancelAnimationFrame(this.frameId)
-    clearInterval(this.updatePosCall)
-    clearInterval(this.updateWorldCall)
+    window.clearRequestInterval(this.updatePosCall)
+    window.clearRequestInterval(this.updateWorldCall)
   }
 
   animate = () => {

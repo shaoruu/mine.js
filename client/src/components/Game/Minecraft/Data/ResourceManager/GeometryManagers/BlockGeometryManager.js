@@ -3,9 +3,10 @@ import * as THREE from 'three'
 import Resources from '../Resources'
 import Config from '../../Config'
 
-const dimension = Config.block.dimension
-const rBlock = Resources.geometries.block
-const rLighting = Resources.lighting.day
+const DIMENSION = Config.block.dimension,
+  R_LIGHTING = Config.lighting.day,
+  SL_DIFF = Config.lighting.slDifference
+const R_BLOCK = Resources.geometries.block
 
 class BlockGeometryManager {
   constructor() {
@@ -13,9 +14,9 @@ class BlockGeometryManager {
   }
 
   load = () => {
-    for (let key in rBlock) {
-      this.geometries[key] = new THREE.PlaneGeometry(dimension, dimension)
-      const { func, rotation } = rBlock[key]
+    for (let key in R_BLOCK) {
+      this.geometries[key] = new THREE.PlaneGeometry(DIMENSION, DIMENSION)
+      const { func, rotation } = R_BLOCK[key]
       // this.geometries[key].computeFaceNormals()
       if (func && Array.isArray(func)) {
         for (let i = 0; i < func.length; i++) {
@@ -30,20 +31,17 @@ class BlockGeometryManager {
   get = key => this.geometries[key]
 
   getWLighting = (key, lighting, smoothLighting) => {
-    const slDifference = 250
-
     const light = new THREE.Color(
-      `rgb(${rLighting[lighting]},${rLighting[lighting]},${
-      rLighting[lighting]
+      `rgb(${R_LIGHTING[lighting]},${R_LIGHTING[lighting]},${
+        R_LIGHTING[lighting]
       })`
     )
     const shadow =
-      rLighting[lighting] - slDifference >= 0
+      R_LIGHTING[lighting] - SL_DIFF >= 0
         ? new THREE.Color(
-          `rgb(${rLighting[lighting] - slDifference},${rLighting[lighting] - slDifference},${
-          rLighting[lighting] - slDifference
-          })`
-        )
+            `rgb(${R_LIGHTING[lighting] - SL_DIFF},${R_LIGHTING[lighting] -
+              SL_DIFF},${R_LIGHTING[lighting] - SL_DIFF})`
+          )
         : new THREE.Color(`rgb(0,0,0)`)
 
     const geo = this.geometries[key]
@@ -79,8 +77,8 @@ class BlockGeometryManager {
             smoothLighting[m][n] === 1
               ? shadow
               : smoothLighting[m][n] === 2
-                ? light
-                : shadow
+              ? light
+              : shadow
         }
         geo.faces[m].vertexColors = colors
       }

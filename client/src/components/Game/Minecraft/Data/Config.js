@@ -69,12 +69,12 @@ export default {
     inertia: 5.0,
     fricIntertia: 15.0,
     inAirInertia: 16,
-    sprintFactor: 1.7,
+    sprintFactor: 1.3,
     spectatorInertia: 2,
     acceleration: {
-      forward: 25,
-      other_horz: 18,
-      vertical: 25,
+      forward: 1500,
+      other_horz: 1000,
+      vertical: 1300,
       jump: 140
     },
     maxSpeed: {
@@ -237,5 +237,11 @@ export default {
   },
   background: {
     color: 0xdbe8ff
+  },
+
+  lighting: {
+    slDifference: 72,
+    day: [14, 19, 23, 28, 34, 41, 48, 57, 67, 79, 93, 110, 132, 160, 197, 250],
+    night: []
   }
 }

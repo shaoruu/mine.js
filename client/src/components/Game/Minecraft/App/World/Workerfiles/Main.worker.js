@@ -13,13 +13,14 @@ export default () => {
         self.config = config
 
         self.generator = new Generator(config.seed, config.size)
+        self.generator.registerCB(config.changedBlocks)
 
         postMessage({ cmd })
         break
       case 'GET_HIGHEST': {
         const { x, z } = e.data
 
-        postMessage({ cmd, h: self.generator.getHighestBlock(x, z) })
+        postMessage({ cmd, h: self.generator.getRelativeHighest(x, z) })
 
         break
       }
@@ -38,19 +39,33 @@ export default () => {
         const get = (i, j, k) =>
           blocks[i * stride[0] + j * stride[1] + k * stride[2]]
 
-        const lighting = new Uint16Array(size ** 3 * 6);
+        const lighting = new Uint16Array(size ** 3 * 6)
 
         const setLighting = (i, j, k, l, v) =>
-          (lighting[i * size ** 2 * 6 + j * size * 6 + k * 6 + l] = v);
+          (lighting[i * size ** 2 * 6 + j * size * 6 + k * 6 + l] = v)
         const getLighting = (i, j, k, l) =>
-          lighting[i * size ** 2 * 6 + j * size * 6 + k * 6 + l];
+          lighting[i * size ** 2 * 6 + j * size * 6 + k * 6 + l]
 
-        const smoothLighting = new Uint16Array(size ** 3 * 6 * 3 * 3);
+        const smoothLighting = new Uint16Array(size ** 3 * 6 * 3 * 3)
 
         const setSmoothLighting = (i, j, k, l, m, n, v) =>
-          (smoothLighting[i * size ** 2 * 6 * 3 * 3 + j * size * 6 * 3 * 3 + k * 6 * 3 * 3 + l * 3 * 3 + m * 3 + n] = v);
+          (smoothLighting[
+            i * size ** 2 * 6 * 3 * 3 +
+              j * size * 6 * 3 * 3 +
+              k * 6 * 3 * 3 +
+              l * 3 * 3 +
+              m * 3 +
+              n
+          ] = v)
         const getSmoothLighting = (i, j, k, l, m, n) =>
-          smoothLighting[i * size ** 2 * 6 * 3 * 3 + j * size * 6 * 3 * 3 + k * 6 * 3 * 3 + l * 3 * 3 + m * 3 + n];
+          smoothLighting[
+            i * size ** 2 * 6 * 3 * 3 +
+              j * size * 6 * 3 * 3 +
+              k * 6 * 3 * 3 +
+              l * 3 * 3 +
+              m * 3 +
+              n
+          ]
         const getSmoothLightingSide = (i, j, k, l) => {
           if (getSmoothLighting(i, j, k, l, 0, 0) === 0) {
             return null
@@ -67,7 +82,15 @@ export default () => {
 
         self.generator.setVoxelData(set, coordx, coordy, coordz, changedBlocks)
 
-        self.generator.setLightingData(setLighting, setSmoothLighting, get, coordx, coordy, coordz, changedBlocks)
+        self.generator.setLightingData(
+          setLighting,
+          setSmoothLighting,
+          get,
+          coordx,
+          coordy,
+          coordz,
+          changedBlocks
+        )
         /** MESHING RIGHT BELOW */
         const dims = [size + 2, size + 2, size + 2]
 

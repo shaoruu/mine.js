@@ -29,6 +29,9 @@ class World {
   ) {
     const { seed, name, changedBlocks } = worldData
 
+    // FOR PREPARATION
+    this.isReady = false
+
     // Chat
     this.chat = new Chat(playerId, id, container, apolloClient)
 
@@ -42,6 +45,7 @@ class World {
     // World Generating Helpers
     this.chunks = {}
     this.changedBlocks = {}
+    this.initCB(changedBlocks)
 
     // Workers
     this.setupWorkerConfigs()
@@ -49,9 +53,13 @@ class World {
       seed,
       size: SIZE,
       stride: [(SIZE + 2) ** 2, SIZE + 2, 1],
-      generation: WORLD_GENERATION_CONFIG
+      generation: WORLD_GENERATION_CONFIG,
+      changedBlocks: this.changedBlocks
     })
     this.workerTaskHandler = new TaskQueue() // This is handle/schedule all the tasks from worker callback
+
+    // World Spawn
+    this.initSpawn(isBrandNew)
 
     // Texture
     this.resourceManager = resourceManager
@@ -62,26 +70,22 @@ class World {
 
     // Server Communication
     this.apolloClient = apolloClient
-
-    // FOR PREPARATION
-    this.isReady = false
-    this.isBrandNew = isBrandNew
-
-    this.initWorld(changedBlocks)
   }
 
   /**
    * Register changed blocks into this.changedBlocks for later quads generation
    * @param {Object[]} changedBlocks - Blocks saved in backend.
    */
-  initWorld = changedBlocks => {
+  initCB = changedBlocks => {
     if (changedBlocks)
       // TYPE = ID
       changedBlocks.forEach(({ type, x, y, z }) => {
         this.registerChangedBlock(type, x, y, z)
       })
+  }
 
-    if (this.isBrandNew) {
+  initSpawn = isBrandNew => {
+    if (isBrandNew) {
       this.workerPool.queueJob({
         cmd: 'GET_HIGHEST',
         x: 0,
@@ -114,7 +118,7 @@ class World {
 
           this.player.setPosition(
             position.x + DIMENSION / 2,
-            (h + P_I_2_TOE + P_I_2_TOP) * DIMENSION,
+            (h + P_I_2_TOE + P_I_2_TOP + 1) * DIMENSION,
             position.z + DIMENSION / 2
           )
           break

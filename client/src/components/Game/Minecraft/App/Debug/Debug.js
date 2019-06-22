@@ -2,6 +2,9 @@ import Helpers from '../../Utils/Helpers'
 import classes from './Debug.module.css'
 
 function Debug(player, world) {
+  this.player = player
+  this.world = world
+
   let display = process.env.NODE_ENV === 'development'
 
   const wrapper = document.createElement('div'),
@@ -32,45 +35,57 @@ function Debug(player, world) {
 
   if (display) Helpers.applyStyle(wrapper, { display: 'block' })
 
-  const calcFPS = (function() {
-    let lastLoop = new Date().getMilliseconds(),
-      count = 1,
-      fps = 0
-
-    return function() {
-      let currentLoop = new Date().getMilliseconds()
-      if (lastLoop > currentLoop) {
-        fps = count
-        count = 1
-      } else {
-        count += 1
-      }
-      lastLoop = currentLoop
-      return fps
-    }
-  })()
-
   this.getGui = () => wrapper
 
-  this.update = () => {
-    const newFPS = calcFPS()
-    const playerPos = player.getCoordinates()
+  this.getDOM_FPS = () => fps
+  this.getDOM_coordinates = () => coordinates
+  this.getDOM_title = () => title
+  this.getDOM_wrapper = () => wrapper
 
-    // prettier-ignore
-    coordinates.innerHTML = `XYZ: ${Helpers.round(playerPos.x, 2)} / 
-                                  ${Helpers.round(playerPos.y, 2)} /
-                                  ${Helpers.round(playerPos.z, 2)}`
-    fps.innerHTML = `${newFPS} fps`
-  }
+  this.setDisplay = bool => (display = bool)
+  this.getDisplay = () => display
+}
 
-  this.toggle = () => {
-    if (display) {
-      display = false
-      wrapper.style.display = 'none'
+Debug.prototype.calcFPS = (function() {
+  let lastLoop = new Date().getMilliseconds(),
+    count = 1,
+    fps = 0
+
+  return function() {
+    let currentLoop = new Date().getMilliseconds()
+    if (lastLoop > currentLoop) {
+      fps = count
+      count = 1
     } else {
-      display = true
-      wrapper.style.display = 'block'
+      count += 1
     }
+    lastLoop = currentLoop
+    return fps
+  }
+})()
+
+Debug.prototype.update = function() {
+  const newFPS = this.calcFPS()
+  const playerPos = this.player.getCoordinates()
+
+  // prettier-ignore
+  this.getDOM_coordinates().innerHTML = `XYZ: ${Helpers.round(playerPos.x, 2)} / 
+                                ${Helpers.round(playerPos.y, 2)} /
+                                ${Helpers.round(playerPos.z, 2)}`
+
+  this.getDOM_FPS().innerHTML = `${newFPS} fps`
+}
+
+Debug.prototype.toggle = function() {
+  const display = this.getDisplay(),
+    wrapper = this.getDOM_wrapper()
+
+  if (display) {
+    this.setDisplay(false)
+    wrapper.style.display = 'none'
+  } else {
+    this.setDisplay(true)
+    wrapper.style.display = 'block'
   }
 }
 

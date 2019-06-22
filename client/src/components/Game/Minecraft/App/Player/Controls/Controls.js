@@ -111,7 +111,7 @@ class Controls extends Stateful {
 
   stopBreakingBlock = () => {
     if (this.breakBlockCountdown) {
-      clearInterval(this.breakBlockCountdown)
+      window.clearRequestInterval(this.breakBlockCountdown)
       this.breakBlockCountdown = undefined
       this.viewport.removeBBFromScene()
     }
@@ -157,8 +157,9 @@ class Controls extends Stateful {
             this.world.breakBlock(false)
 
             this.canBreakBlock = false
-            setTimeout(() => {
+            const canBreakBlockTimeout = window.requestTimeout(() => {
               this.canBreakBlock = true
+              window.clearRequestTimeout(canBreakBlockTimeout)
             }, 200)
           } else if (this.status.isSurvival && !this.breakBlockCountdown)
             this._startBreakingBlock()
@@ -177,8 +178,9 @@ class Controls extends Stateful {
           else if (this.status.isSurvival) this.world.placeBlock(type)
 
           this.canPlaceBlock = false
-          setTimeout(() => {
+          const canPlaceBlockTimeout = window.requestTimeout(() => {
             this.canPlaceBlock = true
+            window.clearRequestTimeout(canPlaceBlockTimeout)
           }, 200)
 
           break
@@ -220,15 +222,13 @@ class Controls extends Stateful {
 
     let counter = 10
 
-    this.breakBlockCountdown = setInterval(() => {
+    this.breakBlockCountdown = window.requestInterval(() => {
       counter--
       if (counter === 0) {
         this.world.breakBlock()
         this.stopBreakingBlock()
         return
-      }
-
-      this.viewport.incrementBBStage()
+      } else this.viewport.incrementBBStage()
 
       // CHANGE TEXTURE
     }, interval)
@@ -395,7 +395,7 @@ class Controls extends Stateful {
 
     let delta = (now - this.prevTime) / 1000
 
-    if (delta > 0.5) delta = 0.01
+    if (delta > 0.15) delta = 0.01
 
     this._calculateAccelerations()
 
@@ -420,8 +420,14 @@ class Controls extends Stateful {
           (isSprinting ? SPRINT_FACTOR : 1)) *
       delta
 
+    this.acc.multiplyScalar(delta)
     this.vel.add(this.acc)
     this.acc.set(0.0, 0.0, 0.0)
+
+    if (this.needsToJump) {
+      this.vel.y += JUMP_ACC
+      this.needsToJump = false
+    }
 
     // APPLY GRAVITY
     if (shouldGravity && !this.freshlyJumped) this.vel.y += GRAVITY
@@ -449,7 +455,7 @@ class Controls extends Stateful {
       if (this.status.isFlying) this.acc.y += VERITCAL_ACC
       else if (this.status.canJump) {
         // SURVIVAL MODE
-        this.acc.y += JUMP_ACC
+        this.needsToJump = true
         this.freshlyJumped = true
         this.status.registerJump()
       }

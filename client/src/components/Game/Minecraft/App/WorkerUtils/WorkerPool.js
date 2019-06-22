@@ -1,5 +1,5 @@
 import WebWorker from './WebWorker'
-// import Config from '../../../Data/Config'
+import Config from '../../Data/Config'
 
 function WorkerPool(codes, world, config) {
   let availables = []
@@ -10,8 +10,8 @@ function WorkerPool(codes, world, config) {
   let prioirityIndex = 0
 
   // TODO: Figure out what's wrong with this
-  const maxWorkers = 1
-  // navigator.hardwareConcurrency || Config.world.maxWorkerCount
+  const maxWorkers =
+    (navigator.hardwareConcurrency || Config.world.maxWorkerCount) / 2
 
   for (let i = 0; i < maxWorkers; i++) {
     const newWorker = new WebWorker(codes)

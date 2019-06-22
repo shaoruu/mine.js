@@ -9,12 +9,36 @@ export default () => {
       maxWorldHeight = 256,
       waterLevel = 62,
       scale = 1,
-      octaves = 2,
+      octaves = 5,
       persistance = 0.5,
       lacunarity = 2,
       heightOffset = 2.5,
       amplifier = 1
     } = {}
+
+    // SOME GOOD CONFIGS
+    // const {
+    //   maxWorldHeight = 256,
+    //   waterLevel = 62,
+    //   scale = 2,
+    //   octaves = 10,
+    //   persistance = 1,
+    //   lacunarity = 1,
+    //   heightOffset = 2.5,
+    //   amplifier = 1
+    // } = {}
+
+    // SOME GOOD CONFIGS
+    // const {
+    //   maxWorldHeight = 256,
+    //   waterLevel = 62,
+    //   scale = 1,
+    //   octaves = 3,
+    //   persistance = 0.5,
+    //   lacunarity = 2,
+    //   heightOffset = 2.5,
+    //   amplifier = 1
+    // } = {}
 
     const initSeed = seed => {
       let hash = 0,
@@ -47,8 +71,40 @@ export default () => {
     const isSolidAt = (x, y, z) =>
       getNoise((x * scale) / 100, (y * scale) / 100, (z * scale) / 100) >= -0.2
 
+    const isSolidAtWithCB = (x, y, z) => {
+      const cb = this.changedBlocks[getCoordsRepresentation(x, y, z)]
+      if (cb) return !!cb
+      return isSolidAt(x, y, z)
+    }
+
+    const isTopBlock = (x, y, z) => {
+      if (!isSolidAtWithCB(x, y + 1, z)) return true
+      return false
+    }
+
     initSeed(seed)
     initNoises()
+
+    this.getRelativeHighest = (x, z) => {
+      let high = maxWorldHeight,
+        low = waterLevel,
+        middle = Math.floor((high + low) / 2)
+
+      while (low <= high) {
+        if (
+          isSolidAtWithCB(x, middle, z) &&
+          !isSolidAtWithCB(x, middle + 1, z) &&
+          !isSolidAtWithCB(x, middle + 2, z)
+        )
+          break
+        else if (!isSolidAtWithCB(x, middle, z)) high = middle - 1
+        else low = middle + 2
+
+        middle = Math.floor((high + low) / 2)
+      }
+
+      return middle
+    }
 
     this.getHighestBlock = (x, z) => {
       for (let y = maxWorldHeight; y >= 0; y--) {
@@ -58,6 +114,9 @@ export default () => {
       }
       return 0
     }
+
+    this.registerCB = (changedBlocks = {}) =>
+      (this.changedBlocks = changedBlocks)
 
     this.octavePerlin3 = (x, y, z) => {
       let total = 0,
@@ -82,18 +141,22 @@ export default () => {
       return (total / maxVal) * amplifier + heightOffset
     }
 
-    this.setVoxelData = (set, coordx, coordy, coordz, changedBlocks) => {
+    this.setVoxelData = (set, coordx, coordy, coordz) => {
       const offsets = [coordx * size - 1, coordy * size - 1, coordz * size - 1]
 
       for (let x = 0; x < size + 2; x++) {
         for (let z = 0; z < size + 2; z++) {
+          const maxHeight = this.getRelativeHighest(
+            x + offsets[0],
+            z + offsets[2]
+          )
           for (let y = 0; y < size + 2; y++) {
             const tempCoords = this.getAbsoluteCoords(x, y, z, offsets)
 
             const tempx = tempCoords[0],
               tempy = tempCoords[1],
               tempz = tempCoords[2],
-              blockId = this.getBlockInfo(tempx, tempy, tempz, changedBlocks)
+              blockId = this.getBlockInfo(tempx, tempy, tempz, maxHeight)
 
             set(x, z, y, blockId)
           }
@@ -107,8 +170,7 @@ export default () => {
       get,
       coordx,
       coordy,
-      coordz,
-      changedBlocks
+      coordz
     ) => {
       const offsets = [coordx * size - 1, coordy * size - 1, coordz * size - 1]
 
@@ -122,24 +184,18 @@ export default () => {
                 tempy = tempCoords[1],
                 tempz = tempCoords[2]
 
-              const lighting = generator.getBlockLighting(
+              const lighting = this.getBlockLighting(
                 tempx,
                 tempy,
                 tempz,
                 get,
-                offsets,
-                changedBlocks
+                offsets
               )
               for (let l = 0; l < 6; l++) {
                 setLighting(x - 1, z - 1, y - 1, l, lighting[l])
               }
 
-              const smoothLighting = generator.getBlockSmoothLighting(
-                x,
-                y,
-                z,
-                get
-              )
+              const smoothLighting = this.getBlockSmoothLighting(x, y, z, get)
               for (let l = 0; l < 6; l++) {
                 if (smoothLighting[l]) {
                   for (let m = 0; m < 3; m++)
@@ -160,7 +216,7 @@ export default () => {
           }
     }
 
-    this.getBlockLighting = (x, y, z, get, offsets, changedBlocks) => {
+    this.getBlockLighting = (x, y, z, get, offsets) => {
       const surroundings = [
         { x: 0, y: 1, z: 0 },
         { x: 1, y: 0, z: 0 },
@@ -184,8 +240,7 @@ export default () => {
           block.y,
           block.z,
           get,
-          offsets,
-          changedBlocks
+          offsets
         )
         if (value === 0) {
           const pastNodeCoords = [getCoordsRepresentation(block.x, -1, block.z)]
@@ -223,8 +278,7 @@ export default () => {
                 yValue,
                 newNode.z,
                 get,
-                offsets,
-                changedBlocks
+                offsets
               )
 
               while (startValue === 0 && endValue !== 0) {
@@ -234,16 +288,14 @@ export default () => {
                   yValue,
                   q.z,
                   get,
-                  offsets,
-                  changedBlocks
+                  offsets
                 )
                 endValue = this.getLoadedBlocks(
                   newNode.x,
                   yValue,
                   newNode.z,
                   get,
-                  offsets,
-                  changedBlocks
+                  offsets
                 )
               }
 
@@ -470,7 +522,7 @@ export default () => {
       return output
     }
 
-    this.getLoadedBlocks = (x, y, z, get, offsets, changedBlocks) => {
+    this.getLoadedBlocks = (x, y, z, get, offsets) => {
       const relativeCoords = this.getRelativeCoords(x, y, z, offsets)
       if (
         this.checkWithinChunk(
@@ -481,12 +533,13 @@ export default () => {
       ) {
         return get(relativeCoords[0], relativeCoords[2], relativeCoords[1])
       } else {
-        return this.getBlockInfo(x, y, z, changedBlocks)
+        const maxHeight = this.getRelativeHighest(x, z)
+        return this.getBlockInfo(x, y, z, maxHeight)
       }
     }
 
-    this.getBlockInfo = (x, y, z, changedBlocks) => {
-      const cb = changedBlocks[getCoordsRepresentation(x, y, z)]
+    this.getBlockInfo = (x, y, z, maxHeight) => {
+      const cb = this.changedBlocks[getCoordsRepresentation(x, y, z)]
 
       if (typeof cb === 'number') {
         return cb
@@ -496,9 +549,11 @@ export default () => {
       else {
         const isSolid = isSolidAt(x, y, z)
         if (isSolid) {
-          return 17
-        } else if (y <= waterLevel) {
+          if (y >= maxHeight - 3 && y < maxHeight) blockId = 3
+          if (y === maxHeight || isTopBlock(x, y, z)) return 2
           return 1
+        } else if (y <= waterLevel) {
+          return 95
         }
       }
       return 0

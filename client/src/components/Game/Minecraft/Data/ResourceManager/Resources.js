@@ -50,7 +50,7 @@ export default {
       nz2: {
         func: 'rotateZ',
         rotation: Math.PI / 2
-      },
+      }
     }
   },
   textures: {
@@ -112,6 +112,11 @@ export default {
         side: require('../../../../../assets/blocks/cactus_side.png'),
         top: require('../../../../../assets/blocks/cactus_top.png'),
         bottom: require('../../../../../assets/blocks/cactus_bottom.png')
+      },
+      95: {
+        side: require('../../../../../assets/blocks/blue_stained_glass.png'),
+        top: require('../../../../../assets/blocks/blue_stained_glass.png'),
+        bottom: require('../../../../../assets/blocks/blue_stained_glass.png')
       }
     },
     specialBlocks: {
@@ -127,9 +132,5 @@ export default {
         8: require('../../../../../assets/blocks/destroy_stage_8.png')
       }
     }
-  },
-  lighting: {
-    day: [14, 19, 23, 28, 34, 41, 48, 57, 67, 79, 93, 110, 132, 160, 197, 250],
-    night: []
   }
 }
