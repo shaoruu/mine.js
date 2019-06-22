@@ -13,7 +13,7 @@ export default () => {
       persistance = 0.5,
       lacunarity = 2,
       heightOffset = 2.5,
-      amplifier = 1
+      amplifier = 2
     } = {}
 
     // SOME GOOD CONFIGS
@@ -115,8 +115,7 @@ export default () => {
       return 0
     }
 
-    this.registerCB = (changedBlocks = {}) =>
-      (this.changedBlocks = changedBlocks)
+    this.registerCB = (changedBlocks = {}) => (this.changedBlocks = changedBlocks)
 
     this.octavePerlin3 = (x, y, z) => {
       let total = 0,
@@ -146,10 +145,7 @@ export default () => {
 
       for (let x = 0; x < size + 2; x++) {
         for (let z = 0; z < size + 2; z++) {
-          const maxHeight = this.getRelativeHighest(
-            x + offsets[0],
-            z + offsets[2]
-          )
+          const maxHeight = this.getRelativeHighest(x + offsets[0], z + offsets[2])
           for (let y = 0; y < size + 2; y++) {
             const tempCoords = this.getAbsoluteCoords(x, y, z, offsets)
 
@@ -184,13 +180,7 @@ export default () => {
                 tempy = tempCoords[1],
                 tempz = tempCoords[2]
 
-              const lighting = this.getBlockLighting(
-                tempx,
-                tempy,
-                tempz,
-                get,
-                offsets
-              )
+              const lighting = this.getBlockLighting(tempx, tempy, tempz, get, offsets)
               for (let l = 0; l < 6; l++) {
                 setLighting(x - 1, z - 1, y - 1, l, lighting[l])
               }
@@ -235,13 +225,7 @@ export default () => {
           z: z + surroundings[i].z,
           lightLevel: 15
         }
-        const value = this.getLoadedBlocks(
-          block.x,
-          block.y,
-          block.z,
-          get,
-          offsets
-        )
+        const value = this.getLoadedBlocks(block.x, block.y, block.z, get, offsets)
         if (value === 0) {
           const pastNodeCoords = [getCoordsRepresentation(block.x, -1, block.z)]
           const queue = [block]
@@ -283,13 +267,7 @@ export default () => {
 
               while (startValue === 0 && endValue !== 0) {
                 yValue += 1
-                startValue = this.getLoadedBlocks(
-                  q.x,
-                  yValue,
-                  q.z,
-                  get,
-                  offsets
-                )
+                startValue = this.getLoadedBlocks(q.x, yValue, q.z, get, offsets)
                 endValue = this.getLoadedBlocks(
                   newNode.x,
                   yValue,
@@ -306,9 +284,7 @@ export default () => {
               newNode.y = yValue
 
               queue.push(newNode)
-              pastNodeCoords.push(
-                getCoordsRepresentation(newNode.x, -1, newNode.z)
-              )
+              pastNodeCoords.push(getCoordsRepresentation(newNode.x, -1, newNode.z))
             }
           }
         }
@@ -525,11 +501,7 @@ export default () => {
     this.getLoadedBlocks = (x, y, z, get, offsets) => {
       const relativeCoords = this.getRelativeCoords(x, y, z, offsets)
       if (
-        this.checkWithinChunk(
-          relativeCoords[0],
-          relativeCoords[1],
-          relativeCoords[2]
-        )
+        this.checkWithinChunk(relativeCoords[0], relativeCoords[1], relativeCoords[2])
       ) {
         return get(relativeCoords[0], relativeCoords[2], relativeCoords[1])
       } else {
