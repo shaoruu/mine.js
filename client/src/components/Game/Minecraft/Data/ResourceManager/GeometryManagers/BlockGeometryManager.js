@@ -33,54 +33,34 @@ class BlockGeometryManager {
   getWLighting = (key, lighting, smoothLighting) => {
     const light = new THREE.Color(
       `rgb(${R_LIGHTING[lighting]},${R_LIGHTING[lighting]},${
-        R_LIGHTING[lighting]
+      R_LIGHTING[lighting]
       })`
     )
     const shadow =
       R_LIGHTING[lighting] - SL_DIFF >= 0
         ? new THREE.Color(
-            `rgb(${R_LIGHTING[lighting] - SL_DIFF},${R_LIGHTING[lighting] -
-              SL_DIFF},${R_LIGHTING[lighting] - SL_DIFF})`
-          )
+          `rgb(${R_LIGHTING[lighting] - SL_DIFF},${R_LIGHTING[lighting] -
+          SL_DIFF},${R_LIGHTING[lighting] - SL_DIFF})`
+        )
         : new THREE.Color(`rgb(0,0,0)`)
 
     const geo = this.geometries[key]
 
-    switch (key) {
-      case 'px':
-      case 'nx':
-      case 'pz':
-      case 'nz':
-      case 'px2':
-      case 'nx2':
-      case 'pz2':
-      case 'nz2':
-        geo.faces[0].vertexColors = [light, shadow, light]
-        geo.faces[1].vertexColors = [shadow, shadow, light]
-        break
-      case 'py':
-      case 'ny':
-      case 'py2':
-      case 'ny2':
-        geo.faces[0].vertexColors = [light, light, light]
-        geo.faces[1].vertexColors = [light, light, light]
-        break
-      default:
-        break
-    }
+    geo.faces[0].vertexColors = [light, light, light]
+    geo.faces[1].vertexColors = [light, light, light]
 
     if (smoothLighting) {
-      for (let m = 0; m < 2; m++) {
+      for (let f = 0; f < 2; f++) {
         const colors = new Array(3)
-        for (let n = 0; n < 3; n++) {
-          colors[n] =
-            smoothLighting[m][n] === 1
+        for (let c = 0; c < 3; c++) {
+          colors[c] =
+            smoothLighting[f][c] === 1
               ? shadow
-              : smoothLighting[m][n] === 2
-              ? light
-              : shadow
+              : smoothLighting[f][c] === 2
+                ? light
+                : shadow
         }
-        geo.faces[m].vertexColors = colors
+        geo.faces[f].vertexColors = colors
       }
     }
     return geo

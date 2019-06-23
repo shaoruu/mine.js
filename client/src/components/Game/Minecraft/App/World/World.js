@@ -101,11 +101,13 @@ class World {
     this.workerCallback = ({ data }) => {
       switch (data.cmd) {
         case 'GET_CHUNK': {
-          const { quads, blocks, chunkName } = data
+          const { quads, blocks, lighting, smoothLighting, chunkName } = data
           const temp = this.chunks[chunkName]
 
           this.workerTaskHandler.addTasks([
             [temp.setGrid, blocks],
+            [temp.setLighting, lighting],
+            [temp.setSmoothLighting, smoothLighting],
             [temp.meshQuads, quads],
             [temp.combineMesh],
             [temp.markAsFinishedLoading]
@@ -127,12 +129,14 @@ class World {
           const {
             quads,
             block: { x, y, z },
+            lightingSides,
+            smoothLightingVals,
             chunkName
           } = data
 
           const temp = this.chunks[chunkName]
           this.workerTaskHandler.addTasks(
-            [[temp.meshQuads, quads], [temp.combineMesh]],
+            [[temp.setLightingSides, lightingSides], [temp.setSmoothLightingValues, smoothLightingVals], [temp.meshQuads, quads], [temp.combineMesh]],
             {
               prioritized: true
             }
@@ -331,49 +335,55 @@ class World {
 
     this.registerChangedBlock(type, mx, my, mz)
 
-    // Checking for neighboring blocks FIRST.
-    ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
-      const nc = { coordx, coordy, coordz },
-        nb = { ...chunkBlock }
-      let neighborAffected = false
+      // Checking for neighboring blocks FIRST.
+      ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
+        const nc = { coordx, coordy, coordz },
+          nb = { ...chunkBlock }
+        let neighborAffected = false
 
-      // If block is either on 0 or size, that means it has effects on neighboring chunks too.
-      if (nb[a] === 0) {
-        nc[c] -= 1
-        nb[a] = SIZE
-        neighborAffected = true
-      } else if (nb[a] === SIZE - 1) {
-        nc[c] += 1
-        nb[a] = -1
-        neighborAffected = true
-      }
-      if (neighborAffected) {
-        const neighborChunk = this.getChunkByCoords(
-          nc.coordx,
-          nc.coordy,
-          nc.coordz
-        )
+        // If block is either on 0 or size, that means it has effects on neighboring chunks too.
+        if (nb[a] === 0) {
+          nc[c] -= 1
+          nb[a] = SIZE
+          neighborAffected = true
+        } else if (nb[a] === SIZE - 1) {
+          nc[c] += 1
+          nb[a] = -1
+          neighborAffected = true
+        }
+        if (neighborAffected) {
+          const neighborChunk = this.getChunkByCoords(
+            nc.coordx,
+            nc.coordy,
+            nc.coordz
+          )
 
-        // Setting neighbor's block that represents self.
-        neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
+          // Setting neighbor's block that represents self.
+          neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
 
-        this.workerPool.queueJob(
-          {
-            cmd: 'UPDATE_BLOCK',
-            data: neighborChunk.grid.data,
-            block: nb,
-            chunkName: neighborChunk.name
-          },
-          true
-        )
-      }
-    })
+          this.workerPool.queueJob(
+            {
+              cmd: 'UPDATE_BLOCK',
+              data: neighborChunk.grid.data,
+              lighting: neighborChunk.lighting.data,
+              smoothLighting: neighborChunk.smoothLighting.data,
+              block: nb,
+              type,
+              chunkName: neighborChunk.name
+            },
+            true
+          )
+        }
+      })
 
     this.workerPool.queueJob(
       {
         cmd: 'UPDATE_BLOCK',
         data: targetChunk.grid.data,
+        lighting: targetChunk.lighting.data,
+        smoothLighting: targetChunk.smoothLighting.data,
         block: chunkBlock,
+        type,
         chunkName: targetChunk.name
       },
       true

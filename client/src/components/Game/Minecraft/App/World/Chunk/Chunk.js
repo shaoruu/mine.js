@@ -20,6 +20,12 @@ class Chunk {
     const arr = new Uint16Array((size + 2) * (size + 2) * (size + 2))
     this.grid = new ndarray(arr, [size + 2, size + 2, size + 2])
 
+    const lightingArr = new Uint16Array((size) ** 3 * 6)
+    this.lighting = new ndarray(lightingArr, [size, size, size, 6])
+
+    const smoothLightingArr = new Uint16Array(size ** 3 * 6 * 3 * 3)
+    this.smoothLighting = new ndarray(smoothLightingArr, [size, size, size, 6, 3, 3])
+
     this.isLoaded = false
 
     this.blocksInProgress = {}
@@ -64,7 +70,25 @@ class Chunk {
 
   setGrid = blocks => (this.grid.data = blocks)
 
+  setLighting = lighting => this.lighting.data = lighting
+
+  setSmoothLighting = smoothLighting => this.smoothLighting.data = smoothLighting
+
   setBlock = (x, y, z, val) => this.grid.set(x + 1, z + 1, y + 1, val)
+
+  setLightingSides = (sides) => {
+    for (let i = 0; i < sides.length; i++) {
+      const { x, z, y, s, val } = sides[i];
+      this.lighting.set(x, z, y, s, val)
+    }
+  }
+
+  setSmoothLightingValues = (values) => {
+    for (let i = 0; i < values.length; i++) {
+      const { x, z, y, s, f, c, val } = values[i];
+      this.lighting.set(x, z, y, s, f, c, val)
+    }
+  }
 
   getBlock = (x, y, z) => this.grid.get(x + 1, z + 1, y + 1) // avoid passing in neighbors
   getMesh = () => this.mesh
