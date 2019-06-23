@@ -240,7 +240,7 @@ export default {
   },
 
   lighting: {
-    slDifference: 72,
+    slDifference: 0,
     day: [14, 19, 23, 28, 34, 41, 48, 57, 67, 79, 93, 110, 132, 160, 197, 250],
     night: []
   }

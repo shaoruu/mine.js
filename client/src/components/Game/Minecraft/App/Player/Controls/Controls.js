@@ -220,7 +220,7 @@ class Controls extends Stateful {
 
     this.viewport.addBB2Scene()
 
-    let counter = 10
+    let counter = 9
 
     this.breakBlockCountdown = window.requestInterval(() => {
       counter--

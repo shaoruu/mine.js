@@ -33,16 +33,15 @@ class BlockGeometryManager {
   getWLighting = (key, lighting, smoothLighting) => {
     const light = new THREE.Color(
       `rgb(${R_LIGHTING[lighting]},${R_LIGHTING[lighting]},${
-      R_LIGHTING[lighting]
+        R_LIGHTING[lighting]
       })`
     )
+
+    const diff = R_LIGHTING[lighting] - SL_DIFF
     const shadow =
-      R_LIGHTING[lighting] - SL_DIFF >= 0
-        ? new THREE.Color(
-          `rgb(${R_LIGHTING[lighting] - SL_DIFF},${R_LIGHTING[lighting] -
-          SL_DIFF},${R_LIGHTING[lighting] - SL_DIFF})`
-        )
-        : new THREE.Color(`rgb(0,0,0)`)
+      diff >= 0
+        ? new THREE.Color(`rgb(${diff},${diff},${diff})`)
+        : new THREE.Color(`rgb(30,30,30)`)
 
     const geo = this.geometries[key]
 
@@ -57,8 +56,8 @@ class BlockGeometryManager {
             smoothLighting[f][c] === 1
               ? shadow
               : smoothLighting[f][c] === 2
-                ? light
-                : shadow
+              ? light
+              : shadow
         }
         geo.faces[f].vertexColors = colors
       }
