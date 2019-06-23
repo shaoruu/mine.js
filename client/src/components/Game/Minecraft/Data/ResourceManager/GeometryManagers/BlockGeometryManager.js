@@ -39,7 +39,7 @@ class BlockGeometryManager {
 
     const diff = R_LIGHTING[lighting] - SL_DIFF
     const shadow =
-      diff >= 0
+      diff >= 30
         ? new THREE.Color(`rgb(${diff},${diff},${diff})`)
         : new THREE.Color(`rgb(30,30,30)`)
 

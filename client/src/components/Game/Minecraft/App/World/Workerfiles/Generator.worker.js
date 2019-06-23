@@ -5,18 +5,24 @@ export default () => {
    * FUNCTIONAL CLASS DECLARATIONS FOR WORKER-SCOPE
    */
   function Generator(seed, size) {
+    /**
+     * Scale: number that determines at what distance to view the noise map.
+     * Octaves: the number of levels of detail you want you perlin noise to have.
+     * Persistence: how much each octave contributes to the overall shape (adjusts amplitude).
+     * Lacunarity: determines how much detail is added or removed at each octave (adjusts frequency).
+     */
+
     const {
       maxWorldHeight = 256,
       waterLevel = 62,
-      scale = 1,
-      octaves = 5,
-      persistance = 0.5,
-      lacunarity = 2,
+      scale = 2,
+      octaves = 10,
+      persistance = 1,
+      lacunarity = 1,
       heightOffset = 2.5,
-      amplifier = 2
+      amplifier = 1
     } = {}
 
-    // SOME GOOD CONFIGS
     // const {
     //   maxWorldHeight = 256,
     //   waterLevel = 62,
@@ -550,7 +556,7 @@ export default () => {
       else {
         const isSolid = isSolidAt(x, y, z)
         if (isSolid) {
-          if (y >= maxHeight - 3 && y < maxHeight) blockId = 3
+          if (y >= maxHeight - 3 && y < maxHeight) return 3
           if (y === maxHeight || isTopBlock(x, y, z)) return 2
           return 1
         } else if (y <= waterLevel) {
