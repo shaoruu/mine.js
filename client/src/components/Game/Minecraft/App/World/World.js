@@ -129,14 +129,19 @@ class World {
           const {
             quads,
             block: { x, y, z },
-            lightingSides,
-            smoothLightingVals,
+            lighting,
+            smoothLighting,
             chunkName
           } = data
 
           const temp = this.chunks[chunkName]
           this.workerTaskHandler.addTasks(
-            [[temp.setLightingSides, lightingSides], [temp.setSmoothLightingValues, smoothLightingVals], [temp.meshQuads, quads], [temp.combineMesh]],
+            [
+              [temp.setLighting, lighting],
+              [temp.setSmoothLighting, smoothLighting],
+              [temp.meshQuads, quads],
+              [temp.combineMesh]
+            ],
             {
               prioritized: true
             }
@@ -333,48 +338,57 @@ class World {
     const targetChunk = this.getChunkByCoords(coordx, coordy, coordz)
     targetChunk.setBlock(chunkBlock.x, chunkBlock.y, chunkBlock.z, type)
 
-    this.registerChangedBlock(type, mx, my, mz)
+    const job = this.registerChangedBlock(type, mx, my, mz)
+    this.workerPool.broadcast({
+      cmd: 'APPEND_CB',
+      changedBlock: job
+    })
 
-      // Checking for neighboring blocks FIRST.
-      ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
-        const nc = { coordx, coordy, coordz },
-          nb = { ...chunkBlock }
-        let neighborAffected = false
+    // Checking for neighboring blocks FIRST.
+    ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
+      const nc = { coordx, coordy, coordz },
+        nb = { ...chunkBlock }
+      let neighborAffected = false
 
-        // If block is either on 0 or size, that means it has effects on neighboring chunks too.
-        if (nb[a] === 0) {
-          nc[c] -= 1
-          nb[a] = SIZE
-          neighborAffected = true
-        } else if (nb[a] === SIZE - 1) {
-          nc[c] += 1
-          nb[a] = -1
-          neighborAffected = true
-        }
-        if (neighborAffected) {
-          const neighborChunk = this.getChunkByCoords(
-            nc.coordx,
-            nc.coordy,
-            nc.coordz
-          )
+      // If block is either on 0 or size, that means it has effects on neighboring chunks too.
+      if (nb[a] === 0) {
+        nc[c] -= 1
+        nb[a] = SIZE
+        neighborAffected = true
+      } else if (nb[a] === SIZE - 1) {
+        nc[c] += 1
+        nb[a] = -1
+        neighborAffected = true
+      }
+      if (neighborAffected) {
+        const neighborChunk = this.getChunkByCoords(
+          nc.coordx,
+          nc.coordy,
+          nc.coordz
+        )
 
-          // Setting neighbor's block that represents self.
-          neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
+        // Setting neighbor's block that represents self.
+        neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
 
-          this.workerPool.queueJob(
-            {
-              cmd: 'UPDATE_BLOCK',
-              data: neighborChunk.grid.data,
-              lighting: neighborChunk.lighting.data,
-              smoothLighting: neighborChunk.smoothLighting.data,
-              block: nb,
-              type,
-              chunkName: neighborChunk.name
-            },
-            true
-          )
-        }
-      })
+        this.workerPool.queueJob(
+          {
+            cmd: 'UPDATE_BLOCK',
+            data: neighborChunk.grid.data,
+            lighting: neighborChunk.lighting.data,
+            smoothLighting: neighborChunk.smoothLighting.data,
+            block: nb,
+            type,
+            chunkName: neighborChunk.name,
+            coords: {
+              coordx: nc.coordx,
+              coordy: nc.coordy,
+              coordz: nc.coordz
+            }
+          },
+          true
+        )
+      }
+    })
 
     this.workerPool.queueJob(
       {
@@ -384,7 +398,12 @@ class World {
         smoothLighting: targetChunk.smoothLighting.data,
         block: chunkBlock,
         type,
-        chunkName: targetChunk.name
+        chunkName: targetChunk.name,
+        coords: {
+          coordx,
+          coordy,
+          coordz
+        }
       },
       true
     )
@@ -392,8 +411,11 @@ class World {
 
   getChunkByCoords = (cx, cy, cz) =>
     this.chunks[Helpers.getCoordsRepresentation(cx, cy, cz)] || null
-  registerChangedBlock = (type, x, y, z) =>
-    (this.changedBlocks[Helpers.getCoordsRepresentation(x, y, z)] = type)
+  registerChangedBlock = (type, x, y, z) => {
+    const key = Helpers.getCoordsRepresentation(x, y, z)
+    this.changedBlocks[key] = type
+    return { key, type }
+  }
   setPotential = potential => (this.potentialBlock = potential)
   setTarget = target => (this.targetBlock = target)
   setPlayer = player => (this.player = player)
