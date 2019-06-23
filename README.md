@@ -67,15 +67,27 @@ Javascript.
 Before cloning the repo or doing anything, be sure to install [docker](https://www.docker.com/), [node](https://nodejs.org/en/), [prisma-cli](https://www.prisma.io/docs/prisma-cli-and-configuration/using-the-prisma-cli-alx4/) and [graphql-cli](https://github.com/graphql-cli/graphql-cli#install) on your computer. After that, run the following commands:
 
 ```bash
-# Clone the repo
+# Clone the repository
 git clone https://github.com/ian13456/minecraft.js.git
 
-# Download packages for server and client with:
+# Download packages for server and client
+cd server
+npm install
+cd client
 npm install
 
-# Start docker containers and deploy prisma
+# Start docker containers
 cd server/prisma
 docker-compose up -d
+
+# FOR WINDOWS
+set PRISMA_MANAGEMENT_API_SECRET=my-secret
+# FOR MAC/LINUX (recommend putting this into .bashrc)
+export PRISMA_MANAGEMENT_API_SECRET=my-secret
+
+
+# Deploy prisma models
+cd server/prisma
 prisma deploy
 
 # Fetch prisma generated schema and start backend service
