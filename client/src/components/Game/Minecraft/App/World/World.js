@@ -361,11 +361,7 @@ class World {
         neighborAffected = true
       }
       if (neighborAffected) {
-        const neighborChunk = this.getChunkByCoords(
-          nc.coordx,
-          nc.coordy,
-          nc.coordz
-        )
+        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
 
         // Setting neighbor's block that represents self.
         neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
@@ -377,7 +373,6 @@ class World {
             lighting: neighborChunk.lighting.data,
             smoothLighting: neighborChunk.smoothLighting.data,
             block: nb,
-            type,
             chunkName: neighborChunk.name,
             coords: {
               coordx: nc.coordx,
@@ -397,7 +392,6 @@ class World {
         lighting: targetChunk.lighting.data,
         smoothLighting: targetChunk.smoothLighting.data,
         block: chunkBlock,
-        type,
         chunkName: targetChunk.name,
         coords: {
           coordx,
@@ -444,9 +438,7 @@ class World {
   getVoxelByVoxelCoords = (x, y, z) => {
     const { coordx, coordy, coordz } = Helpers.toChunkCoords({ x, y, z }),
       { x: bx, y: by, z: bz } = Helpers.toBlockCoords({ x, y, z })
-    const chunk = this.chunks[
-      Helpers.getCoordsRepresentation(coordx, coordy, coordz)
-    ]
+    const chunk = this.chunks[Helpers.getCoordsRepresentation(coordx, coordy, coordz)]
     if (!chunk) return 0
 
     return chunk.getBlock(bx, by, bz)

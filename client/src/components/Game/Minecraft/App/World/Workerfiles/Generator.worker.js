@@ -79,7 +79,7 @@ export default () => {
 
     const isSolidAtWithCB = (x, y, z) => {
       const cb = this.changedBlocks[getCoordsRepresentation(x, y, z)]
-      if (cb) return !!cb
+      if (typeof cb === 'number') return !!cb
       return isSolidAt(x, y, z)
     }
 
@@ -114,21 +114,13 @@ export default () => {
 
     this.getHighestBlock = (x, z) => {
       for (let y = maxWorldHeight; y >= 0; y--) {
-        const isSolid = isSolidAt(x, y, z)
-        const cb = this.changedBlocks[getCoordsRepresentation(x, y, z)]
-
-        if (typeof cb === 'number' && cb !== 0) {
-          return y
-        }
-        if (isSolid && (typeof cb !== 'number' || cb !== 0)) {
-          return y
-        }
+        const isSolid = isSolidAtWithCB(x, y, z)
+        if (isSolid) return y
       }
       return 0
     }
 
-    this.registerCB = (changedBlocks = {}) =>
-      (this.changedBlocks = changedBlocks)
+    this.registerCB = (changedBlocks = {}) => (this.changedBlocks = changedBlocks)
     this.appendCB = ({ key, type }) => (this.changedBlocks[key] = type)
 
     this.octavePerlin3 = (x, y, z) => {
@@ -154,15 +146,12 @@ export default () => {
       return (total / maxVal) * amplifier + heightOffset
     }
 
-    this.setVoxelData = (set, coordx, coordy, coordz) => {
+    this.setVoxelData = (voxelData, coordx, coordy, coordz) => {
       const offsets = [coordx * size - 1, coordy * size - 1, coordz * size - 1]
 
       for (let x = 0; x < size + 2; x++) {
         for (let z = 0; z < size + 2; z++) {
-          const maxHeight = this.getRelativeHighest(
-            x + offsets[0],
-            z + offsets[2]
-          )
+          const maxHeight = this.getRelativeHighest(x + offsets[0], z + offsets[2])
           for (let y = 0; y < size + 2; y++) {
             const tempCoords = this.getAbsoluteCoords(x, y, z, offsets)
 
@@ -171,16 +160,16 @@ export default () => {
               tempz = tempCoords[2],
               blockId = this.getBlockInfo(tempx, tempy, tempz, maxHeight)
 
-            set(x, z, y, blockId)
+            self.set(voxelData, x, z, y, blockId)
           }
         }
       }
     }
 
     this.setLightingData = (
-      setLighting,
-      setSmoothLighting,
-      get,
+      lightingData,
+      smoothLightingData,
+      voxelData,
       coordx,
       coordy,
       coordz
@@ -190,7 +179,7 @@ export default () => {
       for (let x = 1; x < size + 1; x++)
         for (let z = 1; z < size + 1; z++)
           for (let y = 1; y < size + 1; y++) {
-            if (get(x, z, y) !== 0) {
+            if (self.get(voxelData, x, z, y) !== 0) {
               const tempCoords = this.getAbsoluteCoords(x, y, z, offsets)
 
               const tempx = tempCoords[0],
@@ -201,19 +190,20 @@ export default () => {
                 tempx,
                 tempy,
                 tempz,
-                get,
+                voxelData,
                 offsets
               )
               for (let l = 0; l < 6; l++) {
-                setLighting(x - 1, z - 1, y - 1, l, lighting[l])
+                self.setLighting(lightingData, x - 1, z - 1, y - 1, l, lighting[l])
               }
 
-              const smoothLighting = this.getBlockSmoothLighting(x, y, z, get)
+              const smoothLighting = this.getBlockSmoothLighting(x, y, z, voxelData)
               for (let l = 0; l < 6; l++) {
                 if (smoothLighting[l]) {
                   for (let m = 0; m < 3; m++)
                     for (let n = 0; n < 3; n++) {
-                      setSmoothLighting(
+                      self.setSmoothLighting(
+                        smoothLightingData,
                         x - 1,
                         z - 1,
                         y - 1,
@@ -229,7 +219,7 @@ export default () => {
           }
     }
 
-    this.getBlockLighting = (x, y, z, get, offsets) => {
+    this.getBlockLighting = (x, y, z, voxelData, offsets) => {
       const surroundings = [
         { x: 0, y: 1, z: 0 },
         { x: 1, y: 0, z: 0 },
@@ -248,13 +238,7 @@ export default () => {
           z: z + surroundings[i].z,
           lightLevel: 15
         }
-        const value = this.getLoadedBlocks(
-          block.x,
-          block.y,
-          block.z,
-          get,
-          offsets
-        )
+        const value = this.getLoadedBlocks(block.x, block.y, block.z, voxelData, offsets)
         if (value === 0) {
           const pastNodeCoords = [getCoordsRepresentation(block.x, -1, block.z)]
           const queue = [block]
@@ -290,24 +274,18 @@ export default () => {
                 newNode.x,
                 yValue,
                 newNode.z,
-                get,
+                voxelData,
                 offsets
               )
 
               while (startValue === 0 && endValue !== 0) {
                 yValue += 1
-                startValue = this.getLoadedBlocks(
-                  q.x,
-                  yValue,
-                  q.z,
-                  get,
-                  offsets
-                )
+                startValue = this.getLoadedBlocks(q.x, yValue, q.z, voxelData, offsets)
                 endValue = this.getLoadedBlocks(
                   newNode.x,
                   yValue,
                   newNode.z,
-                  get,
+                  voxelData,
                   offsets
                 )
               }
@@ -319,9 +297,7 @@ export default () => {
               newNode.y = yValue
 
               queue.push(newNode)
-              pastNodeCoords.push(
-                getCoordsRepresentation(newNode.x, -1, newNode.z)
-              )
+              pastNodeCoords.push(getCoordsRepresentation(newNode.x, -1, newNode.z))
             }
           }
         }
@@ -329,40 +305,40 @@ export default () => {
       return lights
     }
 
-    this.getBlockSmoothLighting = (x, y, z, get) => {
+    this.getBlockSmoothLighting = (x, y, z, voxelData) => {
       const output = new Array(6)
 
       const light = 2
       const shadow = 1
 
-      const nxnzny = get(x - 1, z - 1, y - 1)
-      const nzny = get(x, z - 1, y - 1)
-      const pxnzny = get(x + 1, z - 1, y - 1)
-      const nxny = get(x - 1, z, y - 1)
-      const ny = get(x, z, y - 1)
-      const pxny = get(x + 1, z, y - 1)
-      const nxpzny = get(x - 1, z + 1, y - 1)
-      const pzny = get(x, z + 1, y - 1)
-      const pxpzny = get(x + 1, z + 1, y - 1)
+      const nxnzny = self.get(voxelData, x - 1, z - 1, y - 1)
+      const nzny = self.get(voxelData, x, z - 1, y - 1)
+      const pxnzny = self.get(voxelData, x + 1, z - 1, y - 1)
+      const nxny = self.get(voxelData, x - 1, z, y - 1)
+      const ny = self.get(voxelData, x, z, y - 1)
+      const pxny = self.get(voxelData, x + 1, z, y - 1)
+      const nxpzny = self.get(voxelData, x - 1, z + 1, y - 1)
+      const pzny = self.get(voxelData, x, z + 1, y - 1)
+      const pxpzny = self.get(voxelData, x + 1, z + 1, y - 1)
 
-      const nxnz = get(x - 1, z - 1, y)
-      const nz = get(x, z - 1, y)
-      const pxnz = get(x + 1, z - 1, y)
-      const nx = get(x - 1, z, y)
-      const px = get(x + 1, z, y)
-      const nxpz = get(x - 1, z + 1, y)
-      const pz = get(x, z + 1, y)
-      const pxpz = get(x + 1, z + 1, y)
+      const nxnz = self.get(voxelData, x - 1, z - 1, y)
+      const nz = self.get(voxelData, x, z - 1, y)
+      const pxnz = self.get(voxelData, x + 1, z - 1, y)
+      const nx = self.get(voxelData, x - 1, z, y)
+      const px = self.get(voxelData, x + 1, z, y)
+      const nxpz = self.get(voxelData, x - 1, z + 1, y)
+      const pz = self.get(voxelData, x, z + 1, y)
+      const pxpz = self.get(voxelData, x + 1, z + 1, y)
 
-      const nxnzpy = get(x - 1, z - 1, y + 1)
-      const nzpy = get(x, z - 1, y + 1)
-      const pxnzpy = get(x + 1, z - 1, y + 1)
-      const nxpy = get(x - 1, z, y + 1)
-      const py = get(x, z, y + 1)
-      const pxpy = get(x + 1, z, y + 1)
-      const nxpzpy = get(x - 1, z + 1, y + 1)
-      const pzpy = get(x, z + 1, y + 1)
-      const pxpzpy = get(x + 1, z + 1, y + 1)
+      const nxnzpy = self.get(voxelData, x - 1, z - 1, y + 1)
+      const nzpy = self.get(voxelData, x, z - 1, y + 1)
+      const pxnzpy = self.get(voxelData, x + 1, z - 1, y + 1)
+      const nxpy = self.get(voxelData, x - 1, z, y + 1)
+      const py = self.get(voxelData, x, z, y + 1)
+      const pxpy = self.get(voxelData, x + 1, z, y + 1)
+      const nxpzpy = self.get(voxelData, x - 1, z + 1, y + 1)
+      const pzpy = self.get(voxelData, x, z + 1, y + 1)
+      const pxpzpy = self.get(voxelData, x + 1, z + 1, y + 1)
 
       if (py === 0) {
         const a = nxpy !== 0 || nzpy !== 0 || nxnzpy !== 0 ? 0 : 1
@@ -535,16 +511,17 @@ export default () => {
       return output
     }
 
-    this.getLoadedBlocks = (x, y, z, get, offsets) => {
+    this.getLoadedBlocks = (x, y, z, voxelData, offsets) => {
       const relativeCoords = this.getRelativeCoords(x, y, z, offsets)
       if (
-        this.checkWithinChunk(
-          relativeCoords[0],
-          relativeCoords[1],
-          relativeCoords[2]
-        )
+        this.checkWithinChunk(relativeCoords[0], relativeCoords[1], relativeCoords[2])
       ) {
-        return get(relativeCoords[0], relativeCoords[2], relativeCoords[1])
+        return self.get(
+          voxelData,
+          relativeCoords[0],
+          relativeCoords[2],
+          relativeCoords[1]
+        )
       } else {
         const maxHeight = this.getRelativeHighest(x, z)
         return this.getBlockInfo(x, y, z, maxHeight)
