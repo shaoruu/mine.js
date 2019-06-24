@@ -16,6 +16,16 @@ class Worlds extends Component {
 
   setSelectedIndex = i => this.setState({ selectedIndex: i })
 
+  componentDidMount() {
+    const escHandler = e => {
+      if (e.keyCode === 27) {
+        document.removeEventListener('keydown', escHandler, false)
+        this.props.history.push('/game/start')
+      }
+    }
+    document.addEventListener('keydown', escHandler, false)
+  }
+
   render() {
     const { selectedIndex } = this.state
 
