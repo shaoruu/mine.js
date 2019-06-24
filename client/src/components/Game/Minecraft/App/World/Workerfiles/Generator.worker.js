@@ -115,8 +115,14 @@ export default () => {
     this.getHighestBlock = (x, z) => {
       for (let y = maxWorldHeight; y >= 0; y--) {
         const isSolid = isSolidAt(x, y, z)
+        const cb = this.changedBlocks[getCoordsRepresentation(x, y, z)]
 
-        if (isSolid) return y
+        if (typeof cb === 'number' && cb !== 0) {
+          return y
+        }
+        if (isSolid && (typeof cb !== 'number' || cb !== 0)) {
+          return y
+        }
       }
       return 0
     }
