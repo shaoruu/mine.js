@@ -122,15 +122,25 @@ export default () => {
           }
 
           // BOTTOM
-          if (self.get(voxelData, x, z, wy) === 0)
+          if (self.get(voxelData, x, z, wy) === 0) {
+            const smoothLightingSide = self.getSmoothLightingSide(
+              smoothLighting,
+              wx,
+              wz,
+              wy,
+              5
+            )
+            const geo = smoothLightingSide[2][0] !== 1 ? 'ny' : 'ny2'
             planes.push([
               [wx + 0.5, wy, wz + 0.5],
-              'ny',
+              geo,
               type,
               materials.bottom,
               self.getLighting(lighting, wx, wz, wy, 5),
               self.getSmoothLightingSide(smoothLighting, wx, wz, wy, 5)
             ])
+          }
+
         }
       }
     }

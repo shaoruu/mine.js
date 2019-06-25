@@ -346,7 +346,12 @@ export default () => {
         const c = pxpy !== 0 || pzpy !== 0 || pxpzpy !== 0 ? 0 : 1
         const d = pxpy !== 0 || nzpy !== 0 || pxnzpy !== 0 ? 0 : 1
 
-        if (a + c > b + d) {
+        const e = nxnzpy !== 0 ? 0 : 1
+        const f = nxpzpy !== 0 ? 0 : 1
+        const g = pxpzpy !== 0 ? 0 : 1
+        const h = pxnzpy !== 0 ? 0 : 1
+
+        if (e + g > f + h) {
           const py2ColorsFace0 = new Uint16Array(3)
           py2ColorsFace0[0] = b === 0 ? shadow : light
           py2ColorsFace0[1] = c === 0 ? shadow : light
@@ -379,16 +384,22 @@ export default () => {
         const c = pxpy !== 0 || pxpz !== 0 || pxpzpy !== 0 ? 0 : 1
         const d = pxpy !== 0 || pxnz !== 0 || pxnzpy !== 0 ? 0 : 1
 
-        if (a + c < b + d) {
+        const e = pxnzny !== 0 ? 0 : 1
+        const f = pxpzny !== 0 ? 0 : 1
+        const g = pxpzpy !== 0 ? 0 : 1
+        const h = pxnzpy !== 0 ? 0 : 1
+
+        if (e + g > f + h) {
+
           const px2ColorsFace0 = new Uint16Array(3)
           px2ColorsFace0[0] = b === 0 ? shadow : light
-          px2ColorsFace0[1] = c === 0 ? shadow : light
-          px2ColorsFace0[2] = a === 0 ? shadow : light
+          px2ColorsFace0[1] = a === 0 ? shadow : light
+          px2ColorsFace0[2] = c === 0 ? shadow : light
 
           const px2ColorsFace1 = new Uint16Array(3)
-          px2ColorsFace1[0] = c === 0 ? shadow : light
+          px2ColorsFace1[0] = a === 0 ? shadow : light
           px2ColorsFace1[1] = d === 0 ? shadow : light
-          px2ColorsFace1[2] = a === 0 ? shadow : light
+          px2ColorsFace1[2] = c === 0 ? shadow : light
 
           output[1] = [px2ColorsFace0, px2ColorsFace1, [1, 1, 1]]
         } else {
@@ -404,6 +415,7 @@ export default () => {
 
           output[1] = [pxColorsFace0, pxColorsFace1, [0, 0, 0]]
         }
+
       }
 
       if (pz === 0) {
@@ -412,7 +424,12 @@ export default () => {
         const c = pzpy !== 0 || pxpz !== 0 || pxpzpy !== 0 ? 0 : 1
         const d = pzpy !== 0 || nxpz !== 0 || nxpzpy !== 0 ? 0 : 1
 
-        if (a + c > b + d) {
+        const e = nxpzny !== 0 ? 0 : 1
+        const f = pxpzny !== 0 ? 0 : 1
+        const g = pxpzpy !== 0 ? 0 : 1
+        const h = nxpzpy !== 0 ? 0 : 1
+
+        if (e + g < f + h) {
           const pz2ColorsFace0 = new Uint16Array(3)
           pz2ColorsFace0[0] = a === 0 ? shadow : light
           pz2ColorsFace0[1] = b === 0 ? shadow : light
@@ -444,7 +461,12 @@ export default () => {
         const c = nxpy !== 0 || nxpz !== 0 || nxpzpy !== 0 ? 0 : 1
         const d = nxpy !== 0 || nxnz !== 0 || nxnzpy !== 0 ? 0 : 1
 
-        if (a + c < b + d) {
+        const e = nxnzny !== 0 ? 0 : 1
+        const f = nxpzny !== 0 ? 0 : 1
+        const g = nxpzpy !== 0 ? 0 : 1
+        const h = nxnzpy !== 0 ? 0 : 1
+
+        if (e + g > f + h) {
           const nx2ColorsFace0 = new Uint16Array(3)
           nx2ColorsFace0[0] = b === 0 ? shadow : light
           nx2ColorsFace0[1] = a === 0 ? shadow : light
@@ -477,7 +499,12 @@ export default () => {
         const c = nzpy !== 0 || pxnz !== 0 || pxnzpy !== 0 ? 0 : 1
         const d = nzpy !== 0 || nxnz !== 0 || nxnzpy !== 0 ? 0 : 1
 
-        if (a + c > b + d) {
+        const e = nxnzny !== 0 ? 0 : 1
+        const f = pxnzny !== 0 ? 0 : 1
+        const g = pxnzpy !== 0 ? 0 : 1
+        const h = nxnzpy !== 0 ? 0 : 1
+
+        if (e + g < f + h) {
           const nz2ColorsFace0 = new Uint16Array(3)
           nz2ColorsFace0[0] = a === 0 ? shadow : light
           nz2ColorsFace0[1] = b === 0 ? shadow : light
@@ -505,7 +532,41 @@ export default () => {
       }
 
       if (ny === 0) {
-        output[5] = [[light, light, light], [light, light, light], [0, 0, 0]]
+        const a = nxny !== 0 || nzny !== 0 || nxnzny !== 0 ? 0 : 1
+        const b = nxny !== 0 || pzny !== 0 || nxpzny !== 0 ? 0 : 1
+        const c = pxny !== 0 || pzny !== 0 || pxpzny !== 0 ? 0 : 1
+        const d = pxny !== 0 || nzny !== 0 || pxnzny !== 0 ? 0 : 1
+
+        const e = nxnzny !== 0 ? 0 : 1
+        const f = nxpzny !== 0 ? 0 : 1
+        const g = pxpzny !== 0 ? 0 : 1
+        const h = pxnzny !== 0 ? 0 : 1
+
+        if (e + g > f + h) {
+          const ny2ColorsFace0 = new Uint16Array(3)
+          ny2ColorsFace0[0] = b === 0 ? shadow : light
+          ny2ColorsFace0[1] = c === 0 ? shadow : light
+          ny2ColorsFace0[2] = a === 0 ? shadow : light
+
+          const ny2ColorsFace1 = new Uint16Array(3)
+          ny2ColorsFace1[0] = c === 0 ? shadow : light
+          ny2ColorsFace1[1] = d === 0 ? shadow : light
+          ny2ColorsFace1[2] = a === 0 ? shadow : light
+
+          output[5] = [ny2ColorsFace0, ny2ColorsFace1, [1, 1, 1]]
+        } else {
+          const nyColorsFace0 = new Uint16Array(3)
+          nyColorsFace0[0] = a === 0 ? shadow : light
+          nyColorsFace0[1] = b === 0 ? shadow : light
+          nyColorsFace0[2] = d === 0 ? shadow : light
+
+          const nyColorsFace1 = new Uint16Array(3)
+          nyColorsFace1[0] = b === 0 ? shadow : light
+          nyColorsFace1[1] = c === 0 ? shadow : light
+          nyColorsFace1[2] = d === 0 ? shadow : light
+
+          output[5] = [nyColorsFace0, nyColorsFace1, [0, 0, 0]]
+        }
       }
 
       return output
