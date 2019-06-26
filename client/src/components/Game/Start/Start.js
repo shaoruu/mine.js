@@ -15,25 +15,19 @@ import p0_3 from '../../../assets/gui/panoramas/0/panorama3.png'
 import p0_4 from '../../../assets/gui/panoramas/0/panorama4.png'
 import p0_5 from '../../../assets/gui/panoramas/0/panorama5.png'
 
-import p1_0 from '../../../assets/gui/panoramas/0/panorama0.png'
-import p1_1 from '../../../assets/gui/panoramas/0/panorama1.png'
-import p1_2 from '../../../assets/gui/panoramas/0/panorama2.png'
-import p1_3 from '../../../assets/gui/panoramas/0/panorama3.png'
-import p1_4 from '../../../assets/gui/panoramas/0/panorama4.png'
-import p1_5 from '../../../assets/gui/panoramas/0/panorama5.png'
+import p1_0 from '../../../assets/gui/panoramas/1/panorama0.png'
+import p1_1 from '../../../assets/gui/panoramas/1/panorama1.png'
+import p1_2 from '../../../assets/gui/panoramas/1/panorama2.png'
+import p1_3 from '../../../assets/gui/panoramas/1/panorama3.png'
+import p1_4 from '../../../assets/gui/panoramas/1/panorama4.png'
+import p1_5 from '../../../assets/gui/panoramas/1/panorama5.png'
 
 const possiblePanoramas = [
   [p0_0, p0_1, p0_2, p0_3, p0_4, p0_5],
   [p1_0, p1_1, p1_2, p1_3, p1_4, p1_5]
 ]
 
-const possibleMessages = [
-  'magic!',
-  'browser!',
-  'beta!',
-  'ian13456!',
-  'FreshKoala!'
-]
+const possibleMessages = ['magic!', 'browser!', 'beta!', 'ian13456!', 'FreshKoala!']
 
 const Start = withRouter(props => {
   const { history } = props
@@ -45,8 +39,7 @@ const Start = withRouter(props => {
     setTimeout(() => (node.current.style.opacity = '1'), 100)
     pannellum.viewer(panoramaId, {
       type: 'cubemap',
-      cubeMap:
-        possiblePanoramas[Math.floor(Math.random() * possiblePanoramas.length)],
+      cubeMap: possiblePanoramas[Math.floor(Math.random() * possiblePanoramas.length)],
       autoLoad: true,
       autoRotate: -2,
       showZoomCtrl: false,
@@ -76,27 +69,23 @@ const Start = withRouter(props => {
       </div>
       <button
         className={`${sharedStyles.button} ${classes.play}`}
-        onClick={() => history.push('/game/worlds')}
-      >
+        onClick={() => history.push('/game/worlds')}>
         Singleplayer
       </button>
       <button
         className={`${classes.button} ${classes.play} ${classes.coming_soon}`}
-        disabled
-      >
+        disabled>
         Multiplayer (COMING SOON)
       </button>
       <div className={classes.options}>
         <button
           className={`${sharedStyles.button} ${classes.options_butt}`}
-          onClick={() => history.push('/game/options')}
-        >
+          onClick={() => history.push('/game/options')}>
           Options
         </button>
         <button
           className={`${sharedStyles.button} ${classes.options_butt}`}
-          onClick={() => history.push('/home')}
-        >
+          onClick={() => history.push('/home')}>
           Quit Game
         </button>
       </div>

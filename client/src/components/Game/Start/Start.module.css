@@ -13,7 +13,7 @@
   top: 0;
   width: 100% !important;
   height: 100% !important;
-  filter: blur(8px);
+  filter: blur(5px);
   z-index: 1;
 }
 

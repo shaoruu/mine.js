@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import libpannellum from './libPannellum'
 
 export default (function(window, document, undefined) {
