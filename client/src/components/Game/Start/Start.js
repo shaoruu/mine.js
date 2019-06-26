@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
-// import ReactPannellum from 'react-pannellum/libs/pannellum'
 
 import './Pannellum/Pannellum.css'
 import pannellum from './Pannellum/Pannellum'
@@ -8,24 +7,7 @@ import classes from './Start.module.css'
 import sharedStyles from '../../../containers/sharedStyles.module.css'
 import logo from '../../../assets/gui/MinecraftJS_logo.png'
 
-import p0_0 from '../../../assets/gui/panoramas/0/panorama0.png'
-import p0_1 from '../../../assets/gui/panoramas/0/panorama1.png'
-import p0_2 from '../../../assets/gui/panoramas/0/panorama2.png'
-import p0_3 from '../../../assets/gui/panoramas/0/panorama3.png'
-import p0_4 from '../../../assets/gui/panoramas/0/panorama4.png'
-import p0_5 from '../../../assets/gui/panoramas/0/panorama5.png'
-
-import p1_0 from '../../../assets/gui/panoramas/1/panorama0.png'
-import p1_1 from '../../../assets/gui/panoramas/1/panorama1.png'
-import p1_2 from '../../../assets/gui/panoramas/1/panorama2.png'
-import p1_3 from '../../../assets/gui/panoramas/1/panorama3.png'
-import p1_4 from '../../../assets/gui/panoramas/1/panorama4.png'
-import p1_5 from '../../../assets/gui/panoramas/1/panorama5.png'
-
-const possiblePanoramas = [
-  [p0_0, p0_1, p0_2, p0_3, p0_4, p0_5],
-  [p1_0, p1_1, p1_2, p1_3, p1_4, p1_5]
-]
+const possiblePanoramas = 3
 
 const possibleMessages = ['magic!', 'browser!', 'beta!', 'ian13456!', 'FreshKoala!']
 
@@ -37,9 +19,19 @@ const Start = withRouter(props => {
 
   useEffect(() => {
     setTimeout(() => (node.current.style.opacity = '1'), 100)
+
+    const panoramaIndex = Math.floor(Math.random() * possiblePanoramas)
+
+    const panoramaArray = []
+
+    for (let i = 0; i < 6; i++)
+      panoramaArray.push(
+        require(`../../../assets/gui/panoramas/${panoramaIndex}/panorama${i}.png`)
+      )
+
     pannellum.viewer(panoramaId, {
       type: 'cubemap',
-      cubeMap: possiblePanoramas[Math.floor(Math.random() * possiblePanoramas.length)],
+      cubeMap: panoramaArray,
       autoLoad: true,
       autoRotate: -2,
       showZoomCtrl: false,
