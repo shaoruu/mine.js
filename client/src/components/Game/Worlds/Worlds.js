@@ -17,6 +17,8 @@ class Worlds extends Component {
   setSelectedIndex = i => this.setState({ selectedIndex: i })
 
   componentDidMount() {
+    document.title = 'MinecraftJS - Worlds'
+
     const escHandler = e => {
       if (e.keyCode === 27) {
         document.removeEventListener('keydown', escHandler, false)
@@ -35,8 +37,7 @@ class Worlds extends Component {
       <Query
         query={MY_WORLDS_QUERY}
         onError={err => console.error(err)}
-        fetchPolicy="network-only"
-      >
+        fetchPolicy="network-only">
         {({ loading, data }) => {
           if (loading) return <Hint />
 
@@ -69,14 +70,12 @@ class Worlds extends Component {
                         disabled={!selectedIndex}
                         onClick={() => {
                           history.push(`/game/minecraft/${selectedIndex}`)
-                        }}
-                      >
+                        }}>
                         Play Selected World
                       </button>
                       <button
                         className={sharedStyles.button}
-                        onClick={() => history.push('/game/worlds/create')}
-                      >
+                        onClick={() => history.push('/game/worlds/create')}>
                         Create New World
                       </button>
                     </div>
@@ -95,8 +94,7 @@ class Worlds extends Component {
                                 refetchQueries: [{ query: MY_WORLDS_QUERY }]
                               })
                               this.setSelectedIndex(null)
-                            }}
-                          >
+                            }}>
                             Delete
                           </button>
                         )}
@@ -104,8 +102,7 @@ class Worlds extends Component {
 
                       <button
                         className={sharedStyles.button}
-                        onClick={() => history.push('/game/start')}
-                      >
+                        onClick={() => history.push('/game/start')}>
                         Cancel
                       </button>
                     </div>

@@ -18,6 +18,8 @@ const Start = withRouter(props => {
   const panoramaId = 'background'
 
   useEffect(() => {
+    document.title = 'MinecraftJS - Start'
+
     setTimeout(() => (node.current.style.opacity = '1'), 100)
 
     const panoramaIndex = Math.floor(Math.random() * possiblePanoramas)

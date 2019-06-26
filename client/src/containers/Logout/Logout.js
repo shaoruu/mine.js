@@ -11,6 +11,10 @@ import { signout, removeAllCookies } from '../../lib/utils'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 
 class Logout extends Component {
+  componentDidMount() {
+    document.title = 'MinecraftJS - Logout'
+  }
+
   render() {
     const { isAuth } = this.props
 

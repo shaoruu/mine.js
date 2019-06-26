@@ -13,6 +13,10 @@ import lobby from '../../assets/gui/MinecraftJS_lobby.png'
 import sharedStyles from '../sharedStyles.module.css'
 
 class Home extends Component {
+  componentDidMount() {
+    document.title = 'MinecraftJS - Home'
+  }
+
   render() {
     const { isAuth, history, username, loading } = this.props
 
@@ -22,20 +26,17 @@ class Home extends Component {
       <div className={classes.wrapper}>
         <button
           className={`${sharedStyles.button} ${classes.button}`}
-          onClick={() => history.push('/game')}
-        >
+          onClick={() => history.push('/game')}>
           Game
         </button>
         <button
           className={`${sharedStyles.button} ${classes.button}`}
-          onClick={() => history.push('/settings')}
-        >
+          onClick={() => history.push('/settings')}>
           Settings
         </button>
         <button
           className={`${sharedStyles.button} ${classes.button}`}
-          onClick={() => history.push('/logout')}
-        >
+          onClick={() => history.push('/logout')}>
           Logout ({username})
         </button>
       </div>
@@ -43,14 +44,12 @@ class Home extends Component {
       <div className={classes.wrapper}>
         <button
           className={`${sharedStyles.button} ${classes.button}`}
-          onClick={() => history.push('/login')}
-        >
+          onClick={() => history.push('/login')}>
           Login
         </button>
         <button
           className={`${sharedStyles.button} ${classes.button}`}
-          onClick={() => history.push('/register')}
-        >
+          onClick={() => history.push('/register')}>
           Register
         </button>
       </div>

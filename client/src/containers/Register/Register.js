@@ -16,6 +16,10 @@ import classes from './Register.module.css'
 import logo from '../../assets/gui/MinecraftJS_register.png'
 
 class Register extends Component {
+  componentDidMount() {
+    document.title = 'MinecraftJS - Register'
+  }
+
   render() {
     const { client, history, isAuth, loading: authHint } = this.props
 
