@@ -66,15 +66,15 @@ export default {
   },
   player: {
     height: 50, // px
-    inertia: 5.0,
+    inertia: 10,
     fricIntertia: 15.0,
-    inAirInertia: 16,
+    inAirInertia: 16, // For jumping
     sprintFactor: 1.3,
-    spectatorInertia: 2,
+    spectatorInertia: 6,
     acceleration: {
-      forward: 1300,
-      other_horz: 700,
-      vertical: 1000,
+      forward: 48,
+      other_horz: 24,
+      vertical: 36,
       jump: 140
     },
     maxSpeed: {
@@ -119,7 +119,7 @@ export default {
   ambientLight: {
     enabled: true,
     color: 0xffffff,
-    intensity: 1.5
+    intensity: 1
   },
   directionalLight: {
     enabled: true,
@@ -161,7 +161,7 @@ export default {
     z: 0.75
   },
   block: {
-    dimension: 20
+    dimension: 16
   },
   chunk: {
     size: 8,
@@ -170,7 +170,7 @@ export default {
   world: {
     noiseConstant: 25,
     maxWorkerCount: 4,
-    gravity: -9,
+    gravity: -9.8,
     worldConfigs: {
       waterLevel: 62,
       biomes: {

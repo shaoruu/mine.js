@@ -47,7 +47,12 @@ class Controls extends Stateful {
     super()
 
     // Controls
-    this.threeControls = new PointerLockControls(camera, container, initPos, initDirs)
+    this.threeControls = new PointerLockControls(
+      camera,
+      container,
+      initPos,
+      initDirs
+    )
 
     // Physics
     this.vel = new THREE.Vector3(0, 0, 0)
@@ -187,7 +192,8 @@ class Controls extends Stateful {
   }
 
   _handleMouseDown = e => {
-    if (!this.chat.enabled && this.threeControls.isLocked) this.mouseKey = e.button
+    if (!this.chat.enabled && this.threeControls.isLocked)
+      this.mouseKey = e.button
   }
 
   _handleMouseUp = e => {
@@ -287,9 +293,7 @@ class Controls extends Stateful {
         this.movements.forward = false
         this.status.registerWalk()
       },
-      () => {
-        if (this.status.isSurvival) this.status.registerSprint()
-      },
+      this.status.registerSprint,
       { immediate: true }
     )
 
@@ -320,7 +324,8 @@ class Controls extends Stateful {
       () => (this.movements.up = true),
       () => (this.movements.up = false),
       () => {
-        if (this.status.canFly && this.status.isCreative) this.status.toggleFly()
+        if (this.status.canFly && this.status.isCreative)
+          this.status.toggleFly()
       },
       { immediate: true }
     )
@@ -415,7 +420,6 @@ class Controls extends Stateful {
           (isSprinting ? SPRINT_FACTOR : 1)) *
       delta
 
-    this.acc.multiplyScalar(delta)
     this.vel.add(this.acc)
     this.acc.set(0.0, 0.0, 0.0)
 

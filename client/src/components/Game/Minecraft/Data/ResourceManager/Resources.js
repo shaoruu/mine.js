@@ -73,11 +73,6 @@ export default {
         top: require('../../../../../assets/blocks/dirt.png'),
         bottom: require('../../../../../assets/blocks/dirt.png')
       },
-      8: {
-        side: require('../../../../../assets/blocks/water_flow.png'),
-        top: require('../../../../../assets/blocks/water_flow.png'),
-        bottom: require('../../../../../assets/blocks/water_flow.png')
-      },
       12: {
         side: require('../../../../../assets/blocks/sand.png'),
         top: require('../../../../../assets/blocks/sand.png'),

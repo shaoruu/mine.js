@@ -119,3 +119,4 @@ After these commands, visit `localhost:3000`
 # Sources
 
 - [Start menu panorama](https://www.deviantart.com/567legodude/art/Minecraft-Panorama-Test-452102606)
+- [Resource Pack Used](https://resourcepack.net/ozocraft-resource-pack/)
