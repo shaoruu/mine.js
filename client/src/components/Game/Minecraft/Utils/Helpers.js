@@ -17,23 +17,23 @@ export default class Helpers {
     for (let i = 0; i < meshes.length; i++) {
       const { geo, pos, mat, lighting, smoothLighting } = meshes[i]
 
+      const actualMaterial = resourceManager.getBlockMat(...mat)
+
       matrix.makeTranslation(...pos)
 
-      mergedGeometry.merge(resourceManager.getBlockGeoWLighting(geo, lighting, smoothLighting), matrix, i)
-      materials.push(mat)
+      mergedGeometry.merge(
+        resourceManager.getBlockGeoWLighting(geo, lighting, smoothLighting),
+        matrix,
+        i
+      )
+      materials.push(actualMaterial)
     }
-    // const end = performance.now()
-    // if (end - start > 1) console.log(meshes)
-
-    // mergedGeometry.groupsNeedUpdate = true
 
     if (toBufferGeometry)
       finalGeometry = new THREE.BufferGeometry().fromGeometry(mergedGeometry)
     else finalGeometry = mergedGeometry
 
     mergedMesh = new THREE.Mesh(finalGeometry, materials)
-    // mergedMesh.geometry.computeFaceNormals()
-    // mergedMesh.geometry.computeVertexNormals()
 
     return mergedMesh
   }
@@ -81,11 +81,11 @@ export default class Helpers {
           ? vcross.x > vcross.z
             ? 'x'
             : vcross.y > vcross.z
-              ? 'y'
-              : vcross.y > vcross.z
-          : vcross.y > vcross.z
             ? 'y'
-            : 'z'
+            : vcross.y > vcross.z
+          : vcross.y > vcross.z
+          ? 'y'
+          : 'z'
       //Take the other two axis from the largest axis
       let uAxis = majorAxis === 'x' ? 'y' : majorAxis === 'y' ? 'x' : 'x'
       let vAxis = majorAxis === 'x' ? 'z' : majorAxis === 'y' ? 'z' : 'y'
@@ -141,15 +141,15 @@ export default class Helpers {
     z = parseFloat(z.toFixed(10))
     return floor
       ? {
-        x: Math.floor(x / dimension),
-        y: Math.floor(y / dimension),
-        z: Math.floor(z / dimension)
-      }
+          x: Math.floor(x / dimension),
+          y: Math.floor(y / dimension),
+          z: Math.floor(z / dimension)
+        }
       : {
-        x: x / dimension,
-        y: y / dimension,
-        z: z / dimension
-      }
+          x: x / dimension,
+          y: y / dimension,
+          z: z / dimension
+        }
   }
 
   /**
@@ -174,8 +174,7 @@ export default class Helpers {
   }
 
   static applyStyle = (ele, s) => {
-    if (typeof s === 'object')
-      Object.keys(s).forEach(key => (ele.style[key] = s[key]))
+    if (typeof s === 'object') Object.keys(s).forEach(key => (ele.style[key] = s[key]))
     else ele.classList.add(s)
   }
 

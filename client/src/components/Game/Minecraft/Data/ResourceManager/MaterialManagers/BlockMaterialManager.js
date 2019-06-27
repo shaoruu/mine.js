@@ -30,12 +30,12 @@ class BlockMaterialManager {
         texture.minFilter = THREE.NearestMipMapLinearFilter
         texture.repeat.set(1, 1)
 
-        const frontSide = new THREE.MeshLambertMaterial({
-          map: texture,
-          side: THREE.FrontSide,
-          vertexColors: THREE.VertexColors
-        }),
-          backSide = new THREE.MeshLambertMaterial({
+        const frontSide = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.FrontSide,
+            vertexColors: THREE.VertexColors
+          }),
+          backSide = new THREE.MeshBasicMaterial({
             map: texture,
             side: THREE.BackSide,
             vertexColors: THREE.VertexColors
@@ -52,12 +52,12 @@ class BlockMaterialManager {
 
         // console.log(texture, rotatedTexture)
 
-        const frontSideRotated = new THREE.MeshLambertMaterial({
-          map: rotatedTexture,
-          side: THREE.FrontSide,
-          vertexColors: THREE.VertexColors
-        }),
-          backSideRotated = new THREE.MeshLambertMaterial({
+        const frontSideRotated = new THREE.MeshBasicMaterial({
+            map: rotatedTexture,
+            side: THREE.FrontSide,
+            vertexColors: THREE.VertexColors
+          }),
+          backSideRotated = new THREE.MeshBasicMaterial({
             map: rotatedTexture,
             side: THREE.BackSide,
             vertexColors: THREE.VertexColors
@@ -110,7 +110,6 @@ class BlockMaterialManager {
       } else {
         return this.materials[id][material].frontSide[0]
       }
-
     } else {
       if (geoType.includes('2')) {
         return this.materials[id][material].backSide[1]
@@ -118,7 +117,6 @@ class BlockMaterialManager {
         return this.materials[id][material].backSide[0]
       }
     }
-
   }
   getSpecial = id => this.materials[id]
   getImage = id => this.images[id]

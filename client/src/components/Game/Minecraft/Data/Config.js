@@ -72,9 +72,9 @@ export default {
     sprintFactor: 1.3,
     spectatorInertia: 6,
     acceleration: {
-      forward: 48,
-      other_horz: 24,
-      vertical: 36,
+      forward: 24,
+      other_horz: 12,
+      vertical: 18,
       jump: 140
     },
     maxSpeed: {
@@ -92,8 +92,8 @@ export default {
     posX: 0,
     posY: 30,
     posZ: 0,
-    horzD: 6,
-    vertD: 4,
+    horzD: 1,
+    vertD: 1,
     reachDst: 7
   },
   controls: {
@@ -164,7 +164,7 @@ export default {
     dimension: 16
   },
   chunk: {
-    size: 8,
+    size: 24,
     height: 50
   },
   world: {

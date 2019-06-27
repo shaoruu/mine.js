@@ -1,4 +1,5 @@
 import ndarray from 'ndarray'
+import * as THREE from 'three'
 
 import Config from '../../../Data/Config'
 import Helpers from '../../../Utils/Helpers'
@@ -20,7 +21,7 @@ class Chunk {
     const arr = new Uint16Array((size + 2) * (size + 2) * (size + 2))
     this.grid = new ndarray(arr, [size + 2, size + 2, size + 2])
 
-    const lightingArr = new Uint16Array((size) ** 3 * 6)
+    const lightingArr = new Uint16Array(size ** 3 * 6)
     this.lighting = new ndarray(lightingArr, [size, size, size, 6])
 
     const smoothLightingArr = new Uint16Array(size ** 3 * 6 * 3 * 3)
@@ -29,63 +30,46 @@ class Chunk {
     this.isLoaded = false
 
     this.blocksInProgress = {}
-  }
-  /** Generate THREE meshes and store them into an array. */
-  meshQuads = quads => {
-    // Avoiding extra work.
-    if (quads === undefined || quads.length === 0) this.mesh = null
 
-    /**
-     * Internal functions for convenience
-     */
-
-    const meshes = []
-
-    for (let i = 0; i < quads.length; i++) {
-      const [coords, geo, type, material, lighting, smoothLighting] = quads[i]
-
-      const globalCoords = Helpers.mapVecToWorldCoords(this.origin, coords)
-
-      const mat = this.resourceManager.getBlockMat(type, geo, material)
-
-      meshes.push({ geo, pos: globalCoords, mat, lighting, smoothLighting })
-    }
-
-    this.meshes = meshes
+    this.geoParser = new THREE.BufferGeometryLoader()
   }
 
-  /** Calculate mesh and merge them together */
-  combineMesh = () => {
-    // console.time('Block Combination')
-    if (!this.meshes || this.meshes.length === 0) {
-      this.mesh = null
+  generateMesh = combined => {
+    if (!combined) {
+      this.meshes = null
       return
     }
 
-    this.mesh = Helpers.mergeMeshes(this.meshes, this.resourceManager)
+    const { geo, materials } = combined
+    const actualMat = []
+    const actualGeo = this.geoParser.parse(geo)
+
+    for (let i = 0; i < materials.length; i++)
+      actualMat.push(this.resourceManager.getBlockMat(...materials[i]))
+
+    this.mesh = new THREE.Mesh(actualGeo, actualMat)
     this.mesh.name = this.name
     this.mesh.isChunk = true
-    // console.timeEnd('Block Combination')
   }
 
   setGrid = blocks => (this.grid.data = blocks)
 
-  setLighting = lighting => this.lighting.data = lighting
+  setLighting = lighting => (this.lighting.data = lighting)
 
-  setSmoothLighting = smoothLighting => this.smoothLighting.data = smoothLighting
+  setSmoothLighting = smoothLighting => (this.smoothLighting.data = smoothLighting)
 
   setBlock = (x, y, z, val) => this.grid.set(x + 1, z + 1, y + 1, val)
 
-  setLightingSides = (sides) => {
+  setLightingSides = sides => {
     for (let i = 0; i < sides.length; i++) {
-      const { x, z, y, s, val } = sides[i];
+      const { x, z, y, s, val } = sides[i]
       this.lighting.set(x, z, y, s, val)
     }
   }
 
-  setSmoothLightingValues = (values) => {
+  setSmoothLightingValues = values => {
     for (let i = 0; i < values.length; i++) {
-      const { x, z, y, s, f, c, val } = values[i];
+      const { x, z, y, s, f, c, val } = values[i]
       this.lighting.set(x, z, y, s, f, c, val)
     }
   }

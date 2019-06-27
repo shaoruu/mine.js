@@ -58,11 +58,7 @@ class MainScene extends Component {
     // Main scene creation
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(Config.background.color)
-    this.scene.fog = new THREE.Fog(
-      Config.fog.color,
-      Config.fog.near,
-      Config.fog.far
-    )
+    this.scene.fog = new THREE.Fog(Config.fog.color, Config.fog.near, Config.fog.far)
 
     // Main renderer constructor
     this.renderer = new Renderer(this.scene, this.mount)
@@ -70,9 +66,7 @@ class MainScene extends Component {
     // Components instantiations
     this.camera = new Camera(this.renderer.threeRenderer)
     this.light = new Light(this.scene)
-    // this.light.place('hemi')
     this.light.place('ambient')
-    // this.light.place('point')
 
     // World Initialization
     this.world = new World(
@@ -148,8 +142,7 @@ class MainScene extends Component {
 
   componentWillUnmount() {
     this.terminate()
-    if (this.mount)
-      this.mount.removeChild(this.renderer.threeRenderer.domElement)
+    if (this.mount) this.mount.removeChild(this.renderer.threeRenderer.domElement)
     window.removeEventListener('beforeunload', this.closingHandler, false)
   }
 
@@ -169,8 +162,7 @@ class MainScene extends Component {
 
     this.renderScene()
     this.update()
-    if (!document.webkitHidden)
-      this.frameId = window.requestAnimationFrame(this.animate)
+    if (!document.webkitHidden) this.frameId = window.requestAnimationFrame(this.animate)
   }
 
   update = () => {
@@ -182,9 +174,7 @@ class MainScene extends Component {
   }
 
   updateWorld = () => {
-    const { coordx, coordy, coordz } = Helpers.toChunkCoords(
-      this.player.getCoordinates()
-    )
+    const { coordx, coordy, coordz } = Helpers.toChunkCoords(this.player.getCoordinates())
 
     this.world.requestMeshUpdate({
       coordx,
@@ -216,8 +206,7 @@ class MainScene extends Component {
           this.worldData = world
           if (this.mount) this.handleQueryComplete()
           else this.waitingForMount = true
-        }}
-      >
+        }}>
         {({ loading, data }) => {
           if (loading) return <Hint text="Loading world..." />
           if (!data)
@@ -226,8 +215,7 @@ class MainScene extends Component {
                 <Hint text="World not found." />
                 <button
                   className={sharedStyles.button}
-                  onClick={() => history.push('/game/start')}
-                >
+                  onClick={() => history.push('/game/start')}>
                   Home
                 </button>
               </div>
@@ -237,8 +225,7 @@ class MainScene extends Component {
             <>
               <Mutation
                 mutation={UPDATE_PLAYER_MUTATION}
-                onError={err => console.error(err)}
-              >
+                onError={err => console.error(err)}>
                 {(updatePlayer, { client }) => {
                   this.updatePlayer = updatePlayer // Hooked updatePlayer for outter usage
                   this.client = client
@@ -255,25 +242,21 @@ class MainScene extends Component {
                           this.waitingForMount = false
                           this.handleQueryComplete()
                         }
-                      }}
-                    >
+                      }}>
                       <div
                         className={classes.blocker}
-                        ref={blocker => (this.blocker = blocker)}
-                      >
+                        ref={blocker => (this.blocker = blocker)}>
                         <Setup />
                         <h1 className={classes.title}>Game Menu</h1>
                         <div className={classes.menu}>
                           <button
                             className={sharedStyles.button}
-                            ref={button => (this.button = button)}
-                          >
+                            ref={button => (this.button = button)}>
                             Back to Game
                           </button>
                           <button
                             className={sharedStyles.button}
-                            onClick={() => history.push('/game/start')}
-                          >
+                            onClick={() => history.push('/game/start')}>
                             Save and Quit to Title
                           </button>
                         </div>

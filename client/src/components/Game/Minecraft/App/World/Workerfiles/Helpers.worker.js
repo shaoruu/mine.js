@@ -4,6 +4,68 @@ export default () => {
   /**
    * HELPER FUNCTIONS
    */
+  function setupGeometries() {
+    const { geoResources: resources, dimension } = self.config
+
+    self.geometries = {}
+
+    for (let key in resources) {
+      self.geometries[key] = new THREE.PlaneGeometry(dimension, dimension)
+      const { func, rotation } = resources[key]
+
+      if (func && Array.isArray(func)) {
+        for (let i = 0; i < func.length; i++) {
+          self.geometries[key][func[i]](rotation[i])
+        }
+      } else if (func) {
+        self.geometries[key][func](rotation)
+      }
+    }
+  }
+
+  function getGeoWLighting(key, lighting, smoothLighting) {
+    const { rLighting, slDiff } = self.config
+
+    const light = new THREE.Color(
+      `rgb(${rLighting[lighting]}, ${rLighting[lighting]}, ${rLighting[lighting]})`
+    )
+    const diff = rLighting[lighting] - slDiff
+    const shadow =
+      diff >= 30
+        ? new THREE.Color(`rgb(${diff}, ${diff}, ${diff})`)
+        : new THREE.Color(`rgb(30, 30, 30)`)
+
+    const geo = self.geometries[key]
+
+    geo.faces[0].vertexColors = [light, light, light]
+    geo.faces[1].vertexColors = [light, light, light]
+
+    if (smoothLighting) {
+      for (let f = 0; f < 2; f++) {
+        const colors = new Array(3)
+        for (let c = 0; c < 3; c++) {
+          colors[c] =
+            smoothLighting[f][c] === 1
+              ? shadow
+              : smoothLighting[f][c] === 2
+              ? light
+              : shadow
+        }
+        geo.faces[f].vertexColors = colors
+      }
+    }
+    return geo
+  }
+
+  function mapVecToWorldCoords(origin, vec) {
+    const { size, dimension } = self.config
+    return [
+      origin.x * size * dimension + vec[0] * dimension,
+      origin.y * size * dimension + vec[1] * dimension,
+      origin.z * size * dimension + vec[2] * dimension
+    ]
+  }
+
   function getCoordsRepresentation(x, y, z, semi = false) {
     return `${x}:${y}:${z}${semi ? ';' : ''}`
   }
@@ -140,10 +202,59 @@ export default () => {
               self.getSmoothLightingSide(smoothLighting, wx, wz, wy, 5)
             ])
           }
-
         }
       }
     }
     return planes
+  }
+
+  function meshQuads(quads, coordx, coordy, coordz) {
+    // Avoiding extra work.
+    if (quads === undefined || quads.length === 0) return null
+
+    const meshes = []
+
+    for (let i = 0; i < quads.length; i++) {
+      const globalCoords = mapVecToWorldCoords(
+        { x: coordx, y: coordy, z: coordz },
+        quads[i][0]
+      )
+
+      const mat = [quads[i][2], quads[i][1], quads[i][3]]
+
+      meshes.push({
+        geo: quads[i][1],
+        pos: globalCoords,
+        mat,
+        lighting: quads[i][4],
+        smoothLighting: quads[i][5]
+      })
+    }
+
+    return meshes
+  }
+
+  function combineMeshes(meshes) {
+    if (!meshes || meshes.length === 0) return null
+
+    let finalGeometry,
+      materials = [],
+      mergedGeometry = new THREE.Geometry()
+
+    const matrix = new THREE.Matrix4()
+
+    for (let i = 0; i < meshes.length; i++) {
+      const { geo, pos, mat, lighting, smoothLighting } = meshes[i]
+
+      matrix.makeTranslation(pos[0], pos[1], pos[2])
+
+      mergedGeometry.merge(getGeoWLighting(geo, lighting, smoothLighting), matrix, i)
+
+      materials.push(mat)
+    }
+
+    finalGeometry = new THREE.BufferGeometry().fromGeometry(mergedGeometry)
+
+    return { geo: finalGeometry.toJSON(), materials }
   }
 }

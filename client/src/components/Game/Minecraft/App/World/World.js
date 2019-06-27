@@ -7,6 +7,7 @@ import Workerfiles from './Workerfiles'
 import { TaskQueue, WorkerPool } from '../WorkerUtils'
 import { UPDATE_BLOCK_MUTATION } from '../../../../../lib/graphql'
 import Chat from '../Chat/Chat'
+import Resources from '../../Data/ResourceManager/Resources'
 
 const SIZE = Config.chunk.size,
   HORZ_D = Config.player.horzD,
@@ -52,9 +53,13 @@ class World {
     this.workerPool = new WorkerPool(Workerfiles, this, {
       seed,
       size: SIZE,
+      dimension: DIMENSION,
       stride: [(SIZE + 2) ** 2, SIZE + 2, 1],
       generation: WORLD_GENERATION_CONFIG,
-      changedBlocks: this.changedBlocks
+      changedBlocks: this.changedBlocks,
+      geoResources: Resources.geometries.block,
+      rLighting: Config.lighting.day,
+      slDiff: Config.lighting.slDifference
     })
     this.workerTaskHandler = new TaskQueue() // This is handle/schedule all the tasks from worker callback
 
@@ -101,17 +106,19 @@ class World {
     this.workerCallback = ({ data }) => {
       switch (data.cmd) {
         case 'GET_CHUNK': {
-          const { quads, blocks, lighting, smoothLighting, chunkName } = data
+          const { combined, blocks, lighting, smoothLighting, chunkName } = data
           const temp = this.chunks[chunkName]
 
-          this.workerTaskHandler.addTasks([
-            [temp.setGrid, blocks],
-            [temp.setLighting, lighting],
-            [temp.setSmoothLighting, smoothLighting],
-            [temp.meshQuads, quads],
-            [temp.combineMesh],
-            [temp.markAsFinishedLoading]
-          ])
+          window.requestAnimationFrame(() =>
+            this.workerTaskHandler.addTasks([
+              [temp.setGrid, blocks],
+              [temp.setLighting, lighting],
+              [temp.setSmoothLighting, smoothLighting],
+              [temp.generateMesh, combined],
+              [temp.markAsFinishedLoading]
+            ])
+          )
+
           break
         }
         case 'GET_HIGHEST': {
@@ -127,7 +134,7 @@ class World {
         }
         case 'UPDATE_BLOCK': {
           const {
-            quads,
+            combined,
             block: { x, y, z },
             lighting,
             smoothLighting,
@@ -135,32 +142,35 @@ class World {
           } = data
 
           const temp = this.chunks[chunkName]
-          this.workerTaskHandler.addTasks(
-            [
-              [temp.setLighting, lighting],
-              [temp.setSmoothLighting, smoothLighting],
-              [temp.meshQuads, quads],
-              [temp.combineMesh]
-            ],
-            {
-              prioritized: true
-            }
-          )
-          this.workerTaskHandler.addTask(
-            () => {
-              // Remove old then add new to scene
-              const obj = this.scene.getObjectByName(chunkName)
-              if (obj) this.scene.remove(obj)
-              const mesh = temp.getMesh()
-              if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
-              temp.untagBusyBlock(x, y, z)
+          window.requestAnimationFrame(() => {
+            this.workerTaskHandler.addTasks(
+              [
+                [temp.setLighting, lighting],
+                [temp.setSmoothLighting, smoothLighting],
+                [temp.generateMesh, combined]
+              ],
+              {
+                prioritized: true
+              }
+            )
+          })
+          window.requestAnimationFrame(() => {
+            this.workerTaskHandler.addTask(
+              () => {
+                // Remove old then add new to scene
+                const obj = this.scene.getObjectByName(chunkName)
+                if (obj) this.scene.remove(obj)
+                const mesh = temp.getMesh()
+                if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
+                temp.untagBusyBlock(x, y, z)
 
-              // Reset everything
-              this.targetBlock = null
-              this.potentialBlock = null
-            },
-            { prioritized: true }
-          )
+                // Reset everything
+                this.targetBlock = null
+                this.potentialBlock = null
+              },
+              { prioritized: true }
+            )
+          })
 
           break
         }
@@ -361,11 +371,7 @@ class World {
         neighborAffected = true
       }
       if (neighborAffected) {
-        const neighborChunk = this.getChunkByCoords(
-          nc.coordx,
-          nc.coordy,
-          nc.coordz
-        )
+        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
 
         // Setting neighbor's block that represents self.
         neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
@@ -436,9 +442,7 @@ class World {
   getVoxelByVoxelCoords = (x, y, z) => {
     const { coordx, coordy, coordz } = Helpers.toChunkCoords({ x, y, z }),
       { x: bx, y: by, z: bz } = Helpers.toBlockCoords({ x, y, z })
-    const chunk = this.chunks[
-      Helpers.getCoordsRepresentation(coordx, coordy, coordz)
-    ]
+    const chunk = this.chunks[Helpers.getCoordsRepresentation(coordx, coordy, coordz)]
     if (!chunk) return 0
 
     return chunk.getBlock(bx, by, bz)
