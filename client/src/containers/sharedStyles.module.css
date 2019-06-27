@@ -9,7 +9,7 @@
   color: white;
   height: 35px;
   font-size: 15px;
-  /* background: #5b5b5c; */
+  background: #5b5b5c;
   border-radius: 3px;
   text-shadow: 3px 3px #4c4c4c;
   cursor: pointer;
@@ -17,7 +17,7 @@
 }
 
 .button:not([disabled]):hover {
-  /* background: #7c8bbc; */
+  background: #7c8bbc;
   border-bottom: 3px solid #59639a;
   border-right: 2px solid #59639a;
   border-left: 2px solid #bdc6ff;
