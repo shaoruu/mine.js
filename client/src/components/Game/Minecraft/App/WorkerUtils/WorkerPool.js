@@ -2,58 +2,95 @@ import WebWorker from './WebWorker'
 // import Config from '../../Data/Config'
 
 function WorkerPool(codes, world, config) {
-  let availables = []
+  let gFrees = [],
+    sFrees = []
 
-  const jobs = [],
-    workers = []
-
-  let priorityIndex = 0
+  const gJobs = [],
+    sJobs = [],
+    generalWorkers = [],
+    specializedWorkers = []
 
   // TODO: Figure out what's wrong with this
-  const maxWorkers = 1
+  const maxGWorkers = 1,
+    maxSWorkers = 2
   // (navigator.hardwareConcurrency || Config.world.maxWorkerCount) / 2
 
-  for (let i = 0; i < maxWorkers; i++) {
-    const newWorker = new WebWorker(codes)
+  for (let i = 0; i < maxGWorkers; i++) {
+    const newGWorker = new WebWorker(codes)
 
-    newWorker.addEventListener('message', e => {
-      if (e.cmd !== 'BOOT') world.appendWorkerTask(world.workerCallback, e)
+    newGWorker.onmessage = e => {
+      if (e.cmd !== 'BOOT') world.workerCallback(e)
 
-      nextJob(i)
-    })
+      console.log('shit')
 
-    workers.push(newWorker)
+      nextGJob(i)
+    }
 
-    // Booting up worker
-    newWorker.postMessage({ cmd: 'BOOT', config })
+    generalWorkers.push(newGWorker)
+
+    // Booting up general worker
+    newGWorker.postMessage({ cmd: 'BOOT', config })
+  }
+
+  for (let i = 0; i < maxSWorkers; i++) {
+    const newSWorker = new WebWorker(codes)
+
+    newSWorker.onmessage = e => {
+      if (e.cmd !== 'BOOT') world.workerCallback(e)
+
+      nextSJob(i)
+    }
+
+    specializedWorkers.push(newSWorker)
+
+    // Booting up specialized worker
+    newSWorker.postMessage({ cmd: 'BOOT', config })
   }
 
   // job: object containing specific actions to do for worker
-  this.queueJob = (job, prioritized = false) => {
-    if (prioritized) {
-      jobs.splice(priorityIndex, 0, job)
-      priorityIndex++
-    } else jobs.push(job)
-    if (availables.length > 0) nextJob(availables.shift())
+  this.queueGJob = job => {
+    gJobs.unshift(job)
+    if (gFrees.length > 0) nextGJob(gFrees.shift())
+  }
+
+  this.queueSJob = job => {
+    sJobs.push(job)
+    if (sFrees.length > 0) nextSJob(sFrees.shift())
   }
 
   this.broadcast = job => {
-    for (let i = 0; i < workers.length; i++) workers[i].postMessage(job)
+    for (let i = 0; i < maxGWorkers; i++) {
+      generalWorkers[i].postMessage(job)
+    }
+    for (let i = 0; i < maxSWorkers; i++) {
+      specializedWorkers[i].postMessage(job)
+    }
   }
 
-  function nextJob(index) {
+  function nextGJob(index) {
     // No job
-    if (!jobs.length) {
-      availables.push(index)
+    if (!gJobs.length) {
+      gFrees.push(index)
       return
     }
 
-    const job = jobs.shift(),
-      worker = workers[index]
+    const job = gJobs.shift(),
+      worker = generalWorkers[index]
 
     worker.postMessage(job)
+  }
 
-    if (priorityIndex) priorityIndex--
+  function nextSJob(index) {
+    // No job
+    if (!sJobs.length) {
+      sFrees.push(index)
+      return
+    }
+
+    const job = sJobs.shift(),
+      worker = specializedWorkers[index]
+
+    worker.postMessage(job)
   }
 }
 

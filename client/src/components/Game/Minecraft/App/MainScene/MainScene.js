@@ -165,10 +165,10 @@ class MainScene extends Component {
   }
 
   animate = () => {
-    this.update()
     this.debug.update()
 
     this.renderScene()
+    this.update()
     if (!document.webkitHidden)
       this.frameId = window.requestAnimationFrame(this.animate)
   }

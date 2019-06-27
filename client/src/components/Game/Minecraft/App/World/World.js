@@ -86,7 +86,7 @@ class World {
 
   initSpawn = isBrandNew => {
     if (isBrandNew) {
-      this.workerPool.queueJob({
+      this.workerPool.queueSJob({
         cmd: 'GET_HIGHEST',
         x: 0,
         z: 0
@@ -236,7 +236,7 @@ class World {
     })
     this.chunks[newChunk.name] = newChunk
 
-    this.workerPool.queueJob({
+    this.workerPool.queueGJob({
       cmd: 'GET_CHUNK',
       changedBlocks: this.changedBlocks,
       chunkName: newChunk.name,
@@ -361,46 +361,44 @@ class World {
         neighborAffected = true
       }
       if (neighborAffected) {
-        const neighborChunk = this.getChunkByCoords(nc.coordx, nc.coordy, nc.coordz)
+        const neighborChunk = this.getChunkByCoords(
+          nc.coordx,
+          nc.coordy,
+          nc.coordz
+        )
 
         // Setting neighbor's block that represents self.
         neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
 
-        this.workerPool.queueJob(
-          {
-            cmd: 'UPDATE_BLOCK',
-            data: neighborChunk.grid.data,
-            lighting: neighborChunk.lighting.data,
-            smoothLighting: neighborChunk.smoothLighting.data,
-            block: nb,
-            chunkName: neighborChunk.name,
-            coords: {
-              coordx: nc.coordx,
-              coordy: nc.coordy,
-              coordz: nc.coordz
-            }
-          },
-          true
-        )
+        this.workerPool.queueSJob({
+          cmd: 'UPDATE_BLOCK',
+          data: neighborChunk.grid.data,
+          lighting: neighborChunk.lighting.data,
+          smoothLighting: neighborChunk.smoothLighting.data,
+          block: nb,
+          chunkName: neighborChunk.name,
+          coords: {
+            coordx: nc.coordx,
+            coordy: nc.coordy,
+            coordz: nc.coordz
+          }
+        })
       }
     })
 
-    this.workerPool.queueJob(
-      {
-        cmd: 'UPDATE_BLOCK',
-        data: targetChunk.grid.data,
-        lighting: targetChunk.lighting.data,
-        smoothLighting: targetChunk.smoothLighting.data,
-        block: chunkBlock,
-        chunkName: targetChunk.name,
-        coords: {
-          coordx,
-          coordy,
-          coordz
-        }
-      },
-      true
-    )
+    this.workerPool.queueSJob({
+      cmd: 'UPDATE_BLOCK',
+      data: targetChunk.grid.data,
+      lighting: targetChunk.lighting.data,
+      smoothLighting: targetChunk.smoothLighting.data,
+      block: chunkBlock,
+      chunkName: targetChunk.name,
+      coords: {
+        coordx,
+        coordy,
+        coordz
+      }
+    })
   }
 
   getChunkByCoords = (cx, cy, cz) =>
@@ -438,7 +436,9 @@ class World {
   getVoxelByVoxelCoords = (x, y, z) => {
     const { coordx, coordy, coordz } = Helpers.toChunkCoords({ x, y, z }),
       { x: bx, y: by, z: bz } = Helpers.toBlockCoords({ x, y, z })
-    const chunk = this.chunks[Helpers.getCoordsRepresentation(coordx, coordy, coordz)]
+    const chunk = this.chunks[
+      Helpers.getCoordsRepresentation(coordx, coordy, coordz)
+    ]
     if (!chunk) return 0
 
     return chunk.getBlock(bx, by, bz)
