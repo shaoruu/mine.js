@@ -72,9 +72,9 @@ export default {
     sprintFactor: 1.3,
     spectatorInertia: 2,
     acceleration: {
-      forward: 1500,
-      other_horz: 1000,
-      vertical: 1300,
+      forward: 1300,
+      other_horz: 700,
+      vertical: 1000,
       jump: 140
     },
     maxSpeed: {
@@ -92,7 +92,7 @@ export default {
     posX: 0,
     posY: 30,
     posZ: 0,
-    horzD: 5,
+    horzD: 6,
     vertD: 4,
     reachDst: 7
   },
@@ -161,7 +161,7 @@ export default {
     z: 0.75
   },
   block: {
-    dimension: 16
+    dimension: 20
   },
   chunk: {
     size: 8,

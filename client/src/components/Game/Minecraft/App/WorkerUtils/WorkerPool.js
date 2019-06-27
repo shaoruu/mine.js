@@ -11,8 +11,7 @@ function WorkerPool(codes, world, config) {
     specializedWorkers = []
 
   // TODO: Figure out what's wrong with this
-  const maxGWorkers =
-      (navigator.hardwareConcurrency || Config.world.maxWorkerCount) / 2,
+  const maxGWorkers = navigator.hardwareConcurrency || Config.world.maxWorkerCount,
     maxSWorkers = 2
 
   for (let i = 0; i < maxGWorkers; i++) {
