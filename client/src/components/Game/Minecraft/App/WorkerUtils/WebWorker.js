@@ -5,7 +5,10 @@ export default class WebWorker {
     for (let i = 0; i < codes.length; i++) {
       const codeString = codes[i].toString()
 
-      complete += codeString.substr(12, codeString.length - 1)
+      complete += codeString.substr(
+        codeString.indexOf('{'),
+        codeString.lastIndexOf('}')
+      )
     }
 
     complete += '}'

@@ -19,7 +19,8 @@ export default () => {
 
         self.set = (data, i, j, k, v) =>
           (data[i * stride[0] + j * stride[1] + k * stride[2]] = v)
-        self.get = (data, i, j, k) => data[i * stride[0] + j * stride[1] + k * stride[2]]
+        self.get = (data, i, j, k) =>
+          data[i * stride[0] + j * stride[1] + k * stride[2]]
 
         self.setLighting = (lighting, i, j, k, l, v) =>
           (lighting[i * size ** 2 * 6 + j * size * 6 + k * 6 + l] = v)
@@ -52,7 +53,15 @@ export default () => {
           for (let m = 0; m < 3; m++) {
             output[m] = new Uint16Array(3)
             for (let n = 0; n < 3; n++) {
-              output[m][n] = self.getSmoothLighting(smoothLighting, i, j, k, l, m, n)
+              output[m][n] = self.getSmoothLighting(
+                smoothLighting,
+                i,
+                j,
+                k,
+                l,
+                m,
+                n
+              )
             }
           }
           return output
@@ -79,8 +88,13 @@ export default () => {
         const lighting = new Uint16Array(size ** 3 * 6)
         const smoothLighting = new Uint16Array(size ** 3 * 6 * 3 * 3)
 
-        self.generator.setVoxelData(blocks, coordx, coordy, coordz, changedBlocks)
-
+        self.generator.setVoxelData(
+          blocks,
+          coordx,
+          coordy,
+          coordz,
+          changedBlocks
+        )
         self.generator.setLightingData(
           lighting,
           smoothLighting,
@@ -89,10 +103,10 @@ export default () => {
           coordy,
           coordz
         )
-        /** MESHING RIGHT BELOW */
-        const dims = [size + 2, size + 2, size + 2]
 
+        /** MESHING RIGHT BELOW */
         if (blocks.find(ele => ele)) {
+          const dims = [size + 2, size + 2, size + 2]
           const quads = calcQuads(blocks, lighting, smoothLighting, dims)
 
           postMessage({
@@ -112,10 +126,6 @@ export default () => {
             quads: [],
             chunkName
           })
-
-        const quads = calcQuads(blocks, lighting, smoothLighting, dims)
-
-        postMessage({ cmd, blocks, lighting, smoothLighting, quads, chunkName })
         break
       }
       case 'UPDATE_BLOCK': {

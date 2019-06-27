@@ -1,5 +1,5 @@
 import WebWorker from './WebWorker'
-// import Config from '../../Data/Config'
+import Config from '../../Data/Config'
 
 function WorkerPool(codes, world, config) {
   let gFrees = [],
@@ -11,17 +11,15 @@ function WorkerPool(codes, world, config) {
     specializedWorkers = []
 
   // TODO: Figure out what's wrong with this
-  const maxGWorkers = 1,
+  const maxGWorkers =
+      (navigator.hardwareConcurrency || Config.world.maxWorkerCount) / 2,
     maxSWorkers = 2
-  // (navigator.hardwareConcurrency || Config.world.maxWorkerCount) / 2
 
   for (let i = 0; i < maxGWorkers; i++) {
     const newGWorker = new WebWorker(codes)
 
     newGWorker.onmessage = e => {
       if (e.cmd !== 'BOOT') world.workerCallback(e)
-
-      console.log('shit')
 
       nextGJob(i)
     }
@@ -49,7 +47,7 @@ function WorkerPool(codes, world, config) {
 
   // job: object containing specific actions to do for worker
   this.queueGJob = job => {
-    gJobs.unshift(job)
+    gJobs.push(job)
     if (gFrees.length > 0) nextGJob(gFrees.shift())
   }
 

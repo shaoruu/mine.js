@@ -46,6 +46,9 @@ export default () => {
     //   amplifier = 1
     // } = {}
 
+    /* -------------------------------------------------------------------------- */
+    /*                             Internal Functions                             */
+    /* -------------------------------------------------------------------------- */
     const initSeed = seed => {
       let hash = 0,
         chr
@@ -58,7 +61,6 @@ export default () => {
       }
 
       if (hash > 0 && hash < 1) hash *= 65536
-
       hash = Math.floor(hash)
 
       this.seed = hash
@@ -88,9 +90,30 @@ export default () => {
       return false
     }
 
+    const getRelativeCoords = (x, y, z, offsets) => [
+      x - offsets[0],
+      y - offsets[1],
+      z - offsets[2]
+    ]
+
+    const getAbsoluteCoords = (x, y, z, offsets) => [
+      x + offsets[0],
+      y + offsets[1],
+      z + offsets[2]
+    ]
+
+    const checkWithinChunk = (x, y, z) =>
+      x >= 0 && x < size + 2 && y >= 0 && y < size + 2 && z >= 0 && z < size + 2
+
+    /* -------------------------------------------------------------------------- */
+    /*                         Instance Initializing Calls                        */
+    /* -------------------------------------------------------------------------- */
     initSeed(seed)
     initNoises()
 
+    /* -------------------------------------------------------------------------- */
+    /*                              Public Functions                              */
+    /* -------------------------------------------------------------------------- */
     this.getRelativeHighest = (x, z) => {
       let high = maxWorldHeight,
         low = waterLevel,
@@ -120,9 +143,6 @@ export default () => {
       return 0
     }
 
-    this.registerCB = (changedBlocks = {}) => (this.changedBlocks = changedBlocks)
-    this.appendCB = ({ key, type }) => (this.changedBlocks[key] = type)
-
     this.octavePerlin3 = (x, y, z) => {
       let total = 0,
         frequency = 1,
@@ -151,9 +171,12 @@ export default () => {
 
       for (let x = 0; x < size + 2; x++) {
         for (let z = 0; z < size + 2; z++) {
-          const maxHeight = this.getRelativeHighest(x + offsets[0], z + offsets[2])
+          const maxHeight = this.getRelativeHighest(
+            x + offsets[0],
+            z + offsets[2]
+          )
           for (let y = 0; y < size + 2; y++) {
-            const tempCoords = this.getAbsoluteCoords(x, y, z, offsets)
+            const tempCoords = getAbsoluteCoords(x, y, z, offsets)
 
             const tempx = tempCoords[0],
               tempy = tempCoords[1],
@@ -180,7 +203,7 @@ export default () => {
         for (let z = 1; z < size + 1; z++)
           for (let y = 1; y < size + 1; y++) {
             if (self.get(voxelData, x, z, y) !== 0) {
-              const tempCoords = this.getAbsoluteCoords(x, y, z, offsets)
+              const tempCoords = getAbsoluteCoords(x, y, z, offsets)
 
               const tempx = tempCoords[0],
                 tempy = tempCoords[1],
@@ -194,10 +217,22 @@ export default () => {
                 offsets
               )
               for (let l = 0; l < 6; l++) {
-                self.setLighting(lightingData, x - 1, z - 1, y - 1, l, lighting[l])
+                self.setLighting(
+                  lightingData,
+                  x - 1,
+                  z - 1,
+                  y - 1,
+                  l,
+                  lighting[l]
+                )
               }
 
-              const smoothLighting = this.getBlockSmoothLighting(x, y, z, voxelData)
+              const smoothLighting = this.getBlockSmoothLighting(
+                x,
+                y,
+                z,
+                voxelData
+              )
               for (let l = 0; l < 6; l++) {
                 if (smoothLighting[l]) {
                   for (let m = 0; m < 3; m++)
@@ -238,7 +273,13 @@ export default () => {
           z: z + surroundings[i].z,
           lightLevel: 15
         }
-        const value = this.getLoadedBlocks(block.x, block.y, block.z, voxelData, offsets)
+        const value = this.getLoadedBlocks(
+          block.x,
+          block.y,
+          block.z,
+          voxelData,
+          offsets
+        )
         if (value === 0) {
           const pastNodeCoords = [getCoordsRepresentation(block.x, -1, block.z)]
           const queue = [block]
@@ -280,7 +321,13 @@ export default () => {
 
               while (startValue === 0 && endValue !== 0) {
                 yValue += 1
-                startValue = this.getLoadedBlocks(q.x, yValue, q.z, voxelData, offsets)
+                startValue = this.getLoadedBlocks(
+                  q.x,
+                  yValue,
+                  q.z,
+                  voxelData,
+                  offsets
+                )
                 endValue = this.getLoadedBlocks(
                   newNode.x,
                   yValue,
@@ -297,7 +344,9 @@ export default () => {
               newNode.y = yValue
 
               queue.push(newNode)
-              pastNodeCoords.push(getCoordsRepresentation(newNode.x, -1, newNode.z))
+              pastNodeCoords.push(
+                getCoordsRepresentation(newNode.x, -1, newNode.z)
+              )
             }
           }
         }
@@ -390,7 +439,6 @@ export default () => {
         const h = pxnzpy !== 0 ? 0 : 1
 
         if (e + g > f + h) {
-
           const px2ColorsFace0 = new Uint16Array(3)
           px2ColorsFace0[0] = b === 0 ? shadow : light
           px2ColorsFace0[1] = a === 0 ? shadow : light
@@ -415,7 +463,6 @@ export default () => {
 
           output[1] = [pxColorsFace0, pxColorsFace1, [0, 0, 0]]
         }
-
       }
 
       if (pz === 0) {
@@ -573,9 +620,13 @@ export default () => {
     }
 
     this.getLoadedBlocks = (x, y, z, voxelData, offsets) => {
-      const relativeCoords = this.getRelativeCoords(x, y, z, offsets)
+      const relativeCoords = getRelativeCoords(x, y, z, offsets)
       if (
-        this.checkWithinChunk(relativeCoords[0], relativeCoords[1], relativeCoords[2])
+        checkWithinChunk(
+          relativeCoords[0],
+          relativeCoords[1],
+          relativeCoords[2]
+        )
       ) {
         return self.get(
           voxelData,
@@ -610,19 +661,8 @@ export default () => {
       return 0
     }
 
-    this.getRelativeCoords = (x, y, z, offsets) => [
-      x - offsets[0],
-      y - offsets[1],
-      z - offsets[2]
-    ]
-
-    this.getAbsoluteCoords = (x, y, z, offsets) => [
-      x + offsets[0],
-      y + offsets[1],
-      z + offsets[2]
-    ]
-
-    this.checkWithinChunk = (x, y, z) =>
-      x >= 0 && x < size + 2 && y >= 0 && y < size + 2 && z >= 0 && z < size + 2
+    this.registerCB = (changedBlocks = {}) =>
+      (this.changedBlocks = changedBlocks)
+    this.appendCB = ({ key, type }) => (this.changedBlocks[key] = type)
   }
 }
