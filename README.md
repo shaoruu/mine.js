@@ -70,34 +70,22 @@ Before cloning the repo or doing anything, be sure to install [docker](https://w
 # Clone the repository
 git clone https://github.com/ian13456/minecraft.js.git
 
-# Download packages for server and client
-cd server
-npm install
-cd client
-npm install
+# Download packages for both server and client
+yarn
 
 # Start docker containers
-cd server/prisma
-docker-compose up -d
+yarn run prisma
 
 # FOR WINDOWS
 set PRISMA_MANAGEMENT_API_SECRET=my-secret
 # FOR MAC/LINUX (recommend putting this into .bashrc)
 export PRISMA_MANAGEMENT_API_SECRET=my-secret
 
-
-# Deploy prisma models
-cd server/prisma
-prisma deploy
-
 # Fetch prisma generated schema and start backend service
-cd server
-npm run get-schema
-npm start
+yarn run server
 
 # Start frontend service
-cd client
-npm start
+yarn client
 ```
 
 After these commands, visit `localhost:3000`

@@ -1,14 +1,14 @@
-import bcrypt from 'bcryptjs'
-
 import getUserId from '../utils/getUserId'
 import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
 import getBlockRepresentation from '../utils/getBlockRepresentation'
 
+import bcrypt from 'bcryptjs'
+
 const DEFAULT_MESSAGE = 'Unknown command. Try /help for a list of commands.'
 
 const Mutation = {
-  async createUser(parent, args, { prisma }, info) {
+  async createUser(parent, args, { prisma }) {
     const password = await hashPassword(args.data.password)
     const user = await prisma.mutation.createUser({
       data: {
@@ -22,7 +22,7 @@ const Mutation = {
       token: generateToken(user.id)
     }
   },
-  async login(parent, args, { prisma }, info) {
+  async login(parent, args, { prisma }) {
     const user = await prisma.query.user({
       where: {
         email: args.data.email
@@ -101,7 +101,7 @@ const Mutation = {
     const owner = await prisma.mutation.createPlayer({
       data: {
         isAdmin: true,
-        gamemode: gamemode,
+        gamemode,
         user: {
           connect: {
             id
@@ -143,10 +143,10 @@ const Mutation = {
     const playerId = args.data.id
     delete args.data.id
 
-    const cursor = args.data.cursor
+    const { cursor } = args.data
     delete args.data.cursor
 
-    const data = args.data.data
+    const { data } = args.data
     delete args.data.data
 
     const inventoryUpdate = { inventory: { update: { cursor, data } } }
@@ -195,7 +195,7 @@ const Mutation = {
       info
     )
   },
-  async deleteWorld(parent, args, { prisma }, info) {
+  async deleteWorld(parent, args, { prisma }) {
     await prisma.mutation.deleteWorld({ where: { id: args.worldId } })
     return true
   },
@@ -207,9 +207,9 @@ const Mutation = {
     { prisma },
     info
   ) {
-    let type = 'ERROR',
-      sender = '',
-      body = DEFAULT_MESSAGE
+    let type = 'ERROR'
+    let sender = ''
+    let body = DEFAULT_MESSAGE
 
     const {
       user: { username }

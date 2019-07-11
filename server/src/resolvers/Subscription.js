@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const defaultArray = []
 
 const Subscription = {
@@ -34,17 +35,11 @@ const Subscription = {
     }
   },
   player: {
-    subscribe(
-      parent,
-      { username, worldId, updatedFields_contains_some },
-      { prisma },
-      info
-    ) {
+    subscribe(parent, { username, worldId, updatedFields_contains_some }, { prisma }, info) {
       return prisma.subscription.player(
         {
           where: {
-            updatedFields_contains_some:
-              updatedFields_contains_some || defaultArray,
+            updatedFields_contains_some: updatedFields_contains_some || defaultArray,
             node: {
               user: {
                 username

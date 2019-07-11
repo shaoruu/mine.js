@@ -1,0 +1,33 @@
+{
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "sourceType": "module",
+    "allowImportExportEverywhere": false,
+    "codeFrame": false
+  },
+  "extends": ["airbnb", "prettier"],
+  "env": {
+    "browser": true,
+    "jest": true
+  },
+  "rules": {
+    "import/order": [2, { "groups": ["parent", "sibling"], "newlines-between": "always" }],
+    "prefer-promise-reject-errors": "off",
+    "react/jsx-filename-extension": "off",
+    "react/forbid-prop-types": "off",
+    "import/prefer-default-export": "off",
+    "no-plusplus": "off",
+    "react/prop-types": "off",
+    "no-return-assign": "off",
+    "no-nested-ternary": "off",
+    "no-param-reassign": "off",
+    "no-continue": "off",
+    "func-names": "off",
+    "no-bitwise": "off"
+  },
+  "settings": {
+    "import/resolver": {
+      "alias": [["core", "./core"]]
+    }
+  }
+}

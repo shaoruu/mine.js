@@ -1,0 +1,11 @@
+{
+  "processors": ["stylelint-processor-styled-components"],
+  "extends": [
+    "stylelint-config-yoctol",
+    "stylelint-config-styled-components"
+  ],
+  "rules": {
+    "comment-empty-line-before": null,
+    "declaration-empty-line-before": null
+  }
+}
