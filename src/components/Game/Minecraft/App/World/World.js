@@ -1,21 +1,22 @@
-import * as THREE from 'three'
-
 import Config from '../../Data/Config'
-import Chunk from './Chunk/Chunk'
 import Helpers from '../../Utils/Helpers'
-import Workerfiles from './Workerfiles'
 import { TaskQueue, WorkerPool } from '../WorkerUtils'
 import { UPDATE_BLOCK_MUTATION } from '../../../../../lib/graphql'
 import Chat from '../Chat/Chat'
 import Resources from '../../Data/ResourceManager/Resources'
 
-const SIZE = Config.chunk.size,
-  HORZ_D = Config.player.horzD,
-  VERT_D = Config.player.vertD,
-  P_I_2_TOE = Config.player.aabb.eye2toe,
-  P_I_2_TOP = Config.player.aabb.eye2top,
-  DIMENSION = Config.block.dimension,
-  WORLD_GENERATION_CONFIG = Config.world.worldConfigs
+import Workerfiles from './Workerfiles'
+import Chunk from './Chunk/Chunk'
+
+import * as THREE from 'three'
+
+const SIZE = Config.chunk.size
+const HORZ_D = Config.player.horzD
+const VERT_D = Config.player.vertD
+const P_I_2_TOE = Config.player.aabb.eye2toe
+const P_I_2_TOP = Config.player.aabb.eye2top
+const DIMENSION = Config.block.dimension
+const WORLD_GENERATION_CONFIG = Config.world.worldConfigs
 
 class World {
   constructor(
@@ -123,7 +124,7 @@ class World {
         }
         case 'GET_HIGHEST': {
           const { h } = data
-          const position = this.player.position
+          const { position } = this.player
 
           this.player.setPosition(
             position.x + DIMENSION / 2,
@@ -193,7 +194,7 @@ class World {
     for (let x = coordx - HORZ_D; x <= coordx + HORZ_D; x++)
       for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++)
         for (let y = coordy - VERT_D; y <= coordy + VERT_D; y++) {
-          let tempChunk = this.chunks[Helpers.getCoordsRepresentation(x, y, z)]
+          const tempChunk = this.chunks[Helpers.getCoordsRepresentation(x, y, z)]
           if (!tempChunk) {
             this.registerChunk({
               coordx: x,
@@ -311,7 +312,7 @@ class World {
 
     const { x, y, z } = block
     if (parentChunk.checkBusyBlock(x, y, z)) return
-    else parentChunk.tagBusyBlock(x, y, z)
+    parentChunk.tagBusyBlock(x, y, z)
 
     // Communicating with server
     this.apolloClient
@@ -341,9 +342,9 @@ class World {
     if (!block) return
     const { node } = block
 
-    const { coordx, coordy, coordz } = Helpers.toChunkCoords(node),
-      chunkBlock = Helpers.toBlockCoords(node),
-      { type, x: mx, y: my, z: mz } = node
+    const { coordx, coordy, coordz } = Helpers.toChunkCoords(node)
+    const chunkBlock = Helpers.toBlockCoords(node)
+    const { type, x: mx, y: my, z: mz } = node
 
     const targetChunk = this.getChunkByCoords(coordx, coordy, coordz)
     targetChunk.setBlock(chunkBlock.x, chunkBlock.y, chunkBlock.z, type)
@@ -356,8 +357,8 @@ class World {
 
     // Checking for neighboring blocks FIRST.
     ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
-      const nc = { coordx, coordy, coordz },
-        nb = { ...chunkBlock }
+      const nc = { coordx, coordy, coordz }
+      const nb = { ...chunkBlock }
       let neighborAffected = false
 
       // If block is either on 0 or size, that means it has effects on neighboring chunks too.
@@ -409,26 +410,33 @@ class World {
 
   getChunkByCoords = (cx, cy, cz) =>
     this.chunks[Helpers.getCoordsRepresentation(cx, cy, cz)] || null
+
   registerChangedBlock = (type, x, y, z) => {
     const key = Helpers.getCoordsRepresentation(x, y, z)
     this.changedBlocks[key] = type
     return { key, type }
   }
+
   setPotential = potential => (this.potentialBlock = potential)
+
   setTarget = target => (this.targetBlock = target)
+
   setPlayer = player => (this.player = player)
+
   appendWorkerTask = (task, argument = null) => this.workerTaskHandler.addTask(task, argument)
+
   getVoxelByWorldCoords = (x, y, z) => {
     const gbc = Helpers.toGlobalBlock({ x, y, z })
     return this.getVoxelByVoxelCoords(gbc.x, gbc.y, gbc.z)
   }
+
   getTargetBlockInfo = () => {
     if (!this.targetBlock) return null
 
     const { chunk, block } = this.targetBlock
 
-    const { x, y, z } = block,
-      { cx, cy, cz } = chunk
+    const { x, y, z } = block
+    const { cx, cy, cz } = chunk
 
     const parentChunk = this.getChunkByCoords(cx, cy, cz)
 
@@ -438,9 +446,10 @@ class World {
       type: parentChunk.getBlock(x, y, z)
     }
   }
+
   getVoxelByVoxelCoords = (x, y, z) => {
-    const { coordx, coordy, coordz } = Helpers.toChunkCoords({ x, y, z }),
-      { x: bx, y: by, z: bz } = Helpers.toBlockCoords({ x, y, z })
+    const { coordx, coordy, coordz } = Helpers.toChunkCoords({ x, y, z })
+    const { x: bx, y: by, z: bz } = Helpers.toBlockCoords({ x, y, z })
     const chunk = this.chunks[Helpers.getCoordsRepresentation(coordx, coordy, coordz)]
     if (!chunk) return 0
 

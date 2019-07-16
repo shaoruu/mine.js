@@ -113,7 +113,8 @@ const Mutation = {
           }
         },
         x: 0,
-        y: Number.MIN_SAFE_INTEGER,
+        // y: Number.MIN_SAFE_INTEGER,
+        y: 0,
         z: 0,
         dirx: 0,
         diry: 0,
@@ -204,8 +205,7 @@ const Mutation = {
     {
       data: { playerId, worldId, command }
     },
-    { prisma },
-    info
+    { prisma }
   ) {
     let type = 'ERROR'
     let sender = ''

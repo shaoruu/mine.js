@@ -1,14 +1,8 @@
-import React, { Component } from 'react'
-import { Mutation, Query, Subscription } from 'react-apollo'
-import * as THREE from 'three'
-import { withRouter } from 'react-router'
-
 import Camera from '../Camera/Camera'
 import Light from '../Light/Light'
 import Player from '../Player/Player'
 import Renderer from '../Renderer/Renderer'
 import World from '../World/World'
-import classes from './MainScene.module.css'
 import { Hint } from '../../../../Utils'
 import Config from '../../Data/Config'
 import Helpers from '../../Utils/Helpers'
@@ -22,7 +16,15 @@ import {
 import ResourceManager from '../../Data/ResourceManager/ResourceManager'
 import sharedStyles from '../../../../../containers/sharedStyles.module.css'
 import Debug from '../Debug/Debug'
+
+import classes from './MainScene.module.css'
 import Setup from './Setup/Setup'
+
+import * as THREE from 'three'
+import { Mutation, Query, Subscription } from 'react-apollo'
+import React, { Component } from 'react'
+import { withRouter } from 'react-router'
+
 class MainScene extends Component {
   constructor(props) {
     super(props)
@@ -38,6 +40,16 @@ class MainScene extends Component {
     // Load textures
     this.resourceManager = new ResourceManager()
     this.resourceManager.initialize()
+  }
+
+  componentDidMount() {
+    window.addEventListener('beforeunload', this.closingHandler, false)
+  }
+
+  componentWillUnmount() {
+    this.terminate()
+    if (this.mount) this.mount.removeChild(this.renderer.threeRenderer.domElement)
+    window.removeEventListener('beforeunload', this.closingHandler, false)
   }
 
   handleQueryComplete = () => {
@@ -108,13 +120,13 @@ class MainScene extends Component {
 
     /** Called every 200ms to update player position with server. */
     this.updatePosCall = window.requestInterval(() => {
-      const playerCoords = this.player.getCoordinates(),
-        playerDirs = this.player.getDirections()
+      const playerCoords = this.player.getCoordinates()
+      const playerDirs = this.player.getDirections()
 
       // Making sure no values are null
-      for (let member in playerCoords)
+      for (const member in playerCoords)
         if (playerCoords[member] !== 0 && !playerCoords[member]) return
-      for (let member in playerDirs) if (playerDirs[member] !== 0 && !playerDirs[member]) return
+      for (const member in playerDirs) if (playerDirs[member] !== 0 && !playerDirs[member]) return
 
       if (
         !(JSON.stringify(playerCoords) === JSON.stringify(this.prevPos)) ||
@@ -133,16 +145,6 @@ class MainScene extends Component {
     }, 200)
 
     this.updateWorldCall = window.requestInterval(this.updateWorld, 50)
-  }
-
-  componentDidMount() {
-    window.addEventListener('beforeunload', this.closingHandler, false)
-  }
-
-  componentWillUnmount() {
-    this.terminate()
-    if (this.mount) this.mount.removeChild(this.renderer.threeRenderer.domElement)
-    window.removeEventListener('beforeunload', this.closingHandler, false)
   }
 
   init = () => {

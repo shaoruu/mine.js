@@ -90,20 +90,6 @@ yarn client
 
 After these commands, visit `localhost:3000`
 
-# To-do's
-
-- [ ] Lighting
-- [ ] Chat system
-- [ ] Command system
-- [ ] Better terrain generation (caves)
-- [ ] Random structures (villages)
-- [ ] Inventory system
-- [ ] Trivial things such as
-  - [ ] Block breaking cooldowns
-  - [ ] Special items (swords, pickaxes)
-- [x] Better UI designs
-- [ ] Dockerize the entire project altogether
-
 # Sources
 
 - [Start menu panorama](https://www.deviantart.com/567legodude/art/Minecraft-Panorama-Test-452102606)

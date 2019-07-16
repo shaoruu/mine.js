@@ -1,5 +1,5 @@
 {
-  "name": "skyfactory.js",
+  "name": "minecraft.js",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -20,12 +20,13 @@
     "graphql-yoga": "^1.17.4",
     "jsonwebtoken": "^8.5.0",
     "ndarray": "^1.0.18",
-    "pannellum-react": "ian13456/pannellum-react",
+    "noisejs": "^2.1.0",
     "prisma-binding": "^2.3.6",
     "prop-types": "^15.7.2",
     "randomstring": "^1.1.5",
     "react": "^16.8.6",
     "react-apollo": "^2.5.2",
+    "react-apollo-hooks": "^0.5.0",
     "react-dom": "^16.8.6",
     "react-outside-click-handler": "^1.2.3",
     "react-pannellum": "^0.1.6",

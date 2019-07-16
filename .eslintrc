@@ -23,7 +23,8 @@
     "no-param-reassign": "off",
     "no-continue": "off",
     "func-names": "off",
-    "no-bitwise": "off"
+    "no-bitwise": "off",
+    "consistent-return": "off"
   },
   "settings": {
     "import/resolver": {

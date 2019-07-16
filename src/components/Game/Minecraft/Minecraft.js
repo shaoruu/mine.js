@@ -1,6 +1,8 @@
+import MainScene from './TestMinecraft'
+
 import React, { useEffect } from 'react'
 
-import MainScene from './App/MainScene/MainScene'
+// import MainScene from './App/MainScene/MainScene'
 
 const Minecraft = ({ id, username }) => {
   useEffect(() => {
