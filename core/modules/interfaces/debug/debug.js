@@ -11,6 +11,9 @@ function Debug(container, player, world) {
 
   let display = process.env.NODE_ENV === 'development'
 
+  let maxFPS = null
+  let minFPS = null
+
   const wrapper = document.createElement('div')
   const leftPanel = document.createElement('div')
   const rightPanel = document.createElement('div')
@@ -49,6 +52,12 @@ function Debug(container, player, world) {
   this.setDisplay = bool => (display = bool)
   this.getDisplay = () => display
 
+  this.getMaxFPS = () => maxFPS
+  this.setMaxFPS = f => (maxFPS = f)
+
+  this.getMinFPS = () => minFPS
+  this.setMinFPS = f => (minFPS = f)
+
   container.appendChild(wrapper)
   this.player.controls.setDebugControl(this)
 }
@@ -75,12 +84,16 @@ Debug.prototype.update = function() {
   const newFPS = this.calcFPS()
   const playerPos = this.player.getCoordinates()
 
+  if (!this.getMaxFPS() || this.getMaxFPS() < newFPS) this.setMaxFPS(newFPS)
+  if (!this.getMinFPS() || this.getMinFPS() > newFPS) this.setMinFPS(newFPS)
+
   // prettier-ignore
   this.getDOM_coordinates().innerHTML = `XYZ: ${Helpers.round(playerPos.x, 2)} /
                                 ${Helpers.round(playerPos.y, 2)} /
                                 ${Helpers.round(playerPos.z, 2)}`
 
-  this.getDOM_FPS().innerHTML = `${newFPS} fps`
+  this.getDOM_FPS().innerHTML = `${newFPS} fps [${this.getMinFPS() || 0} - ${this.getMaxFPS() ||
+    0}]`
 }
 
 Debug.prototype.toggle = function() {
