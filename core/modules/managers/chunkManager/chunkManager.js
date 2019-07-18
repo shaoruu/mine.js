@@ -86,6 +86,8 @@ class ChunkManager {
     for (let x = coordx - HORZ_D; x <= coordx + HORZ_D; x++) {
       for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++) {
         for (let y = coordy - VERT_D; y <= coordy + VERT_D; y++) {
+          updatedChunks[this.getChunkRep(x, y, z)] = true
+
           const tempChunk = this.getChunkFromCoords(x, y, z)
 
           if (!tempChunk) {
@@ -99,9 +101,6 @@ class ChunkManager {
             allGood = false
             continue
           }
-
-          // GETTING HERE MEANS CHUNK IS READY TO BE ADDED
-          updatedChunks[tempChunk.getRep()] = true
 
           if (!tempChunk.getIsInScene()) {
             // IF NOT YET ADDED TO SCENE
