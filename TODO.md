@@ -1,6 +1,19 @@
 # MinecraftJS TODO
 
-- [ ] Workerize chunk generation
+Pull requests are always welcomed!
+
+## UI
+
+- [ ] Add crosshair
+- [x] Better UI designs
+
+## Technical
+
+- [x] Workerize chunk generation
+- [ ] Dockerize the entire project altogether
+
+## Gameplay
+
 - [ ] Lighting
 - [ ] Chat system
 - [ ] Command system
@@ -8,7 +21,5 @@
 - [ ] Random structures (villages)
 - [ ] Inventory system
 - [ ] Trivial things such as
-  - [ ] Block breaking cooldowns
-  - [ ] Special items (swords, pickaxes)
-- [x] Better UI designs
-- [ ] Dockerize the entire project altogether
+- [ ] Block breaking cooldowns
+- [ ] Special items (swords, pickaxes)

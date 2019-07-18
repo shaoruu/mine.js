@@ -9,7 +9,7 @@ import PlayerControls from './controls/controls'
 const P_I_2_TOE = Config.player.aabb.eye2toe
 
 class Player extends Stateful {
-  constructor(apolloClient, playerData, camera, scene, world, container, blocker) {
+  constructor(apolloClient, playerData, camera, scene, world, container, blocker, button) {
     super({ prevPos: '', prevDir: '' })
 
     const { id, gamemode } = playerData
@@ -30,6 +30,7 @@ class Player extends Stateful {
       camera,
       container,
       blocker,
+      button,
       {
         x: playerData.x,
         y: playerData.y,

@@ -49,7 +49,7 @@ class WorkerManager {
 
         this.world.player.setPosition(
           position.x + DIMENSION / 2,
-          (h + P_I_2_TOE + 4) * DIMENSION,
+          (h + P_I_2_TOE + 1) * DIMENSION,
           position.z + DIMENSION / 2
         )
 

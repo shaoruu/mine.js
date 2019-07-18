@@ -1,6 +1,9 @@
 import { WORLD_QUERY } from '../../../lib/graphql'
 import { Hint } from '../../Utils'
 
+import classes from './TestMinecraft.module.css'
+import sharedStyles from '../../../containers/sharedStyles.module.css'
+
 import React, { useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
 import PropTypes from 'prop-types'
@@ -12,39 +15,6 @@ const GameWrapper = styled.div`
   width: 100%;
   height: 100%;
   overflow: hidden;
-`
-
-const HomeButton = styled.button`
-  position: fixed;
-  z-index: 5;
-  bottom: 0;
-  left: 0;
-  width: 60px;
-  height: 60px;
-  margin: 20px;
-  border: 2px solid green;
-  border-radius: 50%;
-  background: black;
-  color: white;
-  font-family: Minecraft, sans-serif;
-  font-weight: 100;
-  text-align: center;
-  vertical-align: center;
-  transition: width 0.2s ease, height 0.2s ease;
-  &:hover {
-    width: 70px;
-    height: 70px;
-    background: white;
-    color: black;
-  }
-  &:active {
-    outline: 0;
-  }
-`
-
-const MainScene = styled.div`
-  width: 100%;
-  height: 100%;
 `
 
 const Blocker = styled.div`
@@ -87,8 +57,9 @@ const terminate = () => {
 }
 
 const Game = ({ id: worldId, username, history }) => {
-  const container = useRef(null)
   const blocker = useRef(null)
+  const button = useRef(null)
+  const container = useRef(null)
 
   const { data: worldData, error, loading } = useQuery(WORLD_QUERY, {
     variables: {
@@ -102,7 +73,14 @@ const Game = ({ id: worldId, username, history }) => {
   useEffect(() => {
     if (loading || error) return
 
-    game = new SkyFactory(worldData, username, container.current, blocker.current, client)
+    game = new SkyFactory(
+      worldData,
+      username,
+      container.current,
+      blocker.current,
+      button.current,
+      client
+    )
 
     const copiedContainer = container.current
 
@@ -116,16 +94,29 @@ const Game = ({ id: worldId, username, history }) => {
   })
 
   if (loading) return <Hint text="Loading world..." />
-  if (error) return <Hint text="An error occurred..." />
+  if (error || !worldData)
+    return (
+      <div className={classes.world_not_found}>
+        <Hint text="World not found..." />
+        <button className={sharedStyles.button} onClick={() => history.push('/game/start')}>
+          Home
+        </button>
+      </div>
+    )
 
   return (
-    <GameWrapper>
-      <HomeButton type="button" onClick={() => history.push('/home')}>
-        HUB
-      </HomeButton>
-      <MainScene ref={container}>
-        <Blocker ref={blocker} />
-      </MainScene>
+    <GameWrapper ref={container}>
+      <Blocker ref={blocker}>
+        <h1 className={classes.title}>Game Menu</h1>
+        <div className={classes.menu}>
+          <button className={sharedStyles.button} ref={button}>
+            Back to Game
+          </button>
+          <button className={sharedStyles.button} onClick={() => history.push('/game/start')}>
+            Save and Quit to Title
+          </button>
+        </div>
+      </Blocker>
     </GameWrapper>
   )
 }

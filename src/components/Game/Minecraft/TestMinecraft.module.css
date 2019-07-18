@@ -1,0 +1,61 @@
+.blocker {
+  position: absolute;
+
+  width: 100%;
+  height: 100%;
+
+  z-index: 4;
+
+  background-color: rgba(0, 0, 0, 0.5);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  color: white;
+  font-size: 15px;
+  margin-bottom: 50px;
+
+  font-family: Minecraft;
+  text-shadow: 2px 2px #4c4c4c;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 600px;
+}
+
+.menu button {
+  width: 400px;
+  margin: 10px;
+}
+
+.crosshair {
+  position: absolute;
+  z-index: 1;
+  margin: auto;
+  width: 4vh;
+  height: 4vh;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  user-select: none;
+}
+
+.world_not_found {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.world_not_found button {
+  margin-top: 10px;
+  width: 100px;
+}

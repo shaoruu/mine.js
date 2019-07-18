@@ -19,7 +19,7 @@ const BACKGROUND_CONFIG = Config.scene.background
 const FOG_CONFIG = Config.scene.fog
 
 class Game {
-  constructor(data, username, container, blocker, apolloClient) {
+  constructor(data, username, container, blocker, button, apolloClient) {
     /** PRE-GAME SETUP */
     const { world } = data
 
@@ -52,7 +52,8 @@ class Game {
       this.scene,
       this.world,
       container,
-      blocker
+      blocker,
+      button
     )
 
     this.world.setPlayer(this.player)

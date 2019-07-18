@@ -88,7 +88,7 @@ const Config = {
       posZ: 5.53
     },
     render: {
-      horzD: 4,
+      horzD: 3,
       vertD: 2
     },
     reachDst: 7

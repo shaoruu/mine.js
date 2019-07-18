@@ -34,7 +34,7 @@ const P_I_2_TOE = Config.player.aabb.eye2toe
 const P_I_2_TOP = Config.player.aabb.eye2top
 
 class Controls {
-  constructor(player, world, status, camera, container, blocker, initPos, initDir) {
+  constructor(player, world, status, camera, container, blocker, button, initPos, initDir) {
     /** THREEJS CAMERA CONTROL */
     this.threeControls = new PointerLockControls(camera, container, initPos, initDir)
 
@@ -64,13 +64,14 @@ class Controls {
     this.world = world
     this.camera = camera
     this.blocker = blocker
+    this.button = button
     this.status = status
 
     this.initListeners()
   }
 
   initListeners = () => {
-    this.blocker.addEventListener('click', this.unblockGame, false)
+    this.button.addEventListener('click', this.unblockGame, false)
     this.threeControls.addEventListener('unlock', this.blockGame, false)
 
     /** REGISTER KEYS */
