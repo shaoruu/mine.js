@@ -1,5 +1,6 @@
+import Config from '../../../config/config'
+
 import WebWorker from './webWorker'
-// import Config from '../../Data/Config'
 
 function WorkerPool(codes, callback, config) {
   const gFrees = []
@@ -11,14 +12,13 @@ function WorkerPool(codes, callback, config) {
   const specializedWorkers = []
 
   // TODO: Figure out what's wrong with this
-  const maxGWorkers = 1
+  const maxGWorkers = navigator.hardwareConcurrency || Config.world.maxWorkerCount
   const maxSWorkers = 2
-  // navigator.hardwareConcurrency || Config.world.maxWorkerCount
 
   function nextGJob(index) {
     // No job
     if (!gJobs.length) {
-      gFrees.push(index)
+      gFrees.unshift(index)
       return
     }
 
@@ -45,7 +45,7 @@ function WorkerPool(codes, callback, config) {
     const newGWorker = new WebWorker(codes)
 
     newGWorker.onmessage = e => {
-      if (e.cmd !== 'BOOT') window.requestAnimationFrame(() => callback(e))
+      if (e.cmd !== 'BOOT') callback(e)
 
       nextGJob(i)
     }
@@ -74,12 +74,10 @@ function WorkerPool(codes, callback, config) {
   // job: object containing specific actions to do for worker
   this.queueGJob = job => {
     gJobs.push(job)
-    if (gFrees.length > 0) nextGJob(gFrees.shift())
   }
 
   this.queueSJob = job => {
     sJobs.push(job)
-    if (sFrees.length > 0) nextSJob(sFrees.shift())
   }
 
   this.broadcast = job => {
@@ -89,6 +87,11 @@ function WorkerPool(codes, callback, config) {
     for (let i = 0; i < maxSWorkers; i++) {
       specializedWorkers[i].postMessage(job)
     }
+  }
+
+  this.update = () => {
+    if (gFrees.length > 0) nextGJob(gFrees.shift())
+    if (sFrees.length > 0) nextSJob(sFrees.shift())
   }
 }
 

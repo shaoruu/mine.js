@@ -1,4 +1,9 @@
 import Helpers from '../../../utils/helpers'
+import Config from '../../../config/config'
+
+import ndarray from 'ndarray'
+
+const SIZE = Config.chunk.size
 
 function Chunk(x, y, z) {
   let mesh = null
@@ -11,7 +16,9 @@ function Chunk(x, y, z) {
 
   this.addSelf = scene => scene.add(mesh)
 
-  this.setData = d => (data = d)
+  this.setData = blocks => {
+    data = ndarray(blocks, [SIZE + 2, SIZE + 2, SIZE + 2])
+  }
   this.setMesh = m => {
     if (!m) return
     mesh = m
@@ -32,6 +39,7 @@ function Chunk(x, y, z) {
   this.getMesh = () => mesh
   this.getLoading = () => loading
   this.getIsInScene = () => isInScene
+  this.getBlock = (bx, by, bz) => (data ? data.get(bx + 1, bz + 1, by + 1) : undefined)
 }
 
 export default Chunk

@@ -313,7 +313,7 @@ class Controls {
         for (let y = minY; y <= maxY; y++) {
           if (voxelExists) break
           for (let z = minZ; z <= maxZ; z++)
-            if (this.world.getVoxelByVoxelCoords(Math.floor(posX), y, z)) {
+            if (this.world.getPassableByVoxelCoords(Math.floor(posX), y, z)) {
               voxelExists = true
               break
             }
@@ -365,7 +365,7 @@ class Controls {
         for (let x = minX; x <= maxX; x++) {
           if (voxelExists) break
           for (let z = minZ; z <= maxZ; z++)
-            if (this.world.getVoxelByVoxelCoords(x, Math.floor(posY), z)) {
+            if (this.world.getPassableByVoxelCoords(x, Math.floor(posY), z)) {
               voxelExists = true
               break
             }
@@ -421,7 +421,7 @@ class Controls {
         for (let x = minX; x <= maxX; x++) {
           if (voxelExists) break
           for (let y = minY; y <= maxY; y++)
-            if (this.world.getVoxelByVoxelCoords(x, y, Math.floor(posZ))) {
+            if (this.world.getPassableByVoxelCoords(x, y, Math.floor(posZ))) {
               voxelExists = true
               break
             }

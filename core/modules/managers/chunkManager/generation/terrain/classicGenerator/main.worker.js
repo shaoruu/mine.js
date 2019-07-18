@@ -15,58 +15,59 @@ export default () => {
         self.generator = new ClassicGenerator(config.seed, config.size)
         self.generator.registerCB(config.changedBlocks)
 
+        const { stride } = config
+
+        self.set = (data, i, j, k, v) => (data[i * stride[0] + j * stride[1] + k * stride[2]] = v)
+        self.get = (data, i, j, k) => data[i * stride[0] + j * stride[1] + k * stride[2]]
+
         postMessage({ cmd })
         break
       }
       case 'GET_HIGHEST': {
         const { x, z } = e.data
 
+        const height = self.generator.getHighestBlock(x, z)
+
         postMessage({
           cmd,
-          h: self.generator.getHighestBlock(x, z)
+          h: height
         })
 
         break
       }
       case 'GET_CHUNK': {
         const {
-          chunkName,
+          chunkRep,
           coords: { coordx, coordy, coordz }
         } = e.data
-        const { size, stride } = self.config
+        const { size } = self.config
 
-        const blocks = new Uint16Array((size + 2) * (size + 2) * (size + 2))
+        const blocks = new Uint8Array((size + 2) * (size + 2) * (size + 2))
 
-        const set = (i, j, k, v) => (blocks[i * stride[0] + j * stride[1] + k * stride[2]] = v)
-        const get = (i, j, k) => blocks[i * stride[0] + j * stride[1] + k * stride[2]]
-
-        self.generator.setVoxelData(set, coordx, coordy, coordz)
+        self.generator.setVoxelData(blocks, coordx, coordy, coordz)
         /** MESHING RIGHT BELOW */
         const dims = [size + 2, size + 2, size + 2]
 
         if (blocks.find(ele => ele)) {
-          const quads = calcQuads(get, dims)
+          const planes = calcPlanes(blocks, dims, coordx, coordy, coordz)
 
-          postMessage({ cmd, blocks, quads, chunkName })
-        } else postMessage({ cmd, blocks, quads: [], chunkName })
+          postMessage({ cmd, blocks, planes, chunkRep })
+        } else postMessage({ cmd, blocks, planes: [], chunkRep })
 
-        const quads = calcQuads(get, dims)
-
-        postMessage({ cmd, blocks, quads, chunkName })
         break
       }
       case 'UPDATE_BLOCK': {
-        const { data, block, chunkName } = e.data
+        const { data, block, chunkRep } = e.data
         const { size, stride } = self.config
 
         if (data.find(ele => ele)) {
           const dims = [size + 2, size + 2, size + 2]
           const get = (i, j, k) => data[i * stride[0] + j * stride[1] + k * stride[2]]
 
-          const quads = calcQuads(get, dims)
+          const quads = calcPlanes(get, dims)
 
-          postMessage({ cmd, quads, block, chunkName })
-        } else postMessage({ cmd, quads: [], block, chunkName })
+          postMessage({ cmd, quads, block, chunkRep })
+        } else postMessage({ cmd, quads: [], block, chunkRep })
 
         break
       }

@@ -17,8 +17,6 @@ import * as THREE from 'three'
 
 const BACKGROUND_CONFIG = Config.scene.background
 const FOG_CONFIG = Config.scene.fog
-// const PLAYER_POS = Config.player.position
-// const DIMENSION = Config.block.dimension
 
 class Game {
   constructor(data, username, container, blocker, apolloClient) {
@@ -46,7 +44,7 @@ class Game {
     this.lights.place('ambient')
 
     /** GAME COMPONENTS */
-    this.world = new World(world, this.scene)
+    this.world = new World(world, this.scene, playerData.y)
     this.player = new Player(
       apolloClient,
       playerData,

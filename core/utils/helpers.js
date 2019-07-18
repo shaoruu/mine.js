@@ -36,7 +36,7 @@ class Helpers {
    * Converting global *block* position to chunk position
    *  (remember to convert to global block coords first!)
    */
-  static blockToChunk = ({ x, y, z }) => ({
+  static globalBlockToChunkCoords = ({ x, y, z }) => ({
     coordx: Math.floor(x / SIZE),
     coordy: Math.floor(y / SIZE),
     coordz: Math.floor(z / SIZE)
@@ -45,8 +45,8 @@ class Helpers {
   /**
    * Converts global block coords to chunk block coords
    */
-  static toLocalBlockCoords = ({ x: gx, y: gy, z: gz }) => {
-    const { coordx, coordy, coordz } = this.toChunkCoords({ x: gx, y: gy, z: gz })
+  static globalBlockToChunkBlock = ({ x: gx, y: gy, z: gz }) => {
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({ x: gx, y: gy, z: gz })
 
     return {
       x: Math.floor(gx - coordx * SIZE),

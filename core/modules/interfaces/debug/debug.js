@@ -19,7 +19,7 @@ function Debug(container, player, world) {
   const fps = document.createElement('p')
 
   // DEFAULTS
-  title.innerHTML = 'Sky Factory JS (dev/beta/vanilla)'
+  title.innerHTML = 'Minecraft JS (dev/beta/vanilla)'
   coordinates.innerHTML = 'XYZ: 0 / 0 / 0'
   fps.innerHTML = '0 fps'
 

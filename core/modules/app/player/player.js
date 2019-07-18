@@ -1,22 +1,26 @@
 import Stateful from '../../../lib/stateful/stateful'
 import Helpers from '../../../utils/helpers'
+import Config from '../../../config/config'
 import { UPDATE_PLAYER_MUTATION } from '../../../lib/graphql'
 
 import Status from './status/status'
 import PlayerControls from './controls/controls'
 
+const P_I_2_TOE = Config.player.aabb.eye2toe
+
 class Player extends Stateful {
   constructor(apolloClient, playerData, camera, scene, world, container, blocker) {
     super({ prevPos: '', prevDir: '' })
 
-    const { id } = playerData
+    const { id, gamemode } = playerData
     this.id = id
 
     this.apolloClient = apolloClient
 
     this.camera = camera
+    this.world = world
 
-    this.status = new Status('CREATIVE', this)
+    this.status = new Status(gamemode, this)
 
     /** CONTROL CENTER */
     this.controls = new PlayerControls(
@@ -74,6 +78,7 @@ class Player extends Stateful {
   }
 
   update = () => {
+    if (!this.world.getIsReady()) return
     this.controls.tick()
     this.status.tick()
   }
@@ -89,7 +94,7 @@ class Player extends Stateful {
 
   getDirections = () => this.controls.getDirections()
 
-  getHeight = () => this.controls.getObject().position.y
+  getHeight = () => this.getCoordinates().y
 
   getPosition = () => this.controls.getObject().position
 
@@ -98,7 +103,7 @@ class Player extends Stateful {
   /* -------------------------------------------------------------------------- */
   setPosition = (x, y, z) => this.controls.getObject().position.set(x, y, z)
 
-  setHeight = y => this.controls.getObject().position.setY(y)
+  setHeight = y => this.controls.getObject().position.setY(y + P_I_2_TOE)
 }
 
 export default Player

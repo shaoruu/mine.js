@@ -1,27 +1,31 @@
 import Helpers from '../../../utils/helpers'
 import Config from '../../../config/config'
 
-import ClassicGenerator from './generation/terrain/classicGenerator'
 import Mesher from './mesher'
 import Chunk from './chunk'
+import { classicGeneratorCode } from './generation/terrain'
 
 import * as THREE from 'three'
-import ndarray from 'ndarray'
 
 const SIZE = Config.chunk.size
+const MAX_CHUNK_PER_FRAME = Config.chunk.maxPerFrame
+const DIMENSION = Config.block.dimension
 const HORZ_D = Config.player.render.horzD
 const VERT_D = Config.player.render.vertD
+const TRANSARENT_BLOCKS = Config.block.transparent
 
 class ChunkManager {
   constructor(scene, seed, resourceManager, workerManager, changedBlocks) {
     this.scene = scene
-    this.generator = new ClassicGenerator(seed)
+    this.seed = seed
 
     this.resourceManager = resourceManager
     this.workerManager = workerManager
 
     this.dirtyChunks = []
     this.chunks = {}
+
+    this.isReady = false
 
     this.prepare(changedBlocks)
   }
@@ -47,42 +51,64 @@ class ChunkManager {
     this.cbDict = {}
 
     changedBlocks.forEach(cb => this.markCB(cb))
-    this.generator.registerCB(this.cbDict)
+
+    /** WORKER */
+    this.workerManager.initChunkPool(classicGeneratorCode, this, {
+      seed: this.seed,
+      size: SIZE,
+      dimension: DIMENSION,
+      stride: [(SIZE + 2) ** 2, SIZE + 2, 1],
+      changedBlocks: this.cbDict,
+      transparent: TRANSARENT_BLOCKS
+      // generation: WORLD_GENERATION_CONFIG,
+    })
+
+    // this.workerManager.queueGeneralChunk({
+    //   cmd: 'GET_HIGHEST',
+    //   x: 0,
+    //   z: 0
+    // })
   }
 
   update = () => {
     if (this.dirtyChunks.length === 0) return
 
     // do the updates one by one
-    const jobTag = this.dirtyChunks.shift()
-
-    const { x, y, z } = Helpers.get3DCoordsFromRep(jobTag)
-
-    this.generateChunk(x, y, z)
+    this.setupChunk(...this.dirtyChunks.shift())
   }
 
   surroundingChunksCheck = (coordx, coordy, coordz) => {
     const updatedChunks = {}
 
+    let count = 0
+    let allGood = true
+
     for (let x = coordx - HORZ_D; x <= coordx + HORZ_D; x++) {
-      for (let y = coordy - VERT_D; y <= coordy + VERT_D; y++) {
-        for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++) {
+      for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++) {
+        for (let y = coordy - VERT_D; y <= coordy + VERT_D; y++) {
           const tempChunk = this.getChunkFromCoords(x, y, z)
 
           if (!tempChunk) {
-            this.makeChunk(x, y, z)
+            if (count < MAX_CHUNK_PER_FRAME) {
+              this.makeChunk(x, y, z)
+              count++
+            } else allGood = false
             continue
-          } else if (tempChunk.getLoading()) continue
+          }
+          if (tempChunk.getLoading()) {
+            allGood = false
+            continue
+          }
 
           // GETTING HERE MEANS CHUNK IS READY TO BE ADDED
           updatedChunks[tempChunk.getRep()] = true
 
           if (!tempChunk.getIsInScene()) {
             // IF NOT YET ADDED TO SCENE
-            const mesh = tempChunk.getMesh()
-            if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
-
-            tempChunk.setIsInScene(true)
+            if (tempChunk.getMesh() instanceof THREE.Object3D) {
+              tempChunk.addSelf(this.scene)
+              tempChunk.setIsInScene(true)
+            }
           }
         }
       }
@@ -96,6 +122,8 @@ class ChunkManager {
       }
     })
     shouldBeRemoved.forEach(obj => this.scene.remove(obj))
+
+    if (!this.isReady && allGood) this.isReady = true
   }
 
   markCB = ({ type, x, y, z }) => {
@@ -111,37 +139,27 @@ class ChunkManager {
     this.tagDirtyChunk(x, y, z)
   }
 
-  generateChunk = (cx, cy, cz) => {
-    const tempChunk = this.getChunkFromCoords(cx, cy, cz)
-    const chunkDim = SIZE + 2
-    const dims = [chunkDim, chunkDim, chunkDim]
-    const data = ndarray(new Int8Array(chunkDim ** 3), dims)
-
-    this.generator.setVoxelData(data, cx, cy, cz)
-    tempChunk.setData(data)
-
-    if (!data.data.filter(e => e !== 0).length) return
-
-    // MESH CHUNK
-    const mesh = Mesher.meshChunk(this.resourceManager, data, dims, cx, cy, cz)
-
-    tempChunk.setMesh(mesh)
-    tempChunk.setLoading(false)
+  setupChunk = (cx, cy, cz) => {
+    this.workerManager.queueGeneralChunk({
+      cmd: 'GET_CHUNK',
+      chunkRep: this.getChunkRep(cx, cy, cz),
+      coords: { coordx: cx, coordy: cy, coordz: cz }
+    })
   }
 
-  meshChunkFromRep = rep => {
-    const { x, y, z } = Helpers.get3DCoordsFromRep(rep)
+  meshChunk = (chunk, planes) => {
+    chunk.setLoading(false)
+    if (planes.length === 0) return
 
-    // TODO
-    this.meshChunk(x, y, z)
+    // TODO: MAKE IT PER FRAME
+    // console.time(`${chunk.getRep()} mesh:`)
+    const mesh = Mesher.mergeMeshes(planes, this.resourceManager)
+    // console.timeEnd(`${chunk.getRep()} mesh:`)
+
+    chunk.setMesh(mesh)
   }
 
-  meshChunk = (x, y, z) => {
-    // TODO
-    Helpers.log(`${x}:${y}:${z}`, true)
-  }
-
-  tagDirtyChunk = (x, y, z) => this.dirtyChunks.push(this.getChunkRep(x, y, z))
+  tagDirtyChunk = (x, y, z) => this.dirtyChunks.push([x, y, z])
 
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
@@ -150,8 +168,16 @@ class ChunkManager {
 
   getChunkFromCoords = (cx, cy, cz) => this.chunks[this.getChunkRep(cx, cy, cz)]
 
-  getTypeAt = () => {
-    return 0
+  getChunkFromRep = rep => this.chunks[rep]
+
+  getTypeAt = (x, y, z) => {
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({ x, y, z })
+    const { x: bx, y: by, z: bz } = Helpers.globalBlockToChunkBlock({ x, y, z })
+    const chunk = this.getChunkFromCoords(coordx, coordy, coordz)
+
+    if (!chunk) return undefined
+
+    return chunk.getBlock(bx, by, bz)
   }
 }
 

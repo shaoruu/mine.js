@@ -5,4 +5,5 @@ export default () => {
    * IMPORTING FILES
    */
   importScripts('https://unpkg.com/noisejs')
+  importScripts('https://cdnjs.cloudflare.com/ajax/libs/three.js/106/three.js')
 }

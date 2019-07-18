@@ -65,10 +65,10 @@ const Config = {
     sprintFactor: 1.3,
     spectatorInertia: 6,
     acceleration: {
-      forward: 15,
-      other_horz: 8,
-      vertical: 12,
-      jump: 80
+      forward: 50,
+      other_horz: 25,
+      vertical: 40,
+      jump: 260
     },
     maxSpeed: {
       horizontal: 700,
@@ -88,23 +88,24 @@ const Config = {
       posZ: 5.53
     },
     render: {
-      horzD: 2,
-      vertD: 1
+      horzD: 4,
+      vertD: 2
     },
     reachDst: 7
   },
   block: {
-    dimension: 12,
+    dimension: 32,
     transparent: [0, 18],
     overridable: [0],
     liquid: [0]
   },
   chunk: {
-    size: 32,
-    height: 256
+    size: 16,
+    height: 256,
+    maxPerFrame: 4
   },
   world: {
-    gravity: -4.95
+    gravity: -16
   }
 }
 

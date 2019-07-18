@@ -113,8 +113,7 @@ const Mutation = {
           }
         },
         x: 0,
-        // y: Number.MIN_SAFE_INTEGER,
-        y: 0,
+        y: Number.MIN_SAFE_INTEGER,
         z: 0,
         dirx: 0,
         diry: 0,
