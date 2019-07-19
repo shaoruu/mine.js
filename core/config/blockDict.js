@@ -13,6 +13,14 @@ const BlockDict = {
     name: 'dirt',
     tag: `${projectTag}:dirt`
   },
+  9: {
+    name: 'water',
+    tag: `${projectTag}:water`
+  },
+  12: {
+    name: 'sand',
+    tag: `${projectTag}:sand`
+  },
   17: {
     name: 'log_oak',
     tag: `${projectTag}:log_oak`

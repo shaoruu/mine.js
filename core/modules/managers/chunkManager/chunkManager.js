@@ -12,7 +12,8 @@ const MAX_CHUNK_PER_FRAME = Config.chunk.maxPerFrame
 const DIMENSION = Config.block.dimension
 const HORZ_D = Config.player.render.horzD
 const VERT_D = Config.player.render.vertD
-const TRANSARENT_BLOCKS = Config.block.transparent
+const BLOCK_CONFIGS = Config.block
+const WORLD_CONFIGS = Config.world
 
 class ChunkManager {
   constructor(scene, seed, resourceManager, workerManager, changedBlocks) {
@@ -59,8 +60,8 @@ class ChunkManager {
       dimension: DIMENSION,
       stride: [(SIZE + 2) ** 2, SIZE + 2, 1],
       changedBlocks: this.cbDict,
-      transparent: TRANSARENT_BLOCKS
-      // generation: WORLD_GENERATION_CONFIG,
+      block: BLOCK_CONFIGS,
+      world: WORLD_CONFIGS
     })
 
     // this.workerManager.queueGeneralChunk({

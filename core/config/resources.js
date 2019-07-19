@@ -32,6 +32,24 @@ const resources = {
           side: THREE.FrontSide
         }
       },
+      9: {
+        top: require('../assets/blocks/water_still.png'),
+        side: require('../assets/blocks/water_still.png'),
+        bottom: require('../assets/blocks/water_still.png'),
+        config: {
+          transparent: true,
+          side: THREE.DoubleSide
+        }
+      },
+      12: {
+        top: require('../assets/blocks/sand.png'),
+        side: require('../assets/blocks/sand.png'),
+        bottom: require('../assets/blocks/sand.png'),
+        config: {
+          transparent: false,
+          side: THREE.FrontSide
+        }
+      },
       17: {
         top: require('../assets/blocks/log_oak_top.png'),
         side: require('../assets/blocks/log_oak.png'),

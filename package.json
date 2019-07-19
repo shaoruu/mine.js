@@ -45,6 +45,7 @@
     "client:eject": "react-scripts eject",
     "prisma:deploy": "prisma deploy",
     "prisma:get-schema": "graphql get-schema -p prisma",
+    "prisma:down": "docker-compose --file server/prisma/docker-compose.yml down",
     "client": "react-app-rewired start",
     "server": "nodemon --watch server server/src/index.js --ext js,graphql --exec babel-node",
     "prisma": "docker-compose --file server/prisma/docker-compose.yml up -d && yarn run prisma:deploy && yarn run prisma:get-schema"

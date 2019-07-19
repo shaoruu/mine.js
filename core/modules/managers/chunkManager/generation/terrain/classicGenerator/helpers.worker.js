@@ -19,7 +19,9 @@ export default () => {
   }
 
   function calcPlanes(arr, dims, coordx, coordy, coordz) {
-    const { transparent: TRANSPARENT_BLOCKS } = self.config
+    const {
+      block: { transparent: TRANSPARENT_BLOCKS, liquid: LIQUID_BLOCKS }
+    } = self.config
 
     const planes = []
 
@@ -45,6 +47,7 @@ export default () => {
           })
 
           const isSelfTransparent = !!TRANSPARENT_BLOCKS.includes(type)
+          const isSelfLiquid = !!LIQUID_BLOCKS.includes(type)
 
           // TOP
           const top = self.get(arr, x, z, y + 1)
@@ -61,14 +64,16 @@ export default () => {
             planes.push(['pz', pos, 'side', type])
 
           const nx = self.get(arr, x - 1, z, y)
-          if (!nx || TRANSPARENT_BLOCKS.includes(nx)) planes.push(['nx', pos, 'side', type])
+          if (!nx || (TRANSPARENT_BLOCKS.includes(nx) && !isSelfLiquid))
+            planes.push(['nx', pos, 'side', type])
 
           const nz = self.get(arr, x, z - 1, y)
-          if (!nz || TRANSPARENT_BLOCKS.includes(nz)) planes.push(['nz', pos, 'side', type])
+          if (!nz || (TRANSPARENT_BLOCKS.includes(nz) && !isSelfLiquid))
+            planes.push(['nz', pos, 'side', type])
 
           // BOTTOM
           const bottom = self.get(arr, x, z, y - 1)
-          if (!bottom || TRANSPARENT_BLOCKS.includes(bottom))
+          if (!bottom || (TRANSPARENT_BLOCKS.includes(bottom) && !isSelfLiquid))
             planes.push(['ny', pos, 'bottom', type])
         }
       }

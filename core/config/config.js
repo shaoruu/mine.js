@@ -95,9 +95,9 @@ const Config = {
   },
   block: {
     dimension: 32,
-    transparent: [0, 18],
+    transparent: [0, 9, 18],
     overridable: [0],
-    liquid: [0]
+    liquid: [0, 9]
   },
   chunk: {
     size: 16,
@@ -105,7 +105,28 @@ const Config = {
     maxPerFrame: 4
   },
   world: {
-    gravity: -16
+    gravity: -16,
+    maxWorldHeight: 256,
+    waterLevel: 62,
+    generation: {
+      classicGeneration: {
+        swampland: {
+          constants: {
+            scale: 1.5,
+            octaves: 5,
+            persistance: 1,
+            lacunarity: 1.5,
+            heightOffset: 2.3,
+            amplifier: 0.2
+          },
+          types: {
+            top: 2,
+            underTop: 3,
+            beach: 12
+          }
+        }
+      }
+    }
   }
 }
 
