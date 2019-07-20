@@ -41,14 +41,15 @@
   "scripts": {
     "client:start": "yarn run client",
     "client:build": "react-app-rewired build",
-    "cliet:test": "react-app-rewired test",
+    "client:test": "react-app-rewired test",
     "client:eject": "react-scripts eject",
+    "prisma:init": "yarn run prisma && sleep 5 && yarn run prisma:deploy && yarn run prisma:get-schema",
+    "prisma:down": "docker-compose --file server/prisma/docker-compose.yml down",
     "prisma:deploy": "prisma deploy",
     "prisma:get-schema": "graphql get-schema -p prisma",
-    "prisma:down": "docker-compose --file server/prisma/docker-compose.yml down",
     "client": "react-app-rewired start",
     "server": "nodemon --watch server server/src/index.js --ext js,graphql --exec babel-node",
-    "prisma": "docker-compose --file server/prisma/docker-compose.yml up -d && yarn run prisma:deploy && yarn run prisma:get-schema"
+    "prisma": "docker-compose --file server/prisma/docker-compose.yml up -d"
   },
   "husky": {
     "hooks": {

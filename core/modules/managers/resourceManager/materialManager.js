@@ -1,5 +1,5 @@
 import Resources from '../../../config/resources'
-import BlockDict from '../../../config/blockdict'
+import BlockDict from '../../../config/blockDict'
 
 import * as THREE from 'three'
 
