@@ -18,6 +18,16 @@ export default () => {
     }
   }
 
+  function globalBlockToChunkCoords({ x, y, z }) {
+    const { size: SIZE } = self.config
+
+    return {
+      coordx: Math.floor(x / SIZE),
+      coordy: Math.floor(y / SIZE),
+      coordz: Math.floor(z / SIZE)
+    }
+  }
+
   function calcPlanes(arr, dims, coordx, coordy, coordz) {
     const {
       block: { transparent: TRANSPARENT_BLOCKS, liquid: LIQUID_BLOCKS }

@@ -47,11 +47,20 @@ export default () => {
 
     const getNoise = (x, y, z) => this.octavePerlin3(x, y, z) - (y * 4) / scale
 
-    const isSolidAt = (x, y, z, arr = undefined) => {
-      if (arr) {
-        const arrVal = self.get(arr, (x % SIZE) + 1, (z % SIZE) + 1, (y % SIZE) + 1)
-        if (arrVal) return !LIQUID_BLOCKS.includes(arrVal)
-      }
+    const isSolidAt = (x, y, z) => {
+      // TODO: Check cache first
+      // const { arr, coordx, coordy, coordz } = config
+      // if (arr) {
+      //   const { coordx: cx, coordy: cy, coordz: cz } = globalBlockToChunkCoords({ x, y, z })
+      //   if (coordx === cx && coordy === cy && coordz === cz) {
+      //     const bx = x - coordx * SIZE
+      //     const by = y - coordy * SIZE
+      //     const bz = z - coordz * SIZE
+
+      //     const arrVal = self.get(arr, bx + 1, by + 1, bz + 1)
+      //     if (arrVal) return !LIQUID_BLOCKS.includes(arrVal)
+      //   }
+      // }
       return getNoise((x * scale) / 100, (y * scale) / 100, (z * scale) / 100) >= -0.2
     }
 
@@ -121,7 +130,7 @@ export default () => {
 
     this.registerCB = (changedBlocks = {}) => (this.changedBlocks = changedBlocks)
 
-    this.getBlockInfo = (x, y, z, maxHeight, arr) => {
+    this.getBlockInfo = (x, y, z, maxHeight) => {
       let blockId = 0
       const cb = this.changedBlocks[get3DCoordsRep(x, y, z)]
 
@@ -134,10 +143,10 @@ export default () => {
         if (isSolid) {
           if (
             y === waterLevel &&
-            (!isSolidAt(x + 1, y, z) ||
-              !isSolidAt(x - 1, y, z, arr) ||
-              !isSolidAt(x, y, z + 1) ||
-              !isSolidAt(x, y, z - 1, arr))
+            (!isSolidAt(x, y, z - 1) ||
+              !isSolidAt(x - 1, y, z) ||
+              !isSolidAt(x + 1, y, z) ||
+              !isSolidAt(x, y, z + 1))
           )
             blockId = beach
           else if (y === maxHeight) {
@@ -158,7 +167,7 @@ export default () => {
         for (let z = offsets[2]; z < offsets[2] + SIZE + 2; z++) {
           const maxHeight = this.getHighestBlock(x, z)
           for (let y = offsets[1]; y < offsets[1] + SIZE + 2; y++) {
-            const blockType = this.getBlockInfo(x, y, z, maxHeight, arr)
+            const blockType = this.getBlockInfo(x, y, z, maxHeight)
             self.set(arr, x - offsets[0], z - offsets[2], y - offsets[1], blockType)
           }
         }
