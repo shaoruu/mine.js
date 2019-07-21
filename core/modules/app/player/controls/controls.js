@@ -34,9 +34,9 @@ const P_I_2_TOE = Config.player.aabb.eye2toe
 const P_I_2_TOP = Config.player.aabb.eye2top
 
 class Controls {
-  constructor(player, world, status, camera, container, blocker, button, initPos, initDir) {
+  constructor(player, world, status, camera, canvas, blocker, button, initPos, initDir) {
     /** THREEJS CAMERA CONTROL */
-    this.threeControls = new PointerLockControls(camera, container, initPos, initDir)
+    this.threeControls = new PointerLockControls(camera, canvas, initPos, initDir)
 
     /** PHYSICS */
     this.vel = new THREE.Vector3(0, 0, 0)

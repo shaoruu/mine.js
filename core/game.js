@@ -19,7 +19,7 @@ const BACKGROUND_CONFIG = Config.scene.background
 const FOG_CONFIG = Config.scene.fog
 
 class Game {
-  constructor(data, username, container, blocker, button, apolloClient) {
+  constructor(data, username, container, canvas, blocker, button, apolloClient) {
     /** PRE-GAME SETUP */
     const { world } = data
 
@@ -34,7 +34,7 @@ class Game {
     this.scene.fog = new THREE.Fog(FOG_CONFIG.color, FOG_CONFIG.near, FOG_CONFIG.far)
 
     /** THREE RENDERER */
-    this.renderer = new Renderer(this.scene, container)
+    this.renderer = new Renderer(this.scene, canvas)
 
     /** THREE CAMERA */
     this.camera = new Camera(this.renderer.threeRenderer)
@@ -51,7 +51,7 @@ class Game {
       this.camera.threeCamera,
       this.scene,
       this.world,
-      container,
+      canvas,
       blocker,
       button
     )

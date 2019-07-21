@@ -29,6 +29,13 @@ const Blocker = styled.div`
   background-color: rgba(0, 0, 0, 0.5);
 `
 
+const MainCanvas = styled.canvas`
+  position: absolute;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+`
+
 let game
 let frameId
 
@@ -60,6 +67,7 @@ const Game = ({ id: worldId, username, history }) => {
   const blocker = useRef(null)
   const button = useRef(null)
   const container = useRef(null)
+  const canvas = useRef(null)
 
   const { data: worldData, error, loading } = useQuery(WORLD_QUERY, {
     variables: {
@@ -77,18 +85,16 @@ const Game = ({ id: worldId, username, history }) => {
       worldData,
       username,
       container.current,
+      canvas.current,
       blocker.current,
       button.current,
       client
     )
 
-    const copiedContainer = container.current
-
     init()
 
     return () => {
       terminate()
-      if (copiedContainer) copiedContainer.removeChild(game.renderer.threeRenderer.domElement)
       window.removeEventListener('beforeunload', closingHandler, false)
     }
   })
@@ -106,6 +112,7 @@ const Game = ({ id: worldId, username, history }) => {
 
   return (
     <GameWrapper ref={container}>
+      <MainCanvas ref={canvas}></MainCanvas>
       <Blocker ref={blocker}>
         <h1 className={classes.title}>Game Menu</h1>
         <div className={classes.menu}>
