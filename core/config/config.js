@@ -106,8 +106,9 @@ const Config = {
   },
   chunk: {
     size: 16,
+    neighborWidth: 3,
     height: 256,
-    maxPerFrame: 2
+    maxPerFrame: 8
   },
   world: {
     gravity: -16,
@@ -122,7 +123,9 @@ const Config = {
             persistance: 1,
             lacunarity: 1.5,
             heightOffset: 2.3,
-            amplifier: 0.2
+            amplifier: 0.2,
+            treeFreq: 0.2,
+            treeScale: 8
           },
           types: {
             top: 2,

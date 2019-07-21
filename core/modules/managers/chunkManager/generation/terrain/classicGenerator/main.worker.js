@@ -70,9 +70,9 @@ export default () => {
           chunkRep,
           coords: { coordx, coordy, coordz }
         } = e.data
-        const { size } = self.config
+        const { size, neighborWidth } = self.config
 
-        const blocks = new Uint8Array((size + 2) * (size + 2) * (size + 2))
+        const blocks = new Uint8Array((size + neighborWidth * 2) ** 3)
         const lighting = new Uint8Array(size ** 3 * 6)
         const smoothLighting = new Uint8Array(size ** 3 * 6 * 3 * 3)
 
@@ -80,7 +80,7 @@ export default () => {
         self.generator.setLightingData(lighting, smoothLighting, blocks, coordx, coordy, coordz)
 
         /** MESHING RIGHT BELOW */
-        const dims = [size + 2, size + 2, size + 2]
+        const dims = [size + neighborWidth * 2, size + neighborWidth * 2, size + neighborWidth * 2]
 
         if (blocks.find(ele => ele)) {
           const planes = calcPlanes(blocks, lighting, smoothLighting, dims, coordx, coordy, coordz)

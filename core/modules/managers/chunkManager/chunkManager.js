@@ -1,5 +1,6 @@
 import Helpers from '../../../utils/helpers'
 import Config from '../../../config/config'
+import Structures from '../../../config/structures'
 
 import Mesher from './mesher'
 import Chunk from './chunk'
@@ -8,6 +9,7 @@ import { classicGeneratorCode } from './generation/terrain'
 import * as THREE from 'three'
 
 const SIZE = Config.chunk.size
+const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
 const MAX_CHUNK_PER_FRAME = Config.chunk.maxPerFrame
 const DIMENSION = Config.block.dimension
 const HORZ_D = Config.player.render.horzD
@@ -57,11 +59,13 @@ class ChunkManager {
     this.workerManager.initChunkPool(classicGeneratorCode, this, {
       seed: this.seed,
       size: SIZE,
+      neighborWidth: NEIGHBOR_WIDTH,
       dimension: DIMENSION,
-      stride: [(SIZE + 2) ** 2, SIZE + 2, 1],
+      stride: [(SIZE + NEIGHBOR_WIDTH * 2) ** 2, SIZE + NEIGHBOR_WIDTH * 2, 1],
       changedBlocks: this.cbDict,
       block: BLOCK_CONFIGS,
-      world: WORLD_CONFIGS
+      world: WORLD_CONFIGS,
+      structures: Structures
     })
 
     // this.workerManager.queueGeneralChunk({

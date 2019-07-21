@@ -51,8 +51,6 @@ class MaterialManager {
         rotatedTexture.center.set(0.5, 0.5)
         rotatedTexture.rotation = -Math.PI / 2
 
-        // console.log(texture, rotatedTexture)
-
         const frontSideRotated = new THREE.MeshLambertMaterial({
           map: rotatedTexture,
           side: THREE.FrontSide,

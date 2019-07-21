@@ -2,23 +2,78 @@
 
 export default () => {
   function ClassicGenerator(seed) {
+    /* -------------------------------------------------------------------------- */
+    /*                                   CONFIGS                                  */
+    /* -------------------------------------------------------------------------- */
     const {
       size: SIZE,
+      neighborWidth: NEIGHBOR_WIDTH,
+      structures: STRUCTURES,
       block: { liquid: LIQUID_BLOCKS },
       world: {
         waterLevel,
         maxWorldHeight,
         generation: {
-          classicGeneration: { mountains }
+          classicGeneration: { swampland }
         }
       }
     } = self.config
 
     const {
-      constants: { scale, octaves, persistance, lacunarity, heightOffset, amplifier },
+      constants: {
+        scale,
+        octaves,
+        persistance,
+        lacunarity,
+        heightOffset,
+        amplifier,
+        treeFreq,
+        treeScale
+      },
       types: { top, underTop, beach }
-    } = mountains
+    } = swampland
 
+    /* -------------------------------------------------------------------------- */
+    /*                              HELPER FUNCTIONS                              */
+    /* -------------------------------------------------------------------------- */
+    const getNoise = (x, y, z) => this.octavePerlin3(x, y, z) - (y * 4) / scale
+
+    const isSolidAt = (x, y, z) => {
+      // TODO: Check cache first
+      return getNoise((x * scale) / 100, (y * scale) / 100, (z * scale) / 100) >= -0.2
+    }
+
+    const isSolidAtWithCB = (x, y, z) => {
+      const cb = this.changedBlocks[get3DCoordsRep(x, y, z)]
+      if (cb) return !!cb
+      return isSolidAt(x, y, z)
+    }
+
+    const getRelativeCoords = (x, y, z, offsets) => ({
+      x: x - offsets[0],
+      y: y - offsets[1],
+      z: z - offsets[2]
+    })
+
+    const getAbsoluteCoords = (x, y, z, offsets) => ({
+      x: x + offsets[0],
+      y: y + offsets[1],
+      z: z + offsets[2]
+    })
+
+    const checkWithinChunk = (x, y, z) =>
+      x >= 0 &&
+      x < SIZE + NEIGHBOR_WIDTH * 2 &&
+      y >= 0 &&
+      y < SIZE + NEIGHBOR_WIDTH * 2 &&
+      z >= 0 &&
+      z < SIZE + NEIGHBOR_WIDTH * 2
+
+    const shouldPlant = (score, range) => score <= range[1] && score >= range[0]
+
+    /* -------------------------------------------------------------------------- */
+    /*                               INITIALIZATION                               */
+    /* -------------------------------------------------------------------------- */
     const initSeed = s => {
       let hash = 0
       let chr
@@ -45,62 +100,37 @@ export default () => {
       this.temp = new Noise(this.seed / 2)
     }
 
-    const getNoise = (x, y, z) => this.octavePerlin3(x, y, z) - (y * 4) / scale
-
-    const isSolidAt = (x, y, z) => {
-      // TODO: Check cache first
-      // const { voxelData, coordx, coordy, coordz } = config
-      // if (voxelData) {
-      //   const { coordx: cx, coordy: cy, coordz: cz } = globalBlockToChunkCoords({ x, y, z })
-      //   if (coordx === cx && coordy === cy && coordz === cz) {
-      //     const bx = x - coordx * SIZE
-      //     const by = y - coordy * SIZE
-      //     const bz = z - coordz * SIZE
-
-      //     const voxelDataVal = self.get(voxelData, bx + 1, by + 1, bz + 1)
-      //     if (voxelDataVal) return !LIQUID_BLOCKS.includes(voxelDataVal)
-      //   }
-      // }
-      return getNoise((x * scale) / 100, (y * scale) / 100, (z * scale) / 100) >= -0.2
+    const initMembers = () => {
+      this.maxHeights = {}
+      this.treeFreq = [-treeFreq / 100, treeFreq / 100]
     }
-
-    const isSolidAtWithCB = (x, y, z) => {
-      const cb = this.changedBlocks[get3DCoordsRep(x, y, z)]
-      if (cb) return !!cb
-      return isSolidAt(x, y, z)
-    }
-
-    /* -------------------------------------------------------------------------- */
-    /*                                   GETTERS                                  */
-    /* -------------------------------------------------------------------------- */
-    const getRelativeCoords = (x, y, z, offsets) => ({
-      x: x - offsets[0],
-      y: y - offsets[1],
-      z: z - offsets[2]
-    })
-
-    const getAbsoluteCoords = (x, y, z, offsets) => ({
-      x: x + offsets[0],
-      y: y + offsets[1],
-      z: z + offsets[2]
-    })
-
-    const checkWithinChunk = (x, y, z) =>
-      x >= 0 && x < SIZE + 2 && y >= 0 && y < SIZE + 2 && z >= 0 && z < SIZE + 2
 
     initSeed(seed)
     initNoises()
+    initMembers()
 
+    /* -------------------------------------------------------------------------- */
+    /*                              MEMBER FUNCTIONS                              */
+    /* -------------------------------------------------------------------------- */
     this.getNaiveHighestBlock = (x, z) => {
+      let height = 0
+
       for (let y = maxWorldHeight; y >= 0; y--) {
         const isSolid = isSolidAt(x, y, z)
 
-        if (isSolid) return y
+        if (isSolid) height = y
       }
-      return 0
+
+      const rep = get2DCoordsRep(x, z)
+      this.maxHeights[rep] = height
+
+      return height
     }
 
     this.getHighestBlock = (x, z) => {
+      const rep = get2DCoordsRep(x, z)
+      if (this.maxHeights[rep]) return this.maxHeights[rep]
+
       let high = maxWorldHeight
       let low = waterLevel
       let middle = Math.floor((high + low) / 2)
@@ -117,6 +147,8 @@ export default () => {
 
         middle = Math.floor((high + low) / 2)
       }
+
+      this.maxHeights[rep] = middle
 
       return middle
     }
@@ -639,14 +671,58 @@ export default () => {
     }
 
     this.setVoxelData = (voxelData, coordx, coordy, coordz) => {
-      const offsets = [coordx * SIZE - 1, coordy * SIZE - 1, coordz * SIZE - 1]
+      const offsets = [
+        coordx * SIZE - NEIGHBOR_WIDTH,
+        coordy * SIZE - NEIGHBOR_WIDTH,
+        coordz * SIZE - NEIGHBOR_WIDTH
+      ]
 
-      for (let x = offsets[0]; x < offsets[0] + SIZE + 2; x++)
-        for (let z = offsets[2]; z < offsets[2] + SIZE + 2; z++) {
+      // TREES
+      const treeCB = {}
+
+      for (let x = offsets[0]; x < offsets[0] + SIZE + NEIGHBOR_WIDTH * 2; x++)
+        for (let z = offsets[2]; z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2; z++) {
           const maxHeight = this.getHighestBlock(x, z)
-          for (let y = offsets[1]; y < offsets[1] + SIZE + 2; y++) {
-            const blockType = this.getBlockInfo(x, y, z, maxHeight)
-            self.set(voxelData, x - offsets[0], z - offsets[2], y - offsets[1], blockType)
+          for (let y = offsets[1]; y < offsets[1] + SIZE + NEIGHBOR_WIDTH * 2; y++) {
+            if (y === maxHeight) {
+              const type = this.getBlockInfo(x, y, z, maxHeight)
+
+              if (
+                (type === 2 || type === 3) &&
+                this.getBlockInfo(x, y + 1, z, maxHeight) === 0 &&
+                shouldPlant(this.noise.simplex2(x / treeScale, z / treeScale), this.treeFreq)
+              ) {
+                const { override, data } = STRUCTURES.BaseTree
+
+                for (let b = 0; b < data.length; b++) {
+                  const { type: treeB, x: dx, y: dy, z: dz } = data[b]
+                  treeCB[get3DCoordsRep(x + dx, y + dy, z + dz)] = {
+                    type: treeB,
+                    override
+                  }
+                }
+              }
+            }
+          }
+        }
+
+      // ACTUAL
+      for (let x = offsets[0]; x < offsets[0] + SIZE + NEIGHBOR_WIDTH * 2; x++)
+        for (let z = offsets[2]; z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2; z++) {
+          const maxHeight = this.getHighestBlock(x, z)
+          for (let y = offsets[1]; y < offsets[1] + SIZE + NEIGHBOR_WIDTH * 2; y++) {
+            let blockType = this.getBlockInfo(x, y, z, maxHeight)
+            const coordsRep = get3DCoordsRep(x, y, z)
+            const treeData = treeCB[coordsRep]
+
+            if (treeData) {
+              const { type: treeType, override: treeOverride } = treeData
+              if (!blockType || treeOverride) blockType = treeType
+            }
+
+            const mappedCoords = getRelativeCoords(x, y, z, offsets)
+
+            self.set(voxelData, mappedCoords.x, mappedCoords.z, mappedCoords.y, blockType)
           }
         }
     }
@@ -659,11 +735,15 @@ export default () => {
       coordy,
       coordz
     ) => {
-      const offsets = [coordx * SIZE - 1, coordy * SIZE - 1, coordz * SIZE - 1]
+      const offsets = [
+        coordx * SIZE - NEIGHBOR_WIDTH,
+        coordy * SIZE - NEIGHBOR_WIDTH,
+        coordz * SIZE - NEIGHBOR_WIDTH
+      ]
 
-      for (let x = 1; x < SIZE + 1; x++)
-        for (let z = 1; z < SIZE + 1; z++)
-          for (let y = 1; y < SIZE + 1; y++) {
+      for (let x = NEIGHBOR_WIDTH; x < SIZE + NEIGHBOR_WIDTH; x++)
+        for (let z = NEIGHBOR_WIDTH; z < SIZE + NEIGHBOR_WIDTH; z++)
+          for (let y = NEIGHBOR_WIDTH; y < SIZE + NEIGHBOR_WIDTH; y++) {
             if (!LIQUID_BLOCKS.includes(self.get(voxelData, x, z, y))) {
               const tempCoords = getAbsoluteCoords(x, y, z, offsets)
 
@@ -673,7 +753,14 @@ export default () => {
 
               const lighting = this.getBlockLighting(tempx, tempy, tempz, voxelData, offsets)
               for (let l = 0; l < 6; l++) {
-                self.setLighting(lightingData, x - 1, z - 1, y - 1, l, lighting[l])
+                self.setLighting(
+                  lightingData,
+                  x - NEIGHBOR_WIDTH,
+                  z - NEIGHBOR_WIDTH,
+                  y - NEIGHBOR_WIDTH,
+                  l,
+                  lighting[l]
+                )
               }
 
               const smoothLighting = this.getBlockSmoothLighting(x, y, z, voxelData)
@@ -683,9 +770,9 @@ export default () => {
                     for (let n = 0; n < 3; n++) {
                       self.setSmoothLighting(
                         smoothLightingData,
-                        x - 1,
-                        z - 1,
-                        y - 1,
+                        x - NEIGHBOR_WIDTH,
+                        z - NEIGHBOR_WIDTH,
+                        y - NEIGHBOR_WIDTH,
                         l,
                         m,
                         n,

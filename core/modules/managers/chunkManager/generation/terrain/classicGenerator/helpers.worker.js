@@ -1,9 +1,13 @@
 /* eslint-disable no-unused-vars, no-undef, no-restricted-globals, eslint-disable-line  */
 
+/**
+ * HELPER FUNCTIONS
+ */
 export default () => {
-  /**
-   * HELPER FUNCTIONS
-   */
+  function get2DCoordsRep(x, z, semi = false) {
+    return `${x}:${z}${semi ? ';' : ''}`
+  }
+
   function get3DCoordsRep(x, y, z, semi = false) {
     return `${x}:${y}:${z}${semi ? ';' : ''}`
   }
@@ -30,22 +34,23 @@ export default () => {
 
   function calcPlanes(voxelData, lighting, smoothLighting, dims, coordx, coordy, coordz) {
     const {
+      neighborWidth: NEIGHBOR_WIDTH,
       block: { transparent: TRANSPARENT_BLOCKS, liquid: LIQUID_BLOCKS }
     } = self.config
 
     const planes = []
 
-    for (let x = 1; x < dims[0] - 1; x++) {
-      for (let z = 1; z < dims[2] - 1; z++) {
-        for (let y = 1; y < dims[1] - 1; y++) {
+    for (let x = NEIGHBOR_WIDTH; x < dims[0] - NEIGHBOR_WIDTH; x++) {
+      for (let z = NEIGHBOR_WIDTH; z < dims[2] - NEIGHBOR_WIDTH; z++) {
+        for (let y = NEIGHBOR_WIDTH; y < dims[1] - NEIGHBOR_WIDTH; y++) {
           // dismiss air
           const type = self.get(voxelData, x, z, y)
 
           if (type === 0) continue
 
-          const wx = x - 1
-          const wy = y - 1
-          const wz = z - 1
+          const wx = x - NEIGHBOR_WIDTH
+          const wy = y - NEIGHBOR_WIDTH
+          const wz = z - NEIGHBOR_WIDTH
 
           const pos = chunkBlockToGlobalBlock({
             x: wx,
@@ -104,7 +109,7 @@ export default () => {
           }
 
           const nx = self.get(voxelData, x - 1, z, y)
-          if (!nx || (TRANSPARENT_BLOCKS.includes(nx) && !isSelfLiquid)) {
+          if (!nx || (TRANSPARENT_BLOCKS.includes(nx) && !isSelfLiquid && !isSelfTransparent)) {
             const smoothLightingSide = self.getSmoothLightingSide(smoothLighting, wx, wz, wy, 3)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'nx' : 'nx2'
             planes.push([
@@ -118,7 +123,7 @@ export default () => {
           }
 
           const nz = self.get(voxelData, x, z - 1, y)
-          if (!nz || (TRANSPARENT_BLOCKS.includes(nz) && !isSelfLiquid)) {
+          if (!nz || (TRANSPARENT_BLOCKS.includes(nz) && !isSelfLiquid && !isSelfTransparent)) {
             const smoothLightingSide = self.getSmoothLightingSide(smoothLighting, wx, wz, wy, 4)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'nz' : 'nz2'
             planes.push([
@@ -133,7 +138,10 @@ export default () => {
 
           // BOTTOM
           const bottom = self.get(voxelData, x, z, y - 1)
-          if (!bottom || (TRANSPARENT_BLOCKS.includes(bottom) && !isSelfLiquid)) {
+          if (
+            !bottom ||
+            (TRANSPARENT_BLOCKS.includes(bottom) && !isSelfLiquid && !isSelfTransparent)
+          ) {
             const smoothLightingSide = self.getSmoothLightingSide(smoothLighting, wx, wz, wy, 5)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'ny' : 'ny2'
             planes.push([
