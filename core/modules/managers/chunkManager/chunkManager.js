@@ -179,7 +179,7 @@ class ChunkManager {
     const { x: bx, y: by, z: bz } = Helpers.globalBlockToChunkBlock({ x, y, z })
     const chunk = this.getChunkFromCoords(coordx, coordy, coordz)
 
-    if (!chunk) return undefined
+    if (!chunk || !chunk.getData()) return undefined
 
     return chunk.getBlock(bx, by, bz)
   }

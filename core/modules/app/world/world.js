@@ -107,7 +107,7 @@ class World extends Stateful {
 
   getPassableByVoxelCoords = (x, y, z) => {
     const type = this.getVoxelByVoxelCoords(x, y, z)
-    if (!type) return false
+    if (type !== 0 && !type) return true
 
     const isSolid = LIQUID.includes(type)
     return !isSolid

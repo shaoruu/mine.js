@@ -692,10 +692,10 @@ export default () => {
                 this.getBlockInfo(x, y + 1, z, maxHeight) === 0 &&
                 shouldPlant(this.noise.simplex2(x / treeScale, z / treeScale), this.treeFreq)
               ) {
-                const { override, data } = STRUCTURES.BaseTree
+                const { data } = STRUCTURES.BaseTree
 
                 for (let b = 0; b < data.length; b++) {
-                  const { type: treeB, x: dx, y: dy, z: dz } = data[b]
+                  const { override, type: treeB, x: dx, y: dy, z: dz } = data[b]
                   treeCB[get3DCoordsRep(x + dx, y + dy, z + dz)] = {
                     type: treeB,
                     override
