@@ -73,24 +73,18 @@ git clone https://github.com/ian13456/minecraft.js.git
 # Download packages for both server and client
 yarn
 
-# Start docker containers
-yarn run prisma
-
+# Export environment variables for prisma
 # FOR WINDOWS
 set PRISMA_MANAGEMENT_API_SECRET=my-secret
 # FOR MAC/LINUX (recommend putting this into .bashrc)
 export PRISMA_MANAGEMENT_API_SECRET=my-secret
 
-# Fetch prisma generated schema and start backend service
-yarn run server
-
-# Start frontend service
-yarn client
+# Start all services
+yarn run start
 ```
 
 After these commands, visit `localhost:3000`
 
 # Sources
 
-- [Start menu panorama](https://www.deviantart.com/567legodude/art/Minecraft-Panorama-Test-452102606)
-- [Resource Pack Used](https://resourcepack.net/ozocraft-resource-pack/)
+- [Resource Pack Used](http://www.9minecraft.net/paper-cut-resource-pack/)
