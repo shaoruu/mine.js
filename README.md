@@ -26,11 +26,11 @@ These are some screenshots taken directly from the project.
 
 ![](https://i.imgur.com/du58Ifa.png)
 
-## Simple and Working Terrain Generation <small>(props to [FreshKoala](https://github.com/mrprokoala))</small>
+## Simple and Working Procedural Terrain Generation
 
-![](https://i.imgur.com/RbwUMwe.jpg)
+![](https://i.imgur.com/tEuhoBx.jpg)
 
-![](https://i.imgur.com/sPJ6DE5.jpg)
+![](https://i.imgur.com/5dadkka.jpg)
 
 ## Awesome Gameplay
 

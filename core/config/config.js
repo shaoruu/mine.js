@@ -23,7 +23,8 @@ const Config = {
       color: 0xdcebf4,
       near: 0.0008,
       far: 2500
-    }
+    },
+    lod: 5
   },
   camera: {
     fov: 102,
@@ -93,8 +94,8 @@ const Config = {
       posZ: 5.53
     },
     render: {
-      horzD: 3,
-      vertD: 2
+      horzD: 1,
+      vertD: 1
     },
     reachDst: 7
   },
@@ -105,10 +106,10 @@ const Config = {
     liquid: [0, 9]
   },
   chunk: {
-    size: 10,
+    size: 24,
     neighborWidth: 3,
     height: 256,
-    maxPerFrame: 8
+    maxPerFrame: 2
   },
   world: {
     gravity: -16,
@@ -124,7 +125,7 @@ const Config = {
             lacunarity: 1.5,
             heightOffset: 2.3,
             amplifier: 0.2,
-            treeFreq: 0.2,
+            treeMin: 0.8,
             treeScale: 8
           },
           types: {
@@ -140,7 +141,9 @@ const Config = {
             persistance: 1,
             lacunarity: 1,
             heightOffset: 2.5,
-            amplifier: 1
+            amplifier: 1,
+            treeMin: 0.6,
+            treeScale: 7
           },
           types: {
             top: 2,

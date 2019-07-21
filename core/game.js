@@ -2,9 +2,9 @@ import Config from './config/config'
 import { Renderer, Camera, World, Player, Light } from './modules/app'
 import { Debug } from './modules/interfaces'
 
-import './utils/setup'
-
 import * as THREE from 'three'
+
+import './utils/setup'
 
 /**
  *

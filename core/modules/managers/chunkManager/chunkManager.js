@@ -160,6 +160,8 @@ class ChunkManager {
     const mesh = Mesher.mergeMeshes(planes, this.resourceManager)
     // console.timeEnd(`${chunk.getRep()} mesh:`)
 
+    if (!mesh) return
+
     chunk.setMesh(mesh)
   }
 

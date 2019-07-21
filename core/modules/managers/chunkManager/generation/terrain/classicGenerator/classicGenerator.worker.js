@@ -27,49 +27,11 @@ export default () => {
         lacunarity,
         heightOffset,
         amplifier,
-        treeFreq,
+        treeMin,
         treeScale
       },
       types: { top, underTop, beach }
     } = swampland
-
-    /* -------------------------------------------------------------------------- */
-    /*                              HELPER FUNCTIONS                              */
-    /* -------------------------------------------------------------------------- */
-    const getNoise = (x, y, z) => this.octavePerlin3(x, y, z) - (y * 4) / scale
-
-    const isSolidAt = (x, y, z) => {
-      // TODO: Check cache first
-      return getNoise((x * scale) / 100, (y * scale) / 100, (z * scale) / 100) >= -0.2
-    }
-
-    const isSolidAtWithCB = (x, y, z) => {
-      const cb = this.changedBlocks[get3DCoordsRep(x, y, z)]
-      if (cb) return !!cb
-      return isSolidAt(x, y, z)
-    }
-
-    const getRelativeCoords = (x, y, z, offsets) => ({
-      x: x - offsets[0],
-      y: y - offsets[1],
-      z: z - offsets[2]
-    })
-
-    const getAbsoluteCoords = (x, y, z, offsets) => ({
-      x: x + offsets[0],
-      y: y + offsets[1],
-      z: z + offsets[2]
-    })
-
-    const checkWithinChunk = (x, y, z) =>
-      x >= 0 &&
-      x < SIZE + NEIGHBOR_WIDTH * 2 &&
-      y >= 0 &&
-      y < SIZE + NEIGHBOR_WIDTH * 2 &&
-      z >= 0 &&
-      z < SIZE + NEIGHBOR_WIDTH * 2
-
-    const shouldPlant = (score, range) => score <= range[1] && score >= range[0]
 
     /* -------------------------------------------------------------------------- */
     /*                               INITIALIZATION                               */
@@ -102,12 +64,65 @@ export default () => {
 
     const initMembers = () => {
       this.maxHeights = {}
-      this.treeFreq = [-treeFreq / 100, treeFreq / 100]
+      this.trees = new Set()
     }
 
     initSeed(seed)
     initNoises()
     initMembers()
+
+    /* -------------------------------------------------------------------------- */
+    /*                              HELPER FUNCTIONS                              */
+    /* -------------------------------------------------------------------------- */
+    const getNoise = (x, y, z) => this.octavePerlin3(x, y, z) - (y * 4) / scale
+
+    const isSolidAt = (x, y, z) => {
+      // TODO: Check cache first
+      return getNoise((x * scale) / 100, (y * scale) / 100, (z * scale) / 100) >= -0.2
+    }
+
+    const isSolidAtWithCB = (x, y, z) => {
+      const cb = this.changedBlocks[get3DCoordsRep(x, y, z)]
+      if (cb) return !!cb
+      return isSolidAt(x, y, z)
+    }
+
+    const isTransparent = type => TRANSPARENT_BLOCKS.includes(type)
+
+    const isLiquid = type => LIQUID_BLOCKS.includes(type)
+
+    const shouldPlantTree = (x, z, treeScopedMin, treeScopedScale) => {
+      const rep = get2DCoordsRep(x, z)
+
+      if (this.trees.has(rep)) return true
+
+      const shouldPlant =
+        this.noise.simplex2(x / treeScopedScale, z / treeScopedScale) > treeScopedMin
+
+      if (shouldPlant) this.trees.add(rep)
+
+      return shouldPlant
+    }
+
+    const getRelativeCoords = (x, y, z, offsets) => ({
+      x: x - offsets[0],
+      y: y - offsets[1],
+      z: z - offsets[2]
+    })
+
+    const getAbsoluteCoords = (x, y, z, offsets) => ({
+      x: x + offsets[0],
+      y: y + offsets[1],
+      z: z + offsets[2]
+    })
+
+    const checkWithinChunk = (x, y, z) =>
+      x >= 0 &&
+      x < SIZE + NEIGHBOR_WIDTH * 2 &&
+      y >= 0 &&
+      y < SIZE + NEIGHBOR_WIDTH * 2 &&
+      z >= 0 &&
+      z < SIZE + NEIGHBOR_WIDTH * 2
 
     /* -------------------------------------------------------------------------- */
     /*                              MEMBER FUNCTIONS                              */
@@ -204,7 +219,7 @@ export default () => {
           lightLevel: 15
         }
         const value = this.getLoadedBlocks(block.x, block.y, block.z, voxelData, offsets)
-        if (TRANSPARENT_BLOCKS.includes(value)) {
+        if (isTransparent(value)) {
           const pastNodeCoords = new Set([get3DCoordsRep(block.x, -1, block.z)])
           const queue = [block]
 
@@ -233,20 +248,13 @@ export default () => {
 
               let endValue = this.getLoadedBlocks(newNode.x, yValue, newNode.z, voxelData, offsets)
 
-              while (
-                TRANSPARENT_BLOCKS.includes(startValue) &&
-                !TRANSPARENT_BLOCKS.includes(endValue)
-              ) {
+              while (isTransparent(startValue) && !isTransparent(endValue)) {
                 yValue += 1
                 startValue = this.getLoadedBlocks(q.x, yValue, q.z, voxelData, offsets)
                 endValue = this.getLoadedBlocks(newNode.x, yValue, newNode.z, voxelData, offsets)
               }
 
-              if (
-                !TRANSPARENT_BLOCKS.includes(startValue) ||
-                !TRANSPARENT_BLOCKS.includes(endValue)
-              )
-                continue
+              if (!isTransparent(startValue) || !isTransparent(endValue)) continue
 
               newNode.y = yValue
 
@@ -295,36 +303,16 @@ export default () => {
       const pzpy = self.get(voxelData, x, z + 1, y + 1)
       const pxpzpy = self.get(voxelData, x + 1, z + 1, y + 1)
 
-      if (TRANSPARENT_BLOCKS.includes(py)) {
-        const a =
-          !TRANSPARENT_BLOCKS.includes(nxpy) ||
-          !TRANSPARENT_BLOCKS.includes(nzpy) ||
-          !TRANSPARENT_BLOCKS.includes(nxnzpy)
-            ? 0
-            : 1
-        const b =
-          !TRANSPARENT_BLOCKS.includes(nxpy) ||
-          !TRANSPARENT_BLOCKS.includes(pzpy) ||
-          !TRANSPARENT_BLOCKS.includes(nxpzpy)
-            ? 0
-            : 1
-        const c =
-          !TRANSPARENT_BLOCKS.includes(pxpy) ||
-          !TRANSPARENT_BLOCKS.includes(pzpy) ||
-          !TRANSPARENT_BLOCKS.includes(pxpzpy)
-            ? 0
-            : 1
-        const d =
-          !TRANSPARENT_BLOCKS.includes(pxpy) ||
-          !TRANSPARENT_BLOCKS.includes(nzpy) ||
-          !TRANSPARENT_BLOCKS.includes(pxnzpy)
-            ? 0
-            : 1
+      if (isTransparent(py)) {
+        const a = !isTransparent(nxpy) || !isTransparent(nzpy) || !isTransparent(nxnzpy) ? 0 : 1
+        const b = !isTransparent(nxpy) || !isTransparent(pzpy) || !isTransparent(nxpzpy) ? 0 : 1
+        const c = !isTransparent(pxpy) || !isTransparent(pzpy) || !isTransparent(pxpzpy) ? 0 : 1
+        const d = !isTransparent(pxpy) || !isTransparent(nzpy) || !isTransparent(pxnzpy) ? 0 : 1
 
-        const e = !TRANSPARENT_BLOCKS.includes(nxnzpy) ? 0 : 1
-        const f = !TRANSPARENT_BLOCKS.includes(nxpzpy) ? 0 : 1
-        const g = !TRANSPARENT_BLOCKS.includes(pxpzpy) ? 0 : 1
-        const h = !TRANSPARENT_BLOCKS.includes(pxnzpy) ? 0 : 1
+        const e = !isTransparent(nxnzpy) ? 0 : 1
+        const f = !isTransparent(nxpzpy) ? 0 : 1
+        const g = !isTransparent(pxpzpy) ? 0 : 1
+        const h = !isTransparent(pxnzpy) ? 0 : 1
 
         if (e + g > f + h) {
           const py2ColorsFace0 = new Uint8Array(3)
@@ -353,36 +341,16 @@ export default () => {
         }
       }
 
-      if (TRANSPARENT_BLOCKS.includes(px)) {
-        const a =
-          !TRANSPARENT_BLOCKS.includes(pxny) ||
-          !TRANSPARENT_BLOCKS.includes(pxnz) ||
-          !TRANSPARENT_BLOCKS.includes(pxnzny)
-            ? 0
-            : 1
-        const b =
-          !TRANSPARENT_BLOCKS.includes(pxny) ||
-          !TRANSPARENT_BLOCKS.includes(pxpz) ||
-          !TRANSPARENT_BLOCKS.includes(pxpzny)
-            ? 0
-            : 1
-        const c =
-          !TRANSPARENT_BLOCKS.includes(pxpy) ||
-          !TRANSPARENT_BLOCKS.includes(pxpz) ||
-          !TRANSPARENT_BLOCKS.includes(pxpzpy)
-            ? 0
-            : 1
-        const d =
-          !TRANSPARENT_BLOCKS.includes(pxpy) ||
-          !TRANSPARENT_BLOCKS.includes(pxnz) ||
-          !TRANSPARENT_BLOCKS.includes(pxnzpy)
-            ? 0
-            : 1
+      if (isTransparent(px)) {
+        const a = !isTransparent(pxny) || !isTransparent(pxnz) || !isTransparent(pxnzny) ? 0 : 1
+        const b = !isTransparent(pxny) || !isTransparent(pxpz) || !isTransparent(pxpzny) ? 0 : 1
+        const c = !isTransparent(pxpy) || !isTransparent(pxpz) || !isTransparent(pxpzpy) ? 0 : 1
+        const d = !isTransparent(pxpy) || !isTransparent(pxnz) || !isTransparent(pxnzpy) ? 0 : 1
 
-        const e = !TRANSPARENT_BLOCKS.includes(pxnzny) ? 0 : 1
-        const f = !TRANSPARENT_BLOCKS.includes(pxpzny) ? 0 : 1
-        const g = !TRANSPARENT_BLOCKS.includes(pxpzpy) ? 0 : 1
-        const h = !TRANSPARENT_BLOCKS.includes(pxnzpy) ? 0 : 1
+        const e = !isTransparent(pxnzny) ? 0 : 1
+        const f = !isTransparent(pxpzny) ? 0 : 1
+        const g = !isTransparent(pxpzpy) ? 0 : 1
+        const h = !isTransparent(pxnzpy) ? 0 : 1
 
         if (e + g > f + h) {
           const px2ColorsFace0 = new Uint8Array(3)
@@ -411,36 +379,16 @@ export default () => {
         }
       }
 
-      if (TRANSPARENT_BLOCKS.includes(pz)) {
-        const a =
-          !TRANSPARENT_BLOCKS.includes(pzny) ||
-          !TRANSPARENT_BLOCKS.includes(nxpz) ||
-          !TRANSPARENT_BLOCKS.includes(nxpzny)
-            ? 0
-            : 1
-        const b =
-          !TRANSPARENT_BLOCKS.includes(pzny) ||
-          !TRANSPARENT_BLOCKS.includes(pxpz) ||
-          !TRANSPARENT_BLOCKS.includes(pxpzny)
-            ? 0
-            : 1
-        const c =
-          !TRANSPARENT_BLOCKS.includes(pzpy) ||
-          !TRANSPARENT_BLOCKS.includes(pxpz) ||
-          !TRANSPARENT_BLOCKS.includes(pxpzpy)
-            ? 0
-            : 1
-        const d =
-          !TRANSPARENT_BLOCKS.includes(pzpy) ||
-          !TRANSPARENT_BLOCKS.includes(nxpz) ||
-          !TRANSPARENT_BLOCKS.includes(nxpzpy)
-            ? 0
-            : 1
+      if (isTransparent(pz)) {
+        const a = !isTransparent(pzny) || !isTransparent(nxpz) || !isTransparent(nxpzny) ? 0 : 1
+        const b = !isTransparent(pzny) || !isTransparent(pxpz) || !isTransparent(pxpzny) ? 0 : 1
+        const c = !isTransparent(pzpy) || !isTransparent(pxpz) || !isTransparent(pxpzpy) ? 0 : 1
+        const d = !isTransparent(pzpy) || !isTransparent(nxpz) || !isTransparent(nxpzpy) ? 0 : 1
 
-        const e = !TRANSPARENT_BLOCKS.includes(nxpzny) ? 0 : 1
-        const f = !TRANSPARENT_BLOCKS.includes(pxpzny) ? 0 : 1
-        const g = !TRANSPARENT_BLOCKS.includes(pxpzpy) ? 0 : 1
-        const h = !TRANSPARENT_BLOCKS.includes(nxpzpy) ? 0 : 1
+        const e = !isTransparent(nxpzny) ? 0 : 1
+        const f = !isTransparent(pxpzny) ? 0 : 1
+        const g = !isTransparent(pxpzpy) ? 0 : 1
+        const h = !isTransparent(nxpzpy) ? 0 : 1
 
         if (e + g < f + h) {
           const pz2ColorsFace0 = new Uint8Array(3)
@@ -469,36 +417,16 @@ export default () => {
         }
       }
 
-      if (TRANSPARENT_BLOCKS.includes(nx)) {
-        const a =
-          !TRANSPARENT_BLOCKS.includes(nxny) ||
-          !TRANSPARENT_BLOCKS.includes(nxnz) ||
-          !TRANSPARENT_BLOCKS.includes(nxnzny)
-            ? 0
-            : 1
-        const b =
-          !TRANSPARENT_BLOCKS.includes(nxny) ||
-          !TRANSPARENT_BLOCKS.includes(nxpz) ||
-          !TRANSPARENT_BLOCKS.includes(nxpzny)
-            ? 0
-            : 1
-        const c =
-          !TRANSPARENT_BLOCKS.includes(nxpy) ||
-          !TRANSPARENT_BLOCKS.includes(nxpz) ||
-          !TRANSPARENT_BLOCKS.includes(nxpzpy)
-            ? 0
-            : 1
-        const d =
-          !TRANSPARENT_BLOCKS.includes(nxpy) ||
-          !TRANSPARENT_BLOCKS.includes(nxnz) ||
-          !TRANSPARENT_BLOCKS.includes(nxnzpy)
-            ? 0
-            : 1
+      if (isTransparent(nx)) {
+        const a = !isTransparent(nxny) || !isTransparent(nxnz) || !isTransparent(nxnzny) ? 0 : 1
+        const b = !isTransparent(nxny) || !isTransparent(nxpz) || !isTransparent(nxpzny) ? 0 : 1
+        const c = !isTransparent(nxpy) || !isTransparent(nxpz) || !isTransparent(nxpzpy) ? 0 : 1
+        const d = !isTransparent(nxpy) || !isTransparent(nxnz) || !isTransparent(nxnzpy) ? 0 : 1
 
-        const e = !TRANSPARENT_BLOCKS.includes(nxnzny) ? 0 : 1
-        const f = !TRANSPARENT_BLOCKS.includes(nxpzny) ? 0 : 1
-        const g = !TRANSPARENT_BLOCKS.includes(nxpzpy) ? 0 : 1
-        const h = !TRANSPARENT_BLOCKS.includes(nxnzpy) ? 0 : 1
+        const e = !isTransparent(nxnzny) ? 0 : 1
+        const f = !isTransparent(nxpzny) ? 0 : 1
+        const g = !isTransparent(nxpzpy) ? 0 : 1
+        const h = !isTransparent(nxnzpy) ? 0 : 1
 
         if (e + g > f + h) {
           const nx2ColorsFace0 = new Uint8Array(3)
@@ -527,36 +455,16 @@ export default () => {
         }
       }
 
-      if (TRANSPARENT_BLOCKS.includes(nz)) {
-        const a =
-          !TRANSPARENT_BLOCKS.includes(nzny) ||
-          !TRANSPARENT_BLOCKS.includes(nxnz) ||
-          !TRANSPARENT_BLOCKS.includes(nxnzny)
-            ? 0
-            : 1
-        const b =
-          !TRANSPARENT_BLOCKS.includes(nzny) ||
-          !TRANSPARENT_BLOCKS.includes(pxnz) ||
-          !TRANSPARENT_BLOCKS.includes(pxnzny)
-            ? 0
-            : 1
-        const c =
-          !TRANSPARENT_BLOCKS.includes(nzpy) ||
-          !TRANSPARENT_BLOCKS.includes(pxnz) ||
-          !TRANSPARENT_BLOCKS.includes(pxnzpy)
-            ? 0
-            : 1
-        const d =
-          !TRANSPARENT_BLOCKS.includes(nzpy) ||
-          !TRANSPARENT_BLOCKS.includes(nxnz) ||
-          !TRANSPARENT_BLOCKS.includes(nxnzpy)
-            ? 0
-            : 1
+      if (isTransparent(nz)) {
+        const a = !isTransparent(nzny) || !isTransparent(nxnz) || !isTransparent(nxnzny) ? 0 : 1
+        const b = !isTransparent(nzny) || !isTransparent(pxnz) || !isTransparent(pxnzny) ? 0 : 1
+        const c = !isTransparent(nzpy) || !isTransparent(pxnz) || !isTransparent(pxnzpy) ? 0 : 1
+        const d = !isTransparent(nzpy) || !isTransparent(nxnz) || !isTransparent(nxnzpy) ? 0 : 1
 
-        const e = !TRANSPARENT_BLOCKS.includes(nxnzny) ? 0 : 1
-        const f = !TRANSPARENT_BLOCKS.includes(pxnzny) ? 0 : 1
-        const g = !TRANSPARENT_BLOCKS.includes(pxnzpy) ? 0 : 1
-        const h = !TRANSPARENT_BLOCKS.includes(nxnzpy) ? 0 : 1
+        const e = !isTransparent(nxnzny) ? 0 : 1
+        const f = !isTransparent(pxnzny) ? 0 : 1
+        const g = !isTransparent(pxnzpy) ? 0 : 1
+        const h = !isTransparent(nxnzpy) ? 0 : 1
 
         if (e + g < f + h) {
           const nz2ColorsFace0 = new Uint8Array(3)
@@ -585,36 +493,16 @@ export default () => {
         }
       }
 
-      if (TRANSPARENT_BLOCKS.includes(ny)) {
-        const a =
-          !TRANSPARENT_BLOCKS.includes(nxny) ||
-          !TRANSPARENT_BLOCKS.includes(nzny) ||
-          !TRANSPARENT_BLOCKS.includes(nxnzny)
-            ? 0
-            : 1
-        const b =
-          !TRANSPARENT_BLOCKS.includes(nxny) ||
-          !TRANSPARENT_BLOCKS.includes(pzny) ||
-          !TRANSPARENT_BLOCKS.includes(nxpzny)
-            ? 0
-            : 1
-        const c =
-          !TRANSPARENT_BLOCKS.includes(pxny) ||
-          !TRANSPARENT_BLOCKS.includes(pzny) ||
-          !TRANSPARENT_BLOCKS.includes(pxpzny)
-            ? 0
-            : 1
-        const d =
-          !TRANSPARENT_BLOCKS.includes(pxny) ||
-          !TRANSPARENT_BLOCKS.includes(nzny) ||
-          !TRANSPARENT_BLOCKS.includes(pxnzny)
-            ? 0
-            : 1
+      if (isTransparent(ny)) {
+        const a = !isTransparent(nxny) || !isTransparent(nzny) || !isTransparent(nxnzny) ? 0 : 1
+        const b = !isTransparent(nxny) || !isTransparent(pzny) || !isTransparent(nxpzny) ? 0 : 1
+        const c = !isTransparent(pxny) || !isTransparent(pzny) || !isTransparent(pxpzny) ? 0 : 1
+        const d = !isTransparent(pxny) || !isTransparent(nzny) || !isTransparent(pxnzny) ? 0 : 1
 
-        const e = !TRANSPARENT_BLOCKS.includes(nxnzny) ? 0 : 1
-        const f = !TRANSPARENT_BLOCKS.includes(nxpzny) ? 0 : 1
-        const g = !TRANSPARENT_BLOCKS.includes(pxpzny) ? 0 : 1
-        const h = !TRANSPARENT_BLOCKS.includes(pxnzny) ? 0 : 1
+        const e = !isTransparent(nxnzny) ? 0 : 1
+        const f = !isTransparent(nxpzny) ? 0 : 1
+        const g = !isTransparent(pxpzny) ? 0 : 1
+        const h = !isTransparent(pxnzny) ? 0 : 1
 
         if (e + g > f + h) {
           const ny2ColorsFace0 = new Uint8Array(3)
@@ -684,54 +572,44 @@ export default () => {
         coordz * SIZE - NEIGHBOR_WIDTH
       ]
 
-      // TREES
-      const treeCB = {}
-
-      for (let x = offsets[0]; x < offsets[0] + SIZE + NEIGHBOR_WIDTH * 2; x++)
-        for (let z = offsets[2]; z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2; z++) {
-          const maxHeight = this.getHighestBlock(x, z)
-          for (let y = offsets[1]; y < offsets[1] + SIZE + NEIGHBOR_WIDTH * 2; y++) {
-            if (y === maxHeight) {
-              const type = this.getBlockInfo(x, y, z, maxHeight)
-
-              if (
-                (type === 2 || type === 3) &&
-                this.getBlockInfo(x, y + 1, z, maxHeight) === 0 &&
-                shouldPlant(this.noise.simplex2(x / treeScale, z / treeScale), this.treeFreq)
-              ) {
-                const { data } = STRUCTURES.BaseTree
-
-                for (let b = 0; b < data.length; b++) {
-                  const { override, type: treeB, x: dx, y: dy, z: dz } = data[b]
-                  const rep = get3DCoordsRep(x + dx, y + dy, z + dz)
-                  if (override || !treeCB[rep])
-                    treeCB[rep] = {
-                      type: treeB,
-                      override
-                    }
-                }
-              }
-            }
-          }
-        }
-
       // ACTUAL
       for (let x = offsets[0]; x < offsets[0] + SIZE + NEIGHBOR_WIDTH * 2; x++)
         for (let z = offsets[2]; z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2; z++) {
           const maxHeight = this.getHighestBlock(x, z)
           for (let y = offsets[1]; y < offsets[1] + SIZE + NEIGHBOR_WIDTH * 2; y++) {
-            let blockType = this.getBlockInfo(x, y, z, maxHeight)
-            const coordsRep = get3DCoordsRep(x, y, z)
-            const treeData = treeCB[coordsRep]
-
-            if (treeData) {
-              const { type: treeType, override: treeOverride } = treeData
-              if (treeOverride || blockType === 0) blockType = treeType
-            }
-
+            const blockType = this.getBlockInfo(x, y, z, maxHeight)
             const mappedCoords = getRelativeCoords(x, y, z, offsets)
 
             self.set(voxelData, mappedCoords.x, mappedCoords.z, mappedCoords.y, blockType)
+          }
+        }
+
+      // TREES
+      for (let x = offsets[0]; x < offsets[0] + SIZE + NEIGHBOR_WIDTH * 2; x++)
+        for (let z = offsets[2]; z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2; z++) {
+          const maxHeight = this.getHighestBlock(x, z)
+
+          const type =
+            self.get(voxelData, x, maxHeight, z) || this.getBlockInfo(x, maxHeight, z, maxHeight)
+
+          if (
+            (type === 2 || type === 3) &&
+            this.getBlockInfo(x, maxHeight + 1, z, maxHeight) === 0 &&
+            shouldPlantTree(x, z, treeMin, treeScale)
+          ) {
+            const { data } = STRUCTURES.BaseTree
+
+            for (let b = 0; b < data.length; b++) {
+              const { override, type: treeB, x: dx, y: dy, z: dz } = data[b]
+              const mappedCoords = getRelativeCoords(x + dx, maxHeight + dy, z + dz, offsets)
+
+              if (checkWithinChunk(mappedCoords.x, mappedCoords.y, mappedCoords.z))
+                if (
+                  override ||
+                  self.get(voxelData, mappedCoords.x, mappedCoords.z, mappedCoords.y) === 0
+                )
+                  self.set(voxelData, mappedCoords.x, mappedCoords.z, mappedCoords.y, treeB)
+            }
           }
         }
     }
@@ -753,7 +631,7 @@ export default () => {
       for (let x = NEIGHBOR_WIDTH; x < SIZE + NEIGHBOR_WIDTH; x++)
         for (let z = NEIGHBOR_WIDTH; z < SIZE + NEIGHBOR_WIDTH; z++)
           for (let y = NEIGHBOR_WIDTH; y < SIZE + NEIGHBOR_WIDTH; y++) {
-            if (!LIQUID_BLOCKS.includes(self.get(voxelData, x, z, y))) {
+            if (!isLiquid(self.get(voxelData, x, z, y))) {
               const tempCoords = getAbsoluteCoords(x, y, z, offsets)
 
               const tempx = tempCoords.x

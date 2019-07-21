@@ -91,8 +91,8 @@ function WorkerPool(codes, callback, config) {
   }
 
   this.update = () => {
-    if (gFrees.length > 0) nextGJob(gFrees.shift())
-    if (sFrees.length > 0) nextSJob(sFrees.shift())
+    if (gFrees.length > 0 && gJobs.length !== 0) nextGJob(gFrees.shift())
+    if (sFrees.length > 0 && sJobs.length !== 0) nextSJob(sFrees.shift())
   }
 }
 
