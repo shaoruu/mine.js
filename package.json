@@ -11,6 +11,7 @@
     "apollo-link-ws": "^1.0.17",
     "apollo-utilities": "^1.2.1",
     "bcryptjs": "^2.4.3",
+    "concurrently": "^4.1.1",
     "cookie": "^0.3.1",
     "dotenv": "^8.0.0",
     "fast-voxel-raycast": "^0.1.1",
@@ -49,7 +50,8 @@
     "prisma:get-schema": "graphql get-schema -p prisma",
     "client": "react-app-rewired start",
     "server": "nodemon --watch server server/src/index.js --ext js,graphql --exec babel-node",
-    "prisma": "docker-compose --file server/prisma/docker-compose.yml up -d"
+    "prisma": "docker-compose --file server/prisma/docker-compose.yml up -d",
+    "start": "yarn run prisma && concurrently \"yarn run client\" \"yarn run server\""
   },
   "husky": {
     "hooks": {

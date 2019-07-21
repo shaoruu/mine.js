@@ -18,13 +18,13 @@ class Chunk {
     this.loading = true
 
     // Grid System of Chunk
-    const arr = new Uint16Array((size + 2) * (size + 2) * (size + 2))
+    const arr = new Uint8Array((size + 2) * (size + 2) * (size + 2))
     this.grid = new ndarray(arr, [size + 2, size + 2, size + 2])
 
-    const lightingArr = new Uint16Array(size ** 3 * 6)
+    const lightingArr = new Uint8Array(size ** 3 * 6)
     this.lighting = new ndarray(lightingArr, [size, size, size, 6])
 
-    const smoothLightingArr = new Uint16Array(size ** 3 * 6 * 3 * 3)
+    const smoothLightingArr = new Uint8Array(size ** 3 * 6 * 3 * 3)
     this.smoothLighting = new ndarray(smoothLightingArr, [size, size, size, 6, 3, 3])
 
     this.isLoaded = false

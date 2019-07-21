@@ -232,7 +232,7 @@ export default () => {
         { x: 0, y: -1, z: 0 }
       ]
 
-      const lights = new Uint16Array(surroundings.length)
+      const lights = new Uint8Array(surroundings.length)
 
       for (let i = 0; i < surroundings.length; i++) {
         const block = {
@@ -342,24 +342,24 @@ export default () => {
         const h = pxnzpy !== 0 ? 0 : 1
 
         if (e + g > f + h) {
-          const py2ColorsFace0 = new Uint16Array(3)
+          const py2ColorsFace0 = new Uint8Array(3)
           py2ColorsFace0[0] = b === 0 ? shadow : light
           py2ColorsFace0[1] = c === 0 ? shadow : light
           py2ColorsFace0[2] = a === 0 ? shadow : light
 
-          const py2ColorsFace1 = new Uint16Array(3)
+          const py2ColorsFace1 = new Uint8Array(3)
           py2ColorsFace1[0] = c === 0 ? shadow : light
           py2ColorsFace1[1] = d === 0 ? shadow : light
           py2ColorsFace1[2] = a === 0 ? shadow : light
 
           output[0] = [py2ColorsFace0, py2ColorsFace1, [1, 1, 1]]
         } else {
-          const pyColorsFace0 = new Uint16Array(3)
+          const pyColorsFace0 = new Uint8Array(3)
           pyColorsFace0[0] = a === 0 ? shadow : light
           pyColorsFace0[1] = b === 0 ? shadow : light
           pyColorsFace0[2] = d === 0 ? shadow : light
 
-          const pyColorsFace1 = new Uint16Array(3)
+          const pyColorsFace1 = new Uint8Array(3)
           pyColorsFace1[0] = b === 0 ? shadow : light
           pyColorsFace1[1] = c === 0 ? shadow : light
           pyColorsFace1[2] = d === 0 ? shadow : light
@@ -380,24 +380,24 @@ export default () => {
         const h = pxnzpy !== 0 ? 0 : 1
 
         if (e + g > f + h) {
-          const px2ColorsFace0 = new Uint16Array(3)
+          const px2ColorsFace0 = new Uint8Array(3)
           px2ColorsFace0[0] = b === 0 ? shadow : light
           px2ColorsFace0[1] = a === 0 ? shadow : light
           px2ColorsFace0[2] = c === 0 ? shadow : light
 
-          const px2ColorsFace1 = new Uint16Array(3)
+          const px2ColorsFace1 = new Uint8Array(3)
           px2ColorsFace1[0] = a === 0 ? shadow : light
           px2ColorsFace1[1] = d === 0 ? shadow : light
           px2ColorsFace1[2] = c === 0 ? shadow : light
 
           output[1] = [px2ColorsFace0, px2ColorsFace1, [1, 1, 1]]
         } else {
-          const pxColorsFace0 = new Uint16Array(3)
+          const pxColorsFace0 = new Uint8Array(3)
           pxColorsFace0[0] = c === 0 ? shadow : light
           pxColorsFace0[1] = b === 0 ? shadow : light
           pxColorsFace0[2] = d === 0 ? shadow : light
 
-          const pxColorsFace1 = new Uint16Array(3)
+          const pxColorsFace1 = new Uint8Array(3)
           pxColorsFace1[0] = b === 0 ? shadow : light
           pxColorsFace1[1] = a === 0 ? shadow : light
           pxColorsFace1[2] = d === 0 ? shadow : light
@@ -418,24 +418,24 @@ export default () => {
         const h = nxpzpy !== 0 ? 0 : 1
 
         if (e + g < f + h) {
-          const pz2ColorsFace0 = new Uint16Array(3)
+          const pz2ColorsFace0 = new Uint8Array(3)
           pz2ColorsFace0[0] = a === 0 ? shadow : light
           pz2ColorsFace0[1] = b === 0 ? shadow : light
           pz2ColorsFace0[2] = d === 0 ? shadow : light
 
-          const pz2ColorsFace1 = new Uint16Array(3)
+          const pz2ColorsFace1 = new Uint8Array(3)
           pz2ColorsFace1[0] = b === 0 ? shadow : light
           pz2ColorsFace1[1] = c === 0 ? shadow : light
           pz2ColorsFace1[2] = d === 0 ? shadow : light
 
           output[2] = [pz2ColorsFace0, pz2ColorsFace1, [1, 1, 1]]
         } else {
-          const pzColorsFace0 = new Uint16Array(3)
+          const pzColorsFace0 = new Uint8Array(3)
           pzColorsFace0[0] = d === 0 ? shadow : light
           pzColorsFace0[1] = a === 0 ? shadow : light
           pzColorsFace0[2] = c === 0 ? shadow : light
 
-          const pzColorsFace1 = new Uint16Array(3)
+          const pzColorsFace1 = new Uint8Array(3)
           pzColorsFace1[0] = a === 0 ? shadow : light
           pzColorsFace1[1] = b === 0 ? shadow : light
           pzColorsFace1[2] = c === 0 ? shadow : light
@@ -455,24 +455,24 @@ export default () => {
         const h = nxnzpy !== 0 ? 0 : 1
 
         if (e + g > f + h) {
-          const nx2ColorsFace0 = new Uint16Array(3)
+          const nx2ColorsFace0 = new Uint8Array(3)
           nx2ColorsFace0[0] = b === 0 ? shadow : light
           nx2ColorsFace0[1] = a === 0 ? shadow : light
           nx2ColorsFace0[2] = c === 0 ? shadow : light
 
-          const nx2ColorsFace1 = new Uint16Array(3)
+          const nx2ColorsFace1 = new Uint8Array(3)
           nx2ColorsFace1[0] = a === 0 ? shadow : light
           nx2ColorsFace1[1] = d === 0 ? shadow : light
           nx2ColorsFace1[2] = c === 0 ? shadow : light
 
           output[3] = [nx2ColorsFace0, nx2ColorsFace1, [1, 1, 1]]
         } else {
-          const nxColorsFace0 = new Uint16Array(3)
+          const nxColorsFace0 = new Uint8Array(3)
           nxColorsFace0[0] = c === 0 ? shadow : light
           nxColorsFace0[1] = b === 0 ? shadow : light
           nxColorsFace0[2] = d === 0 ? shadow : light
 
-          const nxColorsFace1 = new Uint16Array(3)
+          const nxColorsFace1 = new Uint8Array(3)
           nxColorsFace1[0] = b === 0 ? shadow : light
           nxColorsFace1[1] = a === 0 ? shadow : light
           nxColorsFace1[2] = d === 0 ? shadow : light
@@ -493,24 +493,24 @@ export default () => {
         const h = nxnzpy !== 0 ? 0 : 1
 
         if (e + g < f + h) {
-          const nz2ColorsFace0 = new Uint16Array(3)
+          const nz2ColorsFace0 = new Uint8Array(3)
           nz2ColorsFace0[0] = a === 0 ? shadow : light
           nz2ColorsFace0[1] = b === 0 ? shadow : light
           nz2ColorsFace0[2] = d === 0 ? shadow : light
 
-          const nz2ColorsFace1 = new Uint16Array(3)
+          const nz2ColorsFace1 = new Uint8Array(3)
           nz2ColorsFace1[0] = b === 0 ? shadow : light
           nz2ColorsFace1[1] = c === 0 ? shadow : light
           nz2ColorsFace1[2] = d === 0 ? shadow : light
 
           output[4] = [nz2ColorsFace0, nz2ColorsFace1, [1, 1, 1]]
         } else {
-          const nzColorsFace0 = new Uint16Array(3)
+          const nzColorsFace0 = new Uint8Array(3)
           nzColorsFace0[0] = d === 0 ? shadow : light
           nzColorsFace0[1] = a === 0 ? shadow : light
           nzColorsFace0[2] = c === 0 ? shadow : light
 
-          const nzColorsFace1 = new Uint16Array(3)
+          const nzColorsFace1 = new Uint8Array(3)
           nzColorsFace1[0] = a === 0 ? shadow : light
           nzColorsFace1[1] = b === 0 ? shadow : light
           nzColorsFace1[2] = c === 0 ? shadow : light
@@ -531,24 +531,24 @@ export default () => {
         const h = pxnzny !== 0 ? 0 : 1
 
         if (e + g > f + h) {
-          const ny2ColorsFace0 = new Uint16Array(3)
+          const ny2ColorsFace0 = new Uint8Array(3)
           ny2ColorsFace0[0] = b === 0 ? shadow : light
           ny2ColorsFace0[1] = c === 0 ? shadow : light
           ny2ColorsFace0[2] = a === 0 ? shadow : light
 
-          const ny2ColorsFace1 = new Uint16Array(3)
+          const ny2ColorsFace1 = new Uint8Array(3)
           ny2ColorsFace1[0] = c === 0 ? shadow : light
           ny2ColorsFace1[1] = d === 0 ? shadow : light
           ny2ColorsFace1[2] = a === 0 ? shadow : light
 
           output[5] = [ny2ColorsFace0, ny2ColorsFace1, [1, 1, 1]]
         } else {
-          const nyColorsFace0 = new Uint16Array(3)
+          const nyColorsFace0 = new Uint8Array(3)
           nyColorsFace0[0] = a === 0 ? shadow : light
           nyColorsFace0[1] = b === 0 ? shadow : light
           nyColorsFace0[2] = d === 0 ? shadow : light
 
-          const nyColorsFace1 = new Uint16Array(3)
+          const nyColorsFace1 = new Uint8Array(3)
           nyColorsFace1[0] = b === 0 ? shadow : light
           nyColorsFace1[1] = c === 0 ? shadow : light
           nyColorsFace1[2] = d === 0 ? shadow : light

@@ -10,13 +10,13 @@ class Mesher {
     const matrix = new THREE.Matrix4()
 
     for (let i = 0; i < planes.length; i++) {
-      const [geo, pos, face, type] = planes[i]
+      const [geo, pos, face, type, lighting, smoothLighting] = planes[i]
 
       const { x, y, z } = pos
       const {
         geometry,
         translation: { x: dx, y: dy, z: dz }
-      } = resourceManager.getGeometry(geo)
+      } = resourceManager.getGeometryWLighting(geo, lighting, smoothLighting, type)
       const { x: wx, y: wy, z: wz } = Helpers.globalBlockToWorld({
         x: x + dx,
         y: y + dy,
@@ -26,14 +26,16 @@ class Mesher {
       matrix.makeTranslation(wx, wy, wz)
       mergedGeometry.merge(geometry, matrix, i)
 
-      materials.push(resourceManager.getMaterial(type, face))
+      materials.push(resourceManager.getMaterial(type, geo, face))
     }
 
     if (toBufferGeometry) finalGeometry = new THREE.BufferGeometry().fromGeometry(mergedGeometry)
     else finalGeometry = mergedGeometry
 
     const mergedMesh = new THREE.Mesh(finalGeometry, materials)
-    mergedMesh.geometry.computeFaceNormals()
+
+    mergedMesh.matrixAutoUpdate = false
+    mergedMesh.updateMatrix()
 
     return mergedMesh
   }

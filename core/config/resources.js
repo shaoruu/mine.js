@@ -10,8 +10,7 @@ const resources = {
         side: require('../assets/blocks/stone.png'),
         bottom: require('../assets/blocks/stone.png'),
         config: {
-          transparent: false,
-          side: THREE.FrontSide
+          transparent: false
         }
       },
       2: {
@@ -19,8 +18,7 @@ const resources = {
         side: require('../assets/blocks/grass_side.png'),
         bottom: require('../assets/blocks/dirt.png'),
         config: {
-          transparent: false,
-          side: THREE.FrontSide
+          transparent: false
         }
       },
       3: {
@@ -28,8 +26,7 @@ const resources = {
         side: require('../assets/blocks/dirt.png'),
         bottom: require('../assets/blocks/dirt.png'),
         config: {
-          transparent: false,
-          side: THREE.FrontSide
+          transparent: false
         }
       },
       9: {
@@ -46,8 +43,7 @@ const resources = {
         side: require('../assets/blocks/sand.png'),
         bottom: require('../assets/blocks/sand.png'),
         config: {
-          transparent: false,
-          side: THREE.FrontSide
+          transparent: false
         }
       },
       17: {
@@ -55,8 +51,7 @@ const resources = {
         side: require('../assets/blocks/log_oak.png'),
         bottom: require('../assets/blocks/log_oak_top.png'),
         config: {
-          transparent: false,
-          side: THREE.FrontSide
+          transparent: false
         }
       },
       18: {
@@ -113,7 +108,7 @@ const resources = {
       },
       nx: {
         func: 'rotateY',
-        rotation: -Math.PI / 2,
+        rotation: Math.PI / 2,
         translation: {
           x: 0,
           y: 0.5,
@@ -122,7 +117,7 @@ const resources = {
       },
       ny: {
         func: 'rotateX',
-        rotation: Math.PI / 2,
+        rotation: -Math.PI / 2,
         translation: {
           x: 0.5,
           y: 0,
@@ -130,8 +125,62 @@ const resources = {
         }
       },
       nz: {
-        func: 'rotateY',
-        rotation: Math.PI,
+        func: null,
+        rotation: null,
+        translation: {
+          x: 0.5,
+          y: 0.5,
+          z: 0
+        }
+      },
+      px2: {
+        func: ['rotateY', 'rotateX'],
+        rotation: [Math.PI / 2, Math.PI / 2],
+        translation: {
+          x: 1,
+          y: 0.5,
+          z: 0.5
+        }
+      },
+      py2: {
+        func: ['rotateX', 'rotateY'],
+        rotation: [-Math.PI / 2, Math.PI / 2],
+        translation: {
+          x: 0.5,
+          y: 1,
+          z: 0.5
+        }
+      },
+      pz2: {
+        func: 'rotateZ',
+        rotation: Math.PI / 2,
+        translation: {
+          x: 0.5,
+          y: 0.5,
+          z: 1
+        }
+      },
+      nx2: {
+        func: ['rotateY', 'rotateX'],
+        rotation: [Math.PI / 2, Math.PI / 2],
+        translation: {
+          x: 0,
+          y: 0.5,
+          z: 0.5
+        }
+      },
+      ny2: {
+        func: ['rotateX', 'rotateY'],
+        rotation: [-Math.PI / 2, Math.PI / 2],
+        translation: {
+          x: 0.5,
+          y: 0,
+          z: 0.5
+        }
+      },
+      nz2: {
+        func: 'rotateZ',
+        rotation: Math.PI / 2,
         translation: {
           x: 0.5,
           y: 0.5,

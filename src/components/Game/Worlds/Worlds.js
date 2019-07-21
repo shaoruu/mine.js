@@ -19,13 +19,19 @@ class Worlds extends Component {
   componentDidMount() {
     document.title = 'MinecraftJS - Worlds'
 
-    const escHandler = e => {
-      if (e.keyCode === 27) {
-        document.removeEventListener('keydown', escHandler, false)
-        this.props.history.push('/game/start')
-      }
+    document.addEventListener('keydown', this.escHandler, false)
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.escHandler, false)
+  }
+
+  escHandler = e => {
+    if (e.keyCode === 27) {
+      console.log('wtf')
+      document.removeEventListener('keydown', this.escHandler, false)
+      this.props.history.push('/game/start')
     }
-    document.addEventListener('keydown', escHandler, false)
   }
 
   render() {

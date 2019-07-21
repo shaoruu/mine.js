@@ -7,7 +7,12 @@ const Config = {
     ambientLight: {
       enabled: true,
       color: 0xffffff,
-      intensity: 1
+      intensity: 1.2
+    },
+    aoConfigs: {
+      slDifference: 70,
+      levels: [14, 19, 23, 28, 34, 41, 48, 57, 67, 79, 93, 110, 132, 160, 197, 250],
+      lowestLight: 30
     }
   },
   scene: {
@@ -23,7 +28,7 @@ const Config = {
   camera: {
     fov: 102,
     near: 1,
-    far: 2500,
+    far: 1200,
     aspect: 1,
     posX: 0,
     posY: 0,
@@ -88,7 +93,7 @@ const Config = {
       posZ: 5.53
     },
     render: {
-      horzD: 3,
+      horzD: 2,
       vertD: 2
     },
     reachDst: 7
@@ -102,7 +107,7 @@ const Config = {
   chunk: {
     size: 16,
     height: 256,
-    maxPerFrame: 4
+    maxPerFrame: 8
   },
   world: {
     gravity: -16,
@@ -118,6 +123,21 @@ const Config = {
             lacunarity: 1.5,
             heightOffset: 2.3,
             amplifier: 0.2
+          },
+          types: {
+            top: 2,
+            underTop: 3,
+            beach: 12
+          }
+        },
+        mountains: {
+          constants: {
+            scale: 2,
+            octaves: 10,
+            persistance: 1,
+            lacunarity: 1,
+            heightOffset: 2.5,
+            amplifier: 1
           },
           types: {
             top: 2,

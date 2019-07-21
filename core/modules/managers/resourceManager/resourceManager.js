@@ -16,9 +16,12 @@ class ResourceManager {
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
-  getMaterial = (id, face) => this.matMan.get(id, face)
+  getMaterial = (id, geo, face) => this.matMan.get(id, geo, face)
 
   getGeometry = face => this.geoMan.get(face)
+
+  getGeometryWLighting = (face, lighting, smoothLighting, type) =>
+    this.geoMan.getWLighting(face, lighting, smoothLighting, type)
 
   getTexture = (id, face) => this.texMan.get(id, face)
 }

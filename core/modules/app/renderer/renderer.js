@@ -18,10 +18,6 @@ export default class Renderer {
     // Appends canvas
     container.appendChild(this.threeRenderer.domElement)
 
-    // Shadow map options
-    this.threeRenderer.shadowMap.enabled = true
-    this.threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap
-
     // Get anisotropy for textures
     // Config.maxAnisotropy = this.threeRenderer.capabilities.getMaxAnisotropy()
 
@@ -29,7 +25,7 @@ export default class Renderer {
     this.updateSize()
 
     // Listeners
-    document.addEventListener('DOMContentLoaded', () => this.updateSize(), false)
+    document.addEventListener('DOMContentLoaded', this.updateSize, false)
   }
 
   updateSize() {

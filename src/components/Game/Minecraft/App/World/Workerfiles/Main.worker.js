@@ -39,7 +39,7 @@ export default () => {
           }
           const output = new Array(3)
           for (let m = 0; m < 3; m++) {
-            output[m] = new Uint16Array(3)
+            output[m] = new Uint8Array(3)
             for (let n = 0; n < 3; n++) {
               output[m][n] = self.getSmoothLighting(smoothLighting, i, j, k, l, m, n)
             }
@@ -66,9 +66,9 @@ export default () => {
         } = e.data
         const { size } = self.config
 
-        const blocks = new Uint16Array((size + 2) * (size + 2) * (size + 2))
-        const lighting = new Uint16Array(size ** 3 * 6)
-        const smoothLighting = new Uint16Array(size ** 3 * 6 * 3 * 3)
+        const blocks = new Uint8Array((size + 2) * (size + 2) * (size + 2))
+        const lighting = new Uint8Array(size ** 3 * 6)
+        const smoothLighting = new Uint8Array(size ** 3 * 6 * 3 * 3)
 
         self.generator.setVoxelData(blocks, coordx, coordy, coordz, changedBlocks)
         self.generator.setLightingData(lighting, smoothLighting, blocks, coordx, coordy, coordz)
