@@ -8,6 +8,7 @@ function WorkerPool(codes, callback, config) {
 
   const gJobs = []
   const sJobs = []
+
   const generalWorkers = []
   const specializedWorkers = []
 
@@ -18,7 +19,7 @@ function WorkerPool(codes, callback, config) {
   function nextGJob(index) {
     // No job
     if (!gJobs.length) {
-      gFrees.unshift(index)
+      gFrees.push(index)
       return
     }
 
@@ -47,7 +48,7 @@ function WorkerPool(codes, callback, config) {
     newGWorker.onmessage = e => {
       if (e.cmd !== 'BOOT') callback(e)
 
-      nextGJob(i)
+      gFrees.push(i)
     }
 
     generalWorkers.push(newGWorker)
@@ -62,7 +63,7 @@ function WorkerPool(codes, callback, config) {
     newSWorker.onmessage = e => {
       if (e.cmd !== 'BOOT') callback(e)
 
-      nextSJob(i)
+      sFrees.push(i)
     }
 
     specializedWorkers.push(newSWorker)

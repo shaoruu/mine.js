@@ -107,7 +107,7 @@ const Config = {
   chunk: {
     size: 16,
     height: 256,
-    maxPerFrame: 8
+    maxPerFrame: 2
   },
   world: {
     gravity: -16,
