@@ -1,8 +1,6 @@
 import Config from '../../../config/config'
 
-import WebWorker from './webWorker'
-
-function WorkerPool(codes, callback, config) {
+function WorkerPool(Worker, callback, config) {
   const gFrees = []
   const sFrees = []
 
@@ -43,9 +41,9 @@ function WorkerPool(codes, callback, config) {
   }
 
   for (let i = 0; i < maxGWorkers; i++) {
-    const newGWorker = new WebWorker(codes)
+    const newGWorker = new Worker()
 
-    newGWorker.onmessage = e => {
+    newGWorker.onmessage = function(e) {
       if (e.cmd !== 'BOOT') callback(e)
 
       gFrees.push(i)
@@ -58,9 +56,9 @@ function WorkerPool(codes, callback, config) {
   }
 
   for (let i = 0; i < maxSWorkers; i++) {
-    const newSWorker = new WebWorker(codes)
+    const newSWorker = new Worker()
 
-    newSWorker.onmessage = e => {
+    newSWorker.onmessage = function(e) {
       if (e.cmd !== 'BOOT') callback(e)
 
       sFrees.push(i)

@@ -14,10 +14,10 @@ class WorkerManager {
     this.world = world
   }
 
-  initChunkPool = (codes, chunkManager, configs) => {
+  initChunkPool = (instance, chunkManager, config) => {
     this.chunkManager = chunkManager
 
-    this.chunkWorkerPool = new WorkerPool(codes, this.chunkCallback, configs)
+    this.chunkWorkerPool = new WorkerPool(instance, this.chunkCallback, config)
     this.chunkTaskQueue = new TaskQueue()
     this.chunkJobs = []
   }

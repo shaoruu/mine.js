@@ -1,21 +1,15 @@
 import Helpers from '../../../utils/helpers'
 import Config from '../../../config/config'
-import Structures from '../../../config/structures'
 
 import Mesher from './mesher'
 import Chunk from './chunk'
-import { classicGeneratorCode } from './generation/terrain'
+import ChunkGenWorker from './chunkGen.worker'
 
 import * as THREE from 'three'
 
-const SIZE = Config.chunk.size
-const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
 const MAX_CHUNK_PER_FRAME = Config.chunk.maxPerFrame
-const DIMENSION = Config.block.dimension
 const HORZ_D = Config.player.render.horzD
 const VERT_D = Config.player.render.vertD
-const BLOCK_CONFIGS = Config.block
-const WORLD_CONFIGS = Config.world
 
 class ChunkManager {
   constructor(scene, seed, resourceManager, workerManager, changedBlocks) {
@@ -56,16 +50,9 @@ class ChunkManager {
     changedBlocks.forEach(cb => this.markCB(cb))
 
     /** WORKER */
-    this.workerManager.initChunkPool(classicGeneratorCode, this, {
+    this.workerManager.initChunkPool(ChunkGenWorker, this, {
       seed: this.seed,
-      size: SIZE,
-      neighborWidth: NEIGHBOR_WIDTH,
-      dimension: DIMENSION,
-      stride: [(SIZE + NEIGHBOR_WIDTH * 2) ** 2, SIZE + NEIGHBOR_WIDTH * 2, 1],
-      changedBlocks: this.cbDict,
-      block: BLOCK_CONFIGS,
-      world: WORLD_CONFIGS,
-      structures: Structures
+      changedBlocks
     })
 
     // this.workerManager.queueGeneralChunk({

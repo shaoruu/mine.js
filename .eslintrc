@@ -24,7 +24,9 @@
     "no-continue": "off",
     "func-names": "off",
     "no-bitwise": "off",
-    "consistent-return": "off"
+    "consistent-return": "off",
+    "import/no-webpack-loader-syntax": "off",
+    "no-restricted-globals": "off"
   },
   "settings": {
     "import/resolver": {
