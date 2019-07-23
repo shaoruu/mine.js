@@ -3,6 +3,7 @@ import Config from '../../../../config/config'
 import * as THREE from 'three'
 
 const DIMENSION = Config.block.dimension
+const WATER_COLOR = Config.world.waterColor
 
 const name = 'player-viewport'
 
@@ -10,14 +11,14 @@ function Viewport(player, world, scene) {
   let isChanged = false
 
   /** MESH SETUP */
-  const material = new THREE.MeshPhongMaterial({
+  const material = new THREE.MeshBasicMaterial({
     opacity: 0,
     transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false,
     depthTest: false
   })
-  const geometry = new THREE.BoxBufferGeometry(DIMENSION, DIMENSION, DIMENSION)
+  const geometry = new THREE.BoxBufferGeometry(DIMENSION / 2, DIMENSION / 2, DIMENSION / 2)
   const helmet = new THREE.Mesh(geometry, material)
 
   helmet.name = name
@@ -51,7 +52,7 @@ Viewport.prototype.tick = function() {
         this.setIsChanged(true)
       }
 
-      this.setFilter(0x0077be, 0.3)
+      this.setFilter(WATER_COLOR, 0.3)
       break
     default:
       if (this.getIsChanged()) this.reset()

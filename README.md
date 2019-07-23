@@ -32,6 +32,8 @@ These are some screenshots taken directly from the project.
 
 ![](https://i.imgur.com/5dadkka.jpg)
 
+![](https://i.imgur.com/2y8WJ8K.png)
+
 ## Awesome Gameplay
 
 ![](https://i.imgur.com/Xw5u4Lx.jpg)

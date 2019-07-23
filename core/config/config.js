@@ -113,6 +113,7 @@ const Config = {
     gravity: -16,
     maxWorldHeight: 256,
     waterLevel: 62,
+    waterColor: 0x0095ff,
     generation: {
       classicGeneration: {
         swampland: {
