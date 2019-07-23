@@ -35,7 +35,8 @@ const resources = {
         bottom: require('../assets/blocks/water_still.png'),
         config: {
           transparent: true,
-          side: THREE.DoubleSide
+          side: THREE.DoubleSide,
+          alphaTest: 0.15
         }
       },
       12: {
@@ -59,7 +60,6 @@ const resources = {
         side: require('../assets/blocks/leaves_oak.png'),
         bottom: require('../assets/blocks/leaves_oak.png'),
         config: {
-          transparent: true,
           side: THREE.DoubleSide,
           color: 0x1f6b1e,
           alphaTest: 0.15

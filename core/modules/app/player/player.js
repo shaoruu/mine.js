@@ -5,6 +5,7 @@ import { UPDATE_PLAYER_MUTATION } from '../../../lib/graphql'
 
 import Status from './status/status'
 import PlayerControls from './controls/controls'
+import PlayerViewport from './viewport/viewport'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe
 
@@ -41,6 +42,8 @@ class Player extends Stateful {
         diry: playerData.diry
       }
     )
+
+    this.viewport = new PlayerViewport(this, world, scene)
 
     scene.add(this.controls.getObject())
 
@@ -82,6 +85,7 @@ class Player extends Stateful {
     if (!this.world.getIsReady()) return
     this.controls.tick()
     this.status.tick()
+    this.viewport.tick()
   }
 
   removeUpdaters = () => {
@@ -91,6 +95,8 @@ class Player extends Stateful {
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
+  getCamCoordinates = dec => this.controls.getNormalizedCamPos(dec)
+
   getCoordinates = () => this.controls.getFeetCoords()
 
   getDirections = () => this.controls.getDirections()

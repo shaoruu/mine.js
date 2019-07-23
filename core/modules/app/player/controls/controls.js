@@ -480,7 +480,7 @@ class Controls {
   getNormalizedCamPos = (dec = COORD_DEC) => {
     // Normalized as in normalized to world coordinates
     const position = this.getObject().position.clone()
-    return Helpers.roundPos(Helpers.worldToBlock(position, false), dec)
+    return Helpers.floorPos(Helpers.worldToBlock(position, false), dec)
   }
 
   getFeetCoords = (dec = COORD_DEC) => {

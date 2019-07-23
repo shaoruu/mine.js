@@ -17,6 +17,10 @@ import './utils/setup'
 
 const BACKGROUND_CONFIG = Config.scene.background
 const FOG_CONFIG = Config.scene.fog
+const DIMENSION = Config.block.dimension
+const SIZE = Config.chunk.size
+const HORZ_D = Config.player.render.horzD
+const VERT_D = Config.player.render.vertD
 
 class Game {
   constructor(data, username, container, canvas, blocker, button, apolloClient) {
@@ -31,7 +35,11 @@ class Game {
     /** THREE SCENE */
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(BACKGROUND_CONFIG.color)
-    this.scene.fog = new THREE.Fog(FOG_CONFIG.color, FOG_CONFIG.near, FOG_CONFIG.far)
+    this.scene.fog = new THREE.Fog(
+      FOG_CONFIG.color,
+      FOG_CONFIG.near,
+      (HORZ_D > VERT_D ? VERT_D : HORZ_D) * SIZE * DIMENSION * 6
+    )
 
     /** THREE RENDERER */
     this.renderer = new Renderer(this.scene, canvas)

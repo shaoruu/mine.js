@@ -21,15 +21,13 @@ const Config = {
     },
     fog: {
       color: 0xdcebf4,
-      near: 0.0008,
-      far: 2500
+      near: 0.0008
     },
     lod: 5
   },
   camera: {
     fov: 102,
     near: 1,
-    far: 1200,
     aspect: 1,
     posX: 0,
     posY: 0,

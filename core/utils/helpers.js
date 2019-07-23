@@ -84,6 +84,13 @@ class Helpers {
     return { x, y, z }
   }
 
+  static floorPos = ({ x, y, z }, dec) => {
+    x = Math.floor(x * 10 ** dec) / 10 ** dec
+    y = Math.floor(y * 10 ** dec) / 10 ** dec
+    z = Math.floor(z * 10 ** dec) / 10 ** dec
+    return { x, y, z }
+  }
+
   static round(value, decimals) {
     return Number(`${Math.round(`${value}e${decimals}`)}e-${decimals}`)
   }
