@@ -43,8 +43,15 @@ function Chunk(x, y, z) {
   this.getMesh = () => mesh
   this.getLoading = () => loading
   this.getIsInScene = () => isInScene
-  this.getBlock = (bx, by, bz) =>
-    data ? data.get(bx + NEIGHBOR_WIDTH, bz + NEIGHBOR_WIDTH, by + NEIGHBOR_WIDTH) : undefined
+  this.getBlock = (bx, by, bz) => {
+    try {
+      return data
+        ? data.get(bx + NEIGHBOR_WIDTH, bz + NEIGHBOR_WIDTH, by + NEIGHBOR_WIDTH)
+        : undefined
+    } catch (e) {
+      return 0
+    }
+  }
 }
 
 Chunk.prototype.addSelf = function(scene) {

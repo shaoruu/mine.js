@@ -94,7 +94,7 @@ const Config = {
       posZ: 5.53
     },
     render: {
-      horzD: 1,
+      horzD: 2,
       vertD: 1
     },
     reachDst: 7
@@ -106,10 +106,10 @@ const Config = {
     liquid: [0, 9]
   },
   chunk: {
-    size: 20,
+    size: 10,
     neighborWidth: 4,
     height: 256,
-    maxPerFrame: 4
+    maxPerFrame: 8
   },
   world: {
     gravity: -16,

@@ -145,9 +145,7 @@ class ChunkManager {
 
     const [geoJSON, materials] = meshData
 
-    console.time('damn')
     const mesh = Mesher.processMeshData(geoJSON, materials, this.resourceManager)
-    console.timeEnd('damn')
 
     if (!mesh) return
 

@@ -5,7 +5,7 @@ import Config from '../config/config'
 const SIZE = Config.chunk.size
 const DIMENSION = Config.block.dimension
 
-const projectTag = '[SkyfactoryJS]'
+const projectTag = '[MinecraftJS]'
 
 class Helpers {
   static log = (message, pt = false) => console.log(pt ? `${projectTag} ${message}` : message)
