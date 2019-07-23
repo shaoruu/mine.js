@@ -148,7 +148,7 @@ export default function ClassicGenerator(seed) {
     if (this.maxHeights[rep]) return this.maxHeights[rep]
 
     let high = maxWorldHeight
-    let low = 0
+    let low = waterLevel
     let middle = Math.floor((high + low) / 2)
 
     while (low <= high) {
@@ -235,7 +235,7 @@ export default function ClassicGenerator(seed) {
               x: q.x + surroundings[n].x,
               y: -1,
               z: q.z + surroundings[n].z,
-              lightLevel: q.lightLevel - (q.y < waterLevel ? q.lightLevel : 1)
+              lightLevel: q.lightLevel - 1
             }
             if (
               pastNodeCoords.has(Helpers.get3DCoordsRep(newNode.x, newNode.y, newNode.z)) ||
