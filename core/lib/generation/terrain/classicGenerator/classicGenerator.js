@@ -590,7 +590,9 @@ export default function ClassicGenerator(seed) {
       for (let z = offsets[2]; z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2; z++) {
         const maxHeight = this.getHighestBlock(x, z)
 
-        const type = voxelData.get(x, maxHeight, z) || this.getBlockInfo(x, maxHeight, z, maxHeight)
+        const type =
+          voxelData.get(x - offsets[0], z - offsets[2], maxHeight - offsets[1]) ||
+          this.getBlockInfo(x, maxHeight, z, maxHeight)
 
         if (
           (type === 2 || type === 3) &&
