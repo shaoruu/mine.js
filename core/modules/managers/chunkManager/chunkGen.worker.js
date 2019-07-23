@@ -1,4 +1,5 @@
 import { ClassicGenerator } from '../../../lib/generation/terrain'
+import GeometryManager from '../resourceManager/geometryManager'
 import Config from '../../../config/config'
 
 import Mesher from './mesher'
@@ -20,6 +21,9 @@ self.onmessage = function(e) {
 
       self.generator = new ClassicGenerator(seed)
       self.generator.registerCB(changedBlocks)
+
+      self.geometryManager = new GeometryManager()
+      self.geometryManager.load()
 
       self.postMessage({ cmd })
 
@@ -78,7 +82,9 @@ self.onmessage = function(e) {
           coordz
         )
 
-        self.postMessage({ cmd, blocks: blocks.data, planes, chunkRep })
+        const meshData = Mesher.generateMeshData(planes, self.geometryManager)
+
+        self.postMessage({ cmd, blocks: blocks.data, meshData, chunkRep })
       } else self.postMessage({ cmd, blocks, planes: [], chunkRep })
 
       break

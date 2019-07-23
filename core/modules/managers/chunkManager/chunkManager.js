@@ -138,14 +138,16 @@ class ChunkManager {
     })
   }
 
-  meshChunk = (chunk, planes) => {
+  meshChunk = (chunk, meshData) => {
     chunk.setLoading(false)
-    if (planes.length === 0) return
 
-    // TODO: MAKE IT PER FRAME
-    // console.time(`${chunk.getRep()} mesh:`)
-    const mesh = Mesher.mergeMeshes(planes, this.resourceManager)
-    // console.timeEnd(`${chunk.getRep()} mesh:`)
+    if (!meshData) return
+
+    const [geoJSON, materials] = meshData
+
+    console.time('damn')
+    const mesh = Mesher.processMeshData(geoJSON, materials, this.resourceManager)
+    console.timeEnd('damn')
 
     if (!mesh) return
 

@@ -6,7 +6,7 @@ import * as THREE from 'three'
 const LEVEL_OF_DETAIL = Config.scene.lod
 const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
 const TRANSPARENT_BLOCKS = Config.block.transparent
-const LIQUID_BLOCKS = Config.block.transparent
+const LIQUID_BLOCKS = Config.block.liquid
 
 class Mesher {
   static getSmoothLightingSide = (smoothLighting, i, j, k, l) => {
@@ -21,11 +21,12 @@ class Mesher {
     return output
   }
 
-  static mergeMeshes = (planes, resourceManager) => {
+  static generateMeshData = (planes, geoManager) => {
+    if (!planes || planes.length === 0) return null
+
     const materials = []
     const mergedGeometry = new THREE.Geometry()
     const matrix = new THREE.Matrix4()
-    const finalLOD = new THREE.LOD()
 
     for (let i = 0; i < planes.length; i++) {
       const [geo, pos, face, type, lighting, smoothLighting] = planes[i]
@@ -34,7 +35,7 @@ class Mesher {
       const {
         geometry,
         translation: { x: dx, y: dy, z: dz }
-      } = resourceManager.getGeometryWLighting(geo, lighting, smoothLighting, type)
+      } = geoManager.getWLighting(geo, lighting, smoothLighting, type)
       const { x: wx, y: wy, z: wz } = Helpers.globalBlockToWorld({
         x: x + dx,
         y: y + dy,
@@ -44,20 +45,33 @@ class Mesher {
       matrix.makeTranslation(wx, wy, wz)
       mergedGeometry.merge(geometry, matrix, i)
 
-      materials.push(resourceManager.getMaterial(type, geo, face))
+      materials.push([type, geo, face])
     }
 
     const finalGeometry = new THREE.BufferGeometry().fromGeometry(mergedGeometry)
-    const mergedMesh = new THREE.Mesh(finalGeometry, materials)
 
-    mergedMesh.matrixAutoUpdate = false
-    mergedMesh.updateMatrix()
+    return [finalGeometry.toJSON(), materials]
+  }
 
-    for (let i = 0; i < LEVEL_OF_DETAIL; i++) {
-      finalLOD.addLevel(mergedMesh, i * 75)
-    }
+  static processMeshData = (finalGeometryJSON, materials, resourceManager) => {
+    const parser = new THREE.BufferGeometryLoader()
 
-    return finalLOD
+    const actualGeo = parser.parse(finalGeometryJSON)
+    const actualMats = []
+
+    materials.forEach(([type, geo, face]) =>
+      actualMats.push(resourceManager.getMaterial(type, geo, face))
+    )
+
+    const finalMesh = new THREE.Mesh(actualGeo, actualMats)
+    const finalLOD = new THREE.LOD()
+
+    finalMesh.matrixAutoUpdate = false
+    finalMesh.updateMatrix()
+
+    for (let i = 0; i < LEVEL_OF_DETAIL; i++) finalLOD.addLevel(finalMesh, i * 75)
+
+    return finalMesh
   }
 
   static calcPlanes(voxelData, lighting, smoothLighting, dims, coordx, coordy, coordz) {
@@ -111,14 +125,14 @@ class Mesher {
           }
 
           const nx = voxelData.get(x - 1, z, y)
-          if (!nx || (TRANSPARENT_BLOCKS.includes(nx) && !isSelfLiquid && !isSelfTransparent)) {
+          if (!nx || (TRANSPARENT_BLOCKS.includes(nx) && !isSelfLiquid)) {
             const smoothLightingSide = this.getSmoothLightingSide(smoothLighting, wx, wz, wy, 3)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'nx' : 'nx2'
             planes.push([geo, pos, 'side', type, lighting.get(wx, wz, wy, 3), smoothLightingSide])
           }
 
           const nz = voxelData.get(x, z - 1, y)
-          if (!nz || (TRANSPARENT_BLOCKS.includes(nz) && !isSelfLiquid && !isSelfTransparent)) {
+          if (!nz || (TRANSPARENT_BLOCKS.includes(nz) && !isSelfLiquid)) {
             const smoothLightingSide = this.getSmoothLightingSide(smoothLighting, wx, wz, wy, 4)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'nz' : 'nz2'
             planes.push([geo, pos, 'side', type, lighting.get(wx, wz, wy, 4), smoothLightingSide])
@@ -126,10 +140,7 @@ class Mesher {
 
           // BOTTOM
           const bottom = voxelData.get(x, z, y - 1)
-          if (
-            !bottom ||
-            (TRANSPARENT_BLOCKS.includes(bottom) && !isSelfLiquid && !isSelfTransparent)
-          ) {
+          if (!bottom || (TRANSPARENT_BLOCKS.includes(bottom) && !isSelfLiquid)) {
             const smoothLightingSide = this.getSmoothLightingSide(smoothLighting, wx, wz, wy, 5)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'ny' : 'ny2'
             planes.push([geo, pos, 'bottom', type, lighting.get(wx, wz, wy, 5), smoothLightingSide])

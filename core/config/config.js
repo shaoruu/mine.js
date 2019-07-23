@@ -106,10 +106,10 @@ const Config = {
     liquid: [0, 9]
   },
   chunk: {
-    size: 24,
-    neighborWidth: 3,
+    size: 20,
+    neighborWidth: 4,
     height: 256,
-    maxPerFrame: 2
+    maxPerFrame: 4
   },
   world: {
     gravity: -16,

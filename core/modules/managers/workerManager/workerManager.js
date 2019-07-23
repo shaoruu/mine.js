@@ -30,19 +30,6 @@ class WorkerManager {
 
   chunkCallback = ({ data }) => {
     switch (data.cmd) {
-      case 'GET_CHUNK': {
-        const { planes, blocks, chunkRep } = data
-        const temp = this.chunkManager.getChunkFromRep(chunkRep)
-
-        if (!planes.filter(e => e === 0)) break
-
-        this.chunkTaskQueue.addTasks([
-          [temp.setData, blocks],
-          [this.chunkManager.meshChunk, [temp, planes]]
-        ])
-
-        break
-      }
       case 'GET_HIGHEST': {
         const { h } = data
         const position = this.world.player.getPosition()
@@ -56,39 +43,18 @@ class WorkerManager {
         this.world.setState({ isSetup: true })
         break
       }
-      // case 'UPDATE_BLOCK': {
-      //   const {
-      //     combined,
-      //     block: { x, y, z },
-      //     chunkName
-      //   } = data
 
-      //   const temp = this.chunks[chunkName]
-      //   window.requestAnimationFrame(() => {
-      //     this.chunkTaskQueue.addTasks([[temp.generateMesh, combined]], {
-      //       prioritized: true
-      //     })
-      //   })
-      //   window.requestAnimationFrame(() => {
-      //     this.chunkTaskQueue.addTask(
-      //       () => {
-      //         // Remove old then add new to scene
-      //         const obj = this.scene.getObjectByName(chunkName)
-      //         if (obj) this.scene.remove(obj)
-      //         const mesh = temp.getMesh()
-      //         if (mesh instanceof THREE.Object3D) this.scene.add(mesh)
-      //         temp.untagBusyBlock(x, y, z)
+      case 'GET_CHUNK': {
+        const { meshData, blocks, chunkRep } = data
+        const temp = this.chunkManager.getChunkFromRep(chunkRep)
 
-      //         // Reset everything
-      //         this.targetBlock = null
-      //         this.potentialBlock = null
-      //       },
-      //       { prioritized: true }
-      //     )
-      //   })
+        this.chunkTaskQueue.addTasks([
+          [temp.setData, blocks],
+          [this.chunkManager.meshChunk, [temp, meshData]]
+        ])
 
-      //   break
-      // }
+        break
+      }
       default:
         break
     }

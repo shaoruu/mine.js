@@ -2,6 +2,7 @@ import Helpers from '../../../utils/helpers'
 import Config from '../../../config/config'
 
 import ndarray from 'ndarray'
+import * as THREE from 'three'
 
 const SIZE = Config.chunk.size
 const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
@@ -15,8 +16,6 @@ function Chunk(x, y, z) {
 
   const rep = Helpers.get3DCoordsRep(x, y, z)
 
-  this.addSelf = scene => scene.add(mesh)
-
   this.setData = blocks => {
     data = ndarray(blocks, [
       SIZE + NEIGHBOR_WIDTH * 2,
@@ -25,7 +24,7 @@ function Chunk(x, y, z) {
     ])
   }
   this.setMesh = m => {
-    if (!m) return
+    if (!m || !(m instanceof THREE.Object3D)) return
     mesh = m
     mesh.name = this.getRep()
     mesh.isChunk = true
@@ -46,6 +45,10 @@ function Chunk(x, y, z) {
   this.getIsInScene = () => isInScene
   this.getBlock = (bx, by, bz) =>
     data ? data.get(bx + NEIGHBOR_WIDTH, bz + NEIGHBOR_WIDTH, by + NEIGHBOR_WIDTH) : undefined
+}
+
+Chunk.prototype.addSelf = function(scene) {
+  scene.add(this.getMesh())
 }
 
 export default Chunk
