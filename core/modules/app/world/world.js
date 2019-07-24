@@ -96,6 +96,10 @@ class World extends Stateful {
   /* -------------------------------------------------------------------------- */
   setPlayer = player => (this.player = player)
 
+  setTarget = target => (this.targetBlock = target)
+
+  setPotential = potential => (this.potentialBlock = potential)
+
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
@@ -105,13 +109,25 @@ class World extends Stateful {
     return type
   }
 
-  getPassableByVoxelCoords = (x, y, z) => {
+  getVoxelByWorldCoords = (x, y, z) => {
+    const gbc = Helpers.worldToBlock({ x, y, z })
+    return this.getVoxelByVoxelCoords(gbc.x, gbc.y, gbc.z)
+  }
+
+  getSolidityByVoxelCoords = (x, y, z) => {
     const type = this.getVoxelByVoxelCoords(x, y, z)
     if (type !== 0 && !type) return true
 
     const isSolid = LIQUID.includes(type)
     return !isSolid
   }
+
+  getSolidityByWorldCoords = (x, y, z) => {
+    const gbc = Helpers.worldToBlock({ x, y, z })
+    return this.getSolidityByVoxelCoords(gbc.x, gbc.y, gbc.z)
+  }
+
+  getPassableByVoxelCoords = (x, y, z) => this.getSolidityByVoxelCoords(x, y, z)
 
   getIsReady = () => this.chunkManager.isReady
 }

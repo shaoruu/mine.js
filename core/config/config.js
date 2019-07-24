@@ -68,6 +68,7 @@ const Config = {
     inAirInertia: 16, // For jumping
     sprintFactor: 1.3,
     spectatorInertia: 6,
+    rollOverColor: 0xffffff,
     acceleration: {
       forward: 50,
       other_horz: 20,

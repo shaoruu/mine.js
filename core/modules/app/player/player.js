@@ -95,6 +95,8 @@ class Player extends Stateful {
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
+  getCamera = () => this.camera
+
   getCamCoordinates = dec => this.controls.getNormalizedCamPos(dec)
 
   getCoordinates = () => this.controls.getFeetCoords()
@@ -104,6 +106,8 @@ class Player extends Stateful {
   getHeight = () => this.getCoordinates().y
 
   getPosition = () => this.controls.getObject().position
+
+  getObject = () => this.controls.getObject()
 
   /* -------------------------------------------------------------------------- */
   /*                                   SETTERS                                  */
