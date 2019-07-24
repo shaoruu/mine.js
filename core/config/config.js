@@ -69,10 +69,13 @@ const Config = {
     sprintFactor: 1.3,
     spectatorInertia: 6,
     acceleration: {
-      forward: 50,
-      other_horz: 25,
-      vertical: 40,
-      jump: 260
+      forward: 500,
+      other_horz: 250,
+      vertical: 400
+    },
+    jump: {
+      time: 150, // ms
+      force: 300
     },
     maxSpeed: {
       horizontal: 700,
@@ -105,12 +108,12 @@ const Config = {
   },
   chunk: {
     size: 10,
-    neighborWidth: 4,
+    neighborWidth: 3,
     height: 256,
     maxPerFrame: 8
   },
   world: {
-    gravity: -16,
+    gravity: -160,
     maxWorldHeight: 256,
     waterLevel: 62,
     waterColor: 0x0095ff,

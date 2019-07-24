@@ -13,6 +13,7 @@
     "bcryptjs": "^2.4.3",
     "concurrently": "^4.1.1",
     "cookie": "^0.3.1",
+    "d3-ease": "^1.0.5",
     "dotenv": "^8.0.0",
     "fast-voxel-raycast": "^0.1.1",
     "formik": "^1.5.1",

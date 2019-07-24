@@ -5,6 +5,7 @@ import Helpers from '../../../../utils/helpers'
 import PointerLockControls from './pointerLockControls'
 
 import * as THREE from 'three'
+import { easeQuadOut } from 'd3-ease'
 
 /**
  *
@@ -24,7 +25,9 @@ const SPRINT_FACTOR = Config.player.sprintFactor
 const FORW_ACC = Config.player.acceleration.forward
 const OTHER_HORZ_ACC = Config.player.acceleration.other_horz
 const VERTICAL_ACC = Config.player.acceleration.vertical
-const JUMP_ACC = Config.player.acceleration.jump
+// const JUMP_ACC = Config.player.acceleration.jump
+const JUMP_TIME = Config.player.jump.time
+const JUMP_FORCE = Config.player.jump.force
 const GRAVITY = Config.world.gravity
 const DIMENSION = Config.block.dimension
 const COORD_DEC = Config.player.coordinateDec
@@ -50,6 +53,9 @@ class Controls {
       down: false,
       up: false
     }
+
+    this.currJumpTime = 0
+    this.jumping = false
 
     this.sneakNode = null
 
@@ -114,16 +120,43 @@ class Controls {
         : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) / (isSprinting ? SPRINT_FACTOR : 1)) *
       delta
 
-    this.vel.add(this.acc)
-    this.acc.set(0.0, 0.0, 0.0)
-
     if (this.needsToJump) {
-      this.vel.y += JUMP_ACC
+      this.jumping = true
+      this.currJumpTime = JUMP_TIME
       this.needsToJump = false
     }
 
-    // APPLY GRAVITY
-    if (shouldGravity && !this.freshlyJumped) this.vel.y += GRAVITY
+    if (this.currJumpTime > 0 && this.jumping) {
+      const jf = easeQuadOut(this.currJumpTime / JUMP_TIME) * JUMP_FORCE
+      console.log(jf)
+      this.acc.y += jf // !?????
+      this.currJumpTime -= delta * 1000
+    }
+
+    if (this.currJumpTime <= 0) {
+      this.jumping = false
+      this.currJumpTime = 0
+    }
+
+    this.vel.add(this.acc)
+    this.acc.set(0.0, 0.0, 0.0)
+
+    if (shouldGravity && !this.freshlyJumped && !this.jumping) this.vel.y += GRAVITY
+
+    // if (this.movements.up) {
+    //   if (this.jumping && this.currJumpTime > 0) {
+    //     let jf = JUMP_FORCE
+    //     if (this.currJumpTime < delta) jf *= this.currJumpTime / delta
+    //     this.vel.y += jf // !?????
+    //     this.currJumpTime -= delta
+    //   } else {
+    //     this.jumping = true
+    //     this.currJumpTime = JUMP_TIME
+    //     this.needsToJump = false
+    //   }
+    // }
+
+    this.vel.multiplyScalar(delta)
 
     if (this.vel.x > HORZ_MAX_SPEED) this.vel.x = HORZ_MAX_SPEED
     else if (this.vel.x < -HORZ_MAX_SPEED) this.vel.x = -HORZ_MAX_SPEED
@@ -132,7 +165,7 @@ class Controls {
     if (this.vel.z > HORZ_MAX_SPEED) this.vel.z = HORZ_MAX_SPEED
     else if (this.vel.z < -HORZ_MAX_SPEED) this.vel.z = -HORZ_MAX_SPEED
 
-    this.handleCollisions(delta)
+    this.handleCollisions()
 
     this.prevTime = now
     this.freshlyJumped = false
@@ -257,10 +290,10 @@ class Controls {
     this.keyboard.registerKey(78, 'moving', this.status.toggleFly)
   }
 
-  handleCollisions = delta => {
+  handleCollisions = () => {
     // AABB
     const playerPos = this.getNormalizedCamPos(10)
-    const scaledVel = this.vel.clone().multiplyScalar(delta / DIMENSION)
+    const scaledVel = this.vel.clone().multiplyScalar(1 / DIMENSION)
 
     const EPSILON = 1 / 1024
 
@@ -273,7 +306,7 @@ class Controls {
     }
     this.handleYCollision(playerPos, scaledVel, EPSILON)
 
-    scaledVel.multiplyScalar(DIMENSION / delta)
+    scaledVel.multiplyScalar(DIMENSION)
     this.vel.copy(scaledVel)
 
     const { position } = this.getObject()
@@ -375,6 +408,7 @@ class Controls {
         if (voxelExists) {
           if (scaledVel.y > 0) newY = Math.floor(posY) - P_I_2_TOP - EPSILON
           else {
+            this.jumping = false
             this.status.registerLand()
             newY = Math.floor(posY) + 1 + P_I_2_TOE + EPSILON
           }
