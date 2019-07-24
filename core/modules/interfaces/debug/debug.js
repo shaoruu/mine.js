@@ -2,13 +2,11 @@
  * F3 utilities
  */
 import Helpers from '../../../utils/helpers'
+import BlockDict from '../../../config/blockDict'
 
 import classes from './debug.module.css'
 
 function Debug(container, player, world) {
-  this.player = player
-  this.world = world
-
   let display = process.env.NODE_ENV === 'development'
 
   let maxFPS = null
@@ -20,11 +18,15 @@ function Debug(container, player, world) {
   const title = document.createElement('p')
   const coordinates = document.createElement('p')
   const fps = document.createElement('p')
+  const targetedBlockTitle = document.createElement('p')
+  const targetedBlock = document.createElement('p')
 
   // DEFAULTS
   title.innerHTML = 'Minecraft JS (dev/beta/vanilla)'
   coordinates.innerHTML = 'XYZ: 0 / 0 / 0'
   fps.innerHTML = '0 fps'
+  targetedBlockTitle.innerHTML = 'Targeted Block'
+  targetedBlock.innerHTML = BlockDict['0'].tag
 
   Helpers.applyStyle(wrapper, classes.wrapper)
   Helpers.applyStyle(leftPanel, classes.leftPanel)
@@ -32,22 +34,30 @@ function Debug(container, player, world) {
   Helpers.applyStyle(title, classes.title)
   Helpers.applyStyle(coordinates, classes.coords)
   Helpers.applyStyle(fps, classes.fps)
+  Helpers.applyStyle(targetedBlockTitle, classes.subSectionTitle)
 
   leftPanel.appendChild(title)
   leftPanel.appendChild(coordinates)
   leftPanel.appendChild(fps)
 
+  rightPanel.appendChild(targetedBlockTitle)
+  rightPanel.appendChild(targetedBlock)
+
   wrapper.appendChild(leftPanel)
   wrapper.appendChild(rightPanel)
 
-  if (display) Helpers.applyStyle(wrapper, { display: 'block' })
+  if (display) Helpers.applyStyle(wrapper, { display: 'flex' })
 
   this.getGui = () => wrapper
+
+  this.getPlayer = () => player
+  this.getWorld = () => world
 
   this.getDOM_FPS = () => fps
   this.getDOM_coordinates = () => coordinates
   this.getDOM_title = () => title
   this.getDOM_wrapper = () => wrapper
+  this.getDOM_targetedBlock = () => targetedBlock
 
   this.setDisplay = bool => (display = bool)
   this.getDisplay = () => display
@@ -59,7 +69,7 @@ function Debug(container, player, world) {
   this.setMinFPS = f => (minFPS = f)
 
   container.appendChild(wrapper)
-  this.player.controls.setDebugControl(this)
+  player.controls.setDebugControl(this)
 }
 
 Debug.prototype.calcFPS = (function() {
@@ -82,7 +92,7 @@ Debug.prototype.calcFPS = (function() {
 
 Debug.prototype.update = function() {
   const newFPS = this.calcFPS()
-  const playerPos = this.player.getCoordinates()
+  const playerPos = this.getPlayer().getCoordinates()
 
   if (!this.getMaxFPS() || this.getMaxFPS() < newFPS) this.setMaxFPS(newFPS)
   if (!this.getMinFPS() || this.getMinFPS() > newFPS) this.setMinFPS(newFPS)
@@ -94,6 +104,9 @@ Debug.prototype.update = function() {
 
   this.getDOM_FPS().innerHTML = `${newFPS} fps [${this.getMinFPS() || 0} - ${this.getMaxFPS() ||
     0}]`
+
+  const targetedType = this.getWorld().getTargetBlockType()
+  this.getDOM_targetedBlock().innerHTML = BlockDict[targetedType].tag
 }
 
 Debug.prototype.toggle = function() {

@@ -129,6 +129,25 @@ class World extends Stateful {
 
   getPassableByVoxelCoords = (x, y, z) => this.getSolidityByVoxelCoords(x, y, z)
 
+  getTargetBlockType = () => {
+    if (!this.targetBlock) return 0
+
+    const {
+      chunk: { cx, cy, cz },
+      block: { x, y, z }
+    } = this.targetBlock
+    const bCoords = Helpers.chunkBlockToGlobalBlock({
+      x,
+      y,
+      z,
+      coordx: cx,
+      coordy: cy,
+      coordz: cz
+    })
+
+    return this.getVoxelByVoxelCoords(bCoords.x, bCoords.y, bCoords.z)
+  }
+
   getIsReady = () => this.chunkManager.isReady
 }
 
