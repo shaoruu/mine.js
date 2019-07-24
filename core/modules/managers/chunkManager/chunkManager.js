@@ -7,7 +7,7 @@ import ChunkGenWorker from './chunkGen.worker'
 
 import * as THREE from 'three'
 
-const MAX_CHUNK_PER_FRAME = Config.chunk.maxPerFrame
+const MAX_WORKER_COUNT = Config.tech.maxWorkerCount
 const HORZ_D = Config.player.render.horzD
 const VERT_D = Config.player.render.vertD
 
@@ -83,7 +83,7 @@ class ChunkManager {
           const tempChunk = this.getChunkFromCoords(x, y, z)
 
           if (!tempChunk) {
-            if (count < MAX_CHUNK_PER_FRAME) {
+            if (count < (navigator.hardwareConcurrency || MAX_WORKER_COUNT)) {
               this.makeChunk(x, y, z)
               count++
             } else allGood = false

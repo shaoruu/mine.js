@@ -3,6 +3,9 @@
  */
 
 const Config = {
+  tech: {
+    maxWorkerCount: 4
+  },
   lights: {
     ambientLight: {
       enabled: true,
@@ -110,8 +113,7 @@ const Config = {
   chunk: {
     size: 10,
     neighborWidth: 3,
-    height: 256,
-    maxPerFrame: 8
+    height: 256
   },
   world: {
     gravity: -16,
