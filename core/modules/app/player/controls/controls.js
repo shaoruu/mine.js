@@ -7,13 +7,6 @@ import PointerLockControls from './pointerLockControls'
 import * as THREE from 'three'
 import { easeQuadOut } from 'd3-ease'
 
-/**
- *
- * REFERENCE:
- *  https://github.com/ian13456/minecraft.js/blob/master/client/src/components/Game/Minecraft/App/Player/Controls/Controls.js
- *
- */
-
 const { movements: MOVEMENT_KEYS } = Config.keyboard
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal
 const VERT_MAX_SPEED = Config.player.maxSpeed.vertical
@@ -25,7 +18,6 @@ const SPRINT_FACTOR = Config.player.sprintFactor
 const FORW_ACC = Config.player.acceleration.forward
 const OTHER_HORZ_ACC = Config.player.acceleration.other_horz
 const VERTICAL_ACC = Config.player.acceleration.vertical
-// const JUMP_ACC = Config.player.acceleration.jump
 const JUMP_TIME = Config.player.jump.time
 const JUMP_FORCE = Config.player.jump.force
 const GRAVITY = Config.world.gravity
@@ -140,19 +132,6 @@ class Controls {
     this.acc.set(0.0, 0.0, 0.0)
 
     if (shouldGravity && !this.freshlyJumped) this.vel.y += GRAVITY
-
-    // if (this.movements.up) {
-    //   if (this.jumping && this.currJumpTime > 0) {
-    //     let jf = JUMP_FORCE
-    //     if (this.currJumpTime < delta) jf *= this.currJumpTime / delta
-    //     this.vel.y += jf // !?????
-    //     this.currJumpTime -= delta
-    //   } else {
-    //     this.jumping = true
-    //     this.currJumpTime = JUMP_TIME
-    //     this.needsToJump = false
-    //   }
-    // }
 
     this.vel.multiplyScalar(delta)
 

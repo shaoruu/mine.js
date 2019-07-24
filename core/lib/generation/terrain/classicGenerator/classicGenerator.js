@@ -7,8 +7,6 @@ import { Noise } from 'noisejs'
 const STRUCTURES = Structures
 const SIZE = Config.chunk.size
 const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
-const LIQUID_BLOCKS = Config.block.liquid
-const TRANSPARENT_BLOCKS = Config.block.transparent
 const WORLD_CONFIGS = Config.world
 
 const {
@@ -87,10 +85,6 @@ export default function ClassicGenerator(seed) {
     if (cb) return !!cb
     return isSolidAt(x, y, z)
   }
-
-  const isTransparent = type => TRANSPARENT_BLOCKS.includes(type)
-
-  const isLiquid = type => LIQUID_BLOCKS.includes(type)
 
   const shouldPlantTree = (x, z, treeScopedMin, treeScopedScale) => {
     const rep = Helpers.get2DCoordsRep(x, z)
@@ -220,7 +214,7 @@ export default function ClassicGenerator(seed) {
         lightLevel: 15
       }
       const value = this.getLoadedBlocks(block.x, block.y, block.z, voxelData, offsets)
-      if (isTransparent(value)) {
+      if (Helpers.isTransparent(value)) {
         const pastNodeCoords = new Set([Helpers.get3DCoordsRep(block.x, -1, block.z)])
         const queue = [block]
 
@@ -249,13 +243,13 @@ export default function ClassicGenerator(seed) {
 
             let endValue = this.getLoadedBlocks(newNode.x, yValue, newNode.z, voxelData, offsets)
 
-            while (isTransparent(startValue) && !isTransparent(endValue)) {
+            while (Helpers.isTransparent(startValue) && !Helpers.isTransparent(endValue)) {
               yValue += 1
               startValue = this.getLoadedBlocks(q.x, yValue, q.z, voxelData, offsets)
               endValue = this.getLoadedBlocks(newNode.x, yValue, newNode.z, voxelData, offsets)
             }
 
-            if (!isTransparent(startValue) || !isTransparent(endValue)) continue
+            if (!Helpers.isTransparent(startValue) || !Helpers.isTransparent(endValue)) continue
 
             newNode.y = yValue
 
@@ -304,16 +298,36 @@ export default function ClassicGenerator(seed) {
     const pzpy = voxelData.get(x, z + 1, y + 1)
     const pxpzpy = voxelData.get(x + 1, z + 1, y + 1)
 
-    if (isTransparent(py)) {
-      const a = !isTransparent(nxpy) || !isTransparent(nzpy) || !isTransparent(nxnzpy) ? 0 : 1
-      const b = !isTransparent(nxpy) || !isTransparent(pzpy) || !isTransparent(nxpzpy) ? 0 : 1
-      const c = !isTransparent(pxpy) || !isTransparent(pzpy) || !isTransparent(pxpzpy) ? 0 : 1
-      const d = !isTransparent(pxpy) || !isTransparent(nzpy) || !isTransparent(pxnzpy) ? 0 : 1
+    if (Helpers.isTransparent(py)) {
+      const a =
+        !Helpers.isTransparent(nxpy) ||
+        !Helpers.isTransparent(nzpy) ||
+        !Helpers.isTransparent(nxnzpy)
+          ? 0
+          : 1
+      const b =
+        !Helpers.isTransparent(nxpy) ||
+        !Helpers.isTransparent(pzpy) ||
+        !Helpers.isTransparent(nxpzpy)
+          ? 0
+          : 1
+      const c =
+        !Helpers.isTransparent(pxpy) ||
+        !Helpers.isTransparent(pzpy) ||
+        !Helpers.isTransparent(pxpzpy)
+          ? 0
+          : 1
+      const d =
+        !Helpers.isTransparent(pxpy) ||
+        !Helpers.isTransparent(nzpy) ||
+        !Helpers.isTransparent(pxnzpy)
+          ? 0
+          : 1
 
-      const e = !isTransparent(nxnzpy) ? 0 : 1
-      const f = !isTransparent(nxpzpy) ? 0 : 1
-      const g = !isTransparent(pxpzpy) ? 0 : 1
-      const h = !isTransparent(pxnzpy) ? 0 : 1
+      const e = !Helpers.isTransparent(nxnzpy) ? 0 : 1
+      const f = !Helpers.isTransparent(nxpzpy) ? 0 : 1
+      const g = !Helpers.isTransparent(pxpzpy) ? 0 : 1
+      const h = !Helpers.isTransparent(pxnzpy) ? 0 : 1
 
       if (e + g > f + h) {
         const py2ColorsFace0 = new Uint8Array(3)
@@ -342,16 +356,36 @@ export default function ClassicGenerator(seed) {
       }
     }
 
-    if (isTransparent(px)) {
-      const a = !isTransparent(pxny) || !isTransparent(pxnz) || !isTransparent(pxnzny) ? 0 : 1
-      const b = !isTransparent(pxny) || !isTransparent(pxpz) || !isTransparent(pxpzny) ? 0 : 1
-      const c = !isTransparent(pxpy) || !isTransparent(pxpz) || !isTransparent(pxpzpy) ? 0 : 1
-      const d = !isTransparent(pxpy) || !isTransparent(pxnz) || !isTransparent(pxnzpy) ? 0 : 1
+    if (Helpers.isTransparent(px)) {
+      const a =
+        !Helpers.isTransparent(pxny) ||
+        !Helpers.isTransparent(pxnz) ||
+        !Helpers.isTransparent(pxnzny)
+          ? 0
+          : 1
+      const b =
+        !Helpers.isTransparent(pxny) ||
+        !Helpers.isTransparent(pxpz) ||
+        !Helpers.isTransparent(pxpzny)
+          ? 0
+          : 1
+      const c =
+        !Helpers.isTransparent(pxpy) ||
+        !Helpers.isTransparent(pxpz) ||
+        !Helpers.isTransparent(pxpzpy)
+          ? 0
+          : 1
+      const d =
+        !Helpers.isTransparent(pxpy) ||
+        !Helpers.isTransparent(pxnz) ||
+        !Helpers.isTransparent(pxnzpy)
+          ? 0
+          : 1
 
-      const e = !isTransparent(pxnzny) ? 0 : 1
-      const f = !isTransparent(pxpzny) ? 0 : 1
-      const g = !isTransparent(pxpzpy) ? 0 : 1
-      const h = !isTransparent(pxnzpy) ? 0 : 1
+      const e = !Helpers.isTransparent(pxnzny) ? 0 : 1
+      const f = !Helpers.isTransparent(pxpzny) ? 0 : 1
+      const g = !Helpers.isTransparent(pxpzpy) ? 0 : 1
+      const h = !Helpers.isTransparent(pxnzpy) ? 0 : 1
 
       if (e + g > f + h) {
         const px2ColorsFace0 = new Uint8Array(3)
@@ -380,16 +414,36 @@ export default function ClassicGenerator(seed) {
       }
     }
 
-    if (isTransparent(pz)) {
-      const a = !isTransparent(pzny) || !isTransparent(nxpz) || !isTransparent(nxpzny) ? 0 : 1
-      const b = !isTransparent(pzny) || !isTransparent(pxpz) || !isTransparent(pxpzny) ? 0 : 1
-      const c = !isTransparent(pzpy) || !isTransparent(pxpz) || !isTransparent(pxpzpy) ? 0 : 1
-      const d = !isTransparent(pzpy) || !isTransparent(nxpz) || !isTransparent(nxpzpy) ? 0 : 1
+    if (Helpers.isTransparent(pz)) {
+      const a =
+        !Helpers.isTransparent(pzny) ||
+        !Helpers.isTransparent(nxpz) ||
+        !Helpers.isTransparent(nxpzny)
+          ? 0
+          : 1
+      const b =
+        !Helpers.isTransparent(pzny) ||
+        !Helpers.isTransparent(pxpz) ||
+        !Helpers.isTransparent(pxpzny)
+          ? 0
+          : 1
+      const c =
+        !Helpers.isTransparent(pzpy) ||
+        !Helpers.isTransparent(pxpz) ||
+        !Helpers.isTransparent(pxpzpy)
+          ? 0
+          : 1
+      const d =
+        !Helpers.isTransparent(pzpy) ||
+        !Helpers.isTransparent(nxpz) ||
+        !Helpers.isTransparent(nxpzpy)
+          ? 0
+          : 1
 
-      const e = !isTransparent(nxpzny) ? 0 : 1
-      const f = !isTransparent(pxpzny) ? 0 : 1
-      const g = !isTransparent(pxpzpy) ? 0 : 1
-      const h = !isTransparent(nxpzpy) ? 0 : 1
+      const e = !Helpers.isTransparent(nxpzny) ? 0 : 1
+      const f = !Helpers.isTransparent(pxpzny) ? 0 : 1
+      const g = !Helpers.isTransparent(pxpzpy) ? 0 : 1
+      const h = !Helpers.isTransparent(nxpzpy) ? 0 : 1
 
       if (e + g < f + h) {
         const pz2ColorsFace0 = new Uint8Array(3)
@@ -418,16 +472,36 @@ export default function ClassicGenerator(seed) {
       }
     }
 
-    if (isTransparent(nx)) {
-      const a = !isTransparent(nxny) || !isTransparent(nxnz) || !isTransparent(nxnzny) ? 0 : 1
-      const b = !isTransparent(nxny) || !isTransparent(nxpz) || !isTransparent(nxpzny) ? 0 : 1
-      const c = !isTransparent(nxpy) || !isTransparent(nxpz) || !isTransparent(nxpzpy) ? 0 : 1
-      const d = !isTransparent(nxpy) || !isTransparent(nxnz) || !isTransparent(nxnzpy) ? 0 : 1
+    if (Helpers.isTransparent(nx)) {
+      const a =
+        !Helpers.isTransparent(nxny) ||
+        !Helpers.isTransparent(nxnz) ||
+        !Helpers.isTransparent(nxnzny)
+          ? 0
+          : 1
+      const b =
+        !Helpers.isTransparent(nxny) ||
+        !Helpers.isTransparent(nxpz) ||
+        !Helpers.isTransparent(nxpzny)
+          ? 0
+          : 1
+      const c =
+        !Helpers.isTransparent(nxpy) ||
+        !Helpers.isTransparent(nxpz) ||
+        !Helpers.isTransparent(nxpzpy)
+          ? 0
+          : 1
+      const d =
+        !Helpers.isTransparent(nxpy) ||
+        !Helpers.isTransparent(nxnz) ||
+        !Helpers.isTransparent(nxnzpy)
+          ? 0
+          : 1
 
-      const e = !isTransparent(nxnzny) ? 0 : 1
-      const f = !isTransparent(nxpzny) ? 0 : 1
-      const g = !isTransparent(nxpzpy) ? 0 : 1
-      const h = !isTransparent(nxnzpy) ? 0 : 1
+      const e = !Helpers.isTransparent(nxnzny) ? 0 : 1
+      const f = !Helpers.isTransparent(nxpzny) ? 0 : 1
+      const g = !Helpers.isTransparent(nxpzpy) ? 0 : 1
+      const h = !Helpers.isTransparent(nxnzpy) ? 0 : 1
 
       if (e + g > f + h) {
         const nx2ColorsFace0 = new Uint8Array(3)
@@ -456,16 +530,36 @@ export default function ClassicGenerator(seed) {
       }
     }
 
-    if (isTransparent(nz)) {
-      const a = !isTransparent(nzny) || !isTransparent(nxnz) || !isTransparent(nxnzny) ? 0 : 1
-      const b = !isTransparent(nzny) || !isTransparent(pxnz) || !isTransparent(pxnzny) ? 0 : 1
-      const c = !isTransparent(nzpy) || !isTransparent(pxnz) || !isTransparent(pxnzpy) ? 0 : 1
-      const d = !isTransparent(nzpy) || !isTransparent(nxnz) || !isTransparent(nxnzpy) ? 0 : 1
+    if (Helpers.isTransparent(nz)) {
+      const a =
+        !Helpers.isTransparent(nzny) ||
+        !Helpers.isTransparent(nxnz) ||
+        !Helpers.isTransparent(nxnzny)
+          ? 0
+          : 1
+      const b =
+        !Helpers.isTransparent(nzny) ||
+        !Helpers.isTransparent(pxnz) ||
+        !Helpers.isTransparent(pxnzny)
+          ? 0
+          : 1
+      const c =
+        !Helpers.isTransparent(nzpy) ||
+        !Helpers.isTransparent(pxnz) ||
+        !Helpers.isTransparent(pxnzpy)
+          ? 0
+          : 1
+      const d =
+        !Helpers.isTransparent(nzpy) ||
+        !Helpers.isTransparent(nxnz) ||
+        !Helpers.isTransparent(nxnzpy)
+          ? 0
+          : 1
 
-      const e = !isTransparent(nxnzny) ? 0 : 1
-      const f = !isTransparent(pxnzny) ? 0 : 1
-      const g = !isTransparent(pxnzpy) ? 0 : 1
-      const h = !isTransparent(nxnzpy) ? 0 : 1
+      const e = !Helpers.isTransparent(nxnzny) ? 0 : 1
+      const f = !Helpers.isTransparent(pxnzny) ? 0 : 1
+      const g = !Helpers.isTransparent(pxnzpy) ? 0 : 1
+      const h = !Helpers.isTransparent(nxnzpy) ? 0 : 1
 
       if (e + g < f + h) {
         const nz2ColorsFace0 = new Uint8Array(3)
@@ -494,16 +588,36 @@ export default function ClassicGenerator(seed) {
       }
     }
 
-    if (isTransparent(ny)) {
-      const a = !isTransparent(nxny) || !isTransparent(nzny) || !isTransparent(nxnzny) ? 0 : 1
-      const b = !isTransparent(nxny) || !isTransparent(pzny) || !isTransparent(nxpzny) ? 0 : 1
-      const c = !isTransparent(pxny) || !isTransparent(pzny) || !isTransparent(pxpzny) ? 0 : 1
-      const d = !isTransparent(pxny) || !isTransparent(nzny) || !isTransparent(pxnzny) ? 0 : 1
+    if (Helpers.isTransparent(ny)) {
+      const a =
+        !Helpers.isTransparent(nxny) ||
+        !Helpers.isTransparent(nzny) ||
+        !Helpers.isTransparent(nxnzny)
+          ? 0
+          : 1
+      const b =
+        !Helpers.isTransparent(nxny) ||
+        !Helpers.isTransparent(pzny) ||
+        !Helpers.isTransparent(nxpzny)
+          ? 0
+          : 1
+      const c =
+        !Helpers.isTransparent(pxny) ||
+        !Helpers.isTransparent(pzny) ||
+        !Helpers.isTransparent(pxpzny)
+          ? 0
+          : 1
+      const d =
+        !Helpers.isTransparent(pxny) ||
+        !Helpers.isTransparent(nzny) ||
+        !Helpers.isTransparent(pxnzny)
+          ? 0
+          : 1
 
-      const e = !isTransparent(nxnzny) ? 0 : 1
-      const f = !isTransparent(nxpzny) ? 0 : 1
-      const g = !isTransparent(pxpzny) ? 0 : 1
-      const h = !isTransparent(pxnzny) ? 0 : 1
+      const e = !Helpers.isTransparent(nxnzny) ? 0 : 1
+      const f = !Helpers.isTransparent(nxpzny) ? 0 : 1
+      const g = !Helpers.isTransparent(pxpzny) ? 0 : 1
+      const h = !Helpers.isTransparent(pxnzny) ? 0 : 1
 
       if (e + g > f + h) {
         const ny2ColorsFace0 = new Uint8Array(3)
@@ -623,7 +737,7 @@ export default function ClassicGenerator(seed) {
     for (let x = NEIGHBOR_WIDTH; x < SIZE + NEIGHBOR_WIDTH; x++)
       for (let z = NEIGHBOR_WIDTH; z < SIZE + NEIGHBOR_WIDTH; z++)
         for (let y = NEIGHBOR_WIDTH; y < SIZE + NEIGHBOR_WIDTH; y++) {
-          if (!isLiquid(voxelData.get(x, z, y))) {
+          if (!Helpers.isLiquid(voxelData.get(x, z, y))) {
             const tempCoords = getAbsoluteCoords(x, y, z, offsets)
 
             const tempx = tempCoords.x

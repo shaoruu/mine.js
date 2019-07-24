@@ -4,6 +4,8 @@ import Config from '../config/config'
 
 const SIZE = Config.chunk.size
 const DIMENSION = Config.block.dimension
+const TRANSPARENT_BLOCKS = Config.block.transparent
+const LIQUID_BLOCKS = Config.block.liquid
 
 const projectTag = '[MinecraftJS]'
 
@@ -118,6 +120,10 @@ class Helpers {
   static approxEquals = (float1, float2, epsilon = 1e-5) => Math.abs(float1 - float2) < epsilon
 
   static isString = test => typeof test === 'string'
+
+  static isTransparent = type => TRANSPARENT_BLOCKS.includes(type)
+
+  static isLiquid = type => LIQUID_BLOCKS.includes(type)
 
   static applyStyle = (ele, s) => {
     if (typeof s === 'object') Object.keys(s).forEach(key => (ele.style[key] = s[key]))
