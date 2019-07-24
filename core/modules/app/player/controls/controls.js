@@ -96,8 +96,7 @@ class Controls {
     const { isFlying, isOnGround, shouldGravity, isSprinting, isSpectator } = this.status
 
     let delta = (now - this.prevTime) / 1000
-
-    if (delta > 0.15) delta = 0.01
+    if (delta > 0.15) delta = 0.1
 
     this.calculateAccelerations()
 
@@ -128,7 +127,6 @@ class Controls {
 
     if (this.currJumpTime > 0 && this.jumping) {
       const jf = easeQuadOut(this.currJumpTime / JUMP_TIME) * JUMP_FORCE
-      console.log(jf)
       this.acc.y += jf // !?????
       this.currJumpTime -= delta * 1000
     }
@@ -141,7 +139,7 @@ class Controls {
     this.vel.add(this.acc)
     this.acc.set(0.0, 0.0, 0.0)
 
-    if (shouldGravity && !this.freshlyJumped && !this.jumping) this.vel.y += GRAVITY
+    if (shouldGravity && !this.freshlyJumped) this.vel.y += GRAVITY
 
     // if (this.movements.up) {
     //   if (this.jumping && this.currJumpTime > 0) {
@@ -166,6 +164,8 @@ class Controls {
     else if (this.vel.z < -HORZ_MAX_SPEED) this.vel.z = -HORZ_MAX_SPEED
 
     this.handleCollisions()
+
+    this.vel.multiplyScalar(1 / delta)
 
     this.prevTime = now
     this.freshlyJumped = false
@@ -408,10 +408,11 @@ class Controls {
         if (voxelExists) {
           if (scaledVel.y > 0) newY = Math.floor(posY) - P_I_2_TOP - EPSILON
           else {
-            this.jumping = false
             this.status.registerLand()
             newY = Math.floor(posY) + 1 + P_I_2_TOE + EPSILON
           }
+
+          this.jumping = false
 
           scaledVel.y = 0
           break

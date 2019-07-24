@@ -69,13 +69,13 @@ const Config = {
     sprintFactor: 1.3,
     spectatorInertia: 6,
     acceleration: {
-      forward: 500,
-      other_horz: 250,
-      vertical: 400
+      forward: 50,
+      other_horz: 20,
+      vertical: 40
     },
     jump: {
-      time: 150, // ms
-      force: 300
+      time: 80, // ms
+      force: 80
     },
     maxSpeed: {
       horizontal: 700,
@@ -113,7 +113,7 @@ const Config = {
     maxPerFrame: 8
   },
   world: {
-    gravity: -160,
+    gravity: -16,
     maxWorldHeight: 256,
     waterLevel: 62,
     waterColor: 0x0095ff,

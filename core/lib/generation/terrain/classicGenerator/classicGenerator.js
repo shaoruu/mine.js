@@ -15,7 +15,7 @@ const {
   waterLevel,
   maxWorldHeight,
   generation: {
-    classicGeneration: { mountains }
+    classicGeneration: { swampland }
   }
 } = WORLD_CONFIGS
 
@@ -31,7 +31,7 @@ const {
     treeScale
   },
   types: { top, underTop, beach }
-} = mountains
+} = swampland
 
 export default function ClassicGenerator(seed) {
   /* -------------------------------------------------------------------------- */
