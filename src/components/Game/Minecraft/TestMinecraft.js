@@ -1,8 +1,9 @@
 import { WORLD_QUERY } from '../../../lib/graphql'
 import { Hint } from '../../Utils'
+import sharedStyles from '../../../containers/sharedStyles.module.css'
+import crosshair from '../../../assets/gui/crosshair.png'
 
 import classes from './TestMinecraft.module.css'
-import sharedStyles from '../../../containers/sharedStyles.module.css'
 
 import React, { useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
@@ -31,9 +32,20 @@ const Blocker = styled.div`
 
 const MainCanvas = styled.canvas`
   position: absolute;
-  z-index: 2;
+  z-index: 1;
   width: 100%;
   height: 100%;
+`
+
+const Crosshair = styled.img`
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  width: 2vh;
+  height: 2vh;
+  transform: translate(-50%, -50%);
+  user-select: none;
 `
 
 let game
@@ -113,6 +125,7 @@ const Game = ({ id: worldId, username, history }) => {
   return (
     <GameWrapper ref={container}>
       <MainCanvas ref={canvas}></MainCanvas>
+      <Crosshair src={crosshair} alt="+" />
       <Blocker ref={blocker}>
         <h1 className={classes.title}>Game Menu</h1>
         <div className={classes.menu}>

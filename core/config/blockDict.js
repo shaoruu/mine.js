@@ -1,6 +1,10 @@
 const projectTag = 'minecraftjs'
 
 const BlockDict = {
+  0: {
+    name: 'null',
+    tag: `${projectTag}:null`
+  },
   1: {
     name: 'stone',
     tag: `${projectTag}:stone`
