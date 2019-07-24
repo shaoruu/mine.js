@@ -105,8 +105,8 @@ Debug.prototype.update = function() {
   this.getDOM_FPS().innerHTML = `${newFPS} fps [${this.getMinFPS() || 0} - ${this.getMaxFPS() ||
     0}]`
 
-  const targetedType = this.getWorld().getTargetBlockType()
-  this.getDOM_targetedBlock().innerHTML = BlockDict[targetedType].tag
+  const targetedTag = BlockDict[this.getWorld().getTargetBlockType()]
+  if (targetedTag) this.getDOM_targetedBlock().innerHTML = targetedTag.tag
 }
 
 Debug.prototype.toggle = function() {
