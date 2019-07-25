@@ -14,6 +14,7 @@ type Mutation {
 
   # WORLD
   createWorld(data: CreateWorldInput!): World!
+  updateWorld(data: UpdateWorldInput!): World!
   updatePlayer(data: UpdatePlayerInput!): Player!
   updateBlock(data: UpdateBlockInput!): Block!
   deleteWorld(worldId: ID!): Boolean!
@@ -45,6 +46,7 @@ type World {
   id: ID!
   name: String!
   seed: String!
+  time: Float!
   lastPlayed: String!
   changedBlocks: [Block!]!
   players: [Player!]!
@@ -108,6 +110,12 @@ input CreateWorldInput {
   name: String!
   seed: String!
   gamemode: Gamemode!
+}
+
+input UpdateWorldInput {
+  id: ID!
+  name: String
+  time: Float
 }
 
 input UpdatePlayerInput {

@@ -30,8 +30,10 @@ export const MY_WORLDS_QUERY = gql`
 export const WORLD_QUERY = gql`
   query World($query: String!) {
     world(query: $query) {
+      id
       name
       seed
+      time
       changedBlocks {
         type
         x

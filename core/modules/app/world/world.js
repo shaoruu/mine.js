@@ -2,6 +2,7 @@ import { ResourceManager, ChunkManager, WorkerManager } from '../../managers'
 import Config from '../../../config/config'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
+import { UPDATE_WORLD_MUTATION } from '../../../lib/graphql'
 
 import createSky from './sky/sky'
 
@@ -39,14 +40,16 @@ const LIQUID = Config.block.liquid
  */
 
 class World extends Stateful {
-  constructor(worldData, scene, playerY) {
+  constructor(worldData, scene, apolloClient, playerY) {
     super({ isSetup: false })
 
-    const { name, seed, changedBlocks } = worldData
+    const { id, name, seed, time, changedBlocks } = worldData
 
+    this.id = id
     this.name = name
 
     this.scene = scene
+    this.apolloClient = apolloClient
 
     this.resourceManager = new ResourceManager()
     this.workerManager = new WorkerManager(this)
@@ -58,7 +61,7 @@ class World extends Stateful {
       changedBlocks
     )
 
-    this.sky = createSky(scene, this)(1390)
+    this.sky = createSky(scene, this)(time)
 
     this.initPlayer(playerY)
     this.initUpdaters()
@@ -76,12 +79,24 @@ class World extends Stateful {
 
   initUpdaters = () => {
     this.envUpdater = window.requestInterval(this.updateEnv, 100)
+    this.timeUpdater = window.requestInterval(() => {
+      const t = this.sky.getTime()
+      if (t) {
+        this.apolloClient.mutate({
+          mutation: UPDATE_WORLD_MUTATION,
+          variables: {
+            id: this.id,
+            time: t
+          }
+        })
+      }
+    }, 500)
   }
 
   update = () => {
     this.workerManager.update()
     this.chunkManager.update()
-    this.sky()
+    this.sky.tick()
   }
 
   updateEnv = () => {
@@ -94,6 +109,7 @@ class World extends Stateful {
 
   removeUpdaters = () => {
     window.clearRequestInterval(this.envUpdater)
+    window.clearRequestInterval(this.timeUpdater)
   }
 
   /* -------------------------------------------------------------------------- */

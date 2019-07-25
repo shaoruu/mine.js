@@ -301,6 +301,11 @@ Sky.prototype.rgba = function(c, o) {
   return `rgba(${c.r * 255}, ${c.g * 255}, ${c.b * 255}, ${o})`
 }
 
+Sky.prototype.getTime = function(dec = 1) {
+  const t = parseFloat(this.time.toFixed(dec))
+  return t
+}
+
 export default function(world, scene, opts) {
   const sky = new Sky(world, scene, opts || {})
   sky.createBox()
@@ -312,6 +317,7 @@ export default function(world, scene, opts) {
       sky.time = fn
       for (let i = 0; i <= 2400; i += sky.speed) sky.tick.call(sky, 10, true)
     }
-    return sky.tick.bind(sky)
+
+    return sky
   }
 }

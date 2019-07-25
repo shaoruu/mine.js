@@ -91,7 +91,8 @@ const Mutation = {
         data: {
           lastPlayed: new Date().toISOString(),
           name,
-          seed
+          seed,
+          time: 1200
         }
       },
       '{ id }'
@@ -134,6 +135,22 @@ const Mutation = {
           players: {
             connect: [{ id: owner.id }]
           }
+        }
+      },
+      info
+    )
+  },
+  async updateWorld(parent, args, { prisma }, info) {
+    const worldId = args.data.id
+    delete args.data.id
+
+    return prisma.mutation.updateWorld(
+      {
+        where: {
+          id: worldId
+        },
+        data: {
+          ...args.data
         }
       },
       info

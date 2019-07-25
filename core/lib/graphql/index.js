@@ -1,1 +1,1 @@
-export { UPDATE_PLAYER_MUTATION } from './mutations'
+export { UPDATE_PLAYER_MUTATION, UPDATE_WORLD_MUTATION } from './mutations'
