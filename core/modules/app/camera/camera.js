@@ -20,7 +20,7 @@ export default class Camera {
       CAMERA_CONFIG.fov,
       width / height,
       CAMERA_CONFIG.near,
-      D * SIZE * DIMENSION * 2
+      D * SIZE * DIMENSION * 2.5
     )
     this.threeCamera.position.set(CAMERA_CONFIG.posX, CAMERA_CONFIG.posY, CAMERA_CONFIG.posZ)
 

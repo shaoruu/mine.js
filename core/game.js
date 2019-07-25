@@ -38,7 +38,7 @@ class Game {
     this.scene.fog = new THREE.Fog(
       FOG_CONFIG.color,
       FOG_CONFIG.near,
-      (HORZ_D > VERT_D ? VERT_D : HORZ_D) * SIZE * DIMENSION * 6
+      (HORZ_D > VERT_D ? VERT_D : HORZ_D) * SIZE * DIMENSION * 8
     )
 
     /** THREE RENDERER */
@@ -49,7 +49,7 @@ class Game {
 
     /** THREE LIGHTS */
     this.lights = new Light(this.scene)
-    this.lights.place('ambient')
+    // this.lights.place('ambient')
 
     /** GAME COMPONENTS */
     this.world = new World(world, this.scene, playerData.y)

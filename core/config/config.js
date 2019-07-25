@@ -7,6 +7,10 @@ const Config = {
     maxWorkerCount: 4
   },
   lights: {
+    sunlight: {
+      maxIntensity: 1.5,
+      minIntensity: 0.3
+    },
     ambientLight: {
       enabled: true,
       color: 0xffffff,
@@ -31,6 +35,7 @@ const Config = {
   camera: {
     fov: 102,
     near: 1,
+    far: 1200,
     aspect: 1,
     posX: 0,
     posY: 0,
@@ -71,7 +76,7 @@ const Config = {
     inAirInertia: 16, // For jumping
     sprintFactor: 1.3,
     spectatorInertia: 6,
-    rollOverColor: 0xffffff,
+    rollOverColor: 0x000000,
     acceleration: {
       forward: 50,
       other_horz: 20,
@@ -119,7 +124,7 @@ const Config = {
     gravity: -16,
     maxWorldHeight: 256,
     waterLevel: 62,
-    waterColor: 0x0095ff,
+    waterColor: 0x005eff,
     generation: {
       classicGeneration: {
         swampland: {

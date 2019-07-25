@@ -12985,6 +12985,11 @@ thunky@^1.0.2:
   resolved "https://registry.yarnpkg.com/thunky/-/thunky-1.0.3.tgz#f5df732453407b09191dae73e2a8cc73f381a826"
   integrity sha512-YwT8pjmNcAXBZqrubu22P4FYsh2D4dxRmnWBOL8Jk8bUcRUtc5326kx32tuTmFDAZtLOGEVNl8POAR8j896Iow==
 
+tic@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/tic/-/tic-1.0.0.tgz#f481fed7e1838dca8a79d439d70170b961d96717"
+  integrity sha1-9IH+1+GDjcqKedQ51wFwuWHZZxc=
+
 timed-out@4.0.1, timed-out@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/timed-out/-/timed-out-4.0.1.tgz#f32eacac5a175bea25d7fab565ab3ed8741ef56f"

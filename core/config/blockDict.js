@@ -2,8 +2,8 @@ const projectTag = 'minecraft-js'
 
 const BlockDict = {
   0: {
-    name: 'null',
-    tag: `${projectTag}:null`
+    name: 'empty',
+    tag: `${projectTag}:empty`
   },
   1: {
     name: 'stone',

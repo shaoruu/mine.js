@@ -3,6 +3,8 @@ import Config from '../../../config/config'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
 
+import createSky from './sky/sky'
+
 const LIQUID = Config.block.liquid
 
 /**
@@ -56,11 +58,13 @@ class World extends Stateful {
       changedBlocks
     )
 
-    this.initWorld(playerY)
+    this.sky = createSky(scene, this)(1390)
+
+    this.initPlayer(playerY)
     this.initUpdaters()
   }
 
-  initWorld = playerY => {
+  initPlayer = playerY => {
     if (Helpers.approxEquals(playerY, Number.MIN_SAFE_INTEGER, 5))
       this.workerManager.queueSpecificChunk({
         cmd: 'GET_HIGHEST',
@@ -77,6 +81,7 @@ class World extends Stateful {
   update = () => {
     this.workerManager.update()
     this.chunkManager.update()
+    this.sky()
   }
 
   updateEnv = () => {

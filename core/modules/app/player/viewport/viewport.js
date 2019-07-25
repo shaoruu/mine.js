@@ -22,7 +22,7 @@ function Viewport(player, world, scene) {
   const helmetMat = new THREE.MeshBasicMaterial({
     opacity: 0,
     transparent: true,
-    side: THREE.DoubleSide,
+    side: THREE.BackSide,
     depthWrite: false,
     depthTest: false
   })
@@ -33,6 +33,7 @@ function Viewport(player, world, scene) {
   const rollOverMat = new THREE.LineBasicMaterial({
     opacity: 0.3,
     transparent: true,
+    side: THREE.FrontSide,
     color: ROLL_OVER_COLOR,
     linewidth: 8
   })
@@ -40,6 +41,10 @@ function Viewport(player, world, scene) {
 
   helmet.name = helmetName
   rollOver.name = rollOverName
+
+  helmetMat.polygonOffset = true
+  helmetMat.polygonOffsetFactor = -0.5
+  helmet.renderOrder = 2
 
   rollOverMat.polygonOffset = true
   rollOverMat.polygonOffsetFactor = -0.5
