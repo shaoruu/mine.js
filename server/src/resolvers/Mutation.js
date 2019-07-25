@@ -92,7 +92,8 @@ const Mutation = {
           lastPlayed: new Date().toISOString(),
           name,
           seed,
-          time: 1200
+          time: 1200,
+          days: 0
         }
       },
       '{ id }'

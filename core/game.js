@@ -65,6 +65,7 @@ class Game {
     )
 
     this.world.setPlayer(this.player)
+    this.world.init()
 
     /** UI SETUP */
     this.debug = new Debug(container, this.player, this.world)

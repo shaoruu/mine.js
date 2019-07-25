@@ -34,6 +34,7 @@ export const WORLD_QUERY = gql`
       name
       seed
       time
+      days
       changedBlocks {
         type
         x

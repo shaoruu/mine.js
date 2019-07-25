@@ -12,12 +12,16 @@ class World extends Stateful {
   constructor(worldData, scene, apolloClient, playerY) {
     super({ isSetup: false })
 
-    const { id, name, seed, time, changedBlocks } = worldData
+    const { id, name, seed, time, days, changedBlocks } = worldData
 
-    this.id = id
-    this.name = name
-    this.seed = seed
-    this.time = time
+    this.data = {
+      id,
+      name,
+      seed,
+      time,
+      days,
+      playerY
+    }
 
     this.scene = scene
     this.apolloClient = apolloClient
@@ -31,13 +35,15 @@ class World extends Stateful {
       this.workerManager,
       changedBlocks
     )
+  }
 
-    this.initPlayer(playerY)
+  init = () => {
+    this.initPlayer()
     this.initUpdaters()
   }
 
-  initPlayer = playerY => {
-    if (Helpers.approxEquals(playerY, Number.MIN_SAFE_INTEGER, 5))
+  initPlayer = () => {
+    if (Helpers.approxEquals(this.data.playerY, Number.MIN_SAFE_INTEGER, 5))
       this.workerManager.queueSpecificChunk({
         cmd: 'GET_HIGHEST',
         x: 0,
@@ -54,12 +60,26 @@ class World extends Stateful {
         this.apolloClient.mutate({
           mutation: UPDATE_WORLD_MUTATION,
           variables: {
-            id: this.id,
+            id: this.data.id,
             time: t
           }
         })
       }
     }, 500)
+
+    this.sky.on('new-day', () => {
+      const days = this.sky.getDays()
+      if (days) {
+        this.data.days = days
+        this.apolloClient.mutate({
+          mutation: UPDATE_WORLD_MUTATION,
+          variables: {
+            id: this.data.id,
+            days
+          }
+        })
+      }
+    })
   }
 
   update = () => {
@@ -88,7 +108,7 @@ class World extends Stateful {
     this.player = player
     this.sky = createSky(this.scene, this, {
       speed: 0.1
-    })(this.time)
+    })(this.data.time, this.data.days)
   }
 
   setTarget = target => (this.targetBlock = target)
@@ -99,6 +119,8 @@ class World extends Stateful {
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
   getPlayer = () => this.player
+
+  getDays = () => this.data.days
 
   getVoxelByVoxelCoords = (x, y, z) => {
     /** RETURN INFORMATION ABOUT CHUNKS */

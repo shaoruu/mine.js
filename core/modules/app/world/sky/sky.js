@@ -9,6 +9,8 @@ import stars from './stars'
 
 import * as THREE from 'three'
 import ticModule from 'tic'
+import util from 'util'
+import EventEmitter from 'events'
 
 const tic = ticModule()
 
@@ -29,6 +31,8 @@ function Sky(scene, world, opts) {
   this.getWorld = () => world
   this.getScene = () => scene
 }
+
+util.inherits(Sky, EventEmitter)
 
 Sky.prototype.createCanvas = function() {
   const canvas = document.createElement('canvas')
@@ -275,7 +279,7 @@ Sky.prototype.fn = function(time, fastForward) {
   }
 
   // turn off sunlight
-  if (time === 1800) {
+  if (time === 1600) {
     let i
     if (fastForward) this.sunlight.intensity = MIN_SUN_INTENSITY
     else {
@@ -290,7 +294,10 @@ Sky.prototype.fn = function(time, fastForward) {
   this.spin(Math.PI * 2 * (time / 2400))
 
   // keep track of days
-  if (time === 2400) my.day++
+  if (time === 2400) {
+    my.day++
+    this.emit('new-day')
+  }
 }
 
 Sky.prototype.rgba = function(c, o) {
@@ -308,21 +315,27 @@ Sky.prototype.getTime = function(dec = 1) {
   return t
 }
 
+Sky.prototype.getDays = function() {
+  return this.default.day
+}
+
 Sky.prototype.setTime = function(time) {
   this.time = time
   for (let i = 0; i <= 2400; i += this.speed) this.tick(16, true)
+}
+
+Sky.prototype.setDays = function(days) {
+  this.default.day = days
 }
 
 export default function(world, scene, opts) {
   const sky = new Sky(world, scene, opts || {})
   sky.createBox()
   sky.createLights()
-  return function(fn) {
-    if (typeof fn === 'function') sky.fn = fn
-    else if (typeof fn === 'number') {
-      // move to the specific time of the day
-      sky.setTime(fn)
-    }
+  return function(time, days) {
+    // move to the specific time of the day
+    sky.setTime(time)
+    sky.setDays(days)
 
     return sky
   }

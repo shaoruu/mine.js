@@ -47,6 +47,7 @@ type World {
   name: String!
   seed: String!
   time: Float!
+  days: Int!
   lastPlayed: String!
   changedBlocks: [Block!]!
   players: [Player!]!
@@ -116,6 +117,7 @@ input UpdateWorldInput {
   id: ID!
   name: String
   time: Float
+  days: Int
 }
 
 input UpdatePlayerInput {

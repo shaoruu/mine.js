@@ -22,10 +22,11 @@ export const UPDATE_PLAYER_MUTATION = gql`
 `
 
 export const UPDATE_WORLD_MUTATION = gql`
-  mutation UpdateWorld($id: ID!, $name: String, $time: Float) {
-    updateWorld(data: { id: $id, name: $name, time: $time }) {
+  mutation UpdateWorld($id: ID!, $name: String, $time: Float, $days: Int) {
+    updateWorld(data: { id: $id, name: $name, time: $time, days: $days }) {
       name
       time
+      days
     }
   }
 `
