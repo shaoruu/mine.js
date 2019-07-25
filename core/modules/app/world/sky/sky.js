@@ -108,19 +108,21 @@ Sky.prototype.colorFunc = function(end, time) {
   if (this.colorInterval) this.colorInterval()
 
   let i = 0
-  const start = new THREE.Color()
+  const start = {}
   this.color.clone().getHSL(start)
-  const color = new THREE.Color()
+  const color = {}
   this.color.clone().getHSL(color)
 
   this.colorInterval = tic.interval(() => {
     const dt = i / time
-    Object.keys(color).forEach(p => (color[p] = start[p] + (end[p] - start[p]) * dt))
+    // eslint-disable-next-line guard-for-in, no-restricted-syntax
+    for (const p in color) color[p] = start[p] + (end[p] - start[p]) * dt
     this.color.setHSL(color.h, color.s, color.l)
     this.outer.material.color.setHSL(color.h, color.s, color.l)
     this.getScene().background.setHSL(color.h, color.s, color.l)
+    // this.sunlight.color.setHSL(color.h, color.s, color.l)
     if (this.getScene().fog) this.getScene().fog.color.setHSL(color.h, color.s, color.l)
-    if (dt === 1) this.colorInterval()
+    if (dt >= 1) this.colorInterval()
     i += this.speed
   }, this.speed)
 }
@@ -172,11 +174,10 @@ Sky.prototype.stars = stars
 Sky.prototype.default = {
   hours: {
     0: { color: { h: 230 / 360, s: 0.3, l: 0 } },
-    200: { color: { h: 26 / 360, s: 0.3, l: 0.5 } },
-    400: { color: { h: 230 / 360, s: 0.2, l: 0.7 } },
-    1200: { color: { h: 230 / 360, s: 0.2, l: 0.7 } },
-    1400: { color: { h: 26 / 360, s: 0.3, l: 0.5 } },
-    1600: { color: { h: 230 / 360, s: 0.3, l: 0 } }
+    400: { color: { h: 26 / 360, s: 0.3, l: 0.5 } },
+    600: { color: { h: 214 / 360, s: 0.98, l: 0.83 } },
+    1600: { color: { h: 26 / 360, s: 0.3, l: 0.5 } },
+    1800: { color: { h: 230 / 360, s: 0.3, l: 0 } }
   },
   init() {
     // add a sun on the bottom
@@ -212,7 +213,7 @@ Sky.prototype.fn = function(time, fastForward) {
   // maybe make this next part into a helper function
   if (my.hours[hour]) {
     if (!my.until) {
-      this.colorFunc(my.hours[hour].color, speed > 9 ? 100 : 1000)
+      this.colorFunc(my.hours[hour].color, speed > 9 ? 100 : 60)
       my.until = hour + 100
     }
   }
@@ -226,7 +227,7 @@ Sky.prototype.fn = function(time, fastForward) {
   }
 
   // fade stars in and out
-  if (time === 400) {
+  if (time === 500) {
     this.paint(['top', 'left', 'right', 'front', 'back'], function() {
       this.material.transparent = true
       let i
@@ -309,7 +310,7 @@ Sky.prototype.getTime = function(dec = 1) {
 
 Sky.prototype.setTime = function(time) {
   this.time = time
-  for (let i = 0; i <= 2400; i += this.speed) this.tick(10, true)
+  for (let i = 0; i <= 2400; i += this.speed) this.tick(16, true)
 }
 
 export default function(world, scene, opts) {

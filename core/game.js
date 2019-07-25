@@ -69,6 +69,8 @@ class Game {
     /** UI SETUP */
     this.debug = new Debug(container, this.player, this.world)
 
+    /** VOXEL-JS PORT */
+
     /* -------------------------------------------------------------------------- */
     /*                                TEST STARTS HERE                               */
     /* -------------------------------------------------------------------------- */

@@ -86,7 +86,9 @@ class World extends Stateful {
   /* -------------------------------------------------------------------------- */
   setPlayer = player => {
     this.player = player
-    this.sky = createSky(this.scene, this)(this.time)
+    this.sky = createSky(this.scene, this, {
+      speed: 0.1
+    })(this.time)
   }
 
   setTarget = target => (this.targetBlock = target)
@@ -109,9 +111,9 @@ class World extends Stateful {
     return this.getVoxelByVoxelCoords(gbc.x, gbc.y, gbc.z)
   }
 
-  getSolidityByVoxelCoords = (x, y, z) => {
+  getSolidityByVoxelCoords = (x, y, z, forPassing = false) => {
     const type = this.getVoxelByVoxelCoords(x, y, z)
-    if (type !== 0 && !type) return true
+    if (typeof type !== 'number') return forPassing
 
     const isSolid = LIQUID.includes(type)
     return !isSolid
@@ -122,7 +124,7 @@ class World extends Stateful {
     return this.getSolidityByVoxelCoords(gbc.x, gbc.y, gbc.z)
   }
 
-  getPassableByVoxelCoords = (x, y, z) => this.getSolidityByVoxelCoords(x, y, z)
+  getPassableByVoxelCoords = (x, y, z) => this.getSolidityByVoxelCoords(x, y, z, true)
 
   getTargetBlockType = () => {
     if (!this.targetBlock) return 0

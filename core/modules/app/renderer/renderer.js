@@ -5,8 +5,7 @@ export default class Renderer {
   constructor(scene, canvas) {
     // Properties
     this.scene = scene
-    this.canvas =
-      'transferControlToOffscreen' in canvas ? canvas.transferControlToOffscreen() : canvas
+    this.canvas = canvas
 
     // Create WebGL renderer and set its antialias
     this.threeRenderer = new THREE.WebGLRenderer({ antialias: false, canvas: this.canvas })
@@ -15,8 +14,6 @@ export default class Renderer {
     this.threeRenderer.setClearColor(scene.fog.color)
     this.threeRenderer.setPixelRatio(window.devicePixelRatio) // For retina
     this.threeRenderer.setSize(canvas.clientWidth, canvas.clientHeight, false)
-
-    this.dimension = { width: canvas.clientWidth, height: canvas.clientHeight }
 
     // Get anisotropy for textures
     // Config.maxAnisotropy = this.threeRenderer.capabilities.getMaxAnisotropy()
@@ -29,7 +26,7 @@ export default class Renderer {
   }
 
   updateSize() {
-    this.threeRenderer.setSize(this.dimension.width, this.dimension.height, false)
+    this.threeRenderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight, false)
   }
 
   render(scene, camera) {

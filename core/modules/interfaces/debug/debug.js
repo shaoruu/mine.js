@@ -118,7 +118,7 @@ Debug.prototype.toggle = function() {
     wrapper.style.display = 'none'
   } else {
     this.setDisplay(true)
-    wrapper.style.display = 'block'
+    wrapper.style.display = 'flex'
   }
 }
 

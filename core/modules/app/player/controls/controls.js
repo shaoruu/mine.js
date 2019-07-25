@@ -61,6 +61,7 @@ class Controls {
     this.player = player
     this.world = world
     this.camera = camera
+    this.canvas = canvas
     this.blocker = blocker
     this.button = button
     this.status = status
@@ -194,6 +195,12 @@ class Controls {
     /**
      * moving KEYS ('moving')
      */
+    this.keyboard.registerKeys([112, 74], 'moving', () => {
+      if (this.f1) this.canvas.style.zIndex = '1'
+      else this.canvas.style.zIndex = '4'
+      this.f1 = !this.f1
+    })
+
     this.keyboard.registerKey(
       MOVEMENT_KEYS.forward,
       'moving',

@@ -12995,6 +12995,11 @@ tic@^1.0.0:
   resolved "https://registry.yarnpkg.com/tic/-/tic-1.0.0.tgz#f481fed7e1838dca8a79d439d70170b961d96717"
   integrity sha1-9IH+1+GDjcqKedQ51wFwuWHZZxc=
 
+tic@~0.2.0:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/tic/-/tic-0.2.1.tgz#03240336dde29d0b7c2e5a24e9cc0cbf5461e1b1"
+  integrity sha1-AyQDNt3inQt8Llok6cwMv1Rh4bE=
+
 timed-out@4.0.1, timed-out@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/timed-out/-/timed-out-4.0.1.tgz#f32eacac5a175bea25d7fab565ab3ed8741ef56f"
@@ -13656,6 +13661,19 @@ voxel-mesh@^0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/voxel-mesh/-/voxel-mesh-0.3.0.tgz#33d61695f67293c2857715986f177dd27c6a87e9"
   integrity sha1-M9YWlfZyk8KFdxWYbxd90nxqh+k=
+
+voxel-sky@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/voxel-sky/-/voxel-sky-0.3.0.tgz#3aa2d499d5d9469a3fa83aba25eb20890901e3e5"
+  integrity sha1-OqLUmdXZRpo/qDq6JesgiQkB4+U=
+  dependencies:
+    tic "~0.2.0"
+    voxel-trajectory "~0.2.0"
+
+voxel-trajectory@~0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/voxel-trajectory/-/voxel-trajectory-0.2.0.tgz#46b6be44290fe49c77be19d9fc31eee6b945033e"
+  integrity sha1-Rra+RCkP5Jx3vhnZ/DHu5rlFAz4=
 
 voxel@^0.5.0:
   version "0.5.0"

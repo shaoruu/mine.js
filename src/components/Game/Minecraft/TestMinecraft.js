@@ -21,7 +21,7 @@ const GameWrapper = styled.div`
 const Blocker = styled.div`
   display: flex;
   position: absolute;
-  z-index: 4;
+  z-index: 5;
   flex-direction: column;
   align-items: center;
   justify-content: center;
