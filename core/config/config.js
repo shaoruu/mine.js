@@ -8,7 +8,7 @@ const Config = {
   },
   lights: {
     sunlight: {
-      maxIntensity: 1.5,
+      maxIntensity: 1.25,
       minIntensity: 0.3
     },
     ambientLight: {
@@ -124,7 +124,7 @@ const Config = {
     gravity: -16,
     maxWorldHeight: 256,
     waterLevel: 62,
-    waterColor: 0x005eff,
+    waterColor: 0x0084ff,
     generation: {
       classicGeneration: {
         swampland: {

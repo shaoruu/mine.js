@@ -8,37 +8,6 @@ import createSky from './sky/sky'
 
 const LIQUID = Config.block.liquid
 
-/**
- * world(query: $query) {
-      name
-      seed
-      changedBlocks {
-        type
-        x
-        y
-        z
-      }
-      players {
-        id
-        isAdmin
-        gamemode
-        user {
-          username
-        }
-        lastLogin
-        x
-        y
-        z
-        dirx
-        diry
-        inventory {
-          cursor
-          data
-        }
-      }
-    }
- */
-
 class World extends Stateful {
   constructor(worldData, scene, apolloClient, playerY) {
     super({ isSetup: false })
@@ -47,6 +16,8 @@ class World extends Stateful {
 
     this.id = id
     this.name = name
+    this.seed = seed
+    this.time = time
 
     this.scene = scene
     this.apolloClient = apolloClient
@@ -60,8 +31,6 @@ class World extends Stateful {
       this.workerManager,
       changedBlocks
     )
-
-    this.sky = createSky(scene, this)(time)
 
     this.initPlayer(playerY)
     this.initUpdaters()
@@ -115,7 +84,10 @@ class World extends Stateful {
   /* -------------------------------------------------------------------------- */
   /*                                   SETTERS                                  */
   /* -------------------------------------------------------------------------- */
-  setPlayer = player => (this.player = player)
+  setPlayer = player => {
+    this.player = player
+    this.sky = createSky(this.scene, this)(this.time)
+  }
 
   setTarget = target => (this.targetBlock = target)
 
@@ -124,6 +96,8 @@ class World extends Stateful {
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
+  getPlayer = () => this.player
+
   getVoxelByVoxelCoords = (x, y, z) => {
     /** RETURN INFORMATION ABOUT CHUNKS */
     const type = this.chunkManager.getTypeAt(x, y, z)

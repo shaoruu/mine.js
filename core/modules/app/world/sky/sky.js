@@ -22,7 +22,7 @@ const MIN_SUN_INTENSITY = Config.lights.sunlight.minIntensity
 
 function Sky(scene, world, opts) {
   this.time = opts.time || 0
-  this.speed = opts.speed || 0.1
+  this.speed = opts.speed || 0.05
   this.color = opts.color || new THREE.Color(0, 0, 0)
   this.clock = new THREE.Clock()
 
@@ -173,7 +173,8 @@ Sky.prototype.default = {
   hours: {
     0: { color: { h: 230 / 360, s: 0.3, l: 0 } },
     200: { color: { h: 26 / 360, s: 0.3, l: 0.5 } },
-    400: { color: { h: 230 / 360, s: 0.3, l: 0.7 } },
+    400: { color: { h: 230 / 360, s: 0.2, l: 0.7 } },
+    1200: { color: { h: 230 / 360, s: 0.2, l: 0.7 } },
     1400: { color: { h: 26 / 360, s: 0.3, l: 0.5 } },
     1600: { color: { h: 230 / 360, s: 0.3, l: 0 } }
   },
@@ -306,6 +307,11 @@ Sky.prototype.getTime = function(dec = 1) {
   return t
 }
 
+Sky.prototype.setTime = function(time) {
+  this.time = time
+  for (let i = 0; i <= 2400; i += this.speed) this.tick(10, true)
+}
+
 export default function(world, scene, opts) {
   const sky = new Sky(world, scene, opts || {})
   sky.createBox()
@@ -314,8 +320,7 @@ export default function(world, scene, opts) {
     if (typeof fn === 'function') sky.fn = fn
     else if (typeof fn === 'number') {
       // move to the specific time of the day
-      sky.time = fn
-      for (let i = 0; i <= 2400; i += sky.speed) sky.tick.call(sky, 10, true)
+      sky.setTime(fn)
     }
 
     return sky
