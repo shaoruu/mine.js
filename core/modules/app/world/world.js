@@ -2,10 +2,10 @@ import { ResourceManager, ChunkManager, WorkerManager } from '../../managers'
 import Config from '../../../config/config'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
+import { Chat } from '../../interfaces'
 import { UPDATE_WORLD_MUTATION, WORLD_SUBSCRIPTION } from '../../../lib/graphql'
 
 import createSky from './sky/sky'
-import Chat from './chat/chat'
 
 const LIQUID = Config.block.liquid
 

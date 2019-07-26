@@ -1,4 +1,4 @@
-import Helpers from '../../../../../utils/helpers'
+import Helpers from '../../../../utils/helpers'
 
 import classes from './message.module.css'
 

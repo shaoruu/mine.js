@@ -12,6 +12,8 @@ const projectTag = '[MinecraftJS]'
 class Helpers {
   static log = (message, pt = false) => console.log(pt ? `${projectTag} ${message}` : message)
 
+  static fancyLog = (...args) => console.log(...args)
+
   static warn = (warning, pt = false) => console.warn(pt ? `${projectTag} ${warning}` : warning)
 
   static error = (error, pt = false) => console.error(pt ? `${projectTag} ${error}` : error)

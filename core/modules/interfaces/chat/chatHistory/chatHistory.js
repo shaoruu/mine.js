@@ -1,4 +1,4 @@
-import Helpers from '../../../../../utils/helpers'
+import Helpers from '../../../../utils/helpers'
 
 class ChatHistory {
   constructor(input) {

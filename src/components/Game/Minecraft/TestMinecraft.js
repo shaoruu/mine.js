@@ -9,7 +9,7 @@ import React, { useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import SkyFactory from 'core/game'
+import MinecraftJS from 'core/game'
 import { useQuery, useApolloClient } from 'react-apollo-hooks'
 
 const GameWrapper = styled.div`
@@ -93,7 +93,7 @@ const Game = ({ id: worldId, username, history }) => {
   useEffect(() => {
     if (loading || error) return
 
-    game = new SkyFactory(
+    game = new MinecraftJS(
       worldData,
       username,
       container.current,

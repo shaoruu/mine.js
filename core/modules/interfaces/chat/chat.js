@@ -1,5 +1,5 @@
-import { RUN_COMMAND_MUTATION, MESSAGE_SUBSCRIPTION } from '../../../../lib/graphql'
-import Helpers from '../../../../utils/helpers'
+import { RUN_COMMAND_MUTATION, MESSAGE_SUBSCRIPTION } from '../../../lib/graphql'
+import Helpers from '../../../utils/helpers'
 
 import classes from './chat.module.css'
 import Message from './message/message'

@@ -1,5 +1,6 @@
 import Config from './config/config'
 import { Renderer, Camera, World, Player, Light } from './modules/app'
+import ConnectionStatus from './modules/interfaces/connectionStatus/connectionStatus'
 import { Debug } from './modules/interfaces'
 
 import * as THREE from 'three'
@@ -31,6 +32,7 @@ class Game {
 
     /** SERVER COMMUNICATION */
     this.apolloClient = apolloClient
+    this.connectionStatus = new ConnectionStatus(container)
 
     /** THREE SCENE */
     this.scene = new THREE.Scene()
