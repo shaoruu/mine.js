@@ -2,6 +2,7 @@ import getUserId from '../utils/getUserId'
 import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
 import getBlockRepresentation from '../utils/getBlockRepresentation'
+import commands from '../lib/commands'
 
 import bcrypt from 'bcryptjs'
 
@@ -249,76 +250,52 @@ const Mutation = {
         .split(' ')
         .filter(ele => !!ele)
 
-      switch (args[0]) {
-        case 'gamemode': {
-          let isError = false
+      const layer1 = commands[args[0]]
 
-          switch (args[1]) {
-            case 's':
-            case 'survival':
-            case '0': {
-              if (args[2]) {
-                // do something else
-              } else {
-                await prisma.mutation.updatePlayer({
-                  data: {
-                    gamemode: 'SURVIVAL'
-                  },
-                  where: { id: playerId }
-                })
-              }
+      if (layer1) {
+        let isError = true
 
-              break
-            }
+        const recursiveProcess = async (cmdInfoArr, index) => {
+          const instance = cmdInfoArr.find(({ variation }, i) => {
+            if (cmdInfoArr.length - 1 === i) return false
+            if (typeof variation === 'function') return variation(args[index])
+            return variation.includes(args[index])
+          })
 
-            case 'c':
-            case 'creative':
-            case '1': {
-              if (args[2]) {
-                // do something else
-              } else {
-                await prisma.mutation.updatePlayer({
-                  data: {
-                    gamemode: 'CREATIVE'
-                  },
-                  where: { id: playerId }
-                })
-              }
-
-              break
-            }
-
-            case 'sp':
-            case 'spectator':
-            case '3': {
-              if (args[2]) {
-                // do something else
-              } else {
-                await prisma.mutation.updatePlayer({
-                  data: {
-                    gamemode: 'SPECTATOR'
-                  },
-                  where: { id: playerId }
-                })
-              }
-
-              break
-            }
-
-            default:
-              isError = true
-              break
+          if (!instance) {
+            isError = true
+            return
           }
 
-          if (!isError) {
-            type = 'SERVER'
-            body = `${username}'s gamemode has been updated.`
+          const { more, run } = instance
+
+          if (more) await recursiveProcess(more, index + 1)
+          if (!run) return
+
+          isError = false
+
+          const context = {
+            worldId,
+            playerId,
+            username,
+            arg: args[index],
+            prisma
           }
 
-          break
+          await run(context)
+
+          type = 'SERVER'
+          const defaultFallback = cmdInfoArr[cmdInfoArr.length - 1]
+          if (defaultFallback) body = defaultFallback({ username, arg: args[index] })
+          else body = `Success on running command: /${args[0]}`
         }
-        default:
-          break
+
+        await recursiveProcess(layer1, 1)
+
+        if (isError) {
+          type = 'ERROR'
+          body = `Incorrect arguments for command: /${args[0]}`
+        }
       }
     } else {
       // NORMAL MESSAGE

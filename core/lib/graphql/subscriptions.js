@@ -27,3 +27,14 @@ export const PLAYER_SUBSCRIPTION = gql`
     }
   }
 `
+
+export const WORLD_SUBSCRIPTION = gql`
+  subscription World($worldId: ID!, $updatedFields_contains_some: [String!]) {
+    world(worldId: $worldId, updatedFields_contains_some: $updatedFields_contains_some) {
+      mutation
+      node {
+        timeChanger
+      }
+    }
+  }
+`

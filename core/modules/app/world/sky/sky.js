@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- */
-/*               INSPIRATION/PORTED FROM: https://github.com/shama/voxel-sky               */
+/*               PORTED FROM: https://github.com/shama/voxel-sky               */
 /* -------------------------------------------------------------------------- */
 import Config from '../../../../config/config'
 

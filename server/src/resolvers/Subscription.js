@@ -53,6 +53,21 @@ const Subscription = {
         info
       )
     }
+  },
+  world: {
+    subscribe(parent, { worldId, updatedFields_contains_some }, { prisma }, info) {
+      return prisma.subscription.world(
+        {
+          where: {
+            updatedFields_contains_some: updatedFields_contains_some || defaultArray,
+            node: {
+              id: worldId
+            }
+          }
+        },
+        info
+      )
+    }
   }
 }
 

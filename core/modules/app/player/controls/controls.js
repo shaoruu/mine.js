@@ -506,7 +506,9 @@ class Controls {
   handleMouseUp = e => {
     if (!this.world.getChat().enabled && this.threeControls.isLocked) {
       this.mouseKey = null
-      if (e.button === 0) this.stopBreakingBlock()
+      if (e.button === 0) {
+        // this.stopBreakingBlock()
+      }
       if (this.status.isCreative) {
         this.canBreakBlock = true
         this.canPlaceBlock = true

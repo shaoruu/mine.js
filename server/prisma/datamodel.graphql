@@ -36,6 +36,7 @@ type World {
   name: String!
   seed: String!
   time: Float!
+  timeChanger: Float
   days: Int!
   lastPlayed: DateTime!
   changedBlocks: [Block!]! @relation(name: "BlocksToWorld", onDelete: CASCADE)

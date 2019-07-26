@@ -30,6 +30,7 @@ type Subscription {
     worldId: ID!
     updatedFields_contains_some: [String!]
   ): PlayerSubscriptionPayload!
+  world(worldId: ID!, updatedFields_contains_some: [String!]): WorldSubscriptionPayload!
 }
 
 type User {
@@ -47,6 +48,7 @@ type World {
   name: String!
   seed: String!
   time: Float!
+  timeChanger: Float
   days: Int!
   lastPlayed: String!
   changedBlocks: [Block!]!
@@ -182,4 +184,9 @@ type MessageSubscriptionPayload {
 type PlayerSubscriptionPayload {
   mutation: MutationType!
   node: Player
+}
+
+type WorldSubscriptionPayload {
+  mutation: MutationType!
+  node: World
 }

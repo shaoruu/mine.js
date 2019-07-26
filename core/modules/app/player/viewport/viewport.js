@@ -90,7 +90,7 @@ Viewport.prototype.updateHelmet = function() {
         this.setIsChanged(true)
       }
 
-      this.setFilter(WATER_COLOR, 0.3)
+      this.setFilter(WATER_COLOR, 0.1)
       break
     default:
       if (this.getIsChanged()) this.reset()

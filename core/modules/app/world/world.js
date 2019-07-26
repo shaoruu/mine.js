@@ -2,7 +2,7 @@ import { ResourceManager, ChunkManager, WorkerManager } from '../../managers'
 import Config from '../../../config/config'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
-import { UPDATE_WORLD_MUTATION } from '../../../lib/graphql'
+import { UPDATE_WORLD_MUTATION, WORLD_SUBSCRIPTION } from '../../../lib/graphql'
 
 import createSky from './sky/sky'
 import Chat from './chat/chat'
@@ -44,10 +44,11 @@ class World extends Stateful {
   init = () => {
     this.initPlayer()
     this.initUpdaters()
+    this.initSubscriptions()
   }
 
   initPlayer = () => {
-    if (Helpers.approxEquals(this.data.playerY, Number.MIN_SAFE_INTEGER, 5))
+    if (Helpers.approxEquals(this.data.y, Number.MIN_SAFE_INTEGER, 5))
       this.workerManager.queueSpecificChunk({
         cmd: 'GET_HIGHEST',
         x: 0,
@@ -86,6 +87,25 @@ class World extends Stateful {
     })
   }
 
+  initSubscriptions = () => {
+    this.apolloClient
+      .subscribe({
+        query: WORLD_SUBSCRIPTION,
+        variables: {
+          worldId: this.data.id,
+          updatedFields_contains_some: ['timeChanger']
+        }
+      })
+      .subscribe({
+        next: ({ data }) => {
+          this.handleServerUpdate(data)
+        },
+        error(e) {
+          Helpers.error(e.message)
+        }
+      })
+  }
+
   update = () => {
     this.workerManager.update()
     this.chunkManager.update()
@@ -98,6 +118,14 @@ class World extends Stateful {
     const playerPos = this.player.getCoordinates()
     const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords(playerPos)
     this.chunkManager.surroundingChunksCheck(coordx, coordy, coordz)
+  }
+
+  handleServerUpdate = ({
+    world: {
+      node: { timeChanger }
+    }
+  }) => {
+    this.sky.setTime(timeChanger)
   }
 
   removeUpdaters = () => {
