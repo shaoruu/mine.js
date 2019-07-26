@@ -97,6 +97,10 @@ class Helpers {
     return Number(`${Math.round(`${value}e${decimals}`)}e-${decimals}`)
   }
 
+  static toFixed(value, decimals) {
+    return Number(value.toFixed(decimals))
+  }
+
   /**
    * Converting global coordinates to global block coordinates.
    */

@@ -511,6 +511,13 @@ class Controls {
     return camPos
   }
 
+  getChunkCoords = () => {
+    const pos = this.getFeetCoords()
+    const chunkBPos = Helpers.globalBlockToChunkBlock({ ...pos })
+    const chunkPos = Helpers.globalBlockToChunkCoords({ ...pos })
+    return { ...chunkBPos, ...chunkPos }
+  }
+
   /* -------------------------------------------------------------------------- */
   /*                                   SETTERS                                  */
   /* -------------------------------------------------------------------------- */

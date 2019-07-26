@@ -28,13 +28,13 @@ These are some screenshots taken directly from the project.
 
 ## Awesome Graphics
 
+![](https://i.imgur.com/v3aR0E7.png)
+
 ![](https://i.imgur.com/tEuhoBx.jpg)
 
 ![](https://i.imgur.com/5dadkka.jpg)
 
 ![](https://i.imgur.com/extPtZs.png)
-
-![](https://i.imgur.com/2y8WJ8K.png)
 
 # Build Stack
 

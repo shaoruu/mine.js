@@ -101,6 +101,8 @@ class Player extends Stateful {
 
   getCoordinates = () => this.controls.getFeetCoords()
 
+  getChunkInfo = () => this.controls.getChunkCoords()
+
   getDirections = () => this.controls.getDirections()
 
   getHeight = () => this.getCoordinates().y
