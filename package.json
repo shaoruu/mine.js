@@ -34,15 +34,10 @@
     "react-pannellum": "^0.1.6",
     "react-router-dom": "^5.0.1",
     "react-scripts": "3.0.1",
-    "stats-js": "^1.0.0",
     "styled-components": "^4.3.2",
     "subscriptions-transport-ws": "^0.9.16",
     "three": "^0.106.2",
     "tic": "^1.0.0",
-    "voxel": "^0.5.0",
-    "voxel-mesh": "^0.3.0",
-    "voxel-sky": "^0.3.0",
-    "wo-perlin": "^0.0.2",
     "yup": "^0.27.0"
   },
   "scripts": {

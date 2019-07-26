@@ -6475,11 +6475,6 @@ inflight@^1.0.4:
     once "^1.3.0"
     wrappy "1"
 
-inherits@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/inherits/-/inherits-1.0.0.tgz#38e1975285bf1f7ba9c84da102bb12771322ac48"
-  integrity sha1-OOGXUoW/H3upyE2hArsSdxMirEg=
-
 inherits@2, inherits@2.0.4, inherits@^2.0.1, inherits@^2.0.3, inherits@~2.0.1, inherits@~2.0.3:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.4.tgz#0fa2c64f932917c3433a0ded55363aae37416b7c"
@@ -8711,7 +8706,7 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-ndarray@^1.0.18, ndarray@~1.0.5:
+ndarray@^1.0.18:
   version "1.0.18"
   resolved "https://registry.yarnpkg.com/ndarray/-/ndarray-1.0.18.tgz#b60d3a73224ec555d0faa79711e502448fd3f793"
   integrity sha1-tg06cyJOxVXQ+qeXEeUCRI/T95M=
@@ -12382,11 +12377,6 @@ static-extend@^0.1.1:
     define-property "^0.2.5"
     object-copy "^0.1.0"
 
-stats-js@^1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/stats-js/-/stats-js-1.0.1.tgz#377c36490c1935b9a4e68bf3acc3afeb59878f66"
-  integrity sha512-EAwEFghGNv8mlYC4CZzI5kWghsnP8uBKXw6VLRHtXkOk5xySfUKLTqTkjgJFfDluIkf/O7eZwi5MXP50VeTbUg==
-
 "statuses@>= 1.4.0 < 2", "statuses@>= 1.5.0 < 2", statuses@~1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-1.5.0.tgz#161c7dac177659fd9811f43771fa99381478628c"
@@ -12995,11 +12985,6 @@ tic@^1.0.0:
   resolved "https://registry.yarnpkg.com/tic/-/tic-1.0.0.tgz#f481fed7e1838dca8a79d439d70170b961d96717"
   integrity sha1-9IH+1+GDjcqKedQ51wFwuWHZZxc=
 
-tic@~0.2.0:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/tic/-/tic-0.2.1.tgz#03240336dde29d0b7c2e5a24e9cc0cbf5461e1b1"
-  integrity sha1-AyQDNt3inQt8Llok6cwMv1Rh4bE=
-
 timed-out@4.0.1, timed-out@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/timed-out/-/timed-out-4.0.1.tgz#f32eacac5a175bea25d7fab565ab3ed8741ef56f"
@@ -13253,20 +13238,20 @@ ua-parser-js@^0.7.18:
   resolved "https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-0.7.20.tgz#7527178b82f6a62a0f243d1f94fd30e3e3c21098"
   integrity sha512-8OaIKfzL5cpx8eCMAhhvTlft8GYF8b2eQr6JkCyVdrgjcytyOmPCXrqXFcUnhonRpLlh5yxEZVohm6mzaowUOw==
 
-uglify-js@*, uglify-js@^3.1.4:
-  version "3.6.0"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.6.0.tgz#704681345c53a8b2079fb6cec294b05ead242ff5"
-  integrity sha512-W+jrUHJr3DXKhrsS7NUVxn3zqMOFn0hL/Ei6v0anCIMoKC93TjcflTagwIHLW7SfMFfiQuktQyFVCFHGUE0+yg==
-  dependencies:
-    commander "~2.20.0"
-    source-map "~0.6.1"
-
 uglify-js@3.4.x:
   version "3.4.10"
   resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.4.10.tgz#9ad9563d8eb3acdfb8d38597d2af1d815f6a755f"
   integrity sha512-Y2VsbPVs0FIshJztycsO2SfPk7/KAF/T72qzv9u5EpQ4kB2hQoHlhNQTsNyy6ul7lQtqJN/AoWeS23OzEiEFxw==
   dependencies:
     commander "~2.19.0"
+    source-map "~0.6.1"
+
+uglify-js@^3.1.4:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.6.0.tgz#704681345c53a8b2079fb6cec294b05ead242ff5"
+  integrity sha512-W+jrUHJr3DXKhrsS7NUVxn3zqMOFn0hL/Ei6v0anCIMoKC93TjcflTagwIHLW7SfMFfiQuktQyFVCFHGUE0+yg==
+  dependencies:
+    commander "~2.20.0"
     source-map "~0.6.1"
 
 undefsafe@^2.0.2:
@@ -13657,32 +13642,6 @@ vm-browserify@^1.0.1:
   resolved "https://registry.yarnpkg.com/vm-browserify/-/vm-browserify-1.1.0.tgz#bd76d6a23323e2ca8ffa12028dc04559c75f9019"
   integrity sha512-iq+S7vZJE60yejDYM0ek6zg308+UZsdtPExWP9VZoCFCz1zkJoXFnAX7aZfd/ZwrkidzdUZL0C/ryW+JwAiIGw==
 
-voxel-mesh@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/voxel-mesh/-/voxel-mesh-0.3.0.tgz#33d61695f67293c2857715986f177dd27c6a87e9"
-  integrity sha1-M9YWlfZyk8KFdxWYbxd90nxqh+k=
-
-voxel-sky@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/voxel-sky/-/voxel-sky-0.3.0.tgz#3aa2d499d5d9469a3fa83aba25eb20890901e3e5"
-  integrity sha1-OqLUmdXZRpo/qDq6JesgiQkB4+U=
-  dependencies:
-    tic "~0.2.0"
-    voxel-trajectory "~0.2.0"
-
-voxel-trajectory@~0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/voxel-trajectory/-/voxel-trajectory-0.2.0.tgz#46b6be44290fe49c77be19d9fc31eee6b945033e"
-  integrity sha1-Rra+RCkP5Jx3vhnZ/DHu5rlFAz4=
-
-voxel@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/voxel/-/voxel-0.5.0.tgz#2e90efe83a0c15f2f87b960af1c1ba0831a89993"
-  integrity sha1-LpDv6DoMFfL4e5YK8cG6CDGomZM=
-  dependencies:
-    inherits "1.0.0"
-    ndarray "~1.0.5"
-
 w3c-hr-time@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/w3c-hr-time/-/w3c-hr-time-1.0.1.tgz#82ac2bff63d950ea9e3189a58a65625fedf19045"
@@ -13912,13 +13871,6 @@ widest-line@^2.0.0:
   integrity sha512-Ba5m9/Fa4Xt9eb2ELXt77JxVDV8w7qQrH0zS/TWSJdLyAwQjWoOzpzj5lwVftDz6n/EOu3tNACS84v509qwnJA==
   dependencies:
     string-width "^2.1.1"
-
-wo-perlin@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/wo-perlin/-/wo-perlin-0.0.2.tgz#67bbe9624dc45e7444395ab87b09abd845caacd0"
-  integrity sha1-Z7vpYk3EXnREOVq4ewmr2EXKrNA=
-  dependencies:
-    uglify-js "*"
 
 wordwrap@~0.0.2:
   version "0.0.3"
