@@ -5,6 +5,11 @@ import classes from './chat.module.css'
 import Message from './message/message'
 import ChatHistory from './chatHistory/chatHistory'
 
+const HELP_COMMAND = `
+/gamemode (creative|spectator|survival)</br>
+/time (set) (day|night|&lt;value&gt;)
+`
+
 class Chat {
   constructor(playerId, worldId, container, apolloClient) {
     this.state = {
@@ -55,8 +60,12 @@ class Chat {
         variables: { worldId: this.worldId }
       })
       .subscribe({
-        next: ({ data }) => {
-          this.addMessage(data)
+        next: ({
+          data: {
+            message: { node }
+          }
+        }) => {
+          this.addMessage(node)
         },
         error(e) {
           Helpers.error(e.message)
@@ -68,6 +77,11 @@ class Chat {
     const value = this.getInput()
 
     if (value.split(' ').filter(ele => ele).length === 0) return
+
+    if (value === '/help') {
+      this.addMessage({ type: 'SERVER', body: HELP_COMMAND })
+      return
+    }
 
     this.apolloClient.mutate({
       mutation: RUN_COMMAND_MUTATION,
@@ -94,12 +108,7 @@ class Chat {
     if (Helpers.isString(next)) this.setInput(next)
   }
 
-  addMessage = data => {
-    const {
-      message: {
-        node: { type, sender, body }
-      }
-    } = data
+  addMessage = ({ type, sender, body }) => {
     const newMessage = new Message(type, sender, body)
 
     this.messages.push(newMessage)
