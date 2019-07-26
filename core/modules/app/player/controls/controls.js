@@ -7,7 +7,7 @@ import PointerLockControls from './pointerLockControls'
 import * as THREE from 'three'
 import { easeQuadOut } from 'd3-ease'
 
-const { movements: MOVEMENT_KEYS } = Config.keyboard
+const { movements: MOVEMENT_KEYS, multiplayer: MULTIPLAYER_KEYS } = Config.keyboard
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal
 const VERT_MAX_SPEED = Config.player.maxSpeed.vertical
 const SPECTATOR_INERTIA = Config.player.inertia
@@ -75,6 +75,8 @@ class Controls {
 
     /** REGISTER KEYS */
     this.registerKeys()
+    document.addEventListener('mousedown', this.handleMouseDown, false)
+    document.addEventListener('mouseup', this.handleMouseUp, false)
   }
 
   tick = () => {
@@ -192,6 +194,28 @@ class Controls {
   }
 
   registerKeys = () => {
+    const chatRef = this.world.getChat()
+    /**
+     * CHAT KEYS ('chat')
+     */
+    this.keyboard.registerKey(
+      13,
+      'chat',
+      () => {
+        chatRef.handleEnter()
+        chatRef.disable()
+      },
+      this.unblockGame,
+      undefined,
+      { repeat: false }
+    )
+    this.keyboard.registerKey(38, 'chat', chatRef.handleUp) // up
+    this.keyboard.registerKey(40, 'chat', chatRef.handleDown) // down
+
+    this.keyboard.registerKey(27, 'chat', chatRef.disable, this.unblockGame, undefined, {
+      repeat: false
+    })
+
     /**
      * moving KEYS ('moving')
      */
@@ -254,6 +278,19 @@ class Controls {
         this.sneakNode = null
       }
     )
+
+    this.keyboard.registerKey(MULTIPLAYER_KEYS.openChat, 'moving', () => {
+      this.threeControls.unlock()
+      chatRef.enable()
+      this.keyboard.setScope('chat')
+    })
+
+    this.keyboard.registerKey(MULTIPLAYER_KEYS.openCommand, 'moving', () => {
+      this.threeControls.unlock()
+      chatRef.enable(false)
+      this.keyboard.setScope('chat')
+    })
+
     // F3 with 'x' as backup
     this.keyboard.registerKeys([114, 88], 'moving', () => this.debug.toggle())
 
@@ -462,6 +499,21 @@ class Controls {
     playerPos.z += scaledVel.z
   }
 
+  handleMouseDown = e => {
+    if (!this.world.getChat().enabled && this.threeControls.isLocked) this.mouseKey = e.button
+  }
+
+  handleMouseUp = e => {
+    if (!this.world.getChat().enabled && this.threeControls.isLocked) {
+      this.mouseKey = null
+      if (e.button === 0) this.stopBreakingBlock()
+      if (this.status.isCreative) {
+        this.canBreakBlock = true
+        this.canPlaceBlock = true
+      }
+    }
+  }
+
   unblockGame = () => {
     this.blocker.style.display = 'none'
     this.keyboard.setScope('moving')
@@ -470,10 +522,10 @@ class Controls {
 
   blockGame = () => {
     this.resetMovements()
-    // if (!this.chat.enabled) {
-    this.keyboard.setScope('menu')
-    this.blocker.style.display = 'flex'
-    // }
+    if (!this.world.getChat().enabled) {
+      this.keyboard.setScope('menu')
+      this.blocker.style.display = 'flex'
+    }
   }
 
   resetMovements = () =>

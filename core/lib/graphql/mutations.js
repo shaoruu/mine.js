@@ -30,3 +30,9 @@ export const UPDATE_WORLD_MUTATION = gql`
     }
   }
 `
+
+export const RUN_COMMAND_MUTATION = gql`
+  mutation RunCommand($playerId: ID!, $worldId: ID!, $command: String!) {
+    runCommand(data: { playerId: $playerId, worldId: $worldId, command: $command })
+  }
+`

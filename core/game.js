@@ -52,7 +52,10 @@ class Game {
     // this.lights.place('ambient')
 
     /** GAME COMPONENTS */
-    this.world = new World(world, this.scene, apolloClient, playerData.y)
+    this.world = new World(world, this.scene, apolloClient, container, {
+      y: playerData.y,
+      id: playerData.id
+    })
     this.player = new Player(
       apolloClient,
       playerData,

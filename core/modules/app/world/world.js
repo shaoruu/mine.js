@@ -5,11 +5,12 @@ import Stateful from '../../../lib/stateful/stateful'
 import { UPDATE_WORLD_MUTATION } from '../../../lib/graphql'
 
 import createSky from './sky/sky'
+import Chat from './chat/chat'
 
 const LIQUID = Config.block.liquid
 
 class World extends Stateful {
-  constructor(worldData, scene, apolloClient, playerY) {
+  constructor(worldData, scene, apolloClient, container, playerData) {
     super({ isSetup: false })
 
     const { id, name, seed, time, days, changedBlocks } = worldData
@@ -20,11 +21,14 @@ class World extends Stateful {
       seed,
       time,
       days,
-      playerY
+      y: playerData.y,
+      playerId: playerData.id
     }
 
     this.scene = scene
     this.apolloClient = apolloClient
+
+    this.chat = new Chat(this.data.playerId, id, container, apolloClient)
 
     this.resourceManager = new ResourceManager()
     this.workerManager = new WorkerManager(this)
@@ -119,6 +123,8 @@ class World extends Stateful {
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
   getPlayer = () => this.player
+
+  getChat = () => this.chat
 
   getDays = () => this.data.days
 

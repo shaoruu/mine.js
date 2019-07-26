@@ -63,6 +63,11 @@ function Viewport(player, world, scene) {
 }
 
 Viewport.prototype.tick = function() {
+  this.updateHelmet()
+  this.updateTPBlock()
+}
+
+Viewport.prototype.updateHelmet = function() {
   const playerRef = this.getPlayer()
   const worldRef = this.getWorld()
 
@@ -91,10 +96,15 @@ Viewport.prototype.tick = function() {
       if (this.getIsChanged()) this.reset()
       break
   }
+}
 
+Viewport.prototype.updateTPBlock = function() {
   /* -------------------------------------------------------------------------- */
   /*                       VIEWPORT BLOCK ROLL OVER UPDATE                      */
   /* -------------------------------------------------------------------------- */
+  const playerRef = this.getPlayer()
+  const worldRef = this.getWorld()
+
   const blockInfo = this.getLookingBlockInfo()
   const rollOverRef = this.getRollOver()
 
@@ -120,6 +130,8 @@ Viewport.prototype.tick = function() {
   } else {
     this.removeTPBlocks()
   }
+
+  if (playerRef.status.isSpectator && this.getIsRolledOver()) this.removeTPBlocks(blockInfo)
 }
 
 Viewport.prototype.addSelf = function(scene) {
@@ -146,13 +158,15 @@ Viewport.prototype.reset = function() {
   if (helmet) sceneRef.remove(helmet)
 }
 
-Viewport.prototype.removeTPBlocks = function() {
+Viewport.prototype.removeTPBlocks = function(blockInfo) {
   const obj = this.getScene().getObjectByName(rollOverName)
   const worldRef = this.getWorld()
 
   // Clearing world potentials
-  worldRef.setTarget(null)
-  worldRef.setPotential(null)
+  if (!blockInfo) {
+    worldRef.setTarget(null)
+    worldRef.setPotential(null)
+  }
 
   if (obj) {
     this.getScene().remove(obj)

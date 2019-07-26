@@ -1,7 +1,7 @@
 import Stateful from '../../../lib/stateful/stateful'
 import Helpers from '../../../utils/helpers'
 import Config from '../../../config/config'
-import { UPDATE_PLAYER_MUTATION } from '../../../lib/graphql'
+import { UPDATE_PLAYER_MUTATION, PLAYER_SUBSCRIPTION } from '../../../lib/graphql'
 
 import Status from './status/status'
 import PlayerControls from './controls/controls'
@@ -13,8 +13,12 @@ class Player extends Stateful {
   constructor(apolloClient, playerData, camera, scene, world, canvas, blocker, button) {
     super({ prevPos: '', prevDir: '' })
 
-    const { id, gamemode } = playerData
-    this.id = id
+    const { id, user, gamemode } = playerData
+
+    this.data = {
+      id,
+      user
+    }
 
     this.apolloClient = apolloClient
 
@@ -48,6 +52,7 @@ class Player extends Stateful {
     scene.add(this.controls.getObject())
 
     this.initUpdaters()
+    this.initSubscriptions()
   }
 
   initUpdaters = () => {
@@ -72,7 +77,7 @@ class Player extends Stateful {
         this.apolloClient.mutate({
           mutation: UPDATE_PLAYER_MUTATION,
           variables: {
-            id: this.id,
+            id: this.data.id,
             ...playerCoords,
             ...playerDir
           }
@@ -81,11 +86,39 @@ class Player extends Stateful {
     }, 500)
   }
 
+  initSubscriptions = () => {
+    this.apolloClient
+      .subscribe({
+        query: PLAYER_SUBSCRIPTION,
+        variables: {
+          username: this.data.user.username,
+          worldId: this.world.data.id,
+          updatedFields_contains_some: ['gamemode']
+        }
+      })
+      .subscribe({
+        next: ({ data }) => {
+          this.handleServerUpdate(data)
+        },
+        error(e) {
+          Helpers.error(e.message)
+        }
+      })
+  }
+
   update = () => {
     if (!this.world.getIsReady()) return
     this.controls.tick()
     this.status.tick()
     this.viewport.tick()
+  }
+
+  handleServerUpdate = ({
+    player: {
+      node: { gamemode }
+    }
+  }) => {
+    this.status.setGamemode(gamemode)
   }
 
   removeUpdaters = () => {
