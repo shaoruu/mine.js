@@ -1,5 +1,5 @@
 import Config from './config/config'
-import { Renderer, Camera, World, Player, Light } from './modules/app'
+import { Renderer, Camera, World, Player } from './modules/app'
 import ConnectionStatus from './modules/interfaces/connectionStatus/connectionStatus'
 import { Debug } from './modules/interfaces'
 
@@ -48,10 +48,6 @@ class Game {
 
     /** THREE CAMERA */
     this.camera = new Camera(this.renderer.threeRenderer)
-
-    /** THREE LIGHTS */
-    this.lights = new Light(this.scene)
-    // this.lights.place('ambient')
 
     /** GAME COMPONENTS */
     this.world = new World(world, this.scene, apolloClient, container, {

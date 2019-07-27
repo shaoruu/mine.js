@@ -3,6 +3,7 @@
 import Config from '../config/config'
 
 const SIZE = Config.chunk.size
+const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
 const DIMENSION = Config.block.dimension
 const TRANSPARENT_BLOCKS = Config.block.transparent
 const LIQUID_BLOCKS = Config.block.liquid
@@ -76,6 +77,26 @@ class Helpers {
     y: y * DIMENSION,
     z: z * DIMENSION
   })
+
+  static getRelativeCoords = (x, y, z, offsets) => ({
+    x: x - offsets[0],
+    y: y - offsets[1],
+    z: z - offsets[2]
+  })
+
+  static getAbsoluteCoords = (x, y, z, offsets) => ({
+    x: x + offsets[0],
+    y: y + offsets[1],
+    z: z + offsets[2]
+  })
+
+  static checkWithinChunk = (x, y, z) =>
+    x >= 0 &&
+    x < SIZE + NEIGHBOR_WIDTH * 2 &&
+    y >= 0 &&
+    y < SIZE + NEIGHBOR_WIDTH * 2 &&
+    z >= 0 &&
+    z < SIZE + NEIGHBOR_WIDTH * 2
 
   /**
    * Rounding precision of position

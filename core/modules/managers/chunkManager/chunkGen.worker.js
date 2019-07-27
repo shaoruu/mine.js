@@ -1,5 +1,6 @@
 import { ClassicGenerator } from '../../../lib/generation/terrain'
 import GeometryManager from '../resourceManager/geometryManager'
+import LightingManager from '../lightingManager/lightingManager'
 import Config from '../../../config/config'
 
 import Mesher from './mesher'
@@ -24,6 +25,8 @@ self.onmessage = function(e) {
 
       self.geometryManager = new GeometryManager()
       self.geometryManager.load()
+
+      self.lightingManager = new LightingManager(self.generator)
 
       self.postMessage({ cmd })
 
@@ -67,7 +70,7 @@ self.onmessage = function(e) {
       ])
 
       self.generator.setVoxelData(blocks, coordx, coordy, coordz)
-      self.generator.setLightingData(lighting, smoothLighting, blocks, coordx, coordy, coordz)
+      self.lightingManager.setLightingData(lighting, smoothLighting, blocks, coordx, coordy, coordz)
 
       const dims = [SIZE + NEIGHBOR_WIDTH * 2, SIZE + NEIGHBOR_WIDTH * 2, SIZE + NEIGHBOR_WIDTH * 2]
 
