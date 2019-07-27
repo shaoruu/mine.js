@@ -59,7 +59,7 @@ class Player extends Stateful {
     this.posUpdater = window.requestInterval(() => {
       const { prevPos, prevDir } = this.state
 
-      const playerCoords = this.getCoordinates()
+      const playerCoords = this.getCoordinates(3)
       const playerCoordsRep = Helpers.get3DCoordsRep(playerCoords.x, playerCoords.y, playerCoords.z)
 
       const playerDir = this.getDirections()
@@ -132,7 +132,7 @@ class Player extends Stateful {
 
   getCamCoordinates = dec => this.controls.getNormalizedCamPos(dec)
 
-  getCoordinates = () => this.controls.getFeetCoords()
+  getCoordinates = dec => this.controls.getFeetCoords(dec)
 
   getChunkInfo = () => this.controls.getChunkCoords()
 

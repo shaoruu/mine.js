@@ -1,33 +1,25 @@
 const path = require('path')
-const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin')
+const {
+  removeModuleScopePlugin,
+  override,
+  babelInclude,
+  addWebpackAlias
+} = require('customize-cra')
 
-const paths = {
-  core: 'core/'
-}
+module.exports = override(
+  (() => config => {
+    config.module.rules.push({
+      test: /\.worker\.js$/,
+      use: { loader: 'worker-loader', options: { inline: true } }
+    })
 
-module.exports = function override(config, env) {
-  config.module.rules[2].oneOf[1].include = [config.module.rules[2].oneOf[1].include]
+    config.output.globalObject = 'this'
 
-  Object.keys(paths).forEach(key => {
-    const p = paths[key]
-
-    config.resolve.alias[key] = path.resolve(__dirname, p)
-
-    config.module.rules[1].include = [config.module.rules[1].include, path.resolve(__dirname, p)]
-
-    config.module.rules[2].oneOf[1].include.push(path.resolve(__dirname, p))
+    return config
+  })(),
+  removeModuleScopePlugin(),
+  babelInclude([path.resolve(__dirname, 'src'), path.resolve(__dirname, 'core')]),
+  addWebpackAlias({
+    ['core']: path.resolve(__dirname, 'core')
   })
-
-  config.resolve.plugins = config.resolve.plugins.filter(
-    plugin => !(plugin instanceof ModuleScopePlugin)
-  )
-
-  config.module.rules.push({
-    test: /\.worker\.js$/,
-    use: { loader: 'worker-loader', options: { inline: true } }
-  })
-
-  config.output.globalObject = 'this'
-
-  return config
-}
+)
