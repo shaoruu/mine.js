@@ -71,7 +71,7 @@ const resources = {
         bottom: null,
         config: {
           side: THREE.DoubleSide,
-          color: 0x1f6b1e,
+          color: 0x6eb219,
           alphaTest: 0.15
         }
       },
