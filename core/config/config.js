@@ -135,7 +135,7 @@ const Config = {
             lacunarity: 1.5,
             heightOffset: 2.3,
             amplifier: 0.2,
-            treeMin: 0.8,
+            treeMin: 0.65,
             treeScale: 8
           },
           types: {
@@ -152,8 +152,8 @@ const Config = {
             lacunarity: 1,
             heightOffset: 2.5,
             amplifier: 1,
-            treeMin: 0.67,
-            treeScale: 7
+            treeMin: 0.63,
+            treeScale: 10
           },
           types: {
             top: 2,

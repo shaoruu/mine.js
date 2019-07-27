@@ -3,6 +3,7 @@ import Structures from '../../../../config/structures'
 import Config from '../../../../config/config'
 
 import { Noise } from 'noisejs'
+import tooloud from 'tooloud'
 
 const STRUCTURES = Structures
 const SIZE = Config.chunk.size
@@ -64,6 +65,7 @@ export default function ClassicGenerator(seed) {
   const initMembers = () => {
     this.maxHeights = {}
     this.trees = new Set()
+    this.treeNoise = tooloud.Simplex.create(this.seed)
   }
 
   initSeed(seed)
@@ -91,8 +93,8 @@ export default function ClassicGenerator(seed) {
 
     if (this.trees.has(rep)) return true
 
-    const shouldPlant =
-      this.noise.simplex2(x / treeScopedScale, z / treeScopedScale) > treeScopedMin
+    const noiseVal = (1 + this.treeNoise.noise(x * treeScopedScale, z * treeScopedScale, 0)) / 2
+    const shouldPlant = noiseVal > treeScopedMin
 
     if (shouldPlant) this.trees.add(rep)
 
