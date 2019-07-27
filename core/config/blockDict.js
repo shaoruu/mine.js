@@ -33,6 +33,10 @@ const BlockDict = {
     name: 'leaves_oak',
     tag: `${projectTag}:leaves_oak`
   },
+  31: {
+    name: 'tallgrass',
+    tag: `${projectTag}:tallgrass`
+  },
   95: {
     name: 'stained_glass',
     tag: `${projectTag}:stained_glass`

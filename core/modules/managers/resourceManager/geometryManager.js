@@ -46,7 +46,7 @@ class GeometryManager {
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
-  get = face => this.geometries[face]
+  getPure = face => this.geometries[face]
 
   getWLighting = (key, lighting, smoothLighting, type) => {
     if (LIQUID_BLOCKS.includes(type)) return this.pures[key]

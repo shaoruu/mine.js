@@ -7,6 +7,8 @@ const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
 const DIMENSION = Config.block.dimension
 const TRANSPARENT_BLOCKS = Config.block.transparent
 const LIQUID_BLOCKS = Config.block.liquid
+const PLANT_BLOCKS = Config.block.plant
+const PASSABLE_BLOCKS = Config.block.passable
 
 const projectTag = '[MinecraftJS]'
 
@@ -98,6 +100,15 @@ class Helpers {
     z >= 0 &&
     z < SIZE + NEIGHBOR_WIDTH * 2
 
+  static getLoadedBlocks = (x, y, z, voxelData, generator, offsets) => {
+    const relativeCoords = Helpers.getRelativeCoords(x, y, z, offsets)
+    if (Helpers.checkWithinChunk(relativeCoords.x, relativeCoords.y, relativeCoords.z)) {
+      return voxelData.get(relativeCoords.x, relativeCoords.z, relativeCoords.y)
+    }
+    const maxHeight = generator.getHighestBlock(x, z)
+    return generator.getBlockInfo(x, y, z, maxHeight)
+  }
+
   /**
    * Rounding precision of position
    * @param { object } position - position to round contianing x, y and z.
@@ -152,12 +163,18 @@ class Helpers {
 
   static isLiquid = type => LIQUID_BLOCKS.includes(type)
 
+  static isPlant = type => PLANT_BLOCKS.includes(type)
+
+  static isPassable = type => PASSABLE_BLOCKS.includes(type)
+
   static applyStyle = (ele, s) => {
     if (typeof s === 'object') Object.keys(s).forEach(key => (ele.style[key] = s[key]))
     else ele.classList.add(s)
   }
 
   static toRadian = degree => (degree * Math.PI) / 180
+
+  static normalizeNoise = noise => (1 + noise) / 2
 
   static binarySearch(arr, ele, func) {
     let l = 0

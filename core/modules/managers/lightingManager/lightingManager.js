@@ -9,15 +9,6 @@ class LightingManager {
     this.generator = generator
   }
 
-  getLoadedBlocks = (x, y, z, voxelData, offsets) => {
-    const relativeCoords = Helpers.getRelativeCoords(x, y, z, offsets)
-    if (Helpers.checkWithinChunk(relativeCoords.x, relativeCoords.y, relativeCoords.z)) {
-      return voxelData.get(relativeCoords.x, relativeCoords.z, relativeCoords.y)
-    }
-    const maxHeight = this.generator.getHighestBlock(x, z)
-    return this.generator.getBlockInfo(x, y, z, maxHeight)
-  }
-
   getBlockLighting = (x, y, z, voxelData, offsets) => {
     const surroundings = [
       { x: 0, y: 1, z: 0 },
@@ -37,7 +28,14 @@ class LightingManager {
         z: z + surroundings[i].z,
         lightLevel: 15
       }
-      const value = this.getLoadedBlocks(block.x, block.y, block.z, voxelData, offsets)
+      const value = Helpers.getLoadedBlocks(
+        block.x,
+        block.y,
+        block.z,
+        voxelData,
+        this.generator,
+        offsets
+      )
       if (Helpers.isTransparent(value)) {
         const pastNodeCoords = new Set([Helpers.get3DCoordsRep(block.x, -1, block.z)])
         const queue = [block]
@@ -65,12 +63,33 @@ class LightingManager {
 
             let startValue = 0
 
-            let endValue = this.getLoadedBlocks(newNode.x, yValue, newNode.z, voxelData, offsets)
+            let endValue = Helpers.getLoadedBlocks(
+              newNode.x,
+              yValue,
+              newNode.z,
+              voxelData,
+              this.generator,
+              offsets
+            )
 
             while (Helpers.isTransparent(startValue) && !Helpers.isTransparent(endValue)) {
               yValue += 1
-              startValue = this.getLoadedBlocks(q.x, yValue, q.z, voxelData, offsets)
-              endValue = this.getLoadedBlocks(newNode.x, yValue, newNode.z, voxelData, offsets)
+              startValue = Helpers.getLoadedBlocks(
+                q.x,
+                yValue,
+                q.z,
+                voxelData,
+                this.generator,
+                offsets
+              )
+              endValue = Helpers.getLoadedBlocks(
+                newNode.x,
+                yValue,
+                newNode.z,
+                voxelData,
+                this.generator,
+                offsets
+              )
             }
 
             if (!Helpers.isTransparent(startValue) || !Helpers.isTransparent(endValue)) continue

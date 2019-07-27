@@ -1,13 +1,10 @@
 import { ResourceManager, ChunkManager, WorkerManager } from '../../managers'
-import Config from '../../../config/config'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
 import { Chat } from '../../interfaces'
 import { UPDATE_WORLD_MUTATION, WORLD_SUBSCRIPTION } from '../../../lib/graphql'
 
 import createSky from './sky/sky'
-
-const LIQUID = Config.block.liquid
 
 class World extends Stateful {
   constructor(worldData, scene, apolloClient, container, playerData) {
@@ -171,7 +168,7 @@ class World extends Stateful {
     const type = this.getVoxelByVoxelCoords(x, y, z)
     if (typeof type !== 'number') return forPassing
 
-    const isSolid = LIQUID.includes(type)
+    const isSolid = forPassing ? Helpers.isPassable(type) : Helpers.isLiquid(type)
     return !isSolid
   }
 

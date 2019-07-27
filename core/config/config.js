@@ -9,7 +9,7 @@ const Config = {
   lights: {
     sunlight: {
       maxIntensity: 1.25,
-      minIntensity: 0.3
+      minIntensity: 0.2
     },
     ambientLight: {
       enabled: true,
@@ -111,8 +111,9 @@ const Config = {
   },
   block: {
     dimension: 32,
-    transparent: [0, 9, 18],
-    overridable: [0],
+    plant: [31],
+    transparent: [0, 9, 18, 31, 95],
+    passable: [0, 9, 31],
     liquid: [0, 9]
   },
   chunk: {
@@ -136,7 +137,9 @@ const Config = {
             heightOffset: 2.3,
             amplifier: 0.2,
             treeMin: 0.65,
-            treeScale: 8
+            treeScale: 8,
+            grassMin: 0.58,
+            grassScale: 10
           },
           types: {
             top: 2,
@@ -153,7 +156,9 @@ const Config = {
             heightOffset: 2.5,
             amplifier: 1,
             treeMin: 0.63,
-            treeScale: 10
+            treeScale: 10,
+            grassMin: 0.65,
+            grassScale: 0.6
           },
           types: {
             top: 2,

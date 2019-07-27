@@ -30,10 +30,15 @@ class Mesher {
       const [geo, pos, face, type, lighting, smoothLighting] = planes[i]
 
       const { x, y, z } = pos
+
+      const geoData = Helpers.isPlant(type)
+        ? geoManager.getPure(geo)
+        : geoManager.getWLighting(geo, lighting, smoothLighting, type)
+
       const {
         geometry,
         translation: { x: dx, y: dy, z: dz }
-      } = geoManager.getWLighting(geo, lighting, smoothLighting, type)
+      } = geoData
       const { x: wx, y: wy, z: wz } = Helpers.globalBlockToWorld({
         x: x + dx,
         y: y + dy,
@@ -96,8 +101,19 @@ class Mesher {
             coordz
           })
 
-          const isSelfTransparent = !!Helpers.isTransparent(type)
-          const isSelfLiquid = !!Helpers.isLiquid(type)
+          if (Helpers.isPlant(type)) {
+            const { dx, dz } = self.generator.getGrassData(pos.x, pos.z)
+
+            pos.x += dx
+            pos.z += dz
+
+            planes.push(['cross1', pos, 'side', type, 0, 0])
+            planes.push(['cross2', pos, 'side', type, 0, 0])
+            continue
+          }
+
+          const isSelfTransparent = Helpers.isTransparent(type)
+          const isSelfLiquid = Helpers.isLiquid(type)
 
           // TOP
           const top = voxelData.get(x, z, y + 1)

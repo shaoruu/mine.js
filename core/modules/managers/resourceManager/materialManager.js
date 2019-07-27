@@ -22,6 +22,8 @@ class MaterialManager {
       const { config } = R_BLOCKS[key]
 
       ;['top', 'side', 'bottom'].forEach(face => {
+        if (!R_BLOCKS[key][face]) return
+
         const texture = this.loader.load(R_BLOCKS[key][face])
         texture.wrapS = THREE.RepeatWrapping
         texture.wrapT = THREE.RepeatWrapping

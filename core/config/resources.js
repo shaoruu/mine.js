@@ -65,6 +65,16 @@ const resources = {
           alphaTest: 0.15
         }
       },
+      31: {
+        top: null,
+        side: require('../assets/blocks/tallgrass.png'),
+        bottom: null,
+        config: {
+          side: THREE.DoubleSide,
+          color: 0x1f6b1e,
+          alphaTest: 0.15
+        }
+      },
       95: {
         top: require('../assets/blocks/glass_blue.png'),
         side: require('../assets/blocks/glass_blue.png'),
@@ -185,6 +195,24 @@ const resources = {
           x: 0.5,
           y: 0.5,
           z: 0
+        }
+      },
+      cross1: {
+        func: 'rotateY',
+        rotation: Math.PI / 4,
+        translation: {
+          x: 0.5,
+          y: 0.5,
+          z: 0.5
+        }
+      },
+      cross2: {
+        func: ['rotateZ', 'rotateY'],
+        rotation: [Math.PI / 2, -Math.PI / 4],
+        translation: {
+          x: 0.5,
+          y: 0.5,
+          z: 0.5
         }
       }
     }

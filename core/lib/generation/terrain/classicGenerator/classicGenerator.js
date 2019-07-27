@@ -27,7 +27,9 @@ const {
     heightOffset,
     amplifier,
     treeMin,
-    treeScale
+    treeScale,
+    grassMin,
+    grassScale
   },
   types: { top, underTop, beach }
 } = mountains
@@ -65,7 +67,10 @@ export default function ClassicGenerator(seed) {
   const initMembers = () => {
     this.maxHeights = {}
     this.trees = new Set()
+    this.grasses = {}
+
     this.treeNoise = tooloud.Simplex.create(this.seed)
+    this.grassNoise = tooloud.Perlin.create(this.seed)
   }
 
   initSeed(seed)
@@ -93,17 +98,39 @@ export default function ClassicGenerator(seed) {
 
     if (this.trees.has(rep)) return true
 
-    const noiseVal = (1 + this.treeNoise.noise(x * treeScopedScale, z * treeScopedScale, 0)) / 2
-    const shouldPlant = noiseVal > treeScopedMin
+    const noiseVal = Helpers.normalizeNoise(
+      this.treeNoise.noise(x * treeScopedScale, z * treeScopedScale, 0)
+    )
+    const shouldPlant = noiseVal >= treeScopedMin
 
     if (shouldPlant) this.trees.add(rep)
 
     return shouldPlant
   }
 
+  const shouldPlantGrass = (x, z, grassScopedMin, grassScopedScale) => {
+    const rep = Helpers.get2DCoordsRep(x, z)
+
+    const noiseVal = Helpers.normalizeNoise(
+      this.grassNoise.noise(x * grassScopedScale, z * grassScopedScale, 0)
+    )
+
+    if (noiseVal < grassScopedMin) return false
+
+    this.grasses[rep] = {
+      dx: Helpers.round(this.grassNoise.noise(x * 0.3, z * 0.7, 0) / 4, 2),
+      dz: Helpers.round(this.grassNoise.noise(x * 0.7, z * 0.3, 0) / 4, 2)
+    }
+
+    return true
+  }
+
   /* -------------------------------------------------------------------------- */
   /*                              MEMBER FUNCTIONS                              */
   /* -------------------------------------------------------------------------- */
+
+  this.getGrassData = (x, z) => this.grasses[Helpers.get2DCoordsRep(x, z)]
+
   this.getNaiveHighestBlock = (x, z) => {
     let height = 0
 
@@ -222,24 +249,36 @@ export default function ClassicGenerator(seed) {
       for (let z = offsets[2]; z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2; z++) {
         const maxHeight = this.getHighestBlock(x, z)
 
-        const type =
-          voxelData.get(x - offsets[0], z - offsets[2], maxHeight - offsets[1]) ||
-          this.getBlockInfo(x, maxHeight, z, maxHeight)
+        const type = Helpers.getLoadedBlocks(x, maxHeight, z, voxelData, this, offsets)
 
-        if (
-          (type === 2 || type === 3) &&
-          this.getBlockInfo(x, maxHeight + 1, z, maxHeight) === 0 &&
-          shouldPlantTree(x, z, treeMin, treeScale)
-        ) {
-          const { data } = STRUCTURES.BaseTree
+        if ((type === 2 || type === 3) && this.getBlockInfo(x, maxHeight + 1, z, maxHeight) === 0) {
+          if (shouldPlantTree(x, z, treeMin, treeScale)) {
+            const { data } = STRUCTURES.BaseTree
 
-          for (let b = 0; b < data.length; b++) {
-            const { override, type: treeB, x: dx, y: dy, z: dz } = data[b]
-            const mappedCoords = Helpers.getRelativeCoords(x + dx, maxHeight + dy, z + dz, offsets)
+            for (let b = 0; b < data.length; b++) {
+              const { override, type: treeB, x: dx, y: dy, z: dz } = data[b]
+              const mappedCoords = Helpers.getRelativeCoords(
+                x + dx,
+                maxHeight + dy,
+                z + dz,
+                offsets
+              )
+
+              if (Helpers.checkWithinChunk(mappedCoords.x, mappedCoords.y, mappedCoords.z))
+                if (override || voxelData.get(mappedCoords.x, mappedCoords.z, mappedCoords.y) === 0)
+                  voxelData.set(mappedCoords.x, mappedCoords.z, mappedCoords.y, treeB)
+            }
+          } else if (shouldPlantGrass(x, z, grassMin, grassScale)) {
+            const grassPos = { x, y: maxHeight + 1, z }
+            const mappedCoords = Helpers.getRelativeCoords(
+              grassPos.x,
+              grassPos.y,
+              grassPos.z,
+              offsets
+            )
 
             if (Helpers.checkWithinChunk(mappedCoords.x, mappedCoords.y, mappedCoords.z))
-              if (override || voxelData.get(mappedCoords.x, mappedCoords.z, mappedCoords.y) === 0)
-                voxelData.set(mappedCoords.x, mappedCoords.z, mappedCoords.y, treeB)
+              voxelData.set(mappedCoords.x, mappedCoords.z, mappedCoords.y, 31)
           }
         }
       }
