@@ -118,8 +118,8 @@ export default function ClassicGenerator(seed) {
     if (noiseVal < grassScopedMin) return false
 
     this.grasses[rep] = {
-      dx: Helpers.round(this.grassNoise.noise(x * 0.3, z * 0.7, 0) / 4, 2),
-      dz: Helpers.round(this.grassNoise.noise(x * 0.7, z * 0.3, 0) / 4, 2)
+      dx: Helpers.round(this.grassNoise.noise(x * 0.5, z * 0.6, 0) / 3, 2),
+      dz: Helpers.round(this.grassNoise.noise(x * 0.6, z * 0.5, 0) / 3, 2)
     }
 
     return true
@@ -129,7 +129,7 @@ export default function ClassicGenerator(seed) {
   /*                              MEMBER FUNCTIONS                              */
   /* -------------------------------------------------------------------------- */
 
-  this.getGrassData = (x, z) => this.grasses[Helpers.get2DCoordsRep(x, z)]
+  this.getGrassData = (x, z) => this.grasses[Helpers.get2DCoordsRep(x, z)] || null
 
   this.getNaiveHighestBlock = (x, z) => {
     let height = 0

@@ -31,6 +31,10 @@ class Mesher {
 
       const { x, y, z } = pos
 
+      if (isNaN(x) || isNaN(y) || isNaN(z)) {
+        console.log(x, y, z)
+      }
+
       const geoData = Helpers.isPlant(type)
         ? geoManager.getPure(geo)
         : geoManager.getWLighting(geo, lighting, smoothLighting, type)
@@ -52,7 +56,6 @@ class Mesher {
     }
 
     const finalGeometry = new THREE.BufferGeometry().fromGeometry(mergedGeometry)
-
     return [finalGeometry.toJSON(), materials]
   }
 
@@ -102,13 +105,15 @@ class Mesher {
           })
 
           if (Helpers.isPlant(type)) {
-            const { dx, dz } = self.generator.getGrassData(pos.x, pos.z)
+            const grassData = self.generator.getGrassData(pos.x, pos.z)
+            if (!grassData) continue
+            const { dx, dz } = grassData
 
             pos.x += dx
             pos.z += dz
 
-            planes.push(['cross1', pos, 'side', type, 0, 0])
-            planes.push(['cross2', pos, 'side', type, 0, 0])
+            planes.push(['cross1', pos, 'side', type])
+            planes.push(['cross2', pos, 'side', type])
             continue
           }
 

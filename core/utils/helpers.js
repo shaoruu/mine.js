@@ -66,9 +66,9 @@ class Helpers {
    * Converts chunk block coords to global block coords
    */
   static chunkBlockToGlobalBlock = ({ x: bx, y: by, z: bz, coordx, coordy, coordz }) => ({
-    x: coordx * SIZE + bx,
-    y: coordy * SIZE + by,
-    z: coordz * SIZE + bz
+    x: Math.floor(coordx * SIZE + bx),
+    y: Math.floor(coordy * SIZE + by),
+    z: Math.floor(coordz * SIZE + bz)
   })
 
   /**

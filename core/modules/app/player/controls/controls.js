@@ -90,8 +90,9 @@ class Controls {
     const now = performance.now()
     const { isFlying, isOnGround, shouldGravity, isSprinting, isSpectator } = this.status
 
-    let delta = (now - this.prevTime) / 1000
-    if (delta > 0.15) delta = 0.1
+    const delta = (now - this.prevTime) / 1000
+    let normalizedDelta = delta
+    if (delta > 0.16) normalizedDelta = 0.1
 
     this.calculateAccelerations()
 
@@ -103,8 +104,8 @@ class Controls {
           ? SPECTATOR_INERTIA
           : INERTIA
         : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) / (isSprinting ? SPRINT_FACTOR : 1)) *
-      delta
-    if (!shouldGravity) this.vel.y -= this.vel.y * INERTIA * delta
+      normalizedDelta
+    if (!shouldGravity) this.vel.y -= this.vel.y * INERTIA * normalizedDelta
     this.vel.z -=
       this.vel.z *
       (isFlying
@@ -112,7 +113,7 @@ class Controls {
           ? SPECTATOR_INERTIA
           : INERTIA
         : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) / (isSprinting ? SPRINT_FACTOR : 1)) *
-      delta
+      normalizedDelta
 
     if (this.needsToJump) {
       this.jumping = true
@@ -134,9 +135,15 @@ class Controls {
     this.vel.add(this.acc)
     this.acc.set(0.0, 0.0, 0.0)
 
-    if (shouldGravity && !this.freshlyJumped) this.vel.y += GRAVITY
+    if (shouldGravity && !this.freshlyJumped) {
+      if (delta * 1000 > 320) {
+        const iterations = Math.floor((delta * 1000) / 16)
+        const powerfulGravity = iterations * GRAVITY
+        this.vel.y += powerfulGravity
+      } else this.vel.y += GRAVITY
+    }
 
-    this.vel.multiplyScalar(delta)
+    this.vel.multiplyScalar(normalizedDelta)
 
     if (this.vel.x > HORZ_MAX_SPEED) this.vel.x = HORZ_MAX_SPEED
     else if (this.vel.x < -HORZ_MAX_SPEED) this.vel.x = -HORZ_MAX_SPEED
@@ -147,7 +154,7 @@ class Controls {
 
     this.handleCollisions()
 
-    this.vel.multiplyScalar(1 / delta)
+    this.vel.divideScalar(normalizedDelta)
 
     this.prevTime = now
     this.freshlyJumped = false

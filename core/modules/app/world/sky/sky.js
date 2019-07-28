@@ -26,7 +26,7 @@ function Sky(scene, world, opts) {
   this.time = opts.time || 0
   this.speed = opts.speed || 0.05
   this.color = opts.color || new THREE.Color(0, 0, 0)
-  this.clock = new THREE.Clock()
+  this.prevTime = performance.now()
 
   this.getWorld = () => world
   this.getScene = () => scene
@@ -66,6 +66,7 @@ Sky.prototype.createBox = function() {
   })
   this.outer = new THREE.Mesh(new THREE.BoxBufferGeometry(WORLD_SIZE, WORLD_SIZE, WORLD_SIZE), mat)
   sceneRef.add(this.outer)
+  this.outer.name = 'outer-sky'
 
   mat.polygonOffset = true
   mat.polygonOffsetFactor = -0.5
@@ -79,6 +80,7 @@ Sky.prototype.createBox = function() {
   )
   sceneRef.add(this.inner)
   this.inner.renderOrder = 1
+  this.inner.name = 'inner-sky'
 }
 
 Sky.prototype.createLights = function() {
@@ -88,7 +90,11 @@ Sky.prototype.createLights = function() {
 }
 
 Sky.prototype.tick = function(dt, fastForward = false) {
-  if (!dt) dt = this.clock.getDelta() * 1000
+  if (!dt) {
+    const now = performance.now()
+    dt = now - this.prevTime
+    this.prevTime = now
+  }
 
   const worldRef = this.getWorld()
   const playerRef = worldRef.player
@@ -105,6 +111,12 @@ Sky.prototype.tick = function(dt, fastForward = false) {
   this.time += this.speed
 
   if (this.time > 2400) this.time = 0
+
+  if (dt >= 160) {
+    const iterations = dt / 16
+    const ffTime = iterations * this.speed
+    this.setTime(this.time + ffTime)
+  }
   return this
 }
 
