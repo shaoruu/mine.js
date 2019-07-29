@@ -76,12 +76,14 @@
   width: 337.6px;
 }
 
-.navigations p {
+.needAccount {
   font-size: 18.75px;
   font-weight: 400;
   color: blue;
   text-decoration: underline;
   cursor: pointer;
+  background: transparent;
+  border: none;
 }
 
 .navigations button {

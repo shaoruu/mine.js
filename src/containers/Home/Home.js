@@ -41,7 +41,7 @@ const Home = ({ isAuth, history, username, loading }) => {
         className={`${sharedStyles.button} ${classes.button}`}
         onClick={() => history.push('/logout')}
       >
-        Logout ({username})
+        {`Logout (${username})`}
       </button>
     </div>
   ) : (

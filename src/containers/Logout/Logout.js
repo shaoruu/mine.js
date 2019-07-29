@@ -3,12 +3,12 @@
  * - REPRESENTS: SWITCH ACCOUNT BUTTON
  */
 
+import { signout, removeAllCookies } from '../../lib/utils'
+import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
+
 import React, { Component } from 'react'
 import { ApolloConsumer } from 'react-apollo'
 import { Redirect } from 'react-router-dom'
-
-import { signout, removeAllCookies } from '../../lib/utils'
-import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 
 class Logout extends Component {
   componentDidMount() {
