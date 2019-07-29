@@ -1,8 +1,3 @@
-/**
- * GAME PAGE
- * - REPRESENTS: MINECRAFT.JAVA
- */
-
 import { Minecraft, Start, Worlds, Options } from '../../components/Game'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 import { Hint } from '../../components/Utils'

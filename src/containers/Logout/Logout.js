@@ -1,8 +1,3 @@
-/**
- * NOT ACTUALLY A PAGE
- * - REPRESENTS: SWITCH ACCOUNT BUTTON
- */
-
 import { signout, removeAllCookies } from '../../lib/utils'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 

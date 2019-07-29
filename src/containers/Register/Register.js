@@ -1,8 +1,3 @@
-/**
- * REGISTER PAGE
- * - REPRESENTS: MINECRAFT.ORG / MOJANG REGISTRATION
- */
-
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 import { RegisterForm } from '../../components/Forms'
 

@@ -1,4 +1,3 @@
-/** Basis */
 import Layout from '../hoc/Layout/Layout'
 
 import Logout from './Logout/Logout'

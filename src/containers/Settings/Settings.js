@@ -1,8 +1,3 @@
-/**
- * SETTINGS PAGE
- * - REPRESENTS: LAUNCHER SETTINGS
- */
-
 import sharedStyles from '../sharedStyles.module.css'
 
 import classes from './Settings.module.css'
