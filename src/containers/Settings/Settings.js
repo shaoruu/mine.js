@@ -3,11 +3,12 @@
  * - REPRESENTS: LAUNCHER SETTINGS
  */
 
-import React, { useEffect } from 'react'
-import { withRouter } from 'react-router'
+import sharedStyles from '../sharedStyles.module.css'
 
 import classes from './Settings.module.css'
-import sharedStyles from '../sharedStyles.module.css'
+
+import React, { useEffect } from 'react'
+import { withRouter } from 'react-router-dom'
 
 const Settings = ({ history }) => {
   useEffect(() => {
@@ -17,7 +18,7 @@ const Settings = ({ history }) => {
   return (
     <div className={classes.wrapper}>
       <h1>Settings [COMING SOON]</h1>
-      <button className={sharedStyles.button} onClick={() => history.goBack()}>
+      <button type="button" className={sharedStyles.button} onClick={() => history.goBack()}>
         Go Back
       </button>
     </div>
