@@ -31,10 +31,6 @@ class Mesher {
 
       const { x, y, z } = pos
 
-      if (isNaN(x) || isNaN(y) || isNaN(z)) {
-        console.log(x, y, z)
-      }
-
       const geoData = Helpers.isPlant(type)
         ? geoManager.getPure(geo)
         : geoManager.getWLighting(geo, lighting, smoothLighting, type)
