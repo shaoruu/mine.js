@@ -2,7 +2,7 @@ import getUserId from '../utils/getUserId'
 import generateToken from '../utils/generateToken'
 import hashPassword from '../utils/hashPassword'
 import getBlockRepresentation from '../utils/getBlockRepresentation'
-import commands from '../lib/commands'
+import commands from '../lib/gameCommands'
 
 import bcrypt from 'bcryptjs'
 
