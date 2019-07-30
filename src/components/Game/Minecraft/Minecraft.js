@@ -90,6 +90,8 @@ const Game = ({ id: worldId, username, history }) => {
   }
 
   useEffect(() => {
+    document.title = 'MinecraftJS'
+
     if (loading || error) return
 
     const game = new MinecraftJS(
