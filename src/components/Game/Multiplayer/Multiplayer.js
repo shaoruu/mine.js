@@ -1,14 +1,30 @@
 import sharedStyles from '../../../containers/sharedStyles.module.css'
+import { CREATE_PLAYER_MUTATION } from '../../../lib/graphql'
 
 import classes from './Multiplayer.module.css'
 
-import React, { useState } from 'react'
-import { withRouter } from 'react-router-dom'
+import React, { useState, useRef, useEffect } from 'react'
+import { withRouter, Redirect } from 'react-router-dom'
+import { Mutation } from 'react-apollo'
 
 const Multiplayer = ({ history, subpage }) => {
   const [address, setAddress] = useState('')
+  const [error, setError] = useState('')
+  const input = useRef()
 
-  const onChange = e => setAddress(e.target.value)
+  useEffect(() => {
+    if (!subpage) {
+      document.title = 'MinecraftJS - Connect'
+      input.current.focus()
+    } else {
+      document.title = 'MinecraftJS - Server'
+    }
+  })
+
+  const onChange = e => {
+    setAddress(e.target.value)
+    setError('')
+  }
 
   if (!subpage)
     return (
@@ -16,12 +32,35 @@ const Multiplayer = ({ history, subpage }) => {
         <h1 className={classes.title}>Connect</h1>
         <div className={sharedStyles.inputField}>
           <p>World Address</p>
-          <input value={address} type="text" onChange={onChange} />
+          <input value={address} type="text" onChange={onChange} ref={input} />
         </div>
+        <p className={classes.error} style={{ display: error ? 'block' : 'none' }}>
+          {error}
+        </p>
         <div className={classes.buttonWrapper}>
-          <button type="button" className={sharedStyles.button} disabled={!address}>
-            Join World
-          </button>
+          <Mutation
+            mutation={CREATE_PLAYER_MUTATION}
+            onError={e => {
+              // eslint-disable-next-line no-console
+              console.error(e.message)
+              setError('World not found.')
+              setAddress('')
+            }}
+            onCompleted={() => history.push(`/game/minecraft/${address}`)}
+          >
+            {createPlayer => (
+              <button
+                type="button"
+                className={sharedStyles.button}
+                disabled={!address}
+                onClick={() => {
+                  createPlayer({ variables: { worldId: address.trim(), gamemode: 'CREATIVE' } })
+                }}
+              >
+                Join World
+              </button>
+            )}
+          </Mutation>
           <button
             type="button"
             className={sharedStyles.button}
@@ -33,7 +72,7 @@ const Multiplayer = ({ history, subpage }) => {
       </div>
     )
 
-  return <h1>todo</h1>
+  return <Redirect to="/game/multiplayer" />
 }
 
 export default withRouter(Multiplayer)

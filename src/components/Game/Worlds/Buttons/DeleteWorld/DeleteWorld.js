@@ -36,7 +36,10 @@ const DeleteWorld = ({ history, location }) => {
             </p>
 
             <div className={classes.buttonWrapper}>
-              <Mutation mutation={DELETE_WORLD_MUTATION}>
+              <Mutation
+                mutation={DELETE_WORLD_MUTATION}
+                onCompleted={() => history.push('/game/worlds')}
+              >
                 {deleteWorld => (
                   <button
                     type="button"
@@ -48,7 +51,6 @@ const DeleteWorld = ({ history, location }) => {
                         },
                         refetchQueries: [{ query: MY_WORLDS_QUERY }]
                       })
-                      history.push('/game/worlds')
                     }}
                   >
                     Delete

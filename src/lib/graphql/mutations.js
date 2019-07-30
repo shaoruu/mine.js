@@ -28,6 +28,14 @@ export const CREATE_WORLD_MUTATION = gql`
   }
 `
 
+export const CREATE_PLAYER_MUTATION = gql`
+  mutation CreatePlayer($gamemode: Gamemode!, $worldId: ID!) {
+    createPlayer(data: { gamemode: $gamemode, worldId: $worldId }) {
+      id
+    }
+  }
+`
+
 export const DELETE_WORLD_MUTATION = gql`
   mutation DeleteWorld($worldId: ID!) {
     deleteWorld(worldId: $worldId)
