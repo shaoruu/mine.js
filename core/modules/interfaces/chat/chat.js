@@ -57,7 +57,6 @@ class Chat {
     this.chatSubscription = this.apolloClient
       .subscribe({
         query: MESSAGE_SUBSCRIPTION,
-        mutation_in: ['CREATED'],
         variables: { worldId: this.worldId }
       })
       .subscribe({
@@ -183,7 +182,7 @@ class Chat {
 
   terminate = () => {
     this.chatSubscription.unsubscribe()
-    delete this.chatSubscription
+    // delete this.chatSubscription
   }
 }
 

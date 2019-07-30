@@ -1,8 +1,8 @@
 import gql from 'graphql-tag'
 
 export const MESSAGE_SUBSCRIPTION = gql`
-  subscription Message($worldId: ID!, $mutation_in: [String!]) {
-    message(worldId: $worldId, mutation_in: $mutation_in) {
+  subscription Message($worldId: ID!) {
+    message(worldId: $worldId) {
       mutation
       node {
         type

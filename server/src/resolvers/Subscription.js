@@ -19,11 +19,10 @@ const Subscription = {
     }
   },
   message: {
-    subscribe(parent, { worldId, mutation_in }, { prisma }, info) {
+    subscribe(parent, { worldId }, { prisma }, info) {
       return prisma.subscription.message(
         {
           where: {
-            mutation_in: mutation_in || defaultArray,
             node: {
               world: {
                 id: worldId

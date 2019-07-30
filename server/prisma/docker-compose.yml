@@ -19,6 +19,13 @@ services:
             rawAccess: true
             port: 5432
             migrations: true
+
+  redis:
+    image: redis
+    container_name: cache
+    ports:
+      - 6379:6379
+
   postgres:
     image: postgres
     restart: always

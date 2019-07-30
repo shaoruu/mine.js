@@ -127,7 +127,7 @@ class Player extends Stateful {
 
   terminate = () => {
     this.playerSubscription.unsubscribe()
-    delete this.playerSubscription
+    // delete this.playerSubscription
     this.removeUpdaters()
   }
 

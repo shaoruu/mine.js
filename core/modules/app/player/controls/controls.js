@@ -134,7 +134,7 @@ class Controls {
     this.vel.add(this.acc)
     this.acc.set(0.0, 0.0, 0.0)
 
-    this.vel.y += GRAVITY
+    if (shouldGravity && !this.freshlyJumped) this.vel.y += GRAVITY
 
     this.vel.multiplyScalar(delta)
 

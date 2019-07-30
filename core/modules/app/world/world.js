@@ -120,7 +120,7 @@ class World extends Stateful {
 
   terminate = () => {
     this.worldSubscription.unsubscribe()
-    delete this.worldSubscription
+    // delete this.worldSubscription
 
     this.getChat().terminate()
     this.removeUpdaters()

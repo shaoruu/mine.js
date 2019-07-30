@@ -105,9 +105,9 @@ const Game = ({ id: worldId, username, history }) => {
     init(game)
 
     return () => {
+      window.removeEventListener('beforeunload', closingHandler, false)
       game.terminate()
       terminate()
-      window.removeEventListener('beforeunload', closingHandler, false)
     }
   })
 

@@ -24,7 +24,7 @@ type Mutation {
 type Subscription {
   # Chunks
   block(worldId: ID!): BlockSubscriptionPayload!
-  message(worldId: ID!, mutation_in: [String!]): MessageSubscriptionPayload!
+  message(worldId: ID!): MessageSubscriptionPayload!
   player(
     username: String!
     worldId: ID!
