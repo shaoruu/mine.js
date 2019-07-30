@@ -28,50 +28,9 @@ export const CREATE_WORLD_MUTATION = gql`
   }
 `
 
-export const UPDATE_PLAYER_MUTATION = gql`
-  mutation UpdatePlayer(
-    $id: ID!
-    $x: Float
-    $y: Float
-    $z: Float
-    $dirx: Float
-    $diry: Float
-    $cursor: Int
-    $data: String
-  ) {
-    updatePlayer(
-      data: { id: $id, x: $x, y: $y, z: $z, dirx: $dirx, diry: $diry, cursor: $cursor, data: $data }
-    ) {
-      x
-      y
-      z
-    }
-  }
-`
-
-export const UPDATE_BLOCK_MUTATION = gql`
-  mutation UpdateBlock($worldId: ID!, $type: Int!, $x: Int!, $y: Int!, $z: Int!) {
-    updateBlock(data: { worldId: $worldId, type: $type, x: $x, y: $y, z: $z }) {
-      world {
-        id
-      }
-      x
-      y
-      z
-      type
-    }
-  }
-`
-
 export const DELETE_WORLD_MUTATION = gql`
   mutation DeleteWorld($worldId: ID!) {
     deleteWorld(worldId: $worldId)
-  }
-`
-
-export const RUN_COMMAND_MUTATION = gql`
-  mutation RunCommand($playerId: ID!, $worldId: ID!, $command: String!) {
-    runCommand(data: { playerId: $playerId, worldId: $worldId, command: $command })
   }
 `
 
