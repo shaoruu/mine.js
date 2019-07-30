@@ -86,6 +86,10 @@ yarn run start
 
 After these commands, visit `localhost:3000`
 
+# Note
+
+:pushpin: MinecraftJS runs fastest on either Opera or Chrome.
+
 # Sources
 
 - [Resource Pack Used](http://www.9minecraft.net/paper-cut-resource-pack/)
