@@ -25,7 +25,7 @@ const Game = ({
       render = <Minecraft id={query} username={username} />
       break
     case 'multiplayer':
-      render = <Multiplayer />
+      render = <Multiplayer subpage={query} />
       break
     case 'worlds':
       render = <Worlds subpage={query} />
