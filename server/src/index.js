@@ -18,5 +18,6 @@ const server = new GraphQLServer({
 })
 
 server.start({ port: process.env.PORT | 4000 }, ({ port }) => {
+  // eslint-disable-next-line no-console
   console.log(`The server is up and running on port ${port}.`)
 })

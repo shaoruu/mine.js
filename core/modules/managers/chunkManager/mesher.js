@@ -118,7 +118,7 @@ class Mesher {
 
           // TOP
           const top = voxelData.get(x, z, y + 1)
-          if (!top || (Helpers.isTransparent(top) && !isSelfTransparent)) {
+          if (!top || Helpers.isPlant(top) || (Helpers.isTransparent(top) && !isSelfTransparent)) {
             const smoothLightingSide = this.getSmoothLightingSide(smoothLighting, wx, wz, wy, 0)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'py' : 'py2'
             planes.push([geo, pos, 'top', type, lighting.get(wx, wz, wy, 0), smoothLightingSide])
@@ -126,28 +126,36 @@ class Mesher {
 
           // SIDES
           const px = voxelData.get(x + 1, z, y)
-          if (!px || (Helpers.isTransparent(px) && !isSelfTransparent)) {
+          if (!px || Helpers.isPlant(px) || (Helpers.isTransparent(px) && !isSelfTransparent)) {
             const smoothLightingSide = this.getSmoothLightingSide(smoothLighting, wx, wz, wy, 1)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'px' : 'px2'
             planes.push([geo, pos, 'side', type, lighting.get(wx, wz, wy, 1), smoothLightingSide])
           }
 
           const pz = voxelData.get(x, z + 1, y)
-          if (!pz || (Helpers.isTransparent(pz) && !isSelfTransparent)) {
+          if (!pz || Helpers.isPlant(pz) || (Helpers.isTransparent(pz) && !isSelfTransparent)) {
             const smoothLightingSide = this.getSmoothLightingSide(smoothLighting, wx, wz, wy, 2)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'pz' : 'pz2'
             planes.push([geo, pos, 'side', type, lighting.get(wx, wz, wy, 2), smoothLightingSide])
           }
 
           const nx = voxelData.get(x - 1, z, y)
-          if (!nx || (Helpers.isTransparent(nx) && !isSelfLiquid && !isSelfTransparent)) {
+          if (
+            !nx ||
+            Helpers.isPlant(nx) ||
+            (Helpers.isTransparent(nx) && !isSelfLiquid && !isSelfTransparent)
+          ) {
             const smoothLightingSide = this.getSmoothLightingSide(smoothLighting, wx, wz, wy, 3)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'nx' : 'nx2'
             planes.push([geo, pos, 'side', type, lighting.get(wx, wz, wy, 3), smoothLightingSide])
           }
 
           const nz = voxelData.get(x, z - 1, y)
-          if (!nz || (Helpers.isTransparent(nz) && !isSelfLiquid && !isSelfTransparent)) {
+          if (
+            !nz ||
+            Helpers.isPlant(nz) ||
+            (Helpers.isTransparent(nz) && !isSelfLiquid && !isSelfTransparent)
+          ) {
             const smoothLightingSide = this.getSmoothLightingSide(smoothLighting, wx, wz, wy, 4)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'nz' : 'nz2'
             planes.push([geo, pos, 'side', type, lighting.get(wx, wz, wy, 4), smoothLightingSide])
@@ -155,7 +163,11 @@ class Mesher {
 
           // BOTTOM
           const bottom = voxelData.get(x, z, y - 1)
-          if (!bottom || (Helpers.isTransparent(bottom) && !isSelfLiquid && !isSelfTransparent)) {
+          if (
+            !bottom ||
+            Helpers.isPlant(bottom) ||
+            (Helpers.isTransparent(bottom) && !isSelfLiquid && !isSelfTransparent)
+          ) {
             const smoothLightingSide = this.getSmoothLightingSide(smoothLighting, wx, wz, wy, 5)
             const geo = smoothLightingSide === null || smoothLightingSide[2][0] !== 1 ? 'ny' : 'ny2'
             planes.push([geo, pos, 'bottom', type, lighting.get(wx, wz, wy, 5), smoothLightingSide])

@@ -1,8 +1,8 @@
-import getUserId from '../utils/getUserId'
+import Helpers from '../utils/helpers'
 
 const Query = {
   async me(parent, args, { prisma, request }, info) {
-    const id = getUserId(request)
+    const id = Helpers.getUserId(request)
 
     const me = await prisma.query.user({ where: { id } }, info)
 
@@ -11,7 +11,7 @@ const Query = {
     return me
   },
   myWorlds(parent, args, { prisma, request }, info) {
-    const userId = getUserId(request)
+    const userId = Helpers.getUserId(request)
     const opArgs = {
       first: args.first,
       skip: args.skip,

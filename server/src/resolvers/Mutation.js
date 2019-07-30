@@ -1,8 +1,5 @@
-import getUserId from '../utils/getUserId'
-import generateToken from '../utils/generateToken'
-import hashPassword from '../utils/hashPassword'
-import getBlockRepresentation from '../utils/getBlockRepresentation'
-import commands from '../lib/gameCommands'
+import Helpers from '../utils/helpers'
+import commands from '../lib/game/commands'
 
 import bcrypt from 'bcryptjs'
 
@@ -10,7 +7,7 @@ const DEFAULT_MESSAGE = 'Unknown command. Try /help for a list of commands.'
 
 const Mutation = {
   async createUser(parent, args, { prisma }) {
-    const password = await hashPassword(args.data.password)
+    const password = await Helpers.hashPassword(args.data.password)
     const user = await prisma.mutation.createUser({
       data: {
         ...args.data,
@@ -20,7 +17,7 @@ const Mutation = {
 
     return {
       user,
-      token: generateToken(user.id)
+      token: Helpers.generateToken(user.id)
     }
   },
   async login(parent, args, { prisma }) {
@@ -42,11 +39,11 @@ const Mutation = {
 
     return {
       user,
-      token: generateToken(user.id)
+      token: Helpers.generateToken(user.id)
     }
   },
   async deleteUser(parent, args, { prisma, request }, info) {
-    const userId = getUserId(request)
+    const userId = Helpers.getUserId(request)
 
     return prisma.mutation.deleteUser(
       {
@@ -58,10 +55,10 @@ const Mutation = {
     )
   },
   async updateUser(parent, args, { prisma, request }, info) {
-    const userId = getUserId(request)
+    const userId = Helpers.getUserId(request)
 
     if (typeof args.data.password === 'string') {
-      args.data.password = await hashPassword(args.data.password)
+      args.data.password = await Helpers.hashPassword(args.data.password)
     }
 
     return prisma.mutation.updateUser(
@@ -75,7 +72,7 @@ const Mutation = {
     )
   },
   async createWorld(parent, args, { prisma, request }, info) {
-    const id = getUserId(request)
+    const id = Helpers.getUserId(request)
     const {
       data: { gamemode, name, seed }
     } = args
@@ -188,7 +185,7 @@ const Mutation = {
   updateBlock(parent, args, { prisma }, info) {
     const { x, y, z, type, worldId } = args.data
 
-    const repr = getBlockRepresentation(worldId, x, y, z)
+    const repr = Helpers.getBlockRepresentation(worldId, x, y, z)
 
     return prisma.mutation.upsertBlock(
       {
