@@ -1,0 +1,28 @@
+.wrapper {
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-weight: 400;
+  font-family: Minecraft;
+}
+
+.title {
+  margin-bottom: 50px;
+}
+
+.buttonWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+  padding-top: 0;
+}
+
+.buttonWrapper button {
+  margin: 15px 0;
+  width: 100%;
+}

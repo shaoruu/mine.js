@@ -41,13 +41,7 @@ const Start = withRouter(props => {
         cubeMap={panoramaArray}
         autoLoad
         autoRotate={-2}
-        showZoomCtrl={false}
-        keyboardZoom={false}
-        mouseZoom={false}
-        draggable={false}
         disableKeyboardCtrl
-        showControls={false}
-        showFullscreenCtrl={false}
         className={classes.panorama}
       />
       <div className={classes.logoWrapper}>
@@ -65,10 +59,10 @@ const Start = withRouter(props => {
       </button>
       <button
         type="button"
-        className={`${classes.button} ${classes.play} ${classes.coming_soon}`}
-        disabled
+        className={`${sharedStyles.button} ${classes.play}`}
+        onClick={() => history.push('/game/multiplayer')}
       >
-        Multiplayer (COMING SOON)
+        Multiplayer
       </button>
       <div className={classes.options}>
         <button

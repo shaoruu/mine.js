@@ -82,7 +82,7 @@ const CreateNewWorld = withRouter(({ history }) => {
                 >
                   <h1 className={classes.title}>Create New World</h1>
 
-                  <div className={classes.inputField}>
+                  <div className={sharedStyles.inputField}>
                     <p>World Name</p>
                     <input
                       ref={worldNameInput}
@@ -101,7 +101,7 @@ const CreateNewWorld = withRouter(({ history }) => {
                     </p>
                   </div>
 
-                  <div className={classes.inputField}>
+                  <div className={sharedStyles.inputField}>
                     <p>Seed for the world generator</p>
                     <input
                       autoComplete="off"
@@ -125,7 +125,8 @@ const CreateNewWorld = withRouter(({ history }) => {
                         setGamemode((gamemode + 1) % gamemodes.length)
                       }}
                     >
-                      Game Mode: {gamemodeDictionary[gamemodes[gamemode]].title}
+                      Game Mode:
+                      {gamemodeDictionary[gamemodes[gamemode]].title}
                     </button>
                     <p>{gamemodeDictionary[gamemodes[gamemode]].description}</p>
                   </div>

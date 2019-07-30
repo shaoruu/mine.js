@@ -1,4 +1,4 @@
-import { Minecraft, Start, Worlds, Options } from '../../components/Game'
+import { Minecraft, Start, Worlds, Options, Multiplayer } from '../../components/Game'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 import { Hint } from '../../components/Utils'
 import bg from '../../assets/gui/options_background_2.png'
@@ -23,6 +23,9 @@ const Game = ({
   switch (page) {
     case 'minecraft':
       render = <Minecraft id={query} username={username} />
+      break
+    case 'multiplayer':
+      render = <Multiplayer />
       break
     case 'worlds':
       render = <Worlds subpage={query} />

@@ -28,8 +28,12 @@ const DeleteWorld = ({ history, location }) => {
 
         return (
           <div className={classes.wrapper}>
-            <p className={classes.title}>Are you sure you want to delete this world?</p>
-            <p className={classes.title2}>{`'${name}' will be lost forever! (A long time!)`}</p>
+            <p>Are you sure you want to delete this world?</p>
+            <p className={classes.title}>
+              {`'${
+                name.length > 15 ? `${name.substring(0, 15)}...` : name
+              }' will be lost forever! (A long time!)`}
+            </p>
 
             <div className={classes.buttonWrapper}>
               <Mutation mutation={DELETE_WORLD_MUTATION}>

@@ -39,3 +39,37 @@
 .button:active {
   outline: none;
 }
+
+.inputField {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  color: gray;
+  margin: 20px;
+  width: 500px;
+}
+
+.inputField p {
+  width: 500px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inputField input {
+  width: 100%;
+  line-height: 36px;
+  background: black;
+  color: white;
+  font-family: Minecraft;
+  padding: 5px;
+  border: 2px solid rgb(151, 151, 151);
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+.inputField input:active,
+.inputField input:focus {
+  outline: none;
+}
