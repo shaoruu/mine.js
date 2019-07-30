@@ -85,6 +85,10 @@
   border: none;
 }
 
+.login:focus {
+  outline: none;
+}
+
 .register {
   padding: 6.25px;
 }

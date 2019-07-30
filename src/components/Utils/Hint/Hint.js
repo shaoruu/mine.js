@@ -1,7 +1,7 @@
-import React from 'react'
-
 import classes from './Hint.module.css'
 
+import React from 'react'
+
 export const Hint = ({ text }) => {
-  return <div className={classes.wrapper}>{text ? text : 'Loading.'}</div>
+  return <div className={classes.wrapper}>{text || 'Loading.'}</div>
 }

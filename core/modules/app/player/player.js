@@ -87,23 +87,23 @@ class Player extends Stateful {
   }
 
   initSubscriptions = () => {
-    this.apolloClient
-      .subscribe({
-        query: PLAYER_SUBSCRIPTION,
-        variables: {
-          username: this.data.user.username,
-          worldId: this.world.data.id,
-          updatedFields_contains_some: ['gamemode']
-        }
-      })
-      .subscribe({
-        next: ({ data }) => {
-          this.handleServerUpdate(data)
-        },
-        error(e) {
-          Helpers.error(e.message)
-        }
-      })
+    const k = this.apolloClient.subscribe({
+      query: PLAYER_SUBSCRIPTION,
+      variables: {
+        username: this.data.user.username,
+        worldId: this.world.data.id,
+        mutation_in: ['UPDATED'],
+        updatedFields_contains_some: ['gamemode']
+      }
+    })
+    this.playerSubscription = k.subscribe({
+      next: ({ data }) => {
+        this.handleServerUpdate(data)
+      },
+      error(e) {
+        Helpers.error(e.message)
+      }
+    })
   }
 
   update = () => {
@@ -123,6 +123,12 @@ class Player extends Stateful {
 
   removeUpdaters = () => {
     window.clearRequestInterval(this.posUpdater)
+  }
+
+  terminate = () => {
+    this.playerSubscription.unsubscribe()
+    delete this.playerSubscription
+    this.removeUpdaters()
   }
 
   /* -------------------------------------------------------------------------- */

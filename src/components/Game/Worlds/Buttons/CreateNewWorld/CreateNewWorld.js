@@ -1,17 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { Mutation } from 'react-apollo'
-import { withRouter } from 'react-router-dom'
-import { Formik } from 'formik'
-import randomstring from 'randomstring'
-
 import {
   CREATE_WORLD_MUTATION,
   CREATE_WORLD_SCHEMA,
   MY_WORLDS_QUERY
 } from '../../../../../lib/graphql'
 import { Hint } from '../../../../Utils'
-import classes from './CreateNewWorld.module.css'
 import sharedStyles from '../../../../../containers/sharedStyles.module.css'
+
+import classes from './CreateNewWorld.module.css'
+
+import React, { useState, useRef, useEffect } from 'react'
+import { Mutation } from 'react-apollo'
+import { withRouter } from 'react-router-dom'
+import { Formik } from 'formik'
+import randomstring from 'randomstring'
 
 const CreateNewWorld = withRouter(({ history }) => {
   const gamemodeDictionary = {
@@ -43,6 +44,7 @@ const CreateNewWorld = withRouter(({ history }) => {
 
         history.push(`/game/minecraft/${id}`)
       }}
+      // eslint-disable-next-line no-console
       onError={error => console.error(error)}
     >
       {(createWorld, { loading }) =>
@@ -56,7 +58,7 @@ const CreateNewWorld = withRouter(({ history }) => {
               createWorld({
                 variables: {
                   name: values.name,
-                  seed: !!values.seed ? values.seed : randomstring.generate(),
+                  seed: values.seed ? values.seed : randomstring.generate(),
                   gamemode: gamemodes[gamemode]
                 },
                 refetchQueries: [{ query: MY_WORLDS_QUERY }]
@@ -93,7 +95,10 @@ const CreateNewWorld = withRouter(({ history }) => {
                       onBlur={handleBlur}
                       placeholder="Name"
                     />
-                    <p>Will be saved in: {values.name}</p>
+                    <p>
+                      Will be saved in:
+                      {values.name}
+                    </p>
                   </div>
 
                   <div className={classes.inputField}>

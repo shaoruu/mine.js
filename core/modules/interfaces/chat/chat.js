@@ -54,9 +54,10 @@ class Chat {
   }
 
   initSubscriptions = () => {
-    this.apolloClient
+    this.chatSubscription = this.apolloClient
       .subscribe({
         query: MESSAGE_SUBSCRIPTION,
+        mutation_in: ['CREATED'],
         variables: { worldId: this.worldId }
       })
       .subscribe({
@@ -174,9 +175,16 @@ class Chat {
 
   getInput = () => this.gui.input.value
 
+  getSubscription = () => this.chatSubscription
+
   focusInput = () => this.gui.input.focus()
 
   blurInput = () => this.gui.input.blur()
+
+  terminate = () => {
+    this.chatSubscription.unsubscribe()
+    delete this.chatSubscription
+  }
 }
 
 export default Chat

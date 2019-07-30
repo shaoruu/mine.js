@@ -27,6 +27,15 @@ export const MY_WORLDS_QUERY = gql`
   }
 `
 
+export const MINI_WORLD_QUERY = gql`
+  query World($query: String!) {
+    world(query: $query) {
+      id
+      name
+    }
+  }
+`
+
 export const WORLD_QUERY = gql`
   query World($query: String!) {
     world(query: $query) {

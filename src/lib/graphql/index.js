@@ -1,4 +1,4 @@
-export { ME_QUERY, USERS_QUERY, MY_WORLDS_QUERY, WORLD_QUERY } from './queries'
+export { ME_QUERY, USERS_QUERY, MY_WORLDS_QUERY, WORLD_QUERY, MINI_WORLD_QUERY } from './queries'
 
 export {
   LOGIN_MUTATION,

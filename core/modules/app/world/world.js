@@ -85,11 +85,12 @@ class World extends Stateful {
   }
 
   initSubscriptions = () => {
-    this.apolloClient
+    this.worldSubscription = this.apolloClient
       .subscribe({
         query: WORLD_SUBSCRIPTION,
         variables: {
           worldId: this.data.id,
+          mutation_in: ['UPDATED'],
           updatedFields_contains_some: ['timeChanger']
         }
       })
@@ -115,6 +116,14 @@ class World extends Stateful {
     const playerPos = this.player.getCoordinates()
     const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords(playerPos)
     this.chunkManager.surroundingChunksCheck(coordx, coordy, coordz)
+  }
+
+  terminate = () => {
+    this.worldSubscription.unsubscribe()
+    delete this.worldSubscription
+
+    this.getChat().terminate()
+    this.removeUpdaters()
   }
 
   handleServerUpdate = ({

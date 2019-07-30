@@ -19,10 +19,11 @@ const Subscription = {
     }
   },
   message: {
-    subscribe(parent, { worldId }, { prisma }, info) {
+    subscribe(parent, { worldId, mutation_in }, { prisma }, info) {
       return prisma.subscription.message(
         {
           where: {
+            mutation_in: mutation_in || defaultArray,
             node: {
               world: {
                 id: worldId
@@ -35,11 +36,17 @@ const Subscription = {
     }
   },
   player: {
-    subscribe(parent, { username, worldId, updatedFields_contains_some }, { prisma }, info) {
+    subscribe(
+      parent,
+      { username, worldId, mutation_in, updatedFields_contains_some },
+      { prisma },
+      info
+    ) {
       return prisma.subscription.player(
         {
           where: {
             updatedFields_contains_some: updatedFields_contains_some || defaultArray,
+            mutation_in: mutation_in || defaultArray,
             node: {
               user: {
                 username
@@ -55,11 +62,12 @@ const Subscription = {
     }
   },
   world: {
-    subscribe(parent, { worldId, updatedFields_contains_some }, { prisma }, info) {
+    subscribe(parent, { worldId, mutation_in, updatedFields_contains_some }, { prisma }, info) {
       return prisma.subscription.world(
         {
           where: {
             updatedFields_contains_some: updatedFields_contains_some || defaultArray,
+            mutation_in: mutation_in || defaultArray,
             node: {
               id: worldId
             }

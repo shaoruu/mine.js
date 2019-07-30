@@ -86,6 +86,10 @@
   border: none;
 }
 
+.needAccount:focus {
+  outline: none;
+}
+
 .login {
   padding: 6.25px;
 }

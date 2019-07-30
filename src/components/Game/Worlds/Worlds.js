@@ -1,131 +1,129 @@
-import React, { Component } from 'react'
-import { Query, Mutation, withApollo } from 'react-apollo'
-import { withRouter } from 'react-router'
-
-import { MY_WORLDS_QUERY, DELETE_WORLD_MUTATION } from '../../../lib/graphql'
-import WorldList from './WorldList/WorldList'
-import CreateNewWorld from './Buttons/CreateNewWorld/CreateNewWorld'
+import { MY_WORLDS_QUERY } from '../../../lib/graphql'
 import { Hint } from '../../Utils'
-import classes from './Worlds.module.css'
 import sharedStyles from '../../../containers/sharedStyles.module.css'
 
-class Worlds extends Component {
-  state = {
-    selectedIndex: null
-  }
+import WorldList from './WorldList/WorldList'
+import CreateNewWorld from './Buttons/CreateNewWorld/CreateNewWorld'
+import classes from './Worlds.module.css'
+import DeleteWorld from './Buttons/DeleteWorld/DeleteWorld'
 
-  setSelectedIndex = i => this.setState({ selectedIndex: i })
+import React, { useState, useEffect } from 'react'
+import { Query, withApollo } from 'react-apollo'
+import { withRouter, Redirect } from 'react-router-dom'
 
-  componentDidMount() {
-    document.title = 'MinecraftJS - Worlds'
+const Worlds = ({ history, subpage }) => {
+  const [selectedIndex, setSelectedIndex] = useState(null)
 
-    document.addEventListener('keydown', this.escHandler, false)
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.escHandler, false)
-  }
-
-  escHandler = e => {
+  const escHandler = e => {
     if (e.keyCode === 27) {
-      console.log('wtf')
-      document.removeEventListener('keydown', this.escHandler, false)
-      this.props.history.push('/game/start')
+      document.removeEventListener('keydown', escHandler, false)
+      history.push('/game/start')
     }
   }
 
-  render() {
-    const { selectedIndex } = this.state
+  useEffect(() => {
+    document.title = 'MinecraftJS - Worlds'
 
-    const { subpage, history } = this.props
+    document.addEventListener('keydown', escHandler, false)
 
-    return (
-      <Query query={MY_WORLDS_QUERY} onError={err => console.error(err)} fetchPolicy="network-only">
-        {({ loading, data }) => {
-          if (loading) return <Hint />
+    return () => {
+      document.removeEventListener('keydown', escHandler, false)
+    }
+  })
 
-          data.myWorlds.sort((a, b) => {
-            return new Date(b.lastPlayed) - new Date(a.lastPlayed)
-          })
+  switch (subpage) {
+    case 'create':
+      return <CreateNewWorld />
+    case 'delete':
+      return <DeleteWorld />
+    case '':
+    case undefined:
+      return (
+        // eslint-disable-next-line no-console
+        <Query
+          query={MY_WORLDS_QUERY}
+          // eslint-disable-next-line no-console
+          onError={err => console.error(err)}
+          fetchPolicy="network-only"
+        >
+          {({ loading, data }) => {
+            if (loading) return <Hint />
 
-          let render = null
-          switch (subpage) {
-            case 'create':
-              render = <CreateNewWorld />
-              break
-            case undefined:
-            case '':
-              const { myWorlds } = data
+            const { myWorlds } = data
+            myWorlds.sort((a, b) => {
+              return new Date(b.lastPlayed) - new Date(a.lastPlayed)
+            })
 
-              render = (
-                <div className={classes.wrapper}>
-                  <h1 className={classes.title}>Select World</h1>
-                  <WorldList
-                    data={myWorlds}
-                    setSelectedIndex={this.setSelectedIndex}
-                    selectedIndex={selectedIndex}
-                  />
-                  <div className={classes.buttonGroupGroup}>
-                    <div className={classes.buttonGroup}>
-                      <button
-                        id="play-selected-world"
-                        className={sharedStyles.button}
-                        disabled={!selectedIndex}
-                        onClick={() => {
-                          history.push(`/game/minecraft/${selectedIndex}`)
-                        }}
-                      >
-                        Play Selected World
-                      </button>
-                      <button
-                        className={sharedStyles.button}
-                        onClick={() => history.push('/game/worlds/create')}
-                      >
-                        Create New World
-                      </button>
-                    </div>
-                    <div className={classes.buttonGroup}>
-                      <Mutation mutation={DELETE_WORLD_MUTATION}>
-                        {deleteWorld => (
-                          <button
-                            id="delete"
-                            className={sharedStyles.button}
-                            disabled={!selectedIndex}
-                            onClick={() => {
-                              deleteWorld({
-                                variables: {
-                                  worldId: selectedIndex
-                                },
-                                refetchQueries: [{ query: MY_WORLDS_QUERY }]
-                              })
-                              this.setSelectedIndex(null)
-                            }}
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </Mutation>
-
-                      <button
-                        className={sharedStyles.button}
-                        onClick={() => history.push('/game/start')}
-                      >
-                        Cancel
-                      </button>
-                    </div>
+            return (
+              <div className={classes.wrapper}>
+                <h1 className={classes.title}>Select World</h1>
+                <WorldList
+                  data={myWorlds}
+                  setSelectedIndex={setSelectedIndex}
+                  selectedIndex={selectedIndex}
+                />
+                <div className={classes.buttonGroupGroup}>
+                  <div className={classes.buttonGroup}>
+                    <button
+                      type="button"
+                      id="play-selected-world"
+                      className={sharedStyles.button}
+                      disabled={!selectedIndex}
+                      onClick={() => {
+                        history.push(`/game/minecraft/${selectedIndex}`)
+                      }}
+                    >
+                      Play Selected World
+                    </button>
+                    <button
+                      type="button"
+                      className={sharedStyles.button}
+                      onClick={() =>
+                        history.push({
+                          pathname: '/game/worlds/create',
+                          state: {
+                            worldId: selectedIndex
+                          }
+                        })
+                      }
+                    >
+                      Create New World
+                    </button>
+                  </div>
+                  <div className={classes.buttonGroup}>
+                    <button
+                      type="button"
+                      id="delete"
+                      className={sharedStyles.button}
+                      disabled={!selectedIndex}
+                      onClick={() =>
+                        history.push({
+                          pathname: '/game/worlds/delete',
+                          state: { worldId: selectedIndex }
+                        })
+                      }
+                    >
+                      Delete
+                    </button>
+                    <button
+                      type="button"
+                      className={sharedStyles.button}
+                      onClick={() => history.push('/game/start')}
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
-              )
-              break
-            default:
-              break
-          }
-
-          return render
-        }}
-      </Query>
-    )
+              </div>
+            )
+          }}
+        </Query>
+      )
+    default:
+      break
   }
+
+  return <Redirect to="/game/worlds" />
 }
 
 export default withApollo(withRouter(Worlds))

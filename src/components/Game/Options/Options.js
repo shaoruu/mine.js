@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react'
-import { withRouter } from 'react-router'
+import sharedStyles from '../../../containers/sharedStyles.module.css'
 
 import classes from './Options.module.css'
-import sharedStyles from '../../../containers/sharedStyles.module.css'
+
+import React, { useEffect } from 'react'
+import { withRouter } from 'react-router-dom'
 
 const Options = ({ history }) => {
   useEffect(() => {
@@ -12,7 +13,7 @@ const Options = ({ history }) => {
   return (
     <div className={classes.wrapper}>
       <h1>Options [COMING SOON]</h1>
-      <button className={sharedStyles.button} onClick={() => history.goBack()}>
+      <button type="button" className={sharedStyles.button} onClick={() => history.goBack()}>
         Go Back
       </button>
     </div>

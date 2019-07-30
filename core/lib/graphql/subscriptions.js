@@ -1,8 +1,8 @@
 import gql from 'graphql-tag'
 
 export const MESSAGE_SUBSCRIPTION = gql`
-  subscription Message($worldId: ID!) {
-    message(worldId: $worldId) {
+  subscription Message($worldId: ID!, $mutation_in: [String!]) {
+    message(worldId: $worldId, mutation_in: $mutation_in) {
       mutation
       node {
         type
@@ -14,10 +14,16 @@ export const MESSAGE_SUBSCRIPTION = gql`
 `
 
 export const PLAYER_SUBSCRIPTION = gql`
-  subscription Player($username: String!, $worldId: ID!, $updatedFields_contains_some: [String!]) {
+  subscription Player(
+    $username: String!
+    $mutation_in: [String!]
+    $worldId: ID!
+    $updatedFields_contains_some: [String!]
+  ) {
     player(
       username: $username
       worldId: $worldId
+      mutation_in: $mutation_in
       updatedFields_contains_some: $updatedFields_contains_some
     ) {
       mutation
@@ -29,8 +35,16 @@ export const PLAYER_SUBSCRIPTION = gql`
 `
 
 export const WORLD_SUBSCRIPTION = gql`
-  subscription World($worldId: ID!, $updatedFields_contains_some: [String!]) {
-    world(worldId: $worldId, updatedFields_contains_some: $updatedFields_contains_some) {
+  subscription World(
+    $worldId: ID!
+    $mutation_in: [String!]
+    $updatedFields_contains_some: [String!]
+  ) {
+    world(
+      worldId: $worldId
+      mutation_in: $mutation_in
+      updatedFields_contains_some: $updatedFields_contains_some
+    ) {
       mutation
       node {
         timeChanger

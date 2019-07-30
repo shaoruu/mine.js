@@ -98,6 +98,11 @@ class Game {
     this.camera.updateSize(this.renderer.threeRenderer)
   }
 
+  terminate = () => {
+    this.world.terminate()
+    this.player.terminate()
+  }
+
   /* -------------------------------------------------------------------------- */
   /*                             INTERNAL FUNCTIONS                             */
   /* -------------------------------------------------------------------------- */

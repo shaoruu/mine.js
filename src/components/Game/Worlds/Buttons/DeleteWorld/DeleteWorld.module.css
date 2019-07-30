@@ -1,0 +1,34 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 550px;
+}
+
+.title {
+  font-family: Minecraft;
+  font-weight: 400;
+  font-size: 20px;
+  color: white;
+}
+
+.title2 {
+  margin-top: 20px;
+  margin-bottom: 50px;
+  font-family: Minecraft;
+  font-weight: 400;
+  font-size: 20px;
+  color: white;
+}
+
+.buttonWrapper {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.buttonWrapper button {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  width: 260px;
+}

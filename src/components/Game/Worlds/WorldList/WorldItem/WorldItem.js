@@ -1,8 +1,9 @@
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events  */
+import classes from './WorldItem.module.css'
+
 import React from 'react'
 import OutsideClickHandler from 'react-outside-click-handler'
-import { withRouter } from 'react-router'
-
-import classes from './WorldItem.module.css'
+import { withRouter } from 'react-router-dom'
 
 export default withRouter(({ lastPlayed, id, name, history, setSelectedIndex, selectedIndex }) => {
   return (
