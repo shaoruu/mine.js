@@ -33,8 +33,6 @@ class Helpers {
   static generateToken = userId => {
     return jwt.sign({ userId }, 'thisisasecret', { expiresIn: '7 days' })
   }
-
-  static getSocketRep = (worldId, username) => `${worldId}::${username}`
 }
 
 export default Helpers

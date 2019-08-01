@@ -1,4 +1,9 @@
-import { ResourceManager, ChunkManager, WorkerManager, PlayersManager } from '../../managers'
+import {
+  ResourceManager,
+  ChunkManager,
+  WorkerManager,
+  PlayersManager
+} from '../../managers'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
 import { Chat } from '../../interfaces'
@@ -109,22 +114,13 @@ class World extends Stateful {
         }
       })
 
-    // this.otherPlayersSubscription = this.apolloClient
-    //   .subscribe({
-    //     query: OTHER_PLAYERS_SUBSCRIPTION,
-    //     variables: {
-    //       worldId: this.data.id,
-    //       playerId: this.data.playerId
-    //     }
-    //   })
-    //   .subscribe({
-    //     next: ({ data: { otherPlayers } }) => {
-    //       this.playersManager.update(otherPlayers)
-    //     },
-    //     error(e) {
-    //       Helpers.error(e.message)
-    //     }
-    //   })
+    this.ioClient.on('players', pkg => {
+      this.playersManager.update({
+        ...pkg.playerCoords,
+        ...pkg.playerDir,
+        username: pkg.username
+      })
+    })
   }
 
   update = () => {
@@ -137,13 +133,14 @@ class World extends Stateful {
     if (!this.state.isSetup) return
 
     const playerPos = this.player.getCoordinates()
-    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords(playerPos)
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords(
+      playerPos
+    )
     this.chunkManager.surroundingChunksCheck(coordx, coordy, coordz)
   }
 
   terminate = () => {
     this.worldSubscription.unsubscribe()
-    // this.otherPlayersSubscription.unsubscribe()
 
     this.getChat().terminate()
     this.removeUpdaters()
@@ -200,7 +197,9 @@ class World extends Stateful {
     const type = this.getVoxelByVoxelCoords(x, y, z)
     if (typeof type !== 'number') return forPassing
 
-    const isSolid = forPassing ? Helpers.isPassable(type) : Helpers.isLiquid(type)
+    const isSolid = forPassing
+      ? Helpers.isPassable(type)
+      : Helpers.isLiquid(type)
     return !isSolid
   }
 
@@ -209,7 +208,8 @@ class World extends Stateful {
     return this.getSolidityByVoxelCoords(gbc.x, gbc.y, gbc.z)
   }
 
-  getPassableByVoxelCoords = (x, y, z) => this.getSolidityByVoxelCoords(x, y, z, true)
+  getPassableByVoxelCoords = (x, y, z) =>
+    this.getSolidityByVoxelCoords(x, y, z, true)
 
   getTargetBlockType = () => {
     if (!this.targetBlock) return 0

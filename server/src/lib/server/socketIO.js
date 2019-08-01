@@ -1,5 +1,3 @@
-import Helpers from '../../utils/helpers'
-
 import prisma from './prisma'
 
 import { createServer } from 'http'
@@ -21,7 +19,7 @@ io.on('connection', function(socket) {
   log('user connected.')
 
   socket.on('setInfo', async function({ worldId, username }) {
-    watchers[Helpers.getSocketRep(worldId, username)] = 'hi'
+    watchers[socket.id] = username
 
     // CREATE JOIN WORLD MESSAGE
     await prisma.mutation.createMessage({
@@ -37,11 +35,16 @@ io.on('connection', function(socket) {
       }
     })
 
-    log(`set info for ${username} on world ${worldId}`)
+    log(`set info for '${username}' on world '${worldId}'`)
+  })
+
+  socket.on('position', function(data) {
+    data.username = watchers[socket.id]
+    socket.broadcast.emit('players', data)
   })
 
   socket.on('removeInfo', async function({ worldId, username }) {
-    delete watchers[Helpers.getSocketRep(worldId, username)]
+    delete watchers[socket.id]
 
     // CREATE LEAVE WORLD MESSAGE
     await prisma.mutation.createMessage({
@@ -57,7 +60,7 @@ io.on('connection', function(socket) {
       }
     })
 
-    log(`removed info for ${username} on world ${worldId}`)
+    log(`removed info for '${username}' on world '${worldId}'`)
   })
 
   socket.on('disconnect', function() {

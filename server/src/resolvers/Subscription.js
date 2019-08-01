@@ -44,7 +44,8 @@ const Subscription = {
       return prisma.subscription.player(
         {
           where: {
-            updatedFields_contains_some: updatedFields_contains_some || defaultArray,
+            updatedFields_contains_some:
+              updatedFields_contains_some || defaultArray,
             mutation_in: mutation_in || defaultArray,
             node: {
               user: {
@@ -61,37 +62,20 @@ const Subscription = {
     }
   },
   world: {
-    subscribe(parent, { worldId, mutation_in, updatedFields_contains_some }, { prisma }, info) {
+    subscribe(
+      parent,
+      { worldId, mutation_in, updatedFields_contains_some },
+      { prisma },
+      info
+    ) {
       return prisma.subscription.world(
         {
           where: {
-            updatedFields_contains_some: updatedFields_contains_some || defaultArray,
+            updatedFields_contains_some:
+              updatedFields_contains_some || defaultArray,
             mutation_in: mutation_in || defaultArray,
             node: {
               id: worldId
-            }
-          }
-        },
-        info
-      )
-    }
-  },
-  otherPlayers: {
-    subscribe(parent, { worldId, playerId }, { prisma }, info) {
-      return prisma.subscription.player(
-        {
-          where: {
-            AND: {
-              node: {
-                world: {
-                  id: worldId
-                }
-              }
-            },
-            NOT: {
-              node: {
-                id: playerId
-              }
             }
           }
         },

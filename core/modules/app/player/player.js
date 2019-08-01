@@ -1,7 +1,10 @@
 import Stateful from '../../../lib/stateful/stateful'
 import Helpers from '../../../utils/helpers'
 import Config from '../../../config/config'
-import { UPDATE_PLAYER_MUTATION, PLAYER_SUBSCRIPTION } from '../../../lib/graphql'
+import {
+  UPDATE_PLAYER_MUTATION,
+  PLAYER_SUBSCRIPTION
+} from '../../../lib/graphql'
 
 import Status from './status/status'
 import PlayerControls from './controls/controls'
@@ -10,7 +13,17 @@ import PlayerViewport from './viewport/viewport'
 const P_I_2_TOE = Config.player.aabb.eye2toe
 
 class Player extends Stateful {
-  constructor(apolloClient, ioClient, playerData, camera, scene, world, canvas, blocker, button) {
+  constructor(
+    apolloClient,
+    ioClient,
+    playerData,
+    camera,
+    scene,
+    world,
+    canvas,
+    blocker,
+    button
+  ) {
     super({ prevPos: '', prevDir: '' })
 
     const { id, user, gamemode } = playerData
@@ -61,16 +74,24 @@ class Player extends Stateful {
       const { prevPos, prevDir } = this.state
 
       const playerCoords = this.getCoordinates(3)
-      const playerCoordsRep = Helpers.get3DCoordsRep(playerCoords.x, playerCoords.y, playerCoords.z)
+      const playerCoordsRep = Helpers.get3DCoordsRep(
+        playerCoords.x,
+        playerCoords.y,
+        playerCoords.z
+      )
 
       const playerDir = this.getDirections()
-      const playerDirRep = Helpers.get2DCoordsRep(playerDir.dirx, playerDir.diry)
+      const playerDirRep = Helpers.get2DCoordsRep(
+        playerDir.dirx,
+        playerDir.diry
+      )
 
       // eslint-disable-next-line no-restricted-syntax
       for (const member in playerCoords)
         if (playerCoords[member] !== 0 && !playerCoords[member]) return
       // eslint-disable-next-line no-restricted-syntax
-      for (const member in playerDir) if (playerDir[member] !== 0 && !playerDir[member]) return
+      for (const member in playerDir)
+        if (playerDir[member] !== 0 && !playerDir[member]) return
 
       if (playerCoordsRep !== prevPos || playerDirRep !== prevDir) {
         this.setState({ prevPos: playerCoordsRep, prevDir: playerDirRep })
@@ -85,26 +106,37 @@ class Player extends Stateful {
         })
       }
     }, 500)
+
+    this.posSocketUpdater = window.requestInterval(() => {
+      const playerCoords = this.getCoordinates(3)
+      const playerDir = this.getDirections()
+
+      this.ioClient.emit('position', {
+        playerCoords,
+        playerDir
+      })
+    }, 100)
   }
 
   initSubscriptions = () => {
-    const k = this.apolloClient.subscribe({
-      query: PLAYER_SUBSCRIPTION,
-      variables: {
-        username: this.data.user.username,
-        worldId: this.world.data.id,
-        mutation_in: ['UPDATED'],
-        updatedFields_contains_some: ['gamemode']
-      }
-    })
-    this.playerSubscription = k.subscribe({
-      next: ({ data }) => {
-        this.handleServerUpdate(data)
-      },
-      error(e) {
-        Helpers.error(e.message)
-      }
-    })
+    this.playerSubscription = this.apolloClient
+      .subscribe({
+        query: PLAYER_SUBSCRIPTION,
+        variables: {
+          username: this.data.user.username,
+          worldId: this.world.data.id,
+          mutation_in: ['UPDATED'],
+          updatedFields_contains_some: ['gamemode']
+        }
+      })
+      .subscribe({
+        next: ({ data }) => {
+          this.handleServerUpdate(data)
+        },
+        error(e) {
+          Helpers.error(e.message)
+        }
+      })
   }
 
   update = () => {
@@ -124,6 +156,7 @@ class Player extends Stateful {
 
   removeUpdaters = () => {
     window.clearRequestInterval(this.posUpdater)
+    window.clearRequestInterval(this.posSocketUpdater)
   }
 
   terminate = () => {

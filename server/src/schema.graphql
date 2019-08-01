@@ -37,7 +37,6 @@ type Subscription {
     mutation_in: [String!]
     updatedFields_contains_some: [String!]
   ): WorldSubscriptionPayload!
-  otherPlayers(worldId: ID!, playerId: ID!): OtherPlayersSubscriptionPayload!
 }
 
 type User {
@@ -202,9 +201,4 @@ type PlayerSubscriptionPayload {
 type WorldSubscriptionPayload {
   mutation: MutationType!
   node: World
-}
-
-type OtherPlayersSubscriptionPayload {
-  mutation: MutationType!
-  node: Player
 }

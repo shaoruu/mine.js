@@ -10,6 +10,10 @@ function IOClient() {
   this.getSocket = () => socket
 }
 
+IOClient.prototype.on = function(event, func) {
+  this.getSocket().on(event, func)
+}
+
 IOClient.prototype.emit = function(event, pkg) {
   this.getSocket().emit(event, pkg)
 }
