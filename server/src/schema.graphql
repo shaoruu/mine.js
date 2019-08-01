@@ -1,7 +1,7 @@
 type Query {
   users(query: String, first: Int, skip: Int, after: String): [User!]!
   me: User!
-  myWorlds(first: Int, skip: Int, after: String): [World!]!
+  myWorlds: User!
   world(query: String!): World!
 }
 
@@ -14,7 +14,7 @@ type Mutation {
 
   # WORLD
   createWorld(data: CreateWorldInput!): World!
-  createPlayer(data: CreatePlayerInput!): Player!
+  createPlayer(data: CreatePlayerInput!): Boolean!
   updateWorld(data: UpdateWorldInput!): World!
   updatePlayer(data: UpdatePlayerInput!): Player!
   updateBlock(data: UpdateBlockInput!): Block!
@@ -37,6 +37,7 @@ type Subscription {
     mutation_in: [String!]
     updatedFields_contains_some: [String!]
   ): WorldSubscriptionPayload!
+  otherPlayers(worldId: ID!, playerId: ID!): OtherPlayersSubscriptionPayload!
 }
 
 type User {
@@ -200,4 +201,9 @@ type PlayerSubscriptionPayload {
 type WorldSubscriptionPayload {
   mutation: MutationType!
   node: World
+}
+
+type OtherPlayersSubscriptionPayload {
+  mutation: MutationType!
+  node: Player
 }

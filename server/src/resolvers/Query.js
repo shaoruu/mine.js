@@ -12,21 +12,7 @@ const Query = {
   },
   myWorlds(parent, args, { prisma, request }, info) {
     const userId = Helpers.getUserId(request)
-    const opArgs = {
-      first: args.first,
-      skip: args.skip,
-      after: args.after,
-      orderBy: args.orderBy,
-      where: {
-        players_some: {
-          user: {
-            id: userId
-          }
-        }
-      }
-    }
-
-    return prisma.query.worlds(opArgs, info)
+    return prisma.query.user({ where: { id: userId } }, info)
   },
   async world(parent, args, { prisma }, info) {
     const id = args.query

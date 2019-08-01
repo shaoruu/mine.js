@@ -1,13 +1,17 @@
-import { ResourceManager, ChunkManager, WorkerManager } from '../../managers'
+import { ResourceManager, ChunkManager, WorkerManager, PlayersManager } from '../../managers'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
 import { Chat } from '../../interfaces'
-import { UPDATE_WORLD_MUTATION, WORLD_SUBSCRIPTION } from '../../../lib/graphql'
+import {
+  UPDATE_WORLD_MUTATION,
+  WORLD_SUBSCRIPTION
+  // OTHER_PLAYERS_SUBSCRIPTION
+} from '../../../lib/graphql'
 
 import createSky from './sky/sky'
 
 class World extends Stateful {
-  constructor(worldData, scene, apolloClient, container, playerData) {
+  constructor(worldData, scene, apolloClient, ioClient, container, playerData) {
     super({ isSetup: false })
 
     const { id, name, seed, time, days, changedBlocks } = worldData
@@ -24,11 +28,13 @@ class World extends Stateful {
 
     this.scene = scene
     this.apolloClient = apolloClient
+    this.ioClient = ioClient
 
     this.chat = new Chat(this.data.playerId, id, container, apolloClient)
 
     this.resourceManager = new ResourceManager()
     this.workerManager = new WorkerManager(this)
+    this.playersManager = new PlayersManager(scene)
     this.chunkManager = new ChunkManager(
       scene,
       seed,
@@ -102,6 +108,23 @@ class World extends Stateful {
           Helpers.error(e.message)
         }
       })
+
+    // this.otherPlayersSubscription = this.apolloClient
+    //   .subscribe({
+    //     query: OTHER_PLAYERS_SUBSCRIPTION,
+    //     variables: {
+    //       worldId: this.data.id,
+    //       playerId: this.data.playerId
+    //     }
+    //   })
+    //   .subscribe({
+    //     next: ({ data: { otherPlayers } }) => {
+    //       this.playersManager.update(otherPlayers)
+    //     },
+    //     error(e) {
+    //       Helpers.error(e.message)
+    //     }
+    //   })
   }
 
   update = () => {
@@ -120,7 +143,7 @@ class World extends Stateful {
 
   terminate = () => {
     this.worldSubscription.unsubscribe()
-    // delete this.worldSubscription
+    // this.otherPlayersSubscription.unsubscribe()
 
     this.getChat().terminate()
     this.removeUpdaters()

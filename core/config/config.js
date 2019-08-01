@@ -4,7 +4,8 @@
 
 const Config = {
   tech: {
-    maxWorkerCount: 4
+    maxWorkerCount: 4,
+    socketEndpoint: 'localhost:5000'
   },
   lights: {
     sunlight: {

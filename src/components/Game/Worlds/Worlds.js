@@ -49,7 +49,9 @@ const Worlds = ({ history, subpage }) => {
           {({ loading, data }) => {
             if (loading) return <Hint />
 
-            const { myWorlds } = data
+            const {
+              myWorlds: { worlds: myWorlds }
+            } = data
             myWorlds.sort((a, b) => {
               return new Date(b.lastPlayed) - new Date(a.lastPlayed)
             })

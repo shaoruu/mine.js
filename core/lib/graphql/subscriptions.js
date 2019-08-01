@@ -52,3 +52,21 @@ export const WORLD_SUBSCRIPTION = gql`
     }
   }
 `
+
+export const OTHER_PLAYERS_SUBSCRIPTION = gql`
+  subscription OtherPlayers($playerId: ID!, $worldId: ID!) {
+    otherPlayers(playerId: $playerId, worldId: $worldId) {
+      mutation
+      node {
+        user {
+          username
+        }
+        x
+        y
+        z
+        dirx
+        diry
+      }
+    }
+  }
+`

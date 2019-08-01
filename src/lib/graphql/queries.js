@@ -19,10 +19,12 @@ export const USERS_QUERY = gql`
 export const MY_WORLDS_QUERY = gql`
   query MyWorlds {
     myWorlds {
-      lastPlayed
-      id
-      name
-      seed
+      worlds {
+        lastPlayed
+        id
+        name
+        seed
+      }
     }
   }
 `

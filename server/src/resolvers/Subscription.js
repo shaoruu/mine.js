@@ -75,6 +75,29 @@ const Subscription = {
         info
       )
     }
+  },
+  otherPlayers: {
+    subscribe(parent, { worldId, playerId }, { prisma }, info) {
+      return prisma.subscription.player(
+        {
+          where: {
+            AND: {
+              node: {
+                world: {
+                  id: worldId
+                }
+              }
+            },
+            NOT: {
+              node: {
+                id: playerId
+              }
+            }
+          }
+        },
+        info
+      )
+    }
   }
 }
 

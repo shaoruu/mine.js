@@ -1,7 +1,7 @@
 import Config from './config/config'
 import { Renderer, Camera, World, Player } from './modules/app'
-import ConnectionStatus from './modules/interfaces/connectionStatus/connectionStatus'
-import { Debug } from './modules/interfaces'
+import { Debug, ConnectionStatus } from './modules/interfaces'
+import IOClient from './lib/ioClient/ioClient'
 
 import * as THREE from 'three'
 
@@ -32,6 +32,7 @@ class Game {
 
     /** SERVER COMMUNICATION */
     this.apolloClient = apolloClient
+    this.ioClient = new IOClient()
     this.connectionStatus = new ConnectionStatus(container)
 
     /** THREE SCENE */
@@ -50,12 +51,13 @@ class Game {
     this.camera = new Camera(this.renderer.threeRenderer)
 
     /** GAME COMPONENTS */
-    this.world = new World(world, this.scene, apolloClient, container, {
+    this.world = new World(world, this.scene, apolloClient, this.ioClient, container, {
       y: playerData.y,
       id: playerData.id
     })
     this.player = new Player(
       apolloClient,
+      this.ioClient,
       playerData,
       this.camera.threeCamera,
       this.scene,

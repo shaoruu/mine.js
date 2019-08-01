@@ -10,7 +10,7 @@ import PlayerViewport from './viewport/viewport'
 const P_I_2_TOE = Config.player.aabb.eye2toe
 
 class Player extends Stateful {
-  constructor(apolloClient, playerData, camera, scene, world, canvas, blocker, button) {
+  constructor(apolloClient, ioClient, playerData, camera, scene, world, canvas, blocker, button) {
     super({ prevPos: '', prevDir: '' })
 
     const { id, user, gamemode } = playerData
@@ -21,6 +21,7 @@ class Player extends Stateful {
     }
 
     this.apolloClient = apolloClient
+    this.ioClient = ioClient
 
     this.camera = camera
     this.world = world
