@@ -14,6 +14,7 @@
     "concurrently": "^4.1.1",
     "cookie": "^0.3.1",
     "d3-ease": "^1.0.5",
+    "debug": "^4.1.1",
     "detect-browser": "^4.6.0",
     "dotenv": "^8.0.0",
     "fast-voxel-raycast": "^0.1.1",
@@ -55,7 +56,7 @@
     "prisma:get-schema": "graphql get-schema -p prisma",
     "client": "react-app-rewired start",
     "reset": "yarn run prisma:delete && yarn run prisma:deploy && yarn run prisma:get-schema",
-    "server": "nodemon --watch server server/src/index.js --ext js,graphql --exec babel-node",
+    "server": "DEBUG=server,socket nodemon --watch server server/src/index.js --ext js,graphql --exec babel-node",
     "prisma": "docker-compose --file server/prisma/docker-compose.yml up -d",
     "init": "yarn run prisma && sleep 5 && yarn run prisma:deploy && yarn run prisma:get-schema",
     "start": "yarn run prisma && concurrently \"yarn run client\" \"yarn run server\""

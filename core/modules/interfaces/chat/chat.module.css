@@ -1,7 +1,7 @@
 .wrapper {
   position: fixed;
   top: 0;
-  z-index: 3;
+  z-index: 4;
   opacity: 0;
   /* visibility: hidden; Hidden at first */
   width: 100vw;
@@ -31,7 +31,7 @@
   background: #00000081;
   opacity: 0;
   padding: 5px;
-  z-index: 4;
+  z-index: 5;
   font-family: Minecraft;
   color: white;
   border: none;

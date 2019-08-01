@@ -14,4 +14,8 @@ IOClient.prototype.emit = function(event, pkg) {
   this.getSocket().emit(event, pkg)
 }
 
+IOClient.prototype.disconnect = function() {
+  this.getSocket().disconnect()
+}
+
 export default IOClient

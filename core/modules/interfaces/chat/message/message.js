@@ -19,6 +19,11 @@ export default function(type, sender, body) {
     case 'PLAYER':
       message.innerHTML = `&lt;${sender}&gt;&nbsp;&nbsp;${body}`
       break
+    case 'INFO':
+      Helpers.applyStyle(message, {
+        color: 'yellow'
+      })
+      break
     default:
       break
   }

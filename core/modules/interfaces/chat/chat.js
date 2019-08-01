@@ -1,4 +1,7 @@
-import { RUN_COMMAND_MUTATION, MESSAGE_SUBSCRIPTION } from '../../../lib/graphql'
+import {
+  RUN_COMMAND_MUTATION,
+  MESSAGE_SUBSCRIPTION
+} from '../../../lib/graphql'
 import Helpers from '../../../utils/helpers'
 
 import classes from './chat.module.css'
@@ -47,7 +50,9 @@ class Chat {
 
     this.gui.wrapper.appendChild(this.gui.messagesWrapper)
 
-    this.focusListener = this.gui.wrapper.addEventListener('click', () => this.focusInput())
+    this.focusListener = this.gui.wrapper.addEventListener('click', () =>
+      this.focusInput()
+    )
 
     container.appendChild(this.gui.input)
     container.appendChild(this.gui.wrapper)
@@ -113,6 +118,9 @@ class Chat {
 
     this.messages.push(newMessage)
     this.gui.messagesWrapper.appendChild(newMessage.getGui())
+
+    // MIGHT CHANGE FUNCTION NAME SINCE THIS DISPLAYS THE CHAT THEN FADES IT AWAY
+    this.disable()
   }
 
   getGui = () => this.gui.textbox

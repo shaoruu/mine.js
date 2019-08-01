@@ -24,11 +24,24 @@ const HORZ_D = Config.player.render.horzD
 const VERT_D = Config.player.render.vertD
 
 class Game {
-  constructor(data, username, container, canvas, blocker, button, apolloClient) {
+  constructor(
+    data,
+    username,
+    container,
+    canvas,
+    blocker,
+    button,
+    apolloClient
+  ) {
     /** PRE-GAME SETUP */
     const { world } = data
 
     const playerData = world.players.find(ele => ele.user.username === username)
+
+    /** LOCAL DATA SAVE */
+    this.data = {
+      username
+    }
 
     /** SERVER COMMUNICATION */
     this.apolloClient = apolloClient
@@ -51,10 +64,17 @@ class Game {
     this.camera = new Camera(this.renderer.threeRenderer)
 
     /** GAME COMPONENTS */
-    this.world = new World(world, this.scene, apolloClient, this.ioClient, container, {
-      y: playerData.y,
-      id: playerData.id
-    })
+    this.world = new World(
+      world,
+      this.scene,
+      apolloClient,
+      this.ioClient,
+      container,
+      {
+        y: playerData.y,
+        id: playerData.id
+      }
+    )
     this.player = new Player(
       apolloClient,
       this.ioClient,
@@ -68,12 +88,11 @@ class Game {
     )
 
     this.world.setPlayer(this.player)
-    this.world.init()
 
     /** UI SETUP */
     this.debug = new Debug(container, this.player, this.world)
 
-    /** VOXEL-JS PORT */
+    this.init()
 
     /* -------------------------------------------------------------------------- */
     /*                                TEST STARTS HERE                               */
@@ -86,6 +105,14 @@ class Game {
     /* -------------------------------------------------------------------------- */
     /*                               TEST ENDS HERE                               */
     /* -------------------------------------------------------------------------- */
+  }
+
+  init = () => {
+    this.world.init()
+    this.ioClient.emit('setInfo', {
+      worldId: this.world.data.id,
+      username: this.data.username
+    })
   }
 
   update = () => {
@@ -103,6 +130,13 @@ class Game {
   terminate = () => {
     this.world.terminate()
     this.player.terminate()
+
+    // CLEAR IO CACHE
+    this.ioClient.emit('removeInfo', {
+      worldId: this.world.data.id,
+      username: this.data.username
+    })
+    this.ioClient.disconnect()
   }
 
   /* -------------------------------------------------------------------------- */

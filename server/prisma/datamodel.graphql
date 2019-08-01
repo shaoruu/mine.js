@@ -28,7 +28,8 @@ type Player {
   z: Float!
   dirx: Float!
   diry: Float!
-  inventory: Inventory! @relation(link: INLINE, name: "InventoryToPlayer", onDelete: CASCADE)
+  inventory: Inventory!
+    @relation(link: INLINE, name: "InventoryToPlayer", onDelete: CASCADE)
 }
 
 type World {
@@ -74,4 +75,5 @@ enum MessageType {
   ERROR
   PLAYER
   SERVER
+  INFO
 }

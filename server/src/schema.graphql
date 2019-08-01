@@ -181,6 +181,7 @@ enum MessageType {
   ERROR
   PLAYER
   SERVER
+  INFO
 }
 
 type BlockSubscriptionPayload {
