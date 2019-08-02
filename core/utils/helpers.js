@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable no-console */
 
 import Config from '../config/config'
@@ -13,13 +14,16 @@ const PASSABLE_BLOCKS = Config.block.passable
 const projectTag = '[MinecraftJS]'
 
 class Helpers {
-  static log = (message, pt = false) => console.log(pt ? `${projectTag} ${message}` : message)
+  static log = (message, pt = false) =>
+    console.log(pt ? `${projectTag} ${message}` : message)
 
   static fancyLog = (...args) => console.log(...args)
 
-  static warn = (warning, pt = false) => console.warn(pt ? `${projectTag} ${warning}` : warning)
+  static warn = (warning, pt = false) =>
+    console.warn(pt ? `${projectTag} ${warning}` : warning)
 
-  static error = (error, pt = false) => console.error(pt ? `${projectTag} ${error}` : error)
+  static error = (error, pt = false) =>
+    console.error(pt ? `${projectTag} ${error}` : error)
 
   static get2DCoordsRep = (x, z, semi = false) => {
     return `${x}:${z}${semi ? ';' : ''}`
@@ -53,7 +57,11 @@ class Helpers {
    * Converts global block coords to chunk block coords
    */
   static globalBlockToChunkBlock = ({ x: gx, y: gy, z: gz }) => {
-    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({ x: gx, y: gy, z: gz })
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({
+      x: gx,
+      y: gy,
+      z: gz
+    })
 
     return {
       x: Math.floor(gx - coordx * SIZE),
@@ -65,7 +73,14 @@ class Helpers {
   /**
    * Converts chunk block coords to global block coords
    */
-  static chunkBlockToGlobalBlock = ({ x: bx, y: by, z: bz, coordx, coordy, coordz }) => ({
+  static chunkBlockToGlobalBlock = ({
+    x: bx,
+    y: by,
+    z: bz,
+    coordx,
+    coordy,
+    coordz
+  }) => ({
     x: Math.floor(coordx * SIZE + bx),
     y: Math.floor(coordy * SIZE + by),
     z: Math.floor(coordz * SIZE + bz)
@@ -102,7 +117,13 @@ class Helpers {
 
   static getLoadedBlocks = (x, y, z, voxelData, generator, offsets) => {
     const relativeCoords = Helpers.getRelativeCoords(x, y, z, offsets)
-    if (Helpers.checkWithinChunk(relativeCoords.x, relativeCoords.y, relativeCoords.z)) {
+    if (
+      Helpers.checkWithinChunk(
+        relativeCoords.x,
+        relativeCoords.y,
+        relativeCoords.z
+      )
+    ) {
       return voxelData.get(relativeCoords.x, relativeCoords.z, relativeCoords.y)
     }
     const maxHeight = generator.getHighestBlock(x, z)
@@ -155,7 +176,8 @@ class Helpers {
         }
   }
 
-  static approxEquals = (float1, float2, epsilon = 1e-5) => Math.abs(float1 - float2) < epsilon
+  static approxEquals = (float1, float2, epsilon = 1e-5) =>
+    Math.abs(float1 - float2) < epsilon
 
   static isString = test => typeof test === 'string'
 
@@ -168,7 +190,8 @@ class Helpers {
   static isPassable = type => PASSABLE_BLOCKS.includes(type)
 
   static applyStyle = (ele, s) => {
-    if (typeof s === 'object') Object.keys(s).forEach(key => (ele.style[key] = s[key]))
+    if (typeof s === 'object')
+      Object.keys(s).forEach(key => (ele.style[key] = s[key]))
     else ele.classList.add(s)
   }
 
@@ -185,7 +208,11 @@ class Helpers {
     func =
       func ||
       function(a, b) {
-        return a < b ? -1 : a > b ? 1 : 0 /* default comparison method if one was not provided */
+        return a < b
+          ? -1
+          : a > b
+          ? 1
+          : 0 /* default comparison method if one was not provided */
       }
 
     while (l <= h) {
@@ -210,6 +237,10 @@ class Helpers {
     } else i = ~i
 
     return i
+  }
+
+  static clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max)
   }
 }
 

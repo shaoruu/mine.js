@@ -19,7 +19,24 @@ const Config = {
     },
     aoConfigs: {
       slDifference: 70,
-      levels: [14, 19, 23, 28, 34, 41, 48, 57, 67, 79, 93, 110, 132, 160, 197, 250],
+      levels: [
+        14,
+        19,
+        23,
+        28,
+        34,
+        41,
+        48,
+        57,
+        67,
+        79,
+        93,
+        110,
+        132,
+        160,
+        197,
+        250
+      ],
       lowestLight: 30
     }
   },
@@ -108,7 +125,8 @@ const Config = {
       horzD: 2,
       vertD: 1
     },
-    reachDst: 7
+    reachDst: 7,
+    headBodyDeg: Math.PI / 4
   },
   block: {
     dimension: 32,

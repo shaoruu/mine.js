@@ -138,6 +138,9 @@ const Game = ({ id: worldId, username, history }) => {
           <button type="button" className={sharedStyles.button} ref={button}>
             Back to Game
           </button>
+          <button type="button" className={sharedStyles.button}>
+            Get world URL
+          </button>
           <button
             type="button"
             className={sharedStyles.button}

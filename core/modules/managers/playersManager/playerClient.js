@@ -1,21 +1,19 @@
-import Config from '../../../config/config'
+import OriginalSteve from '../../../assets/skin/Original_Steve.png'
 
-import * as THREE from 'three'
-import TWEEN from '@tweenjs/tween.js'
-
-const DIMENSION = Config.block.dimension
+import PlayerObject from './playerObject'
 
 function PlayerClient(username, pos, dir) {
-  const tempGeo = new THREE.BoxBufferGeometry(DIMENSION, DIMENSION, DIMENSION)
-  const tempMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-  const tempMesh = new THREE.Mesh(tempGeo, tempMat)
+  this.yAxisClamp = 0
+  this.oldDiry = dir.y
 
-  tempMesh.position.copy(pos.multiplyScalar(DIMENSION))
+  const playerMesh = new PlayerObject(OriginalSteve, pos, dir)
 
   this.getUsername = () => username
-  this.getPosition = () => tempMesh.position
+  this.getPosition = () => playerMesh.position
   this.getDirection = () => dir
-  this.getMesh = () => tempMesh
+  this.getMesh = () => playerMesh
+  this.getHead = () => playerMesh.skin.head
+  this.getBody = () => playerMesh.skin.body
 }
 
 PlayerClient.prototype.addSelf = function(scene) {
@@ -24,10 +22,9 @@ PlayerClient.prototype.addSelf = function(scene) {
 
 PlayerClient.prototype.update = function(x, y, z, dirx, diry) {
   const meshRef = this.getMesh()
-  new TWEEN.Tween(meshRef.position)
-    .to({ x: x * DIMENSION, y: y * DIMENSION, z: z * DIMENSION }, 100)
-    .start()
-  new TWEEN.Tween(meshRef.rotation).to({ x: dirx, y: diry, z: meshRef.rotation.z }, 100).start()
+
+  meshRef.tweenPosition(x, y, z)
+  meshRef.tweenDirection(dirx, diry)
 }
 
 export default PlayerClient
