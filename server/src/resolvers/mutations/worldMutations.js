@@ -203,6 +203,9 @@ const WorldMutations = {
     })
 
     return true
+  },
+  async requestChunks(parent, info, {redisClient}) {
+    return true
   }
 }
 

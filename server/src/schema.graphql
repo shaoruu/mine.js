@@ -20,6 +20,7 @@ type Mutation {
   updateBlock(data: UpdateBlockInput!): Block!
   deleteWorld(worldId: ID!): Boolean!
   runCommand(data: RunCommandInput!): Boolean!
+  requestChunks(data: RequestChunksInput!): Boolean!
 }
 
 type Subscription {
@@ -156,6 +157,12 @@ input RunCommandInput {
   playerId: ID!
   worldId: ID!
   command: String!
+}
+
+input RequestChunksInput {
+  worldId: ID!
+  playerId: ID!
+  chunks: [String!]! # array of chunk reps ("x:z")
 }
 
 type AuthPayload {

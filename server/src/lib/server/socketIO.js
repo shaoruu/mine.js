@@ -9,7 +9,7 @@ const io = socketIO(app)
 
 const watchers = {}
 
-const log = output => debug('socket')(output)
+const log = output => debug('socket')(JSON.stringify(output, null, 2))
 
 app.listen(5000, () => {
   log('Socket server running on port 5000.')

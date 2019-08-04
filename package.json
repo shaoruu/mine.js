@@ -36,6 +36,7 @@
     "react-pannellum": "^0.1.6",
     "react-router-dom": "^5.0.1",
     "react-scripts": "3.0.1",
+    "redis": "^2.8.0",
     "skinview3d": "^1.2.0-alpha.1",
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0",
@@ -58,7 +59,7 @@
     "prisma:get-schema": "graphql get-schema -p prisma",
     "client": "react-app-rewired start",
     "reset": "yarn run prisma:delete && yarn run prisma:deploy && yarn run prisma:get-schema",
-    "server": "DEBUG=server,socket nodemon --watch server server/src/index.js --ext js,graphql --exec babel-node",
+    "server": "DEBUG=server,socket,redis nodemon --watch server server/src/index.js --ext js,graphql --exec babel-node",
     "prisma": "docker-compose --file server/prisma/docker-compose.yml up -d",
     "init": "yarn run prisma && sleep 5 && yarn run prisma:deploy && yarn run prisma:get-schema",
     "start": "yarn run prisma && concurrently \"yarn run client\" \"yarn run server\""
