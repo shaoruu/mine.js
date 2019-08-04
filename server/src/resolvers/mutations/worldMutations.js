@@ -1,76 +1,9 @@
-import Helpers from '../utils/helpers'
-import commands from '../lib/game/commands'
-
-import bcrypt from 'bcryptjs'
+import Helpers from '../../utils/helpers'
+import commands from '../../lib/game/commands'
 
 const DEFAULT_MESSAGE = 'Unknown command. Try /help for a list of commands.'
 
-const Mutation = {
-  async createUser(parent, args, { prisma }) {
-    const password = await Helpers.hashPassword(args.data.password)
-    const user = await prisma.mutation.createUser({
-      data: {
-        ...args.data,
-        password
-      }
-    })
-
-    return {
-      user,
-      token: Helpers.generateToken(user.id)
-    }
-  },
-  async login(parent, args, { prisma }) {
-    const user = await prisma.query.user({
-      where: {
-        email: args.data.email
-      }
-    })
-
-    if (!user) {
-      throw new Error('Unable to login')
-    }
-
-    const isMatch = await bcrypt.compare(args.data.password, user.password)
-
-    if (!isMatch) {
-      throw new Error('Unable to login')
-    }
-
-    return {
-      user,
-      token: Helpers.generateToken(user.id)
-    }
-  },
-  async deleteUser(parent, args, { prisma, request }, info) {
-    const userId = Helpers.getUserId(request)
-
-    return prisma.mutation.deleteUser(
-      {
-        where: {
-          id: userId
-        }
-      },
-      info
-    )
-  },
-  async updateUser(parent, args, { prisma, request }, info) {
-    const userId = Helpers.getUserId(request)
-
-    if (typeof args.data.password === 'string') {
-      args.data.password = await Helpers.hashPassword(args.data.password)
-    }
-
-    return prisma.mutation.updateUser(
-      {
-        where: {
-          id: userId
-        },
-        data: args.data
-      },
-      info
-    )
-  },
+const WorldMutations = {
   async createWorld(parent, args, { prisma, request }, info) {
     const id = Helpers.getUserId(request)
     const {
@@ -149,62 +82,6 @@ const Mutation = {
       info
     )
   },
-  async createPlayer(
-    parent,
-    {
-      data: { worldId, gamemode }
-    },
-    { prisma, request }
-  ) {
-    const id = Helpers.getUserId(request)
-
-    const userExists = await prisma.exists.User({ id })
-    if (!userExists) throw new Error('User not found')
-
-    const existingPlayer = await prisma.exists.Player({
-      user: {
-        id
-      },
-      world: {
-        id: worldId
-      }
-    })
-
-    console.log(existingPlayer)
-
-    // Player creation
-    if (!existingPlayer)
-      await prisma.mutation.createPlayer({
-        data: {
-          isAdmin: true,
-          gamemode,
-          user: {
-            connect: {
-              id
-            }
-          },
-          world: {
-            connect: {
-              id: worldId
-            }
-          },
-          x: 0,
-          y: Number.MIN_SAFE_INTEGER,
-          z: 0,
-          dirx: 0,
-          diry: 0,
-          inventory: {
-            create: {
-              cursor: 0,
-              data:
-                'ARMOR:0;0;0;0;|BACKPACK:0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;|HOTBAR:0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;'
-            }
-          }
-        }
-      })
-
-    return true
-  },
   async updateWorld(parent, args, { prisma }, info) {
     const worldId = args.data.id
     delete args.data.id
@@ -216,62 +93,6 @@ const Mutation = {
         },
         data: {
           ...args.data
-        }
-      },
-      info
-    )
-  },
-  async updatePlayer(parent, args, { prisma }, info) {
-    const playerId = args.data.id
-    delete args.data.id
-
-    const { cursor } = args.data
-    delete args.data.cursor
-
-    const { data } = args.data
-    delete args.data.data
-
-    const inventoryUpdate = { inventory: { update: { cursor, data } } }
-    if (!cursor) delete inventoryUpdate.cursor
-    if (!data) delete inventoryUpdate.data
-
-    return prisma.mutation.updatePlayer(
-      {
-        where: {
-          id: playerId
-        },
-        data: {
-          ...args.data,
-          ...inventoryUpdate
-        }
-      },
-      info
-    )
-  },
-  updateBlock(parent, args, { prisma }, info) {
-    const { x, y, z, type, worldId } = args.data
-
-    const repr = Helpers.getBlockRepresentation(worldId, x, y, z)
-
-    return prisma.mutation.upsertBlock(
-      {
-        where: {
-          representation: repr
-        },
-        create: {
-          representation: repr,
-          type,
-          x,
-          y,
-          z,
-          world: {
-            connect: {
-              id: worldId
-            }
-          }
-        },
-        update: {
-          type
         }
       },
       info
@@ -349,7 +170,8 @@ const Mutation = {
 
           type = 'SERVER'
           const defaultFallback = cmdInfoArr[cmdInfoArr.length - 1]
-          if (defaultFallback) body = defaultFallback({ username, arg: args[index] })
+          if (defaultFallback)
+            body = defaultFallback({ username, arg: args[index] })
           else body = `Success on running command: /${args[0]}`
         }
 
@@ -384,4 +206,4 @@ const Mutation = {
   }
 }
 
-export { Mutation as default }
+export default WorldMutations
