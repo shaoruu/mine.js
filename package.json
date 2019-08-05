@@ -36,7 +36,6 @@
     "react-pannellum": "^0.1.6",
     "react-router-dom": "^5.0.1",
     "react-scripts": "3.0.1",
-    "redis": "^2.8.0",
     "skinview3d": "^1.2.0-alpha.1",
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0",
@@ -45,7 +44,6 @@
     "three": "^0.106.2",
     "tic": "^1.0.0",
     "tooloud": "^2.0.4",
-    "worker-threads-pool": "^2.0.0",
     "yup": "^0.27.0"
   },
   "scripts": {

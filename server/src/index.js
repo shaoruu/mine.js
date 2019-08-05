@@ -1,5 +1,5 @@
 import { resolvers } from './resolvers'
-import { prisma, socketIO, redisClient } from './lib/server'
+import { prisma, socketIO } from './lib/server'
 
 import debug from 'debug'
 import { GraphQLServer, PubSub } from 'graphql-yoga'
@@ -16,7 +16,6 @@ const server = new GraphQLServer({
       pubsub,
       prisma,
       socketIO,
-      redisClient,
       request
     }
   }
