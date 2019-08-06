@@ -4,22 +4,24 @@ Pull requests are always welcomed!
 
 ## UI
 
-- [ ] Add crosshair
+- [x] Add crosshair
 - [x] Better UI designs
 
 ## Technical
 
 - [x] Workerize chunk generation
+- [ ] Server side chunk generation
+- [ ] Smoother gameplay (stable)
 - [ ] Dockerize the entire project altogether
 
 ## Gameplay
 
-- [ ] Lighting
-- [ ] Chat system
-- [ ] Command system
+- [ ] Better lighting
+- [x] Chat system
+- [x] Command system
+- [ ] Block Breaking
 - [ ] Better terrain generation (caves)
 - [ ] Random structures (villages)
+- [ ] Multiplayer
 - [ ] Inventory system
-- [ ] Trivial things such as
-- [ ] Block breaking cooldowns
-- [ ] Special items (swords, pickaxes)
+- [ ] Special tools (swords, pickaxes)
