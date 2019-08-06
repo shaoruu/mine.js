@@ -116,10 +116,11 @@ class Game {
   }
 
   update = () => {
+    this.debug.tickStart()
     this.renderScene()
     this.player.update()
     this.world.update()
-    this.debug.update()
+    this.debug.tick()
   }
 
   onWindowResize = () => {
