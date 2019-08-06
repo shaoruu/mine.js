@@ -2,7 +2,7 @@
 
 MC.JS brings the best-selling PC game "Minecraft" into the web with the power of javascript.
 
-# Disclaimer
+### Disclaimer
 
 :pushpin: This project is a work in progress. There's still a lot of features waiting to be implemented, and the game is far from being the actual game.
 
@@ -16,17 +16,17 @@ These are some screenshots taken directly from the project.
 
 ## User Authentication
 
-![](https://i.imgur.com/1jwIc4x.jpg)
+![](https://i.imgur.com/7v5dasa.png)
 
-![](https://i.imgur.com/VKyEP2F.jpg)
+![](https://i.imgur.com/5yYMYGH.png)
 
-![](https://i.imgur.com/GUyan19.jpg)
+![](https://i.imgur.com/9Tr3GmL.png)
 
-![](https://i.imgur.com/u52JZ3n.jpg)
+![](https://i.imgur.com/vgpqSCV.png)
 
 ## Neatly Styled Game UI
 
-![](https://i.imgur.com/YoVA8P6.jpg)
+![](https://i.imgur.com/PoYFpdQ.jpg)
 
 ![](https://i.imgur.com/du58Ifa.png)
 
