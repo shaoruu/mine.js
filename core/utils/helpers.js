@@ -11,7 +11,7 @@ const LIQUID_BLOCKS = Config.block.liquid
 const PLANT_BLOCKS = Config.block.plant
 const PASSABLE_BLOCKS = Config.block.passable
 
-const projectTag = '[MinecraftJS]'
+const projectTag = '[MCJS]'
 
 class Helpers {
   static log = (message, pt = false) =>

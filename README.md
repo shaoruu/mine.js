@@ -1,6 +1,6 @@
-# MinecraftJS
+# MC.JS
 
-MinecraftJS brings the best-selling PC game "Minecraft" into the web with the power of javascript.
+MC.JS brings the best-selling PC game "Minecraft" into the web with the power of javascript.
 
 # Disclaimer
 
@@ -73,7 +73,7 @@ Before cloning the repo or doing anything, be sure to install [docker](https://w
 
 ```bash
 # Clone the repository
-git clone https://github.com/ian13456/minecraft.js.git
+git clone https://github.com/ian13456/mc.js.git
 
 # Download packages for both server and client
 yarn
@@ -93,8 +93,10 @@ After these commands, visit `localhost:3000`
 
 # Note
 
-:pushpin: MinecraftJS runs fastest on either Opera or Chrome.
+:pushpin: MC.JS runs fastest on either Opera or Chrome.
 
 # Sources
 
 - [Resource Pack Used](http://www.9minecraft.net/paper-cut-resource-pack/)
+- [Multiplayer Player Mesh](https://github.com/bs-community/skinview3d)
+- [Home Page Panorama Library](https://pannellum.org)

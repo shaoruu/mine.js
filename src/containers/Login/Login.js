@@ -7,7 +7,7 @@ import React, { useEffect } from 'react'
 
 const Login = ({ isAuth }) => {
   useEffect(() => {
-    document.title = 'MinecraftJS - Login'
+    document.title = 'MC.JS - Login'
   })
 
   if (isAuth) return <Redirect to="/home" />

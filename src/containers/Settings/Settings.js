@@ -7,13 +7,17 @@ import { withRouter } from 'react-router-dom'
 
 const Settings = ({ history }) => {
   useEffect(() => {
-    document.title = 'MinecraftJS - Settings'
+    document.title = 'MC.JS - Settings'
   })
 
   return (
     <div className={classes.wrapper}>
       <h1>Settings [COMING SOON]</h1>
-      <button type="button" className={sharedStyles.button} onClick={() => history.goBack()}>
+      <button
+        type="button"
+        className={sharedStyles.button}
+        onClick={() => history.goBack()}
+      >
         Go Back
       </button>
     </div>

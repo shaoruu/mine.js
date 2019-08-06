@@ -7,7 +7,7 @@ import { Redirect } from 'react-router-dom'
 
 class Logout extends Component {
   componentDidMount() {
-    document.title = 'MinecraftJS - Logout'
+    document.title = 'MC.JS - Logout'
   }
 
   render() {

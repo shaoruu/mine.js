@@ -22,7 +22,7 @@ const Worlds = ({ history, subpage }) => {
   }
 
   useEffect(() => {
-    document.title = 'MinecraftJS - Worlds'
+    document.title = 'MC.JS - Worlds'
 
     document.addEventListener('keydown', escHandler, false)
 
@@ -72,7 +72,7 @@ const Worlds = ({ history, subpage }) => {
                       className={sharedStyles.button}
                       disabled={!selectedIndex}
                       onClick={() => {
-                        history.push(`/game/minecraft/${selectedIndex}`)
+                        history.push(`/game/mcjs/${selectedIndex}`)
                       }}
                     >
                       Play Selected World

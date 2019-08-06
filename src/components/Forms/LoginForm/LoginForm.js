@@ -1,5 +1,5 @@
 import withAuthGuard from '../../../hoc/AuthGuard/AuthGuard'
-import logo from '../../../assets/gui/MinecraftJS_login.png'
+import logo from '../../../assets/gui/MCJS_login.png'
 import { LOGIN_MUTATION, LOGIN_SCHEMA } from '../../../lib/graphql'
 import { Hint } from '../../Utils'
 import { setCookie } from '../../../lib/utils'
@@ -62,7 +62,7 @@ const LoginForm = ({ client, history, loading: authHint }) => {
               isSubmitting
             }) => (
               <form onSubmit={handleSubmit} className={classes.wrapper}>
-                <img src={logo} alt="MinecraftJS" className={classes.logo} />
+                <img src={logo} alt="MCJS" className={classes.logo} />
                 <div className={classes.inputFields}>
                   <div className={classes.inputField}>
                     <h1>Email</h1>
@@ -98,7 +98,11 @@ const LoginForm = ({ client, history, loading: authHint }) => {
                         onBlur={handleBlur}
                         placeholder="Password"
                       />
-                      <span>{touched.password && !!errors.password ? errors.password : ''}</span>
+                      <span>
+                        {touched.password && !!errors.password
+                          ? errors.password
+                          : ''}
+                      </span>
                     </div>
                   </div>
 

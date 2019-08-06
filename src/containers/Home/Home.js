@@ -5,7 +5,7 @@
 
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 import { Hint } from '../../components/Utils'
-import lobby from '../../assets/gui/MinecraftJS_lobby.png'
+import lobby from '../../assets/gui/MCJS_lobby.png'
 import sharedStyles from '../sharedStyles.module.css'
 
 import classes from './Home.module.css'
@@ -15,7 +15,7 @@ import React, { useEffect } from 'react'
 
 const Home = ({ isAuth, history, username, loading }) => {
   useEffect(() => {
-    document.title = 'MinecraftJS - Home'
+    document.title = 'MC.JS - Home'
   })
 
   if (loading) return <Hint />
@@ -64,8 +64,8 @@ const Home = ({ isAuth, history, username, loading }) => {
   )
 
   return (
-    <div>
-      <img src={lobby} alt="MinecraftJS Lobby" className={classes.logo} />
+    <div className={classes.wrapper}>
+      <img src={lobby} alt="MC.JS Lobby" className={classes.logo} />
       {content}
     </div>
   )

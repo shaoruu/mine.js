@@ -1,5 +1,5 @@
 import sharedStyles from '../../../containers/sharedStyles.module.css'
-import logo from '../../../assets/gui/MinecraftJS_logo.png'
+import logo from '../../../assets/gui/MCJS_logo.png'
 
 import Pannellum from './Elements/Pannellum'
 import classes from './Start.module.css'
@@ -9,7 +9,13 @@ import { withRouter } from 'react-router-dom'
 
 const possiblePanoramas = 3
 
-const possibleMessages = ['magic!', 'browser!', 'beta!', 'ian13456!', 'FreshKoala!']
+const possibleMessages = [
+  'magic!',
+  'browser!',
+  'beta!',
+  'ian13456!',
+  'FreshKoala!'
+]
 
 const Start = withRouter(props => {
   const { history } = props
@@ -20,7 +26,7 @@ const Start = withRouter(props => {
   const panoramaArray = []
 
   useEffect(() => {
-    document.title = 'MinecraftJS - Start'
+    document.title = 'MC.JS - Start'
 
     setTimeout(() => (node.current.style.opacity = '1'), 100)
   })
@@ -28,8 +34,10 @@ const Start = withRouter(props => {
   const panoramaIndex = Math.floor(Math.random() * possiblePanoramas)
 
   for (let i = 0; i < 6; i++)
-    // eslint-disable-next-line global-require, import/no-dynamic-require
-    panoramaArray.push(require(`../../../assets/gui/panoramas/${panoramaIndex}/panorama${i}.png`))
+    panoramaArray.push(
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      require(`../../../assets/gui/panoramas/${panoramaIndex}/panorama${i}.png`)
+    )
 
   return (
     <div ref={node} className={classes.wrapper}>
@@ -45,9 +53,11 @@ const Start = withRouter(props => {
         className={classes.panorama}
       />
       <div className={classes.logoWrapper}>
-        <img src={logo} alt="MinecraftJS" className={classes.logo} />
+        <img src={logo} alt="MCJS" className={classes.logo} />
         <span>
-          {possibleMessages[Math.floor(Math.random() * possibleMessages.length)].toUpperCase()}
+          {possibleMessages[
+            Math.floor(Math.random() * possibleMessages.length)
+          ].toUpperCase()}
         </span>
       </div>
       <button

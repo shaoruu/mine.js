@@ -1,4 +1,4 @@
-# MinecraftJS TODO
+# MCJS TODO
 
 Pull requests are always welcomed!
 

@@ -27,7 +27,7 @@
 .logoWrapper span {
   position: absolute;
   bottom: 35px;
-  right: -25px;
+  right: -55px;
   font-size: 23px;
   color: rgb(251, 255, 0);
   font-family: Minecraft;
@@ -40,7 +40,7 @@
 }
 
 .logo {
-  width: 650px;
+  width: 350px;
   z-index: 2;
 }
 

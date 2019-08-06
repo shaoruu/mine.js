@@ -14,10 +14,10 @@ const Multiplayer = ({ history, subpage }) => {
 
   useEffect(() => {
     if (!subpage) {
-      document.title = 'MinecraftJS - Connect'
+      document.title = 'MC.JS - Connect'
       input.current.focus()
     } else {
-      document.title = 'MinecraftJS - Server'
+      document.title = 'MC.JS - Server'
     }
   })
 
@@ -34,7 +34,10 @@ const Multiplayer = ({ history, subpage }) => {
           <p>World Address</p>
           <input value={address} type="text" onChange={onChange} ref={input} />
         </div>
-        <p className={classes.error} style={{ display: error ? 'block' : 'none' }}>
+        <p
+          className={classes.error}
+          style={{ display: error ? 'block' : 'none' }}
+        >
           {error}
         </p>
         <div className={classes.buttonWrapper}>
@@ -46,7 +49,7 @@ const Multiplayer = ({ history, subpage }) => {
               setError('World not found.')
               setAddress('')
             }}
-            onCompleted={() => history.push(`/game/minecraft/${address}`)}
+            onCompleted={() => history.push(`/game/mcjs/${address}`)}
           >
             {createPlayer => (
               <button
@@ -54,7 +57,9 @@ const Multiplayer = ({ history, subpage }) => {
                 className={sharedStyles.button}
                 disabled={!address}
                 onClick={() => {
-                  createPlayer({ variables: { worldId: address.trim(), gamemode: 'CREATIVE' } })
+                  createPlayer({
+                    variables: { worldId: address.trim(), gamemode: 'CREATIVE' }
+                  })
                 }}
               >
                 Join World

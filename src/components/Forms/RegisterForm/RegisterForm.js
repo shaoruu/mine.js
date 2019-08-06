@@ -1,5 +1,5 @@
 import withAuthGuard from '../../../hoc/AuthGuard/AuthGuard'
-import logo from '../../../assets/gui/MinecraftJS_login.png'
+import logo from '../../../assets/gui/MCJS_register.png'
 import { REGISTER_MUTATION, REGISTER_SCHEMA } from '../../../lib/graphql'
 import { Hint } from '../../Utils'
 import { removeAllCookies, setCookie } from '../../../lib/utils'
@@ -56,7 +56,7 @@ const RegisterForm = ({ client, loading: authHint, history }) => {
               isSubmitting
             }) => (
               <form onSubmit={handleSubmit} className={classes.wrapper}>
-                <img src={logo} alt="MinecraftJS" className={classes.logo} />
+                <img src={logo} alt="MCJS" className={classes.logo} />
 
                 <div className={classes.inputFields}>
                   <div className={classes.inputField}>
@@ -72,7 +72,9 @@ const RegisterForm = ({ client, loading: authHint, history }) => {
                         placeholder="Username"
                       />
                       <span>
-                        {(touched.username && errors.username ? errors.username : '') ||
+                        {(touched.username && errors.username
+                          ? errors.username
+                          : '') ||
                           (error && error.message.includes('name = username')
                             ? 'Username taken.'
                             : '')}
@@ -115,7 +117,11 @@ const RegisterForm = ({ client, loading: authHint, history }) => {
                         onBlur={handleBlur}
                         placeholder="Password"
                       />
-                      <span>{touched.password && errors.password ? errors.password : ''}</span>
+                      <span>
+                        {touched.password && errors.password
+                          ? errors.password
+                          : ''}
+                      </span>
                     </div>
                   </div>
 

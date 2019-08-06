@@ -41,7 +41,7 @@ function Debug(container, player, world) {
   const chunkXYZ = document.createElement('p')
   const days = document.createElement('p')
 
-  title.innerHTML = 'Minecraft JS (dev/beta/vanilla)'
+  title.innerHTML = 'MCJS (dev/beta/vanilla)'
   fps.innerHTML = '0 fps'
   xyz.innerHTML = 'XYZ: 0 / 0 / 0'
   blockXYZ.innerHTML = 'Block: 0 0 0'
@@ -146,8 +146,8 @@ Debug.prototype.update = function() {
   // prettier-ignore
   this.getDOM_chunkXYZ().innerHTML = `Chunk: ${playerChunk.x} ${playerChunk.y} ${playerChunk.z} in ${playerChunk.coordx} ${playerChunk.coordy} ${playerChunk.coordz}`
 
-  this.getDOM_FPS().innerHTML = `${newFPS} fps [${this.getMinFPS() || 0} - ${this.getMaxFPS() ||
-    0}]`
+  this.getDOM_FPS().innerHTML = `${newFPS} fps [${this.getMinFPS() ||
+    0} - ${this.getMaxFPS() || 0}]`
 
   const targetedTag = BlockDict[worldRef.getTargetBlockType()]
   if (targetedTag) this.getDOM_targetedBlock().innerHTML = targetedTag.tag

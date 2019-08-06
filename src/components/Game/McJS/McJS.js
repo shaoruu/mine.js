@@ -3,13 +3,13 @@ import { Hint } from '../../Utils'
 import sharedStyles from '../../../containers/sharedStyles.module.css'
 import crosshair from '../../../assets/gui/crosshair.png'
 
-import classes from './Minecraft.module.css'
+import classes from './McJS.module.css'
 
 import React, { useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import MinecraftJS from 'core/game'
+import McJS from 'core/game'
 import { useQuery, useApolloClient } from 'react-apollo-hooks'
 
 const GameWrapper = styled.div`
@@ -90,11 +90,11 @@ const Game = ({ id: worldId, username, history }) => {
   }
 
   useEffect(() => {
-    document.title = 'MinecraftJS'
+    document.title = 'MC.JS'
 
     if (loading || error) return
 
-    const game = new MinecraftJS(
+    const game = new McJS(
       worldData,
       username,
       container.current,

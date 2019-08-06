@@ -6,7 +6,7 @@ import React, { useEffect } from 'react'
 
 const Register = ({ isAuth }) => {
   useEffect(() => {
-    document.title = 'MinecraftJS - Register'
+    document.title = 'MC.JS - Register'
   })
 
   if (isAuth) return <Redirect to="/home" />

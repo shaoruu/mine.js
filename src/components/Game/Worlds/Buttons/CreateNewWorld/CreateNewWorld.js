@@ -18,11 +18,13 @@ const CreateNewWorld = withRouter(({ history }) => {
   const gamemodeDictionary = {
     SURVIVAL: {
       title: 'Survival',
-      description: 'Search for resources, crafting, gain levels, health and hunger'
+      description:
+        'Search for resources, crafting, gain levels, health and hunger'
     },
     CREATIVE: {
       title: 'Creative',
-      description: 'Unlimited resources, free flying and destroy blocks instantly'
+      description:
+        'Unlimited resources, free flying and destroy blocks instantly'
     }
   }
   const gamemodes = ['SURVIVAL', 'CREATIVE']
@@ -42,7 +44,7 @@ const CreateNewWorld = withRouter(({ history }) => {
           createWorld: { id }
         } = data
 
-        history.push(`/game/minecraft/${id}`)
+        history.push(`/game/mcjs/${id}`)
       }}
       // eslint-disable-next-line no-console
       onError={error => console.error(error)}
