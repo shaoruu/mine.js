@@ -6,6 +6,7 @@ Pull requests are always welcomed!
 
 - [x] Add crosshair
 - [x] Better UI designs
+- [ ] Logo
 
 ## Technical
 
