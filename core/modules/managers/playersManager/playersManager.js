@@ -7,6 +7,7 @@ function PlayersManager(scene) {
 
   this.getPlayers = () => players
   this.getScene = () => scene
+  this.getPlayerCount = () => Object.keys(players).length
 }
 
 PlayersManager.prototype.register = function(node) {
