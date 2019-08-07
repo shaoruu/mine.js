@@ -54,12 +54,6 @@ class ChunkManager {
       seed: this.seed,
       changedBlocks
     })
-
-    // this.workerManager.queueGeneralChunk({
-    //   cmd: 'GET_HIGHEST',
-    //   x: 0,
-    //   z: 0
-    // })
   }
 
   update = () => {
@@ -145,7 +139,11 @@ class ChunkManager {
 
     const [geoJSON, materials] = meshData
 
-    const mesh = Mesher.processMeshData(geoJSON, materials, this.resourceManager)
+    const mesh = Mesher.processMeshData(
+      geoJSON,
+      materials,
+      this.resourceManager
+    )
 
     if (!mesh) return
 
@@ -164,7 +162,11 @@ class ChunkManager {
   getChunkFromRep = rep => this.chunks[rep]
 
   getTypeAt = (x, y, z) => {
-    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({ x, y, z })
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({
+      x,
+      y,
+      z
+    })
     const { x: bx, y: by, z: bz } = Helpers.globalBlockToChunkBlock({ x, y, z })
     const chunk = this.getChunkFromCoords(coordx, coordy, coordz)
 

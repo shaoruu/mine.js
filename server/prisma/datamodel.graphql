@@ -36,6 +36,7 @@ type World {
   id: ID! @id
   name: String!
   seed: String!
+  type: WorldType!
   time: Float!
   timeChanger: Float
   days: Int!
@@ -76,4 +77,9 @@ enum MessageType {
   PLAYER
   SERVER
   INFO
+}
+
+enum WorldType {
+  DEFAULT
+  SUPERFLAT
 }

@@ -54,6 +54,7 @@ type World {
   id: ID!
   name: String!
   seed: String!
+  type: WorldType!
   time: Float!
   timeChanger: Float
   days: Int!
@@ -120,6 +121,7 @@ input CreateWorldInput {
   name: String!
   seed: String!
   gamemode: Gamemode!
+  type: WorldType!
 }
 
 input CreatePlayerInput {
@@ -188,6 +190,11 @@ enum MessageType {
   PLAYER
   SERVER
   INFO
+}
+
+enum WorldType {
+  DEFAULT
+  SUPERFLAT
 }
 
 type BlockSubscriptionPayload {

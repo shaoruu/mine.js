@@ -14,21 +14,28 @@ import { withRouter } from 'react-router-dom'
 import { Formik } from 'formik'
 import randomstring from 'randomstring'
 
-const CreateNewWorld = withRouter(({ history }) => {
-  const gamemodeDictionary = {
-    SURVIVAL: {
-      title: 'Survival',
-      description:
-        'Search for resources, crafting, gain levels, health and hunger'
-    },
-    CREATIVE: {
-      title: 'Creative',
-      description:
-        'Unlimited resources, free flying and destroy blocks instantly'
-    }
+const gamemodes = ['SURVIVAL', 'CREATIVE']
+const gamemodeDictionary = {
+  SURVIVAL: {
+    title: 'Survival',
+    description:
+      'Search for resources, crafting, gain levels, health and hunger'
+  },
+  CREATIVE: {
+    title: 'Creative',
+    description: 'Unlimited resources, free flying and destroy blocks instantly'
   }
-  const gamemodes = ['SURVIVAL', 'CREATIVE']
+}
+
+const worldTypes = ['DEFAULT', 'SUPERFLAT']
+const worldTypeDictionary = {
+  DEFAULT: 'Default',
+  SUPERFLAT: 'Superflat'
+}
+
+const CreateNewWorld = withRouter(({ history }) => {
   const [gamemode, setGamemode] = useState(0)
+  const [worldType, setWorldType] = useState(0)
 
   const worldNameInput = useRef()
 
@@ -54,14 +61,15 @@ const CreateNewWorld = withRouter(({ history }) => {
           <Hint text="Generating" />
         ) : (
           <Formik
-            initialValues={{ name: 'New World', seed: '' }}
+            initialValues={{ name: 'New World', seed: '', type: 'DEFAULT' }}
             validationSchema={CREATE_WORLD_SCHEMA}
             onSubmit={(values, { setSubmitting }) => {
               createWorld({
                 variables: {
                   name: values.name,
                   seed: values.seed ? values.seed : randomstring.generate(),
-                  gamemode: gamemodes[gamemode]
+                  gamemode: gamemodes[gamemode],
+                  type: worldTypes[worldType]
                 },
                 refetchQueries: [{ query: MY_WORLDS_QUERY }]
               })
@@ -119,18 +127,31 @@ const CreateNewWorld = withRouter(({ history }) => {
                     <p>Leave blank for random seed</p>
                   </div>
 
-                  <div className={classes.gamemode}>
+                  <div className={classes.buttonWrapper}>
                     <button
                       className={sharedStyles.button}
                       type="button"
-                      onClick={() => {
+                      onClick={() =>
                         setGamemode((gamemode + 1) % gamemodes.length)
-                      }}
+                      }
                     >
-                      Game Mode:
-                      {gamemodeDictionary[gamemodes[gamemode]].title}
+                      {`Game Mode: ${gamemodeDictionary[gamemodes[gamemode]].title}`}
                     </button>
                     <p>{gamemodeDictionary[gamemodes[gamemode]].description}</p>
+                  </div>
+
+                  <div className={classes.buttonWrapper}>
+                    <button
+                      className={sharedStyles.button}
+                      type="button"
+                      onClick={() =>
+                        setWorldType((worldType + 1) % worldTypes.length)
+                      }
+                    >
+                      {`World Type: ${
+                        worldTypeDictionary[worldTypes[worldType]]
+                      }`}
+                    </button>
                   </div>
 
                   <div className={classes.finalButts}>

@@ -16,18 +16,18 @@
   color: white;
 }
 
-.gamemode {
+.buttonWrapper {
   margin-top: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.gamemode button {
+.buttonWrapper button {
   width: 360px;
 }
 
-.gamemode p {
+.buttonWrapper p {
   margin-top: 10px;
   max-width: 400px;
   text-align: center;

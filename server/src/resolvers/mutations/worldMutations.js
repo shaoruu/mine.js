@@ -7,7 +7,7 @@ const WorldMutations = {
   async createWorld(parent, args, { prisma, request }, info) {
     const id = Helpers.getUserId(request)
     const {
-      data: { gamemode, name, seed }
+      data: { gamemode, name, seed, type }
     } = args
 
     // Check if user exists
@@ -23,6 +23,7 @@ const WorldMutations = {
           lastPlayed: new Date().toISOString(),
           name,
           seed,
+          type,
           time: 1200,
           days: 0
         }
