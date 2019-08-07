@@ -29,6 +29,12 @@ const resources = {
           transparent: false
         }
       },
+      7: {
+        top: require('../assets/blocks/bedrock.png'),
+        side: require('../assets/blocks/bedrock.png'),
+        bottom: require('../assets/blocks/bedrock.png'),
+        config: {}
+      },
       9: {
         top: require('../assets/blocks/water_still.png'),
         side: require('../assets/blocks/water_still.png'),

@@ -130,6 +130,12 @@ class Helpers {
     return generator.getBlockInfo(x, y, z, maxHeight)
   }
 
+  static getOffsets = (coordx, coordy, coordz) => [
+    coordx * SIZE - NEIGHBOR_WIDTH,
+    coordy * SIZE - NEIGHBOR_WIDTH,
+    coordz * SIZE - NEIGHBOR_WIDTH
+  ]
+
   /**
    * Rounding precision of position
    * @param { object } position - position to round contianing x, y and z.
@@ -180,6 +186,8 @@ class Helpers {
     Math.abs(float1 - float2) < epsilon
 
   static isString = test => typeof test === 'string'
+
+  static isType = type => Number.isInteger(type)
 
   static isTransparent = type => TRANSPARENT_BLOCKS.includes(type)
 

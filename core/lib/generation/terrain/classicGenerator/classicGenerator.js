@@ -1,6 +1,8 @@
 import Helpers from '../../../../utils/helpers'
 import Structures from '../../../../config/structures'
 import Config from '../../../../config/config'
+import { BLOCKS } from '../../../../config/blockDict'
+import BaseGenerator from '../baseGenerator/baseGenerator'
 
 import { Noise } from 'noisejs'
 import tooloud from 'tooloud'
@@ -11,10 +13,8 @@ const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
 const WORLD_CONFIGS = Config.world
 
 const {
-  waterLevel,
-  maxWorldHeight,
   generation: {
-    classicGeneration: { mountains }
+    classicGeneration: { waterLevel, maxWorldHeight, mountains }
   }
 } = WORLD_CONFIGS
 
@@ -34,29 +34,18 @@ const {
   types: { top, underTop, beach }
 } = mountains
 
-export default function ClassicGenerator(seed) {
-  /* -------------------------------------------------------------------------- */
-  /*                               INITIALIZATION                               */
-  /* -------------------------------------------------------------------------- */
-  const initSeed = s => {
-    let hash = 0
-    let chr
-    if (s.length === 0) return hash
+export default class ClassicGenerator extends BaseGenerator {
+  constructor(seed, changedBlocks) {
+    super(seed, changedBlocks)
 
-    for (let i = 0; i < s.length; i++) {
-      chr = seed.charCodeAt(i)
-      hash = (hash << 5) - hash + chr
-      hash |= 0
-    }
-
-    if (hash > 0 && hash < 1) hash *= 65536
-
-    hash = Math.floor(hash)
-
-    this.seed = hash
+    /* -------------------------------------------------------------------------- */
+    /*                               INITIALIZATION                               */
+    /* -------------------------------------------------------------------------- */
+    this.initNoises()
+    this.initMembers()
   }
 
-  const initNoises = () => {
+  initNoises = () => {
     this.noise = new Noise(this.seed)
 
     // BIOMES
@@ -64,7 +53,7 @@ export default function ClassicGenerator(seed) {
     this.temp = new Noise(this.seed / 2)
   }
 
-  const initMembers = () => {
+  initMembers = () => {
     this.maxHeights = {}
     this.trees = new Set()
     this.grasses = {}
@@ -73,27 +62,21 @@ export default function ClassicGenerator(seed) {
     this.grassNoise = tooloud.Perlin.create(this.seed)
   }
 
-  initSeed(seed)
-  initNoises()
-  initMembers()
-
-  /* -------------------------------------------------------------------------- */
-  /*                              HELPER FUNCTIONS                              */
-  /* -------------------------------------------------------------------------- */
-  const getNoise = (x, y, z) => this.octavePerlin3(x, y, z) - (y * 4) / scale
-
-  const isSolidAt = (x, y, z) => {
+  isSolidAt = (x, y, z) => {
     // TODO: Check cache first
-    return getNoise((x * scale) / 100, (y * scale) / 100, (z * scale) / 100) >= -0.2
+    return (
+      this.getNoise((x * scale) / 100, (y * scale) / 100, (z * scale) / 100) >=
+      -0.2
+    )
   }
 
-  const isSolidAtWithCB = (x, y, z) => {
-    const cb = this.changedBlocks[Helpers.get3DCoordsRep(x, y, z)]
-    if (cb) return !!cb
-    return isSolidAt(x, y, z)
+  isSolidAtWithCB = (x, y, z) => {
+    const cb = this.getCBAt(x, y, z)
+    if (Helpers.isType(cb)) return !!cb
+    return this.isSolidAt(x, y, z)
   }
 
-  const shouldPlantTree = (x, z, treeScopedMin, treeScopedScale) => {
+  shouldPlantTree = (x, z, treeScopedMin, treeScopedScale) => {
     const rep = Helpers.get2DCoordsRep(x, z)
 
     if (this.trees.has(rep)) return true
@@ -108,7 +91,7 @@ export default function ClassicGenerator(seed) {
     return shouldPlant
   }
 
-  const shouldPlantGrass = (x, z, grassScopedMin, grassScopedScale) => {
+  shouldPlantGrass = (x, z, grassScopedMin, grassScopedScale) => {
     const rep = Helpers.get2DCoordsRep(x, z)
 
     const noiseVal = Helpers.normalizeNoise(
@@ -125,134 +108,57 @@ export default function ClassicGenerator(seed) {
     return true
   }
 
-  /* -------------------------------------------------------------------------- */
-  /*                              MEMBER FUNCTIONS                              */
-  /* -------------------------------------------------------------------------- */
-
-  this.getGrassData = (x, z) => this.grasses[Helpers.get2DCoordsRep(x, z)] || null
-
-  this.getNaiveHighestBlock = (x, z) => {
-    let height = 0
-
-    for (let y = maxWorldHeight; y >= 0; y--) {
-      const isSolid = isSolidAt(x, y, z)
-
-      if (isSolid) height = y
-    }
-
-    const rep = Helpers.get2DCoordsRep(x, z)
-    this.maxHeights[rep] = height
-
-    return height
-  }
-
-  this.getHighestBlock = (x, z) => {
-    const rep = Helpers.get2DCoordsRep(x, z)
-    if (this.maxHeights[rep]) return this.maxHeights[rep]
-
-    let high = maxWorldHeight
-    let low = waterLevel
-    let middle = Math.floor((high + low) / 2)
-
-    while (low <= high) {
-      if (
-        isSolidAtWithCB(x, middle, z) &&
-        !isSolidAtWithCB(x, middle + 1, z) &&
-        !isSolidAtWithCB(x, middle + 2, z)
-      )
-        break
-      else if (!isSolidAtWithCB(x, middle, z)) high = middle - 1
-      else low = middle + 2
-
-      middle = Math.floor((high + low) / 2)
-    }
-
-    this.maxHeights[rep] = middle
-
-    return middle
-  }
-
-  this.octavePerlin3 = (x, y, z) => {
-    let total = 0
-    let frequency = 1
-    let amplitude = 1
-    let maxVal = 0
-
-    for (let i = 0; i < octaves; i++) {
-      total +=
-        this.noise.perlin3(x * frequency * scale, y * frequency * scale, z * frequency * scale) *
-        amplitude
-
-      maxVal += amplitude
-
-      amplitude *= persistance
-      frequency *= lacunarity
-    }
-
-    return (total / maxVal) * amplifier + heightOffset
-  }
-
-  this.registerCB = (changedBlocks = {}) => (this.changedBlocks = changedBlocks)
-
-  this.getBlockInfo = (x, y, z, maxHeight) => {
-    let blockId = 0
-    const cb = this.changedBlocks[Helpers.get3DCoordsRep(x, y, z)]
-
-    if (typeof cb === 'number') return cb
-
-    if (y > maxWorldHeight || y <= 0) blockId = 0
-    else {
-      const isSolid = isSolidAt(x, y, z)
-
-      if (isSolid) {
-        if (
-          y === waterLevel &&
-          !isSolidAt(x, y + 1, z) &&
-          (!isSolidAt(x, y, z - 1) ||
-            !isSolidAt(x - 1, y, z) ||
-            !isSolidAt(x + 1, y, z) ||
-            !isSolidAt(x, y, z + 1))
-        )
-          blockId = beach
-        else if (y === maxHeight) {
-          if (y < waterLevel) blockId = underTop
-          else blockId = top
-        } else if (y >= maxHeight - 3 && y < maxHeight) blockId = underTop
-        else blockId = 1
-      } else if (y <= waterLevel) blockId = 9
-    }
-
-    return blockId
-  }
-
-  this.setVoxelData = (voxelData, coordx, coordy, coordz) => {
-    const offsets = [
-      coordx * SIZE - NEIGHBOR_WIDTH,
-      coordy * SIZE - NEIGHBOR_WIDTH,
-      coordz * SIZE - NEIGHBOR_WIDTH
-    ]
+  setVoxelData = (voxelData, coordx, coordy, coordz) => {
+    const offsets = Helpers.getOffsets(coordx, coordy, coordz)
 
     // ACTUAL
     for (let x = offsets[0]; x < offsets[0] + SIZE + NEIGHBOR_WIDTH * 2; x++)
-      for (let z = offsets[2]; z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2; z++) {
+      for (
+        let z = offsets[2];
+        z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2;
+        z++
+      ) {
         const maxHeight = this.getHighestBlock(x, z)
-        for (let y = offsets[1]; y < offsets[1] + SIZE + NEIGHBOR_WIDTH * 2; y++) {
+        for (
+          let y = offsets[1];
+          y < offsets[1] + SIZE + NEIGHBOR_WIDTH * 2;
+          y++
+        ) {
           const blockType = this.getBlockInfo(x, y, z, maxHeight)
           const mappedCoords = Helpers.getRelativeCoords(x, y, z, offsets)
 
-          voxelData.set(mappedCoords.x, mappedCoords.z, mappedCoords.y, blockType)
+          voxelData.set(
+            mappedCoords.x,
+            mappedCoords.z,
+            mappedCoords.y,
+            blockType
+          )
         }
       }
 
     // TREES
     for (let x = offsets[0]; x < offsets[0] + SIZE + NEIGHBOR_WIDTH * 2; x++)
-      for (let z = offsets[2]; z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2; z++) {
+      for (
+        let z = offsets[2];
+        z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2;
+        z++
+      ) {
         const maxHeight = this.getHighestBlock(x, z)
 
-        const type = Helpers.getLoadedBlocks(x, maxHeight, z, voxelData, this, offsets)
+        const type = Helpers.getLoadedBlocks(
+          x,
+          maxHeight,
+          z,
+          voxelData,
+          this,
+          offsets
+        )
 
-        if ((type === 2 || type === 3) && this.getBlockInfo(x, maxHeight + 1, z, maxHeight) === 0) {
-          if (shouldPlantTree(x, z, treeMin, treeScale)) {
+        if (
+          (type === 2 || type === 3) &&
+          this.getBlockInfo(x, maxHeight + 1, z, maxHeight) === 0
+        ) {
+          if (this.shouldPlantTree(x, z, treeMin, treeScale)) {
             const { data } = STRUCTURES.BaseTree
 
             for (let b = 0; b < data.length; b++) {
@@ -264,11 +170,29 @@ export default function ClassicGenerator(seed) {
                 offsets
               )
 
-              if (Helpers.checkWithinChunk(mappedCoords.x, mappedCoords.y, mappedCoords.z))
-                if (override || voxelData.get(mappedCoords.x, mappedCoords.z, mappedCoords.y) === 0)
-                  voxelData.set(mappedCoords.x, mappedCoords.z, mappedCoords.y, treeB)
+              if (
+                Helpers.checkWithinChunk(
+                  mappedCoords.x,
+                  mappedCoords.y,
+                  mappedCoords.z
+                )
+              )
+                if (
+                  override ||
+                  voxelData.get(
+                    mappedCoords.x,
+                    mappedCoords.z,
+                    mappedCoords.y
+                  ) === 0
+                )
+                  voxelData.set(
+                    mappedCoords.x,
+                    mappedCoords.z,
+                    mappedCoords.y,
+                    treeB
+                  )
             }
-          } else if (shouldPlantGrass(x, z, grassMin, grassScale)) {
+          } else if (this.shouldPlantGrass(x, z, grassMin, grassScale)) {
             const grassPos = { x, y: maxHeight + 1, z }
             const mappedCoords = Helpers.getRelativeCoords(
               grassPos.x,
@@ -277,10 +201,118 @@ export default function ClassicGenerator(seed) {
               offsets
             )
 
-            if (Helpers.checkWithinChunk(mappedCoords.x, mappedCoords.y, mappedCoords.z))
+            if (
+              Helpers.checkWithinChunk(
+                mappedCoords.x,
+                mappedCoords.y,
+                mappedCoords.z
+              )
+            )
               voxelData.set(mappedCoords.x, mappedCoords.z, mappedCoords.y, 31)
           }
         }
       }
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   GETTERS                                  */
+  /* -------------------------------------------------------------------------- */
+  getOctavePerlin3 = (x, y, z) => {
+    let total = 0
+    let frequency = 1
+    let amplitude = 1
+    let maxVal = 0
+
+    for (let i = 0; i < octaves; i++) {
+      total +=
+        this.noise.perlin3(
+          x * frequency * scale,
+          y * frequency * scale,
+          z * frequency * scale
+        ) * amplitude
+
+      maxVal += amplitude
+
+      amplitude *= persistance
+      frequency *= lacunarity
+    }
+
+    return (total / maxVal) * amplifier + heightOffset
+  }
+
+  getNoise = (x, y, z) => this.getOctavePerlin3(x, y, z) - (y * 4) / scale
+
+  getGrassData = (x, z) => this.grasses[Helpers.get2DCoordsRep(x, z)] || null
+
+  getNaiveHighestBlock = (x, z) => {
+    let height = 0
+
+    for (let y = maxWorldHeight; y >= 0; y--) {
+      const isSolid = this.isSolidAt(x, y, z)
+
+      if (isSolid) height = y
+    }
+
+    const rep = Helpers.get2DCoordsRep(x, z)
+    this.maxHeights[rep] = height
+
+    return height
+  }
+
+  getHighestBlock = (x, z) => {
+    const rep = Helpers.get2DCoordsRep(x, z)
+    if (this.maxHeights[rep]) return this.maxHeights[rep]
+
+    let high = maxWorldHeight
+    let low = waterLevel
+    let middle = Math.floor((high + low) / 2)
+
+    while (low <= high) {
+      if (
+        this.isSolidAtWithCB(x, middle, z) &&
+        !this.isSolidAtWithCB(x, middle + 1, z) &&
+        !this.isSolidAtWithCB(x, middle + 2, z)
+      )
+        break
+      else if (!this.isSolidAtWithCB(x, middle, z)) high = middle - 1
+      else low = middle + 2
+
+      middle = Math.floor((high + low) / 2)
+    }
+
+    this.maxHeights[rep] = middle
+
+    return middle
+  }
+
+  getBlockInfo = (x, y, z, maxHeight) => {
+    let blockId = BLOCKS.EMPTY
+    const cb = this.getCBAt(x, y, z)
+
+    if (Helpers.isType(cb)) return cb
+
+    if (y === 0) blockId = BLOCKS.BEDROCK
+    else if (y <= maxHeight && y > 0) {
+      const isSolid = this.isSolidAt(x, y, z)
+
+      if (isSolid) {
+        if (
+          y === waterLevel &&
+          !this.isSolidAt(x, y + 1, z) &&
+          (!this.isSolidAt(x, y, z - 1) ||
+            !this.isSolidAt(x - 1, y, z) ||
+            !this.isSolidAt(x + 1, y, z) ||
+            !this.isSolidAt(x, y, z + 1))
+        )
+          blockId = beach
+        else if (y === maxHeight) {
+          if (y < waterLevel) blockId = underTop
+          else blockId = top
+        } else if (y >= maxHeight - 3 && y < maxHeight) blockId = underTop
+        else blockId = BLOCKS.STONE
+      } else if (y <= waterLevel) blockId = BLOCKS.WATER
+    }
+
+    return blockId
   }
 }
