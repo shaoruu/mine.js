@@ -1,4 +1,7 @@
-import { ClassicGenerator } from '../../../lib/generation/terrain'
+import {
+  ClassicGenerator,
+  SuperflatGenerator
+} from '../../../lib/generation/terrain'
 import GeometryManager from '../resourceManager/geometryManager'
 import LightingManager from '../lightingManager/lightingManager'
 import Config from '../../../config/config'
@@ -18,10 +21,16 @@ self.onmessage = function(e) {
 
   switch (cmd) {
     case 'BOOT': {
-      const { seed, changedBlocks } = e.data.config
+      const { seed, type, changedBlocks } = e.data.config
 
-      self.generator = new ClassicGenerator(seed)
-      self.generator.registerCB(changedBlocks)
+      switch (type) {
+        case 'SUPERFLAT':
+          self.generator = new SuperflatGenerator(seed, changedBlocks)
+          break
+        default:
+          self.generator = new ClassicGenerator(seed, changedBlocks)
+          break
+      }
 
       self.geometryManager = new GeometryManager()
       self.geometryManager.load()
@@ -58,7 +67,12 @@ self.onmessage = function(e) {
         SIZE + NEIGHBOR_WIDTH * 2
       ])
 
-      const lighting = ndarray(new Uint8Array(SIZE ** 3 * 6), [SIZE, SIZE, SIZE, 6])
+      const lighting = ndarray(new Uint8Array(SIZE ** 3 * 6), [
+        SIZE,
+        SIZE,
+        SIZE,
+        6
+      ])
 
       const smoothLighting = ndarray(new Uint8Array(SIZE ** 3 * 6 * 3 * 3), [
         SIZE,
@@ -70,9 +84,20 @@ self.onmessage = function(e) {
       ])
 
       self.generator.setVoxelData(blocks, coordx, coordy, coordz)
-      self.lightingManager.setLightingData(lighting, smoothLighting, blocks, coordx, coordy, coordz)
+      self.lightingManager.setLightingData(
+        lighting,
+        smoothLighting,
+        blocks,
+        coordx,
+        coordy,
+        coordz
+      )
 
-      const dims = [SIZE + NEIGHBOR_WIDTH * 2, SIZE + NEIGHBOR_WIDTH * 2, SIZE + NEIGHBOR_WIDTH * 2]
+      const dims = [
+        SIZE + NEIGHBOR_WIDTH * 2,
+        SIZE + NEIGHBOR_WIDTH * 2,
+        SIZE + NEIGHBOR_WIDTH * 2
+      ]
 
       if (blocks.data.find(ele => ele)) {
         const planes = Mesher.calcPlanes(

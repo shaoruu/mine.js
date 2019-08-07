@@ -44,6 +44,7 @@ class World extends Stateful {
     this.chunkManager = new ChunkManager(
       scene,
       seed,
+      type,
       this.resourceManager,
       this.workerManager,
       changedBlocks

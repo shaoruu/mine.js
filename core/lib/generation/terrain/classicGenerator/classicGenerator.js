@@ -292,7 +292,7 @@ export default class ClassicGenerator extends BaseGenerator {
     if (Helpers.isType(cb)) return cb
 
     if (y === 0) blockId = BLOCKS.BEDROCK
-    else if (y <= maxHeight && y > 0) {
+    else if (y <= maxWorldHeight && y > 0) {
       const isSolid = this.isSolidAt(x, y, z)
 
       if (isSolid) {

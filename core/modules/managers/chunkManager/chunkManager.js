@@ -12,9 +12,17 @@ const HORZ_D = Config.player.render.horzD
 const VERT_D = Config.player.render.vertD
 
 class ChunkManager {
-  constructor(scene, seed, resourceManager, workerManager, changedBlocks) {
+  constructor(
+    scene,
+    seed,
+    type,
+    resourceManager,
+    workerManager,
+    changedBlocks
+  ) {
     this.scene = scene
     this.seed = seed
+    this.type = type
 
     this.resourceManager = resourceManager
     this.workerManager = workerManager
@@ -52,6 +60,7 @@ class ChunkManager {
     /** WORKER */
     this.workerManager.initChunkPool(ChunkGenWorker, this, {
       seed: this.seed,
+      type: this.type,
       changedBlocks
     })
   }

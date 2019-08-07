@@ -28,6 +28,8 @@ export default class SuperFlatGenerator extends BaseGenerator {
 
   initMembers = () => {}
 
+  getHighestBlock = () => maxHeight
+
   setVoxelData = (voxelData, coordx, coordy, coordz) => {
     const offsets = Helpers.getOffsets(coordx, coordy, coordz)
 
@@ -39,8 +41,15 @@ export default class SuperFlatGenerator extends BaseGenerator {
           y < offsets[1] + SIZE + NEIGHBOR_WIDTH * 2;
           y++
         ) {
-          const type = this.getBlockInfo(x, y, z)
-          voxelData.set(x, z, y, type)
+          const blockType = this.getBlockInfo(x, y, z)
+          const mappedCoords = Helpers.getRelativeCoords(x, y, z, offsets)
+
+          voxelData.set(
+            mappedCoords.x,
+            mappedCoords.z,
+            mappedCoords.y,
+            blockType
+          )
         }
   }
 
