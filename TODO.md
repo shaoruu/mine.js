@@ -11,18 +11,27 @@ Pull requests are always welcomed!
 ## Technical
 
 - [x] Workerize chunk generation
-- [ ] Server side chunk generation
-- [ ] Smoother gameplay (stable)
+- [ ] Server side chunk validation
+- [ ] Smoother gameplay (optimizations)
 - [ ] Dockerize the entire project altogether
 
 ## Gameplay
 
+- [ ] User settings
+- [ ] Player settings
 - [ ] Better lighting
+- [ ] Better player physics
+  - Current physics system still isn't based on frames.
 - [x] Chat system
 - [x] Command system
 - [ ] Block Breaking
-- [ ] Better terrain generation (caves)
+- [ ] Better terrain generation
+  - [ ] biomes
+  - [ ] caves
 - [ ] Random structures (villages)
 - [ ] Multiplayer
 - [ ] Inventory system
-- [ ] Special tools (swords, pickaxes)
+- [ ] Tools
+- [ ] Entities
+  - [ ] Animals
+  - [ ] Hostile Mobs
