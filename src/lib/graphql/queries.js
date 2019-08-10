@@ -78,3 +78,13 @@ export const WORLD_QUERY = gql`
     }
   }
 `
+
+export const MY_SETTINGS = gql`
+  query Me {
+    me {
+      settings {
+        renderDistance
+      }
+    }
+  }
+`
