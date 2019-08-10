@@ -72,6 +72,26 @@ const UserMutations = {
       },
       info
     )
+  },
+  updateSettings(
+    parent,
+    {
+      data: { id, ...settings }
+    },
+    { prisma },
+    info
+  ) {
+    return prisma.mutation.updateSettings(
+      {
+        data: {
+          ...settings
+        },
+        where: {
+          id
+        }
+      },
+      info
+    )
   }
 }
 

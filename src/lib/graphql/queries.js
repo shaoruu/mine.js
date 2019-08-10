@@ -83,6 +83,7 @@ export const MY_SETTINGS = gql`
   query Me {
     me {
       settings {
+        id
         renderDistance
       }
     }

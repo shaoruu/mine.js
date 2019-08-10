@@ -16,9 +16,6 @@ const tic = ticModule()
 
 const SIZE = Config.chunk.size
 const DIMENSION = Config.block.dimension
-const HORZ_D = Config.player.render.horzD
-const VERT_D = Config.player.render.vertD
-const WORLD_SIZE = (HORZ_D > VERT_D ? HORZ_D : VERT_D) * SIZE * DIMENSION * 2
 const MAX_SUN_INTENSITY = Config.lights.sunlight.maxIntensity
 const MIN_SUN_INTENSITY = Config.lights.sunlight.minIntensity
 
@@ -29,6 +26,8 @@ function Sky(scene, world, opts) {
   this.prevTime = performance.now()
 
   this.getWorld = () => world
+  this.getWorldSize = () =>
+    world.data.user.settings.renderDistance * SIZE * DIMENSION * 2
   this.getScene = () => scene
 }
 
@@ -64,7 +63,14 @@ Sky.prototype.createBox = function() {
     side: THREE.BackSide,
     fog: false
   })
-  this.outer = new THREE.Mesh(new THREE.BoxBufferGeometry(WORLD_SIZE, WORLD_SIZE, WORLD_SIZE), mat)
+  this.outer = new THREE.Mesh(
+    new THREE.BoxBufferGeometry(
+      this.getWorldSize(),
+      this.getWorldSize(),
+      this.getWorldSize()
+    ),
+    mat
+  )
   sceneRef.add(this.outer)
   this.outer.name = 'outer-sky'
 
@@ -75,7 +81,11 @@ Sky.prototype.createBox = function() {
   const materials = []
   for (let i = 0; i < 6; i++) materials.push(this.createCanvas())
   this.inner = new THREE.Mesh(
-    new THREE.BoxBufferGeometry(WORLD_SIZE - 10, WORLD_SIZE - 10, WORLD_SIZE - 10),
+    new THREE.BoxBufferGeometry(
+      this.getWorldSize() - 10,
+      this.getWorldSize() - 10,
+      this.getWorldSize() - 10
+    ),
     materials
   )
   sceneRef.add(this.inner)
@@ -87,6 +97,17 @@ Sky.prototype.createLights = function() {
   this.sunlight = new THREE.AmbientLight(0xffffff, 0.5)
   this.sunlight.visible = true
   this.getScene().add(this.sunlight)
+}
+
+Sky.prototype.init = function() {
+  // add a sun on the bottom
+  this.paint('bottom', this.sun)
+  // add some stars
+  this.paint(['top', 'left', 'right', 'front', 'back'], this.stars, 500)
+  // add full moon to the top
+  this.paint('top', this.moon, 0)
+  // no sunlight at startup
+  this.sunlight.intensity = 0
 }
 
 Sky.prototype.tick = function(dt, fastForward = false) {
@@ -107,7 +128,6 @@ Sky.prototype.tick = function(dt, fastForward = false) {
     this.outer.position.copy(pos)
     this.inner.position.copy(pos)
   }
-
   this.time += this.speed
 
   if (this.time > 2400) this.time = 0
@@ -137,7 +157,8 @@ Sky.prototype.colorFunc = function(end, time) {
     this.outer.material.color.setHSL(color.h, color.s, color.l)
     this.getScene().background.setHSL(color.h, color.s, color.l)
     // this.sunlight.color.setHSL(color.h, color.s, color.l)
-    if (this.getScene().fog) this.getScene().fog.color.setHSL(color.h, color.s, color.l)
+    if (this.getScene().fog)
+      this.getScene().fog.color.setHSL(color.h, color.s, color.l)
     if (dt >= 1) this.colorInterval()
     i += this.speed
   }, this.speed)
@@ -195,16 +216,6 @@ Sky.prototype.default = {
     1600: { color: { h: 26 / 360, s: 0.3, l: 0.5 } },
     1800: { color: { h: 230 / 360, s: 0.3, l: 0 } }
   },
-  init() {
-    // add a sun on the bottom
-    this.paint('bottom', this.sun)
-    // add some stars
-    this.paint(['top', 'left', 'right', 'front', 'back'], this.stars, 500)
-    // add full moon to the top
-    this.paint('top', this.moon, 0)
-    // no sunlight at startup
-    this.sunlight.intensity = 0
-  },
   day: 0,
   moonCycle: 29.5305882,
   until: false,
@@ -238,7 +249,11 @@ Sky.prototype.fn = function(time, fastForward) {
   // change moon phase
   if (time === 1200) {
     this.paint('top', this.clear)
-    this.paint('top', this.moon, Math.floor(my.day % my.moonCycle) / my.moonCycle)
+    this.paint(
+      'top',
+      this.moon,
+      Math.floor(my.day % my.moonCycle) / my.moonCycle
+    )
     this.paint('top', this.stars, 500)
   }
 
@@ -344,6 +359,7 @@ export default function(world, scene, opts) {
   const sky = new Sky(world, scene, opts || {})
   sky.createBox()
   sky.createLights()
+  sky.init()
   return function(time, days) {
     // move to the specific time of the day
     sky.setTime(time)

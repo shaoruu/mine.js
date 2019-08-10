@@ -1,16 +1,19 @@
 import sharedStyles from '../../../containers/sharedStyles.module.css'
 import { Slider, Hint } from '../../Utils'
-import { MY_SETTINGS } from '../../../lib/graphql'
+import { MY_SETTINGS, UPDATE_SETTINGS_MUTATION } from '../../../lib/graphql'
 
 import classes from './Options.module.css'
 
 import React, { useEffect, useState } from 'react'
 import { withRouter } from 'react-router-dom'
-import { useQuery } from 'react-apollo-hooks'
+import { useQuery, useApolloClient } from 'react-apollo-hooks'
 
 const Options = ({ history }) => {
   const [renderDistance, setRenderDistance] = useState(0)
-  const { data, error, loading } = useQuery(MY_SETTINGS)
+  const { data, error, loading } = useQuery(MY_SETTINGS, {
+    fetchPolicy: 'network-only'
+  })
+  const client = useApolloClient()
 
   useEffect(() => {
     document.title = 'MC.JS - Options'
@@ -37,6 +40,7 @@ const Options = ({ history }) => {
       <h1 className={classes.title}>Options</h1>
       <div className={classes.optionsWrapper}>
         <Slider
+          className={classes.slider}
           value={renderDistance}
           onChange={handleRenderDistance}
           min="1"
@@ -45,19 +49,25 @@ const Options = ({ history }) => {
           text="Render Distance"
           unit="chunk"
         />
+        <Hint
+          text="More settings coming."
+          style={{ fontSize: 10, color: 'gray' }}
+        />
       </div>
-      <Hint
-        text="More settings coming."
-        style={{ fontSize: 10, color: 'gray' }}
-      />
       <button
         type="button"
         className={sharedStyles.button}
         onClick={() => {
-          // client.mutate({
-          //   mutation:
-          // })
-          history.goBack()
+          const settings = { renderDistance: Math.round(renderDistance) }
+          client
+            .mutate({
+              mutation: UPDATE_SETTINGS_MUTATION,
+              variables: {
+                id: data.me.settings.id,
+                ...settings
+              }
+            })
+            .then(() => history.goBack())
         }}
       >
         Done

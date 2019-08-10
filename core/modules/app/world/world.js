@@ -29,7 +29,8 @@ class World extends Stateful {
       time,
       days,
       y: playerData.y,
-      playerId: playerData.id
+      playerId: playerData.id,
+      user: playerData.user
     }
 
     this.scene = scene
@@ -43,8 +44,7 @@ class World extends Stateful {
     this.playersManager = new PlayersManager(scene)
     this.chunkManager = new ChunkManager(
       scene,
-      seed,
-      type,
+      this,
       this.resourceManager,
       this.workerManager,
       changedBlocks

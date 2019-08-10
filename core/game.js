@@ -20,8 +20,6 @@ const BACKGROUND_CONFIG = Config.scene.background
 const FOG_CONFIG = Config.scene.fog
 const DIMENSION = Config.block.dimension
 const SIZE = Config.chunk.size
-const HORZ_D = Config.player.render.horzD
-const VERT_D = Config.player.render.vertD
 
 class Game {
   constructor(
@@ -37,6 +35,7 @@ class Game {
     const { world } = data
 
     const playerData = world.players.find(ele => ele.user.username === username)
+    const RENDER_D = playerData.user.settings.renderDistance
 
     /** LOCAL DATA SAVE */
     this.data = {
@@ -54,14 +53,14 @@ class Game {
     this.scene.fog = new THREE.Fog(
       FOG_CONFIG.color,
       FOG_CONFIG.near,
-      (HORZ_D > VERT_D ? VERT_D : HORZ_D) * SIZE * DIMENSION * 8
+      RENDER_D * SIZE * DIMENSION * 8
     )
 
     /** THREE RENDERER */
     this.renderer = new Renderer(this.scene, canvas)
 
     /** THREE CAMERA */
-    this.camera = new Camera(this.renderer.threeRenderer)
+    this.camera = new Camera(this.renderer.threeRenderer, RENDER_D)
 
     /** GAME COMPONENTS */
     this.world = new World(
@@ -70,10 +69,7 @@ class Game {
       apolloClient,
       this.ioClient,
       container,
-      {
-        y: playerData.y,
-        id: playerData.id
-      }
+      playerData
     )
     this.player = new Player(
       apolloClient,

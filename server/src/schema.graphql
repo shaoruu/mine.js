@@ -11,6 +11,7 @@ type Mutation {
   login(data: LoginUserInput!): AuthPayload!
   deleteUser: User!
   updateUser(data: UpdateUserInput!): User!
+  updateSettings(data: UpdateSettingsInput!): Settings!
 
   # WORLD
   createWorld(data: CreateWorldInput!): World!
@@ -140,6 +141,11 @@ input UpdateWorldInput {
   name: String
   time: Float
   days: Int
+}
+
+input UpdateSettingsInput {
+  id: ID!
+  renderDistance: Int
 }
 
 input UpdatePlayerInput {
