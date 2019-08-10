@@ -87,6 +87,7 @@ type Player {
 }
 
 type Settings {
+  id: ID!
   renderDistance: Int!
 }
 

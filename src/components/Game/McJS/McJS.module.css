@@ -56,6 +56,24 @@
   margin: 10px;
 }
 
+.moreOptionsWrapper {
+  display: flex;
+  flex-direction: row;
+  width: 400px;
+}
+
+.optionsGroup {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.optionsGroup button {
+  width: 190px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .world_not_found {
   display: flex;
   flex-direction: column;
