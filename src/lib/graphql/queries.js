@@ -59,6 +59,10 @@ export const WORLD_QUERY = gql`
         gamemode
         user {
           username
+          settings {
+            id
+            renderDistance
+          }
         }
         lastLogin
         x

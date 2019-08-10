@@ -8,7 +8,12 @@ const UserMutations = {
     const user = await prisma.mutation.createUser({
       data: {
         ...args.data,
-        password
+        password,
+        settings: {
+          create: {
+            renderDistance: 1
+          }
+        }
       }
     })
 

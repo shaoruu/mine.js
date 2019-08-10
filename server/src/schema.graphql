@@ -46,6 +46,7 @@ type User {
   email: String!
   password: String!
   worlds: [World!]!
+  settings: Settings!
   updatedAt: String!
   createdAt: String!
 }
@@ -83,6 +84,10 @@ type Player {
   dirx: Float!
   diry: Float!
   inventory: Inventory!
+}
+
+type Settings {
+  renderDistance: Int!
 }
 
 type Block {
