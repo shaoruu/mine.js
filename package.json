@@ -25,6 +25,7 @@
     "jsonwebtoken": "^8.5.0",
     "ndarray": "^1.0.18",
     "noisejs": "^2.1.0",
+    "pluralize": "^8.0.0",
     "prisma-binding": "^2.3.6",
     "prop-types": "^15.7.2",
     "randomstring": "^1.1.5",

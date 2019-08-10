@@ -3,6 +3,7 @@ type User {
   username: String! @unique
   email: String! @unique
   password: String!
+  settings: Settings!
   worlds: [World!]!
   updatedAt: DateTime! @updatedAt
   createdAt: DateTime! @createdAt
@@ -30,6 +31,11 @@ type Player {
   diry: Float!
   inventory: Inventory!
     @relation(link: INLINE, name: "InventoryToPlayer", onDelete: CASCADE)
+}
+
+type Settings {
+  id: ID! @id
+  renderDistance: Int! @default(value: 1)
 }
 
 type World {

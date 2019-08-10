@@ -122,10 +122,6 @@ const Config = {
       posY: 4.49,
       posZ: 5.53
     },
-    render: {
-      horzD: 2,
-      vertD: 1
-    },
     reachDst: 7,
     headBodyDeg: Math.PI / 4
   },

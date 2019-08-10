@@ -8,7 +8,12 @@ const UserMutations = {
     const user = await prisma.mutation.createUser({
       data: {
         ...args.data,
-        password
+        password,
+        settings: {
+          create: {
+            renderDistance: 1
+          }
+        }
       }
     })
 
@@ -64,6 +69,26 @@ const UserMutations = {
           id: userId
         },
         data: args.data
+      },
+      info
+    )
+  },
+  updateSettings(
+    parent,
+    {
+      data: { id, ...settings }
+    },
+    { prisma },
+    info
+  ) {
+    return prisma.mutation.updateSettings(
+      {
+        data: {
+          ...settings
+        },
+        where: {
+          id
+        }
       },
       info
     )

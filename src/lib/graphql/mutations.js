@@ -22,6 +22,15 @@ export const LOGIN_MUTATION = gql`
   }
 `
 
+export const UPDATE_SETTINGS_MUTATION = gql`
+  mutation UpdateSettings($id: ID!, $renderDistance: Int) {
+    updateSettings(data: { id: $id, renderDistance: $renderDistance }) {
+      id
+      renderDistance
+    }
+  }
+`
+
 export const CREATE_WORLD_MUTATION = gql`
   mutation CreateWorld(
     $name: String!

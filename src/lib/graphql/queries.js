@@ -59,6 +59,10 @@ export const WORLD_QUERY = gql`
         gamemode
         user {
           username
+          settings {
+            id
+            renderDistance
+          }
         }
         lastLogin
         x
@@ -70,6 +74,17 @@ export const WORLD_QUERY = gql`
           cursor
           data
         }
+      }
+    }
+  }
+`
+
+export const MY_SETTINGS = gql`
+  query Me {
+    me {
+      settings {
+        id
+        renderDistance
       }
     }
   }

@@ -8,45 +8,8 @@ import classes from './McJS.module.css'
 import React, { useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
 import PropTypes from 'prop-types'
-import styled from 'styled-components'
 import McJS from 'core/game'
 import { useQuery, useApolloClient } from 'react-apollo-hooks'
-
-const GameWrapper = styled.div`
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-`
-
-const Blocker = styled.div`
-  display: flex;
-  position: absolute;
-  z-index: 5;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
-`
-
-const MainCanvas = styled.canvas`
-  position: absolute;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-`
-
-const Crosshair = styled.img`
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  width: 2vh;
-  height: 2vh;
-  transform: translate(-50%, -50%);
-  user-select: none;
-`
 
 const Game = ({ id: worldId, username, history }) => {
   const blocker = useRef(null)
@@ -129,18 +92,29 @@ const Game = ({ id: worldId, username, history }) => {
     )
 
   return (
-    <GameWrapper ref={container}>
-      <MainCanvas ref={canvas} />
-      <Crosshair src={crosshair} alt="+" />
-      <Blocker ref={blocker}>
+    <div className={classes.wrapper} ref={container}>
+      <canvas className={classes.canvas} ref={canvas} />
+      <img className={classes.crosshair} src={crosshair} alt="+" />
+      <div className={classes.blocker} ref={blocker}>
         <h1 className={classes.title}>Game Menu</h1>
         <div className={classes.menu}>
           <button type="button" className={sharedStyles.button} ref={button}>
             Back to Game
           </button>
-          <button type="button" className={sharedStyles.button}>
-            Get world URL
-          </button>
+          <div className={classes.moreOptionsWrapper}>
+            <div className={classes.optionsGroup}>
+              <button
+                type="button"
+                className={sharedStyles.button}
+                onClick={() => history.push('/game/options')}
+              >
+                Options
+              </button>
+              <button type="button" className={sharedStyles.button}>
+                Get world URL
+              </button>
+            </div>
+          </div>
           <button
             type="button"
             className={sharedStyles.button}
@@ -149,8 +123,8 @@ const Game = ({ id: worldId, username, history }) => {
             Save and Quit to Title
           </button>
         </div>
-      </Blocker>
-    </GameWrapper>
+      </div>
+    </div>
   )
 }
 
