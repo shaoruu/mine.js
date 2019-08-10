@@ -43,8 +43,8 @@ const Options = ({ history }) => {
           className={classes.slider}
           value={renderDistance}
           onChange={handleRenderDistance}
-          min="1"
-          max="5"
+          min="2"
+          max="6"
           step="0.1"
           text="Render Distance"
           unit="chunk"

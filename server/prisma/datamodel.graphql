@@ -35,7 +35,7 @@ type Player {
 
 type Settings {
   id: ID! @id
-  renderDistance: Int! @default(value: 1)
+  renderDistance: Int! @default(value: 2)
 }
 
 type World {

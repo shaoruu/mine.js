@@ -11,7 +11,7 @@ const UserMutations = {
         password,
         settings: {
           create: {
-            renderDistance: 1
+            renderDistance: 2
           }
         }
       }

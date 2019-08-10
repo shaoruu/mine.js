@@ -72,7 +72,7 @@ class ChunkManager {
 
     for (let x = coordx - RENDER_D; x <= coordx + RENDER_D; x++) {
       for (let z = coordz - RENDER_D; z <= coordz + RENDER_D; z++) {
-        for (let y = coordy - RENDER_D; y <= coordy + RENDER_D; y++) {
+        for (let y = coordy - RENDER_D + 1; y <= coordy + RENDER_D - 1; y++) {
           updatedChunks[this.getChunkRep(x, y, z)] = true
 
           const tempChunk = this.getChunkFromCoords(x, y, z)

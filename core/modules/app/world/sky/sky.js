@@ -27,7 +27,7 @@ function Sky(scene, world, opts) {
 
   this.getWorld = () => world
   this.getWorldSize = () =>
-    world.data.user.settings.renderDistance * SIZE * DIMENSION * 2
+    (world.data.user.settings.renderDistance - 1) * SIZE * DIMENSION * 2
   this.getScene = () => scene
 }
 
