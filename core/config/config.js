@@ -99,7 +99,8 @@ const Config = {
     acceleration: {
       forward: 50,
       other_horz: 20,
-      vertical: 40
+      vertical: 40,
+      sneak: 20
     },
     jump: {
       time: 80, // ms
