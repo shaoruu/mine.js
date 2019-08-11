@@ -195,7 +195,11 @@ class Controls {
       }
     } else if (down) {
       if (this.status.isSneaking) {
-        this.camera.position.set(0, Config.player.sneaking, 0)
+        this.camera.position.set(
+          0,
+          (Config.player.aabb.eye2toe + Config.player.aabb.eye2top) * -1,
+          0
+        )
       }
       if (!this.status.isSneaking && this.status.isFlying)
         this.acc.y -= VERTICAL_ACC
