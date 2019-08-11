@@ -69,9 +69,12 @@ Javascript.
 
 # Installation
 
-Before cloning the repo or doing anything, be sure to install [docker](https://www.docker.com/), [node](https://nodejs.org/en/), [prisma-cli](https://www.prisma.io/docs/prisma-cli-and-configuration/using-the-prisma-cli-alx4/) and [graphql-cli](https://github.com/graphql-cli/graphql-cli#install) on your computer. After that, run the following commands:
+Before cloning the repo or doing anything, be sure to install [docker](https://www.docker.com/) and [node](https://nodejs.org/en/) on your computer. After that, run the following commands:
 
 ```bash
+# Install the prerequisite libraries
+yarn global add prisma graphql-cli
+
 # Clone the repository
 git clone https://github.com/ian13456/mc.js.git
 
