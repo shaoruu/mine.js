@@ -6,17 +6,24 @@ const WorldQueries = {
     return prisma.query.user({ where: { id: userId } }, info)
   },
   async world(parent, args, { prisma }, info) {
-    const id = args.query
+    // const id = args.query
+
+    const { query } = args
+    let { where } = args
+
+    if (!where && query) {
+      where = {
+        id: query
+      }
+    }
 
     await prisma.mutation.updateWorld({
       data: {
         lastPlayed: new Date().toISOString()
       },
-      where: {
-        id
-      }
+      where
     })
-    return prisma.query.world({ where: { id } }, info)
+    return prisma.query.world({ where }, info)
   }
 }
 

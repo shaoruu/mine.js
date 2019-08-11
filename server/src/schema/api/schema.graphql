@@ -1,0 +1,188 @@
+# type User {
+#   id: ID!
+#   username: String!
+#   email: String!
+#   password: String!
+#   worlds: [World]!
+#   settings: Settings!
+#   updatedAt: String!
+#   createdAt: String!
+# }
+
+# type World {
+#   id: ID!
+#   name: String!
+#   seed: String!
+#   type: WorldType!
+#   time: Float!
+#   timeChanger: Float
+#   days: Int!
+#   lastPlayed: String!
+#   changedBlocks: [Block]!
+#   players: [Player]!
+# }
+
+# type Message {
+#   world: World!
+#   type: MessageType!
+#   sender: String
+#   body: String!
+# }
+
+# type Player {
+#   id: ID!
+#   isAdmin: Boolean!
+#   gamemode: String!
+#   user: User!
+#   world: World!
+#   lastLogin: String
+#   x: Float!
+#   y: Float!
+#   z: Float!
+#   dirx: Float!
+#   diry: Float!
+#   inventory: Inventory!
+# }
+
+# type Settings {
+#   id: ID!
+#   renderDistance: Int!
+# }
+
+# type Block {
+#   representation: String!
+#   type: Int!
+#   world: World!
+#   x: Int!
+#   y: Int!
+#   z: Int!
+# }
+
+# type Inventory {
+#   player: Player!
+#   cursor: Int!
+#   data: String!
+# }
+
+input CreateUserInput {
+  email: String!
+  password: String!
+  username: String!
+}
+
+input LoginUserInput {
+  email: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  username: String
+  email: String
+  password: String
+}
+
+input CreateWorldInput {
+  name: String!
+  seed: String!
+  gamemode: Gamemode!
+  type: WorldType!
+}
+
+input CreatePlayerInput {
+  worldId: ID!
+  gamemode: Gamemode!
+}
+
+input UpdateWorldInput {
+  id: ID!
+  name: String
+  time: Float
+  days: Int
+}
+
+input UpdateSettingsInput {
+  id: ID!
+  renderDistance: Int
+}
+
+# input UpdatePlayerInput {
+input PlayerUpdateInput {
+  # id: ID!
+  x: Float
+  y: Float
+  z: Float
+  dirx: Float
+  diry: Float
+  cursor: Int
+  data: String
+}
+
+input UpdateBlockInput {
+  worldId: ID!
+  type: Int!
+  x: Int!
+  y: Int!
+  z: Int!
+}
+
+input RunCommandInput {
+  playerId: ID!
+  worldId: ID!
+  command: String!
+}
+
+input RequestChunksInput {
+  worldId: ID!
+  playerId: ID!
+  chunks: [String]! # array of chunk reps ("x:z")
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+enum Gamemode {
+  SURVIVAL
+  CREATIVE
+  ADVENTURE
+  SPECTATOR
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+enum MessageType {
+  ERROR
+  PLAYER
+  SERVER
+  INFO
+}
+
+enum WorldType {
+  DEFAULT
+  SUPERFLAT
+}
+
+type BlockSubscriptionPayload {
+  mutation: MutationType!
+  node: Block
+}
+
+type MessageSubscriptionPayload {
+  mutation: MutationType!
+  node: Message
+}
+
+type PlayerSubscriptionPayload {
+  mutation: MutationType!
+  node: Player
+}
+
+type WorldSubscriptionPayload {
+  mutation: MutationType!
+  node: World
+}

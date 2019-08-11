@@ -18,7 +18,7 @@ const RegisterForm = ({ client, loading: authHint, history }) => {
       onCompleted={data => {
         removeAllCookies()
 
-        setCookie(data.createUser.token)
+        setCookie(data.signup.token)
 
         // Force a reload of all current queries now that user is
         // logged in

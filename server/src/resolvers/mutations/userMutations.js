@@ -3,7 +3,8 @@ import Helpers from '../../utils/helpers'
 import bcrypt from 'bcryptjs'
 
 const UserMutations = {
-  async createUser(parent, args, { prisma }) {
+  // async createUser(parent, args, { prisma }) {
+  async signup(parent, args, { prisma }) {
     const password = await Helpers.hashPassword(args.data.password)
     const user = await prisma.mutation.createUser({
       data: {
@@ -76,19 +77,22 @@ const UserMutations = {
   updateSettings(
     parent,
     {
-      data: { id, ...settings }
+      data: { id, ...data },
+      where
     },
     { prisma },
     info
   ) {
+    if (!where && id) {
+      where = {
+        id
+      }
+    }
+
     return prisma.mutation.updateSettings(
       {
-        data: {
-          ...settings
-        },
-        where: {
-          id
-        }
+        data,
+        where
       },
       info
     )
