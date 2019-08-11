@@ -33,6 +33,7 @@ const P_I_2_TOP = Config.player.aabb.eye2top
 const SNEAK_DIFF = Config.player.aabb.sneakDifference
 const PLAYER_HEIGHT = P_I_2_TOE + P_I_2_TOP
 const CAM_SNEAK_DIFF = SNEAK_DIFF * PLAYER_HEIGHT * DIMENSION
+const SNEAK_ACC = Config.player.acceleration.sneak
 
 class Controls {
   constructor(
@@ -206,26 +207,29 @@ class Controls {
     if (!this.status.isSneaking && !this.status.isFlying) {
       this.camera.position.set(0, 0, 0)
     }
-
+    let acceleration = OTHER_HORZ_ACC
+    if (this.status.isSneaking) acceleration = SNEAK_ACC
     if (left) {
-      this.acc.x += -Math.sin(diry + Math.PI / 2) * OTHER_HORZ_ACC
-      this.acc.z += -Math.cos(diry + Math.PI / 2) * OTHER_HORZ_ACC
+      this.acc.x += -Math.sin(diry + Math.PI / 2) * acceleration
+      this.acc.z += -Math.cos(diry + Math.PI / 2) * acceleration
     }
 
     if (right) {
-      this.acc.x += Math.sin(diry + Math.PI / 2) * OTHER_HORZ_ACC
-      this.acc.z += Math.cos(diry + Math.PI / 2) * OTHER_HORZ_ACC
+      this.acc.x += Math.sin(diry + Math.PI / 2) * acceleration
+      this.acc.z += Math.cos(diry + Math.PI / 2) * acceleration
     }
 
     if (forward) {
       // TODO: implement sprint here.
-      this.acc.x += -Math.sin(diry) * FORW_ACC
-      this.acc.z += -Math.cos(diry) * FORW_ACC
+      acceleration = FORW_ACC
+      if (this.status.isSneaking) acceleration = SNEAK_ACC
+      this.acc.x += -Math.sin(diry) * acceleration
+      this.acc.z += -Math.cos(diry) * acceleration
     }
 
     if (backward) {
-      this.acc.x += Math.sin(diry) * OTHER_HORZ_ACC
-      this.acc.z += Math.cos(diry) * OTHER_HORZ_ACC
+      this.acc.x += Math.sin(diry) * acceleration
+      this.acc.z += Math.cos(diry) * acceleration
     }
   }
 
