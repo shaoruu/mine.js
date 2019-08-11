@@ -30,6 +30,9 @@ const P_WIDTH = Config.player.aabb.width
 const P_DEPTH = Config.player.aabb.depth
 const P_I_2_TOE = Config.player.aabb.eye2toe
 const P_I_2_TOP = Config.player.aabb.eye2top
+const SNEAK_DIFF = Config.player.aabb.sneakDifference
+const PLAYER_HEIGHT = P_I_2_TOE + P_I_2_TOP
+const CAM_SNEAK_DIFF = SNEAK_DIFF * PLAYER_HEIGHT * DIMENSION
 
 class Controls {
   constructor(
@@ -195,11 +198,7 @@ class Controls {
       }
     } else if (down) {
       if (this.status.isSneaking) {
-        this.camera.position.set(
-          0,
-          (Config.player.aabb.eye2toe + Config.player.aabb.eye2top) * -1,
-          0
-        )
+        this.camera.position.y = CAM_SNEAK_DIFF * -1
       }
       if (!this.status.isSneaking && this.status.isFlying)
         this.acc.y -= VERTICAL_ACC
