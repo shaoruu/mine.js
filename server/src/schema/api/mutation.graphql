@@ -1,0 +1,27 @@
+type Mutation {
+  # USER
+  # createUser(data: CreateUserInput!): AuthPayload!
+  signup(data: CreateUserInput!): AuthPayload!
+  login(data: LoginUserInput!): AuthPayload!
+  # deleteUser: User
+  # updateUser(data: UpdateUserInput!): User
+  # updateSettings(data: UpdateSettingsInput!): Settings!
+
+  # WORLD
+  # createWorld(data: CreateWorldInput!): World!
+  # createPlayer(data: CreatePlayerInput!): Boolean!
+  # updateWorld(data: UpdateWorldInput!): World!
+  # updatePlayer(data: UpdatePlayerInput!): Player!
+  # updateBlock(data: UpdateBlockInput!): Block!
+  # deleteWorld(worldId: ID!): Boolean!
+  runCommand(data: RunCommandInput!): Boolean!
+  requestChunks(data: RequestChunksInput!): Boolean!
+}
+
+input SettingsUpdateInput {
+  id: ID
+}
+
+input WorldCreateInput {
+  gamemode: Gamemode!
+}

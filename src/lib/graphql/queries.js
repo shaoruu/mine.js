@@ -39,8 +39,8 @@ export const MINI_WORLD_QUERY = gql`
 `
 
 export const WORLD_QUERY = gql`
-  query World($query: String!) {
-    world(query: $query) {
+  query World($query: ID!) {
+    world(where: { id: $query }) {
       id
       name
       seed

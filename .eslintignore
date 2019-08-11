@@ -1,2 +1,3 @@
 config-overrides.js
 serviceWorker.js
+node_modules

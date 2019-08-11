@@ -84,17 +84,21 @@ const WorldMutations = {
     )
   },
   async updateWorld(parent, args, { prisma }, info) {
-    const worldId = args.data.id
-    delete args.data.id
+    let { where } = args
+    const {
+      data: { id, ...data }
+    } = args
+
+    if (!where && id) {
+      where = {
+        id
+      }
+    }
 
     return prisma.mutation.updateWorld(
       {
-        where: {
-          id: worldId
-        },
-        data: {
-          ...args.data
-        }
+        where,
+        data
       },
       info
     )
