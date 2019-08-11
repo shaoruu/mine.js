@@ -1,6 +1,6 @@
 import {
   CREATE_WORLD_MUTATION,
-  CREATE_WORLD_SCHEMA,
+  CREATE_WORLD_SCHEMA
   // MY_WORLDS_QUERY
 } from '../../../../../lib/graphql'
 import { Hint } from '../../../../Utils'
@@ -64,131 +64,131 @@ const CreateNewWorld = withRouter(({ history }) => {
             initialValues={{ name: 'New World', seed: '', type: 'DEFAULT' }}
             validationSchema={CREATE_WORLD_SCHEMA}
             onSubmit={(values, { setSubmitting }) => {
-                createWorld({
-                  variables: {
-                    data: {
-                      name: values.name,
-                      seed: values.seed ? values.seed : randomstring.generate(),
-                      gamemode: gamemodes[gamemode],
-                      type: worldTypes[worldType],
-                      time: 1200,
-                      days: 0,
-                      lastPlayed: new Date(),
-                    },
-                  },
-                  // refetchQueries: [{
-                  //   where: {
-                  //     id: MY_WORLDS_QUERY
-                  //   }
-                  // }]
-                })
-                setSubmitting(false)
-              }}
-              render={({
-                values,
-                errors,
-                touched,
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                isSubmitting
-              }) => {
-                return (
-                  <form
-                    onSubmit={handleSubmit}
-                    style={{ display: 'flex', flexDirection: 'column' }}
-                    className={classes.wrapper}
-                  >
-                    <h1 className={classes.title}>Create New World</h1>
+              createWorld({
+                variables: {
+                  data: {
+                    name: values.name,
+                    seed: values.seed ? values.seed : randomstring.generate(),
+                    gamemode: gamemodes[gamemode],
+                    type: worldTypes[worldType],
+                    time: 1200,
+                    days: 0,
+                    lastPlayed: new Date()
+                  }
+                }
+                // refetchQueries: [{
+                //   where: {
+                //     id: MY_WORLDS_QUERY
+                //   }
+                // }]
+              })
+              setSubmitting(false)
+            }}
+            render={({
+              values,
+              errors,
+              touched,
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              isSubmitting
+            }) => {
+              return (
+                <form
+                  onSubmit={handleSubmit}
+                  style={{ display: 'flex', flexDirection: 'column' }}
+                  className={classes.wrapper}
+                >
+                  <h1 className={classes.title}>Create New World</h1>
 
-                    <div className={sharedStyles.inputField}>
-                      <p>World Name</p>
-                      <input
-                        ref={worldNameInput}
-                        autoComplete="off"
-                        id="name"
-                        name="name"
-                        value={values.name}
-                        label="name"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        placeholder="Name"
-                      />
-                      <p>
-                        Will be saved in:
+                  <div className={sharedStyles.inputField}>
+                    <p>World Name</p>
+                    <input
+                      ref={worldNameInput}
+                      autoComplete="off"
+                      id="name"
+                      name="name"
+                      value={values.name}
+                      label="name"
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="Name"
+                    />
+                    <p>
+                      Will be saved in:
                       {values.name}
-                      </p>
-                    </div>
+                    </p>
+                  </div>
 
-                    <div className={sharedStyles.inputField}>
-                      <p>Seed for the world generator</p>
-                      <input
-                        autoComplete="off"
-                        id="seed"
-                        name="seed"
-                        value={values.password}
-                        type="seed"
-                        label="Seed"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        placeholder="Seed"
-                      />
-                      <p>Leave blank for random seed</p>
-                    </div>
+                  <div className={sharedStyles.inputField}>
+                    <p>Seed for the world generator</p>
+                    <input
+                      autoComplete="off"
+                      id="seed"
+                      name="seed"
+                      value={values.password}
+                      type="seed"
+                      label="Seed"
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="Seed"
+                    />
+                    <p>Leave blank for random seed</p>
+                  </div>
 
-                    <div className={classes.buttonWrapper}>
-                      <button
-                        className={sharedStyles.button}
-                        type="button"
-                        onClick={() =>
-                          setGamemode((gamemode + 1) % gamemodes.length)
-                        }
-                      >
-                        {`Game Mode: ${gamemodeDictionary[gamemodes[gamemode]].title}`}
-                      </button>
-                      <p>{gamemodeDictionary[gamemodes[gamemode]].description}</p>
-                    </div>
-
-                    <div className={classes.buttonWrapper}>
-                      <button
-                        className={sharedStyles.button}
-                        type="button"
-                        onClick={() =>
-                          setWorldType((worldType + 1) % worldTypes.length)
-                        }
-                      >
-                        {`World Type: ${
-                          worldTypeDictionary[worldTypes[worldType]]
-                          }`}
-                      </button>
-                    </div>
-
-                    <div className={classes.finalButts}>
-                      <button
-                        className={sharedStyles.button}
-                        type="submit"
-                        disabled={
-                          !values.name ||
-                          isSubmitting ||
-                          !!(errors.name && touched.name) ||
-                          !!(errors.seed && touched.seed)
-                        }
-                      >
-                        Create New World
+                  <div className={classes.buttonWrapper}>
+                    <button
+                      className={sharedStyles.button}
+                      type="button"
+                      onClick={() =>
+                        setGamemode((gamemode + 1) % gamemodes.length)
+                      }
+                    >
+                      {`Game Mode: ${gamemodeDictionary[gamemodes[gamemode]].title}`}
                     </button>
-                      <button
-                        className={sharedStyles.button}
-                        type="button"
-                        onClick={() => history.goBack()}
-                      >
-                        Cancel
+                    <p>{gamemodeDictionary[gamemodes[gamemode]].description}</p>
+                  </div>
+
+                  <div className={classes.buttonWrapper}>
+                    <button
+                      className={sharedStyles.button}
+                      type="button"
+                      onClick={() =>
+                        setWorldType((worldType + 1) % worldTypes.length)
+                      }
+                    >
+                      {`World Type: ${
+                        worldTypeDictionary[worldTypes[worldType]]
+                      }`}
                     </button>
-                    </div>
-                  </form>
-                )
-              }}
-            />
-          )
+                  </div>
+
+                  <div className={classes.finalButts}>
+                    <button
+                      className={sharedStyles.button}
+                      type="submit"
+                      disabled={
+                        !values.name ||
+                        isSubmitting ||
+                        !!(errors.name && touched.name) ||
+                        !!(errors.seed && touched.seed)
+                      }
+                    >
+                      Create New World
+                    </button>
+                    <button
+                      className={sharedStyles.button}
+                      type="button"
+                      onClick={() => history.goBack()}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )
+            }}
+          />
+        )
       }
     </Mutation>
   )
