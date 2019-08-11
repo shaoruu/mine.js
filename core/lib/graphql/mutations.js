@@ -12,7 +12,16 @@ export const UPDATE_PLAYER_MUTATION = gql`
     $data: String
   ) {
     updatePlayer(
-      data: { id: $id, x: $x, y: $y, z: $z, dirx: $dirx, diry: $diry, cursor: $cursor, data: $data }
+      where: { id: $id }
+      data: {
+        x: $x
+        y: $y
+        z: $z
+        dirx: $dirx
+        diry: $diry
+        cursor: $cursor
+        data: $data
+      }
     ) {
       x
       y
@@ -23,7 +32,10 @@ export const UPDATE_PLAYER_MUTATION = gql`
 
 export const UPDATE_WORLD_MUTATION = gql`
   mutation UpdateWorld($id: ID!, $name: String, $time: Float, $days: Int) {
-    updateWorld(data: { id: $id, name: $name, time: $time, days: $days }) {
+    updateWorld(
+      where: { id: $id }
+      data: { name: $name, time: $time, days: $days }
+    ) {
       name
       time
       days
@@ -33,6 +45,8 @@ export const UPDATE_WORLD_MUTATION = gql`
 
 export const RUN_COMMAND_MUTATION = gql`
   mutation RunCommand($playerId: ID!, $worldId: ID!, $command: String!) {
-    runCommand(data: { playerId: $playerId, worldId: $worldId, command: $command })
+    runCommand(
+      data: { playerId: $playerId, worldId: $worldId, command: $command }
+    )
   }
 `

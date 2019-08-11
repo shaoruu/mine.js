@@ -58,14 +58,24 @@ const PlayerMutations = {
     return true
   },
   async updatePlayer(parent, args, { prisma }, info) {
-    const playerId = args.data.id
-    delete args.data.id
+    let { where } = args
 
-    const { cursor } = args.data
-    delete args.data.cursor
+    const { id, cursor, data, ...otherData } = args.data || {}
 
-    const { data } = args.data
-    delete args.data.data
+    if (!where && id) {
+      where = {
+        id
+      }
+    }
+
+    // const playerId = args.data.id
+    // delete args.data.id
+
+    // const { cursor } = args.data
+    // delete args.data.cursor
+
+    // const { data } = args.data
+    // delete args.data.data
 
     const inventoryUpdate = { inventory: { update: { cursor, data } } }
     if (!cursor) delete inventoryUpdate.cursor
@@ -73,11 +83,9 @@ const PlayerMutations = {
 
     return prisma.mutation.updatePlayer(
       {
-        where: {
-          id: playerId
-        },
+        where,
         data: {
-          ...args.data,
+          ...otherData,
           ...inventoryUpdate
         }
       },
