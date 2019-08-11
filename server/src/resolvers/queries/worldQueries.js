@@ -8,7 +8,8 @@ const WorldQueries = {
   async world(parent, args, { prisma }, info) {
     // const id = args.query
 
-    let { query, where } = args
+    const { query } = args
+    let { where } = args
 
     if (!where && query) {
       where = {
