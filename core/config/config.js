@@ -124,6 +124,10 @@ const Config = {
       posY: 4.49,
       posZ: 5.53
     },
+    times: {
+      // ms
+      sneakTime: 60
+    },
     reachDst: 7,
     headBodyDeg: Math.PI / 4,
     sneaking: -10

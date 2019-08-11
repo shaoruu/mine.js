@@ -18,7 +18,11 @@ function Viewport(player, world, scene) {
   let isRolledOver = false
 
   /** MESH SETUP */
-  const helmetGeo = new THREE.BoxBufferGeometry(DIMENSION / 2, DIMENSION / 2, DIMENSION / 2)
+  const helmetGeo = new THREE.BoxBufferGeometry(
+    DIMENSION / 2,
+    DIMENSION / 2,
+    DIMENSION / 2
+  )
   const helmetMat = new THREE.MeshBasicMaterial({
     opacity: 0,
     transparent: true,
@@ -28,7 +32,11 @@ function Viewport(player, world, scene) {
   })
   const helmet = new THREE.Mesh(helmetGeo, helmetMat)
 
-  const rollOverBaseGeo = new THREE.BoxBufferGeometry(DIMENSION, DIMENSION, DIMENSION)
+  const rollOverBaseGeo = new THREE.BoxBufferGeometry(
+    DIMENSION,
+    DIMENSION,
+    DIMENSION
+  )
   const rollOverEdgeGeo = new THREE.EdgesGeometry(rollOverBaseGeo)
   const rollOverMat = new THREE.LineBasicMaterial({
     opacity: 0.3,
@@ -78,7 +86,11 @@ Viewport.prototype.updateHelmet = function() {
 
   const playerPos = playerRef.getCamCoordinates()
 
-  helmetRef.position.set(playerPos.x * DIMENSION, playerPos.y * DIMENSION, playerPos.z * DIMENSION)
+  helmetRef.position.set(
+    playerPos.x * DIMENSION,
+    playerPos.y * DIMENSION,
+    playerPos.z * DIMENSION
+  )
 
   const coords = playerRef.getCamCoordinates(0)
   const camInType = worldRef.getVoxelByVoxelCoords(coords.x, coords.y, coords.z)
@@ -124,14 +136,16 @@ Viewport.prototype.updateTPBlock = function() {
       rollOverRef.position.set(x, y, z)
 
     if (!this.getIsRolledOver()) {
-      if (rollOverRef instanceof THREE.Object3D) this.getScene().add(rollOverRef)
+      if (rollOverRef instanceof THREE.Object3D)
+        this.getScene().add(rollOverRef)
       this.setIsRolledOver(true)
     }
   } else {
     this.removeTPBlocks()
   }
 
-  if (playerRef.status.isSpectator && this.getIsRolledOver()) this.removeTPBlocks(blockInfo)
+  if (playerRef.status.isSpectator && this.getIsRolledOver())
+    this.removeTPBlocks(blockInfo)
 }
 
 Viewport.prototype.addSelf = function(scene) {
@@ -201,7 +215,11 @@ Viewport.prototype.getLookingBlockInfo = function() {
   // Global Block Coords
   const gbc = Helpers.worldToBlock({ x: point[0], y: point[1], z: point[2] })
 
-  const { coordx: cx, coordy: cy, coordz: cz } = Helpers.globalBlockToChunkCoords(gbc)
+  const {
+    coordx: cx,
+    coordy: cy,
+    coordz: cz
+  } = Helpers.globalBlockToChunkCoords(gbc)
   const bc = Helpers.globalBlockToChunkBlock(gbc)
 
   const chunkDim = SIZE * DIMENSION
