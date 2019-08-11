@@ -114,7 +114,8 @@ const Config = {
       width: 0.5,
       eye2toe: 1.6,
       eye2top: 0.2,
-      depth: 0.5
+      depth: 0.5,
+      sneakDifference: 0.2
     },
     coordinateDec: 2,
     position: {
