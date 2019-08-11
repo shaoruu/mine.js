@@ -123,7 +123,8 @@ const Config = {
       posZ: 5.53
     },
     reachDst: 7,
-    headBodyDeg: Math.PI / 4
+    headBodyDeg: Math.PI / 4,
+    sneaking: -10
   },
   block: {
     dimension: 32,

@@ -7,7 +7,10 @@ import PointerLockControls from './pointerLockControls'
 import * as THREE from 'three'
 import { easeQuadOut } from 'd3-ease'
 
-const { movements: MOVEMENT_KEYS, multiplayer: MULTIPLAYER_KEYS } = Config.keyboard
+const {
+  movements: MOVEMENT_KEYS,
+  multiplayer: MULTIPLAYER_KEYS
+} = Config.keyboard
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal
 const VERT_MAX_SPEED = Config.player.maxSpeed.vertical
 const SPECTATOR_INERTIA = Config.player.inertia
@@ -29,9 +32,24 @@ const P_I_2_TOE = Config.player.aabb.eye2toe
 const P_I_2_TOP = Config.player.aabb.eye2top
 
 class Controls {
-  constructor(player, world, status, camera, canvas, blocker, button, initPos, initDir) {
+  constructor(
+    player,
+    world,
+    status,
+    camera,
+    canvas,
+    blocker,
+    button,
+    initPos,
+    initDir
+  ) {
     /** THREEJS CAMERA CONTROL */
-    this.threeControls = new PointerLockControls(camera, canvas, initPos, initDir)
+    this.threeControls = new PointerLockControls(
+      camera,
+      canvas,
+      initPos,
+      initDir
+    )
 
     /** PHYSICS */
     this.vel = new THREE.Vector3(0, 0, 0)
@@ -88,7 +106,13 @@ class Controls {
   /* -------------------------------------------------------------------------- */
   handleMovements = () => {
     const now = performance.now()
-    const { isFlying, isOnGround, shouldGravity, isSprinting, isSpectator } = this.status
+    const {
+      isFlying,
+      isOnGround,
+      shouldGravity,
+      isSprinting,
+      isSpectator
+    } = this.status
 
     let delta = (now - this.prevTime) / 1000
     if (delta > 0.15) delta = 0.1
@@ -102,7 +126,8 @@ class Controls {
         ? isSpectator
           ? SPECTATOR_INERTIA
           : INERTIA
-        : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) / (isSprinting ? SPRINT_FACTOR : 1)) *
+        : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) /
+          (isSprinting ? SPRINT_FACTOR : 1)) *
       delta
     if (!shouldGravity) this.vel.y -= this.vel.y * INERTIA * delta
     this.vel.z -=
@@ -111,7 +136,8 @@ class Controls {
         ? isSpectator
           ? SPECTATOR_INERTIA
           : INERTIA
-        : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) / (isSprinting ? SPRINT_FACTOR : 1)) *
+        : (isOnGround ? FRIC_INERTIA : IN_AIR_INERTIA) /
+          (isSprinting ? SPRINT_FACTOR : 1)) *
       delta
 
     if (this.needsToJump) {
@@ -168,7 +194,14 @@ class Controls {
         this.status.registerJump()
       }
     } else if (down) {
-      if (!this.status.isSneaking && this.status.isFlying) this.acc.y -= VERTICAL_ACC
+      if (this.status.isSneaking) {
+        this.camera.position.set(0, Config.player.sneaking, 0)
+      }
+      if (!this.status.isSneaking && this.status.isFlying)
+        this.acc.y -= VERTICAL_ACC
+    }
+    if (!this.status.isSneaking && !this.status.isFlying) {
+      this.camera.position.set(0, 0, 0)
     }
 
     if (left) {
@@ -212,9 +245,16 @@ class Controls {
     this.keyboard.registerKey(38, 'chat', chatRef.handleUp) // up
     this.keyboard.registerKey(40, 'chat', chatRef.handleDown) // down
 
-    this.keyboard.registerKey(27, 'chat', chatRef.disable, this.unblockGame, undefined, {
-      repeat: false
-    })
+    this.keyboard.registerKey(
+      27,
+      'chat',
+      chatRef.disable,
+      this.unblockGame,
+      undefined,
+      {
+        repeat: false
+      }
+    )
 
     /**
      * moving KEYS ('moving')
@@ -264,7 +304,8 @@ class Controls {
       () => (this.movements.up = true),
       () => (this.movements.up = false),
       () => {
-        if (this.status.canFly && this.status.isCreative) this.status.toggleFly()
+        if (this.status.canFly && this.status.isCreative)
+          this.status.toggleFly()
       },
       { immediate: true }
     )
@@ -500,7 +541,8 @@ class Controls {
   }
 
   handleMouseDown = e => {
-    if (!this.world.getChat().enabled && this.threeControls.isLocked) this.mouseKey = e.button
+    if (!this.world.getChat().enabled && this.threeControls.isLocked)
+      this.mouseKey = e.button
   }
 
   handleMouseUp = e => {
