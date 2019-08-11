@@ -60,9 +60,17 @@ const Config = {
     posY: 0,
     posZ: 0,
     sprintFovDelta: 15,
-    spectatorFov: 130
+    spectatorFov: 130,
+    thirdPerson: {
+      posX: 0,
+      posY: 50,
+      posZ: 60
+    }
   },
   keyboard: {
+    camera: {
+      thirdPerson: 116
+    },
     movements: {
       forward: 87,
       backward: 83,
