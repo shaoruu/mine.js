@@ -4,7 +4,7 @@
 
 :pushpin: This project is a work in progress. There's still a lot of features waiting to be implemented, and the game is far from being the actual game.
 
-### **MC.JS brings the best-selling PC game "Minecraft" into the web with the power of Javascript.**
+### **MC.JS brings the best-selling PC game Minecraft into the web with the power of Javascript.**
 
 # Motivation
 
