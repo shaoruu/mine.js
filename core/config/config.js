@@ -69,7 +69,7 @@ const Config = {
   },
   keyboard: {
     camera: {
-      thirdPerson: 116
+      thirdPerson: 86
     },
     movements: {
       forward: 87,
