@@ -18,7 +18,14 @@ const DeleteWorld = ({ history, location }) => {
   if (!worldId) return <Redirect to="/game/worlds" />
 
   return (
-    <Query query={MINI_WORLD_QUERY} variables={{ query: worldId }}>
+    <Query
+      query={MINI_WORLD_QUERY}
+      variables={{
+        where: {
+          id: worldId
+        }
+      }}
+    >
       {({ loading, data }) => {
         if (loading) return <Hint />
 
@@ -49,7 +56,13 @@ const DeleteWorld = ({ history, location }) => {
                         variables: {
                           worldId
                         },
-                        refetchQueries: [{ query: MY_WORLDS_QUERY }]
+                        refetchQueries: [
+                          {
+                            where: {
+                              id: MY_WORLDS_QUERY
+                            }
+                          }
+                        ]
                       })
                     }}
                   >

@@ -1,7 +1,19 @@
 /* eslint-disable no-underscore-dangle */
 import Helpers from '../../utils/helpers'
+import Config from '../../config/config'
+import {
+  loadSkinToCanvas,
+  isSlimSkin
+} from '../../modules/managers/playersManager/playerObjectUtils'
 
 import * as THREE from 'three'
+import TWEEN from '@tweenjs/tween.js'
+
+const DIMENSION = Config.block.dimension
+const EYE_2_TOE = Config.player.aabb.eye2toe
+const EYE_2_TOP = Config.player.aabb.eye2top
+// const HEAD_BODY_DEG = Config.player.headBodyDeg
+const HEIGHT = EYE_2_TOE + EYE_2_TOP
 
 function toFaceVertices(x1, y1, x2, y2, w, h) {
   return [
@@ -36,7 +48,7 @@ const esp = 0.002
 /**
  * Notice that innerLayer and outerLayer may NOT be the direct children of the Group.
  */
-export class BodyPart extends THREE.Group {
+class BodyPart extends THREE.Group {
   constructor(innerLayer, outerLayer) {
     super()
 
@@ -47,7 +59,7 @@ export class BodyPart extends THREE.Group {
   }
 }
 
-export class SkinObject extends THREE.Group {
+class SkinObject extends THREE.Group {
   constructor(layer1Material, layer2Material) {
     super()
 
@@ -65,6 +77,7 @@ export class SkinObject extends THREE.Group {
       toSkinVertices(16, 8, 24, 16),
       toSkinVertices(24, 8, 32, 16)
     )
+    headBox.rotateY(Math.PI)
     const headMesh = new THREE.Mesh(headBox, layer1Material)
     const head2Box = new THREE.BoxGeometry(9, 9, 9, 0, 0, 0)
     setVertices(
@@ -76,11 +89,15 @@ export class SkinObject extends THREE.Group {
       toSkinVertices(48, 8, 56, 16),
       toSkinVertices(56, 8, 64, 16)
     )
+    head2Box.rotateY(Math.PI)
     const head2Mesh = new THREE.Mesh(head2Box, layer2Material)
     head2Mesh.renderOrder = -1
+    headMesh.position.setY(3)
     this.head = new BodyPart(headMesh, head2Mesh)
     this.head.name = 'head'
     this.head.add(headMesh, head2Mesh)
+    this.head.rotation.order = 'YXZ'
+    this.head.position.setY(-3)
     this.add(this.head)
 
     // Body
@@ -94,6 +111,7 @@ export class SkinObject extends THREE.Group {
       toSkinVertices(28, 20, 32, 32),
       toSkinVertices(32, 20, 40, 32)
     )
+    bodyBox.rotateY(Math.PI)
     const bodyMesh = new THREE.Mesh(bodyBox, layer1Material)
     const body2Box = new THREE.BoxGeometry(9, 13.5, 4.5, 0, 0, 0)
     setVertices(
@@ -105,6 +123,7 @@ export class SkinObject extends THREE.Group {
       toSkinVertices(28, 36, 32, 48),
       toSkinVertices(32, 36, 40, 48)
     )
+    body2Box.rotateY(Math.PI)
     const body2Mesh = new THREE.Mesh(body2Box, layer2Material)
     this.body = new BodyPart(bodyMesh, body2Mesh)
     this.body.name = 'body'
@@ -114,6 +133,7 @@ export class SkinObject extends THREE.Group {
 
     // Right Arm
     const rightArmBox = new THREE.BoxGeometry(1, 1, 1, 0, 0, 0) // w/d/h is model-related
+    rightArmBox.rotateY(Math.PI)
     const rightArmMesh = new THREE.Mesh(rightArmBox, layer1Material)
     this.modelListeners.push(() => {
       rightArmMesh.scale.x = (this.slim ? 3 : 4) - esp
@@ -144,6 +164,7 @@ export class SkinObject extends THREE.Group {
       rightArmBox.elementsNeedUpdate = true
     })
     const rightArm2Box = new THREE.BoxGeometry(1, 1, 1, 0, 0, 0) // w/d/h is model-related
+    rightArm2Box.rotateY(Math.PI)
     const rightArm2Mesh = new THREE.Mesh(rightArm2Box, layer2Material)
     rightArm2Mesh.renderOrder = 1
     this.modelListeners.push(() => {
@@ -188,6 +209,7 @@ export class SkinObject extends THREE.Group {
 
     // Left Arm
     const leftArmBox = new THREE.BoxGeometry(1, 1, 1, 0, 0, 0) // w/d/h is model-related
+    leftArmBox.rotateY(Math.PI)
     const leftArmMesh = new THREE.Mesh(leftArmBox, layer1Material)
     this.modelListeners.push(() => {
       leftArmMesh.scale.x = (this.slim ? 3 : 4) - esp
@@ -218,6 +240,7 @@ export class SkinObject extends THREE.Group {
       leftArmBox.elementsNeedUpdate = true
     })
     const leftArm2Box = new THREE.BoxGeometry(1, 1, 1, 0, 0, 0) // w/d/h is model-related
+    leftArm2Box.rotateY(Math.PI)
     const leftArm2Mesh = new THREE.Mesh(leftArm2Box, layer2Material)
     leftArm2Mesh.renderOrder = 1
     this.modelListeners.push(() => {
@@ -278,6 +301,7 @@ export class SkinObject extends THREE.Group {
       toSkinVertices(8, 20, 12, 32),
       toSkinVertices(12, 20, 16, 32)
     )
+    rightLegBox.rotateY(Math.PI)
     const rightLegMesh = new THREE.Mesh(rightLegBox, layer1Material)
     const rightLeg2Box = new THREE.BoxGeometry(
       4.5 - esp,
@@ -296,6 +320,7 @@ export class SkinObject extends THREE.Group {
       toSkinVertices(8, 36, 12, 48),
       toSkinVertices(12, 36, 16, 48)
     )
+    rightLeg2Box.rotateY(Math.PI)
     const rightLeg2Mesh = new THREE.Mesh(rightLeg2Box, layer2Material)
     rightLeg2Mesh.renderOrder = 1
     const rightLegPivot = new THREE.Group()
@@ -326,6 +351,7 @@ export class SkinObject extends THREE.Group {
       toSkinVertices(24, 52, 28, 64),
       toSkinVertices(28, 52, 32, 64)
     )
+    leftLegBox.rotateY(Math.PI)
     const leftLegMesh = new THREE.Mesh(leftLegBox, layer1Material)
     const leftLeg2Box = new THREE.BoxGeometry(
       4.5 - esp,
@@ -344,6 +370,7 @@ export class SkinObject extends THREE.Group {
       toSkinVertices(8, 52, 12, 64),
       toSkinVertices(12, 52, 16, 64)
     )
+    leftLeg2Box.rotateY(Math.PI)
     const leftLeg2Mesh = new THREE.Mesh(leftLeg2Box, layer2Material)
     leftLeg2Mesh.renderOrder = 1
     const leftLegPivot = new THREE.Group()
@@ -381,7 +408,7 @@ export class SkinObject extends THREE.Group {
 }
 
 export default class PlayerObject extends THREE.Group {
-  constructor(skinImg) {
+  constructor(skinImg, pos, dir) {
     super()
 
     this.skinImg = new Image()
@@ -410,12 +437,12 @@ export default class PlayerObject extends THREE.Group {
 
     this.skinImg.crossOrigin = 'anonymous'
     this.skinImg.onerror = () =>
-      Helpers.error(`Failed loading ${this.skinImg.src}`)
+      Helpers.error(`Failed loading ${this.skinImg.src}`, true)
     this.skinImg.onload = () => {
-      Helpers.loadSkinToCanvas(this.skinCanvas, this.skinImg)
+      loadSkinToCanvas(this.skinCanvas, this.skinImg)
 
       if (this.detectModel) {
-        this.playerObject.skin.slim = Helpers.isSlimSkin(this.skinCanvas)
+        this.playerObject.skin.slim = isSlimSkin(this.skinCanvas)
       }
 
       this.skinTexture.needsUpdate = true
@@ -426,5 +453,67 @@ export default class PlayerObject extends THREE.Group {
     }
 
     this.skinImg.src = skinImg
+
+    this.scale.set(HEIGHT, HEIGHT, HEIGHT)
+
+    this.position.copy(pos.multiplyScalar(DIMENSION))
+    this.position.y += EYE_2_TOE * DIMENSION
+    this.skin.head.rotation.x = dir.x
+    this.rotation.y = dir.y
+
+    this.oldDirY = dir.y
   }
+
+  tweenPosition = (x, y, z) => {
+    new TWEEN.Tween(this.position)
+      .to(
+        { x: x * DIMENSION, y: (y + EYE_2_TOE) * DIMENSION, z: z * DIMENSION },
+        90
+      )
+      .start()
+  }
+
+  tweenDirection = (dirx, diry) => {
+    const { head } = this.skin
+    // HORIZONTAL DIRECTION CHANGE
+
+    // const headY = head.rotation.y % (Math.PI * 2)
+    // const deltaDirY = diry - this.oldDirY
+
+    // if (deltaDirY >= 0) this.stuckRight = false
+    // if (deltaDirY <= 0) this.stuckLeft = false
+
+    // // if (deltaDirY !== 0) {
+    // //   if ((this.stuckRight && deltaDirY < 0) || (this.stuckLeft && deltaDirY > 0)) {
+    // //     new TWEEN.Tween(this.rotation).to({ y: this.rotation.y + deltaDirY }, 90).start()
+    // //   } else if (headY + deltaDirY > HEAD_BODY_DEG) {
+    // //     console.log('stuckLeft', headY)
+    // //     if (headY < HEAD_BODY_DEG)
+    // //       new TWEEN.Tween(head.rotation).to({ y: HEAD_BODY_DEG }, 90).start()
+    // //     new TWEEN.Tween(this.rotation)
+    // //       .to({ y: this.rotation.y + deltaDirY - HEAD_BODY_DEG }, 90)
+    // //       .start()
+    // //     this.stuckLeft = true
+    // //   } else if (headY + deltaDirY < -HEAD_BODY_DEG) {
+    // //     console.log('stuckRight', headY)
+    // //     if (headY > -HEAD_BODY_DEG)
+    // //       new TWEEN.Tween(head.rotation).to({ y: -HEAD_BODY_DEG }, 90).start()
+    // //     new TWEEN.Tween(this.rotation)
+    // //       .to({ y: this.rotation.y + deltaDirY - HEAD_BODY_DEG }, 90)
+    // //       .start()
+    // //     this.stuckRight = true
+    // //   } else {
+    // //     new TWEEN.Tween(head.rotation).to({ y: diry % (Math.PI * 2) }, 90).start()
+    // //   }
+    // // }
+
+    // VERTICAL DIRECTION CHANGE
+    new TWEEN.Tween(head.rotation).to({ x: dirx }, 90).start()
+    new TWEEN.Tween(this.rotation).to({ y: diry }, 90).start()
+  }
+
+  // setDirection = (x, y) => {
+  //   this.skin.head.rotation.x = x
+  //   this.skin.head.rotation.y = y
+  // }
 }

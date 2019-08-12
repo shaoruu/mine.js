@@ -5,6 +5,7 @@ import Helpers from '../../../../utils/helpers'
 import PointerLockControls from './pointerLockControls'
 
 import * as THREE from 'three'
+import TWEEN from '@tweenjs/tween.js'
 import { easeQuadOut } from 'd3-ease'
 
 const {
@@ -18,6 +19,7 @@ const SPECTATOR_INERTIA = Config.player.inertia
 const INERTIA = Config.player.inertia
 const FRIC_INERTIA = Config.player.fricIntertia
 const IN_AIR_INERTIA = Config.player.inAirInertia
+const SNEAK_TIME = Config.player.times.sneakTime
 const SPRINT_FACTOR = Config.player.sprintFactor
 const FORW_ACC = Config.player.acceleration.forward
 const OTHER_HORZ_ACC = Config.player.acceleration.other_horz
@@ -32,6 +34,10 @@ const P_DEPTH = Config.player.aabb.depth
 const P_I_2_TOE = Config.player.aabb.eye2toe
 const P_I_2_TOP = Config.player.aabb.eye2top
 const CAMERA_CONFIG = Config.camera
+const SNEAK_DIFF = Config.player.aabb.sneakDifference
+const PLAYER_HEIGHT = P_I_2_TOE + P_I_2_TOP
+const CAM_SNEAK_DIFF = SNEAK_DIFF * PLAYER_HEIGHT * DIMENSION
+const SNEAK_ACC = Config.player.acceleration.sneak
 
 class Controls {
   constructor(
@@ -201,29 +207,52 @@ class Controls {
         this.status.registerJump()
       }
     } else if (down) {
-      if (!this.status.isSneaking && this.status.isFlying)
+      if (this.status.isSneaking && this.freshlySneaked && !this.sneakTween) {
+        delete this.unsneakTween
+        this.sneakTween = new TWEEN.Tween(this.camera.position)
+          .to({ y: -CAM_SNEAK_DIFF }, SNEAK_TIME)
+          .start()
+          .onComplete(() => {
+            this.freshlySneaked = false
+          })
+      } else if (!this.status.isSneaking && this.status.isFlying)
         this.acc.y -= VERTICAL_ACC
     }
-
+    if (
+      !this.status.isSneaking &&
+      this.freshlyUnsneaked &&
+      !this.status.isFlying
+    ) {
+      this.unsneakTween = new TWEEN.Tween(this.camera.position)
+        .to({ y: 0 }, SNEAK_TIME)
+        .start()
+        .onComplete(() => {
+          this.freshlyUnsneaked = false
+        })
+    }
+    let acceleration = OTHER_HORZ_ACC
+    if (this.status.isSneaking) acceleration = SNEAK_ACC
     if (left) {
-      this.acc.x += -Math.sin(diry + Math.PI / 2) * OTHER_HORZ_ACC
-      this.acc.z += -Math.cos(diry + Math.PI / 2) * OTHER_HORZ_ACC
+      this.acc.x += -Math.sin(diry + Math.PI / 2) * acceleration
+      this.acc.z += -Math.cos(diry + Math.PI / 2) * acceleration
     }
 
     if (right) {
-      this.acc.x += Math.sin(diry + Math.PI / 2) * OTHER_HORZ_ACC
-      this.acc.z += Math.cos(diry + Math.PI / 2) * OTHER_HORZ_ACC
+      this.acc.x += Math.sin(diry + Math.PI / 2) * acceleration
+      this.acc.z += Math.cos(diry + Math.PI / 2) * acceleration
     }
 
     if (forward) {
       // TODO: implement sprint here.
-      this.acc.x += -Math.sin(diry) * FORW_ACC
-      this.acc.z += -Math.cos(diry) * FORW_ACC
+      acceleration = FORW_ACC
+      if (this.status.isSneaking) acceleration = SNEAK_ACC
+      this.acc.x += -Math.sin(diry) * acceleration
+      this.acc.z += -Math.cos(diry) * acceleration
     }
 
     if (backward) {
-      this.acc.x += Math.sin(diry) * OTHER_HORZ_ACC
-      this.acc.z += Math.cos(diry) * OTHER_HORZ_ACC
+      this.acc.x += Math.sin(diry) * acceleration
+      this.acc.z += Math.cos(diry) * acceleration
     }
   }
 
@@ -330,10 +359,15 @@ class Controls {
     this.keyboard.registerKey(
       MOVEMENT_KEYS.sneak,
       'moving',
-      () => (this.movements.down = true),
+      () => {
+        this.movements.down = true
+        this.freshlySneaked = true
+      },
       () => {
         this.movements.down = false
         this.sneakNode = null
+        delete this.sneakTween
+        this.freshlyUnsneaked = true
       }
     )
 
@@ -379,7 +413,7 @@ class Controls {
 
   handleCollisions = () => {
     // AABB
-    const playerPos = this.getNormalizedCamPos(10)
+    const playerPos = this.getNormalizedObjPos(10)
     const scaledVel = this.vel.clone().multiplyScalar(1 / DIMENSION)
 
     const EPSILON = 1 / 1024
@@ -618,6 +652,13 @@ class Controls {
   getObject = () => this.threeControls.getObject()
 
   getNormalizedCamPos = (dec = COORD_DEC) => {
+    const camPos = this.camera.position.clone()
+    const objPos = this.getObject().position.clone()
+    const position = objPos.add(camPos)
+    return Helpers.floorPos(Helpers.worldToBlock(position, false), dec)
+  }
+
+  getNormalizedObjPos = (dec = COORD_DEC) => {
     // Normalized as in normalized to world coordinates
     const position = this.getObject().position.clone()
     return Helpers.floorPos(Helpers.worldToBlock(position, false), dec)
@@ -625,7 +666,7 @@ class Controls {
 
   getFeetCoords = (dec = COORD_DEC) => {
     // This is essentially where the foot of the player is
-    const camPos = this.getNormalizedCamPos(dec)
+    const camPos = this.getNormalizedObjPos(dec)
     camPos.y -= P_I_2_TOE
     return camPos
   }

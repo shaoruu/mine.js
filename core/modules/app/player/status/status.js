@@ -12,7 +12,12 @@ const SPECTATOR_FOV = Config.camera.spectatorFov
 
 class Status extends Stateful {
   constructor(gamemode, player) {
-    super({ flying: true, hasJumped: false, isOnGround: true, isSprinting: false })
+    super({
+      flying: true,
+      hasJumped: false,
+      isOnGround: true,
+      isSprinting: false
+    })
 
     this.gamemode = gamemode
 
@@ -128,7 +133,15 @@ class Status extends Stateful {
   }
 
   get isSneaking() {
-    return !this.state.flying && this.state.isOnGround && this.player.controls.movements.down
+    return !this.state.flying && this.player.controls.movements.down
+  }
+
+  get isSneakingOnGround() {
+    return (
+      !this.state.flying &&
+      this.state.isOnGround &&
+      this.player.controls.movements.down
+    )
   }
 
   tweenCameraFOV = (fov, time = 200) => {

@@ -1,7 +1,7 @@
 import {
   CREATE_WORLD_MUTATION,
-  CREATE_WORLD_SCHEMA,
-  MY_WORLDS_QUERY
+  CREATE_WORLD_SCHEMA
+  // MY_WORLDS_QUERY
 } from '../../../../../lib/graphql'
 import { Hint } from '../../../../Utils'
 import sharedStyles from '../../../../../containers/sharedStyles.module.css'
@@ -66,12 +66,21 @@ const CreateNewWorld = withRouter(({ history }) => {
             onSubmit={(values, { setSubmitting }) => {
               createWorld({
                 variables: {
-                  name: values.name,
-                  seed: values.seed ? values.seed : randomstring.generate(),
-                  gamemode: gamemodes[gamemode],
-                  type: worldTypes[worldType]
-                },
-                refetchQueries: [{ query: MY_WORLDS_QUERY }]
+                  data: {
+                    name: values.name,
+                    seed: values.seed ? values.seed : randomstring.generate(),
+                    gamemode: gamemodes[gamemode],
+                    type: worldTypes[worldType],
+                    time: 1200,
+                    days: 0,
+                    lastPlayed: new Date()
+                  }
+                }
+                // refetchQueries: [{
+                //   where: {
+                //     id: MY_WORLDS_QUERY
+                //   }
+                // }]
               })
               setSubmitting(false)
             }}

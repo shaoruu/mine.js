@@ -1,6 +1,5 @@
 import OriginalSteve from '../../../assets/skin/Original_Steve.png'
-
-import PlayerObject from './playerObject'
+import PlayerObject from '../../../lib/playerObject/playerObject'
 
 function PlayerClient(username, pos, dir) {
   this.yAxisClamp = 0
