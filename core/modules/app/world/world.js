@@ -6,7 +6,7 @@ import {
 } from '../../managers'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
-import { Chat } from '../../interfaces'
+import { Chat, Inventory } from '../../interfaces'
 import {
   UPDATE_WORLD_MUTATION,
   WORLD_SUBSCRIPTION
@@ -38,6 +38,13 @@ class World extends Stateful {
     this.ioClient = ioClient
 
     this.chat = new Chat(this.data.playerId, id, container, apolloClient)
+
+    this.inventory = new Inventory(
+      this.data.playerId,
+      id,
+      container,
+      apolloClient
+    )
 
     this.resourceManager = new ResourceManager()
     this.workerManager = new WorkerManager(this)
@@ -181,6 +188,8 @@ class World extends Stateful {
   getPlayer = () => this.player
 
   getChat = () => this.chat
+
+  getInventory = () => this.inventory
 
   getDays = () => this.data.days
 
