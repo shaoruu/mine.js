@@ -1,28 +1,24 @@
 import { signout, removeAllCookies } from '../../lib/utils'
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 
-import React, { Component } from 'react'
-import { ApolloConsumer } from 'react-apollo'
+import React, { useEffect } from 'react'
+import { useApolloClient } from '@apollo/react-hooks'
 import { Redirect } from 'react-router-dom'
 
-class Logout extends Component {
-  componentDidMount() {
-    document.title = 'MC.JS - Logout'
+const Logout = ({ isAuth }) => {
+  useEffect(() => {
+    document.title = 'MC.JS - Home'
+  }, [])
+
+  const client = useApolloClient()
+
+  if (process.browser && isAuth) {
+    signout(client)
   }
 
-  render() {
-    const { isAuth } = this.props
+  removeAllCookies()
 
-    return (
-      <ApolloConsumer>
-        {client => {
-          if (process.browser) if (isAuth) signout(client)
-          removeAllCookies()
-          return <Redirect to="/home" />
-        }}
-      </ApolloConsumer>
-    )
-  }
+  return <Redirect to="/home" />
 }
 
 export default withAuthGuard(Logout)

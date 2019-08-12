@@ -22,8 +22,13 @@ const Game = ({
   loading,
   username
 }) => {
-  if (loading) return <Hint />
-  if (!isAuth) return <Redirect to="/login" />
+  if (loading) {
+    return <Hint />
+  }
+
+  if (!isAuth) {
+    return <Redirect to="/login" />
+  }
 
   let render = null
   switch (page) {

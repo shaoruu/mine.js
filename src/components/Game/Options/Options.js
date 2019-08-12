@@ -4,9 +4,9 @@ import { MY_SETTINGS, UPDATE_SETTINGS_MUTATION } from '../../../lib/graphql'
 
 import classes from './Options.module.css'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { withRouter } from 'react-router-dom'
-import { useQuery, useApolloClient } from 'react-apollo-hooks'
+import { useQuery, useApolloClient } from '@apollo/react-hooks'
 
 const Options = ({ history }) => {
   const [renderDistance, setRenderDistance] = useState(0)
@@ -18,7 +18,7 @@ const Options = ({ history }) => {
   useEffect(() => {
     document.title = 'MC.JS - Options'
 
-    if (data) {
+    if (data.me) {
       const {
         me: {
           settings: { renderDistance: rd }
@@ -28,11 +28,16 @@ const Options = ({ history }) => {
     }
   }, [data])
 
-  if (loading) return <Hint />
-  if (error) return <Hint text="Something went wrong..." />
-
-  const handleRenderDistance = e => {
+  const handleRenderDistance = useCallback(e => {
     setRenderDistance(e.target.value)
+  }, [])
+
+  if (loading) {
+    return <Hint />
+  }
+
+  if (error) {
+    return <Hint text="Something went wrong..." />
   }
 
   return (
