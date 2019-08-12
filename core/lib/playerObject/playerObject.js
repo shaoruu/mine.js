@@ -1,10 +1,8 @@
-/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-underscore-dangle, max-classes-per-file */
 import Helpers from '../../utils/helpers'
 import Config from '../../config/config'
-import {
-  loadSkinToCanvas,
-  isSlimSkin
-} from '../../modules/managers/playersManager/playerObjectUtils'
+
+import { loadSkinToCanvas, isSlimSkin } from './playerObjectUtils'
 
 import * as THREE from 'three'
 import TWEEN from '@tweenjs/tween.js'
