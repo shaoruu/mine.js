@@ -10,7 +10,8 @@ import { easeQuadOut } from 'd3-ease'
 
 const {
   movements: MOVEMENT_KEYS,
-  multiplayer: MULTIPLAYER_KEYS
+  multiplayer: MULTIPLAYER_KEYS,
+  inventory: INVENTORY_KEYS
 } = Config.keyboard
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal
 const VERT_MAX_SPEED = Config.player.maxSpeed.vertical
@@ -47,7 +48,8 @@ class Controls {
     blocker,
     button,
     initPos,
-    initDir
+    initDir,
+    inventory
   ) {
     /** THREEJS CAMERA CONTROL */
     this.threeControls = new PointerLockControls(
@@ -89,6 +91,7 @@ class Controls {
     this.blocker = blocker
     this.button = button
     this.status = status
+    this.inventory = inventory
 
     this.initListeners()
   }
@@ -358,6 +361,35 @@ class Controls {
       this.threeControls.unlock()
       chatRef.enable(false)
       this.keyboard.setScope('chat')
+    })
+
+    /* INVENTORY TOOLBAR */
+    this.keyboard.registerKey(INVENTORY_KEYS.h1, 'moving', () => {
+      this.inventory.setItemActiveInToolbar(1)
+    })
+    this.keyboard.registerKey(INVENTORY_KEYS.h2, 'moving', () => {
+      this.inventory.setItemActiveInToolbar(2)
+    })
+    this.keyboard.registerKey(INVENTORY_KEYS.h3, 'moving', () => {
+      this.inventory.setItemActiveInToolbar(3)
+    })
+    this.keyboard.registerKey(INVENTORY_KEYS.h4, 'moving', () => {
+      this.inventory.setItemActiveInToolbar(4)
+    })
+    this.keyboard.registerKey(INVENTORY_KEYS.h5, 'moving', () => {
+      this.inventory.setItemActiveInToolbar(5)
+    })
+    this.keyboard.registerKey(INVENTORY_KEYS.h6, 'moving', () => {
+      this.inventory.setItemActiveInToolbar(6)
+    })
+    this.keyboard.registerKey(INVENTORY_KEYS.h7, 'moving', () => {
+      this.inventory.setItemActiveInToolbar(7)
+    })
+    this.keyboard.registerKey(INVENTORY_KEYS.h8, 'moving', () => {
+      this.inventory.setItemActiveInToolbar(8)
+    })
+    this.keyboard.registerKey(INVENTORY_KEYS.h9, 'moving', () => {
+      this.inventory.setItemActiveInToolbar(9)
     })
 
     // F3 with 'x' as backup

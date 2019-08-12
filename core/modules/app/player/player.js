@@ -22,7 +22,8 @@ class Player extends Stateful {
     world,
     canvas,
     blocker,
-    button
+    button,
+    inventory
   ) {
     super({ prevPos: '', prevDir: '' })
 
@@ -58,7 +59,8 @@ class Player extends Stateful {
       {
         dirx: playerData.dirx,
         diry: playerData.diry
-      }
+      },
+      inventory
     )
 
     this.viewport = new PlayerViewport(this, world, scene)

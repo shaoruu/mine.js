@@ -23,6 +23,12 @@ class Inventory {
 
     container.appendChild(this.gui.wrapper)
   }
+
+  setItemActiveInToolbar = itemBoxId => {
+    this.toolbar.setActive(itemBoxId)
+  }
+
+  getToolbar = () => this.toolbar
 }
 
 export default Inventory

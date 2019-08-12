@@ -203,6 +203,12 @@ class Helpers {
     else ele.classList.add(s)
   }
 
+  static removeStyle = (ele, s) => {
+    if (typeof s === 'object')
+      Object.keys(s).forEach(key => (ele.style[key] = null))
+    else ele.classList.remove(s)
+  }
+
   static toRadian = degree => (degree * Math.PI) / 180
 
   static normalizeNoise = noise => (1 + noise) / 2
