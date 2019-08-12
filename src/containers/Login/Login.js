@@ -8,11 +8,12 @@ import React, { useEffect } from 'react'
 const Login = ({ isAuth }) => {
   useEffect(() => {
     document.title = 'MC.JS - Login'
-  })
+    removeAllCookies()
+  }, [])
 
-  if (isAuth) return <Redirect to="/home" />
-
-  removeAllCookies()
+  if (isAuth) {
+    return <Redirect to="/home" />
+  }
 
   return <LoginForm />
 }

@@ -8,7 +8,7 @@ import { withRouter } from 'react-router-dom'
 const Settings = ({ history }) => {
   useEffect(() => {
     document.title = 'MC.JS - Settings'
-  })
+  }, [])
 
   return (
     <div className={classes.wrapper}>

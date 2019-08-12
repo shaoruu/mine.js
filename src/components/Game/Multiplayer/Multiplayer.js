@@ -3,9 +3,9 @@ import { CREATE_PLAYER_MUTATION } from '../../../lib/graphql'
 
 import classes from './Multiplayer.module.css'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { withRouter, Redirect } from 'react-router-dom'
-import { Mutation } from 'react-apollo'
+import { useMutation } from '@apollo/react-hooks'
 
 const Multiplayer = ({ history, subpage }) => {
   const [address, setAddress] = useState('')
@@ -21,10 +21,20 @@ const Multiplayer = ({ history, subpage }) => {
     }
   })
 
-  const onChange = e => {
+  const onChange = useCallback(e => {
     setAddress(e.target.value)
     setError('')
-  }
+  }, [])
+
+  const [createPlayer] = useMutation(CREATE_PLAYER_MUTATION, {
+    onError: e => {
+      // eslint-disable-next-line no-console
+      console.error(e.message)
+      setError('World not found.')
+      setAddress('')
+    },
+    onCompleted: () => history.push(`/game/mcjs/${address}`)
+  })
 
   if (!subpage)
     return (
@@ -41,31 +51,18 @@ const Multiplayer = ({ history, subpage }) => {
           {error}
         </p>
         <div className={classes.buttonWrapper}>
-          <Mutation
-            mutation={CREATE_PLAYER_MUTATION}
-            onError={e => {
-              // eslint-disable-next-line no-console
-              console.error(e.message)
-              setError('World not found.')
-              setAddress('')
+          <button
+            type="button"
+            className={sharedStyles.button}
+            disabled={!address}
+            onClick={() => {
+              createPlayer({
+                variables: { worldId: address.trim(), gamemode: 'CREATIVE' }
+              })
             }}
-            onCompleted={() => history.push(`/game/mcjs/${address}`)}
           >
-            {createPlayer => (
-              <button
-                type="button"
-                className={sharedStyles.button}
-                disabled={!address}
-                onClick={() => {
-                  createPlayer({
-                    variables: { worldId: address.trim(), gamemode: 'CREATIVE' }
-                  })
-                }}
-              >
-                Join World
-              </button>
-            )}
-          </Mutation>
+            Join World
+          </button>
           <button
             type="button"
             className={sharedStyles.button}

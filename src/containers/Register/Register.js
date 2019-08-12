@@ -7,9 +7,11 @@ import React, { useEffect } from 'react'
 const Register = ({ isAuth }) => {
   useEffect(() => {
     document.title = 'MC.JS - Register'
-  })
+  }, [])
 
-  if (isAuth) return <Redirect to="/home" />
+  if (isAuth) {
+    return <Redirect to="/home" />
+  }
 
   return <RegisterForm />
 }

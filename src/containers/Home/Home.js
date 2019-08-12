@@ -16,9 +16,11 @@ import React, { useEffect } from 'react'
 const Home = ({ isAuth, history, username, loading }) => {
   useEffect(() => {
     document.title = 'MC.JS - Home'
-  })
+  }, [])
 
-  if (loading) return <Hint />
+  if (loading) {
+    return <Hint />
+  }
 
   const content = isAuth ? (
     <div className={classes.wrapper}>
