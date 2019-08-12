@@ -99,7 +99,8 @@ const Config = {
     acceleration: {
       forward: 50,
       other_horz: 20,
-      vertical: 40
+      vertical: 40,
+      sneak: 20
     },
     jump: {
       time: 80, // ms
@@ -114,7 +115,8 @@ const Config = {
       width: 0.5,
       eye2toe: 1.6,
       eye2top: 0.2,
-      depth: 0.5
+      depth: 0.5,
+      sneakDifference: 0.2
     },
     coordinateDec: 2,
     position: {
@@ -122,8 +124,13 @@ const Config = {
       posY: 4.49,
       posZ: 5.53
     },
+    times: {
+      // ms
+      sneakTime: 60
+    },
     reachDst: 7,
-    headBodyDeg: Math.PI / 4
+    headBodyDeg: Math.PI / 4,
+    sneaking: -10
   },
   block: {
     dimension: 32,
