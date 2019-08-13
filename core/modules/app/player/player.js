@@ -24,11 +24,12 @@ class Player extends Stateful {
     canvas,
     blocker,
     button,
-    container
+    container,
+    resourceManager
   ) {
     super({ prevPos: '', prevDir: '' })
 
-    const { id, user, gamemode } = playerData
+    const { id, user, gamemode, inventory } = playerData
 
     this.data = {
       id,
@@ -47,7 +48,9 @@ class Player extends Stateful {
       this.data.playerId,
       id,
       container,
-      apolloClient
+      inventory.cursor,
+      inventory.data,
+      resourceManager
     )
 
     /** CONTROL CENTER */
@@ -67,8 +70,7 @@ class Player extends Stateful {
       {
         dirx: playerData.dirx,
         diry: playerData.diry
-      },
-      this.inventory
+      }
     )
 
     this.viewport = new PlayerViewport(this, world, scene)

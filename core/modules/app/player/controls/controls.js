@@ -48,8 +48,7 @@ class Controls {
     blocker,
     button,
     initPos,
-    initDir,
-    inventory
+    initDir
   ) {
     /** THREEJS CAMERA CONTROL */
     this.threeControls = new PointerLockControls(
@@ -91,7 +90,6 @@ class Controls {
     this.blocker = blocker
     this.button = button
     this.status = status
-    this.inventory = inventory
 
     this.initListeners()
   }
@@ -365,7 +363,9 @@ class Controls {
 
     /* INVENTORY TOOLBAR */
     this.keyboard.registerIndexedKeyGroup(INVENTORY_KEYS, 'moving', index => {
-      this.inventory.selectToolbar(index)
+      if (this.player.inventory.getCursor() !== index - 1) {
+        this.player.inventory.select(index - 1)
+      }
     })
 
     // F3 with 'x' as backup
