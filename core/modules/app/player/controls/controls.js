@@ -364,32 +364,8 @@ class Controls {
     })
 
     /* INVENTORY TOOLBAR */
-    this.keyboard.registerKey(INVENTORY_KEYS.h1, 'moving', () => {
-      this.inventory.setItemActiveInToolbar(1)
-    })
-    this.keyboard.registerKey(INVENTORY_KEYS.h2, 'moving', () => {
-      this.inventory.setItemActiveInToolbar(2)
-    })
-    this.keyboard.registerKey(INVENTORY_KEYS.h3, 'moving', () => {
-      this.inventory.setItemActiveInToolbar(3)
-    })
-    this.keyboard.registerKey(INVENTORY_KEYS.h4, 'moving', () => {
-      this.inventory.setItemActiveInToolbar(4)
-    })
-    this.keyboard.registerKey(INVENTORY_KEYS.h5, 'moving', () => {
-      this.inventory.setItemActiveInToolbar(5)
-    })
-    this.keyboard.registerKey(INVENTORY_KEYS.h6, 'moving', () => {
-      this.inventory.setItemActiveInToolbar(6)
-    })
-    this.keyboard.registerKey(INVENTORY_KEYS.h7, 'moving', () => {
-      this.inventory.setItemActiveInToolbar(7)
-    })
-    this.keyboard.registerKey(INVENTORY_KEYS.h8, 'moving', () => {
-      this.inventory.setItemActiveInToolbar(8)
-    })
-    this.keyboard.registerKey(INVENTORY_KEYS.h9, 'moving', () => {
-      this.inventory.setItemActiveInToolbar(9)
+    this.keyboard.registerIndexedKeyGroup(INVENTORY_KEYS, 'moving', index => {
+      this.inventory.selectToolbar(index)
     })
 
     // F3 with 'x' as backup

@@ -24,7 +24,7 @@ class Inventory {
     container.appendChild(this.gui.wrapper)
   }
 
-  setItemActiveInToolbar = itemBoxId => {
+  selectToolbar = itemBoxId => {
     this.toolbar.setActive(itemBoxId)
   }
 

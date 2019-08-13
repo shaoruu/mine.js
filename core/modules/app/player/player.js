@@ -5,6 +5,7 @@ import {
   UPDATE_PLAYER_MUTATION,
   PLAYER_SUBSCRIPTION
 } from '../../../lib/graphql'
+import { Inventory } from '../../interfaces'
 
 import Status from './status/status'
 import PlayerControls from './controls/controls'
@@ -23,7 +24,7 @@ class Player extends Stateful {
     canvas,
     blocker,
     button,
-    inventory
+    container
   ) {
     super({ prevPos: '', prevDir: '' })
 
@@ -41,6 +42,13 @@ class Player extends Stateful {
     this.world = world
 
     this.status = new Status(gamemode, this)
+
+    this.inventory = new Inventory(
+      this.data.playerId,
+      id,
+      container,
+      apolloClient
+    )
 
     /** CONTROL CENTER */
     this.controls = new PlayerControls(
@@ -60,7 +68,7 @@ class Player extends Stateful {
         dirx: playerData.dirx,
         diry: playerData.diry
       },
-      inventory
+      this.inventory
     )
 
     this.viewport = new PlayerViewport(this, world, scene)

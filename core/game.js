@@ -81,7 +81,7 @@ class Game {
       canvas,
       blocker,
       button,
-      this.world.getInventory()
+      container
     )
 
     this.world.setPlayer(this.player)
