@@ -222,6 +222,15 @@ const resources = {
         }
       }
     }
+  },
+  interface: {
+    armor: {
+      heart: {
+        full: require('../assets/interface/heart_full.png'),
+        mid: require('../assets/interface/heart_50.png'),
+        empty: require('../assets/interface/heart_clear.png')
+      }
+    }
   }
 }
 

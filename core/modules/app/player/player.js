@@ -6,6 +6,7 @@ import {
   PLAYER_SUBSCRIPTION
 } from '../../../lib/graphql'
 import { Inventory } from '../../interfaces'
+import Armor from '../../interfaces/inventory/armor/armor'
 
 import Status from './status/status'
 import PlayerControls from './controls/controls'
@@ -43,6 +44,8 @@ class Player extends Stateful {
     this.world = world
 
     this.status = new Status(gamemode, this)
+
+    this.armor = new Armor(playerData, container, resourceManager)
 
     this.inventory = new Inventory(
       this.data.playerId,
