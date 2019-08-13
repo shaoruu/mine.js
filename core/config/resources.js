@@ -229,6 +229,16 @@ const resources = {
         full: require('../assets/interface/heart_full.png'),
         mid: require('../assets/interface/heart_50.png'),
         empty: require('../assets/interface/heart_clear.png')
+      },
+      armor: {
+        full: require('../assets/interface/armor_full.png'),
+        mid: require('../assets/interface/armor_50.png'),
+        empty: require('../assets/interface/armor_clear.png')
+      },
+      hungry: {
+        full: require('../assets/interface/hungry_full.png'),
+        mid: require('../assets/interface/hungry_50.png'),
+        empty: require('../assets/interface/hungry_clear.png')
       }
     }
   }

@@ -15,9 +15,7 @@
   align-self: flex-end;
 
   display: flex;
-  flex-direction: column;
-  justify-content: start;
-  align-items: center;
+  flex-direction: row;
   -webkit-user-select: none;
 
   width: 380px;
@@ -25,19 +23,44 @@
   /* background: red; */
   margin-bottom: 45px;
 }
+.section {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: start;
+
+  width: 190px;
+  height: 60px;
+}
+
 .wrapperRow {
+  position: relative;
   display: flex;
   flex-direction: row;
   justify-content: start;
   align-items: center;
   -webkit-user-select: none;
 
-  width: 380px;
+  width: 190px;
+  height: 30px;
+  /* background: blue; */
+}
+.wrapperRowReverse {
+  position: relative;
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: start;
+  align-items: center;
+  -webkit-user-select: none;
+
+  width: 190px;
   height: 30px;
   /* background: blue; */
 }
 
-.imgHeart {
+.imgIcon {
   witdh: 18px;
   height: 18px;
 }
