@@ -88,7 +88,7 @@ set PRISMA_MANAGEMENT_API_SECRET=my-secret
 export PRISMA_MANAGEMENT_API_SECRET=my-secret
 
 # Start all services
-yarn run init # only need this for first time running
+yarn run init # only needed when running for the first time
 yarn run start
 ```
 
