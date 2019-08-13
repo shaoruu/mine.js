@@ -2,8 +2,8 @@ import { Hint } from '../../../../Utils'
 import sharedStyles from '../../../../../containers/sharedStyles.module.css'
 import {
   MINI_WORLD_QUERY,
-  DELETE_WORLD_MUTATION,
-  MY_WORLDS_QUERY
+  DELETE_WORLD_MUTATION
+  // MY_WORLDS_QUERY
 } from '../../../../../lib/graphql'
 
 import classes from './DeleteWorld.module.css'
@@ -15,12 +15,7 @@ import { useQuery, useMutation } from '@apollo/react-hooks'
 const DeleteWorld = ({ history, location }) => {
   const { worldId } = location.state
 
-  const {
-    data: {
-      world: { name }
-    },
-    loading
-  } = useQuery(MINI_WORLD_QUERY, {
+  const { data, loading } = useQuery(MINI_WORLD_QUERY, {
     variables: {
       where: {
         id: worldId
@@ -40,6 +35,15 @@ const DeleteWorld = ({ history, location }) => {
     return <Hint />
   }
 
+  const { world } = data || {}
+
+  if (!world) {
+    history.push('/game/worlds')
+    return null
+  }
+
+  const { name } = world
+
   return (
     <div className={classes.wrapper}>
       <p>Are you sure you want to delete this world?</p>
@@ -57,14 +61,14 @@ const DeleteWorld = ({ history, location }) => {
             deleteWorld({
               variables: {
                 worldId
-              },
-              refetchQueries: [
-                {
-                  where: {
-                    id: MY_WORLDS_QUERY
-                  }
-                }
-              ]
+              }
+              // refetchQueries: [
+              //   {
+              //     where: {
+              //       id: MY_WORLDS_QUERY
+              //     }
+              //   }
+              // ]
             })
           }}
         >
