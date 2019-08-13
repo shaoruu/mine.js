@@ -13,12 +13,12 @@ const withAuthGuard = WrappedComponent => () => {
     }
   })
 
-  if (error) {
-    return <WrappedComponent isAuth={false} />
+  if (loading) {
+    return <WrappedComponent loading />
   }
 
-  if (!data || !data.me || loading) {
-    return <WrappedComponent loading />
+  if (error || !data || !data.me) {
+    return <WrappedComponent isAuth={false} />
   }
 
   return <WrappedComponent isAuth username={data.me.username} />
