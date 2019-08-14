@@ -6,10 +6,14 @@ import {
   PLAYER_SUBSCRIPTION
 } from '../../../lib/graphql'
 import { Inventory, PlayerStatus } from '../../interfaces'
+import PlayerObject from '../../../lib/playerObject/playerObject'
+import OriginalSteve from '../../../assets/skin/Original_Steve.png'
 
 import Status from './status/status'
 import Controls from './controls/controls'
 import Viewport from './viewport/viewport'
+
+import { Vector2, Vector3 } from 'three'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe
 
@@ -78,6 +82,13 @@ class Player extends Stateful {
         diry: playerData.diry
       }
     )
+
+    this.skin = new PlayerObject(
+      OriginalSteve,
+      new Vector3(playerData.x, playerData.y, playerData.z),
+      new Vector2(playerData.dirx, playerData.diry)
+    )
+    scene.add(this.skin)
 
     this.viewport = new Viewport(this, world, scene)
 
@@ -163,6 +174,16 @@ class Player extends Stateful {
     this.controls.tick()
     this.status.tick()
     this.viewport.tick()
+
+    this.updateSkin()
+  }
+
+  updateSkin = () => {
+    const pos = this.getCoordinates(3)
+    const dir = this.getDirections()
+
+    this.skin.tweenPosition(pos.x, pos.y, pos.z)
+    this.skin.tweenDirection(dir.dirx, dir.diry)
   }
 
   handleServerUpdate = ({

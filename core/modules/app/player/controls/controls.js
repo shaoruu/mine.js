@@ -82,7 +82,7 @@ class Controls {
     }
 
     this.cameraMode = {
-      thirdPerson: false
+      thirdPerson: 'first'
     }
 
     this.currJumpTime = 0
@@ -117,8 +117,8 @@ class Controls {
   }
 
   tick = () => {
-    this.handleMovements()
     this.setCameraMode()
+    this.handleMovements()
     this.mouseControl.tick()
   }
 
@@ -265,13 +265,23 @@ class Controls {
   }
 
   setCameraMode = () => {
-    if (this.cameraMode.thirdPerson) {
+    this.camera.rotation.x = 0
+    this.camera.rotation.z = 0
+    if (this.cameraMode.thirdPerson === 'reverse') {
       this.camera.position.set(
-        CAMERA_CONFIG.thirdPerson.posX,
-        CAMERA_CONFIG.thirdPerson.posY,
-        CAMERA_CONFIG.thirdPerson.posZ
+        CAMERA_CONFIG.thirdPersonReverse.posX,
+        CAMERA_CONFIG.thirdPersonReverse.posY,
+        CAMERA_CONFIG.thirdPersonReverse.posZ
       )
-    } else {
+    } else if (this.cameraMode.thirdPerson === 'front') {
+      this.camera.position.set(
+        CAMERA_CONFIG.thirdPersonFront.posX,
+        CAMERA_CONFIG.thirdPersonFront.posY,
+        CAMERA_CONFIG.thirdPersonFront.posZ
+      )
+      this.camera.rotation.x = 180
+      this.camera.rotation.z = (180 * Math.PI) / 180
+    } else if (this.cameraMode.thirdPerson === 'first') {
       this.camera.position.set(
         CAMERA_CONFIG.posX,
         CAMERA_CONFIG.posY,
@@ -279,6 +289,8 @@ class Controls {
       )
     }
   }
+
+  isCameraThirdPerson = () => this.cameraMode.thirdPerson !== 'first'
 
   registerKeys = () => {
     const chatRef = this.world.getChat()
@@ -379,11 +391,16 @@ class Controls {
       }
     )
 
-    this.keyboard.registerKey(
-      CAMERA_KEYS.thirdPerson,
-      'moving',
-      () => (this.cameraMode.thirdPerson = !this.cameraMode.thirdPerson)
-    )
+    this.keyboard.registerKey(CAMERA_KEYS.thirdPerson, 'moving', () => {
+      // this.cameraMode.thirdPerson = !this.cameraMode.thirdPerson
+      if (this.cameraMode.thirdPerson === 'first') {
+        this.cameraMode.thirdPerson = 'reverse'
+      } else if (this.cameraMode.thirdPerson === 'reverse') {
+        this.cameraMode.thirdPerson = 'front'
+      } else {
+        this.cameraMode.thirdPerson = 'first'
+      }
+    })
 
     this.keyboard.registerKey(MULTIPLAYER_KEYS.openChat, 'moving', () => {
       this.threeControls.unlock()

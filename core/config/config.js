@@ -61,10 +61,15 @@ const Config = {
     posZ: 0,
     sprintFovDelta: 15,
     spectatorFov: 130,
-    thirdPerson: {
+    thirdPersonReverse: {
       posX: 0,
       posY: 50,
       posZ: 60
+    },
+    thirdPersonFront: {
+      posX: 0,
+      posY: 50,
+      posZ: -60
     }
   },
   keyboard: {
