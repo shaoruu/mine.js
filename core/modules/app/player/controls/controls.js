@@ -12,6 +12,7 @@ import { easeQuadOut } from 'd3-ease'
 const {
   movements: MOVEMENT_KEYS,
   multiplayer: MULTIPLAYER_KEYS,
+  camera: CAMERA_KEYS,
   inventory: INVENTORY_KEYS
 } = Config.keyboard
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal
@@ -34,6 +35,7 @@ const P_WIDTH = Config.player.aabb.width
 const P_DEPTH = Config.player.aabb.depth
 const P_I_2_TOE = Config.player.aabb.eye2toe
 const P_I_2_TOP = Config.player.aabb.eye2top
+const CAMERA_CONFIG = Config.camera
 const SNEAK_DIFF = Config.player.aabb.sneakDifference
 const PLAYER_HEIGHT = P_I_2_TOE + P_I_2_TOP
 const CAM_SNEAK_DIFF = SNEAK_DIFF * PLAYER_HEIGHT * DIMENSION
@@ -79,6 +81,10 @@ class Controls {
       up: false
     }
 
+    this.cameraMode = {
+      thirdPerson: false
+    }
+
     this.currJumpTime = 0
     this.jumping = false
 
@@ -112,6 +118,7 @@ class Controls {
 
   tick = () => {
     this.handleMovements()
+    this.setCameraMode()
     this.mouseControl.tick()
   }
 
@@ -257,6 +264,22 @@ class Controls {
     }
   }
 
+  setCameraMode = () => {
+    if (this.cameraMode.thirdPerson) {
+      this.camera.position.set(
+        CAMERA_CONFIG.thirdPerson.posX,
+        CAMERA_CONFIG.thirdPerson.posY,
+        CAMERA_CONFIG.thirdPerson.posZ
+      )
+    } else {
+      this.camera.position.set(
+        CAMERA_CONFIG.posX,
+        CAMERA_CONFIG.posY,
+        CAMERA_CONFIG.posZ
+      )
+    }
+  }
+
   registerKeys = () => {
     const chatRef = this.world.getChat()
     /**
@@ -354,6 +377,12 @@ class Controls {
         delete this.sneakTween
         this.freshlyUnsneaked = true
       }
+    )
+
+    this.keyboard.registerKey(
+      CAMERA_KEYS.thirdPerson,
+      'moving',
+      () => (this.cameraMode.thirdPerson = !this.cameraMode.thirdPerson)
     )
 
     this.keyboard.registerKey(MULTIPLAYER_KEYS.openChat, 'moving', () => {
