@@ -82,6 +82,8 @@ class Inventory {
   getHotbar = () => this.hotbar
 
   getCursor = () => this.cursor
+
+  getHand = () => this.hotbar.getHand()
 }
 
 export default Inventory
