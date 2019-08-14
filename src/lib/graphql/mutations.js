@@ -48,7 +48,9 @@ export const CREATE_PLAYER_MUTATION = gql`
 
 export const DELETE_WORLD_MUTATION = gql`
   mutation DeleteWorld($worldId: ID!) {
-    deleteWorld(worldId: $worldId)
+    deleteWorld(where: { id: $worldId }) {
+      id
+    }
   }
 `
 
