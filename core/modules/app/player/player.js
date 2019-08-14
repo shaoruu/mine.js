@@ -12,7 +12,7 @@ import Controls from './controls/controls'
 import Viewport from './viewport/viewport'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe
-
+const HEALTH_MIN = Config.player.health.min
 class Player extends Stateful {
   constructor(
     apolloClient,
@@ -89,6 +89,8 @@ class Player extends Stateful {
 
     this.initUpdaters()
     this.initSubscriptions()
+
+    // this.playerStatus.updateStatus(20, 0, 20)
   }
 
   initUpdaters = () => {
@@ -212,6 +214,8 @@ class Player extends Stateful {
   getPosition = () => this.controls.getObject().position
 
   getObject = () => this.controls.getObject()
+
+  isDead = () => this.health === HEALTH_MIN
 
   /* -------------------------------------------------------------------------- */
   /*                                   SETTERS                                  */

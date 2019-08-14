@@ -1,7 +1,20 @@
 import Helpers from '../../../utils/helpers'
+import Config from '../../../config/config'
 
 import classes from './playerStatus.module.css'
 
+const HEALTH_MAX = Config.player.health.max
+const HEALTH_MIN = Config.player.health.min
+const HUNGER_MAX = Config.player.hunger.max
+const HUNGER_MIN = Config.player.hunger.min
+const ARMOR_MAX = Config.player.armor.max
+const ARMOR_MIN = Config.player.armor.min
+const HEALTH_HUNGER_INCREMENT_TIME = Config.player.health.hungerIncrementTime
+const HEALTH_HUNGER_INCREMENT = Config.player.health.hungerIncrement
+const HEALTH_HUNGER_DECREMENT_TIME = Config.player.health.hungerDecrementTime
+const HEALTH_HUNGER_DECREMENT = Config.player.health.hungerDecrement
+const HUNGER_DECREMENT_TIME = Config.player.hunger.hungerDecrementTime
+const HUNGER_DECREMENT = Config.player.hunger.hungerDecrement
 class PlayerStatus {
   constructor(
     gamemode,
@@ -23,10 +36,14 @@ class PlayerStatus {
     this.armor = armor
     this.hunger = hunger
 
+    this.gamemode = gamemode
+
     this.resourceManager = resourceManager
     this.initDom(container)
     this.updateStatus(this.health, this.armor, this.hunger)
-    this.setGamemode(gamemode)
+    this.setGamemode(this.gamemode)
+
+    this.initAutoStatus()
   }
 
   initDom = container => {
@@ -92,25 +109,78 @@ class PlayerStatus {
     this.setHunger(hunger)
   }
 
+  initAutoStatus = () => {
+    this.autoIncrementHealth()
+    this.autoDecrementHealth()
+    this.autoDecrementHunger()
+  }
+
+  autoIncrementHealth = () => {
+    window.requestInterval(() => {
+      if (
+        this.gamemode === 'SURVIVAL' &&
+        this.hunger === HUNGER_MAX &&
+        this.health < HEALTH_MAX
+      )
+        this.setHealth(this.health + HEALTH_HUNGER_INCREMENT)
+    }, HEALTH_HUNGER_INCREMENT_TIME)
+  }
+
+  autoDecrementHealth = () => {
+    window.requestInterval(() => {
+      if (
+        this.gamemode === 'SURVIVAL' &&
+        this.hunger === HUNGER_MIN &&
+        this.health > HEALTH_MIN
+      )
+        this.setHealth(this.health - HEALTH_HUNGER_DECREMENT)
+    }, HEALTH_HUNGER_DECREMENT_TIME)
+  }
+
+  autoDecrementHunger = () => {
+    window.requestInterval(() => {
+      if (this.gamemode === 'SURVIVAL' && this.hunger > HUNGER_MIN)
+        this.setHunger(this.hunger - HUNGER_DECREMENT)
+    }, HUNGER_DECREMENT_TIME)
+  }
+
+  autoHunger = () => {}
+
   /* -------------------------------------------------------------------------- */
   /*                                   SETTERS                                  */
   /* -------------------------------------------------------------------------- */
   setHealth = health => {
-    this.health = health
+    if (health > HEALTH_MIN) {
+      if (health < HEALTH_MAX) {
+        this.health = health
+      } else {
+        this.health = HEALTH_MAX
+      }
+    } else {
+      this.health = 0
+    }
     let hearts = 0
     let midHearts = 0
-    if (Helpers.isEven(health)) {
-      hearts = health / 2
+    if (Helpers.isEven(this.health)) {
+      hearts = this.health / 2
       midHearts = 0
     } else {
-      hearts = Math.trunc(health / 2)
+      hearts = Math.trunc(this.health / 2)
       midHearts = 1
     }
     this.generateIcons(hearts, midHearts, this.wrapperHeart, 'heart')
   }
 
   setArmor = armor => {
-    this.armor = armor
+    if (armor > ARMOR_MIN) {
+      if (armor < ARMOR_MAX) {
+        this.armor = armor
+      } else {
+        this.armor = ARMOR_MAX
+      }
+    } else {
+      this.armor = 0
+    }
     let armors = 0
     let midArmors = 0
     if (Helpers.isEven(armor)) {
@@ -124,7 +194,15 @@ class PlayerStatus {
   }
 
   setHunger = hunger => {
-    this.hunger = hunger
+    if (hunger > HUNGER_MIN) {
+      if (hunger < HUNGER_MAX) {
+        this.hunger = hunger
+      } else {
+        this.hunger = HUNGER_MAX
+      }
+    } else {
+      this.hunger = 0
+    }
     let hungers = 0
     let midHungers = 0
     if (Helpers.isEven(hunger)) {
@@ -138,6 +216,7 @@ class PlayerStatus {
   }
 
   setGamemode = gamemode => {
+    this.gamemode = gamemode
     let style
     switch (gamemode) {
       case 'SURVIVAL': {

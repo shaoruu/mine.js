@@ -138,7 +138,25 @@ const Config = {
     },
     reachDst: 7,
     headBodyDeg: Math.PI / 4,
-    sneaking: -10
+    sneaking: -10,
+    health: {
+      max: 20,
+      min: 0,
+      hungerIncrementTime: 10000,
+      hungerIncrement: 1,
+      hungerDecrementTime: 3000,
+      hungerDecrement: 1
+    },
+    hunger: {
+      max: 20,
+      min: 0,
+      hungerDecrementTime: 15000,
+      hungerDecrement: 1
+    },
+    armor: {
+      max: 20,
+      min: 0
+    }
   },
   block: {
     dimension: 32,
