@@ -104,16 +104,18 @@ class PlayerStatus {
   }
 
   setGamemode = gamemode => {
+    let style
     switch (gamemode) {
       case 'SURVIVAL': {
-        this.wrapper.style.display = 'flex'
+        style = 'flex'
         break
       }
       default: {
-        this.wrapper.style.display = 'none'
+        style = 'none'
         break
       }
     }
+    Helpers.applyStyle(this.wrapper, { display: style })
   }
 
   generateIcons = (icons, midIcons, wrapper, interfaceId) => {

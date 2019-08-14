@@ -14,13 +14,13 @@ class Inventory {
   }
 
   initDom = container => {
-    const wrapper = document.createElement('div')
+    this.wrapper = document.createElement('div')
 
-    wrapper.appendChild(this.hotbar.getGui())
+    this.wrapper.appendChild(this.hotbar.getGui())
 
-    Helpers.applyStyle(wrapper, classes.wrapper)
+    Helpers.applyStyle(this.wrapper, classes.wrapper)
 
-    container.appendChild(wrapper)
+    container.appendChild(this.wrapper)
   }
 
   select = itemBoxId => {
@@ -30,6 +30,21 @@ class Inventory {
   getHotbar = () => this.hotbar
 
   getCursor = () => this.cursor
+
+  setGamemode = gamemode => {
+    let style
+    switch (gamemode) {
+      case 'SPECTATOR': {
+        style = 'none'
+        break
+      }
+      default: {
+        style = 'flex'
+        break
+      }
+    }
+    Helpers.applyStyle(this.wrapper, { display: style })
+  }
 
   digestInventory = data => {
     // Default data: "ARMOR:(0;) * 4|BACKPACK:(0,0;) * 27|HOTBAR:(0,0;) * 9"

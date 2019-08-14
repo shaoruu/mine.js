@@ -172,6 +172,7 @@ class Player extends Stateful {
   }) => {
     this.status.setGamemode(gamemode)
     this.playerStatus.setGamemode(gamemode)
+    this.inventory.setGamemode(gamemode)
   }
 
   removeUpdaters = () => {
