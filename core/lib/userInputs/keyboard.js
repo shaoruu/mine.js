@@ -29,9 +29,13 @@ class Keyboard {
 
           keyState.dblPressedPotential = false // Set to falsey value to indicate dbl pressed.
 
-          if (keyState.config.immediate && keyState.onPressed) keyState.onPressed(e)
+          if (keyState.config.immediate && keyState.onPressed)
+            keyState.onPressed(e)
         } else if (keyState.onPressed) {
-          if ((!keyState.config.repeat && !keyState.state.isPressed) || keyState.config.repeat)
+          if (
+            (!keyState.config.repeat && !keyState.state.isPressed) ||
+            keyState.config.repeat
+          )
             keyState.onPressed(e)
         }
 
@@ -52,7 +56,10 @@ class Keyboard {
       if (!keyState) return
 
       try {
-        if (keyState.onDblPressed && keyState.dblPressedPotential === undefined) {
+        if (
+          keyState.onDblPressed &&
+          keyState.dblPressedPotential === undefined
+        ) {
           keyState.dblPressedPotential = true
 
           // Double press will not work after x seconds.
@@ -107,17 +114,34 @@ class Keyboard {
     for (let i = 0; i < keyArr.length; i++) {
       const keyCode = keyArr[i]
 
-      this.registerKey(keyCode, scope, onPressed, onReleased, onDblPressed, config)
+      this.registerKey(
+        keyCode,
+        scope,
+        onPressed,
+        onReleased,
+        onDblPressed,
+        config
+      )
     }
   }
 
   registerIndexedKeyGroup = (group, scope, onPressed) => {
-    const wrapped = event => {
-      const index = group.indexOf(event.keyCode)
-      onPressed(index)
+    if (Array.isArray(group)) {
+      const wrapped = event => {
+        const index = group.indexOf(event.keyCode)
+        onPressed(index)
+      }
+      for (let i = 0; i < group.length; i++) {
+        this.registerKey(group[i], scope, wrapped)
+      }
+    } else {
+      Object.keys(group).forEach(key => {
+        const index = parseInt(key.split('h')[1], 0)
+        this.registerKey(group[key], scope, () => {
+          onPressed(index)
+        })
+      })
     }
-
-    for (let i = 0; i < group.length; i++) this.registerKey(group[i], scope, wrapped)
   }
 
   setScopeDefaultHandler = (scope, onPressed) => {

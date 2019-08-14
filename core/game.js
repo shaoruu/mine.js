@@ -2,6 +2,7 @@ import Config from './config/config'
 import { Renderer, Camera, World, Player } from './modules/app'
 import { Debug, ConnectionStatus } from './modules/interfaces'
 import IOClient from './lib/ioClient/ioClient'
+import { ResourceManager } from './modules/managers'
 
 import * as THREE from 'three'
 
@@ -37,6 +38,8 @@ class Game {
     const playerData = world.players.find(ele => ele.user.username === username)
     const RENDER_D = playerData.user.settings.renderDistance
 
+    const resourceManager = new ResourceManager()
+
     /** LOCAL DATA SAVE */
     this.data = {
       username
@@ -69,7 +72,8 @@ class Game {
       apolloClient,
       this.ioClient,
       container,
-      playerData
+      playerData,
+      resourceManager
     )
     this.player = new Player(
       apolloClient,
@@ -80,7 +84,9 @@ class Game {
       this.world,
       canvas,
       blocker,
-      button
+      button,
+      container,
+      resourceManager
     )
 
     this.world.setPlayer(this.player)

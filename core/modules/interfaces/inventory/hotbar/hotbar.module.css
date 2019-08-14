@@ -1,0 +1,9 @@
+.wrapper {
+  align-self: flex-end;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  -webkit-user-select: none;
+}
