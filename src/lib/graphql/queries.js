@@ -74,6 +74,9 @@ export const WORLD_QUERY = gql`
           cursor
           data
         }
+        health
+        armor
+        hunger
       }
     }
   }

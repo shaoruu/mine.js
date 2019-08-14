@@ -3,7 +3,15 @@ import Helpers from '../../../utils/helpers'
 import classes from './playerStatus.module.css'
 
 class PlayerStatus {
-  constructor(gamemode, playerData, container, resourceManager) {
+  constructor(
+    gamemode,
+    playerData,
+    container,
+    resourceManager,
+    health,
+    armor,
+    hunger
+  ) {
     /* Here we need to get health and armor from database info
      * Health full = 20
      * Armor full = 20
@@ -11,15 +19,13 @@ class PlayerStatus {
      * Mid Health/Mid Armor/Mid Hunger = 1
      * 1 Health/1 Armor/1 Hunger = 2
      */
-
-    //! Temporary Data
-    const health = 11
-    const armor = 6
-    const hunger = 14
+    this.health = health
+    this.armor = armor
+    this.hunger = hunger
 
     this.resourceManager = resourceManager
     this.initDom(container)
-    this.updateStatus(health, armor, hunger)
+    this.updateStatus(this.health, this.armor, this.hunger)
     this.setGamemode(gamemode)
   }
 
@@ -90,6 +96,7 @@ class PlayerStatus {
   /*                                   SETTERS                                  */
   /* -------------------------------------------------------------------------- */
   setHealth = health => {
+    this.health = health
     let hearts = 0
     let midHearts = 0
     if (Helpers.isEven(health)) {
@@ -103,6 +110,7 @@ class PlayerStatus {
   }
 
   setArmor = armor => {
+    this.armor = armor
     let armors = 0
     let midArmors = 0
     if (Helpers.isEven(armor)) {
@@ -116,6 +124,7 @@ class PlayerStatus {
   }
 
   setHunger = hunger => {
+    this.hunger = hunger
     let hungers = 0
     let midHungers = 0
     if (Helpers.isEven(hunger)) {
@@ -141,6 +150,23 @@ class PlayerStatus {
       }
     }
     Helpers.applyStyle(this.wrapper, { display: style })
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   GETTERS                                  */
+  /* -------------------------------------------------------------------------- */
+  getHealth = () => this.health
+
+  getArmor = () => this.armor
+
+  getHunger = () => this.hunger
+
+  getStatus = () => {
+    return {
+      health: this.health,
+      armor: this.armor,
+      hunger: this.hunger
+    }
   }
 }
 export default PlayerStatus

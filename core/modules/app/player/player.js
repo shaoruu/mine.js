@@ -35,6 +35,7 @@ class Player extends Stateful {
       id,
       user
     }
+    console.log(playerData)
 
     this.apolloClient = apolloClient
     this.ioClient = ioClient
@@ -47,7 +48,10 @@ class Player extends Stateful {
       gamemode,
       playerData,
       container,
-      resourceManager
+      resourceManager,
+      playerData.health,
+      playerData.armor,
+      playerData.hunger
     )
 
     this.inventory = new Inventory(
@@ -103,6 +107,7 @@ class Player extends Stateful {
         playerDir.dirx,
         playerDir.diry
       )
+      const playerStatus = this.playerStatus.getStatus()
 
       // eslint-disable-next-line no-restricted-syntax
       for (const member in playerCoords)
@@ -119,7 +124,8 @@ class Player extends Stateful {
           variables: {
             id: this.data.id,
             ...playerCoords,
-            ...playerDir
+            ...playerDir,
+            ...playerStatus
           }
         })
       }
