@@ -1,0 +1,11 @@
+.wrapper {
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  -webkit-user-select: none;
+  z-index: 1;
+}

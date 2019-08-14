@@ -68,15 +68,6 @@ const PlayerMutations = {
       }
     }
 
-    // const playerId = args.data.id
-    // delete args.data.id
-
-    // const { cursor } = args.data
-    // delete args.data.cursor
-
-    // const { data } = args.data
-    // delete args.data.data
-
     const inventoryUpdate = { inventory: { update: { cursor, data } } }
     if (!cursor) delete inventoryUpdate.cursor
     if (!data) delete inventoryUpdate.data

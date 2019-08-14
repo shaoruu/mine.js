@@ -5,10 +5,11 @@ import {
   UPDATE_PLAYER_MUTATION,
   PLAYER_SUBSCRIPTION
 } from '../../../lib/graphql'
+import { Inventory, PlayerStatus } from '../../interfaces'
 
 import Status from './status/status'
-import PlayerControls from './controls/controls'
-import PlayerViewport from './viewport/viewport'
+import Controls from './controls/controls'
+import Viewport from './viewport/viewport'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe
 
@@ -22,11 +23,13 @@ class Player extends Stateful {
     world,
     canvas,
     blocker,
-    button
+    button,
+    container,
+    resourceManager
   ) {
     super({ prevPos: '', prevDir: '' })
 
-    const { id, user, gamemode } = playerData
+    const { id, user, gamemode, inventory } = playerData
 
     this.data = {
       id,
@@ -40,9 +43,24 @@ class Player extends Stateful {
     this.world = world
 
     this.status = new Status(gamemode, this)
+    this.playerStatus = new PlayerStatus(
+      gamemode,
+      playerData,
+      container,
+      resourceManager
+    )
+
+    this.inventory = new Inventory(
+      this.data.playerId,
+      id,
+      container,
+      inventory.cursor,
+      inventory.data,
+      resourceManager
+    )
 
     /** CONTROL CENTER */
-    this.controls = new PlayerControls(
+    this.controls = new Controls(
       this,
       world,
       this.status,
@@ -61,7 +79,7 @@ class Player extends Stateful {
       }
     )
 
-    this.viewport = new PlayerViewport(this, world, scene)
+    this.viewport = new Viewport(this, world, scene)
 
     scene.add(this.controls.getObject())
 
@@ -153,6 +171,8 @@ class Player extends Stateful {
     }
   }) => {
     this.status.setGamemode(gamemode)
+    this.playerStatus.setGamemode(gamemode)
+    this.inventory.setGamemode(gamemode)
   }
 
   removeUpdaters = () => {

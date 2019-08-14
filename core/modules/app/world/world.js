@@ -1,9 +1,4 @@
-import {
-  ResourceManager,
-  ChunkManager,
-  WorkerManager,
-  PlayersManager
-} from '../../managers'
+import { ChunkManager, WorkerManager, PlayersManager } from '../../managers'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
 import { Chat } from '../../interfaces'
@@ -16,7 +11,15 @@ import {
 import createSky from './sky/sky'
 
 class World extends Stateful {
-  constructor(worldData, scene, apolloClient, ioClient, container, playerData) {
+  constructor(
+    worldData,
+    scene,
+    apolloClient,
+    ioClient,
+    container,
+    playerData,
+    resourceManager
+  ) {
     super({ isSetup: false })
 
     const { id, name, seed, type, time, days, changedBlocks } = worldData
@@ -39,13 +42,12 @@ class World extends Stateful {
 
     this.chat = new Chat(this.data.playerId, id, container, apolloClient)
 
-    this.resourceManager = new ResourceManager()
     this.workerManager = new WorkerManager(this)
     this.playersManager = new PlayersManager(scene)
     this.chunkManager = new ChunkManager(
       scene,
       this,
-      this.resourceManager,
+      resourceManager,
       this.workerManager,
       changedBlocks
     )

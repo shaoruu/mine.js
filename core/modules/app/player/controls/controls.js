@@ -11,7 +11,8 @@ import { easeQuadOut } from 'd3-ease'
 const {
   movements: MOVEMENT_KEYS,
   multiplayer: MULTIPLAYER_KEYS,
-  camera: CAMERA_KEYS
+  camera: CAMERA_KEYS,
+  inventory: INVENTORY_KEYS
 } = Config.keyboard
 const HORZ_MAX_SPEED = Config.player.maxSpeed.horizontal
 const VERT_MAX_SPEED = Config.player.maxSpeed.vertical
@@ -387,6 +388,13 @@ class Controls {
       this.threeControls.unlock()
       chatRef.enable(false)
       this.keyboard.setScope('chat')
+    })
+
+    /* INVENTORY TOOLBAR */
+    this.keyboard.registerIndexedKeyGroup(INVENTORY_KEYS, 'moving', index => {
+      if (this.player.inventory.getCursor() !== index - 1) {
+        this.player.inventory.select(index - 1)
+      }
     })
 
     // F3 with 'x' as backup

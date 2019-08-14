@@ -222,6 +222,25 @@ const resources = {
         }
       }
     }
+  },
+  interface: {
+    armor: {
+      heart: {
+        full: require('../assets/interface/heart_full.png'),
+        mid: require('../assets/interface/heart_50.png'),
+        empty: require('../assets/interface/heart_clear.png')
+      },
+      armor: {
+        full: require('../assets/interface/armor_full.png'),
+        mid: require('../assets/interface/armor_50.png'),
+        empty: require('../assets/interface/armor_clear.png')
+      },
+      hunger: {
+        full: require('../assets/interface/hunger_full.png'),
+        mid: require('../assets/interface/hunger_50.png'),
+        empty: require('../assets/interface/hunger_clear.png')
+      }
+    }
   }
 }
 

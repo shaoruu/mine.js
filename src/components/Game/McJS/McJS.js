@@ -5,24 +5,23 @@ import crosshair from '../../../assets/gui/crosshair.png'
 
 import classes from './McJS.module.css'
 
-import React, { useRef, useEffect } from 'react'
+import React, { useCallback, useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import McJS from 'core/game'
-import { useQuery, useApolloClient } from 'react-apollo-hooks'
+import { useQuery, useApolloClient } from '@apollo/react-hooks'
 
 const Game = ({ id: worldId, username, history }) => {
   const blocker = useRef(null)
   const button = useRef(null)
   const container = useRef(null)
   const canvas = useRef(null)
+  const frameId = useRef(null)
 
-  let frameId
-
-  const terminate = () => {
+  const terminate = useCallback(() => {
     window.cancelAnimationFrame(frameId)
-    frameId = undefined
-  }
+    frameId.current = null
+  }, [frameId])
 
   const { data: worldData, error, loading } = useQuery(WORLD_QUERY, {
     variables: {
@@ -33,24 +32,33 @@ const Game = ({ id: worldId, username, history }) => {
 
   const client = useApolloClient()
 
-  const animate = game => {
-    game.update()
-    if (!document.webkitHidden) {
-      frameId = window.requestAnimationFrame(() => animate(game))
-    }
-  }
+  const animate = useCallback(
+    game => {
+      game.update()
 
-  const closingHandler = ev => {
+      if (!document.webkitHidden) {
+        frameId.current = window.requestAnimationFrame(() => animate(game))
+      }
+    },
+    [frameId]
+  )
+
+  const closingHandler = useCallback(ev => {
     ev.preventDefault()
     ev.returnValue = 'Are you sure you want to close?'
-  }
+  }, [])
 
-  const init = game => {
-    window.addEventListener('resize', game.onWindowResize, false)
-    window.addEventListener('beforeunload', closingHandler, false)
+  const init = useCallback(
+    game => {
+      window.addEventListener('resize', game.onWindowResize, false)
+      window.addEventListener('beforeunload', closingHandler, false)
 
-    if (!frameId) frameId = window.requestAnimationFrame(() => animate(game))
-  }
+      if (!frameId.current) {
+        frameId.current = window.requestAnimationFrame(() => animate(game))
+      }
+    },
+    [frameId, animate, closingHandler]
+  )
 
   useEffect(() => {
     document.title = 'MC.JS'
@@ -74,10 +82,22 @@ const Game = ({ id: worldId, username, history }) => {
       game.terminate()
       terminate()
     }
-  })
+  }, [
+    client,
+    closingHandler,
+    error,
+    init,
+    loading,
+    terminate,
+    username,
+    worldData
+  ])
 
-  if (loading) return <Hint text="Loading world..." />
-  if (error || !worldData)
+  if (loading) {
+    return <Hint text="Loading world..." />
+  }
+
+  if (error || !worldData) {
     return (
       <div className={classes.world_not_found}>
         <Hint text="World not found..." />
@@ -90,6 +110,7 @@ const Game = ({ id: worldId, username, history }) => {
         </button>
       </div>
     )
+  }
 
   return (
     <div className={classes.wrapper} ref={container}>

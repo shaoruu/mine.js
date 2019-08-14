@@ -197,10 +197,18 @@ class Helpers {
 
   static isPassable = type => PASSABLE_BLOCKS.includes(type)
 
+  static isEven = number => number % 2 === 0
+
   static applyStyle = (ele, s) => {
     if (typeof s === 'object')
       Object.keys(s).forEach(key => (ele.style[key] = s[key]))
     else ele.classList.add(s)
+  }
+
+  static removeStyle = (ele, s) => {
+    if (typeof s === 'object')
+      Object.keys(s).forEach(key => (ele.style[key] = null))
+    else ele.classList.remove(s)
   }
 
   static toRadian = degree => (degree * Math.PI) / 180

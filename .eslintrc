@@ -6,12 +6,16 @@
     "codeFrame": false
   },
   "extends": ["airbnb", "prettier"],
+  "plugins": ["react-hooks"],
   "env": {
     "browser": true,
     "jest": true
   },
   "rules": {
-    "import/order": [2, { "groups": ["parent", "sibling"], "newlines-between": "always" }],
+    "import/order": [
+      2,
+      { "groups": ["parent", "sibling"], "newlines-between": "always" }
+    ],
     "prefer-promise-reject-errors": "off",
     "react/jsx-filename-extension": "off",
     "react/forbid-prop-types": "off",
@@ -26,7 +30,9 @@
     "no-bitwise": "off",
     "consistent-return": "off",
     "import/no-webpack-loader-syntax": "off",
-    "no-restricted-globals": "off"
+    "no-restricted-globals": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
   },
   "settings": {
     "import/resolver": {
