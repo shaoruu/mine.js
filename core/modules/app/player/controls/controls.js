@@ -3,6 +3,7 @@ import Config from '../../../../config/config'
 import Helpers from '../../../../utils/helpers'
 
 import PointerLockControls from './pointerLockControls'
+import MouseControl from './mouseControl'
 
 import * as THREE from 'three'
 import TWEEN from '@tweenjs/tween.js'
@@ -60,6 +61,13 @@ class Controls {
       initDir
     )
 
+    this.mouseControl = new MouseControl(
+      player,
+      world,
+      status,
+      this.threeControls
+    )
+
     /** PHYSICS */
     this.vel = new THREE.Vector3(0, 0, 0)
     this.acc = new THREE.Vector3(0, 0, 0)
@@ -106,13 +114,12 @@ class Controls {
 
     /** REGISTER KEYS */
     this.registerKeys()
-    document.addEventListener('mousedown', this.handleMouseDown, false)
-    document.addEventListener('mouseup', this.handleMouseUp, false)
   }
 
   tick = () => {
     this.handleMovements()
     this.setCameraMode()
+    this.mouseControl.tick()
   }
 
   /* -------------------------------------------------------------------------- */
@@ -603,24 +610,6 @@ class Controls {
 
     if (newZ) playerPos.z = newZ
     playerPos.z += scaledVel.z
-  }
-
-  handleMouseDown = e => {
-    if (!this.world.getChat().enabled && this.threeControls.isLocked)
-      this.mouseKey = e.button
-  }
-
-  handleMouseUp = e => {
-    if (!this.world.getChat().enabled && this.threeControls.isLocked) {
-      this.mouseKey = null
-      if (e.button === 0) {
-        // this.stopBreakingBlock()
-      }
-      if (this.status.isCreative) {
-        this.canBreakBlock = true
-        this.canPlaceBlock = true
-      }
-    }
   }
 
   unblockGame = () => {
