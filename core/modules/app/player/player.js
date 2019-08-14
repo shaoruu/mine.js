@@ -5,12 +5,11 @@ import {
   UPDATE_PLAYER_MUTATION,
   PLAYER_SUBSCRIPTION
 } from '../../../lib/graphql'
-import { Inventory } from '../../interfaces'
-import PlayerStatus from '../../interfaces/playerStatus/playerStatus'
+import { Inventory, PlayerStatus } from '../../interfaces'
 
 import Status from './status/status'
-import PlayerControls from './controls/controls'
-import PlayerViewport from './viewport/viewport'
+import Controls from './controls/controls'
+import Viewport from './viewport/viewport'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe
 
@@ -44,13 +43,12 @@ class Player extends Stateful {
     this.world = world
 
     this.status = new Status(gamemode, this)
-    if (this.status.isSurvival) {
-      this.playerStatus = new PlayerStatus(
-        playerData,
-        container,
-        resourceManager
-      )
-    }
+    this.playerStatus = new PlayerStatus(
+      gamemode,
+      playerData,
+      container,
+      resourceManager
+    )
 
     this.inventory = new Inventory(
       this.data.playerId,
@@ -62,7 +60,7 @@ class Player extends Stateful {
     )
 
     /** CONTROL CENTER */
-    this.controls = new PlayerControls(
+    this.controls = new Controls(
       this,
       world,
       this.status,
@@ -81,7 +79,7 @@ class Player extends Stateful {
       }
     )
 
-    this.viewport = new PlayerViewport(this, world, scene)
+    this.viewport = new Viewport(this, world, scene)
 
     scene.add(this.controls.getObject())
 
@@ -173,6 +171,7 @@ class Player extends Stateful {
     }
   }) => {
     this.status.setGamemode(gamemode)
+    this.playerStatus.setGamemode(gamemode)
   }
 
   removeUpdaters = () => {

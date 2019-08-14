@@ -3,27 +3,31 @@ import Helpers from '../../../utils/helpers'
 import classes from './playerStatus.module.css'
 
 class PlayerStatus {
-  constructor(playerData, container, resourceManager) {
-    /* Here we need get health and armor from database info
+  constructor(gamemode, playerData, container, resourceManager) {
+    /* Here we need to get health and armor from database info
      * Health full = 20
      * Armor full = 20
-     * Hungry full = 20
-     * Mid Health/Mid Armor/Mid Hungry = 1
-     * 1 Health/1 Armor/1 Hungry = 2
+     * Hunger full = 20
+     * Mid Health/Mid Armor/Mid Hunger = 1
+     * 1 Health/1 Armor/1 Hunger = 2
      */
+
+    //! Temporary Data
     const health = 11
     const armor = 16
-    const hungry = 14
+    const hunger = 14
+
     this.resourceManager = resourceManager
     this.initDom(container)
     this.setHealth(health)
     this.setArmor(armor)
-    this.setHungry(hungry)
+    this.setHunger(hunger)
+    this.setGamemode(gamemode)
   }
 
   initDom = container => {
-    const wrapper = document.createElement('div')
-    Helpers.applyStyle(wrapper, classes.wrapper)
+    this.wrapper = document.createElement('div')
+    Helpers.applyStyle(this.wrapper, classes.wrapper)
 
     const content = document.createElement('div')
     Helpers.applyStyle(content, classes.wrapperContent)
@@ -50,20 +54,20 @@ class PlayerStatus {
     Helpers.applyStyle(this.wrapperWater, classes.wrapperRowReverse)
     sectionRight.appendChild(this.wrapperWater)
 
-    this.wrapperHungry = document.createElement('div')
-    Helpers.applyStyle(this.wrapperHungry, classes.wrapperRowReverse)
-    sectionRight.appendChild(this.wrapperHungry)
+    this.wrapperHunger = document.createElement('div')
+    Helpers.applyStyle(this.wrapperHunger, classes.wrapperRowReverse)
+    sectionRight.appendChild(this.wrapperHunger)
 
     content.appendChild(sectionRight)
 
-    wrapper.appendChild(content)
-    container.appendChild(wrapper)
+    this.wrapper.appendChild(content)
+    container.appendChild(this.wrapper)
   }
 
   setHealth = health => {
     let hearts = 0
     let midHearts = 0
-    if (this.isPair(health)) {
+    if (Helpers.isEven(health)) {
       hearts = health / 2
       midHearts = 0
     } else {
@@ -76,7 +80,7 @@ class PlayerStatus {
   setArmor = armor => {
     let armors = 0
     let midArmors = 0
-    if (this.isPair(armor)) {
+    if (Helpers.isEven(armor)) {
       armors = armor / 2
       midArmors = 0
     } else {
@@ -86,17 +90,30 @@ class PlayerStatus {
     this.generateIcons(armors, midArmors, this.wrapperArmor, 'armor')
   }
 
-  setHungry = hungry => {
-    let hungrys = 0
-    let midHungrys = 0
-    if (this.isPair(hungry)) {
-      hungrys = hungry / 2
-      midHungrys = 0
+  setHunger = hunger => {
+    let hungers = 0
+    let midHungers = 0
+    if (Helpers.isEven(hunger)) {
+      hungers = hunger / 2
+      midHungers = 0
     } else {
-      hungrys = Math.trunc(hungry / 2)
-      midHungrys = 1
+      hungers = Math.trunc(hunger / 2)
+      midHungers = 1
     }
-    this.generateIcons(hungrys, midHungrys, this.wrapperHungry, 'hungry')
+    this.generateIcons(hungers, midHungers, this.wrapperHunger, 'hunger')
+  }
+
+  setGamemode = gamemode => {
+    switch (gamemode) {
+      case 'SURVIVAL': {
+        this.wrapper.style.display = 'flex'
+        break
+      }
+      default: {
+        this.wrapper.style.display = 'none'
+        break
+      }
+    }
   }
 
   generateIcons = (icons, midIcons, wrapper, interfaceId) => {
@@ -114,11 +131,6 @@ class PlayerStatus {
       }
       wrapper.appendChild(icon)
     }
-  }
-
-  isPair = number => {
-    if (number % 2 === 0) return true
-    return false
   }
 }
 export default PlayerStatus

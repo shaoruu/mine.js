@@ -34,7 +34,6 @@ class Game {
   ) {
     /** PRE-GAME SETUP */
     const { world } = data
-    console.log(world)
 
     const playerData = world.players.find(ele => ele.user.username === username)
     const RENDER_D = playerData.user.settings.renderDistance
