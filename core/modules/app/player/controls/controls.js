@@ -40,6 +40,7 @@ const SNEAK_DIFF = Config.player.aabb.sneakDifference
 const PLAYER_HEIGHT = P_I_2_TOE + P_I_2_TOP
 const CAM_SNEAK_DIFF = SNEAK_DIFF * PLAYER_HEIGHT * DIMENSION
 const SNEAK_ACC = Config.player.acceleration.sneak
+const CAM_FIRST_PERSON_OFF_SKIN = Config.camera.firstPersonOffsetSkin
 
 class Controls {
   constructor(
@@ -106,6 +107,7 @@ class Controls {
     this.status = status
 
     this.initListeners()
+    this.setCameraMode()
   }
 
   initListeners = () => {
@@ -285,7 +287,7 @@ class Controls {
       this.camera.position.set(
         CAMERA_CONFIG.posX,
         CAMERA_CONFIG.posY,
-        CAMERA_CONFIG.posZ
+        CAMERA_CONFIG.posZ + CAM_FIRST_PERSON_OFF_SKIN
       )
     }
   }

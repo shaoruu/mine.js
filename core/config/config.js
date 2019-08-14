@@ -70,7 +70,8 @@ const Config = {
       posX: 0,
       posY: 50,
       posZ: -60
-    }
+    },
+    firstPersonOffsetSkin: -20
   },
   keyboard: {
     camera: {
