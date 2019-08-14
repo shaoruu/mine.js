@@ -2,8 +2,8 @@ import { Hint } from '../../../../Utils'
 import sharedStyles from '../../../../../containers/sharedStyles.module.css'
 import {
   MINI_WORLD_QUERY,
-  DELETE_WORLD_MUTATION
-  // MY_WORLDS_QUERY
+  DELETE_WORLD_MUTATION,
+  MY_WORLDS_QUERY
 } from '../../../../../lib/graphql'
 
 import classes from './DeleteWorld.module.css'
@@ -61,14 +61,8 @@ const DeleteWorld = ({ history, location }) => {
             deleteWorld({
               variables: {
                 worldId
-              }
-              // refetchQueries: [
-              //   {
-              //     where: {
-              //       id: MY_WORLDS_QUERY
-              //     }
-              //   }
-              // ]
+              },
+              refetchQueries: [{ query: MY_WORLDS_QUERY }]
             })
           }}
         >

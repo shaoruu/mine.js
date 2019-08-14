@@ -103,7 +103,7 @@ const WorldMutations = {
       info
     )
   },
-  async deleteWorld(parent, args, { prisma }) {
+  deleteWorld(parent, args, { prisma }) {
     return prisma.mutation.deleteWorld(args)
   },
   async runCommand(
