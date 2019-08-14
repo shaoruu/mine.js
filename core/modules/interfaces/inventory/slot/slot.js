@@ -38,15 +38,6 @@ class Slot {
     this.setCount(count)
   }
 
-  set = (type, count) => {
-    const leftover = count - 64
-
-    this.setType(type)
-    this.setCount(count > 64 ? 64 : count)
-
-    return leftover < 0 ? 0 : leftover
-  }
-
   append = count => {
     let c = this.count + count
 
@@ -78,18 +69,34 @@ class Slot {
     this.setGuiItem(this.type)
   }
 
-  getUI = () => this.gui.wrapper
-
-  getType = () => this.type
-
-  getCount = () => this.count
-
-  get isEmpty() {
-    return this.count === 0
+  select = () => {
+    Helpers.applyStyle(this.gui.itemWrapper, {
+      border: '3px #c4c4c4 solid'
+    })
+    Helpers.applyStyle(this.gui.wrapper, {
+      border: '1px #141414 solid'
+    })
   }
 
-  get isFull() {
-    return this.count === 64
+  deselect = () => {
+    Helpers.applyStyle(this.gui.itemWrapper, {
+      border: '4px #605D5E solid'
+    })
+    Helpers.applyStyle(this.gui.wrapper, {
+      border: '1px grey solid'
+    })
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   SETTERS                                  */
+  /* -------------------------------------------------------------------------- */
+  set = (type, count) => {
+    const leftover = count - 64
+
+    this.setType(type)
+    this.setCount(count > 64 ? 64 : count)
+
+    return leftover < 0 ? 0 : leftover
   }
 
   setType = type => {
@@ -120,22 +127,21 @@ class Slot {
     }
   }
 
-  select = () => {
-    Helpers.applyStyle(this.gui.itemWrapper, {
-      border: '3px #c4c4c4 solid'
-    })
-    Helpers.applyStyle(this.gui.wrapper, {
-      border: '1px #141414 solid'
-    })
+  /* -------------------------------------------------------------------------- */
+  /*                                   GETTERS                                  */
+  /* -------------------------------------------------------------------------- */
+  getUI = () => this.gui.wrapper
+
+  getType = () => this.type
+
+  getCount = () => this.count
+
+  get isEmpty() {
+    return this.count === 0
   }
 
-  deselect = () => {
-    Helpers.applyStyle(this.gui.itemWrapper, {
-      border: '4px #605D5E solid'
-    })
-    Helpers.applyStyle(this.gui.wrapper, {
-      border: '1px grey solid'
-    })
+  get isFull() {
+    return this.count === 64
   }
 }
 

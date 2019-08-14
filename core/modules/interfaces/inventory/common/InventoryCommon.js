@@ -42,6 +42,9 @@ class InventoryCommon {
     return tempCount
   }
 
+  /* -------------------------------------------------------------------------- */
+  /*                                   GETTERS                                  */
+  /* -------------------------------------------------------------------------- */
   getDatabaseRepresentation(name) {
     return `${name}:${this.items
       .map(slot => `${slot.getType()},${slot.getCount()};`)

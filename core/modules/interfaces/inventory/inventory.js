@@ -27,25 +27,6 @@ class Inventory {
     this.hotbar.select(itemBoxId)
   }
 
-  getHotbar = () => this.hotbar
-
-  getCursor = () => this.cursor
-
-  setGamemode = gamemode => {
-    let style
-    switch (gamemode) {
-      case 'SPECTATOR': {
-        style = 'none'
-        break
-      }
-      default: {
-        style = 'flex'
-        break
-      }
-    }
-    Helpers.applyStyle(this.wrapper, { display: style })
-  }
-
   digestInventory = data => {
     // Default data: "ARMOR:(0;) * 4|BACKPACK:(0,0;) * 27|HOTBAR:(0,0;) * 9"
     const inventory = data.split('|')
@@ -76,6 +57,31 @@ class Inventory {
 
     return { armor, backpack, hotbar }
   }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   SETTERS                                  */
+  /* -------------------------------------------------------------------------- */
+  setGamemode = gamemode => {
+    let style
+    switch (gamemode) {
+      case 'SPECTATOR': {
+        style = 'none'
+        break
+      }
+      default: {
+        style = 'flex'
+        break
+      }
+    }
+    Helpers.applyStyle(this.wrapper, { display: style })
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   GETTERS                                  */
+  /* -------------------------------------------------------------------------- */
+  getHotbar = () => this.hotbar
+
+  getCursor = () => this.cursor
 }
 
 export default Inventory

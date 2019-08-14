@@ -14,14 +14,12 @@ class PlayerStatus {
 
     //! Temporary Data
     const health = 11
-    const armor = 16
+    const armor = 6
     const hunger = 14
 
     this.resourceManager = resourceManager
     this.initDom(container)
-    this.setHealth(health)
-    this.setArmor(armor)
-    this.setHunger(hunger)
+    this.updateStatus(health, armor, hunger)
     this.setGamemode(gamemode)
   }
 
@@ -64,6 +62,33 @@ class PlayerStatus {
     container.appendChild(this.wrapper)
   }
 
+  generateIcons = (icons, midIcons, wrapper, interfaceId) => {
+    wrapper.innerHTML = ''
+    if (!icons && !midIcons && interfaceId === 'armor') return
+    for (let index = 1; index <= 10; index++) {
+      const icon = document.createElement('img')
+      Helpers.applyStyle(icon, classes.imgIcon)
+      if (index <= icons) {
+        icon.src = this.resourceManager.getInterface(interfaceId, 'full')
+      } else if (midIcons === 1) {
+        icon.src = this.resourceManager.getInterface(interfaceId, 'mid')
+        midIcons = 0
+      } else {
+        icon.src = this.resourceManager.getInterface(interfaceId, 'empty')
+      }
+      wrapper.appendChild(icon)
+    }
+  }
+
+  updateStatus = (health, armor, hunger) => {
+    this.setHealth(health)
+    this.setArmor(armor)
+    this.setHunger(hunger)
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   SETTERS                                  */
+  /* -------------------------------------------------------------------------- */
   setHealth = health => {
     let hearts = 0
     let midHearts = 0
@@ -116,23 +141,6 @@ class PlayerStatus {
       }
     }
     Helpers.applyStyle(this.wrapper, { display: style })
-  }
-
-  generateIcons = (icons, midIcons, wrapper, interfaceId) => {
-    wrapper.innerHTML = ''
-    for (let index = 1; index <= 10; index++) {
-      const icon = document.createElement('img')
-      Helpers.applyStyle(icon, classes.imgIcon)
-      if (index <= icons) {
-        icon.src = this.resourceManager.getInterface(interfaceId, 'full')
-      } else if (midIcons === 1) {
-        icon.src = this.resourceManager.getInterface(interfaceId, 'mid')
-        midIcons = 0
-      } else {
-        icon.src = this.resourceManager.getInterface(interfaceId, 'empty')
-      }
-      wrapper.appendChild(icon)
-    }
   }
 }
 export default PlayerStatus

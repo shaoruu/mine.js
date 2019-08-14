@@ -26,10 +26,6 @@ class Hotbar extends InventoryCommon {
     this.items[this.selectedIndex].select()
   }
 
-  getGui = () => this.hotbar
-
-  getHand = () => this.items[this.selectedIndex].type
-
   takeFromHand = amount => {
     this.items[this.selectedIndex].take(amount)
   }
@@ -39,6 +35,13 @@ class Hotbar extends InventoryCommon {
     this.items[index].select()
     this.selectedIndex = index
   }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   GETTERS                                  */
+  /* -------------------------------------------------------------------------- */
+  getGui = () => this.hotbar
+
+  getHand = () => this.items[this.selectedIndex].type
 }
 
 export default Hotbar
