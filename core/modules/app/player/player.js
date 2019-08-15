@@ -5,7 +5,7 @@ import {
   UPDATE_PLAYER_MUTATION,
   PLAYER_SUBSCRIPTION
 } from '../../../lib/graphql'
-import { Inventory, PlayerStatus } from '../../interfaces'
+import { Inventory, PlayerState } from '../../interfaces'
 import PlayerObject from '../../../lib/playerObject/playerObject'
 import OriginalSteve from '../../../assets/skin/Original_Steve.png'
 
@@ -54,7 +54,7 @@ class Player extends Stateful {
     scene.add(this.skin)
 
     this.status = new Status(gamemode, this)
-    this.playerStatus = new PlayerStatus(
+    this.playerState = new PlayerState(
       gamemode,
       playerData,
       container,
@@ -114,7 +114,7 @@ class Player extends Stateful {
         playerDir.dirx,
         playerDir.diry
       )
-      const playerStatus = this.playerStatus.getStatus()
+      const playerState = this.playerState.getStatus()
 
       // eslint-disable-next-line no-restricted-syntax
       for (const member in playerCoords)
@@ -132,7 +132,7 @@ class Player extends Stateful {
             id: this.data.id,
             ...playerCoords,
             ...playerDir,
-            ...playerStatus
+            ...playerState
           }
         })
       }
@@ -194,7 +194,7 @@ class Player extends Stateful {
     }
   }) => {
     this.status.setGamemode(gamemode)
-    this.playerStatus.setGamemode(gamemode)
+    this.playerState.setGamemode(gamemode)
     this.inventory.setGamemode(gamemode)
   }
 

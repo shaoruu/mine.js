@@ -1,7 +1,7 @@
 import Helpers from '../../../utils/helpers'
 import Config from '../../../config/config'
 
-import classes from './playerStatus.module.css'
+import classes from './playerState.module.css'
 
 const HEALTH_MAX = Config.player.health.max
 const HEALTH_MIN = Config.player.health.min
@@ -15,7 +15,8 @@ const HEALTH_HUNGER_DECREMENT_TIME = Config.player.health.hungerDecrementTime
 const HEALTH_HUNGER_DECREMENT = Config.player.health.hungerDecrement
 const HUNGER_DECREMENT_TIME = Config.player.hunger.hungerDecrementTime
 const HUNGER_DECREMENT = Config.player.hunger.hungerDecrement
-class PlayerStatus {
+
+class PlayerState {
   constructor(gamemode, playerData, container, resourceManager) {
     /* Here we need to get health and armor from database info
      * Health full = 20
@@ -242,4 +243,4 @@ class PlayerStatus {
     }
   }
 }
-export default PlayerStatus
+export default PlayerState

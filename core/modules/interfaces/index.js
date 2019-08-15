@@ -4,4 +4,4 @@ export {
   default as ConnectionStatus
 } from './connectionStatus/connectionStatus'
 export { default as Inventory } from './inventory/inventory'
-export { default as PlayerStatus } from './playerStatus/playerStatus'
+export { default as PlayerState } from './playerState/playerState'
