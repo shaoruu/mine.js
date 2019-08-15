@@ -5,7 +5,7 @@ import {
   UPDATE_PLAYER_MUTATION,
   PLAYER_SUBSCRIPTION
 } from '../../../lib/graphql'
-import { Inventory, PlayerState } from '../../interfaces'
+import { Inventory } from '../../interfaces'
 import PlayerObject from '../../../lib/playerObject/playerObject'
 import OriginalSteve from '../../../assets/skin/Original_Steve.png'
 
@@ -33,7 +33,8 @@ class Player extends Stateful {
   ) {
     super({ prevPos: '', prevDir: '' })
 
-    const { id, user, gamemode, inventory } = playerData
+    this.playerData = playerData
+    const { id, user, inventory } = playerData
 
     this.data = {
       id,
@@ -50,17 +51,11 @@ class Player extends Stateful {
       OriginalSteve,
       new Vector3(playerData.x, playerData.y, playerData.z),
       new Vector2(playerData.dirx, playerData.diry),
-      { visible: false }
+      { visible: true }
     )
     scene.add(this.skin)
 
-    this.status = new Status(gamemode, this)
-    this.playerState = new PlayerState(
-      gamemode,
-      playerData,
-      container,
-      resourceManager
-    )
+    this.status = new Status(this, playerData, container, resourceManager)
 
     this.inventory = new Inventory(
       this.data.playerId,
@@ -81,13 +76,13 @@ class Player extends Stateful {
       blocker,
       button,
       {
-        x: playerData.x,
-        y: playerData.y,
-        z: playerData.z
+        x: this.playerData.x,
+        y: this.playerData.y,
+        z: this.playerData.z
       },
       {
-        dirx: playerData.dirx,
-        diry: playerData.diry
+        dirx: this.playerData.dirx,
+        diry: this.playerData.diry
       }
     )
 
@@ -115,7 +110,7 @@ class Player extends Stateful {
         playerDir.dirx,
         playerDir.diry
       )
-      const playerState = this.playerState.getStatus()
+      const playerStatus = this.status.getStatus()
 
       // eslint-disable-next-line no-restricted-syntax
       for (const member in playerCoords)
@@ -133,7 +128,7 @@ class Player extends Stateful {
             id: this.data.id,
             ...playerCoords,
             ...playerDir,
-            ...playerState
+            ...playerStatus
           }
         })
       }
@@ -195,7 +190,6 @@ class Player extends Stateful {
     }
   }) => {
     this.status.setGamemode(gamemode)
-    this.playerState.setGamemode(gamemode)
     this.inventory.setGamemode(gamemode)
   }
 

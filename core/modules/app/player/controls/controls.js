@@ -282,6 +282,7 @@ class Controls {
         CAMERA_CONFIG.thirdPerson.posZ
       )
     } else if (this.cameraMode.perspective === 'third') {
+      this.player.skin.skin.visible = true
       this.camera.position.set(
         CAMERA_CONFIG.secondPerson.posX,
         CAMERA_CONFIG.secondPerson.posY,
