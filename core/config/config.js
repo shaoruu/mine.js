@@ -63,13 +63,18 @@ const Config = {
     spectatorFov: 130,
     thirdPerson: {
       posX: 0,
-      posY: 50,
-      posZ: 60
+      posY: 0,
+      posZ: 80
+    },
+    secondPerson: {
+      posX: 0,
+      posY: 0,
+      posZ: -80
     }
   },
   keyboard: {
     camera: {
-      thirdPerson: 86
+      togglePerspective: 86
     },
     movements: {
       forward: 87,

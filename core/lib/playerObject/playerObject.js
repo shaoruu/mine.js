@@ -462,6 +462,14 @@ export default class PlayerObject extends THREE.Group {
     this.oldDirY = dir.y
   }
 
+  setPosition = (x, y, z) =>
+    this.position.set(x * DIMENSION, (y + EYE_2_TOE) * DIMENSION, z * DIMENSION)
+
+  setDirection = (dirx, diry) => {
+    this.skin.head.rotation.x = dirx
+    this.rotation.y = diry
+  }
+
   tweenPosition = (x, y, z) => {
     new TWEEN.Tween(this.position)
       .to(
