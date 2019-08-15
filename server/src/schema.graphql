@@ -85,9 +85,9 @@ type Player {
   dirx: Float!
   diry: Float!
   inventory: Inventory!
-  health: Int
-  armor: Int
-  hunger: Int
+  health: Int!
+  armor: Int!
+  hunger: Int!
 }
 
 type Settings {
