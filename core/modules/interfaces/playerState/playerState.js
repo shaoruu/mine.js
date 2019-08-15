@@ -15,6 +15,7 @@ const HEALTH_HUNGER_DECREMENT_TIME = Config.player.health.hungerDecrementTime
 const HEALTH_HUNGER_DECREMENT = Config.player.health.hungerDecrement
 const HUNGER_DECREMENT_TIME = Config.player.hunger.hungerDecrementTime
 const HUNGER_DECREMENT = Config.player.hunger.hungerDecrement
+const HUNGER_SLOW_WALK = Config.player.hunger.slowWalk
 
 class PlayerState {
   constructor(gamemode, playerData, container, resourceManager) {
@@ -134,8 +135,11 @@ class PlayerState {
 
   autoDecrementHunger = () => {
     window.requestInterval(() => {
-      if (this.gamemode === 'SURVIVAL' && this.hunger > HUNGER_MIN)
+      if (this.gamemode === 'SURVIVAL' && this.hunger > HUNGER_MIN) {
         this.setHunger(this.hunger - HUNGER_DECREMENT)
+        if (this.hunger <= HUNGER_SLOW_WALK && this.player.status.isSprinting)
+          this.player.status.registerWalk()
+      }
     }, HUNGER_DECREMENT_TIME)
   }
 
