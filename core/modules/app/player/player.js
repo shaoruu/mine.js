@@ -39,7 +39,6 @@ class Player extends Stateful {
       id,
       user
     }
-    console.log(playerData)
 
     this.apolloClient = apolloClient
     this.ioClient = ioClient
@@ -59,10 +58,7 @@ class Player extends Stateful {
       gamemode,
       playerData,
       container,
-      resourceManager,
-      playerData.health,
-      playerData.armor,
-      playerData.hunger
+      resourceManager
     )
 
     this.inventory = new Inventory(
@@ -100,8 +96,6 @@ class Player extends Stateful {
 
     this.initUpdaters()
     this.initSubscriptions()
-
-    // this.playerStatus.updateStatus(20, 0, 20)
   }
 
   initUpdaters = () => {

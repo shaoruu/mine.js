@@ -16,15 +16,7 @@ const HEALTH_HUNGER_DECREMENT = Config.player.health.hungerDecrement
 const HUNGER_DECREMENT_TIME = Config.player.hunger.hungerDecrementTime
 const HUNGER_DECREMENT = Config.player.hunger.hungerDecrement
 class PlayerStatus {
-  constructor(
-    gamemode,
-    playerData,
-    container,
-    resourceManager,
-    health,
-    armor,
-    hunger
-  ) {
+  constructor(gamemode, playerData, container, resourceManager) {
     /* Here we need to get health and armor from database info
      * Health full = 20
      * Armor full = 20
@@ -32,6 +24,8 @@ class PlayerStatus {
      * Mid Health/Mid Armor/Mid Hunger = 1
      * 1 Health/1 Armor/1 Hunger = 2
      */
+    const { health, armor, hunger } = playerData
+
     this.health = health
     this.armor = armor
     this.hunger = hunger
