@@ -49,7 +49,8 @@ class Player extends Stateful {
     this.skin = new PlayerObject(
       OriginalSteve,
       new Vector3(playerData.x, playerData.y, playerData.z),
-      new Vector2(playerData.dirx, playerData.diry)
+      new Vector2(playerData.dirx, playerData.diry),
+      { visible: false }
     )
     scene.add(this.skin)
 
