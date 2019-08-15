@@ -112,8 +112,7 @@ const Config = {
     acceleration: {
       forward: 50,
       other_horz: 20,
-      vertical: 40,
-      sneak: 20
+      vertical: 40
     },
     jump: {
       time: 80, // ms
@@ -143,7 +142,6 @@ const Config = {
     },
     reachDst: 7,
     headBodyDeg: Math.PI / 4,
-    sneaking: -10,
     health: {
       max: 20,
       min: 0,
@@ -156,7 +154,8 @@ const Config = {
       max: 20,
       min: 0,
       hungerDecrementTime: 15000,
-      hungerDecrement: 1
+      hungerDecrement: 1,
+      slowWalk: 6
     },
     armor: {
       max: 20,

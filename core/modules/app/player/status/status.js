@@ -9,6 +9,7 @@ import TWEEN from '@tweenjs/tween.js'
 const SPRINT_FOV_DELTA = Config.camera.sprintFovDelta
 const REGULAR_FOV = Config.camera.fov
 const SPECTATOR_FOV = Config.camera.spectatorFov
+const HUNGER_SLOW_WALK = Config.player.hunger.slowWalk
 
 class Status extends Stateful {
   constructor(gamemode, player) {
@@ -126,6 +127,10 @@ class Status extends Stateful {
 
   get isSpectator() {
     return this.gamemode === 'SPECTATOR'
+  }
+
+  get isHungry() {
+    return this.isSurvival && this.player.playerState.hunger <= HUNGER_SLOW_WALK
   }
 
   get gamemodeFOV() {
