@@ -5,7 +5,8 @@ import classes from './connectionStatus.module.css'
 import { SubscriptionClient } from 'subscriptions-transport-ws'
 
 function ConnectionStatus(container) {
-  const subscriptionClient = new SubscriptionClient(`ws://localhost:4000`, {
+  const { hostname } = window.location
+  const subscriptionClient = new SubscriptionClient(`ws://${hostname}:4000`, {
     reconnect: true
   })
 

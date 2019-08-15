@@ -82,7 +82,7 @@ class Controls {
     }
 
     this.cameraMode = {
-      thirdPerson: false
+      perspective: 'first'
     }
 
     this.currJumpTime = 0
@@ -106,6 +106,7 @@ class Controls {
     this.status = status
 
     this.initListeners()
+    this.setCameraMode()
   }
 
   initListeners = () => {
@@ -117,8 +118,8 @@ class Controls {
   }
 
   tick = () => {
-    this.handleMovements()
     this.setCameraMode()
+    this.handleMovements()
     this.mouseControl.tick()
   }
 
@@ -265,20 +266,32 @@ class Controls {
   }
 
   setCameraMode = () => {
-    if (this.cameraMode.thirdPerson) {
-      this.camera.position.set(
-        CAMERA_CONFIG.thirdPerson.posX,
-        CAMERA_CONFIG.thirdPerson.posY,
-        CAMERA_CONFIG.thirdPerson.posZ
-      )
-    } else {
+    if (this.cameraMode.perspective === 'first') {
+      this.camera.rotation.y = 0
+      this.player.skin.skin.visible = false
       this.camera.position.set(
         CAMERA_CONFIG.posX,
         CAMERA_CONFIG.posY,
         CAMERA_CONFIG.posZ
       )
+    } else if (this.cameraMode.perspective === 'second') {
+      this.player.skin.skin.visible = true
+      this.camera.position.set(
+        CAMERA_CONFIG.thirdPerson.posX,
+        CAMERA_CONFIG.thirdPerson.posY,
+        CAMERA_CONFIG.thirdPerson.posZ
+      )
+    } else if (this.cameraMode.perspective === 'third') {
+      this.camera.position.set(
+        CAMERA_CONFIG.secondPerson.posX,
+        CAMERA_CONFIG.secondPerson.posY,
+        CAMERA_CONFIG.secondPerson.posZ
+      )
+      this.camera.rotation.y = Math.PI
     }
   }
+
+  isCameraThirdPerson = () => this.cameraMode.perspective !== 'first'
 
   registerKeys = () => {
     const chatRef = this.world.getChat()
@@ -379,11 +392,16 @@ class Controls {
       }
     )
 
-    this.keyboard.registerKey(
-      CAMERA_KEYS.thirdPerson,
-      'moving',
-      () => (this.cameraMode.thirdPerson = !this.cameraMode.thirdPerson)
-    )
+    this.keyboard.registerKey(CAMERA_KEYS.togglePerspective, 'moving', () => {
+      const { perspective } = this.cameraMode
+      if (perspective === 'third') {
+        this.cameraMode.perspective = 'first'
+      } else if (perspective === 'second') {
+        this.cameraMode.perspective = 'third'
+      } else {
+        this.cameraMode.perspective = 'second'
+      }
+    })
 
     this.keyboard.registerKey(MULTIPLAYER_KEYS.openChat, 'moving', () => {
       this.threeControls.unlock()
