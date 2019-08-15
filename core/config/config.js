@@ -61,21 +61,20 @@ const Config = {
     posZ: 0,
     sprintFovDelta: 15,
     spectatorFov: 130,
-    thirdPersonReverse: {
+    thirdPerson: {
       posX: 0,
-      posY: 50,
-      posZ: 60
+      posY: 0,
+      posZ: 80
     },
-    thirdPersonFront: {
+    secondPerson: {
       posX: 0,
-      posY: 50,
-      posZ: -60
-    },
-    firstPersonOffsetSkin: -20
+      posY: 0,
+      posZ: -80
+    }
   },
   keyboard: {
     camera: {
-      thirdPerson: 86
+      togglePerspective: 86
     },
     movements: {
       forward: 87,

@@ -40,7 +40,6 @@ const SNEAK_DIFF = Config.player.aabb.sneakDifference
 const PLAYER_HEIGHT = P_I_2_TOE + P_I_2_TOP
 const CAM_SNEAK_DIFF = SNEAK_DIFF * PLAYER_HEIGHT * DIMENSION
 const SNEAK_ACC = Config.player.acceleration.sneak
-const CAM_FIRST_PERSON_OFF_SKIN = Config.camera.firstPersonOffsetSkin
 
 class Controls {
   constructor(
@@ -83,7 +82,7 @@ class Controls {
     }
 
     this.cameraMode = {
-      thirdPerson: 'first'
+      perspective: 'first'
     }
 
     this.currJumpTime = 0
@@ -267,32 +266,32 @@ class Controls {
   }
 
   setCameraMode = () => {
-    this.camera.rotation.x = 0
-    this.camera.rotation.z = 0
-    if (this.cameraMode.thirdPerson === 'reverse') {
-      this.camera.position.set(
-        CAMERA_CONFIG.thirdPersonReverse.posX,
-        CAMERA_CONFIG.thirdPersonReverse.posY,
-        CAMERA_CONFIG.thirdPersonReverse.posZ
-      )
-    } else if (this.cameraMode.thirdPerson === 'front') {
-      this.camera.position.set(
-        CAMERA_CONFIG.thirdPersonFront.posX,
-        CAMERA_CONFIG.thirdPersonFront.posY,
-        CAMERA_CONFIG.thirdPersonFront.posZ
-      )
-      this.camera.rotation.x = 180
-      this.camera.rotation.z = (180 * Math.PI) / 180
-    } else if (this.cameraMode.thirdPerson === 'first') {
+    if (this.cameraMode.perspective === 'first') {
+      this.camera.rotation.y = 0
+      this.player.skin.skin.visible = false
       this.camera.position.set(
         CAMERA_CONFIG.posX,
         CAMERA_CONFIG.posY,
-        CAMERA_CONFIG.posZ + CAM_FIRST_PERSON_OFF_SKIN
+        CAMERA_CONFIG.posZ
       )
+    } else if (this.cameraMode.perspective === 'second') {
+      this.player.skin.skin.visible = true
+      this.camera.position.set(
+        CAMERA_CONFIG.thirdPerson.posX,
+        CAMERA_CONFIG.thirdPerson.posY,
+        CAMERA_CONFIG.thirdPerson.posZ
+      )
+    } else if (this.cameraMode.perspective === 'third') {
+      this.camera.position.set(
+        CAMERA_CONFIG.secondPerson.posX,
+        CAMERA_CONFIG.secondPerson.posY,
+        CAMERA_CONFIG.secondPerson.posZ
+      )
+      this.camera.rotation.y = Math.PI
     }
   }
 
-  isCameraThirdPerson = () => this.cameraMode.thirdPerson !== 'first'
+  isCameraThirdPerson = () => this.cameraMode.perspective !== 'first'
 
   registerKeys = () => {
     const chatRef = this.world.getChat()
@@ -393,14 +392,14 @@ class Controls {
       }
     )
 
-    this.keyboard.registerKey(CAMERA_KEYS.thirdPerson, 'moving', () => {
-      // this.cameraMode.thirdPerson = !this.cameraMode.thirdPerson
-      if (this.cameraMode.thirdPerson === 'first') {
-        this.cameraMode.thirdPerson = 'reverse'
-      } else if (this.cameraMode.thirdPerson === 'reverse') {
-        this.cameraMode.thirdPerson = 'front'
+    this.keyboard.registerKey(CAMERA_KEYS.togglePerspective, 'moving', () => {
+      const { perspective } = this.cameraMode
+      if (perspective === 'third') {
+        this.cameraMode.perspective = 'first'
+      } else if (perspective === 'second') {
+        this.cameraMode.perspective = 'third'
       } else {
-        this.cameraMode.thirdPerson = 'first'
+        this.cameraMode.perspective = 'second'
       }
     })
 

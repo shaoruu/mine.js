@@ -46,6 +46,13 @@ class Player extends Stateful {
     this.camera = camera
     this.world = world
 
+    this.skin = new PlayerObject(
+      OriginalSteve,
+      new Vector3(playerData.x, playerData.y, playerData.z),
+      new Vector2(playerData.dirx, playerData.diry)
+    )
+    scene.add(this.skin)
+
     this.status = new Status(gamemode, this)
     this.playerStatus = new PlayerStatus(
       gamemode,
@@ -82,13 +89,6 @@ class Player extends Stateful {
         diry: playerData.diry
       }
     )
-
-    this.skin = new PlayerObject(
-      OriginalSteve,
-      new Vector3(playerData.x, playerData.y, playerData.z),
-      new Vector2(playerData.dirx, playerData.diry)
-    )
-    scene.add(this.skin)
 
     this.viewport = new Viewport(this, world, scene)
 
@@ -182,8 +182,8 @@ class Player extends Stateful {
     const pos = this.getCoordinates(3)
     const dir = this.getDirections()
 
-    this.skin.tweenPosition(pos.x, pos.y, pos.z)
-    this.skin.tweenDirection(dir.dirx, dir.diry)
+    this.skin.setPosition(pos.x, pos.y, pos.z)
+    this.skin.setDirection(dir.dirx, dir.diry)
   }
 
   handleServerUpdate = ({
@@ -227,6 +227,8 @@ class Player extends Stateful {
   getPosition = () => this.controls.getObject().position
 
   getObject = () => this.controls.getObject()
+
+  getSkin = () => this.skin
 
   /* -------------------------------------------------------------------------- */
   /*                                   SETTERS                                  */
