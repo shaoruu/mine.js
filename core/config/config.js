@@ -148,7 +148,8 @@ const Config = {
       hungerIncrementTime: 10000,
       hungerIncrement: 1,
       hungerDecrementTime: 3000,
-      hungerDecrement: 1
+      hungerDecrement: 1,
+      hungerMin: 1
     },
     hunger: {
       max: 20,

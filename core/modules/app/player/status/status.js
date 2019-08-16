@@ -22,6 +22,7 @@ const HEALTH_HUNGER_INCREMENT_TIME = Config.player.health.hungerIncrementTime
 const HEALTH_HUNGER_INCREMENT = Config.player.health.hungerIncrement
 const HEALTH_HUNGER_DECREMENT_TIME = Config.player.health.hungerDecrementTime
 const HEALTH_HUNGER_DECREMENT = Config.player.health.hungerDecrement
+const HUNGER_HEART_MIN = Config.player.health.hungerMin
 const HUNGER_DECREMENT_TIME = Config.player.hunger.hungerDecrementTime
 const HUNGER_DECREMENT = Config.player.hunger.hungerDecrement
 const HUNGER_SLOW_WALK = Config.player.hunger.slowWalk
@@ -276,7 +277,7 @@ class Status extends Stateful {
   }
 
   autoIncrementHealth = () => {
-    window.requestInterval(() => {
+    this.healthIncr = window.requestInterval(() => {
       if (
         this.gamemode === 'SURVIVAL' &&
         this.hunger === HUNGER_MAX &&
@@ -287,18 +288,18 @@ class Status extends Stateful {
   }
 
   autoDecrementHealth = () => {
-    window.requestInterval(() => {
+    this.healthDecr = window.requestInterval(() => {
       if (
         this.gamemode === 'SURVIVAL' &&
         this.hunger === HUNGER_MIN &&
-        this.health > HEALTH_MIN
+        this.health > HUNGER_HEART_MIN
       )
         this.setHealth(this.health - HEALTH_HUNGER_DECREMENT)
     }, HEALTH_HUNGER_DECREMENT_TIME)
   }
 
   autoDecrementHunger = () => {
-    window.requestInterval(() => {
+    this.hungerDecr = window.requestInterval(() => {
       if (this.gamemode === 'SURVIVAL' && this.hunger > HUNGER_MIN) {
         this.setHunger(this.hunger - HUNGER_DECREMENT)
         if (this.hunger <= HUNGER_SLOW_WALK && this.player.status.isSprinting)
