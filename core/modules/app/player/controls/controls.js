@@ -268,21 +268,21 @@ class Controls {
   setCameraMode = () => {
     if (this.cameraMode.perspective === 'first') {
       this.camera.rotation.y = 0
-      this.player.skin.skin.setVisible(false)
+      this.player.skin.setVisible(false)
       this.camera.position.set(
         CAMERA_CONFIG.posX,
         CAMERA_CONFIG.posY,
         CAMERA_CONFIG.posZ
       )
     } else if (this.cameraMode.perspective === 'second') {
-      this.player.skin.skin.setVisible(true)
+      this.player.skin.setVisible(true)
       this.camera.position.set(
         CAMERA_CONFIG.thirdPerson.posX,
         CAMERA_CONFIG.thirdPerson.posY,
         CAMERA_CONFIG.thirdPerson.posZ
       )
     } else if (this.cameraMode.perspective === 'third') {
-      this.player.skin.skin.setVisible(true)
+      this.player.skin.setVisible(true)
       this.camera.position.set(
         CAMERA_CONFIG.secondPerson.posX,
         CAMERA_CONFIG.secondPerson.posY,

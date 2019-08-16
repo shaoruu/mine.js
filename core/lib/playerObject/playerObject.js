@@ -411,7 +411,7 @@ class SkinObject extends THREE.Group {
 }
 
 export default class PlayerObject extends THREE.Group {
-  constructor(skinImg, pos, dir, visible) {
+  constructor(skinImg, pos, dir, visible = true) {
     super()
 
     this.skinImg = new Image()
@@ -434,7 +434,6 @@ export default class PlayerObject extends THREE.Group {
     })
 
     this.skin = new SkinObject(layer1Material, layer2Material)
-    this.skin.setVisible(visible)
     this.add(this.skin)
 
     this.skinImg.crossOrigin = 'anonymous'
@@ -466,6 +465,7 @@ export default class PlayerObject extends THREE.Group {
     this.oldDirY = dir.y
 
     this.visible = visible
+    this.skin.setVisible(visible)
   }
 
   setPosition = (x, y, z) =>
@@ -528,4 +528,6 @@ export default class PlayerObject extends THREE.Group {
   //   this.skin.head.rotation.x = x
   //   this.skin.head.rotation.y = y
   // }
+
+  setVisible = visible => this.skin.setVisible(visible)
 }
