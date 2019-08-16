@@ -94,20 +94,22 @@ Viewport.prototype.updateHelmet = function() {
 
   const coords = playerRef.getCamCoordinates(0)
   const camInType = worldRef.getVoxelByVoxelCoords(coords.x, coords.y, coords.z)
-
+  // console.log(camInType)
   switch (camInType) {
     case 9:
       if (!this.getIsChanged()) {
         this.addSelf(this.getScene())
         this.setIsChanged(true)
       }
-
+      this.getPlayer().status.setDiving(true)
       this.setFilter(WATER_COLOR, 0.2)
       break
     default:
+      this.getPlayer().status.setDiving(false)
       if (this.getIsChanged()) this.reset()
       break
   }
+  console.log(this.getPlayer().status.isDiving)
 }
 
 Viewport.prototype.updateTPBlock = function() {

@@ -16,7 +16,8 @@ class Status extends Stateful {
       flying: true,
       hasJumped: false,
       isOnGround: true,
-      isSprinting: false
+      isSprinting: false,
+      diving: false
     })
 
     this.gamemode = gamemode
@@ -79,6 +80,10 @@ class Status extends Stateful {
 
   registerFly = () => (this.state.flying = true)
 
+  setDiving = diving => (this.state.diving = diving)
+
+  toggleDiving = () => (this.state.diving = !this.state.diving)
+
   toggleFly = () => (this.state.flying = !this.state.flying)
 
   toggleSprint = () => (this.state.isSprinting = !this.state.isSprinting)
@@ -94,6 +99,10 @@ class Status extends Stateful {
 
   get isFlying() {
     return this.state.flying
+  }
+
+  get isDiving() {
+    return this.state.diving
   }
 
   get shouldGravity() {
