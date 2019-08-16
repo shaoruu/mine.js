@@ -10,6 +10,9 @@ export const UPDATE_PLAYER_MUTATION = gql`
     $diry: Float
     $cursor: Int
     $data: String
+    $health: Int
+    $armor: Int
+    $hunger: Int
   ) {
     updatePlayer(
       where: { id: $id }
@@ -21,6 +24,9 @@ export const UPDATE_PLAYER_MUTATION = gql`
         diry: $diry
         cursor: $cursor
         data: $data
+        health: $health
+        armor: $armor
+        hunger: $hunger
       }
     ) {
       x

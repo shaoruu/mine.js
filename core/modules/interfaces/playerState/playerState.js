@@ -1,22 +1,10 @@
 import Helpers from '../../../utils/helpers'
 
-import classes from './playerStatus.module.css'
+import classes from './playerState.module.css'
 
-class PlayerStatus {
-  constructor(gamemode, playerData, container, resourceManager) {
-    /* Here we need to get health and armor from database info
-     * Health full = 20
-     * Armor full = 20
-     * Hunger full = 20
-     * Mid Health/Mid Armor/Mid Hunger = 1
-     * 1 Health/1 Armor/1 Hunger = 2
-     */
-
-    //! Temporary Data
-    const health = 11
-    const armor = 6
-    const hunger = 14
-
+class PlayerState {
+  constructor(gamemode, status, container, resourceManager) {
+    const { health, armor, hunger } = status
     this.resourceManager = resourceManager
     this.initDom(container)
     this.updateStatus(health, armor, hunger)
@@ -62,6 +50,64 @@ class PlayerStatus {
     container.appendChild(this.wrapper)
   }
 
+  updateStatus = (health, armor, hunger) => {
+    this.setHealth(health)
+    this.setArmor(armor)
+    this.setHunger(hunger)
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   SETTERS                                  */
+  /* -------------------------------------------------------------------------- */
+
+  setGamemode = gamemode => {
+    this.gamemode = gamemode
+    this.toggleStatusInterface(this.gamemode)
+  }
+
+  toggleStatusInterface = () => {
+    let style
+    switch (this.gamemode) {
+      case 'SURVIVAL': {
+        style = 'flex'
+        break
+      }
+      default: {
+        style = 'none'
+        break
+      }
+    }
+    Helpers.applyStyle(this.wrapper, { display: style })
+  }
+
+  setHealth = health => {
+    this.health = health
+    const { fullIcons, midIcons } = this.calculateNumberOfIcons(this.health)
+    this.generateIcons(fullIcons, midIcons, this.wrapperHeart, 'heart')
+  }
+
+  setArmor = armor => {
+    this.armor = armor
+    const { fullIcons, midIcons } = this.calculateNumberOfIcons(this.armor)
+    this.generateIcons(fullIcons, midIcons, this.wrapperArmor, 'armor')
+  }
+
+  setHunger = hunger => {
+    this.hunger = hunger
+    const { fullIcons, midIcons } = this.calculateNumberOfIcons(this.hunger)
+    this.generateIcons(fullIcons, midIcons, this.wrapperHunger, 'hunger')
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   INTERNAL                                  */
+  /* -------------------------------------------------------------------------- */
+  calculateNumberOfIcons = value => {
+    if (Helpers.isEven(value)) {
+      return { fullIcons: value / 2, midIcons: 0 }
+    }
+    return { fullIcons: Math.trunc(value / 2), midIcons: 1 }
+  }
+
   generateIcons = (icons, midIcons, wrapper, interfaceId) => {
     wrapper.innerHTML = ''
     if (!icons && !midIcons && interfaceId === 'armor') return
@@ -79,68 +125,5 @@ class PlayerStatus {
       wrapper.appendChild(icon)
     }
   }
-
-  updateStatus = (health, armor, hunger) => {
-    this.setHealth(health)
-    this.setArmor(armor)
-    this.setHunger(hunger)
-  }
-
-  /* -------------------------------------------------------------------------- */
-  /*                                   SETTERS                                  */
-  /* -------------------------------------------------------------------------- */
-  setHealth = health => {
-    let hearts = 0
-    let midHearts = 0
-    if (Helpers.isEven(health)) {
-      hearts = health / 2
-      midHearts = 0
-    } else {
-      hearts = Math.trunc(health / 2)
-      midHearts = 1
-    }
-    this.generateIcons(hearts, midHearts, this.wrapperHeart, 'heart')
-  }
-
-  setArmor = armor => {
-    let armors = 0
-    let midArmors = 0
-    if (Helpers.isEven(armor)) {
-      armors = armor / 2
-      midArmors = 0
-    } else {
-      armors = Math.trunc(armor / 2)
-      midArmors = 1
-    }
-    this.generateIcons(armors, midArmors, this.wrapperArmor, 'armor')
-  }
-
-  setHunger = hunger => {
-    let hungers = 0
-    let midHungers = 0
-    if (Helpers.isEven(hunger)) {
-      hungers = hunger / 2
-      midHungers = 0
-    } else {
-      hungers = Math.trunc(hunger / 2)
-      midHungers = 1
-    }
-    this.generateIcons(hungers, midHungers, this.wrapperHunger, 'hunger')
-  }
-
-  setGamemode = gamemode => {
-    let style
-    switch (gamemode) {
-      case 'SURVIVAL': {
-        style = 'flex'
-        break
-      }
-      default: {
-        style = 'none'
-        break
-      }
-    }
-    Helpers.applyStyle(this.wrapper, { display: style })
-  }
 }
-export default PlayerStatus
+export default PlayerState

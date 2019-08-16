@@ -29,6 +29,9 @@ type Player {
   z: Float!
   dirx: Float!
   diry: Float!
+  health: Int!
+  armor: Int!
+  hunger: Int!
   inventory: Inventory!
     @relation(link: INLINE, name: "InventoryToPlayer", onDelete: CASCADE)
 }
