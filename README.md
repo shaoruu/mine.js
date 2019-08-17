@@ -1,5 +1,7 @@
+![](https://i.imgur.com/SdFI2bi.png)
+
 <a href="https://discord.gg/xQHPHgZ" align="center">
-  <img src="https://i.imgur.com/SdFI2bi.png" />
+<img src="https://img.shields.io/discord/612114066873516032.svg?style=for-the-badge" />
 </a>
 
 ### Disclaimer
