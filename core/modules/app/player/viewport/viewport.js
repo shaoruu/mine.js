@@ -96,11 +96,11 @@ Viewport.prototype.updateHelmet = function() {
         this.addSelf(this.getScene())
         this.setIsChanged(true)
       }
-      this.getPlayer().status.setDiving(true)
+      playerRef.status.setDiving(true)
       this.setFilter(WATER_COLOR, 0.2)
       break
     default:
-      this.getPlayer().status.setDiving(false)
+      playerRef.status.setDiving(false)
       if (this.getIsChanged()) this.reset()
       break
   }
