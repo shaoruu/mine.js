@@ -77,7 +77,7 @@ Before cloning the repo or doing anything, be sure to install [docker](https://w
 
 ```bash
 # Install the prerequisite libraries
-yarn global add prisma graphql-cli
+yarn global add prisma graphql-cli nodemon
 
 # Clone the repository
 git clone https://github.com/ian13456/mc.js.git
