@@ -115,6 +115,9 @@ input PlayerUpdateInput {
   diry: Float
   cursor: Int
   data: String
+  health: Int = 20
+  armor: Int = 0
+  hunger: Int = 20
 }
 
 input UpdateBlockInput {

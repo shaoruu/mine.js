@@ -7,7 +7,7 @@ const P_I_2_TOE = Config.player.aabb.eye2toe
 const DIMENSION = Config.block.dimension
 
 // https://cdn-images-1.medium.com/max/1400/1*BOwbHOyhLlo7jM_NfoQwEQ.png
-function PointerLockControls(camera, domElement, initPos, initDirs) {
+function PointerLockControls(player, camera, domElement, initPos, initDirs) {
   const scope = this
 
   this.domElement = domElement || document.body
@@ -42,13 +42,20 @@ function PointerLockControls(camera, domElement, initPos, initDirs) {
       return
     }
 
-    const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0
-    const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0
+    const movementX =
+      event.movementX || event.mozMovementX || event.webkitMovementX || 0
+    const movementY =
+      event.movementY || event.mozMovementY || event.webkitMovementY || 0
 
     yawObject.rotation.y -= movementX * 0.002
     pitchObject.rotation.x -= movementY * 0.002
 
-    pitchObject.rotation.x = Math.max(-PI_2, Math.min(PI_2, pitchObject.rotation.x))
+    pitchObject.rotation.x = Math.max(
+      -PI_2,
+      Math.min(PI_2, pitchObject.rotation.x)
+    )
+
+    player.updateViewport()
   }
 
   function onPointerlockChange() {
@@ -56,7 +63,8 @@ function PointerLockControls(camera, domElement, initPos, initDirs) {
 
     justChanged = true
 
-    if (document.pointerLockElement !== scope.domElement) scope.dispatchEvent({ type: 'unlock' })
+    if (document.pointerLockElement !== scope.domElement)
+      scope.dispatchEvent({ type: 'unlock' })
   }
 
   function onPointerlockError() {
@@ -71,7 +79,11 @@ function PointerLockControls(camera, domElement, initPos, initDirs) {
 
   this.disconnect = () => {
     document.removeEventListener('mousemove', onMouseMove, false)
-    document.removeEventListener('pointerlockchange', onPointerlockChange, false)
+    document.removeEventListener(
+      'pointerlockchange',
+      onPointerlockChange,
+      false
+    )
     document.removeEventListener('pointerlockerror', onPointerlockError, false)
   }
 

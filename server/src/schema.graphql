@@ -85,6 +85,9 @@ type Player {
   dirx: Float!
   diry: Float!
   inventory: Inventory!
+  health: Int!
+  armor: Int!
+  hunger: Int!
 }
 
 type Settings {
@@ -157,6 +160,9 @@ input UpdatePlayerInput {
   diry: Float
   cursor: Int
   data: String
+  health: Int
+  armor: Int
+  hunger: Int
 }
 
 input UpdateBlockInput {

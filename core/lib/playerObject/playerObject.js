@@ -60,7 +60,8 @@ class BodyPart extends THREE.Group {
 class SkinObject extends THREE.Group {
   constructor(layer1Material, layer2Material) {
     super()
-
+    this.name = 'skin'
+    this.visible = false
     this.modelListeners = [] // called when model(slim property) is changed
     this._slim = false
 
@@ -403,10 +404,14 @@ class SkinObject extends THREE.Group {
   setOuterLayerVisible(value) {
     this.getBodyParts().forEach(part => (part.outerLayer.visible = value))
   }
+
+  setVisible(visible) {
+    this.visible = visible
+  }
 }
 
 export default class PlayerObject extends THREE.Group {
-  constructor(skinImg, pos, dir) {
+  constructor(skinImg, pos, dir, visible = true) {
     super()
 
     this.skinImg = new Image()
@@ -429,8 +434,6 @@ export default class PlayerObject extends THREE.Group {
     })
 
     this.skin = new SkinObject(layer1Material, layer2Material)
-    this.skin.name = 'skin'
-    this.skin.visible = false
     this.add(this.skin)
 
     this.skinImg.crossOrigin = 'anonymous'
@@ -460,6 +463,9 @@ export default class PlayerObject extends THREE.Group {
     this.rotation.y = dir.y
 
     this.oldDirY = dir.y
+
+    this.visible = visible
+    this.skin.setVisible(visible)
   }
 
   setPosition = (x, y, z) =>
@@ -522,4 +528,8 @@ export default class PlayerObject extends THREE.Group {
   //   this.skin.head.rotation.x = x
   //   this.skin.head.rotation.y = y
   // }
+
+  getLookingDirection = () => this.skin.head.rotation
+
+  setVisible = visible => this.skin.setVisible(visible)
 }

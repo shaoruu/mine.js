@@ -5,7 +5,7 @@ import {
   UPDATE_PLAYER_MUTATION,
   PLAYER_SUBSCRIPTION
 } from '../../../lib/graphql'
-import { Inventory, PlayerStatus } from '../../interfaces'
+import { Inventory } from '../../interfaces'
 import PlayerObject from '../../../lib/playerObject/playerObject'
 import OriginalSteve from '../../../assets/skin/Original_Steve.png'
 
@@ -16,7 +16,7 @@ import Viewport from './viewport/viewport'
 import { Vector2, Vector3 } from 'three'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe
-
+const HEALTH_MIN = Config.player.health.min
 class Player extends Stateful {
   constructor(
     apolloClient,
@@ -33,7 +33,8 @@ class Player extends Stateful {
   ) {
     super({ prevPos: '', prevDir: '' })
 
-    const { id, user, gamemode, inventory } = playerData
+    this.playerData = playerData
+    const { id, user, inventory } = playerData
 
     this.data = {
       id,
@@ -49,17 +50,12 @@ class Player extends Stateful {
     this.skin = new PlayerObject(
       OriginalSteve,
       new Vector3(playerData.x, playerData.y, playerData.z),
-      new Vector2(playerData.dirx, playerData.diry)
+      new Vector2(playerData.dirx, playerData.diry),
+      { visible: true }
     )
     scene.add(this.skin)
 
-    this.status = new Status(gamemode, this)
-    this.playerStatus = new PlayerStatus(
-      gamemode,
-      playerData,
-      container,
-      resourceManager
-    )
+    this.status = new Status(this, playerData, container, resourceManager)
 
     this.inventory = new Inventory(
       this.data.playerId,
@@ -80,13 +76,13 @@ class Player extends Stateful {
       blocker,
       button,
       {
-        x: playerData.x,
-        y: playerData.y,
-        z: playerData.z
+        x: this.playerData.x,
+        y: this.playerData.y,
+        z: this.playerData.z
       },
       {
-        dirx: playerData.dirx,
-        diry: playerData.diry
+        dirx: this.playerData.dirx,
+        diry: this.playerData.diry
       }
     )
 
@@ -114,6 +110,7 @@ class Player extends Stateful {
         playerDir.dirx,
         playerDir.diry
       )
+      const playerStatus = this.status.getStatus()
 
       // eslint-disable-next-line no-restricted-syntax
       for (const member in playerCoords)
@@ -130,7 +127,8 @@ class Player extends Stateful {
           variables: {
             id: this.data.id,
             ...playerCoords,
-            ...playerDir
+            ...playerDir,
+            ...playerStatus
           }
         })
       }
@@ -186,13 +184,16 @@ class Player extends Stateful {
     this.skin.setDirection(dir.dirx, dir.diry)
   }
 
+  updateViewport = () => {
+    this.viewport.updateHelmet()
+  }
+
   handleServerUpdate = ({
     player: {
       node: { gamemode }
     }
   }) => {
     this.status.setGamemode(gamemode)
-    this.playerStatus.setGamemode(gamemode)
     this.inventory.setGamemode(gamemode)
   }
 
@@ -214,6 +215,8 @@ class Player extends Stateful {
   /* -------------------------------------------------------------------------- */
   getCamera = () => this.camera
 
+  getCamPos = () => this.controls.getCamPos()
+
   getCamCoordinates = dec => this.controls.getNormalizedCamPos(dec)
 
   getCoordinates = dec => this.controls.getFeetCoords(dec)
@@ -229,6 +232,8 @@ class Player extends Stateful {
   getObject = () => this.controls.getObject()
 
   getSkin = () => this.skin
+
+  isDead = () => this.health === HEALTH_MIN
 
   /* -------------------------------------------------------------------------- */
   /*                                   SETTERS                                  */

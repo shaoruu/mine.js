@@ -1,5 +1,9 @@
 ![](https://i.imgur.com/SdFI2bi.png)
 
+<a href="https://discord.gg/xQHPHgZ" align="center">
+<img src="https://img.shields.io/discord/612114066873516032.svg?style=for-the-badge" />
+</a>
+
 ### Disclaimer
 
 :pushpin: This project is a work in progress. There's still a lot of features waiting to be implemented, and the game is far from being the actual game.
