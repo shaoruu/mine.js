@@ -1,14 +1,14 @@
 ![](https://i.imgur.com/SdFI2bi.png)
 
+<a href="https://discord.gg/xQHPHgZ" align="center">
+  <img src="https://img.shields.io/discord/525739117951320081.svg?style=for-the-badge&colorB=7581dc&logo=discord&logoColor=white">
+</a>
+
 ### Disclaimer
 
 :pushpin: This project is a work in progress. There's still a lot of features waiting to be implemented, and the game is far from being the actual game.
 
 ### **MC.JS brings the best-selling PC game Minecraft into the web with the power of Javascript.**
-
-<a href="https://discord.gg/xQHPHgZ" align="center">
-  <img src="https://img.shields.io/discord/525739117951320081.svg?style=for-the-badge&colorB=7581dc&logo=discord&logoColor=white">
-</a>
 
 # Motivation
 
