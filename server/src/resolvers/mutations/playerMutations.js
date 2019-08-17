@@ -1,32 +1,44 @@
 import Helpers from '../../utils/helpers'
 
-const PlayerMutations = {
-  async createPlayer(
-    parent,
+const createPlayer = async function(parent, args, { prisma }, info) {
+  return prisma.mutation.createPlayer(args, info)
+}
+
+const joinWorld = async function(parent, args, ctx, info) {
+  const { prisma, request } = ctx
+
+  const {
+    data: { gamemode },
+    where
+  } = args
+
+  const id = Helpers.getUserId(request)
+
+  const userExists = await prisma.exists.User({ id })
+  if (!userExists) throw new Error('User not found')
+
+  let existingPlayer
+
+  const players = await prisma.query.players(
     {
-      data: { worldId, gamemode }
-    },
-    { prisma, request }
-  ) {
-    const id = Helpers.getUserId(request)
-
-    const userExists = await prisma.exists.User({ id })
-    if (!userExists) throw new Error('User not found')
-
-    const existingPlayer = await prisma.exists.Player({
-      user: {
-        id
-      },
-      world: {
-        id: worldId
+      first: 1,
+      where: {
+        user: {
+          id
+        },
+        world: where
       }
-    })
+    },
+    info
+  )
 
-    console.log(existingPlayer)
+  existingPlayer = players ? players[0] : null
 
-    // Player creation
-    if (!existingPlayer)
-      await prisma.mutation.createPlayer({
+  // Player creation
+  if (!existingPlayer)
+    existingPlayer = await createPlayer(
+      null,
+      {
         data: {
           isAdmin: true,
           gamemode,
@@ -36,9 +48,7 @@ const PlayerMutations = {
             }
           },
           world: {
-            connect: {
-              id: worldId
-            }
+            connect: where
           },
           x: 0,
           y: Number.MIN_SAFE_INTEGER,
@@ -56,10 +66,16 @@ const PlayerMutations = {
           armor: 0,
           hunger: 20
         }
-      })
+      },
+      ctx,
+      info
+    )
 
-    return true
-  },
+  return existingPlayer
+}
+
+const PlayerMutations = {
+  joinWorld,
   async updatePlayer(parent, args, { prisma }, info) {
     let { where } = args
 
