@@ -42,7 +42,9 @@ export const CREATE_WORLD_MUTATION = gql`
 
 export const CREATE_PLAYER_MUTATION = gql`
   mutation CreatePlayer($gamemode: Gamemode!, $worldId: ID!) {
-    createPlayer(data: { gamemode: $gamemode, worldId: $worldId })
+    joinWorld(data: { gamemode: $gamemode }, where: { id: $worldId }) {
+      id
+    }
   }
 `
 
