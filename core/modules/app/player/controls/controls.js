@@ -55,6 +55,7 @@ class Controls {
   ) {
     /** THREEJS CAMERA CONTROL */
     this.threeControls = new PointerLockControls(
+      player,
       camera,
       canvas,
       initPos,
@@ -670,10 +671,14 @@ class Controls {
   getObject = () => this.threeControls.getObject()
 
   getNormalizedCamPos = (dec = COORD_DEC) => {
-    const camPos = this.camera.position.clone()
-    const objPos = this.getObject().position.clone()
-    const position = objPos.add(camPos)
+    const position = this.getCamPos()
     return Helpers.floorPos(Helpers.worldToBlock(position, false), dec)
+  }
+
+  getCamPos = () => {
+    const position = new THREE.Vector3()
+    this.camera.getWorldPosition(position)
+    return Helpers.floorPos(position, 0)
   }
 
   getNormalizedObjPos = (dec = COORD_DEC) => {

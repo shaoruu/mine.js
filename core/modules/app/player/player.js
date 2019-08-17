@@ -184,6 +184,10 @@ class Player extends Stateful {
     this.skin.setDirection(dir.dirx, dir.diry)
   }
 
+  updateViewport = () => {
+    this.viewport.updateHelmet()
+  }
+
   handleServerUpdate = ({
     player: {
       node: { gamemode }
@@ -210,6 +214,8 @@ class Player extends Stateful {
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
   getCamera = () => this.camera
+
+  getCamPos = () => this.controls.getCamPos()
 
   getCamCoordinates = dec => this.controls.getNormalizedCamPos(dec)
 

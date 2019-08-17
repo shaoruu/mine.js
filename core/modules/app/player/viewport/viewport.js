@@ -19,9 +19,9 @@ function Viewport(player, world, scene) {
 
   /** MESH SETUP */
   const helmetGeo = new THREE.BoxBufferGeometry(
-    DIMENSION / 2,
-    DIMENSION / 2,
-    DIMENSION / 2
+    DIMENSION * 2,
+    DIMENSION * 2,
+    DIMENSION * 2
   )
   const helmetMat = new THREE.MeshBasicMaterial({
     opacity: 0,
@@ -84,13 +84,9 @@ Viewport.prototype.updateHelmet = function() {
   /* -------------------------------------------------------------------------- */
   const helmetRef = this.getHelmet()
 
-  const playerPos = playerRef.getCamCoordinates()
+  const camPos = playerRef.getCamPos()
 
-  helmetRef.position.set(
-    playerPos.x * DIMENSION,
-    playerPos.y * DIMENSION,
-    playerPos.z * DIMENSION
-  )
+  helmetRef.position.set(camPos.x, camPos.y, camPos.z)
 
   const coords = playerRef.getCamCoordinates(0)
   const camInType = worldRef.getVoxelByVoxelCoords(coords.x, coords.y, coords.z)
@@ -195,6 +191,8 @@ Viewport.prototype.getLookingBlockInfo = function() {
   const camDir = new THREE.Vector3()
   playerRef.getCamera().getWorldDirection(camDir)
   camDir.normalize()
+  if (playerRef.controls.cameraMode.perspective === 'third')
+    camDir.multiplyScalar(-1)
 
   const camPos = objectRef.position
 
