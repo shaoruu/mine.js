@@ -529,5 +529,7 @@ export default class PlayerObject extends THREE.Group {
   //   this.skin.head.rotation.y = y
   // }
 
+  getLookingDirection = () => this.skin.head.rotation
+
   setVisible = visible => this.skin.setVisible(visible)
 }
