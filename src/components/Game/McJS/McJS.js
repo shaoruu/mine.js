@@ -43,7 +43,8 @@ const Game = ({ id: worldId, username, history }) => {
     [frameId]
   )
 
-  const closingHandler = useCallback(ev => {
+  const closingHandler = useCallback((ev, game) => {
+    game.save()
     ev.preventDefault()
     ev.returnValue = 'Are you sure you want to close?'
   }, [])
@@ -51,7 +52,11 @@ const Game = ({ id: worldId, username, history }) => {
   const init = useCallback(
     game => {
       window.addEventListener('resize', game.onWindowResize, false)
-      window.addEventListener('beforeunload', closingHandler, false)
+      window.addEventListener(
+        'beforeunload',
+        ev => closingHandler(ev, game),
+        false
+      )
 
       if (!frameId.current) {
         frameId.current = window.requestAnimationFrame(() => animate(game))
@@ -79,6 +84,7 @@ const Game = ({ id: worldId, username, history }) => {
 
     return () => {
       window.removeEventListener('beforeunload', closingHandler, false)
+      game.save()
       game.terminate()
       terminate()
     }

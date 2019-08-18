@@ -71,32 +71,6 @@ class World extends Stateful {
 
   initUpdaters = () => {
     this.envUpdater = window.requestInterval(this.updateEnv, 100)
-    this.timeUpdater = window.requestInterval(() => {
-      const t = this.sky.getTime()
-      if (t) {
-        this.apolloClient.mutate({
-          mutation: UPDATE_WORLD_MUTATION,
-          variables: {
-            id: this.data.id,
-            time: t
-          }
-        })
-      }
-    }, 500)
-
-    this.sky.on('new-day', () => {
-      const days = this.sky.getDays()
-      if (days) {
-        this.data.days = days
-        this.apolloClient.mutate({
-          mutation: UPDATE_WORLD_MUTATION,
-          variables: {
-            id: this.data.id,
-            days
-          }
-        })
-      }
-    })
   }
 
   initSubscriptions = () => {
@@ -143,6 +117,35 @@ class World extends Stateful {
     this.chunkManager.surroundingChunksCheck(coordx, coordy, coordz)
   }
 
+  saveApollo = () => {
+    this.saveTime()
+  }
+
+  saveTime = () => {
+    const t = this.sky.getTime()
+    if (t) {
+      this.apolloClient.mutate({
+        mutation: UPDATE_WORLD_MUTATION,
+        variables: {
+          id: this.data.id,
+          time: t
+        }
+      })
+    }
+
+    const days = this.sky.getDays()
+    if (days && this.data.days !== days) {
+      this.data.days = days
+      this.apolloClient.mutate({
+        mutation: UPDATE_WORLD_MUTATION,
+        variables: {
+          id: this.data.id,
+          days
+        }
+      })
+    }
+  }
+
   terminate = () => {
     this.worldSubscription.unsubscribe()
 
@@ -160,7 +163,6 @@ class World extends Stateful {
 
   removeUpdaters = () => {
     window.clearRequestInterval(this.envUpdater)
-    window.clearRequestInterval(this.timeUpdater)
   }
 
   /* -------------------------------------------------------------------------- */

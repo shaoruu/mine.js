@@ -17,6 +17,7 @@ import './utils/setup'
  *
  */
 
+const AUTO_SAVE_INTERVAL = Config.game.autoSaveInterval
 const BACKGROUND_CONFIG = Config.scene.background
 const FOG_CONFIG = Config.scene.fog
 const DIMENSION = Config.block.dimension
@@ -115,6 +116,9 @@ class Game {
       worldId: this.world.data.id,
       username: this.data.username
     })
+
+    // AUTO SAVE
+    window.requestInterval(this.save, AUTO_SAVE_INTERVAL)
   }
 
   update = () => {
@@ -123,6 +127,11 @@ class Game {
     this.player.update()
     this.world.update()
     this.debug.tick()
+  }
+
+  save = () => {
+    this.world.saveApollo()
+    this.player.saveApollo()
   }
 
   onWindowResize = () => {
@@ -140,6 +149,8 @@ class Game {
       username: this.data.username
     })
     this.ioClient.disconnect()
+
+    this.save()
   }
 
   /* -------------------------------------------------------------------------- */

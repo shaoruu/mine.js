@@ -35,6 +35,7 @@ const Worlds = ({ history, subpage }) => {
   }, [escHandler])
 
   const { data, loading } = useQuery(MY_WORLDS_QUERY, {
+    // eslint-disable-next-line no-console
     onError: err => console.error(err),
     fetchPolicy: 'network-only'
   })

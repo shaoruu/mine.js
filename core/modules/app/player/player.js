@@ -95,45 +95,6 @@ class Player extends Stateful {
   }
 
   initUpdaters = () => {
-    this.posUpdater = window.requestInterval(() => {
-      const { prevPos, prevDir } = this.state
-
-      const playerCoords = this.getCoordinates(3)
-      const playerCoordsRep = Helpers.get3DCoordsRep(
-        playerCoords.x,
-        playerCoords.y,
-        playerCoords.z
-      )
-
-      const playerDir = this.getDirections()
-      const playerDirRep = Helpers.get2DCoordsRep(
-        playerDir.dirx,
-        playerDir.diry
-      )
-      const playerStatus = this.status.getStatus()
-
-      // eslint-disable-next-line no-restricted-syntax
-      for (const member in playerCoords)
-        if (playerCoords[member] !== 0 && !playerCoords[member]) return
-      // eslint-disable-next-line no-restricted-syntax
-      for (const member in playerDir)
-        if (playerDir[member] !== 0 && !playerDir[member]) return
-
-      if (playerCoordsRep !== prevPos || playerDirRep !== prevDir) {
-        this.setState({ prevPos: playerCoordsRep, prevDir: playerDirRep })
-
-        this.apolloClient.mutate({
-          mutation: UPDATE_PLAYER_MUTATION,
-          variables: {
-            id: this.data.id,
-            ...playerCoords,
-            ...playerDir,
-            ...playerStatus
-          }
-        })
-      }
-    }, 500)
-
     if (this.world.playersManager.getPlayerCount() > 0)
       this.posSocketUpdater = window.requestInterval(() => {
         const playerCoords = this.getCoordinates(3)
@@ -197,9 +158,47 @@ class Player extends Stateful {
     this.inventory.setGamemode(gamemode)
   }
 
-  removeUpdaters = () => {
-    window.clearRequestInterval(this.posUpdater)
+  saveApollo = () => {
+    this.saveAttributes()
+  }
 
+  saveAttributes = () => {
+    const { prevPos, prevDir } = this.state
+
+    const playerCoords = this.getCoordinates(3)
+    const playerCoordsRep = Helpers.get3DCoordsRep(
+      playerCoords.x,
+      playerCoords.y,
+      playerCoords.z
+    )
+
+    const playerDir = this.getDirections()
+    const playerDirRep = Helpers.get2DCoordsRep(playerDir.dirx, playerDir.diry)
+    const playerStatus = this.status.getStatus()
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const member in playerCoords)
+      if (playerCoords[member] !== 0 && !playerCoords[member]) return
+    // eslint-disable-next-line no-restricted-syntax
+    for (const member in playerDir)
+      if (playerDir[member] !== 0 && !playerDir[member]) return
+
+    if (playerCoordsRep !== prevPos || playerDirRep !== prevDir) {
+      this.setState({ prevPos: playerCoordsRep, prevDir: playerDirRep })
+
+      this.apolloClient.mutate({
+        mutation: UPDATE_PLAYER_MUTATION,
+        variables: {
+          id: this.data.id,
+          ...playerCoords,
+          ...playerDir,
+          ...playerStatus
+        }
+      })
+    }
+  }
+
+  removeUpdaters = () => {
     if (this.posSocketUpdater)
       window.clearRequestInterval(this.posSocketUpdater)
   }

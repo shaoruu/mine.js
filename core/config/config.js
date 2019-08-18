@@ -8,6 +8,9 @@ const Config = {
     maxWorkerCount: 4,
     socketEndpoint: `${self.location.hostname}:5000`
   },
+  game: {
+    autoSaveInterval: 5 * 1000 * 60 // ms
+  },
   lights: {
     sunlight: {
       maxIntensity: 1.25,
