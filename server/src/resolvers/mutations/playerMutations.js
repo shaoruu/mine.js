@@ -70,7 +70,6 @@ const joinWorld = async function(parent, args, ctx, info) {
       ctx,
       info
     )
-
   return existingPlayer
 }
 
