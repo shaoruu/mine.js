@@ -70,16 +70,10 @@ const joinWorld = async function(parent, args, ctx, info) {
       ctx,
       info
     )
-
   return existingPlayer
 }
 
-// const joinWorld = async function (parent, args, ctx, info) {
-//   return createPlayer(parent, args, ctx, info);
-// }
-
 const PlayerMutations = {
-  createPlayer,
   joinWorld,
   async updatePlayer(parent, args, { prisma }, info) {
     let { where } = args
