@@ -218,7 +218,7 @@ class Controls {
       }
     } else if (down) {
       if (this.status.isSneaking && this.freshlySneaked && !this.sneakTween) {
-        delete this.unsneakTween
+        this.unsneakTween = undefined
         this.sneakTween = new TWEEN.Tween(this.camera.position)
           .to({ y: -CAM_SNEAK_DIFF }, SNEAK_TIME)
           .start()
@@ -391,7 +391,7 @@ class Controls {
       () => {
         this.movements.down = false
         this.sneakNode = null
-        delete this.sneakTween
+        this.sneakTween = undefined
         this.freshlyUnsneaked = true
       }
     )

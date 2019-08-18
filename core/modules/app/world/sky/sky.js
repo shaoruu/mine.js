@@ -233,7 +233,7 @@ Sky.prototype.fn = function(time, fastForward) {
   // run initialization once
   if (my.init) {
     my.init.call(this)
-    delete my.init
+    my.init = undefined
   }
 
   // switch color based on time of day
