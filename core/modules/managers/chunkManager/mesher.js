@@ -55,6 +55,7 @@ class Mesher {
     const finalGeometry = new THREE.BufferGeometry().fromGeometry(
       mergedGeometry
     )
+
     const JSONGeo = finalGeometry.toJSON()
     return [LZString.compress(JSON.stringify(JSONGeo)), materials]
   }
