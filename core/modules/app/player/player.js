@@ -51,6 +51,7 @@ class Player extends Stateful {
       OriginalSteve,
       new Vector3(playerData.x, playerData.y, playerData.z),
       new Vector2(playerData.dirx, playerData.diry),
+      playerData.gamemode,
       { visible: true }
     )
     scene.add(this.skin)
@@ -156,6 +157,7 @@ class Player extends Stateful {
   }) => {
     this.status.setGamemode(gamemode)
     this.inventory.setGamemode(gamemode)
+    this.skin.setGamemode(gamemode)
   }
 
   saveApollo = () => {

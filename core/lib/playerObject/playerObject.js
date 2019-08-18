@@ -411,7 +411,7 @@ class SkinObject extends THREE.Group {
 }
 
 export default class PlayerObject extends THREE.Group {
-  constructor(skinImg, pos, dir, visible = true) {
+  constructor(skinImg, pos, dir, gamemode, visible = true) {
     super()
 
     this.skinImg = new Image()
@@ -430,7 +430,7 @@ export default class PlayerObject extends THREE.Group {
       transparent: true,
       opacity: 1,
       side: THREE.DoubleSide,
-      alphaTest: 0.5
+      alphaTest: 0.3
     })
 
     this.skin = new SkinObject(layer1Material, layer2Material)
@@ -466,6 +466,9 @@ export default class PlayerObject extends THREE.Group {
 
     this.visible = visible
     this.skin.setVisible(visible)
+    this.materials = [layer1Material, layer2Material]
+
+    this.setGamemode(gamemode)
   }
 
   setPosition = (x, y, z) =>
@@ -532,4 +535,33 @@ export default class PlayerObject extends THREE.Group {
   getLookingDirection = () => this.skin.head.rotation
 
   setVisible = visible => this.skin.setVisible(visible)
+
+  setGamemode = gamemode => {
+    switch (gamemode) {
+      case 'SURVIVAL':
+      case 'CREATIVE': {
+        this.materials.forEach(m => {
+          m.opacity = 1
+          m.needsUpdate = true
+        })
+        this.skin.getBodyParts().forEach(bp => (bp.visible = true))
+        this.materials[0].transparent = false
+        this.materials[0].depthTest = true
+        break
+      }
+      case 'SPECTATOR': {
+        this.skin.getBodyParts().forEach(bp => (bp.visible = false))
+        this.skin.head.visible = true
+        this.materials.forEach(m => {
+          m.opacity = 0.5
+          m.needsUpdate = true
+        })
+        this.materials[0].transparent = true
+        this.materials[0].depthTest = false
+        break
+      }
+      default:
+        break
+    }
+  }
 }
