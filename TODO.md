@@ -32,6 +32,7 @@ Pull requests are always welcomed!
 - [ ] Multiplayer
 - [ ] Inventory system
 - [ ] Tools
+- [ ] Agriculture
 - [ ] Entities
   - [ ] Animals
   - [ ] Hostile Mobs
