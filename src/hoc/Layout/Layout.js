@@ -1,16 +1,18 @@
-import React, { Component } from 'react'
-
 import classes from './Layout.module.css'
-import background from '../../assets/gui/options_background.png'
 
-class Layout extends Component {
-  render() {
-    return (
-      <div style={{ backgroundImage: `url(${background})` }} className={classes.layout__wrapper}>
-        {this.props.children}
-      </div>
-    )
-  }
+import React from 'react'
+
+const Layout = ({ children }) => {
+  return (
+    <div
+      style={{
+        backgroundImage: 'linear-gradient(to top, #30cfd0 0%, #330867 100%)'
+      }}
+      className={classes.layout__wrapper}
+    >
+      {children}
+    </div>
+  )
 }
 
 export default Layout

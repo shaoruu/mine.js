@@ -8,7 +8,7 @@
 }
 
 .logo {
-  width: 350px;
+  width: 300px;
 }
 
 .inputFields {
@@ -56,6 +56,7 @@
   font-family: monospace;
   padding: 1.25px;
   background-color: white;
+  border-radius: 4px; /* added border-radius*/
 }
 
 .wrappedInputField input:focus {

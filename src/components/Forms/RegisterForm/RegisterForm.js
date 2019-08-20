@@ -1,5 +1,5 @@
 import withAuthGuard from '../../../hoc/AuthGuard/AuthGuard'
-import logo from '../../../assets/gui/MCJS_register.png'
+import logo from '../../../assets/gui/MCJS_appLogo.png'
 import { REGISTER_MUTATION, REGISTER_SCHEMA } from '../../../lib/graphql'
 import { Hint } from '../../Utils'
 import { removeAllCookies, setCookie } from '../../../lib/utils'

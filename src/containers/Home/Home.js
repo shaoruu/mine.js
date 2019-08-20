@@ -5,7 +5,7 @@
 
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 import { Hint } from '../../components/Utils'
-import lobby from '../../assets/gui/MCJS_lobby.png'
+import lobby from '../../assets/gui/MCJS_appLogo.png'
 import sharedStyles from '../sharedStyles.module.css'
 
 import classes from './Home.module.css'
