@@ -1,5 +1,5 @@
 import withAuthGuard from '../../../hoc/AuthGuard/AuthGuard'
-import logo from '../../../assets/gui/minejs_appLogo.png'
+import logo from '../../../assets/gui/minejs_register.png'
 import { REGISTER_MUTATION, REGISTER_SCHEMA } from '../../../lib/graphql'
 import { Hint } from '../../Utils'
 import { removeAllCookies, setCookie } from '../../../lib/utils'
@@ -26,6 +26,7 @@ const RegisterForm = ({ loading: authLoading, history }) => {
         history.push('/home')
       })
     },
+    // eslint-disable-next-line no-console
     onError: err => console.error(err)
   })
 

@@ -1,5 +1,5 @@
 import withAuthGuard from '../../../hoc/AuthGuard/AuthGuard'
-import logo from '../../../assets/gui/minejs_appLogo.png'
+import logo from '../../../assets/gui/minejs_login.png'
 import { LOGIN_MUTATION, LOGIN_SCHEMA } from '../../../lib/graphql'
 import { Hint } from '../../Utils'
 import { setCookie } from '../../../lib/utils'

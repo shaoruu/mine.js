@@ -66,10 +66,10 @@ class MaterialManager {
           ...config
         })
 
-        if (key === '2' && face === 'top') {
-          frontSide.color.set(0x6eb219)
-          frontSideRotated.color.set(0x6eb219)
-        }
+        // if (key === '2' && face === 'top') {
+        //   frontSide.color.set(0x6eb219)
+        //   frontSideRotated.color.set(0x6eb219)
+        // }
 
         frontSide.name = BlockDict[key].name
         frontSide.tag = BlockDict[key].tag

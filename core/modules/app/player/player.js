@@ -7,7 +7,7 @@ import {
 } from '../../../lib/graphql'
 import { Inventory } from '../../interfaces'
 import PlayerObject from '../../../lib/playerObject/playerObject'
-import OriginalSteve from '../../../assets/skin/Original_Steve.png'
+import ian13456 from '../../../assets/skin/ian13456.png'
 
 import Status from './status/status'
 import Controls from './controls/controls'
@@ -48,7 +48,7 @@ class Player extends Stateful {
     this.world = world
 
     this.skin = new PlayerObject(
-      OriginalSteve,
+      ian13456,
       new Vector3(playerData.x, playerData.y, playerData.z),
       new Vector2(playerData.dirx, playerData.diry),
       playerData.gamemode,

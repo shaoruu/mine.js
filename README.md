@@ -1,12 +1,12 @@
-![](https://i.imgur.com/SdFI2bi.png)
+![](https://i.imgur.com/DrT5F2R.png)
 
-<a href="https://discord.gg/xQHPHgZ" align="center">
-<img src="https://img.shields.io/discord/612114066873516032.svg?style=for-the-badge" />
+<a href="https://discord.gg/Xp5cStm" align="center">
+<img src="https://img.shields.io/discord/648532255979077635.svg?style=for-the-badge" />
 </a>
 
 ### Disclaimer
 
-:pushpin: This project is a work in progress. There's still a lot of features waiting to be implemented.
+:pushpin: This project is a work in progress. There are a lot of potential features waiting to be added!
 
 # Screenshots
 
@@ -14,29 +14,29 @@ These are some screenshots taken directly from the project.
 
 ## User Authentication
 
-![](https://i.imgur.com/7v5dasa.png)
+![](https://i.imgur.com/RNzVsKz.png)
 
-![](https://i.imgur.com/5yYMYGH.png)
+![](https://i.imgur.com/He0UBHz.png)
 
-![](https://i.imgur.com/9Tr3GmL.png)
+![](https://i.imgur.com/Ra2KnTT.png)
 
-![](https://i.imgur.com/vgpqSCV.png)
+![](https://i.imgur.com/MJEEtFI.png)
 
 ## Neatly Styled Game UI
 
-![](https://i.imgur.com/PoYFpdQ.jpg)
+![](https://i.imgur.com/fIVxDQH.png)
 
-![](https://i.imgur.com/du58Ifa.png)
+![](https://i.imgur.com/A951uaC.png)
 
 ## Awesome Graphics
 
-![](https://i.imgur.com/v3aR0E7.png)
+![](https://i.imgur.com/Xpi24GY.png)
 
-![](https://i.imgur.com/tEuhoBx.jpg)
+![](https://i.imgur.com/FAuiYJe.jpg)
 
-![](https://i.imgur.com/5dadkka.jpg)
+![](https://i.imgur.com/fYrQsAT.png)
 
-![](https://i.imgur.com/extPtZs.png)
+![](https://i.imgur.com/B4tDJjw.png)
 
 # Build Stack
 
@@ -98,6 +98,5 @@ After these commands, visit `localhost:3000`
 
 # Sources
 
-- [Resource Pack Used](http://www.9minecraft.net/paper-cut-resource-pack/)
+- [Voxel Texture](https://opengameart.org/content/voxel-pack)
 - [Multiplayer Player Mesh](https://github.com/bs-community/skinview3d)
-- [Home Page Panorama Library](https://pannellum.org)

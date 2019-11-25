@@ -42,7 +42,8 @@ const resources = {
         config: {
           transparent: true,
           side: THREE.DoubleSide,
-          alphaTest: 0.15
+          alphaTest: 0.15,
+          opacity: 0.4
         }
       },
       12: {

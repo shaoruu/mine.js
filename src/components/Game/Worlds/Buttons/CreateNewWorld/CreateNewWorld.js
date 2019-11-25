@@ -51,6 +51,7 @@ const CreateNewWorld = withRouter(({ history }) => {
 
       history.push(`/game/minejs/${id}`)
     },
+    // eslint-disable-next-line no-console
     onError: error => console.error(error)
   })
 

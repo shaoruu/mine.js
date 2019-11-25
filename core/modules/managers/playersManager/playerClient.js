@@ -1,11 +1,11 @@
-import OriginalSteve from '../../../assets/skin/Original_Steve.png'
+import ian13456 from '../../../assets/skin/ian13456.png'
 import PlayerObject from '../../../lib/playerObject/playerObject'
 
 function PlayerClient(username, pos, dir) {
   this.yAxisClamp = 0
   this.oldDiry = dir.y
 
-  const playerMesh = new PlayerObject(OriginalSteve, pos, dir)
+  const playerMesh = new PlayerObject(ian13456, pos, dir)
 
   this.getUsername = () => username
   this.getPosition = () => playerMesh.position
