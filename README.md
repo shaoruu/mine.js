@@ -3,8 +3,7 @@
 <a href="https://discord.gg/Xp5cStm" align="center">
 <img src="https://img.shields.io/discord/648532255979077635.svg?style=for-the-badge" />
 </a>
-
-MineJS is a javascript-based voxel engine that runs in your browser!
+<p align="center"><b>MineJS</b> is a javascript-based voxel engine that runs in your browser!</p>
 
 ### Disclaimer
 
