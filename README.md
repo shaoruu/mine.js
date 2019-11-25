@@ -1,4 +1,4 @@
-![](https://i.imgur.com/Xe1WfTR.png)
+![](https://i.imgur.com/B3GoQ4p.png)
 
 <a href="https://discord.gg/Xp5cStm" align="center">
 <img src="https://img.shields.io/discord/648532255979077635.svg?style=for-the-badge" />
