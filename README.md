@@ -1,4 +1,4 @@
-![](https://i.imgur.com/DrT5F2R.png)
+![](https://i.imgur.com/Xe1WfTR.png)
 
 <a href="https://discord.gg/Xp5cStm" align="center">
 <img src="https://img.shields.io/discord/648532255979077635.svg?style=for-the-badge" />
@@ -12,7 +12,7 @@ MineJS is a javascript-based voxel engine that runs in your browser!
 
 # Motivation
 
-We thought it would be interesting to design a game that is inspired by the hugely popular game "Minecraft" with javascript. We are interested to see if javascript can deliver quality graphics and performance, and interactive multiplayer game play within a 3D voxel type environment.
+We thought it would be interesting to design a game that is inspired by the popular voxel engine ["Minetest"](https://www.minetest.net/) with javascript. We are interested to see if javascript can deliver quality graphics and performance, and interactive multiplayer game play within a 3D voxel type environment.
 
 # Screenshots
 
