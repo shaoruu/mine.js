@@ -4,9 +4,15 @@
 <img src="https://img.shields.io/discord/648532255979077635.svg?style=for-the-badge" />
 </a>
 
+MineJS is a javascript-based voxel engine that runs in your browser!
+
 ### Disclaimer
 
 :pushpin: This project is a work in progress. There are a lot of potential features waiting to be added!
+
+# Motivation
+
+We thought it would be interesting to design a game that is inspired by the hugely popular game "Minecraft" with javascript. We are interested to see if javascript can deliver quality graphics and performance, and interactive multiplayer game play within a 3D voxel type environment.
 
 # Screenshots
 
