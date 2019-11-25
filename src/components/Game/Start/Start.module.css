@@ -30,7 +30,7 @@
   right: -55px;
   font-size: 23px;
   color: rgb(251, 255, 0);
-  font-family: Minecraft;
+  font-family: 'Alata', sans-serif;
   text-shadow: 4px 4px black;
   text-align: center;
   z-index: 3;
@@ -45,20 +45,20 @@
 }
 
 .play {
-  width: 500px;
+  width: 450px;
   margin: 10px 0;
   z-index: 2;
 }
 
 .options {
-  width: 500px;
+  width: 450px;
   z-index: 2;
   display: flex;
   justify-content: space-between;
 }
 
 .options_butt {
-  width: 240px;
+  width: 220px;
   margin: 10px 0;
 }
 

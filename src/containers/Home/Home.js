@@ -5,7 +5,7 @@
 
 import withAuthGuard from '../../hoc/AuthGuard/AuthGuard'
 import { Hint } from '../../components/Utils'
-import lobby from '../../assets/gui/MCJS_appLogo.png'
+import lobby from '../../assets/gui/minejs_appLogo.png'
 import sharedStyles from '../sharedStyles.module.css'
 
 import classes from './Home.module.css'
@@ -15,7 +15,7 @@ import React, { useEffect } from 'react'
 
 const Home = ({ isAuth, history, username, loading }) => {
   useEffect(() => {
-    document.title = 'MC.JS - Home'
+    document.title = 'mine.js - home'
   }, [])
 
   if (loading) {
@@ -67,7 +67,7 @@ const Home = ({ isAuth, history, username, loading }) => {
 
   return (
     <div className={classes.wrapper}>
-      <img src={lobby} alt="MC.JS Lobby" className={classes.logo} />
+      <img src={lobby} alt="mine.js Lobby" className={classes.logo} />
       {content}
     </div>
   )

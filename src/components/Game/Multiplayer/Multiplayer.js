@@ -14,10 +14,10 @@ const Multiplayer = ({ history, subpage }) => {
 
   useEffect(() => {
     if (!subpage) {
-      document.title = 'MC.JS - Connect'
+      document.title = 'mine.js - connect'
       input.current.focus()
     } else {
-      document.title = 'MC.JS - Server'
+      document.title = 'mine.js - server'
     }
   })
 

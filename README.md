@@ -6,13 +6,7 @@
 
 ### Disclaimer
 
-:pushpin: This project is a work in progress. There's still a lot of features waiting to be implemented, and the game is far from being the actual game.
-
-### **MC.JS brings the best-selling PC game Minecraft into the web with the power of Javascript.**
-
-# Motivation
-
-Having to open an additional app to play a game is sometimes too tiring. Therefore, I thought it'd be interesting to somehow implement Minecraft with javascript, essentially bringing the whole Minecraft game onto the web. This not only takes away the tedious process of installing the game, it also brings the entire game to players within a couple clicks.
+:pushpin: This project is a work in progress. There's still a lot of features waiting to be implemented.
 
 # Screenshots
 
@@ -80,7 +74,7 @@ Before cloning the repo or doing anything, be sure to install [docker](https://w
 yarn global add prisma graphql-cli nodemon
 
 # Clone the repository
-git clone https://github.com/ian13456/mc.js.git
+git clone https://github.com/ian13456/mine.js.git
 
 # Download packages for both server and client
 yarn
@@ -100,7 +94,7 @@ After these commands, visit `localhost:3000`
 
 # Note
 
-:pushpin: MC.JS runs fastest on either Opera or Chrome.
+:pushpin: mine.js runs fastest on either Opera or Chrome.
 
 # Sources
 

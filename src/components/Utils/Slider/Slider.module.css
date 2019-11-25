@@ -12,7 +12,7 @@
 }
 
 .wrapper:hover .textOverlay {
-  color: #f8f6a4;
+  color: #dbf8a4;
 }
 
 .wrapper:hover .slider::-webkit-slider-thumb {
@@ -48,11 +48,11 @@
   appearance: none;
   width: 15px;
   height: 35px;
-  background: #5b5b5c;
-  border-bottom: 3px solid #565656;
-  border-right: 2px solid #565656;
-  border-left: 2px solid #aaa;
-  border-top: 2px solid #aaa;
+  background: #465881;
+  border-bottom: 3px solid #35425f;
+  border-right: 2px solid #35425f;
+  border-left: 2px solid #728ecf;
+  border-top: 2px solid #728ecf;
   box-shadow: 0 0 2px 2px black;
   border-radius: 3px;
   cursor: pointer;

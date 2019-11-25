@@ -1,5 +1,5 @@
 .wrapper {
-  font-family: Minecraft;
+  font-family: 'Alata', sans-serif;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -28,7 +28,7 @@
 .buttonGroup button {
   margin-top: 10px;
   margin-bottom: 5px;
-  width: 260px;
+  width: 230px;
 }
 
 .button:active,

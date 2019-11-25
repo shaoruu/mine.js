@@ -7,7 +7,7 @@ import { withRouter } from 'react-router-dom'
 
 const Settings = ({ history }) => {
   useEffect(() => {
-    document.title = 'MC.JS - Settings'
+    document.title = 'mine.js - settings'
   }, [])
 
   return (

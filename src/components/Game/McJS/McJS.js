@@ -66,7 +66,7 @@ const Game = ({ id: worldId, username, history }) => {
   )
 
   useEffect(() => {
-    document.title = 'MC.JS'
+    document.title = 'mine.js'
 
     if (loading || error) return
 

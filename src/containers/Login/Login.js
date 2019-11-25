@@ -7,7 +7,7 @@ import React, { useEffect } from 'react'
 
 const Login = ({ isAuth }) => {
   useEffect(() => {
-    document.title = 'MC.JS - Login'
+    document.title = 'mine.js - login'
     removeAllCookies()
   }, [])
 

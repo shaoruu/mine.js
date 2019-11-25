@@ -7,7 +7,7 @@ import { Redirect } from 'react-router-dom'
 
 const Logout = ({ isAuth }) => {
   useEffect(() => {
-    document.title = 'MC.JS - Home'
+    document.title = 'mine.js - home'
   }, [])
 
   const client = useApolloClient()

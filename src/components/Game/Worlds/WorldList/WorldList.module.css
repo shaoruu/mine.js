@@ -1,12 +1,12 @@
 .wrapper {
-  background-color: rgba(1, 1, 1, 0.486);
+  background-color: rgba(1, 1, 1, 0.247);
   height: 70vh;
-  width: 100%;
+  width: 80%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  box-shadow: inset 0px 0px 15px 0px #000000;
+  box-shadow: inset 0px 0px 15px 0px #000000a4;
   list-style: none;
   overflow-x: hidden;
   overflow-y: auto;

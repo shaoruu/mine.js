@@ -16,7 +16,7 @@ const Options = ({ history }) => {
   const client = useApolloClient()
 
   useEffect(() => {
-    document.title = 'MC.JS - Options'
+    document.title = 'mine.js - options'
 
     if (data.me) {
       const {

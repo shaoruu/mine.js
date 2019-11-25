@@ -25,7 +25,11 @@ export default withRouter(
           onDoubleClick={() => {
             history.push(`/game/mcjs/${id}`)
           }}
-          style={selectedIndex === id ? { borderColor: 'white' } : null}
+          style={
+            selectedIndex === id
+              ? { borderColor: 'rgba(173, 173, 173, 0.74)' }
+              : null
+          }
         >
           <h1>{name}</h1>
           <p>{new Date(lastPlayed).toLocaleString()}</p>

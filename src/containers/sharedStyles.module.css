@@ -1,15 +1,15 @@
 .button {
-  font-family: 'Minecraft';
+  font-family: 'Alata', sans-serif;
   border: none;
-  border-bottom: 3px solid #565656;
-  border-right: 2px solid #565656;
-  border-left: 2px solid #aaa;
-  border-top: 2px solid #aaa;
+  border-bottom: 3px solid #35425f;
+  border-right: 2px solid #35425f;
+  border-left: 2px solid #728ecf;
+  border-top: 2px solid #728ecf;
   box-shadow: 0 0 2px 2px black;
   color: white;
   height: 35px;
   font-size: 15px;
-  background: #5b5b5c;
+  background: #465881;
   border-radius: 3px;
   text-shadow: 2px 2px #4c4c4c;
   cursor: pointer;
@@ -45,7 +45,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  color: gray;
+  color: rgb(168, 168, 168);
   margin: 20px;
   width: 500px;
 }
@@ -62,9 +62,10 @@
   line-height: 36px;
   background: black;
   color: white;
-  font-family: Minecraft;
+  font-family: 'Alata', sans-serif;
   padding: 5px;
-  border: 2px solid rgb(151, 151, 151);
+  border: 2px solid #566da1;
+  border-radius: 10px;
   margin: 8px 0;
   font-size: 15px;
 }

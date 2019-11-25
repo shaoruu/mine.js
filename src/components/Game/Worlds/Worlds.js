@@ -25,7 +25,7 @@ const Worlds = ({ history, subpage }) => {
   )
 
   useEffect(() => {
-    document.title = 'MC.JS - Worlds'
+    document.title = 'mine.js - worlds'
 
     document.addEventListener('keydown', escHandler, false)
 

@@ -32,7 +32,8 @@
     "import/no-webpack-loader-syntax": "off",
     "no-restricted-globals": "off",
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": "warn",
+    "react/jsx-curly-newline": "off"
   },
   "settings": {
     "import/resolver": {

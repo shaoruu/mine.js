@@ -1,4 +1,4 @@
-const projectTag = 'mc-js'
+const projectTag = 'mine.js'
 
 const BlockDict = {
   0: {

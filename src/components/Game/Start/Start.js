@@ -1,13 +1,12 @@
 import sharedStyles from '../../../containers/sharedStyles.module.css'
-import logo from '../../../assets/gui/MCJS_logo.png'
+import logo from '../../../assets/gui/minejs_logo.png'
 
-import Pannellum from './Elements/Pannellum'
 import classes from './Start.module.css'
 
 import React, { useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
 
-const possiblePanoramas = 3
+// const possiblePanoramas = 3
 
 const possibleMessages = [
   'magic!',
@@ -21,27 +20,27 @@ const Start = withRouter(props => {
   const { history } = props
   const node = useRef()
 
-  const panoramaId = 'panorama-background'
+  // const panoramaId = 'panorama-background'
 
-  const panoramaArray = []
+  // const panoramaArray = []
 
   useEffect(() => {
-    document.title = 'MC.JS - Start'
+    document.title = 'mine.js - start'
 
     setTimeout(() => (node.current.style.opacity = '1'), 100)
   })
 
-  const panoramaIndex = Math.floor(Math.random() * possiblePanoramas)
+  // const panoramaIndex = Math.floor(Math.random() * possiblePanoramas)
 
-  for (let i = 0; i < 6; i++)
-    panoramaArray.push(
-      // eslint-disable-next-line global-require, import/no-dynamic-require
-      require(`../../../assets/gui/panoramas/${panoramaIndex}/panorama${i}.png`)
-    )
+  // for (let i = 0; i < 6; i++)
+  //   panoramaArray.push(
+  //     // eslint-disable-next-line global-require, import/no-dynamic-require
+  //     require(`../../../assets/gui/panoramas/${panoramaIndex}/panorama${i}.png`)
+  //   )
 
   return (
     <div ref={node} className={classes.wrapper}>
-      <Pannellum
+      {/* <Pannellum
         id={panoramaId}
         width="600px"
         height="400px"
@@ -51,7 +50,7 @@ const Start = withRouter(props => {
         autoRotate={-2}
         disableKeyboardCtrl
         className={classes.panorama}
-      />
+      /> */}
       <div className={classes.logoWrapper}>
         <img src={logo} alt="MCJS" className={classes.logo} />
         <span>
@@ -65,14 +64,14 @@ const Start = withRouter(props => {
         className={`${sharedStyles.button} ${classes.play}`}
         onClick={() => history.push('/game/worlds')}
       >
-        Singleplayer
+        Single Player
       </button>
       <button
         type="button"
         className={`${sharedStyles.button} ${classes.play}`}
         onClick={() => history.push('/game/multiplayer')}
       >
-        Multiplayer
+        Multi Player
       </button>
       <div className={classes.options}>
         <button

@@ -1,5 +1,5 @@
 .wrapper {
-  font-family: Minecraft;
+  font-family: 'Alata', sans-serif;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -31,7 +31,7 @@
   margin-top: 10px;
   max-width: 400px;
   text-align: center;
-  color: gray;
+  color: rgb(168, 168, 168);
 }
 
 .finalButts {

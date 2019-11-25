@@ -6,7 +6,7 @@ import React, { useEffect } from 'react'
 
 const Register = ({ isAuth }) => {
   useEffect(() => {
-    document.title = 'MC.JS - Register'
+    document.title = 'mine.js - register'
   }, [])
 
   if (isAuth) {
