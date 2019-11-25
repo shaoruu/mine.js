@@ -33,7 +33,7 @@ const Multiplayer = ({ history, subpage }) => {
       setError('World not found.')
       setAddress('')
     },
-    onCompleted: () => history.push(`/game/mcjs/${address}`)
+    onCompleted: () => history.push(`/game/minejs/${address}`)
   })
 
   if (!subpage)

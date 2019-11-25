@@ -1,4 +1,4 @@
-# MCJS TODO
+# mine.js TODO
 
 Pull requests are always welcomed!
 

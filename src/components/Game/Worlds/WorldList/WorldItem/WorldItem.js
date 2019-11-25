@@ -23,7 +23,7 @@ export default withRouter(
             setSelectedIndex(id)
           }}
           onDoubleClick={() => {
-            history.push(`/game/mcjs/${id}`)
+            history.push(`/game/minejs/${id}`)
           }}
           style={
             selectedIndex === id

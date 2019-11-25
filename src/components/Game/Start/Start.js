@@ -6,8 +6,6 @@ import classes from './Start.module.css'
 import React, { useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
 
-// const possiblePanoramas = 3
-
 const possibleMessages = [
   'magic!',
   'browser!',
@@ -20,39 +18,16 @@ const Start = withRouter(props => {
   const { history } = props
   const node = useRef()
 
-  // const panoramaId = 'panorama-background'
-
-  // const panoramaArray = []
-
   useEffect(() => {
     document.title = 'mine.js - start'
 
     setTimeout(() => (node.current.style.opacity = '1'), 100)
   })
 
-  // const panoramaIndex = Math.floor(Math.random() * possiblePanoramas)
-
-  // for (let i = 0; i < 6; i++)
-  //   panoramaArray.push(
-  //     // eslint-disable-next-line global-require, import/no-dynamic-require
-  //     require(`../../../assets/gui/panoramas/${panoramaIndex}/panorama${i}.png`)
-  //   )
-
   return (
     <div ref={node} className={classes.wrapper}>
-      {/* <Pannellum
-        id={panoramaId}
-        width="600px"
-        height="400px"
-        type="cubemap"
-        cubeMap={panoramaArray}
-        autoLoad
-        autoRotate={-2}
-        disableKeyboardCtrl
-        className={classes.panorama}
-      /> */}
       <div className={classes.logoWrapper}>
-        <img src={logo} alt="MCJS" className={classes.logo} />
+        <img src={logo} alt="mine.js" className={classes.logo} />
         <span>
           {possibleMessages[
             Math.floor(Math.random() * possibleMessages.length)

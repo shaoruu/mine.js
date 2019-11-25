@@ -3,12 +3,12 @@ import { Hint } from '../../Utils'
 import sharedStyles from '../../../containers/sharedStyles.module.css'
 import crosshair from '../../../assets/gui/crosshair.png'
 
-import classes from './McJS.module.css'
+import classes from './minejs.module.css'
 
 import React, { useCallback, useRef, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
 import PropTypes from 'prop-types'
-import McJS from 'core/game'
+import MineJS from 'core/game'
 import { useQuery, useApolloClient } from '@apollo/react-hooks'
 
 const Game = ({ id: worldId, username, history }) => {
@@ -70,7 +70,7 @@ const Game = ({ id: worldId, username, history }) => {
 
     if (loading || error) return
 
-    const game = new McJS(
+    const game = new MineJS(
       worldData,
       username,
       container.current,

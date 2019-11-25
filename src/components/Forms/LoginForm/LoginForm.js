@@ -63,7 +63,7 @@ const LoginForm = ({ history, loading: authLoading }) => {
         isSubmitting
       }) => (
         <form onSubmit={handleSubmit} className={classes.wrapper}>
-          <img src={logo} alt="MCJS" className={classes.logo} />
+          <img src={logo} alt="mine.js" className={classes.logo} />
           <div className={classes.inputFields}>
             <div className={classes.inputField}>
               <h1>Email</h1>

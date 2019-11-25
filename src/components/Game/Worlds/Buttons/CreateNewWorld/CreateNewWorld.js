@@ -49,7 +49,7 @@ const CreateNewWorld = withRouter(({ history }) => {
         createWorld: { id }
       } = data
 
-      history.push(`/game/mcjs/${id}`)
+      history.push(`/game/minejs/${id}`)
     },
     onError: error => console.error(error)
   })

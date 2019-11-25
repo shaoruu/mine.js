@@ -48,7 +48,7 @@ function Debug(container, player, world) {
   const chunkXYZ = document.createElement('p')
   const days = document.createElement('p')
 
-  title.innerHTML = 'MCJS (dev/beta/vanilla)'
+  title.innerHTML = 'mine.js (dev/beta/vanilla)'
   fps.innerHTML = '0 fps'
   xyz.innerHTML = 'XYZ: 0 / 0 / 0'
   blockXYZ.innerHTML = 'Block: 0 0 0'

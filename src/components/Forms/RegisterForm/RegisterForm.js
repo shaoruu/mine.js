@@ -57,7 +57,7 @@ const RegisterForm = ({ loading: authLoading, history }) => {
         isSubmitting
       }) => (
         <form onSubmit={handleSubmit} className={classes.wrapper}>
-          <img src={logo} alt="MCJS" className={classes.logo} />
+          <img src={logo} alt="mine.js" className={classes.logo} />
 
           <div className={classes.inputFields}>
             <div className={classes.inputField}>

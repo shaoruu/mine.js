@@ -73,7 +73,7 @@ const Worlds = ({ history, subpage }) => {
                 className={sharedStyles.button}
                 disabled={!selectedIndex}
                 onClick={() => {
-                  history.push(`/game/mcjs/${selectedIndex}`)
+                  history.push(`/game/minejs/${selectedIndex}`)
                 }}
               >
                 Play Selected World

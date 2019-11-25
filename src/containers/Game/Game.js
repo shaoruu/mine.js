@@ -1,5 +1,5 @@
 import {
-  McJS,
+  MineJS,
   Start,
   Worlds,
   Options,
@@ -32,8 +32,8 @@ const Game = ({
 
   let render = null
   switch (page) {
-    case 'mcjs':
-      render = <McJS id={query} username={username} />
+    case 'minejs':
+      render = <MineJS id={query} username={username} />
       break
     case 'multiplayer':
       render = <Multiplayer subpage={query} />
