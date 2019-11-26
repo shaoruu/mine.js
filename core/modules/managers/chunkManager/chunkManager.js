@@ -22,6 +22,9 @@ class ChunkManager {
 
     this.isReady = false
 
+    this.meshGroup = new THREE.Group()
+    this.scene.add(this.meshGroup)
+
     this.prepare(changedBlocks)
   }
 
@@ -92,7 +95,7 @@ class ChunkManager {
           if (!tempChunk.getIsInScene()) {
             // IF NOT YET ADDED TO SCENE
             if (tempChunk.getMesh() instanceof THREE.Object3D) {
-              tempChunk.addSelf(this.scene)
+              tempChunk.addSelf(this.meshGroup)
               tempChunk.setIsInScene(true)
             }
           }
@@ -101,13 +104,13 @@ class ChunkManager {
     }
 
     const shouldBeRemoved = []
-    this.scene.children.forEach(child => {
+    this.meshGroup.children.forEach(child => {
       if (!updatedChunks[child.name] && child.isChunk) {
         shouldBeRemoved.push(child)
-        this.chunks[child.name].setIsInScene(false)
+        this.chunks[child.name] = undefined
       }
     })
-    shouldBeRemoved.forEach(obj => this.scene.remove(obj))
+    shouldBeRemoved.forEach(obj => this.meshGroup.remove(obj))
 
     if (!this.isReady && allGood) this.isReady = true
   }

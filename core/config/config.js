@@ -5,7 +5,7 @@ import { BLOCKS } from './blockDict'
 
 const Config = {
   tech: {
-    maxWorkerCount: 4,
+    maxWorkerCount: 1,
     socketEndpoint: `${self.location.hostname}:5000`
   },
   game: {
@@ -174,7 +174,7 @@ const Config = {
     liquid: [0, 9]
   },
   chunk: {
-    size: 10,
+    size: 8,
     neighborWidth: 3,
     height: 256
   },
