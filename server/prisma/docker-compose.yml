@@ -1,6 +1,18 @@
 version: '3'
 
 services:
+  minejs:
+    image: minejs
+    build:
+      context: ../../
+    ports:
+      - '3000:3000'
+      - '4000:4000'
+      - '5000:5000'
+    environment:
+      PRISMA_ENDPOINT : http://prisma:4466
+      PRISMA_MANAGEMENT_API_SECRET: my-secret
+
   prisma:
     image: prismagraphql/prisma:1.34
     restart: always
