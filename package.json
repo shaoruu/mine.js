@@ -64,7 +64,7 @@
     "server": "cross-env DEBUG=server,socket,redis nodemon --watch server server/src/ --ext js,graphql --exec babel-node",
     "prisma": "docker-compose --file server/prisma/docker-compose.yml up -d",
     "init": "yarn run prisma && sleep 5 && yarn run prisma:deploy && yarn run prisma:get-schema",
-    "start": "yarn run prisma && concurrently \"yarn run client\" \"yarn run server\""
+    "start": "yarn run prisma && yarn prisma:get-schema && concurrently \"yarn run client\" \"yarn run server\""
   },
   "husky": {
     "hooks": {
