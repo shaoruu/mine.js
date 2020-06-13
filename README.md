@@ -75,21 +75,11 @@ Javascript.
 Before cloning the repo or doing anything, be sure to install [docker](https://www.docker.com/) and [node](https://nodejs.org/en/) on your computer. After that, run the following commands:
 
 ```bash
-# Install the prerequisite libraries
-yarn global add prisma graphql-cli nodemon
-
 # Clone the repository
 git clone https://github.com/ian13456/mine.js.git
 
 # Download packages for both server and client
 yarn
-
-# Export environment variables for prisma
-# FOR WINDOWS
-set PRISMA_MANAGEMENT_API_SECRET=my-secret
-# FOR MAC/LINUX (recommend putting this into .bashrc)
-export PRISMA_MANAGEMENT_API_SECRET=my-secret
-
 # Start all services
 yarn run init # only needed when running for the first time
 yarn run start
