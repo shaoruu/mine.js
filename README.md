@@ -89,7 +89,7 @@ After these commands, visit `localhost:3000`
 
 # Note
 
-:pushpin: mine.js runs fastest on either Opera or Chrome.
+:pushpin: mine.js runs fastest on either Opera, Brave or Chrome.
 
 # Sources
 
