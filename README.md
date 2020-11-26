@@ -1,13 +1,12 @@
+:heavy_exclamation_mark: `mine.js` was previously [`mc.js`](https://github.com/ian13456/mc.js), which has been taken down by a [DMCA notice](https://github.com/github/dmca/blob/master/2019/08/2019-08-22-minecraft.md).
+
 ![](https://i.imgur.com/B3GoQ4p.png)
 
 <a href="https://discord.gg/Xp5cStm" align="center">
 <img src="https://img.shields.io/discord/648532255979077635.svg?style=for-the-badge" />
 </a>
+
 <p align="center"><b>MineJS</b> is a javascript-based voxel engine that runs in your browser!</p>
-
-### Disclaimer
-
-:pushpin: This project is a work in progress. There are a lot of potential features waiting to be added!
 
 # Motivation
 
