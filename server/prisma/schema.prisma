@@ -31,7 +31,7 @@ model Player {
   y         Float
   z         Float
   dirx      Float
-  dirY      Float
+  diry      Float
   health    Int
   armor     Int
   hunger    Int
@@ -53,7 +53,7 @@ model World {
   name        String
   seed        String
   time        Float
-  timeChanger Float
+  timeChanger Float?
   days        Int
   lastPlayed  DateTime
 

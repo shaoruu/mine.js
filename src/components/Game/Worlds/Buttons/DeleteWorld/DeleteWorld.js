@@ -17,9 +17,7 @@ const DeleteWorld = ({ history, location }) => {
 
   const { data, loading } = useQuery(MINI_WORLD_QUERY, {
     variables: {
-      where: {
-        id: worldId
-      }
+      worldId
     }
   })
 

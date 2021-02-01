@@ -2,7 +2,7 @@ type Query {
   users(query: String, first: Int, skip: Int, after: String): [User!]!
   me: User!
   myWorlds: User!
-  world(query: String!): World!
+  world(query: ID!): World!
 }
 
 type Mutation {
@@ -19,7 +19,7 @@ type Mutation {
   updateWorld(data: UpdateWorldInput!): World!
   updatePlayer(data: UpdatePlayerInput!): Player!
   updateBlock(data: UpdateBlockInput!): Block!
-  deleteWorld(worldId: ID!): Boolean!
+  deleteWorld(worldId: ID!): World!
   runCommand(data: RunCommandInput!): Boolean!
   requestChunks(data: RequestChunksInput!): Boolean!
   joinWorld(data: JoinWorldInput!): Player!
@@ -135,6 +135,9 @@ input CreateWorldInput {
   seed: String!
   gamemode: Gamemode!
   type: WorldType!
+  time: Int!
+  days: Int!
+  lastPlayed: String!
 }
 
 input CreatePlayerInput {

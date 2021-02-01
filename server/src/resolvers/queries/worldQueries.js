@@ -1,25 +1,23 @@
-const WorldQueries = {
-  myWorlds(parent, args, { user }) {
-    return user.worlds
-  },
-  async world(parent, args, { prisma }) {
-    const { query } = args
-    let { where } = args
+import { prisma } from '../../lib/server'
 
-    if (!where && query) {
-      where = {
-        id: query
-      }
-    }
+const WorldQueries = {
+  async myWorlds(parent, args, { user }) {
+    return user
+  },
+  async world(parent, args) {
+    const { query } = args
+    const where = { id: Number(query) }
 
     await prisma.world.update({
       data: {
-        lastPlayed: new Date().toISOString()
+        lastPlayed: new Date()
       },
       where
     })
 
-    return prisma.world.findUnique({ where })
+    return prisma.world.findUnique({
+      where
+    })
   }
 }
 

@@ -13,7 +13,7 @@ export default {
           data: {
             gamemode: 'SURVIVAL'
           },
-          where: { id: playerId }
+          where: { id: Number(playerId) }
         })
     },
     {
@@ -24,7 +24,7 @@ export default {
           data: {
             gamemode: 'CREATIVE'
           },
-          where: { id: playerId }
+          where: { id: Number(playerId) }
         })
     },
     {
@@ -35,7 +35,7 @@ export default {
           data: {
             gamemode: 'SPECTATOR'
           },
-          where: { id: playerId }
+          where: { id: Number(playerId) }
         })
     },
     ({ username }) => `${username}'s gamemode has been updated.`
@@ -52,7 +52,7 @@ export default {
               data: {
                 timeChanger: 600.0
               },
-              where: { id: worldId }
+              where: { id: Number(worldId) }
             })
         },
         {
@@ -63,7 +63,7 @@ export default {
               data: {
                 timeChanger: 1800.0
               },
-              where: { id: worldId }
+              where: { id: Number(worldId) }
             })
         },
         {
@@ -78,9 +78,7 @@ export default {
               data: {
                 timeChanger: Number(arg)
               },
-              where: {
-                id: worldId
-              }
+              where: { id: Number(worldId) }
             })
         },
         ({ arg }) => `Set the time to ${arg}`

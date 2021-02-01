@@ -33,7 +33,7 @@ export const UPDATE_SETTINGS_MUTATION = gql`
 `
 
 export const CREATE_WORLD_MUTATION = gql`
-  mutation CreateWorld($data: WorldCreateInput!) {
+  mutation CreateWorld($data: CreateWorldInput!) {
     createWorld(data: $data) {
       id
     }
@@ -50,7 +50,7 @@ export const CREATE_PLAYER_MUTATION = gql`
 
 export const DELETE_WORLD_MUTATION = gql`
   mutation DeleteWorld($worldId: ID!) {
-    deleteWorld(where: { id: $worldId }) {
+    deleteWorld(worldId: $worldId) {
       id
     }
   }

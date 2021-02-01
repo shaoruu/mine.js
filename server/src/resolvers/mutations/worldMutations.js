@@ -1,9 +1,10 @@
 import commands from '../../lib/game/commands'
+import { prisma } from '../../lib/server'
 
 const DEFAULT_MESSAGE = 'Unknown command. Try /help for a list of commands.'
 
 const WorldMutations = {
-  async createWorld(parent, args, { prisma, user }) {
+  async createWorld(parent, args, { user }) {
     const {
       data: { gamemode, name, seed, type }
     } = args
@@ -14,7 +15,7 @@ const WorldMutations = {
     // World creation
     const world = await prisma.world.create({
       data: {
-        lastPlayed: new Date().toISOString(),
+        lastPlayed: new Date(),
         name,
         seed,
         type,
@@ -40,16 +41,8 @@ const WorldMutations = {
       data: {
         isAdmin: true,
         gamemode,
-        user: {
-          connect: {
-            id: user.id
-          }
-        },
-        world: {
-          connect: {
-            id: world.id
-          }
-        },
+        userId: user.id,
+        worldId: world.id,
         x: 0,
         y: Number.MIN_SAFE_INTEGER,
         z: 0,
@@ -70,7 +63,7 @@ const WorldMutations = {
 
     return world
   },
-  updateWorld(parent, args, { prisma }, info) {
+  updateWorld(parent, args) {
     let { where } = args
     const {
       data: { id, ...data }
@@ -82,24 +75,19 @@ const WorldMutations = {
       }
     }
 
-    return prisma.world.update(
-      {
-        where,
-        data
-      },
-      info
-    )
+    return prisma.world.update({
+      where,
+      data
+    })
   },
-  deleteWorld(parent, args, { prisma }) {
-    return prisma.world.delete(args)
+  deleteWorld(parent, { worldId }) {
+    return prisma.world.delete({
+      where: {
+        id: Number(worldId)
+      }
+    })
   },
-  async runCommand(
-    parent,
-    {
-      data: { playerId, worldId, command }
-    },
-    { prisma }
-  ) {
+  async runCommand(parent, { data: { playerId, worldId, command } }) {
     let type = 'ERROR'
     let sender = ''
     let body = DEFAULT_MESSAGE
@@ -108,7 +96,10 @@ const WorldMutations = {
       user: { username }
     } = await prisma.player.findUnique({
       where: {
-        id: playerId
+        id: Number(playerId)
+      },
+      select: {
+        user: true
       }
     })
 
@@ -178,11 +169,7 @@ const WorldMutations = {
         type,
         sender,
         body,
-        world: {
-          connect: {
-            id: worldId
-          }
-        }
+        worldId: Number(worldId)
       }
     })
 

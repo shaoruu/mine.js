@@ -10,6 +10,7 @@ const UserMutations = {
     const user = await prisma.user.create({
       data: {
         ...args.data,
+        createdAt: new Date(),
         password,
         settings: {
           create: {
@@ -26,7 +27,9 @@ const UserMutations = {
   },
   async login(parent, args) {
     const user = await prisma.user.findUnique({
-      where: { email: args.data.email }
+      where: {
+        email: args.data.email
+      }
     })
 
     if (!user) {
@@ -46,22 +49,20 @@ const UserMutations = {
   },
   async deleteUser(parent, args, { user }) {
     return prisma.user.delete({
-      where: user
+      where: {
+        id: user.id
+      }
     })
   },
   async updateUser(parent, args, { user }) {
     return prisma.user.update({
-      where: user,
+      where: {
+        id: user.id
+      },
       data: args.data
     })
   },
-  updateSettings(
-    parent,
-    {
-      data: { id, ...data },
-      where
-    }
-  ) {
+  updateSettings(parent, { data: { id, ...data }, where }) {
     if (!where && id) {
       where = {
         id

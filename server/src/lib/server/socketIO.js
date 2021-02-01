@@ -1,7 +1,7 @@
 import prisma from './prisma'
 
-import { createServer } from 'http'
 import debug from 'debug'
+import { createServer } from 'http'
 import socketIO from 'socket.io'
 
 const app = createServer()
@@ -11,8 +11,8 @@ const watchers = {}
 
 const log = output => debug('socket')(JSON.stringify(output, null, 2))
 
-app.listen(5000, () => {
-  log('Socket server running on port 5000.')
+app.listen(6000, () => {
+  log('Socket server running on port 6000.')
 })
 
 io.on('connection', function(socket) {
