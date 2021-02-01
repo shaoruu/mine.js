@@ -1,9 +1,11 @@
-const createPlayer = async function(parent, args, { prisma }) {
+import { prisma } from '../../lib/server'
+
+const createPlayer = async function(parent, args) {
   return prisma.player.create(args)
 }
 
 const joinWorld = async function(parent, args, ctx, info) {
-  const { prisma, user } = ctx
+  const { user } = ctx
 
   const {
     data: { gamemode, worldId }
@@ -69,7 +71,7 @@ const joinWorld = async function(parent, args, ctx, info) {
 
 const PlayerMutations = {
   joinWorld,
-  async updatePlayer(parent, args, { prisma }) {
+  async updatePlayer(parent, args) {
     let { where } = args
 
     const { id, cursor, data, ...otherData } = args.data || {}

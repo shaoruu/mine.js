@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://bottable:123123@localhost:5432/bottable-db?schema=public"
+  url      = env("DB_URL")
 }
 
 generator client {
@@ -14,7 +14,7 @@ model User {
   email String @unique
   password String
 
-  settings Settings
+  settings Settings?
   worlds World[]
 
   updatedAt DateTime @updatedAt
@@ -92,6 +92,9 @@ model Settings {
   id Int @id @default(autoincrement())
 
   renderDistance Int @default(2)
+
+  userId Int
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Inventory {

@@ -1,10 +1,12 @@
 import Helpers from '../../utils/helpers'
+import { prisma } from '../../lib/server'
 
 import bcrypt from 'bcryptjs'
 
 const UserMutations = {
-  async signup(parent, args, { prisma }) {
+  async signup(parent, args) {
     const password = await Helpers.hashPassword(args.data.password)
+
     const user = await prisma.user.create({
       data: {
         ...args.data,
@@ -22,7 +24,7 @@ const UserMutations = {
       token: Helpers.generateToken(user.id)
     }
   },
-  async login(parent, args, { prisma }) {
+  async login(parent, args) {
     const user = await prisma.user.findUnique({
       where: { email: args.data.email }
     })
@@ -42,16 +44,12 @@ const UserMutations = {
       token: Helpers.generateToken(user.id)
     }
   },
-  async deleteUser(parent, args, { prisma, user }) {
+  async deleteUser(parent, args, { user }) {
     return prisma.user.delete({
       where: user
     })
   },
-  async updateUser(parent, args, { prisma, user }) {
-    if (typeof args.data.password === 'string') {
-      args.data.password = await Helpers.hashPassword(args.data.password)
-    }
-
+  async updateUser(parent, args, { user }) {
     return prisma.user.update({
       where: user,
       data: args.data
@@ -62,8 +60,7 @@ const UserMutations = {
     {
       data: { id, ...data },
       where
-    },
-    { prisma }
+    }
   ) {
     if (!where && id) {
       where = {
