@@ -11,35 +11,36 @@ model User {
   id Int @id @default(autoincrement())
 
   username String @unique
-  email String @unique
+  email    String @unique
   password String
 
   settings Settings?
-  worlds World[]
+  worlds   World[]
 
   updatedAt DateTime @updatedAt
   createdAt DateTime
+  Player    Player[]
 }
 
-model Player  {
+model Player {
   id Int @id @default(autoincrement())
 
-  isAdmin Boolean @default(false)
+  isAdmin   Boolean  @default(false)
   lastLogin DateTime @updatedAt
-  x Float
-  y Float
-  z Float
-  dirx Float 
-  dirY Float
-  health Int
-  armor Int
-  hunger Int
+  x         Float
+  y         Float
+  z         Float
+  dirx      Float
+  dirY      Float
+  health    Int
+  armor     Int
+  hunger    Int
 
   userId Int
-  user User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 
   worldId Int
-  world World @relation(fields: [worldId], references: [id])
+  world   World @relation(fields: [worldId], references: [id])
 
   inventory Inventory?
 
@@ -49,28 +50,30 @@ model Player  {
 model World {
   id Int @id @default(autoincrement())
 
-  name String
-  seed String
-  time Float
+  name        String
+  seed        String
+  time        Float
   timeChanger Float
-  days Int
-  lastPlayed DateTime
+  days        Int
+  lastPlayed  DateTime
 
   type WorldType @default(DEFAULT)
 
   changedBlocks Block[]
-  players Player[]
-  messages Message[]
+  players       Player[]
+  messages      Message[]
+  User          User?     @relation(fields: [userId], references: [id])
+  userId        Int?
 }
 
 model Message {
   id Int @id @default(autoincrement())
 
   sender String?
-  body String
+  body   String
 
   worldId Int
-  world World @relation(fields: [worldId], references: [id])
+  world   World @relation(fields: [worldId], references: [id])
 
   type MessageType
 }
@@ -79,13 +82,13 @@ model Block {
   id Int @id @default(autoincrement())
 
   representation String
-  type Int
-  x Int
-  y Int
-  z Int
+  type           Int
+  x              Int
+  y              Int
+  z              Int
 
   worldId Int
-  world World @relation(fields: [worldId], references: [id])
+  world   World @relation(fields: [worldId], references: [id])
 }
 
 model Settings {
@@ -94,17 +97,17 @@ model Settings {
   renderDistance Int @default(2)
 
   userId Int
-  user User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model Inventory {
   id Int @id @default(autoincrement())
 
   cursor Int
-  data String
+  data   String
 
   playerId Int
-  player Player @relation(fields: [playerId], references: [id])
+  player   Player @relation(fields: [playerId], references: [id])
 }
 
 enum Gamemode {
