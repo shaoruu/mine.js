@@ -1,39 +1,31 @@
-import Helpers from '../../utils/helpers'
 import commands from '../../lib/game/commands'
 
 const DEFAULT_MESSAGE = 'Unknown command. Try /help for a list of commands.'
 
 const WorldMutations = {
-  async createWorld(parent, args, { prisma, request }, info) {
-    const id = Helpers.getUserId(request)
+  async createWorld(parent, args, { prisma, user }) {
     const {
       data: { gamemode, name, seed, type }
     } = args
 
     // Check if user exists
-    const userExists = await prisma.exists.User({
-      id
-    })
-    if (!userExists) throw new Error('User not found')
+    if (!user) throw new Error('User not found')
 
     // World creation
-    const world = await prisma.mutation.createWorld(
-      {
-        data: {
-          lastPlayed: new Date().toISOString(),
-          name,
-          seed,
-          type,
-          time: 1200,
-          days: 0
-        }
-      },
-      '{ id }'
-    )
+    const world = await prisma.world.create({
+      data: {
+        lastPlayed: new Date().toISOString(),
+        name,
+        seed,
+        type,
+        time: 1200,
+        days: 0
+      }
+    })
 
-    await prisma.mutation.updateUser({
+    await prisma.user.update({
       where: {
-        id
+        id: user.id
       },
       data: {
         worlds: {
@@ -44,14 +36,13 @@ const WorldMutations = {
       }
     })
 
-    // Adding owner into world
-    await prisma.mutation.createPlayer({
+    await prisma.player.create({
       data: {
         isAdmin: true,
         gamemode,
         user: {
           connect: {
-            id
+            id: user.id
           }
         },
         world: {
@@ -77,16 +68,9 @@ const WorldMutations = {
       }
     })
 
-    return prisma.query.world(
-      {
-        where: {
-          id: world.id
-        }
-      },
-      info
-    )
+    return world
   },
-  async updateWorld(parent, args, { prisma }, info) {
+  updateWorld(parent, args, { prisma }, info) {
     let { where } = args
     const {
       data: { id, ...data }
@@ -98,7 +82,7 @@ const WorldMutations = {
       }
     }
 
-    return prisma.mutation.updateWorld(
+    return prisma.world.update(
       {
         where,
         data
@@ -107,7 +91,7 @@ const WorldMutations = {
     )
   },
   deleteWorld(parent, args, { prisma }) {
-    return prisma.mutation.deleteWorld(args)
+    return prisma.world.delete(args)
   },
   async runCommand(
     parent,
@@ -122,18 +106,11 @@ const WorldMutations = {
 
     const {
       user: { username }
-    } = await prisma.query.player(
-      {
-        where: {
-          id: playerId
-        }
-      },
-      `{
-        user {
-          username
-        }
-      }`
-    )
+    } = await prisma.player.findUnique({
+      where: {
+        id: playerId
+      }
+    })
 
     if (command.startsWith('/')) {
       const args = command
@@ -196,7 +173,7 @@ const WorldMutations = {
       body = command
     }
 
-    await prisma.mutation.createMessage({
+    await prisma.message.create({
       data: {
         type,
         sender,

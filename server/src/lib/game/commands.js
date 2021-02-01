@@ -9,7 +9,7 @@ export default {
       variation: ['s', 'survival', '0'],
       more: null,
       run: async ({ prisma, playerId }) =>
-        prisma.mutation.updatePlayer({
+        prisma.player.update({
           data: {
             gamemode: 'SURVIVAL'
           },
@@ -20,7 +20,7 @@ export default {
       variation: ['c', 'creative', '1'],
       more: null,
       run: async ({ prisma, playerId }) =>
-        prisma.mutation.updatePlayer({
+        prisma.player.update({
           data: {
             gamemode: 'CREATIVE'
           },
@@ -31,7 +31,7 @@ export default {
       variation: ['sp', 'spectator', '3'],
       more: null,
       run: async ({ prisma, playerId }) =>
-        prisma.mutation.updatePlayer({
+        prisma.player.update({
           data: {
             gamemode: 'SPECTATOR'
           },
@@ -48,7 +48,7 @@ export default {
           variation: ['day'],
           more: null,
           run: ({ prisma, worldId }) =>
-            prisma.mutation.updateWorld({
+            prisma.world.update({
               data: {
                 timeChanger: 600.0
               },
@@ -59,7 +59,7 @@ export default {
           variation: ['night'],
           more: null,
           run: async ({ worldId, prisma }) =>
-            prisma.mutation.updateWorld({
+            prisma.world.update({
               data: {
                 timeChanger: 1800.0
               },
@@ -74,7 +74,7 @@ export default {
           },
           more: null,
           run: async ({ worldId, arg, prisma }) =>
-            prisma.mutation.updateWorld({
+            prisma.world.update({
               data: {
                 timeChanger: Number(arg)
               },

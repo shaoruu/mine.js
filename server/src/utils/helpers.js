@@ -10,7 +10,7 @@ class Helpers {
     return bcrypt.hash(password, 10)
   }
 
-  static getUserId = (request, requireAuth = true) => {
+  static getUserId = (request, requireAuth = false) => {
     const header = request.request
       ? request.request.headers.authorization
       : request.connection.context.Authorization

@@ -1,13 +1,8 @@
-import Helpers from '../../utils/helpers'
-
 const WorldQueries = {
-  myWorlds(parent, args, { prisma, request }, info) {
-    const userId = Helpers.getUserId(request)
-    return prisma.query.user({ where: { id: userId } }, info)
+  myWorlds(parent, args, { user }) {
+    return user.worlds
   },
-  async world(parent, args, { prisma }, info) {
-    // const id = args.query
-
+  async world(parent, args, { prisma }) {
     const { query } = args
     let { where } = args
 
@@ -17,13 +12,14 @@ const WorldQueries = {
       }
     }
 
-    await prisma.mutation.updateWorld({
+    await prisma.world.update({
       data: {
         lastPlayed: new Date().toISOString()
       },
       where
     })
-    return prisma.query.world({ where }, info)
+
+    return prisma.world.findUnique({ where })
   }
 }
 

@@ -1,42 +1,33 @@
-import Helpers from '../../utils/helpers'
-
-const createPlayer = async function(parent, args, { prisma }, info) {
-  return prisma.mutation.createPlayer(args, info)
+const createPlayer = async function(parent, args, { prisma }) {
+  return prisma.player.create(args)
 }
 
 const joinWorld = async function(parent, args, ctx, info) {
-  const { prisma, request } = ctx
+  const { prisma, user } = ctx
 
   const {
-    data: { gamemode },
-    where
+    data: { gamemode, worldId }
   } = args
 
-  const id = Helpers.getUserId(request)
+  if (!user) throw new Error('User not found')
 
-  const userExists = await prisma.exists.User({ id })
-  if (!userExists) throw new Error('User not found')
-
-  let existingPlayer
-
-  const players = await prisma.query.players(
+  let player = await prisma.player.findFirst(
     {
-      first: 1,
       where: {
-        user: {
-          id
-        },
-        world: where
+        user,
+        world: {
+          where: {
+            id: worldId
+          }
+        }
       }
     },
     info
   )
 
-  existingPlayer = players ? players[0] : null
-
   // Player creation
-  if (!existingPlayer)
-    existingPlayer = await createPlayer(
+  if (!player)
+    player = await createPlayer(
       null,
       {
         data: {
@@ -44,11 +35,13 @@ const joinWorld = async function(parent, args, ctx, info) {
           gamemode,
           user: {
             connect: {
-              id
+              id: user.id
             }
           },
           world: {
-            connect: where
+            connect: {
+              id: worldId
+            }
           },
           x: 0,
           y: Number.MIN_SAFE_INTEGER,
@@ -70,12 +63,13 @@ const joinWorld = async function(parent, args, ctx, info) {
       ctx,
       info
     )
-  return existingPlayer
+
+  return player
 }
 
 const PlayerMutations = {
   joinWorld,
-  async updatePlayer(parent, args, { prisma }, info) {
+  async updatePlayer(parent, args, { prisma }) {
     let { where } = args
 
     const { id, cursor, data, ...otherData } = args.data || {}
@@ -90,16 +84,13 @@ const PlayerMutations = {
     if (!cursor) delete inventoryUpdate.cursor
     if (!data) delete inventoryUpdate.data
 
-    return prisma.mutation.updatePlayer(
-      {
-        where,
-        data: {
-          ...otherData,
-          ...inventoryUpdate
-        }
-      },
-      info
-    )
+    return prisma.player.update({
+      where,
+      data: {
+        ...otherData,
+        ...inventoryUpdate
+      }
+    })
   }
 }
 

@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 const UserMutations = {
   async signup(parent, args, { prisma }) {
     const password = await Helpers.hashPassword(args.data.password)
-    const user = await prisma.mutation.createUser({
+    const user = await prisma.user.create({
       data: {
         ...args.data,
         password,
@@ -23,10 +23,8 @@ const UserMutations = {
     }
   },
   async login(parent, args, { prisma }) {
-    const user = await prisma.query.user({
-      where: {
-        email: args.data.email
-      }
+    const user = await prisma.user.findUnique({
+      where: { email: args.data.email }
     })
 
     if (!user) {
@@ -44,34 +42,20 @@ const UserMutations = {
       token: Helpers.generateToken(user.id)
     }
   },
-  async deleteUser(parent, args, { prisma, request }, info) {
-    const userId = Helpers.getUserId(request)
-
-    return prisma.mutation.deleteUser(
-      {
-        where: {
-          id: userId
-        }
-      },
-      info
-    )
+  async deleteUser(parent, args, { prisma, user }) {
+    return prisma.user.delete({
+      where: user
+    })
   },
-  async updateUser(parent, args, { prisma, request }, info) {
-    const userId = Helpers.getUserId(request)
-
+  async updateUser(parent, args, { prisma, user }) {
     if (typeof args.data.password === 'string') {
       args.data.password = await Helpers.hashPassword(args.data.password)
     }
 
-    return prisma.mutation.updateUser(
-      {
-        where: {
-          id: userId
-        },
-        data: args.data
-      },
-      info
-    )
+    return prisma.user.update({
+      where: user,
+      data: args.data
+    })
   },
   updateSettings(
     parent,
@@ -79,8 +63,7 @@ const UserMutations = {
       data: { id, ...data },
       where
     },
-    { prisma },
-    info
+    { prisma }
   ) {
     if (!where && id) {
       where = {
@@ -88,13 +71,10 @@ const UserMutations = {
       }
     }
 
-    return prisma.mutation.updateSettings(
-      {
-        data,
-        where
-      },
-      info
-    )
+    return prisma.settings.update({
+      where,
+      data
+    })
   }
 }
 

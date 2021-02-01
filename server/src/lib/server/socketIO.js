@@ -22,7 +22,7 @@ io.on('connection', function(socket) {
     watchers[socket.id] = username
 
     // CREATE JOIN WORLD MESSAGE
-    await prisma.mutation.createMessage({
+    await prisma.message.create({
       data: {
         type: 'INFO',
         sender: '',
@@ -47,7 +47,7 @@ io.on('connection', function(socket) {
     delete watchers[socket.id]
 
     // CREATE LEAVE WORLD MESSAGE
-    await prisma.mutation.createMessage({
+    await prisma.message.create({
       data: {
         type: 'INFO',
         sender: '',
