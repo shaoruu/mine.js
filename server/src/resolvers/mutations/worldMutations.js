@@ -80,7 +80,52 @@ const WorldMutations = {
       data
     })
   },
-  deleteWorld(parent, { worldId }) {
+  async deleteWorld(parent, { worldId }) {
+    const players = await prisma.player.findMany({
+      where: {
+        worldId: Number(worldId)
+      },
+      select: {
+        id: true,
+        inventory: true
+      }
+    })
+
+    await Promise.all(
+      players.map(async player => {
+        await prisma.inventory.delete({
+          where: {
+            id: player.inventory.id
+          }
+        })
+
+        return prisma.player.delete({
+          where: {
+            id: Number(player.id)
+          }
+        })
+      })
+    )
+
+    const messages = await prisma.message.findMany({
+      where: {
+        worldId: Number(worldId)
+      },
+      select: {
+        id: true
+      }
+    })
+
+    await Promise.all(
+      messages.map(message =>
+        prisma.message.delete({
+          where: {
+            id: Number(message.id)
+          }
+        })
+      )
+    )
+
     return prisma.world.delete({
       where: {
         id: Number(worldId)
