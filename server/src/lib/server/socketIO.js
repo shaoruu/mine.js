@@ -11,8 +11,8 @@ const watchers = {}
 
 const log = output => debug('socket')(JSON.stringify(output, null, 2))
 
-app.listen(6000, () => {
-  log('Socket server running on port 6000.')
+app.listen(3030, () => {
+  log('Socket server running on port 3030.')
 })
 
 io.on('connection', function(socket) {

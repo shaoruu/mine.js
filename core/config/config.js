@@ -6,7 +6,7 @@ import { BLOCKS } from './blockDict'
 const Config = {
   tech: {
     maxWorkerCount: 1,
-    socketEndpoint: `${self.location.hostname}:6000`
+    socketEndpoint: `${self.location.hostname}:3030`
   },
   game: {
     autoSaveInterval: 5 * 1000 * 60 // ms
