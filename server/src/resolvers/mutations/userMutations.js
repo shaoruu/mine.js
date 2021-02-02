@@ -65,7 +65,7 @@ const UserMutations = {
   updateSettings(parent, { data: { id, ...data }, where }) {
     if (!where && id) {
       where = {
-        id
+        id: Number(id)
       }
     }
 

@@ -32,7 +32,7 @@ export default withRouter(
           }
         >
           <h1>{name}</h1>
-          <p>{new Date(lastPlayed).toLocaleString()}</p>
+          <p>{new Date(Number(lastPlayed) * 1000).toLocaleString()}</p>
         </li>
       </OutsideClickHandler>
     )
