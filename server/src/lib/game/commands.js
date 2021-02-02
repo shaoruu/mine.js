@@ -12,6 +12,15 @@ const publishPlayer = async (player, pubsub) => {
   })
 }
 
+const publishWorld = async (world, pubsub) => {
+  await pubsub.publish(`world ${world.id}`, {
+    world: {
+      mutation: 'UPDATED',
+      node: world
+    }
+  })
+}
+
 export default {
   gamemode: [
     {
@@ -65,24 +74,30 @@ export default {
         {
           variation: ['day'],
           more: null,
-          run: ({ prisma, worldId }) =>
-            prisma.world.update({
+          run: async ({ prisma, worldId, pubsub }) => {
+            const world = await prisma.world.update({
               data: {
                 timeChanger: 600.0
               },
               where: { id: Number(worldId) }
             })
+
+            await publishWorld(world, pubsub)
+          }
         },
         {
           variation: ['night'],
           more: null,
-          run: async ({ worldId, prisma }) =>
-            prisma.world.update({
+          run: async ({ prisma, worldId, pubsub }) => {
+            const world = await prisma.world.update({
               data: {
                 timeChanger: 1800.0
               },
               where: { id: Number(worldId) }
             })
+
+            await publishWorld(world, pubsub)
+          }
         },
         {
           variation: arg => {
@@ -91,13 +106,16 @@ export default {
             return false
           },
           more: null,
-          run: async ({ worldId, arg, prisma }) =>
-            prisma.world.update({
+          run: async ({ worldId, arg, prisma, pubsub }) => {
+            const world = await prisma.world.update({
               data: {
                 timeChanger: Number(arg)
               },
               where: { id: Number(worldId) }
             })
+
+            await publishWorld(world, pubsub)
+          }
         },
         ({ arg }) => `Set the time to ${arg}`
       ]
