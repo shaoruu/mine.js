@@ -145,7 +145,11 @@ class Chat {
     this.focusInput()
     this.resetInput()
 
-    if (isT) setTimeout(() => this.setInput(this.getInput().substr(1)), 0.01)
+    if (isT) {
+      setTimeout(() => this.setInput(this.getInput().substr(1)), 0.01)
+    } else {
+      this.setInput('/')
+    }
   }
 
   disable = () => {

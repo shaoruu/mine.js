@@ -71,7 +71,7 @@ const joinWorld = async function(parent, args, ctx, info) {
 
 const PlayerMutations = {
   joinWorld,
-  async updatePlayer(parent, args) {
+  async updatePlayer(parent, args, { pubsub }) {
     let { where } = args
 
     const { id, cursor, data, ...otherData } = args.data || {}
@@ -86,13 +86,22 @@ const PlayerMutations = {
     if (!cursor) delete inventoryUpdate.cursor
     if (!data) delete inventoryUpdate.data
 
-    return prisma.player.update({
+    const player = await prisma.player.update({
       where,
       data: {
         ...otherData,
         ...inventoryUpdate
       }
     })
+
+    pubsub.publish(`player ${player.id}`, {
+      player: {
+        mutation: 'UPDATED',
+        data: player
+      }
+    })
+
+    return player
   }
 }
 
