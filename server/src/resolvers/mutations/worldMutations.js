@@ -132,7 +132,11 @@ const WorldMutations = {
       }
     })
   },
-  async runCommand(parent, { data: { playerId, worldId, command } }) {
+  async runCommand(
+    parent,
+    { data: { playerId, worldId, command } },
+    { pubsub }
+  ) {
     let type = 'ERROR'
     let sender = ''
     let body = DEFAULT_MESSAGE
@@ -183,7 +187,8 @@ const WorldMutations = {
             playerId,
             username,
             arg: args[index],
-            prisma
+            prisma,
+            pubsub
           }
 
           await run(context)
@@ -209,12 +214,19 @@ const WorldMutations = {
       body = command
     }
 
-    await prisma.message.create({
+    const message = await prisma.message.create({
       data: {
         type,
         sender,
         body,
         worldId: Number(worldId)
+      }
+    })
+
+    pubsub.publish(`message ${worldId}`, {
+      message: {
+        mutation: 'CREATED',
+        node: message
       }
     })
 

@@ -11,6 +11,7 @@ import classes from './DeleteWorld.module.css'
 import React from 'react'
 import { withRouter, Redirect } from 'react-router-dom'
 import { useQuery, useMutation } from '@apollo/react-hooks'
+import classNames from 'classnames'
 
 const DeleteWorld = ({ history, location }) => {
   const { worldId } = location.state
@@ -54,7 +55,7 @@ const DeleteWorld = ({ history, location }) => {
       <div className={classes.buttonWrapper}>
         <button
           type="button"
-          className={sharedStyles.button}
+          className={classNames(sharedStyles.button, classes.deleteButton)}
           onClick={() => {
             deleteWorld({
               variables: {

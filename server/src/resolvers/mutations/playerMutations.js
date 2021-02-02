@@ -97,7 +97,7 @@ const PlayerMutations = {
     pubsub.publish(`player ${player.id}`, {
       player: {
         mutation: 'UPDATED',
-        data: player
+        node: player
       }
     })
 

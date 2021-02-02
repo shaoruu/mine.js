@@ -3,40 +3,58 @@
  * THEY ARE ALL ARRAYS OF variationS.
  */
 
+const publishPlayer = async (player, pubsub) => {
+  await pubsub.publish(`player ${player.id}`, {
+    player: {
+      mutation: 'UPDATED',
+      node: player
+    }
+  })
+}
+
 export default {
   gamemode: [
     {
       variation: ['s', 'survival', '0'],
       more: null,
-      run: async ({ prisma, playerId }) =>
-        prisma.player.update({
+      run: async ({ prisma, playerId, pubsub }) => {
+        const player = await prisma.player.update({
           data: {
             gamemode: 'SURVIVAL'
           },
           where: { id: Number(playerId) }
         })
+
+        await publishPlayer(player, pubsub)
+      }
     },
     {
       variation: ['c', 'creative', '1'],
       more: null,
-      run: async ({ prisma, playerId }) =>
-        prisma.player.update({
+      run: async ({ prisma, playerId, pubsub }) => {
+        const player = await prisma.player.update({
           data: {
             gamemode: 'CREATIVE'
           },
           where: { id: Number(playerId) }
         })
+
+        await publishPlayer(player, pubsub)
+      }
     },
     {
       variation: ['sp', 'spectator', '3'],
       more: null,
-      run: async ({ prisma, playerId }) =>
-        prisma.player.update({
+      run: async ({ prisma, playerId, pubsub }) => {
+        const player = await prisma.player.update({
           data: {
             gamemode: 'SPECTATOR'
           },
           where: { id: Number(playerId) }
         })
+
+        await publishPlayer(player, pubsub)
+      }
     },
     ({ username }) => `${username}'s gamemode has been updated.`
   ],

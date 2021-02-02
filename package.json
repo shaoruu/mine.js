@@ -17,6 +17,7 @@
     "apollo-server-lambda": "2.14.2",
     "apollo-utilities": "^1.2.1",
     "bcryptjs": "^2.4.3",
+    "classnames": "^2.2.6",
     "colyseus": "^0.10.9",
     "concurrently": "^4.1.1",
     "cookie": "^0.4.0",

@@ -147,11 +147,12 @@ class Player extends Stateful {
     this.viewport.updateHelmet()
   }
 
-  handleServerUpdate = ({
-    player: {
-      node: { gamemode }
-    }
-  }) => {
+  handleServerUpdate = data => {
+    const {
+      player: {
+        node: { gamemode }
+      }
+    } = data
     this.status.setGamemode(gamemode)
     this.inventory.setGamemode(gamemode)
     this.skin.setGamemode(gamemode)
