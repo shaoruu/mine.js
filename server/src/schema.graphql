@@ -29,17 +29,8 @@ type Subscription {
   # Chunks
   block(worldId: ID!): BlockSubscriptionPayload!
   message(worldId: ID!): MessageSubscriptionPayload!
-  player(
-    username: String!
-    worldId: ID!
-    mutation_in: [String!]
-    updatedFields_contains_some: [String!]
-  ): PlayerSubscriptionPayload!
-  world(
-    worldId: ID!
-    mutation_in: [String!]
-    updatedFields_contains_some: [String!]
-  ): WorldSubscriptionPayload!
+  player(playerId: ID!): PlayerSubscriptionPayload!
+  world(worldId: ID!): WorldSubscriptionPayload!
 }
 
 type User {

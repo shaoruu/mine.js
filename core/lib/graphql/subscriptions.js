@@ -14,18 +14,8 @@ export const MESSAGE_SUBSCRIPTION = gql`
 `
 
 export const PLAYER_SUBSCRIPTION = gql`
-  subscription Player(
-    $username: String!
-    $mutation_in: [String!]
-    $worldId: ID!
-    $updatedFields_contains_some: [String!]
-  ) {
-    player(
-      username: $username
-      worldId: $worldId
-      mutation_in: $mutation_in
-      updatedFields_contains_some: $updatedFields_contains_some
-    ) {
+  subscription Player($playerId: ID!) {
+    player(playerId: $playerId) {
       mutation
       node {
         gamemode
@@ -35,16 +25,8 @@ export const PLAYER_SUBSCRIPTION = gql`
 `
 
 export const WORLD_SUBSCRIPTION = gql`
-  subscription World(
-    $worldId: ID!
-    $mutation_in: [String!]
-    $updatedFields_contains_some: [String!]
-  ) {
-    world(
-      worldId: $worldId
-      mutation_in: $mutation_in
-      updatedFields_contains_some: $updatedFields_contains_some
-    ) {
+  subscription World($worldId: ID!) {
+    world(worldId: $worldId) {
       mutation
       node {
         timeChanger

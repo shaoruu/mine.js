@@ -71,7 +71,7 @@ const WorldMutations = {
 
     if (!where && id) {
       where = {
-        id
+        id: Number(id)
       }
     }
 

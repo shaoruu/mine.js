@@ -15,8 +15,8 @@ export const UPDATE_PLAYER_MUTATION = gql`
     $hunger: Int
   ) {
     updatePlayer(
-      where: { id: $id }
       data: {
+        id: $id
         x: $x
         y: $y
         z: $z
@@ -38,10 +38,7 @@ export const UPDATE_PLAYER_MUTATION = gql`
 
 export const UPDATE_WORLD_MUTATION = gql`
   mutation UpdateWorld($id: ID!, $name: String, $time: Float, $days: Int) {
-    updateWorld(
-      where: { id: $id }
-      data: { name: $name, time: $time, days: $days }
-    ) {
+    updateWorld(data: { id: $id, name: $name, time: $time, days: $days }) {
       name
       time
       days

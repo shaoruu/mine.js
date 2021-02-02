@@ -78,9 +78,7 @@ class World extends Stateful {
       .subscribe({
         query: WORLD_SUBSCRIPTION,
         variables: {
-          worldId: this.data.id,
-          mutation_in: ['UPDATED'],
-          updatedFields_contains_some: ['timeChanger']
+          worldId: this.data.id
         }
       })
       .subscribe({

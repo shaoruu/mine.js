@@ -27,11 +27,7 @@ io.on('connection', function(socket) {
         type: 'INFO',
         sender: '',
         body: `${username} joined the game.`,
-        world: {
-          connect: {
-            id: worldId
-          }
-        }
+        worldId: Number(worldId)
       }
     })
 
@@ -52,11 +48,7 @@ io.on('connection', function(socket) {
         type: 'INFO',
         sender: '',
         body: `${username} left the game.`,
-        world: {
-          connect: {
-            id: worldId
-          }
-        }
+        worldId: Number(worldId)
       }
     })
 

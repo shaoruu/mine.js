@@ -1,5 +1,5 @@
 const doesWorldExist = async (prisma, worldId) => {
-  return !!prisma.world.findUnique({ where: { id: worldId } })
+  return !!prisma.world.findUnique({ where: { id: Number(worldId) } })
 }
 
 const WorldSubscriptions = {

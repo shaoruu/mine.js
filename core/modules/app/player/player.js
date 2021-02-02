@@ -113,10 +113,7 @@ class Player extends Stateful {
       .subscribe({
         query: PLAYER_SUBSCRIPTION,
         variables: {
-          username: this.data.user.username,
-          worldId: this.world.data.id,
-          mutation_in: ['UPDATED'],
-          updatedFields_contains_some: ['gamemode']
+          playerId: this.playerData.id
         }
       })
       .subscribe({
@@ -178,10 +175,10 @@ class Player extends Stateful {
     const playerDirRep = Helpers.get2DCoordsRep(playerDir.dirx, playerDir.diry)
     const playerStatus = this.status.getStatus()
 
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line
     for (const member in playerCoords)
       if (playerCoords[member] !== 0 && !playerCoords[member]) return
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line
     for (const member in playerDir)
       if (playerDir[member] !== 0 && !playerDir[member]) return
 
