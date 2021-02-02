@@ -1,13 +1,16 @@
 import Helpers from '../../utils/helpers'
+import { prisma } from '../../lib/server'
 
 import bcrypt from 'bcryptjs'
 
 const UserMutations = {
-  async signup(parent, args, { prisma }) {
+  async signup(parent, args) {
     const password = await Helpers.hashPassword(args.data.password)
-    const user = await prisma.mutation.createUser({
+
+    const user = await prisma.user.create({
       data: {
         ...args.data,
+        createdAt: new Date(),
         password,
         settings: {
           create: {
@@ -22,8 +25,8 @@ const UserMutations = {
       token: Helpers.generateToken(user.id)
     }
   },
-  async login(parent, args, { prisma }) {
-    const user = await prisma.query.user({
+  async login(parent, args) {
+    const user = await prisma.user.findUnique({
       where: {
         email: args.data.email
       }
@@ -44,57 +47,32 @@ const UserMutations = {
       token: Helpers.generateToken(user.id)
     }
   },
-  async deleteUser(parent, args, { prisma, request }, info) {
-    const userId = Helpers.getUserId(request)
-
-    return prisma.mutation.deleteUser(
-      {
-        where: {
-          id: userId
-        }
-      },
-      info
-    )
+  async deleteUser(parent, args, { user }) {
+    return prisma.user.delete({
+      where: {
+        id: user.id
+      }
+    })
   },
-  async updateUser(parent, args, { prisma, request }, info) {
-    const userId = Helpers.getUserId(request)
-
-    if (typeof args.data.password === 'string') {
-      args.data.password = await Helpers.hashPassword(args.data.password)
-    }
-
-    return prisma.mutation.updateUser(
-      {
-        where: {
-          id: userId
-        },
-        data: args.data
+  async updateUser(parent, args, { user }) {
+    return prisma.user.update({
+      where: {
+        id: user.id
       },
-      info
-    )
+      data: args.data
+    })
   },
-  updateSettings(
-    parent,
-    {
-      data: { id, ...data },
-      where
-    },
-    { prisma },
-    info
-  ) {
+  updateSettings(parent, { data: { id, ...data }, where }) {
     if (!where && id) {
       where = {
-        id
+        id: Number(id)
       }
     }
 
-    return prisma.mutation.updateSettings(
-      {
-        data,
-        where
-      },
-      info
-    )
+    return prisma.settings.update({
+      where,
+      data
+    })
   }
 }
 

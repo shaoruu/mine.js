@@ -30,8 +30,8 @@ export const MY_WORLDS_QUERY = gql`
 `
 
 export const MINI_WORLD_QUERY = gql`
-  query World($where: WorldWhereUniqueInput!) {
-    world(where: $where) {
+  query World($worldId: ID!) {
+    world(query: $worldId) {
       id
       name
     }
@@ -40,7 +40,7 @@ export const MINI_WORLD_QUERY = gql`
 
 export const WORLD_QUERY = gql`
   query World($query: ID!) {
-    world(where: { id: $query }) {
+    world(query: $query) {
       id
       name
       seed

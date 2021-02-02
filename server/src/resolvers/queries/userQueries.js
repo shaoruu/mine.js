@@ -1,14 +1,8 @@
-import Helpers from '../../utils/helpers'
-
 const UserQueries = {
-  async me(parent, args, { prisma, request }, info) {
-    const id = Helpers.getUserId(request)
+  async me(parent, args, { user }) {
+    if (!user) throw new Error('Unknown token')
 
-    const me = await prisma.query.user({ where: { id } }, info)
-
-    if (!me) throw new Error('Unknown token')
-
-    return me
+    return user
   },
   users(parent, args, { prisma }, info) {
     const opArgs = {
@@ -27,7 +21,7 @@ const UserQueries = {
       }
     }
 
-    return prisma.query.users(opArgs, info)
+    return prisma.user.findMany(opArgs, info)
   }
 }
 

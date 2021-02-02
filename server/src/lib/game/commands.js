@@ -3,40 +3,67 @@
  * THEY ARE ALL ARRAYS OF variationS.
  */
 
+const publishPlayer = async (player, pubsub) => {
+  await pubsub.publish(`player ${player.id}`, {
+    player: {
+      mutation: 'UPDATED',
+      node: player
+    }
+  })
+}
+
+const publishWorld = async (world, pubsub) => {
+  await pubsub.publish(`world ${world.id}`, {
+    world: {
+      mutation: 'UPDATED',
+      node: world
+    }
+  })
+}
+
 export default {
   gamemode: [
     {
       variation: ['s', 'survival', '0'],
       more: null,
-      run: async ({ prisma, playerId }) =>
-        prisma.mutation.updatePlayer({
+      run: async ({ prisma, playerId, pubsub }) => {
+        const player = await prisma.player.update({
           data: {
             gamemode: 'SURVIVAL'
           },
-          where: { id: playerId }
+          where: { id: Number(playerId) }
         })
+
+        await publishPlayer(player, pubsub)
+      }
     },
     {
       variation: ['c', 'creative', '1'],
       more: null,
-      run: async ({ prisma, playerId }) =>
-        prisma.mutation.updatePlayer({
+      run: async ({ prisma, playerId, pubsub }) => {
+        const player = await prisma.player.update({
           data: {
             gamemode: 'CREATIVE'
           },
-          where: { id: playerId }
+          where: { id: Number(playerId) }
         })
+
+        await publishPlayer(player, pubsub)
+      }
     },
     {
       variation: ['sp', 'spectator', '3'],
       more: null,
-      run: async ({ prisma, playerId }) =>
-        prisma.mutation.updatePlayer({
+      run: async ({ prisma, playerId, pubsub }) => {
+        const player = await prisma.player.update({
           data: {
             gamemode: 'SPECTATOR'
           },
-          where: { id: playerId }
+          where: { id: Number(playerId) }
         })
+
+        await publishPlayer(player, pubsub)
+      }
     },
     ({ username }) => `${username}'s gamemode has been updated.`
   ],
@@ -47,24 +74,30 @@ export default {
         {
           variation: ['day'],
           more: null,
-          run: ({ prisma, worldId }) =>
-            prisma.mutation.updateWorld({
+          run: async ({ prisma, worldId, pubsub }) => {
+            const world = await prisma.world.update({
               data: {
                 timeChanger: 600.0
               },
-              where: { id: worldId }
+              where: { id: Number(worldId) }
             })
+
+            await publishWorld(world, pubsub)
+          }
         },
         {
           variation: ['night'],
           more: null,
-          run: async ({ worldId, prisma }) =>
-            prisma.mutation.updateWorld({
+          run: async ({ prisma, worldId, pubsub }) => {
+            const world = await prisma.world.update({
               data: {
                 timeChanger: 1800.0
               },
-              where: { id: worldId }
+              where: { id: Number(worldId) }
             })
+
+            await publishWorld(world, pubsub)
+          }
         },
         {
           variation: arg => {
@@ -73,15 +106,16 @@ export default {
             return false
           },
           more: null,
-          run: async ({ worldId, arg, prisma }) =>
-            prisma.mutation.updateWorld({
+          run: async ({ worldId, arg, prisma, pubsub }) => {
+            const world = await prisma.world.update({
               data: {
                 timeChanger: Number(arg)
               },
-              where: {
-                id: worldId
-              }
+              where: { id: Number(worldId) }
             })
+
+            await publishWorld(world, pubsub)
+          }
         },
         ({ arg }) => `Set the time to ${arg}`
       ]

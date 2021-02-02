@@ -2,12 +2,12 @@ type Query {
   users(query: String, first: Int, skip: Int, after: String): [User!]!
   me: User!
   myWorlds: User!
-  world(query: String!): World!
+  world(query: ID!): World!
 }
 
 type Mutation {
   # USER
-  createUser(data: CreateUserInput!): AuthPayload!
+  signup(data: CreateUserInput!): AuthPayload!
   login(data: LoginUserInput!): AuthPayload!
   deleteUser: User!
   updateUser(data: UpdateUserInput!): User!
@@ -19,26 +19,18 @@ type Mutation {
   updateWorld(data: UpdateWorldInput!): World!
   updatePlayer(data: UpdatePlayerInput!): Player!
   updateBlock(data: UpdateBlockInput!): Block!
-  deleteWorld(worldId: ID!): Boolean!
+  deleteWorld(worldId: ID!): World!
   runCommand(data: RunCommandInput!): Boolean!
   requestChunks(data: RequestChunksInput!): Boolean!
+  joinWorld(data: JoinWorldInput!): Player!
 }
 
 type Subscription {
   # Chunks
   block(worldId: ID!): BlockSubscriptionPayload!
   message(worldId: ID!): MessageSubscriptionPayload!
-  player(
-    username: String!
-    worldId: ID!
-    mutation_in: [String!]
-    updatedFields_contains_some: [String!]
-  ): PlayerSubscriptionPayload!
-  world(
-    worldId: ID!
-    mutation_in: [String!]
-    updatedFields_contains_some: [String!]
-  ): WorldSubscriptionPayload!
+  player(playerId: ID!): PlayerSubscriptionPayload!
+  world(worldId: ID!): WorldSubscriptionPayload!
 }
 
 type User {
@@ -63,6 +55,7 @@ type World {
   lastPlayed: String!
   changedBlocks: [Block!]!
   players: [Player!]!
+  messages: [Message!]!
 }
 
 type Message {
@@ -92,6 +85,7 @@ type Player {
 
 type Settings {
   id: ID!
+  user: User!
   renderDistance: Int!
 }
 
@@ -132,6 +126,9 @@ input CreateWorldInput {
   seed: String!
   gamemode: Gamemode!
   type: WorldType!
+  time: Int!
+  days: Int!
+  lastPlayed: String!
 }
 
 input CreatePlayerInput {
@@ -183,6 +180,11 @@ input RequestChunksInput {
   worldId: ID!
   playerId: ID!
   chunks: [String!]! # array of chunk reps ("x:z")
+}
+
+input JoinWorldInput {
+  worldId: ID!
+  gamemode: Gamemode!
 }
 
 type AuthPayload {

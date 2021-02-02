@@ -18,7 +18,7 @@ const Options = ({ history }) => {
   useEffect(() => {
     document.title = 'mine.js - options'
 
-    if (data.me) {
+    if (data && data.me) {
       const {
         me: {
           settings: { renderDistance: rd }

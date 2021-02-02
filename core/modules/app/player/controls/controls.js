@@ -408,15 +408,17 @@ class Controls {
     })
 
     this.keyboard.registerKey(MULTIPLAYER_KEYS.openChat, 'moving', () => {
-      this.threeControls.unlock()
-      chatRef.enable()
-      this.keyboard.setScope('chat')
+      this.threeControls.unlock(() => {
+        chatRef.enable()
+        this.keyboard.setScope('chat')
+      })
     })
 
     this.keyboard.registerKey(MULTIPLAYER_KEYS.openCommand, 'moving', () => {
-      this.threeControls.unlock()
-      chatRef.enable(false)
-      this.keyboard.setScope('chat')
+      this.threeControls.unlock(() => {
+        chatRef.enable(false)
+        this.keyboard.setScope('chat')
+      })
     })
 
     /* INVENTORY TOOLBAR */
@@ -635,9 +637,10 @@ class Controls {
   }
 
   unblockGame = () => {
-    this.blocker.style.display = 'none'
-    this.keyboard.setScope('moving')
-    this.threeControls.lock()
+    this.threeControls.lock(() => {
+      this.blocker.style.display = 'none'
+      this.keyboard.setScope('moving')
+    })
   }
 
   blockGame = () => {

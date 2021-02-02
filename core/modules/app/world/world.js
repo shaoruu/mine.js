@@ -78,9 +78,7 @@ class World extends Stateful {
       .subscribe({
         query: WORLD_SUBSCRIPTION,
         variables: {
-          worldId: this.data.id,
-          mutation_in: ['UPDATED'],
-          updatedFields_contains_some: ['timeChanger']
+          worldId: this.data.id
         }
       })
       .subscribe({
@@ -171,7 +169,7 @@ class World extends Stateful {
   setPlayer = player => {
     this.player = player
     this.sky = createSky(this.scene, this, {
-      speed: 0.1
+      speed: 0.02
     })(this.data.time, this.data.days)
   }
 

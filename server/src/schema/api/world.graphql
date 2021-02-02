@@ -1,7 +1,0 @@
-type Mutation {
-  joinWorld(where: WorldWhereUniqueInput!, data: JoinWorldDataInput!): Player
-}
-
-input JoinWorldDataInput {
-  gamemode: Gamemode = "CREATIVE"
-}

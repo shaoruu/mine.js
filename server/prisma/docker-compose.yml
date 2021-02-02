@@ -1,34 +1,30 @@
 version: '3'
 
 services:
-  prisma:
-    image: prismagraphql/prisma:1.34
-    restart: always
-    ports:
-      - '4466:4466'
-    environment:
-      PRISMA_CONFIG: |
-        port: 4466
-        # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
-        managementApiSecret: my-secret
-        databases:
-          default:
-            connector: postgres
-            host: postgres
-            user: prisma
-            password: prisma
-            rawAccess: true
-            port: 5432
-            migrations: true
-
-  postgres:
+  database:
     image: postgres
     restart: always
-    environment:
-      POSTGRES_USER: prisma
-      POSTGRES_PASSWORD: prisma
+    ports:
+      - '5432:5432'
     volumes:
       - postgres:/var/lib/postgresql/data
+      # - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+    environment:
+      POSTGRES_HOST: '${DB_HOST}'
+      POSTGRES_USER: '${DB_USER}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+      POSTGRES_DB: '${DB_DATABASE}'
+      POSTGRES_PORT: '${DB_PORT}'
+
+  pgadmin-compose:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: '${PG_ADMIN_EMAIL}'
+      PGADMIN_DEFAULT_PASSWORD: '${PG_ADMIN_PASSWORD}'
+    ports:
+      - '16543:80'
+    depends_on:
+      - database
 
 volumes:
   postgres:

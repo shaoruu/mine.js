@@ -63,6 +63,10 @@ function PointerLockControls(player, camera, domElement, initPos, initDirs) {
 
     justChanged = true
 
+    if (scope.callback) {
+      scope.callback()
+    }
+
     if (document.pointerLockElement !== scope.domElement)
       scope.dispatchEvent({ type: 'unlock' })
   }
@@ -114,12 +118,16 @@ function PointerLockControls(player, camera, domElement, initPos, initDirs) {
     }
   })()
 
-  this.lock = () => {
-    this.domElement.requestPointerLock()
+  this.lock = function(callback) {
+    scope.domElement.requestPointerLock()
+
+    scope.callback = callback
   }
 
-  this.unlock = () => {
+  this.unlock = function(callback) {
     document.exitPointerLock()
+
+    scope.callback = callback
   }
 
   this.connect()

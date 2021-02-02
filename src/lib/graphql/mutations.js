@@ -22,10 +22,7 @@ export const LOGIN_MUTATION = gql`
 
 export const UPDATE_SETTINGS_MUTATION = gql`
   mutation UpdateSettings($id: ID!, $renderDistance: Int) {
-    updateSettings(
-      where: { id: $id }
-      data: { renderDistance: $renderDistance }
-    ) {
+    updateSettings(data: { id: $id, renderDistance: $renderDistance }) {
       id
       renderDistance
     }
@@ -33,7 +30,7 @@ export const UPDATE_SETTINGS_MUTATION = gql`
 `
 
 export const CREATE_WORLD_MUTATION = gql`
-  mutation CreateWorld($data: WorldCreateInput!) {
+  mutation CreateWorld($data: CreateWorldInput!) {
     createWorld(data: $data) {
       id
     }
@@ -42,7 +39,7 @@ export const CREATE_WORLD_MUTATION = gql`
 
 export const CREATE_PLAYER_MUTATION = gql`
   mutation CreatePlayer($gamemode: Gamemode!, $worldId: ID!) {
-    joinWorld(data: { gamemode: $gamemode }, where: { id: $worldId }) {
+    joinWorld(data: { gamemode: $gamemode, worldId: $worldId }) {
       id
     }
   }
@@ -50,7 +47,7 @@ export const CREATE_PLAYER_MUTATION = gql`
 
 export const DELETE_WORLD_MUTATION = gql`
   mutation DeleteWorld($worldId: ID!) {
-    deleteWorld(where: { id: $worldId }) {
+    deleteWorld(worldId: $worldId) {
       id
     }
   }

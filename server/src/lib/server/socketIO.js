@@ -1,7 +1,7 @@
 import prisma from './prisma'
 
-import { createServer } from 'http'
 import debug from 'debug'
+import { createServer } from 'http'
 import socketIO from 'socket.io'
 
 const app = createServer()
@@ -11,8 +11,8 @@ const watchers = {}
 
 const log = output => debug('socket')(JSON.stringify(output, null, 2))
 
-app.listen(5000, () => {
-  log('Socket server running on port 5000.')
+app.listen(3030, () => {
+  log('Socket server running on port 3030.')
 })
 
 io.on('connection', function(socket) {
@@ -22,16 +22,12 @@ io.on('connection', function(socket) {
     watchers[socket.id] = username
 
     // CREATE JOIN WORLD MESSAGE
-    await prisma.mutation.createMessage({
+    await prisma.message.create({
       data: {
         type: 'INFO',
         sender: '',
         body: `${username} joined the game.`,
-        world: {
-          connect: {
-            id: worldId
-          }
-        }
+        worldId: Number(worldId)
       }
     })
 
@@ -47,16 +43,12 @@ io.on('connection', function(socket) {
     delete watchers[socket.id]
 
     // CREATE LEAVE WORLD MESSAGE
-    await prisma.mutation.createMessage({
+    await prisma.message.create({
       data: {
         type: 'INFO',
         sender: '',
         body: `${username} left the game.`,
-        world: {
-          connect: {
-            id: worldId
-          }
-        }
+        worldId: Number(worldId)
       }
     })
 
