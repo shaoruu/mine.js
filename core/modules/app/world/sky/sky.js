@@ -152,7 +152,9 @@ Sky.prototype.colorFunc = function(end, time) {
   this.colorInterval = tic.interval(() => {
     const dt = i / time
     // eslint-disable-next-line guard-for-in, no-restricted-syntax
-    for (const p in color) color[p] = start[p] + (end[p] - start[p]) * dt
+    Object.keys(color).map(
+      p => (color[p] = start[p] + (end[p] - start[p]) * dt)
+    )
     this.color.setHSL(color.h, color.s, color.l)
     this.outer.material.color.setHSL(color.h, color.s, color.l)
     this.getScene().background.setHSL(color.h, color.s, color.l)

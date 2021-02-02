@@ -169,7 +169,7 @@ class World extends Stateful {
   setPlayer = player => {
     this.player = player
     this.sky = createSky(this.scene, this, {
-      speed: 0.1
+      speed: 0.02
     })(this.data.time, this.data.days)
   }
 
