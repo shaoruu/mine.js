@@ -19,7 +19,7 @@ const Game = ({ id: worldId, username, history }) => {
   const frameId = useRef(null)
 
   const terminate = useCallback(() => {
-    window.cancelAnimationFrame(frameId)
+    window.cancelAnimationFrame(frameId.current)
     frameId.current = null
   }, [frameId])
 
