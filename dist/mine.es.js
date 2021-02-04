@@ -1,3 +1,5 @@
+import { EventEmitter } from 'events';
+
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
 
@@ -12,6 +14,28 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
+/* global Reflect, Promise */
+
+var extendStatics = function (d, b) {
+  extendStatics =
+    Object.setPrototypeOf ||
+    ({ __proto__: [] } instanceof Array &&
+      function (d, b) {
+        d.__proto__ = b;
+      }) ||
+    function (d, b) {
+      for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+    };
+  return extendStatics(d, b);
+};
+
+function __extends(d, b) {
+  extendStatics(d, b);
+  function __() {
+    this.constructor = d;
+  }
+  d.prototype = b === null ? Object.create(b) : ((__.prototype = b.prototype), new __());
+}
 
 var __assign = function () {
   __assign =
@@ -40,24 +64,27 @@ var defaults = {
   skipDefaultHighlighting: false,
   originRebaseDistance: 25,
 };
-var Engine = /** @class */ (function () {
+var Engine = /** @class */ (function (_super) {
+  __extends(Engine, _super);
   function Engine(opts) {
-    this.paused = false;
-    this.worldOriginOffset = [0, 0, 0];
-    this.positionInCurrentTick = 0;
-    this.worldName = 'default';
-    this.version = require('../package.json').version;
+    var _this = _super.call(this) || this;
+    _this.paused = false;
+    _this.worldOriginOffset = [0, 0, 0];
+    _this.positionInCurrentTick = 0;
+    _this.worldName = 'default';
+    _this.version = require('../package.json').version;
     opts = __assign(__assign({}, defaults), { opts: opts });
-    this.tickRate = opts.tickRate;
-    this.dragOutsideLock = opts.dragCameraOutsidePointerLock;
+    _this.tickRate = opts.tickRate;
+    _this.dragOutsideLock = opts.dragCameraOutsidePointerLock;
     if (!opts.silent) {
       var debugStr = opts.debug ? ' (debug)' : '';
-      console.log('minejs-engine v' + this.version + debugStr);
+      console.log('minejs-engine v' + _this.version + debugStr);
     }
     // world origin offset, used throughout engine for origin rebasing
-    this.originRebaseDistance = opts.originRebaseDistance;
+    _this.originRebaseDistance = opts.originRebaseDistance;
+    return _this;
   }
   return Engine;
-})();
+})(EventEmitter);
 
 export { Engine };

@@ -1,3 +1,5 @@
+import { EventEmitter } from 'events';
+
 type EngineOptions = {
   debug: boolean;
   silent: boolean;
@@ -28,7 +30,7 @@ const defaults: EngineOptions = {
   originRebaseDistance: 25,
 };
 
-class Engine {
+class Engine extends EventEmitter {
   private tickRate: number;
   private dragOutsideLock: boolean;
   private originRebaseDistance: number;
@@ -41,6 +43,8 @@ class Engine {
   worldName = 'default';
 
   constructor(opts: EngineOptions) {
+    super();
+
     this.version = require('../package.json').version;
 
     opts = { ...defaults, opts } as EngineOptions;

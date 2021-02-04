@@ -1,3 +1,5 @@
+/// <reference types="node" />
+import { EventEmitter } from 'events';
 declare type EngineOptions = {
   debug: boolean;
   silent: boolean;
@@ -12,7 +14,7 @@ declare type EngineOptions = {
   skipDefaultHighlighting: boolean;
   originRebaseDistance: number;
 };
-declare class Engine {
+declare class Engine extends EventEmitter {
   private tickRate;
   private dragOutsideLock;
   private originRebaseDistance;

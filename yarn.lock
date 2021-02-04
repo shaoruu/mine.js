@@ -1221,6 +1221,11 @@ binary-extensions@^2.0.0:
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-2.2.0.tgz#75f502eeaf9ffde42fc98829645be4ea76bd9e2d"
   integrity sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==
 
+binary-search-bounds@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/binary-search-bounds/-/binary-search-bounds-1.0.0.tgz#323ca317e3f2a40f4244c7255f5384a5b207bb69"
+  integrity sha1-MjyjF+PypA9CRMclX1OEpbIHu2k=
+
 bindings@^1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.5.0.tgz#10353c9e945334bc0511a6d90b38fbc7c9c504df"
@@ -2033,6 +2038,11 @@ domexception@^2.0.1:
   integrity sha512-yxJ2mFy/sibVQlu5qHjOkf9J3K6zgmCxgJ94u2EdvDOV09H+32LtRswEcUsmUWN72pVLOEnTSRaIVVzVQgS0dg==
   dependencies:
     webidl-conversions "^5.0.0"
+
+domready@^1.0.5:
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/domready/-/domready-1.0.8.tgz#91f252e597b65af77e745ae24dd0185d5e26d58c"
+  integrity sha1-kfJS5Ze2Wvd+dFriTdAYXV4m1Yw=
 
 duplexify@^3.6.0:
   version "3.7.1"
@@ -2879,6 +2889,18 @@ functional-red-black-tree@^1.0.1:
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
 
+game-shell@^1.3.2:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/game-shell/-/game-shell-1.3.2.tgz#62bb99fa97d521b4e1c59d88750019be0aa6a822"
+  integrity sha1-YruZ+pfVIbThxZ2IdQAZvgqmqCI=
+  dependencies:
+    binary-search-bounds "^1.0.0"
+    domready "^1.0.5"
+    invert-hash "~0.0.0"
+    iota-array "^1.0.0"
+    uniq "^1.0.0"
+    vkey "~0.0.2"
+
 gensync@^1.0.0-beta.1:
   version "1.0.0-beta.2"
   resolved "https://registry.yarnpkg.com/gensync/-/gensync-1.0.0-beta.2.tgz#32a6ee76c3d7f52d46b2b1ae5d93fea8580a25e0"
@@ -3351,6 +3373,11 @@ interpret@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.4.0.tgz#665ab8bc4da27a774a40584e812e3e0fa45b1a1e"
   integrity sha512-agE4QfB2Lkp9uICn7BAqoscw4SZP9kTE2hxiFI3jBPmXJfdqiahTbUuKGsMoN2GtqL9AxhYioAcVvgsb1HvRbA==
+
+invert-hash@~0.0.0:
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/invert-hash/-/invert-hash-0.0.0.tgz#754159aa8bf9fe08be1f1dca141787b7ab64fa77"
+  integrity sha1-dUFZqov5/gi+Hx3KFBeHt6tk+nc=
 
 invert-kv@^1.0.0:
   version "1.0.0"
@@ -6709,6 +6736,11 @@ union-value@^1.0.0:
     is-extendable "^0.1.1"
     set-value "^2.0.1"
 
+uniq@^1.0.0:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/uniq/-/uniq-1.0.1.tgz#b31c5ae8254844a3a8281541ce2b04b865a734ff"
+  integrity sha1-sxxa6CVIRKOoKBVBzisEuGWnNP8=
+
 unique-stream@^2.0.2:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/unique-stream/-/unique-stream-2.3.1.tgz#c65d110e9a4adf9a6c5948b28053d9a8d04cbeac"
@@ -6867,6 +6899,11 @@ vinyl@^2.0.0:
     cloneable-readable "^1.0.0"
     remove-trailing-separator "^1.0.1"
     replace-ext "^1.0.0"
+
+vkey@~0.0.2:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/vkey/-/vkey-0.0.3.tgz#634dd7952eb2c11531bf1859f0e6d419478033df"
+  integrity sha1-Y03XlS6ywRUxvxhZ8ObUGUeAM98=
 
 w3c-hr-time@^1.0.2:
   version "1.0.2"
