@@ -34,8 +34,7 @@
   "lint-staged": {
     "{src,core}/**/*.{js,jsx}": [
       "yarn lint",
-      "pretty-quick --staged",
-      "git add"
+      "pretty-quick --staged"
     ]
   },
   "devDependencies": {
