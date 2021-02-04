@@ -32,8 +32,8 @@
     }
   },
   "lint-staged": {
-    "{src,examples}/**/*.{js,ts}": [
-      "yarn lint",
+    "*.{js,ts}": [
+      "eslint --fix",
       "pretty-quick --staged"
     ]
   },
