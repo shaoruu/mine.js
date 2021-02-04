@@ -29,8 +29,32 @@ const defaults: EngineOptions = {
 };
 
 class Engine {
+  private tickRate: number;
+  private dragOutsideLock: boolean;
+  private originRebaseDistance: number;
+
+  version: string;
+
+  paused = false;
+  worldOriginOffset = [0, 0, 0];
+  positionInCurrentTick = 0;
+  worldName = 'default';
+
   constructor(opts: EngineOptions) {
+    this.version = require('../package.json').version;
+
     opts = { ...defaults, opts } as EngineOptions;
+
+    this.tickRate = opts.tickRate;
+    this.dragOutsideLock = opts.dragCameraOutsidePointerLock;
+
+    if (!opts.silent) {
+      const debugStr = opts.debug ? ' (debug)' : '';
+      console.log(`minejs-engine v${this.version}${debugStr}`);
+    }
+
+    // world origin offset, used throughout engine for origin rebasing
+    this.originRebaseDistance = opts.originRebaseDistance;
   }
 }
 

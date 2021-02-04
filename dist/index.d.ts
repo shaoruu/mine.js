@@ -13,6 +13,14 @@ declare type EngineOptions = {
   originRebaseDistance: number;
 };
 declare class Engine {
+  private tickRate;
+  private dragOutsideLock;
+  private originRebaseDistance;
+  version: string;
+  paused: boolean;
+  worldOriginOffset: number[];
+  positionInCurrentTick: number;
+  worldName: string;
   constructor(opts: EngineOptions);
 }
 export { Engine };
