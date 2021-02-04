@@ -14,7 +14,7 @@
   "license": "MIT",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "tslint -p tsconfig.json",
+    "lint": "eslint '*/**/*.{js,ts}' --quiet --fix",
     "test": "jest --config jestconfig.json",
     "prepare": "yarn run build",
     "prepublishOnly": "yarn test && yarn run lint",
@@ -26,6 +26,18 @@
     "dev": "gulp serve",
     "start": "concurrently \"yarn watch\" \"yarn dev\""
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "{src,core}/**/*.{js,jsx}": [
+      "yarn lint",
+      "pretty-quick --staged",
+      "git add"
+    ]
+  },
   "devDependencies": {
     "@types/jest": "^26.0.20",
     "@typescript-eslint/eslint-plugin": "^4.14.2",
@@ -34,8 +46,15 @@
     "browser-sync": "^2.26.14",
     "concurrently": "^5.3.0",
     "eslint": "^7.19.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-prettier": "^3.3.1",
     "gulp": "^4.0.2",
+    "husky": "^4.3.8",
     "jest": "^26.6.3",
+    "lint-staged": "^10.5.3",
+    "prettier": "^2.2.1",
+    "pretty-quick": "^3.1.0",
     "rollup": "^2.38.4",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-typescript2": "^0.29.0",
