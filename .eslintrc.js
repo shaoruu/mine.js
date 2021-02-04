@@ -25,5 +25,6 @@ module.exports = {
     'import/no-webpack-loader-syntax': 'off',
     'no-restricted-globals': 'off',
     '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
   },
 };

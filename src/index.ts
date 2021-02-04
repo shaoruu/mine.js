@@ -1,3 +1,5 @@
+import Container from './lib/container';
+
 import { EventEmitter } from 'events';
 
 type EngineOptions = {
@@ -15,7 +17,7 @@ type EngineOptions = {
   originRebaseDistance: number;
 };
 
-const defaults: EngineOptions = {
+const engineDefaultOptions: EngineOptions = {
   debug: false,
   silent: false,
   playerHeight: 1.8,
@@ -36,6 +38,7 @@ class Engine extends EventEmitter {
   private originRebaseDistance: number;
 
   version: string;
+  container: Container;
 
   paused = false;
   worldOriginOffset = [0, 0, 0];
@@ -47,7 +50,7 @@ class Engine extends EventEmitter {
 
     this.version = require('../package.json').version;
 
-    opts = { ...defaults, opts } as EngineOptions;
+    opts = { ...engineDefaultOptions, opts } as EngineOptions;
 
     this.tickRate = opts.tickRate;
     this.dragOutsideLock = opts.dragCameraOutsidePointerLock;
@@ -59,7 +62,17 @@ class Engine extends EventEmitter {
 
     // world origin offset, used throughout engine for origin rebasing
     this.originRebaseDistance = opts.originRebaseDistance;
+
+    this.container = new Container(this, opts);
   }
+
+  tick = () => {
+    return 'hi';
+  };
+
+  render = (dx: number) => {
+    return dx;
+  };
 }
 
 export { Engine };
