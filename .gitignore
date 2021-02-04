@@ -1,8 +1,2 @@
-node_modules/
-build/
-.package-lock.json
-.DS_Store
-/.vscode
-.env
-server/src/generated
-yarn-error.log
+node_modules
+/lib
