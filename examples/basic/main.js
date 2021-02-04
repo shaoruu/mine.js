@@ -1,1 +1,2 @@
-console.log('dam');
+console.log('shit');
+console.log(MineJS);
