@@ -26,11 +26,11 @@ class Container extends EventEmitter {
   engine: Engine;
   element: HTMLElement;
   canvas: HTMLCanvasElement;
+  isFocused: boolean;
 
   hasPointerLock = false;
   supportsPointerLock = false;
   pointerInGame = false;
-  isFocused = document.hasFocus();
 
   constructor(engine: Engine, opts: Partial<ContainerOptions>) {
     super();
@@ -45,11 +45,12 @@ class Container extends EventEmitter {
     this.tickRate = opts.tickRate;
     this.canvas = this.getOrCreateCanvas(this.element);
     this.shell = this.createShell(this.canvas, opts);
+    this.isFocused = document.hasFocus();
 
     // basic listeners
-    document.addEventListener('pointerlockchange', this.lockChange, false);
-    document.addEventListener('mozpointerlockchange', this.lockChange, false);
-    document.addEventListener('webkitpointerlockchange', this.lockChange, false);
+    document.addEventListener('pointerlockchange', this.onLockChange, false);
+    document.addEventListener('mozpointerlockchange', this.onLockChange, false);
+    document.addEventListener('webkitpointerlockchange', this.onLockChange, false);
     this.detectPointerLock();
 
     this.element.addEventListener('mouseenter', () => {
@@ -70,8 +71,12 @@ class Container extends EventEmitter {
       const { shell } = this;
 
       // TODO
-      shell.on('resize');
+      shell.on('resize', () => {
+        console.log('resize occurred');
+      });
+
       this.setupTimingEvents();
+
       this.emit('DOMready');
     });
   }
@@ -98,15 +103,15 @@ class Container extends EventEmitter {
       preventDefaults: false,
     };
 
-    opts = { ...shellDefaults, ...opts };
-    opts.element = canvas;
+    opts = { ...shellDefaults, ...opts, element: canvas };
+
     const shell = createGameShell(opts);
     shell.preventDefaults = opts.preventDefaults;
 
     return shell;
   };
 
-  lockChange = () => {
+  onLockChange = () => {
     const el =
       document.pointerLockElement ||
       (document as any).mozPointerLockElement ||
@@ -129,6 +134,7 @@ class Container extends EventEmitter {
   detectPointerLock = () => {
     const lockElementExists =
       'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+
     if (lockElementExists) {
       this.supportsPointerLock = true;
 
@@ -182,6 +188,7 @@ class Container extends EventEmitter {
 
       requestAnimationFrame(onAnimationFrame);
     };
+
     requestAnimationFrame(onAnimationFrame);
   };
 }

@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import Container from './lib/container';
 import { EventEmitter } from 'events';
 declare type EngineOptions = {
     debug: boolean;
@@ -19,10 +20,13 @@ declare class Engine extends EventEmitter {
     private dragOutsideLock;
     private originRebaseDistance;
     version: string;
+    container: Container;
     paused: boolean;
     worldOriginOffset: number[];
     positionInCurrentTick: number;
     worldName: string;
     constructor(opts: EngineOptions);
+    tick: () => string;
+    render: (dx: number) => number;
 }
 export { Engine };

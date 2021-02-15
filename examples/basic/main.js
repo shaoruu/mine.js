@@ -1,2 +1,3 @@
-console.log('shit');
 console.log(MineJS);
+
+new MineJS.Engine();
