@@ -16,7 +16,7 @@ const { default: Engine } = MineJS;
 var opts = {
   debug: true,
   showFPS: true,
-  chunkSize: 64,
+  chunkSize: 32,
   chunkAddDistance: 2.5,
   chunkRemoveDistance: 3.5,
   // See `test` example, or noa docs/source, for more options

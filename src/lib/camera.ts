@@ -263,7 +263,6 @@ function cameraObstructionDistance(self: Camera) {
       self.noa.world.getBlockSolidity(x + off[0], y + off[1], z + off[2]);
     vec3.scale(_camBoxVec, _camBoxVec, -0.5);
   }
-  console.log(_camBox);
   _camBox.setPosition(self._localGetTargetPosition());
   _camBox.translate(_camBoxVec);
   const dist = Math.max(self.zoomDistance, self.currentZoom) + 0.1;
