@@ -1,17 +1,22 @@
-import { Engine } from '..';
+import Engine from '..';
 
-import createGameShell from 'game-shell';
 import { EventEmitter } from 'events';
+import createGameShell from 'game-shell';
 
-type ContainerOptions = {
+export interface IContainerOptions {
   element: HTMLElement;
   domElement: HTMLElement;
   preventDefaults: boolean;
   pointerLock: boolean;
-  tickRate: number;
-};
 
-const containerDefaultOptions: ContainerOptions = {
+  /**
+   * ms per tick - not ticks per second
+   * @default 33
+   */
+  tickRate: number;
+}
+
+const containerDefaultOptions: IContainerOptions = {
   element: document.body,
   domElement: document.body,
   preventDefaults: true,
@@ -19,99 +24,156 @@ const containerDefaultOptions: ContainerOptions = {
   tickRate: 33,
 };
 
-class Container extends EventEmitter {
-  private tickRate: number;
-  private shell: any;
-
-  engine: Engine;
-  element: HTMLElement;
-  canvas: HTMLCanvasElement;
-  isFocused: boolean;
-
-  hasPointerLock = false;
-  supportsPointerLock = false;
-  pointerInGame = false;
-
-  constructor(engine: Engine, opts: Partial<ContainerOptions>) {
+/**
+ * @typicalname noa.container
+ * @emits DOMready
+ * @description Wraps `game-shell` module and manages HTML container, canvas, etc.
+ */
+export class Container extends EventEmitter {
+  constructor(noa: Engine, options: Partial<IContainerOptions>) {
     super();
 
-    opts = {
+    const optionsWithDefaults = {
       ...containerDefaultOptions,
-      ...opts,
+      ...options,
     };
 
-    this.engine = engine;
-    this.element = opts.domElement;
-    this.tickRate = opts.tickRate;
+    this._noa = noa;
+    this._tickRate = optionsWithDefaults.tickRate;
+    this.element = optionsWithDefaults.domElement || this.createContainerDiv();
     this.canvas = this.getOrCreateCanvas(this.element);
-    this.shell = this.createShell(this.canvas, opts);
+    this._shell = this.createShell(this.canvas, optionsWithDefaults);
+
+    // mouse state/feature detection
+    this.hasPointerLock = false;
+    this.supportsPointerLock = false;
+    this.pointerInGame = false;
     this.isFocused = document.hasFocus();
 
     // basic listeners
-    document.addEventListener('pointerlockchange', this.onLockChange, false);
-    document.addEventListener('mozpointerlockchange', this.onLockChange, false);
-    document.addEventListener('webkitpointerlockchange', this.onLockChange, false);
+    const self = this;
+    const lockChange = function (event: any) {
+      self.onLockChange(event);
+    };
+    document.addEventListener('pointerlockchange', lockChange, false);
+    document.addEventListener('mozpointerlockchange', lockChange, false);
+    document.addEventListener('webkitpointerlockchange', lockChange, false);
     this.detectPointerLock();
 
-    this.element.addEventListener('mouseenter', () => {
-      this.pointerInGame = true;
+    self.element.addEventListener('mouseenter', function () {
+      self.pointerInGame = true;
     });
-    this.element.addEventListener('mouseleave', () => {
-      this.pointerInGame = false;
-    });
-
-    window.addEventListener('focus', () => {
-      this.isFocused = true;
-    });
-    window.addEventListener('blur', () => {
-      this.isFocused = false;
+    self.element.addEventListener('mouseleave', function () {
+      self.pointerInGame = false;
     });
 
-    this.shell.on('init', () => {
-      const { shell } = this;
+    window.addEventListener('focus', function () {
+      self.isFocused = true;
+    });
+    window.addEventListener('blur', function () {
+      self.isFocused = false;
+    });
 
-      // TODO
-      shell.on('resize', () => {
-        console.log('resize occurred');
-      });
+    // get shell events after it's initialized
+    this._shell.on('init', () => {
+      // create shell listeners that drive engine functions
+      const noa = self._noa;
+      const shell = self._shell;
+      shell.on('resize', noa.rendering.resize.bind(noa.rendering));
 
+      // override shell's timing with simpler internal implementation
       this.setupTimingEvents();
 
-      this.emit('DOMready');
+      // let other components know DOM is ready
+      self.emit('DOMready');
     });
   }
 
-  getOrCreateCanvas = (element: HTMLElement | undefined) => {
-    let canvas = element.querySelector('canvas');
+  _noa: Engine;
+  _tickRate: number;
+  element: HTMLElement;
+  canvas: HTMLCanvasElement;
+  _shell: any;
 
-    if (!canvas) {
-      canvas = document.createElement('canvas');
-      canvas.style.position = 'absolute';
-      canvas.style.left = '0px';
-      canvas.style.top = '0px';
-      canvas.style.height = '100%';
-      canvas.style.width = '100%';
-      canvas.id = 'minejs-canvas';
-    }
+  // mouse state/feature detection
+  hasPointerLock: boolean;
+  supportsPointerLock: boolean;
+  pointerInGame: boolean;
+  isFocused: boolean;
 
-    return canvas;
+  appendTo = (htmlElement: HTMLElement) => {
+    this.element.appendChild(htmlElement);
   };
 
-  createShell = (canvas: HTMLCanvasElement, opts: Partial<ContainerOptions>) => {
-    const shellDefaults = {
+  setPointerLock = (lock: boolean) => {
+    // not sure if this will work robustly
+    this._shell.pointerLock = !!lock;
+  };
+
+  /**
+   * INTERNALS
+   */
+  createContainerDiv = () => {
+    // based on github.com/mikolalysenko/game-shell - makeDefaultContainer()
+    const container = document.createElement('div');
+    container.tabIndex = 1;
+    container.style.position = 'fixed';
+    container.style.left = '0px';
+    container.style.right = '0px';
+    container.style.top = '0px';
+    container.style.bottom = '0px';
+    container.style.height = '100%';
+    container.style.overflow = 'hidden';
+
+    document.body.appendChild(container);
+    document.body.style.overflow = 'hidden'; //Prevent bounce
+    document.body.style.height = '100%';
+    container.id = 'noa-container';
+
+    return container;
+  };
+
+  createShell = (canvas: HTMLCanvasElement, options: Partial<IContainerOptions>) => {
+    const shellDefaults: Partial<IContainerOptions> = {
       pointerLock: true,
       preventDefaults: false,
     };
 
-    opts = { ...shellDefaults, ...opts, element: canvas };
+    const optionsWithDefaults = {
+      ...shellDefaults,
+      ...options,
+      element: canvas,
+    };
 
-    const shell = createGameShell(opts);
-    shell.preventDefaults = opts.preventDefaults;
+    const shell = createGameShell(optionsWithDefaults);
+    shell.preventDefaults = options.preventDefaults;
 
     return shell;
   };
 
-  onLockChange = () => {
+  /**
+   * set up stuff to detect pointer lock support.
+   * Needlessly complex because Chrome/Android claims to support but doesn't.
+   * For now, just feature detect, but assume no support if a touch event occurs
+   * TODO: see if this makes sense on hybrid touch/mouse devices
+   */
+  detectPointerLock = () => {
+    const lockElementExists =
+      'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+    if (lockElementExists) {
+      this.supportsPointerLock = true;
+      const self = this;
+
+      var listener = function (event: any) {
+        self.supportsPointerLock = false;
+        document.removeEventListener(event.type, listener);
+      };
+      document.addEventListener('touchmove', listener);
+    }
+  };
+
+  /** track changes in Pointer Lock state */
+  onLockChange = (event: any) => {
     const el =
       document.pointerLockElement ||
       (document as any).mozPointerLockElement ||
@@ -131,66 +193,49 @@ class Container extends EventEmitter {
     }
   };
 
-  detectPointerLock = () => {
-    const lockElementExists =
-      'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
-
-    if (lockElementExists) {
-      this.supportsPointerLock = true;
-
-      const listener = (event: any) => {
-        this.supportsPointerLock = false;
-        document.removeEventListener(event.type, listener);
-      };
-      document.addEventListener('touchmove', listener);
+  getOrCreateCanvas = (element: HTMLElement) => {
+    // based on github.com/stackgl/gl-now - default canvas
+    let canvas = element.querySelector('canvas');
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+      canvas.style.position = 'absolute';
+      canvas.style.left = '0px';
+      canvas.style.top = '0px';
+      canvas.style.height = '100%';
+      canvas.style.width = '100%';
+      canvas.id = 'noa-canvas';
+      element.insertBefore(canvas, element.firstChild);
     }
-  };
 
-  appendTo = (htmlElement: HTMLElement) => {
-    this.element.appendChild(htmlElement);
-  };
-
-  setPointerLock = (lock: any) => {
-    this.shell.pointerlock = !!lock;
+    return canvas;
   };
 
   setupTimingEvents = () => {
-    const { engine, tickRate } = this;
-
+    const noa = this._noa;
+    const tickRate = this._tickRate;
     let lastRAF = performance.now();
     let tickAccum = 0;
-
     const onAnimationFrame = function () {
       const t0 = performance.now();
-
-      if (!engine.paused) {
+      if (!noa._paused) {
         const dt = t0 - lastRAF;
         tickAccum += dt;
-
         // do at most two ticks per render
         let maxTicks = 2;
         while (tickAccum > tickRate && maxTicks-- > 0) {
-          engine.tick();
+          noa.tick();
           tickAccum -= tickRate;
         }
-
         // don't accrue deficit when running slow
         if (tickAccum > tickRate) tickAccum = 0;
-
         const t1 = performance.now();
         const renderPt = tickAccum + (t1 - t0);
         const framePart = Math.min(1, renderPt / tickRate);
-
-        engine.render(framePart);
+        noa.render(framePart);
       }
-
       lastRAF = t0;
-
       requestAnimationFrame(onAnimationFrame);
     };
-
     requestAnimationFrame(onAnimationFrame);
   };
 }
-
-export default Container;

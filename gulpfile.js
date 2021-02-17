@@ -7,6 +7,6 @@ gulp.task('serve', function () {
     server: {
       baseDir: ['./examples/basic', './dist'], //added multiple directories
     },
-    files: '.',
+    files: ['dist', 'examples/basic'],
   });
 });
