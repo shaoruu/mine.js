@@ -7,7 +7,7 @@
   "author": "ian13456 <21ianh1@students.tas.tw>",
   "license": "MIT",
   "scripts": {
-    "dev": "webpack --config ./bundler/webpack.dev.js",
+    "dev": "node --no-deprecation node_modules/webpack/bin/webpack.js --config ./bundler/webpack.dev.js",
     "dev:example": "gulp serve",
     "build": "rimraf dist && webpack --config ./bundler/webpack.prod.js"
   },
@@ -17,7 +17,7 @@
     }
   },
   "lint-staged": {
-    "{src,examples}/*.{js,ts}": [
+    "{src,examples}/**/*.{js,ts}": [
       "eslint --fix",
       "pretty-quick --staged"
     ]
