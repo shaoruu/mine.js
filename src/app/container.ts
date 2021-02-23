@@ -22,6 +22,8 @@ class Container extends EventEmitter {
   public container: HTMLElement = document.body;
   public canvas: HTMLCanvasElement;
 
+  public pointerLocked = false;
+
   constructor(engine: Engine, options: Partial<ContainerOptions>) {
     super();
 
@@ -61,6 +63,27 @@ class Container extends EventEmitter {
     this.container = container;
     this.container.append(this.canvas);
     this.container.id = 'mine.js-container';
+
+    // Pointerlock
+    document.addEventListener('pointerlockchange', this.onLockChange, false);
+    document.addEventListener('mozpointerlockchange', this.onLockChange, false);
+
+    // TODO: extract this.
+    this.canvas.onclick = () => {
+      if (!this.pointerLocked) {
+        this.canvas.requestPointerLock();
+      }
+    };
+  };
+
+  onLockChange = () => {
+    if (document.pointerLockElement === this.canvas) {
+      console.log('The pointer lock status is now locked');
+      this.pointerLocked = true;
+    } else {
+      console.log('The pointer lock status is now unlocked');
+      this.pointerLocked = false;
+    }
   };
 }
 

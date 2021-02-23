@@ -1,5 +1,7 @@
 import { Container, Debug } from './app';
 
+import { EventEmitter } from 'events';
+
 type ConfigType = {
   chunkSize?: number;
   dimension?: number;
@@ -12,12 +14,14 @@ const defaultConfig: ConfigType = {
   domElement: document.body,
 };
 
-class Engine {
+class Engine extends EventEmitter {
   public config: ConfigType;
   public debug: Debug;
   public container: Container;
 
   constructor(canvas: HTMLCanvasElement | undefined, params: Partial<ConfigType> = defaultConfig) {
+    super();
+
     this.config = {
       ...this.config,
       ...params,
