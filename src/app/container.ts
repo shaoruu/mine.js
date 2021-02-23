@@ -2,6 +2,7 @@ import { Engine } from '..';
 import { Helper } from '../utils';
 
 import { EventEmitter } from 'events';
+import { Vector2 } from 'three';
 
 type ContainerOptions = {
   container: HTMLElement;
@@ -22,6 +23,7 @@ class Container extends EventEmitter {
   public container: HTMLElement = document.body;
   public canvas: HTMLCanvasElement;
 
+  public movements = new Vector2();
   public pointerLocked = false;
 
   constructor(engine: Engine, options: Partial<ContainerOptions>) {
@@ -78,12 +80,17 @@ class Container extends EventEmitter {
 
   onLockChange = () => {
     if (document.pointerLockElement === this.canvas) {
-      console.log('The pointer lock status is now locked');
       this.pointerLocked = true;
+      document.addEventListener('mousemove', this.updateMovements, false);
     } else {
-      console.log('The pointer lock status is now unlocked');
       this.pointerLocked = false;
+      document.removeEventListener('mousemove', this.updateMovements, false);
     }
+  };
+
+  updateMovements = (e: MouseEvent) => {
+    const { movementX, movementY } = e;
+    this.movements.set(movementX, movementY);
   };
 }
 
