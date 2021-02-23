@@ -889,6 +889,11 @@
   resolved "https://registry.yarnpkg.com/@types/box-intersect/-/box-intersect-1.0.0.tgz#413795fb592f190c765cf4fa09ff9b8f3a830544"
   integrity sha512-Bf6O431pf1gDWxCXnKrxcBPc+NLpTA9HtZJ1l1hEhqrBsSr2zDwYrw2/K6QwkO+Nwfj5spsLwRFNYLft5QhVSQ==
 
+"@types/dat.gui@^0.7.6":
+  version "0.7.6"
+  resolved "https://registry.yarnpkg.com/@types/dat.gui/-/dat.gui-0.7.6.tgz#61aaacdb01f70e1401e051dfcf4192a30acb2435"
+  integrity sha512-Dx9f9CkXJkDAxt9M05vc7DItSqsiEhWN7Rx3vgO/maltv/nX9TaMX2sd/iAMENnL1D5FivetktJEyCBLFu50CQ==
+
 "@types/eslint-scope@^3.7.0":
   version "3.7.0"
   resolved "https://registry.yarnpkg.com/@types/eslint-scope/-/eslint-scope-3.7.0.tgz#4792816e31119ebd506902a482caec4951fabd86"
@@ -2480,6 +2485,11 @@ d@1, d@^1.0.1:
   dependencies:
     es5-ext "^0.10.50"
     type "^1.0.1"
+
+dat.gui@^0.7.7:
+  version "0.7.7"
+  resolved "https://registry.yarnpkg.com/dat.gui/-/dat.gui-0.7.7.tgz#7f96dbd21621a76385203659aebfa264ee6ae89b"
+  integrity sha512-sRl/28gF/XRC5ywC9I4zriATTsQcpSsRG7seXCPnTkK8/EQMIbCu5NPMpICLGxX9ZEUvcXR3ArLYCtgreFoMDw==
 
 date-fns@^2.0.1:
   version "2.17.0"

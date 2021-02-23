@@ -1,0 +1,3 @@
+class Registry {}
+
+export { Registry };

@@ -1,0 +1,3 @@
+class Inputs {}
+
+export { Inputs };

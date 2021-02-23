@@ -1,0 +1,3 @@
+class Physics {}
+
+export { Physics };
