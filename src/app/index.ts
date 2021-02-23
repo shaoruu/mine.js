@@ -6,4 +6,5 @@ export * from './entity';
 export * from './inputs';
 export * from './physics';
 export * from './registry';
+export * from './rendering';
 export * from './world';

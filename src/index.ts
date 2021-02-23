@@ -1,4 +1,4 @@
-import { Container, Debug } from './app';
+import { Container, Debug, Rendering } from './app';
 
 import { EventEmitter } from 'events';
 
@@ -18,6 +18,7 @@ class Engine extends EventEmitter {
   public config: ConfigType;
   public debug: Debug;
   public container: Container;
+  public rendering: Rendering;
 
   constructor(canvas: HTMLCanvasElement | undefined, params: Partial<ConfigType> = defaultConfig) {
     super();
@@ -28,10 +29,13 @@ class Engine extends EventEmitter {
     };
 
     this.debug = new Debug(this);
+
     this.container = new Container(this, {
+      ...this.config,
       canvas,
-      container: this.config.domElement,
     });
+
+    this.rendering = new Rendering(this);
   }
 
   tick = () => {

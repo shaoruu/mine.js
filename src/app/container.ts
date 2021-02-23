@@ -5,14 +5,14 @@ import { EventEmitter } from 'events';
 import { Vector2 } from 'three';
 
 type ContainerOptions = {
-  container: HTMLElement;
+  domElement: HTMLElement;
   canvas?: HTMLCanvasElement;
   pointerLock: boolean;
   preventDefault: boolean;
 };
 
 const defaultContainerOptions: ContainerOptions = {
-  container: document.body,
+  domElement: document.body,
   canvas: undefined,
   pointerLock: true,
   preventDefault: true,
@@ -20,13 +20,13 @@ const defaultContainerOptions: ContainerOptions = {
 
 class Container extends EventEmitter {
   public engine: Engine;
-  public container: HTMLElement = document.body;
+  public domElement: HTMLElement = document.body;
   public canvas: HTMLCanvasElement;
 
   public movements = new Vector2();
   public pointerLocked = false;
 
-  constructor(engine: Engine, options: Partial<ContainerOptions>) {
+  constructor(engine: Engine, options: Partial<ContainerOptions> = {}) {
     super();
 
     options = {
@@ -40,7 +40,7 @@ class Container extends EventEmitter {
   }
 
   setupCanvas = (options: Partial<ContainerOptions>) => {
-    const { canvas, container = document.body } = options;
+    const { canvas, domElement = document.body } = options;
 
     if (canvas) {
       this.canvas = canvas;
@@ -56,15 +56,14 @@ class Container extends EventEmitter {
         position: 'fixed',
         top: '0',
         width: '100%',
-        zIndex: '1000000',
       });
 
       this.canvas = newCanvas;
     }
 
-    this.container = container;
-    this.container.append(this.canvas);
-    this.container.id = 'mine.js-container';
+    this.domElement = domElement;
+    this.domElement.append(this.canvas);
+    this.domElement.id = 'mine.js-container';
 
     // Pointerlock
     document.addEventListener('pointerlockchange', this.onLockChange, false);
