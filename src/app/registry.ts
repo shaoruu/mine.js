@@ -12,9 +12,9 @@ type BlockType = {
 
 class Registry {
   public materials: MeshStandardMaterial[];
-  public materialIndices: { [key: string]: number };
+  public materialIndices: Map<string, number>;
   public blocks: BlockType[];
-  public blockIndices: { [key: string]: number };
+  public blockIndices: Map<string, number>;
 
   constructor() {
     console.log('registry');
@@ -31,21 +31,21 @@ class Registry {
     });
 
     const index = this.materials.length;
-    this.materialIndices[name] = index;
+    this.materialIndices.set(name, index);
     this.materials.push(material);
 
     return material;
   };
 
   registerBlock = (name: string, type: string) => {
-    const { index: matIndex, material } = this.getMaterial(name);
+    const { index: matIndex, material } = this.getMaterial(type);
 
     if (!material) {
       throw new Error(`Error registering block, ${name}: material not found.`);
     }
 
     const index = this.blocks.length;
-    this.blockIndices[name] = index;
+    this.blockIndices.set(name, index);
 
     const newBlock = {
       name,
@@ -58,7 +58,7 @@ class Registry {
   };
 
   getMaterial = (name: string) => {
-    const materialIndex = this.materialIndices[name];
+    const materialIndex = this.materialIndices.get(name);
     if (!materialIndex) {
       throw new Error(`Material not found: ${name}`);
     }
@@ -69,7 +69,7 @@ class Registry {
   };
 
   getBlock = (name: string) => {
-    const blockIndex = this.blockIndices[name];
+    const blockIndex = this.blockIndices.get(name);
     if (!blockIndex) {
       throw new Error(`Block not found: ${name}`);
     }

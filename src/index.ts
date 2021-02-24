@@ -3,14 +3,10 @@ import { Camera, Container, Debug, Rendering, World } from './app';
 import { EventEmitter } from 'events';
 
 type ConfigType = {
-  chunkSize?: number;
-  dimension?: number;
   domElement?: HTMLElement;
 };
 
 const defaultConfig: ConfigType = {
-  chunkSize: 32,
-  dimension: 16,
   domElement: document.body,
 };
 
@@ -52,9 +48,16 @@ class Engine extends EventEmitter {
   }
 
   boot = () => {
+    this.debug.mount();
+
     const cycle = () => {
+      this.debug.stats.begin();
+
       this.tick();
       this.render();
+
+      this.debug.stats.end();
+
       requestAnimationFrame(cycle);
     };
 
