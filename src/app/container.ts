@@ -2,14 +2,13 @@ import { Engine } from '..';
 import { Helper } from '../utils';
 
 import { EventEmitter } from 'events';
-import { Vector2 } from 'three';
 
-type ContainerOptions = {
+type ContainerOptionsType = {
   domElement: HTMLElement;
   canvas?: HTMLCanvasElement;
 };
 
-const defaultContainerOptions: ContainerOptions = {
+const defaultContainerOptions: ContainerOptionsType = {
   domElement: document.body,
   canvas: undefined,
 };
@@ -19,7 +18,7 @@ class Container extends EventEmitter {
   public domElement: HTMLElement = document.body;
   public canvas: HTMLCanvasElement;
 
-  constructor(engine: Engine, options: Partial<ContainerOptions> = {}) {
+  constructor(engine: Engine, options: Partial<ContainerOptionsType> = {}) {
     super();
 
     options = {
@@ -32,31 +31,29 @@ class Container extends EventEmitter {
     this.setupCanvas(options);
   }
 
-  setupCanvas = (options: Partial<ContainerOptions>) => {
-    const { canvas, domElement = document.body } = options;
+  setupCanvas = (options: Partial<ContainerOptionsType>) => {
+    const { canvas = document.createElement('canvas'), domElement = document.body } = options;
 
-    if (canvas) {
-      this.canvas = canvas;
-    } else {
-      const newCanvas = document.createElement('canvas');
+    Helper.applyStyle(canvas, {
+      position: 'absolute',
+      margin: '0',
+      outline: 'none',
+      padding: '0',
+      top: '0px',
+      left: '0px',
+    });
 
-      Helper.applyStyle(newCanvas, {
-        height: '100%',
-        left: '0',
-        margin: '0',
-        outline: 'none',
-        padding: '0',
-        position: 'fixed',
-        top: '0',
-        width: '100%',
-      });
-
-      this.canvas = newCanvas;
-    }
+    this.canvas = canvas;
+    this.fitCanvas();
 
     this.domElement = domElement;
     this.domElement.append(this.canvas);
     this.domElement.id = 'mine.js-container';
+  };
+
+  fitCanvas = () => {
+    this.canvas.style.width = this.domElement.clientWidth + 'px';
+    this.canvas.style.height = this.domElement.clientHeight + 'px';
   };
 }
 
