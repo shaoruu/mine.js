@@ -1,4 +1,4 @@
-import { Container, Debug, Rendering } from './app';
+import { Camera, Container, Debug, Rendering } from './app';
 
 import { EventEmitter } from 'events';
 
@@ -19,6 +19,7 @@ class Engine extends EventEmitter {
   public debug: Debug;
   public container: Container;
   public rendering: Rendering;
+  public camera: Camera;
 
   constructor(canvas: HTMLCanvasElement | undefined, params: Partial<ConfigType> = defaultConfig) {
     super();
@@ -28,14 +29,20 @@ class Engine extends EventEmitter {
       ...params,
     };
 
+    // debug
     this.debug = new Debug(this);
 
+    // container
     this.container = new Container(this, {
       ...this.config,
       canvas,
     });
 
+    // rendering
     this.rendering = new Rendering(this);
+
+    // camera
+    this.camera = new Camera(this);
   }
 
   tick = () => {

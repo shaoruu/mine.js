@@ -30,12 +30,26 @@ class Rendering extends EventEmitter {
     this.scene = new Scene();
 
     // renderer
-    const { canvas } = engine.container;
-    const { offsetWidth, offsetHeight } = canvas;
     this.renderer = new WebGLRenderer({
-      canvas,
+      canvas: this.engine.container.canvas,
     });
-    this.renderer.setSize(offsetWidth, offsetHeight);
+    this.adjustRenderer();
+  }
+
+  adjustRenderer = () => {
+    const { width, height } = this.renderSize;
+    this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  };
+
+  get renderSize() {
+    const { offsetWidth, offsetHeight } = this.engine.container.canvas;
+    return { width: offsetWidth, height: offsetHeight };
+  }
+
+  get aspectRatio() {
+    const { width, height } = this.renderSize;
+    return width / height;
   }
 }
 
