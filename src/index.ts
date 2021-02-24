@@ -1,4 +1,4 @@
-import { Camera, Container, Debug, Rendering } from './app';
+import { Camera, Container, Debug, Rendering, World } from './app';
 
 import { EventEmitter } from 'events';
 
@@ -20,6 +20,7 @@ class Engine extends EventEmitter {
   public container: Container;
   public rendering: Rendering;
   public camera: Camera;
+  public world: World;
 
   constructor(canvas: HTMLCanvasElement | undefined, params: Partial<ConfigType> = defaultConfig) {
     super();
@@ -43,14 +44,32 @@ class Engine extends EventEmitter {
 
     // camera
     this.camera = new Camera(this);
+
+    // world
+    this.world = new World(this);
+
+    this.boot();
   }
+
+  boot = () => {
+    const cycle = () => {
+      this.tick();
+      this.render();
+      requestAnimationFrame(cycle);
+    };
+
+    cycle();
+  };
 
   tick = () => {
     // console.log('tick');
+    this.camera.tick();
+    this.world.tick();
   };
 
   render = () => {
     // console.log('render');
+    this.rendering.render();
   };
 
   resize = () => {

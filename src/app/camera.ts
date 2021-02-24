@@ -47,6 +47,8 @@ class Camera {
       engine.rendering.adjustRenderer();
     });
   }
+
+  tick = () => {};
 }
 
 export { Camera };
