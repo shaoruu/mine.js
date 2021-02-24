@@ -116,7 +116,7 @@ class Rendering extends EventEmitter {
   };
 
   tick = () => {
-    this.sky.position.copy(this.engine.camera.controls.getObject().position);
+    // this.sky.position.copy(this.engine.camera.controls.getObject().position);
   };
 
   render = () => {
@@ -150,7 +150,7 @@ class Rendering extends EventEmitter {
       color: 'blue',
     });
     const geometry = new BoxBufferGeometry(0.5, 0.5, 0.5);
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 50; i++) {
       const x = Math.random() * 10 - 5;
       const y = Math.random() * 10 - 5;
       const z = Math.random() * 10 - 5;

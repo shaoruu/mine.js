@@ -12,17 +12,19 @@ type CameraOptionsType = {
   maxPolarAngle: number;
   acceleration: number;
   flyingInertia: number;
+  maxDelta: number;
 };
 
 const defaultCameraOptions: CameraOptionsType = {
   fov: 75,
   near: 0.1,
   far: 10000,
-  initPos: [0, 10, 0],
+  initPos: [0, 0, 10],
   minPolarAngle: 0,
   maxPolarAngle: Math.PI,
   acceleration: 3,
   flyingInertia: 3,
+  maxDelta: 0.3,
 };
 
 class Camera {
@@ -147,7 +149,7 @@ class Camera {
 
   tick = () => {
     const now = Date.now();
-    const delta = (now - this.prevTime) / 1000; // seconds
+    const delta = Math.min((now - this.prevTime) / 1000, this.options.maxDelta); // seconds
     this.prevTime = now;
 
     const { right, left, up, down, front, back } = this.movements;
