@@ -1426,6 +1426,16 @@ anymatch@~3.1.1:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
+ao-mesher@^0.2.10:
+  version "0.2.10"
+  resolved "https://registry.yarnpkg.com/ao-mesher/-/ao-mesher-0.2.10.tgz#99fe8248ba01e8ae2334b13d8ef0fe38d90b83de"
+  integrity sha1-mf6CSLoB6K4jNLE9jvD+ONkLg94=
+  dependencies:
+    cwise-compiler "~0.1.0"
+    greedy-mesher "~1.0.0"
+    ndarray "~1.0.1"
+    typedarray-pool "~0.1.1"
+
 append-buffer@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/append-buffer/-/append-buffer-1.0.2.tgz#d8220cf466081525efea50614f3de6514dfa58f1"
@@ -1774,6 +1784,11 @@ bit-twiddle@^1.0.0, bit-twiddle@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/bit-twiddle/-/bit-twiddle-1.0.2.tgz#0c6c1fabe2b23d17173d9a61b7b7093eb9e1769e"
   integrity sha1-DGwfq+KyPRcXPZpht7cJPrnhdp4=
+
+bit-twiddle@~0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/bit-twiddle/-/bit-twiddle-0.0.2.tgz#c2eaebb952a3b94acc140497e1cdcd2f1a33f58e"
+  integrity sha1-wurruVKjuUrMFASX4c3NLxoz9Y4=
 
 blob@0.0.5:
   version "0.0.5"
@@ -2483,6 +2498,13 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+cwise-compiler@~0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/cwise-compiler/-/cwise-compiler-0.1.0.tgz#899e5c1981b56041ab2921864b034fe0d591b71a"
+  integrity sha1-iZ5cGYG1YEGrKSGGSwNP4NWRtxo=
+  dependencies:
+    uniq "~0.0.2"
+
 d@1, d@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/d/-/d-1.0.1.tgz#8698095372d58dbee346ffd0c7093f99f8f9eb5a"
@@ -2726,6 +2748,11 @@ dup@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/dup/-/dup-1.0.0.tgz#51fc5ac685f8196469df0b905e934b20af5b4029"
   integrity sha1-UfxaxoX4GWRp3wuQXpNLIK9bQCk=
+
+dup@~0.0.0:
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/dup/-/dup-0.0.0.tgz#680c4c51ace6ab9fe3bc6e48d9cab26c0396abd7"
+  integrity sha1-aAxMUazmq5/jvG5I2cqybAOWq9c=
 
 duplexify@^3.6.0:
   version "3.7.1"
@@ -3880,6 +3907,15 @@ graceful-fs@^4.0.0, graceful-fs@^4.1.11, graceful-fs@^4.1.2, graceful-fs@^4.1.6,
   version "4.2.6"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.6.tgz#ff040b2b0853b23c3d31027523706f1885d76bee"
   integrity sha512-nTnJ528pbqxYanhpDYsi4Rd8MAeaBA67+RZ10CM1m3bTAVFEDcd5AuA4a6W5YkGZ1iNXHzZz8T6TBKLeBuNriQ==
+
+greedy-mesher@~1.0.0:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/greedy-mesher/-/greedy-mesher-1.0.3.tgz#423e5879e1db66be86d0c690e9974c31bd6c8972"
+  integrity sha1-Qj5YeeHbZr6G0MaQ6ZdMMb1siXI=
+  dependencies:
+    iota-array "^1.0.0"
+    typedarray-pool "^1.1.0"
+    uniq "^1.0.1"
 
 gulp-cli@^2.2.0:
   version "2.3.0"
@@ -5295,7 +5331,7 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-ndarray@^1.0.19:
+ndarray@^1.0.19, ndarray@~1.0.1:
   version "1.0.19"
   resolved "https://registry.yarnpkg.com/ndarray/-/ndarray-1.0.19.tgz#6785b5f5dfa58b83e31ae5b2a058cfd1ab3f694e"
   integrity sha512-B4JHA4vdyZU30ELBw3g7/p9bZupyew5a7tX1Y/gGeF2hafrPaQZhgrGQfsvgfYbgdFZjYwuEcnaobeM/WMW+HQ==
@@ -7401,6 +7437,14 @@ typedarray-pool@^1.1.0:
     bit-twiddle "^1.0.0"
     dup "^1.0.0"
 
+typedarray-pool@~0.1.1:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/typedarray-pool/-/typedarray-pool-0.1.2.tgz#c01a4a95d35f05f990f53456b63ff698557d928f"
+  integrity sha1-wBpKldNfBfmQ9TRWtj/2mFV9ko8=
+  dependencies:
+    bit-twiddle "~0.0.2"
+    dup "~0.0.0"
+
 typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
@@ -7475,10 +7519,15 @@ union-value@^1.0.0:
     is-extendable "^0.1.1"
     set-value "^2.0.1"
 
-uniq@^1.0.0:
+uniq@^1.0.0, uniq@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/uniq/-/uniq-1.0.1.tgz#b31c5ae8254844a3a8281541ce2b04b865a734ff"
   integrity sha1-sxxa6CVIRKOoKBVBzisEuGWnNP8=
+
+uniq@~0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/uniq/-/uniq-0.0.2.tgz#614e868ba288651d351262369317acc43b901823"
+  integrity sha1-YU6Gi6KIZR01EmI2kxesxDuQGCM=
 
 unique-stream@^2.0.2:
   version "2.3.1"
