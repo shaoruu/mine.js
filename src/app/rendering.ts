@@ -5,18 +5,16 @@ import skyFragmentShader from './shaders/sky/fragment.glsl';
 
 import { EventEmitter } from 'events';
 import {
-  ACESFilmicToneMapping,
   AmbientLight,
   BackSide,
   BoxBufferGeometry,
-  BoxGeometry,
   Color,
   DirectionalLight,
   Mesh,
   Scene,
   ShaderMaterial,
+  SphereGeometry,
   sRGBEncoding,
-  Vector3,
   WebGLRenderer,
 } from 'three';
 import { GUI } from 'dat.gui';
@@ -31,32 +29,18 @@ type RenderingOptionsType = {
   ambientLightColor: string;
   ambientLightIntensity: number;
   skyDomeOffset: number;
-  turbidity: number;
-  rayleigh: number;
-  mieCoefficient: number;
-  mieDirectionalG: number;
-  inclination: number; // elevation / inclination
-  azimuth: number; // Facing front,
-  exposure: number;
 };
 
 const defaultRenderingOptions: RenderingOptionsType = {
   clearColor: '#b6d2ff',
-  topColor: '#aabbff',
+  topColor: '#0077ff',
   bottomColor: '#eeeeee',
   directionalLightColor: '#ffffff',
   directionalLightIntensity: 0.5,
   directionalLightPosition: [300, 250, -500],
   ambientLightColor: '#ffffff',
   ambientLightIntensity: 0.3,
-  skyDomeOffset: 800,
-  turbidity: 3,
-  rayleigh: 1,
-  mieCoefficient: 0.003,
-  mieDirectionalG: 0.7,
-  inclination: 0.49, // elevation / inclination
-  azimuth: 0.25, // Facing front,
-  exposure: 0.5,
+  skyDomeOffset: 600,
 };
 
 class Rendering extends EventEmitter {
@@ -69,8 +53,6 @@ class Rendering extends EventEmitter {
 
   public options: RenderingOptionsType;
   public datGUI: GUI;
-
-  public sun = new Vector3();
 
   constructor(engine: Engine, options: Partial<RenderingOptionsType> = {}) {
     super();
@@ -87,6 +69,9 @@ class Rendering extends EventEmitter {
       directionalLightPosition,
       ambientLightColor,
       ambientLightIntensity,
+      topColor,
+      bottomColor,
+      skyDomeOffset,
     } = this.options;
 
     this.engine = engine;
@@ -100,8 +85,6 @@ class Rendering extends EventEmitter {
     });
     this.renderer.setClearColor(new Color(clearColor));
     this.renderer.outputEncoding = sRGBEncoding;
-    this.renderer.toneMapping = ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.5;
 
     // directional light
     this.directionalLight = new DirectionalLight(directionalLightColor, directionalLightIntensity);
@@ -112,26 +95,25 @@ class Rendering extends EventEmitter {
     this.ambientLight = new AmbientLight(ambientLightColor, ambientLightIntensity);
     this.scene.add(this.ambientLight);
 
-    const skyMaterial = new ShaderMaterial({
-      name: 'SkyShader',
-      uniforms: {
-        turbidity: { value: 2 },
-        rayleigh: { value: 1 },
-        mieCoefficient: { value: 0.005 },
-        mieDirectionalG: { value: 0.8 },
-        sunPosition: { value: new Vector3() },
-        up: { value: new Vector3(0, 1, 0) },
-      },
+    // sky
+    const uniforms = {
+      topColor: { value: new Color(topColor) },
+      bottomColor: { value: new Color(bottomColor) },
+      offset: { value: skyDomeOffset },
+      exponent: { value: 0.6 },
+    };
+    uniforms.topColor.value.copy(this.directionalLight.color);
+
+    const skyGeo = new SphereGeometry(4000, 32, 15);
+    const skyMat = new ShaderMaterial({
+      uniforms: uniforms,
       vertexShader: skyVertexShader,
       fragmentShader: skyFragmentShader,
       side: BackSide,
-      depthWrite: false,
     });
-    const skyGeometry = new BoxGeometry();
-    this.sky = new Mesh(skyGeometry, skyMaterial);
-    this.sky.scale.setScalar(450000);
+
+    this.sky = new Mesh(skyGeo, skyMat);
     this.scene.add(this.sky);
-    this.skyGUIChanged();
 
     this.adjustRenderer();
     this.debug();
@@ -160,14 +142,6 @@ class Rendering extends EventEmitter {
       // @ts-ignore
       .onChange((value) => (this.sky.material.uniforms.offset.value = value));
 
-    this.datGUI.add(this.options, 'turbidity', 0.0, 20.0, 0.1).onChange(this.skyGUIChanged);
-    this.datGUI.add(this.options, 'rayleigh', 0.0, 4, 0.001).onChange(this.skyGUIChanged);
-    this.datGUI.add(this.options, 'mieCoefficient', 0.0, 0.1, 0.001).onChange(this.skyGUIChanged);
-    this.datGUI.add(this.options, 'mieDirectionalG', 0.0, 1, 0.001).onChange(this.skyGUIChanged);
-    this.datGUI.add(this.options, 'inclination', 0, 1, 0.0001).onChange(this.skyGUIChanged);
-    this.datGUI.add(this.options, 'azimuth', 0, 1, 0.0001).onChange(this.skyGUIChanged);
-    this.datGUI.add(this.options, 'exposure', 0, 1, 0.0001).onChange(this.skyGUIChanged);
-
     this.datGUI
       .addColor(this.options, 'topColor')
       // @ts-ignore
@@ -185,30 +159,6 @@ class Rendering extends EventEmitter {
       .onFinishChange((value) => this.ambientLight.color.set(value));
 
     this.datGUI.open();
-  };
-
-  skyGUIChanged = () => {
-    const { uniforms } = this.sky.material as ShaderMaterial;
-    uniforms['turbidity'].value = this.options.turbidity;
-    uniforms['rayleigh'].value = this.options.rayleigh;
-    uniforms['mieCoefficient'].value = this.options.mieCoefficient;
-    uniforms['mieDirectionalG'].value = this.options.mieDirectionalG;
-
-    const theta = Math.PI * (this.options.inclination - 0.5);
-    const phi = 2 * Math.PI * (this.options.azimuth - 0.5);
-
-    this.sun.x = Math.cos(phi);
-    this.sun.y = Math.sin(phi) * Math.sin(theta);
-    this.sun.z = Math.sin(phi) * Math.cos(theta);
-
-    this.directionalLight.position.copy(this.sun);
-    const intensity = (1 - this.options.inclination) * 0.5;
-    this.ambientLight.intensity = intensity;
-    this.directionalLight.intensity = intensity;
-
-    uniforms['sunPosition'].value.copy(this.sun);
-
-    this.renderer.toneMappingExposure = this.options.exposure;
   };
 
   test = () => {

@@ -23,7 +23,7 @@ const defaultCameraOptions: CameraOptionsType = {
   minPolarAngle: 0,
   maxPolarAngle: Math.PI,
   acceleration: 1,
-  flyingInertia: 0.5,
+  flyingInertia: 3,
   maxDelta: 0.3,
 };
 
@@ -166,9 +166,9 @@ class Camera {
     this.acc.y = yMovement * acceleration;
     this.acc.z = -movementVec.z * acceleration;
 
-    this.vel.x -= (this.vel.x / flyingInertia) * delta;
-    this.vel.y -= (this.vel.y / flyingInertia) * delta;
-    this.vel.z -= (this.vel.z / flyingInertia) * delta;
+    this.vel.x -= this.vel.x * flyingInertia * delta;
+    this.vel.y -= this.vel.y * flyingInertia * delta;
+    this.vel.z -= this.vel.z * flyingInertia * delta;
 
     this.vel.add(this.acc.multiplyScalar(delta));
     this.acc.set(0, 0, 0);
