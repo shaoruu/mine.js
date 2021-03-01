@@ -55,7 +55,7 @@
     "socket.io-client": "^2.2.0",
     "styled-components": "^4.3.2",
     "subscriptions-transport-ws": "^0.9.16",
-    "three": "^0.107.0",
+    "three": "^0.125.0",
     "tic": "^1.0.0",
     "tooloud": "^2.0.4",
     "yup": "^0.27.0"
