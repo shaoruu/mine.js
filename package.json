@@ -70,7 +70,6 @@
     "@babylonjs/core": "^4.2.0",
     "@babylonjs/materials": "^4.2.0",
     "aabb-3d": "andyhall/aabb-3d",
-    "ao-mesher": "^0.2.10",
     "box-intersect": "^1.0.2",
     "browser-sync": "^2.26.14",
     "buffer": "^6.0.3",

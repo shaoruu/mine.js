@@ -1,6 +1,4 @@
-import { Engine } from '..';
-
-import { MeshStandardMaterial, Texture } from 'three';
+import { Color, Material, MeshStandardMaterial, Texture } from 'three';
 
 type MaterialOptions = {
   color?: string;
@@ -13,34 +11,24 @@ type BlockType = {
 };
 
 class Registry {
-  public engine: Engine;
   public materials: MeshStandardMaterial[];
   public materialIndices: Map<string, number>;
   public blocks: BlockType[];
   public blockIndices: Map<string, number>;
 
-  constructor(engine: Engine) {
-    this.engine = engine;
-
-    this.materials = [];
-    this.blocks = [];
-
-    this.materialIndices = new Map();
-    this.blockIndices = new Map();
-
-    // defaults
-    this.addMaterial('dirt', { color: '#edc9af' });
-    this.addMaterial('grass', { color: '#41980a' });
+  constructor() {
+    console.log('registry');
   }
 
-  addMaterial = (name: string, options: MaterialOptions) => {
-    const { color, map } = options;
-
+  addMaterial = (name: string, { color, map }: MaterialOptions) => {
     if (!color && !map) {
       throw new Error(`Error adding material, ${name}: no color or map provided.`);
     }
 
-    const material = new MeshStandardMaterial(options);
+    const material = new MeshStandardMaterial({
+      color: new Color(color),
+      map,
+    });
 
     const index = this.materials.length;
     this.materialIndices.set(name, index);
@@ -71,23 +59,23 @@ class Registry {
 
   getMaterial = (name: string) => {
     const materialIndex = this.materialIndices.get(name);
-    if (materialIndex === undefined) {
+    if (!materialIndex) {
       throw new Error(`Material not found: ${name}`);
     }
     return {
       index: materialIndex,
-      material: this.materials[materialIndex],
+      material: this.materialIndices[materialIndex],
     };
   };
 
   getBlock = (name: string) => {
     const blockIndex = this.blockIndices.get(name);
-    if (blockIndex === undefined) {
+    if (!blockIndex) {
       throw new Error(`Block not found: ${name}`);
     }
     return {
       index: blockIndex,
-      block: this.blocks[blockIndex],
+      block: this.blockIndices[blockIndex],
     };
   };
 }

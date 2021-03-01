@@ -5,12 +5,12 @@ import skyFragmentShader from './shaders/sky/fragment.glsl';
 
 import { EventEmitter } from 'events';
 import {
-  AmbientLight,
   BackSide,
   BoxBufferGeometry,
   Color,
   DirectionalLight,
   Mesh,
+  MeshBasicMaterial,
   Scene,
   ShaderMaterial,
   SphereGeometry,
@@ -21,25 +21,21 @@ import { GUI } from 'dat.gui';
 
 type RenderingOptionsType = {
   clearColor: string;
+  lightColor: string;
   topColor: string;
   bottomColor: string;
-  directionalLightColor: string;
-  directionalLightIntensity: number;
-  directionalLightPosition: [number, number, number];
-  ambientLightColor: string;
-  ambientLightIntensity: number;
+  lightIntensity: number;
+  lightPosition: [number, number, number];
   skyDomeOffset: number;
 };
 
 const defaultRenderingOptions: RenderingOptionsType = {
   clearColor: '#b6d2ff',
+  lightColor: '#aabbff',
   topColor: '#0077ff',
   bottomColor: '#eeeeee',
-  directionalLightColor: '#ffffff',
-  directionalLightIntensity: 0.5,
-  directionalLightPosition: [300, 250, -500],
-  ambientLightColor: '#ffffff',
-  ambientLightIntensity: 0.3,
+  lightIntensity: 0.3,
+  lightPosition: [300, 250, -500],
   skyDomeOffset: 600,
 };
 
@@ -47,8 +43,7 @@ class Rendering extends EventEmitter {
   public engine: Engine;
   public scene: Scene;
   public renderer: WebGLRenderer;
-  public directionalLight: DirectionalLight;
-  public ambientLight: AmbientLight;
+  public light: DirectionalLight;
   public sky: Mesh;
 
   public options: RenderingOptionsType;
@@ -64,11 +59,9 @@ class Rendering extends EventEmitter {
 
     const {
       clearColor,
-      directionalLightColor,
-      directionalLightIntensity,
-      directionalLightPosition,
-      ambientLightColor,
-      ambientLightIntensity,
+      lightColor,
+      lightIntensity,
+      lightPosition,
       topColor,
       bottomColor,
       skyDomeOffset,
@@ -86,14 +79,10 @@ class Rendering extends EventEmitter {
     this.renderer.setClearColor(new Color(clearColor));
     this.renderer.outputEncoding = sRGBEncoding;
 
-    // directional light
-    this.directionalLight = new DirectionalLight(directionalLightColor, directionalLightIntensity);
-    this.directionalLight.position.set(...directionalLightPosition);
-    this.scene.add(this.directionalLight);
-
-    // ambient light
-    this.ambientLight = new AmbientLight(ambientLightColor, ambientLightIntensity);
-    this.scene.add(this.ambientLight);
+    // lights
+    this.light = new DirectionalLight(lightColor, lightIntensity);
+    this.light.position.set(...lightPosition);
+    this.scene.add(this.light);
 
     // sky
     const uniforms = {
@@ -102,7 +91,7 @@ class Rendering extends EventEmitter {
       offset: { value: skyDomeOffset },
       exponent: { value: 0.6 },
     };
-    uniforms.topColor.value.copy(this.directionalLight.color);
+    uniforms.topColor.value.copy(this.light.color);
 
     const skyGeo = new SphereGeometry(4000, 32, 15);
     const skyMat = new ShaderMaterial({
@@ -151,18 +140,15 @@ class Rendering extends EventEmitter {
       // @ts-ignore
       .onFinishChange((value) => this.sky.material.uniforms.bottomColor.value.set(value));
     this.datGUI.addColor(this.options, 'clearColor').onFinishChange((value) => this.renderer.setClearColor(value));
-    this.datGUI
-      .addColor(this.options, 'directionalLightColor')
-      .onFinishChange((value) => this.directionalLight.color.set(value));
-    this.datGUI
-      .addColor(this.options, 'ambientLightColor')
-      .onFinishChange((value) => this.ambientLight.color.set(value));
+    this.datGUI.addColor(this.options, 'lightColor').onFinishChange((value) => this.light.color.set(value));
 
     this.datGUI.open();
   };
 
   test = () => {
-    const { material } = this.engine.registry.getMaterial('dirt');
+    const material = new MeshBasicMaterial({
+      color: 'blue',
+    });
     const geometry = new BoxBufferGeometry(0.5, 0.5, 0.5);
     for (let i = 0; i < 50; i++) {
       const x = Math.random() * 10 - 5;
