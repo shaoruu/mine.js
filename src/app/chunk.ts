@@ -2,6 +2,7 @@ import { Coords3 } from '../libs';
 import { Helper } from '../utils';
 
 import ndarray from 'ndarray';
+import { Engine } from '..';
 
 type ChunkOptions = {
   size: number;
@@ -9,14 +10,19 @@ type ChunkOptions = {
 
 class Chunk {
   public coords: Coords3;
-  public data: ndarray;
+  public voxels: ndarray;
+  public engine: Engine;
 
   public size: number;
 
-  public isDirty: false;
+  public isDirty: true;
 
-  constructor(options: ChunkOptions) {
-    this.size = options.size;
+  constructor(engine: Engine, { size }: ChunkOptions) {
+    this.engine = engine;
+
+    this.size = size;
+
+    this.voxels = ndarray(new Int8Array(size * size * size), [size, size, size]);
   }
 
   get name() {
