@@ -1,4 +1,4 @@
-import { Camera, Container, Debug, Rendering, World } from './app';
+import { Camera, Container, Debug, Registry, Rendering, World } from './app';
 
 import { EventEmitter } from 'events';
 
@@ -16,6 +16,7 @@ class Engine extends EventEmitter {
   public container: Container;
   public rendering: Rendering;
   public camera: Camera;
+  public registry: Registry;
   public world: World;
 
   constructor(canvas: HTMLCanvasElement | undefined, params: Partial<ConfigType> = defaultConfig) {
@@ -34,6 +35,9 @@ class Engine extends EventEmitter {
       ...this.config,
       canvas,
     });
+
+    // registry
+    this.registry = new Registry(this);
 
     // rendering
     this.rendering = new Rendering(this);

@@ -18,11 +18,11 @@ type CameraOptionsType = {
 const defaultCameraOptions: CameraOptionsType = {
   fov: 75,
   near: 0.1,
-  far: 10000,
+  far: 8000,
   initPos: [0, 0, 10],
   minPolarAngle: 0,
   maxPolarAngle: Math.PI,
-  acceleration: 3,
+  acceleration: 1,
   flyingInertia: 3,
   maxDelta: 0.3,
 };
