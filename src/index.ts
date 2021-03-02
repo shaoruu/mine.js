@@ -1,4 +1,5 @@
 import { Camera, Container, Debug, Registry, Rendering, World } from './app';
+import { Clock } from './libs';
 
 import { EventEmitter } from 'events';
 
@@ -13,6 +14,7 @@ const defaultConfig: ConfigType = {
 class Engine extends EventEmitter {
   public config: ConfigType;
   public debug: Debug;
+  public clock: Clock;
   public container: Container;
   public rendering: Rendering;
   public camera: Camera;
@@ -48,6 +50,8 @@ class Engine extends EventEmitter {
     // world
     this.world = new World(this);
 
+    this.clock = new Clock();
+
     this.boot();
   }
 
@@ -69,7 +73,7 @@ class Engine extends EventEmitter {
   };
 
   tick = () => {
-    // console.log('tick');
+    this.clock.tick();
     this.camera.tick();
     this.world.tick();
     this.rendering.tick();

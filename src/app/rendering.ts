@@ -58,8 +58,8 @@ class Rendering extends EventEmitter {
     super();
 
     this.options = {
-      ...options,
       ...defaultRenderingOptions,
+      ...options,
     };
 
     const {

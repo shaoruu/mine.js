@@ -22,8 +22,8 @@ class Container extends EventEmitter {
     super();
 
     options = {
-      ...options,
       ...defaultContainerOptions,
+      ...options,
     };
 
     this.engine = engine;

@@ -12,7 +12,6 @@ type CameraOptionsType = {
   maxPolarAngle: number;
   acceleration: number;
   flyingInertia: number;
-  maxDelta: number;
 };
 
 const defaultCameraOptions: CameraOptionsType = {
@@ -24,7 +23,6 @@ const defaultCameraOptions: CameraOptionsType = {
   maxPolarAngle: Math.PI,
   acceleration: 1,
   flyingInertia: 3,
-  maxDelta: 0.3,
 };
 
 class Camera {
@@ -33,8 +31,6 @@ class Camera {
   public controls: PointerLockControls;
 
   public options: CameraOptionsType;
-
-  private prevTime: number;
 
   private acc = new Vector3();
   private vel = new Vector3();
@@ -49,8 +45,8 @@ class Camera {
 
   constructor(engine: Engine, options: Partial<CameraOptionsType> = {}) {
     this.options = {
-      ...options,
       ...defaultCameraOptions,
+      ...options,
     };
 
     const { fov, near, far, initPos } = this.options;
@@ -66,8 +62,6 @@ class Camera {
     this.engine.container.canvas.onclick = () => this.controls.lock();
 
     this.controls.getObject().position.set(...initPos);
-
-    this.prevTime = Date.now();
 
     window.addEventListener('resize', () => {
       engine.container.fitCanvas();
@@ -148,9 +142,7 @@ class Camera {
   };
 
   tick = () => {
-    const now = Date.now();
-    const delta = Math.min((now - this.prevTime) / 1000, this.options.maxDelta); // seconds
-    this.prevTime = now;
+    const { delta } = this.engine.clock;
 
     const { right, left, up, down, front, back } = this.movements;
     const { acceleration, flyingInertia } = this.options;
