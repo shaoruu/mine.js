@@ -9,7 +9,7 @@ type MaterialOptions = {
 
 type BlockType = {
   name: string;
-  materialIndex: number;
+  material: MeshStandardMaterial;
 };
 
 class Registry {
@@ -31,6 +31,7 @@ class Registry {
 
     this.addMaterial('dirt', { color: '#edc9af' });
     this.addMaterial('grass', { color: '#41980a' });
+    this.addMaterial('stone', { color: '#999C9B' });
   }
 
   addMaterial = (name: string, options: MaterialOptions) => {
@@ -38,6 +39,10 @@ class Registry {
 
     if (!color && !map) {
       throw new Error(`Error adding material, ${name}: no color or map provided.`);
+    }
+
+    if (this.materialIndices.get(name)) {
+      throw new Error(`Error adding material, ${name}: material name taken.`);
     }
 
     const material = new MeshStandardMaterial(options);
@@ -50,10 +55,14 @@ class Registry {
   };
 
   registerBlock = (name: string, type: string) => {
-    const { index: matIndex, material } = this.getMaterial(type);
+    const material = this.getMaterial(type);
 
     if (!material) {
       throw new Error(`Error registering block, ${name}: material not found.`);
+    }
+
+    if (this.blockIndices.get(name)) {
+      throw new Error(`Error registering block, ${name}: block name taken.`);
     }
 
     const index = this.blocks.length;
@@ -61,7 +70,7 @@ class Registry {
 
     const newBlock = {
       name,
-      materialIndex: matIndex,
+      material,
     };
 
     this.blocks.push(newBlock);
@@ -69,26 +78,24 @@ class Registry {
     return newBlock;
   };
 
-  getMaterial = (name: string) => {
+  getMaterialIndex = (name: string) => {
     const materialIndex = this.materialIndices.get(name);
-    if (materialIndex === undefined) {
-      throw new Error(`Material not found: ${name}`);
-    }
-    return {
-      index: materialIndex,
-      material: this.materials[materialIndex],
-    };
+    return materialIndex === undefined ? -1 : materialIndex;
+  };
+
+  getMaterial = (name: string) => {
+    const index = this.getMaterialIndex(name);
+    return index < 0 ? null : this.materials[index];
+  };
+
+  getBlockIndex = (name: string) => {
+    const blockIndex = this.blockIndices.get(name);
+    return blockIndex === undefined ? -1 : blockIndex;
   };
 
   getBlock = (name: string) => {
-    const blockIndex = this.blockIndices.get(name);
-    if (blockIndex === undefined) {
-      throw new Error(`Block not found: ${name}`);
-    }
-    return {
-      index: blockIndex,
-      block: this.blocks[blockIndex],
-    };
+    const index = this.getBlockIndex(name);
+    return index < 0 ? null : this.blocks[index];
   };
 }
 

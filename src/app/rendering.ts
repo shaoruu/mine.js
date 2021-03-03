@@ -161,14 +161,14 @@ class Rendering extends EventEmitter {
   };
 
   test = () => {
-    const { material } = this.engine.registry.getMaterial('dirt');
+    const material = this.engine.registry.getMaterial('dirt');
     const geometry = new BoxBufferGeometry(0.5, 0.5, 0.5);
     for (let i = 0; i < 50; i++) {
       const x = Math.random() * 10 - 5;
       const y = Math.random() * 10 - 5;
       const z = Math.random() * 10 - 5;
 
-      const mesh = new Mesh(geometry, material);
+      const mesh = new Mesh(geometry, material || undefined);
       mesh.position.set(x, y, z);
       this.scene.add(mesh);
     }
