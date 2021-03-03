@@ -2,6 +2,7 @@ import { Engine } from '..';
 
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
+import { AxesHelper, GridHelper } from 'three';
 
 class Debug {
   public engine: Engine;
@@ -17,6 +18,23 @@ class Debug {
 
     const { parentElement } = this.gui.domElement;
     if (parentElement) parentElement.style.zIndex = '10000000';
+
+    engine.on('ready', () => {
+      this.mount();
+
+      const {
+        rendering: { scene },
+        world: {
+          options: { chunkSize, dimension },
+        },
+      } = this.engine;
+
+      const axesHelper = new AxesHelper(5);
+      engine.rendering.scene.add(axesHelper);
+
+      const gridHelper = new GridHelper(chunkSize * dimension, chunkSize);
+      scene.add(gridHelper);
+    });
   }
 
   mount = () => {

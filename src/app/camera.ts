@@ -2,6 +2,8 @@ import { Engine } from '..';
 
 import { PerspectiveCamera, Vector3 } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
+import { Coords3 } from '../libs';
+import { Helper } from '../utils';
 
 type CameraOptionsType = {
   fov: number;
@@ -18,11 +20,11 @@ const defaultCameraOptions: CameraOptionsType = {
   fov: 75,
   near: 0.1,
   far: 8000,
-  initPos: [0, 0, 10],
+  initPos: [0, 10, 10],
   minPolarAngle: 0,
   maxPolarAngle: Math.PI,
   acceleration: 1,
-  flyingInertia: 3,
+  flyingInertia: 10,
 };
 
 class Camera {
@@ -73,6 +75,8 @@ class Camera {
 
     document.addEventListener('keydown', this.onKeyDown, false);
     document.addEventListener('keyup', this.onKeyUp, false);
+
+    this.threeCamera.lookAt(new Vector3(0, 0, 0));
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {
@@ -170,6 +174,15 @@ class Camera {
 
     this.controls.getObject().position.y += this.vel.y;
   };
+
+  get voxel(): Coords3 {
+    return Helper.vMapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);
+  }
+
+  get position(): Coords3 {
+    const { x, y, z } = this.threeCamera.position;
+    return [x, y, z];
+  }
 }
 
 export { Camera };

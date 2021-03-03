@@ -53,11 +53,11 @@ class Engine extends EventEmitter {
     this.clock = new Clock();
 
     this.boot();
+
+    this.emit('ready');
   }
 
   boot = () => {
-    this.debug.mount();
-
     const cycle = () => {
       this.debug.stats.begin();
 

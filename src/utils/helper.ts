@@ -1,4 +1,5 @@
 import { Coords3 } from '../libs';
+import vec3 from 'gl-vec3';
 
 class Helper {
   /**
@@ -13,13 +14,15 @@ class Helper {
   };
 
   /**
-   * Scale and floor coordinates
+   * Scale coordinates and floor them.
    *
    * @param {Coords3} coords
-   * @param {*} factor
+   * @param {number} factor
+   * @returns
    */
-  public static scaleCoordsF = (coords: Coords3, factor: number): Coords3 => {
-    return [(coords[0] * factor) | 0, (coords[1] * factor) | 0, (coords[2] * factor) | 0];
+  public static scaleCoordsF = (coords: Coords3, factor: number) => {
+    const scaled = vec3.scale(coords, coords, factor);
+    return vec3.floor(scaled, scaled);
   };
 
   /**
@@ -27,9 +30,9 @@ class Helper {
    *
    * @param {Coords3} worldPos
    * @param {Chunk} chunk
-   * @returns {Coords3}
+   * @returns
    */
-  public static vMapVoxelPosToChunkLocalPos = (worldPos: Coords3, chunkSize: number): Coords3 => {
+  public static vMapVoxelPosToChunkLocalPos = (worldPos: Coords3, chunkSize: number) => {
     const [vx, vy, vz] = worldPos;
 
     return [vx % chunkSize, vy % chunkSize, vz % chunkSize];
@@ -40,9 +43,9 @@ class Helper {
    *
    * @param {Coords3} worldPos
    * @param {number} chunkSize
-   * @returns {Coords3}
+   * @returns
    */
-  public static vMapVoxelPosToChunkPos = (worldPos: Coords3, chunkSize: number): Coords3 => {
+  public static vMapVoxelPosToChunkPos = (worldPos: Coords3, chunkSize: number) => {
     return Helper.scaleCoordsF(worldPos, 1 / chunkSize);
   };
 
@@ -51,9 +54,9 @@ class Helper {
    *
    * @param {Coords3} worldPos
    * @param {number} dimension
-   * @returns {Coords3}
+   * @returns
    */
-  public static vMapWorldPosToVoxelPos = (worldPos: Coords3, dimension: number): Coords3 => {
+  public static vMapWorldPosToVoxelPos = (worldPos: Coords3, dimension: number) => {
     return Helper.scaleCoordsF(worldPos, 1 / dimension);
   };
 

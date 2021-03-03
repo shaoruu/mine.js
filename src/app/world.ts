@@ -13,7 +13,7 @@ type WorldOptionsType = {
 
 const defaultWorldOptions: WorldOptionsType = {
   chunkSize: 32,
-  dimension: 16,
+  dimension: 1,
   generator: 'flat',
 };
 
@@ -44,7 +44,11 @@ class World extends EventEmitter {
     }
   }
 
-  tick = () => {};
+  tick = () => {
+    // Check camera position
+    const pos = this.engine.camera.voxel;
+    console.log(pos);
+  };
 
   chunkDataNeeded = (chunk: Chunk) => {};
 }
