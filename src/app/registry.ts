@@ -30,7 +30,7 @@ class Registry {
     this.addMaterial('stone', { color: '#999C9B' });
   }
 
-  addMaterial = (name: string, options: MaterialOptions) => {
+  addMaterial(name: string, options: MaterialOptions) {
     const { color, map } = options;
 
     if (!color && !map) {
@@ -45,9 +45,9 @@ class Registry {
     this.materials.set(name, material);
 
     return material;
-  };
+  }
 
-  registerBlock = (name: string, type: string) => {
+  registerBlock(name: string, type: string) {
     const material = this.getMaterial(type);
 
     if (!material) {
@@ -65,23 +65,23 @@ class Registry {
     this.blocks.set(name, newBlock);
 
     return newBlock;
-  };
+  }
 
-  getMaterialIndex = (name: string) => {
+  getMaterialIndex(name: string) {
     return this.materials.getIndex(name);
-  };
+  }
 
-  getMaterial = (name: string) => {
+  getMaterial(name: string) {
     return this.materials.get(name);
-  };
+  }
 
-  getBlockIndex = (name: string) => {
+  getBlockIndex(name: string) {
     return this.blocks.getIndex(name);
-  };
+  }
 
-  getBlock = (name: string) => {
+  getBlock(name: string) {
     return this.blocks.get(name);
-  };
+  }
 }
 
 export { Registry };

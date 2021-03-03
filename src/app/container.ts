@@ -31,7 +31,7 @@ class Container extends EventEmitter {
     this.setupCanvas(options);
   }
 
-  setupCanvas = (options: Partial<ContainerOptionsType>) => {
+  setupCanvas(options: Partial<ContainerOptionsType>) {
     const { canvas = document.createElement('canvas'), domElement = document.body } = options;
 
     Helper.applyStyle(canvas, {
@@ -49,12 +49,12 @@ class Container extends EventEmitter {
     this.domElement = domElement;
     this.domElement.append(this.canvas);
     this.domElement.id = 'mine.js-container';
-  };
+  }
 
-  fitCanvas = () => {
+  fitCanvas() {
     this.canvas.style.width = this.domElement.clientWidth + 'px';
     this.canvas.style.height = this.domElement.clientHeight + 'px';
-  };
+  }
 }
 
 export { Container };

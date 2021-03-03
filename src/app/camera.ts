@@ -79,7 +79,7 @@ class Camera {
     this.threeCamera.lookAt(new Vector3(0, 0, 0));
   }
 
-  onKeyDown = ({ code }: KeyboardEvent) => {
+  onKeyDown({ code }: KeyboardEvent) {
     if (!this.controls.isLocked) return;
 
     switch (code) {
@@ -111,9 +111,9 @@ class Camera {
         this.movements.down = true;
         break;
     }
-  };
+  }
 
-  onKeyUp = ({ code }: KeyboardEvent) => {
+  onKeyUp({ code }: KeyboardEvent) {
     switch (code) {
       case 'ArrowUp':
       case 'KeyW':
@@ -143,9 +143,9 @@ class Camera {
         this.movements.down = false;
         break;
     }
-  };
+  }
 
-  tick = () => {
+  tick() {
     const { delta } = this.engine.clock;
 
     const { right, left, up, down, front, back } = this.movements;
@@ -173,7 +173,7 @@ class Camera {
     this.controls.moveForward(-this.vel.z);
 
     this.controls.getObject().position.y += this.vel.y;
-  };
+  }
 
   get voxel(): Coords3 {
     return Helper.vMapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);

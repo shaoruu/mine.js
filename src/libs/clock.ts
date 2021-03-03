@@ -22,11 +22,11 @@ class Clock {
     this.delta = 0;
   }
 
-  tick = () => {
+  tick() {
     const now = Date.now();
     this.delta = Math.min((now - this.lastFrameTime) / 1000, this.options.maxDelta);
     this.lastFrameTime = now;
-  };
+  }
 }
 
 export { Clock };

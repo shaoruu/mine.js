@@ -37,9 +37,9 @@ class Debug {
     });
   }
 
-  mount = () => {
+  mount() {
     this.engine.container.domElement.appendChild(this.stats.dom);
-  };
+  }
 }
 
 export { Debug };

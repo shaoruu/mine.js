@@ -119,21 +119,21 @@ class Rendering extends EventEmitter {
     this.test();
   }
 
-  adjustRenderer = () => {
+  adjustRenderer() {
     const { width, height } = this.renderSize;
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  };
+  }
 
-  tick = () => {
+  tick() {
     // this.sky.position.copy(this.engine.camera.controls.getObject().position);
-  };
+  }
 
-  render = () => {
+  render() {
     this.renderer.render(this.scene, this.engine.camera.threeCamera);
-  };
+  }
 
-  debug = () => {
+  debug() {
     this.datGUI = this.engine.debug.gui.addFolder('rendering');
 
     this.datGUI
@@ -158,9 +158,9 @@ class Rendering extends EventEmitter {
       .onFinishChange((value) => this.ambientLight.color.set(value));
 
     this.datGUI.open();
-  };
+  }
 
-  test = () => {
+  test() {
     const material = this.engine.registry.getMaterial('dirt');
     const geometry = new BoxBufferGeometry(1, 1, 1);
     for (let i = 0; i < 50; i++) {
@@ -172,7 +172,7 @@ class Rendering extends EventEmitter {
       mesh.position.set(x, y, z);
       this.scene.add(mesh);
     }
-  };
+  }
 
   get renderSize() {
     const { offsetWidth, offsetHeight } = this.engine.container.canvas;
