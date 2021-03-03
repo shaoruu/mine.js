@@ -47,7 +47,6 @@ class World extends EventEmitter {
   tick = () => {
     // Check camera position
     const pos = this.engine.camera.voxel;
-    console.log(pos);
   };
 
   chunkDataNeeded = (chunk: Chunk) => {};

@@ -32,7 +32,7 @@ class Debug {
       const axesHelper = new AxesHelper(5);
       engine.rendering.scene.add(axesHelper);
 
-      const gridHelper = new GridHelper(chunkSize * dimension, chunkSize);
+      const gridHelper = new GridHelper(2 * chunkSize * dimension, 2 * chunkSize);
       scene.add(gridHelper);
     });
   }

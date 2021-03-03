@@ -1,7 +1,7 @@
 import ndarray from 'ndarray';
 import { Engine } from '../..';
 import { Coords3 } from '../types';
-import { Generator } from './generators';
+import { Generator } from './generator';
 
 class DefaultGenerator extends Generator {
   constructor(engine: Engine) {

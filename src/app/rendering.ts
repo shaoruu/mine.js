@@ -164,9 +164,9 @@ class Rendering extends EventEmitter {
     const material = this.engine.registry.getMaterial('dirt');
     const geometry = new BoxBufferGeometry(1, 1, 1);
     for (let i = 0; i < 50; i++) {
-      const x = ((Math.random() * 10) | 0) - 5;
-      const y = (Math.random() * 10) | 0;
-      const z = ((Math.random() * 10) | 0) - 5;
+      const x = ((Math.random() * 10) | 0) - 5 + 0.5;
+      const y = ((Math.random() * 10) | 0) + 0.5;
+      const z = ((Math.random() * 10) | 0) - 5 + 0.5;
 
       const mesh = new Mesh(geometry, material || undefined);
       mesh.position.set(x, y, z);

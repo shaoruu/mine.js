@@ -20,9 +20,9 @@ class Helper {
    * @param {number} factor
    * @returns
    */
-  public static scaleCoordsF = (coords: Coords3, factor: number) => {
+  public static scaleCoordsF = (coords: Coords3, factor: number): Coords3 => {
     const scaled = vec3.scale(coords, coords, factor);
-    return vec3.floor(scaled, scaled);
+    return vec3.floor(scaled, scaled) as Coords3;
   };
 
   /**
@@ -30,9 +30,9 @@ class Helper {
    *
    * @param {Coords3} worldPos
    * @param {Chunk} chunk
-   * @returns
+   * @returns {Coords3}
    */
-  public static vMapVoxelPosToChunkLocalPos = (worldPos: Coords3, chunkSize: number) => {
+  public static vMapVoxelPosToChunkLocalPos = (worldPos: Coords3, chunkSize: number): Coords3 => {
     const [vx, vy, vz] = worldPos;
 
     return [vx % chunkSize, vy % chunkSize, vz % chunkSize];
@@ -43,9 +43,9 @@ class Helper {
    *
    * @param {Coords3} worldPos
    * @param {number} chunkSize
-   * @returns
+   * @returns {Coords3}
    */
-  public static vMapVoxelPosToChunkPos = (worldPos: Coords3, chunkSize: number) => {
+  public static vMapVoxelPosToChunkPos = (worldPos: Coords3, chunkSize: number): Coords3 => {
     return Helper.scaleCoordsF(worldPos, 1 / chunkSize);
   };
 
@@ -54,9 +54,9 @@ class Helper {
    *
    * @param {Coords3} worldPos
    * @param {number} dimension
-   * @returns
+   * @returns {Coords3}
    */
-  public static vMapWorldPosToVoxelPos = (worldPos: Coords3, dimension: number) => {
+  public static vMapWorldPosToVoxelPos = (worldPos: Coords3, dimension: number): Coords3 => {
     return Helper.scaleCoordsF(worldPos, 1 / dimension);
   };
 
@@ -65,7 +65,7 @@ class Helper {
    *
    * @param {HTMLElement} ele
    * @param {Partial<CSSStyleDeclaration>} style
-   * @returns
+   * @returns {HTMLElement}
    */
   public static applyStyle = (ele: HTMLElement, style: Partial<CSSStyleDeclaration>) => {
     Object.keys(style).forEach((key: string) => {

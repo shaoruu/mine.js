@@ -20,11 +20,11 @@ const defaultCameraOptions: CameraOptionsType = {
   fov: 75,
   near: 0.1,
   far: 8000,
-  initPos: [0, 10, 10],
+  initPos: [10, 10, 10],
   minPolarAngle: 0,
   maxPolarAngle: Math.PI,
   acceleration: 1,
-  flyingInertia: 10,
+  flyingInertia: 3,
 };
 
 class Camera {
