@@ -3,7 +3,7 @@ import { Engine } from '..';
 import { EventEmitter } from 'events';
 import { Chunk } from './chunk';
 import { GeneratorType } from '../libs';
-import { DefaultGenerator, FlatGenerator, Generator, SinCosGenerator } from '../libs/generators';
+import { DefaultGenerator, FlatGenerator, Generator, SinCosGenerator } from '../libs';
 
 type WorldOptionsType = {
   chunkSize: number;

@@ -19,7 +19,7 @@ class Helper {
    * @param {*} factor
    */
   public static scaleCoordsF = (coords: Coords3, factor: number): Coords3 => {
-    return [Math.floor(coords[0] * factor), Math.floor(coords[1] * factor), Math.floor(coords[2] * factor)];
+    return [(coords[0] * factor) | 0, (coords[1] * factor) | 0, (coords[2] * factor) | 0];
   };
 
   /**
