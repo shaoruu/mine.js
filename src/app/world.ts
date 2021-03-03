@@ -1,9 +1,8 @@
-import { Engine } from '..';
-
-import vec3 from 'gl-vec3';
 import { EventEmitter } from 'events';
 
-import { Chunk } from './chunk';
+import vec3 from 'gl-vec3';
+
+import { Engine } from '..';
 import {
   Coords3,
   GeneratorType,
@@ -14,6 +13,8 @@ import {
   SinCosGenerator,
 } from '../libs';
 import { Helper } from '../utils';
+
+import { Chunk } from './chunk';
 
 type WorldOptionsType = {
   chunkSize: number;
@@ -30,7 +31,7 @@ const defaultWorldOptions: WorldOptionsType = {
   // radius of rendering centered by camera
   renderRadius: 2,
   // maximum amount of chunks to process per frame tick
-  maxChunkPerFrame: 2,
+  maxChunkPerFrame: 1,
 };
 
 class World extends EventEmitter {
@@ -117,7 +118,8 @@ class World extends EventEmitter {
             const newChunk = new Chunk(this.engine, mChunkPos, { size: this.options.chunkSize });
 
             this.setChunk(newChunk);
-            this.requestChunkData(newChunk);
+            this.dirtyChunks.push(newChunk);
+            // this.requestChunkData(newChunk);
 
             // Data setting here!
           }
@@ -132,6 +134,11 @@ class World extends EventEmitter {
       while (count <= this.options.maxChunkPerFrame && this.dirtyChunks.length > 0) {
         const chunk = this.dirtyChunks.shift();
         if (!chunk) break;
+        if (!chunk.isInitialized) {
+          this.requestChunkData(chunk);
+          this.dirtyChunks.push(chunk);
+          break;
+        }
         chunk.mesh();
         count++;
       }
@@ -144,7 +151,7 @@ class World extends EventEmitter {
       return;
     }
 
-    this.generator.generate(chunk.voxels, chunk.base);
+    this.generator.generate(chunk);
   }
 }
 

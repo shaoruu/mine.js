@@ -9,9 +9,28 @@ module.exports = {
     'prettier/@typescript-eslint', // Uses eslint-config-prettier to disable ESLint rules from @typescript-eslint/eslint-plugin that would conflict with prettier
     'plugin:prettier/recommended', // Enables eslint-plugin-prettier and eslint-config-prettier. This will display prettier errors as ESLint errors. Make sure this is always the last configuration in the extends array.
   ],
-  plugins: ['import'],
+  plugins: ['import', 'sort-exports'],
   rules: {
-    'import/order': [2, { groups: ['parent', 'sibling'], 'newlines-between': 'always' }],
+    'import/order': [
+      'error',
+      {
+        alphabetize: {
+          order: 'asc',
+          caseInsensitive: true,
+        },
+        'newlines-between': 'always',
+        groups: ['builtin', 'external', 'parent', 'sibling', 'index'],
+        pathGroups: [
+          {
+            pattern: 'react',
+            group: 'external',
+            position: 'before',
+          },
+        ],
+        pathGroupsExcludedImportTypes: ['builtin'],
+      },
+    ],
+    'sort-exports/sort-exports': ['error', { sortDir: 'asc' }],
     'import/prefer-default-export': 'off',
     'prefer-promise-reject-errors': 'off',
     'no-plusplus': 'off',
@@ -28,6 +47,6 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/ban-ts-comment': 'off',
-    'prefer-template': 'on',
+    'prefer-template': 2,
   },
 };

@@ -1,6 +1,9 @@
 import ndarray from 'ndarray';
+
 import { Engine } from '../..';
+import { Chunk } from '../../app';
 import { Coords3 } from '../types';
+
 import { Generator } from './generator';
 
 class DefaultGenerator extends Generator {
@@ -8,7 +11,7 @@ class DefaultGenerator extends Generator {
     super(engine);
   }
 
-  generate(data: ndarray) {}
+  generate(chunk: Chunk) {}
 
   getVoxelAt(voxel: Coords3) {
     // TODO: Implement perlin noise and stuff.

@@ -1,9 +1,6 @@
-import { Engine } from '../';
-
-import skyVertexShader from './shaders/sky/vertex.glsl';
-import skyFragmentShader from './shaders/sky/fragment.glsl';
-
 import { EventEmitter } from 'events';
+
+import { GUI } from 'dat.gui';
 import {
   AmbientLight,
   BackSide,
@@ -17,7 +14,11 @@ import {
   sRGBEncoding,
   WebGLRenderer,
 } from 'three';
-import { GUI } from 'dat.gui';
+
+import { Engine } from '../';
+
+import skyFragmentShader from './shaders/sky/fragment.glsl';
+import skyVertexShader from './shaders/sky/vertex.glsl';
 
 type RenderingOptionsType = {
   clearColor: string;

@@ -1,6 +1,6 @@
-import { Engine } from '..';
-
 import { Color, MeshStandardMaterial, Texture } from 'three';
+
+import { Engine } from '..';
 import { SmartDictionary } from '../libs';
 
 type MaterialOptions = {

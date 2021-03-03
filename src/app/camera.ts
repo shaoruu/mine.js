@@ -1,7 +1,7 @@
-import { Engine } from '..';
-
 import { PerspectiveCamera, Vector3 } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
+
+import { Engine } from '..';
 import { Coords3 } from '../libs';
 import { Helper } from '../utils';
 

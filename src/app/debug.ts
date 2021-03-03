@@ -1,8 +1,8 @@
-import { Engine } from '..';
-
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
 import { AxesHelper, GridHelper } from 'three';
+
+import { Engine } from '..';
 
 class Debug {
   public engine: Engine;

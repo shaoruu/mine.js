@@ -1,7 +1,7 @@
+import { EventEmitter } from 'events';
+
 import { Engine } from '..';
 import { Helper } from '../utils';
-
-import { EventEmitter } from 'events';
 
 type ContainerOptionsType = {
   domElement: HTMLElement;
@@ -52,8 +52,8 @@ class Container extends EventEmitter {
   };
 
   fitCanvas = () => {
-    this.canvas.style.width = this.domElement.clientWidth + 'px';
-    this.canvas.style.height = this.domElement.clientHeight + 'px';
+    this.canvas.style.width = `${this.domElement.clientWidth}px`;
+    this.canvas.style.height = `${this.domElement.clientHeight}px`;
   };
 }
 

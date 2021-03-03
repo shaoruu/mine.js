@@ -1,6 +1,7 @@
-import ndarray from 'ndarray';
 import { Engine } from '../..';
+import { Chunk } from '../../app';
 import { Coords3 } from '../types';
+
 import { Generator } from './generator';
 
 type FlatGeneratorOptions = {
@@ -23,7 +24,7 @@ class FlatGenerator extends Generator {
     };
   }
 
-  generate(data: ndarray, base: Coords3) {}
+  generate(chunk: Chunk) {}
 
   getVoxelAt(voxel: Coords3) {
     const [_, y] = voxel;

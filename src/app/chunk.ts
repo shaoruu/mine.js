@@ -1,9 +1,9 @@
-import { Coords3 } from '../libs';
-import { Helper } from '../utils';
-import { Engine } from '..';
-
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
+
+import { Engine } from '..';
+import { Coords3 } from '../libs';
+import { Helper } from '../utils';
 
 type ChunkOptions = {
   size: number;

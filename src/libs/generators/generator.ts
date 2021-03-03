@@ -1,12 +1,14 @@
 import ndarray from 'ndarray';
+
 import { Engine } from '../..';
+import { Chunk } from '../../app';
 import { Coords3 } from '../types';
 
 abstract class Generator {
   constructor(public engine: Engine) {}
 
   // base: [0, 0, 0] of chunk data
-  abstract generate(data: ndarray, base: Coords3): void;
+  abstract generate(chunk: Chunk): void;
   abstract getVoxelAt(voxel: Coords3): number;
 
   getChunkSize(data: ndarray) {
