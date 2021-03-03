@@ -1,8 +1,9 @@
 import { Coords3 } from '../libs';
 import { Helper } from '../utils';
-
-import ndarray from 'ndarray';
 import { Engine } from '..';
+
+import vec3 from 'gl-vec3';
+import ndarray from 'ndarray';
 
 type ChunkOptions = {
   size: number;
@@ -15,14 +16,26 @@ class Chunk {
 
   public size: number;
 
-  public isDirty: true;
+  public isDirty = true;
+  public isInitialized = false;
 
-  constructor(engine: Engine, { size }: ChunkOptions) {
+  constructor(engine: Engine, coords: Coords3, { size }: ChunkOptions) {
     this.engine = engine;
-
+    this.coords = coords;
     this.size = size;
 
     this.voxels = ndarray(new Int8Array(size * size * size), [size, size, size]);
+  }
+
+  mesh() {
+    console.log('meshing: ', this.name);
+    this.isDirty = false;
+  }
+
+  get base() {
+    const results = vec3.create() as Coords3;
+    vec3.scale(results, this.coords, this.size);
+    return results;
   }
 
   get name() {

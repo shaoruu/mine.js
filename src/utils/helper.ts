@@ -10,7 +10,7 @@ class Helper {
    * @returns
    */
   public static getChunkName = (coords: Coords3, concat = '|') => {
-    return coords.join(concat);
+    return coords[0] + concat + coords[1] + concat + coords[2];
   };
 
   /**

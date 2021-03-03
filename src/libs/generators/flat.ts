@@ -23,7 +23,7 @@ class FlatGenerator extends Generator {
     };
   }
 
-  generate(data: ndarray) {}
+  generate(data: ndarray, base: Coords3) {}
 
   getVoxelAt(voxel: Coords3) {
     const [_, y] = voxel;
