@@ -117,7 +117,6 @@ class Rendering extends EventEmitter {
 
     this.adjustRenderer();
     this.debug();
-    this.test();
   }
 
   adjustRenderer = () => {

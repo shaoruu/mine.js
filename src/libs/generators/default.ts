@@ -13,7 +13,7 @@ class DefaultGenerator extends Generator {
 
   generate(chunk: Chunk) {}
 
-  getVoxelAt(voxel: Coords3) {
+  getVoxelAt(vx: number, vy: number, vz: number) {
     // TODO: Implement perlin noise and stuff.
     return 0;
   }

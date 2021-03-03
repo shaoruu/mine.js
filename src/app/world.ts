@@ -18,6 +18,7 @@ import { Chunk } from './chunk';
 
 type WorldOptionsType = {
   chunkSize: number;
+  chunkPadding: number;
   dimension: number;
   generator?: GeneratorType;
   renderRadius: number;
@@ -26,10 +27,11 @@ type WorldOptionsType = {
 
 const defaultWorldOptions: WorldOptionsType = {
   chunkSize: 32,
+  chunkPadding: 2,
   dimension: 1,
   generator: 'flat',
   // radius of rendering centered by camera
-  renderRadius: 2,
+  renderRadius: 0,
   // maximum amount of chunks to process per frame tick
   maxChunkPerFrame: 1,
 };
@@ -41,6 +43,7 @@ class World extends EventEmitter {
 
   private camChunkName: string;
   private camChunkPos: Coords3;
+
   private chunks: SmartDictionary<Chunk>;
   private dirtyChunks: Chunk[];
 
@@ -91,7 +94,7 @@ class World extends EventEmitter {
     const { chunkSize } = this.options;
 
     const pos = this.engine.camera.voxel;
-    const chunkPos = Helper.vMapVoxelPosToChunkPos(pos, chunkSize);
+    const chunkPos = Helper.mapVoxelPosToChunkPos(pos, chunkSize);
     const chunkName = Helper.getChunkName(chunkPos);
 
     if (chunkName !== this.camChunkName) {
@@ -105,7 +108,7 @@ class World extends EventEmitter {
   }
 
   private surroundCamChunks() {
-    const { renderRadius } = this.options;
+    const { renderRadius, dimension, chunkSize, chunkPadding } = this.options;
 
     for (let i = -renderRadius; i <= renderRadius; i++) {
       for (let j = -renderRadius; j <= renderRadius; j++) {
@@ -115,13 +118,11 @@ class World extends EventEmitter {
 
           const chunk = this.getChunkByCPos(mChunkPos);
           if (!chunk) {
-            const newChunk = new Chunk(this.engine, mChunkPos, { size: this.options.chunkSize });
+            const newChunk = new Chunk(this.engine, mChunkPos, { size: chunkSize, dimension, padding: chunkPadding });
 
             this.setChunk(newChunk);
             this.dirtyChunks.push(newChunk);
-            // this.requestChunkData(newChunk);
-
-            // Data setting here!
+            continue;
           }
         }
       }
@@ -135,11 +136,12 @@ class World extends EventEmitter {
         const chunk = this.dirtyChunks.shift();
         if (!chunk) break;
         if (!chunk.isInitialized) {
+          // if chunk data has not been initialized
           this.requestChunkData(chunk);
           this.dirtyChunks.push(chunk);
           break;
         }
-        chunk.mesh();
+        chunk.buildMesh();
         count++;
       }
     }

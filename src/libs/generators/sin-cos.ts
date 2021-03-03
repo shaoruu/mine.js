@@ -1,6 +1,5 @@
 import { Engine } from '../..';
 import { Chunk } from '../../app';
-import { Coords3 } from '../types';
 
 import { Generator } from './generator';
 
@@ -9,24 +8,28 @@ class SinCosGenerator extends Generator {
     super(engine);
   }
 
-  generate(chunk: Chunk) {
-    const { voxels, base } = chunk;
-    for (let i = 0; i < voxels.shape[0]; i++) {
-      for (let j = 0; j < voxels.shape[1]; j++) {
-        for (let k = 0; k < voxels.shape[2]; k++) {
-          const voxel = this.getVoxelAt([base[0] + i, base[1] + j, base[2] + k]);
-          voxels.set(voxel);
+  async generate(chunk: Chunk) {
+    const { minOuter: min, maxOuter: max } = chunk;
+
+    console.log(`generating: ${chunk.name}`);
+
+    for (let vx = min[0]; vx < max[0]; vx++) {
+      for (let vy = min[1]; vy < max[1]; vy++) {
+        for (let vz = min[2]; vz < max[2]; vz++) {
+          const voxel = this.getVoxelAt(vx, vy, vz);
+          chunk.setVoxel(vx, vy, vz, voxel);
         }
       }
     }
+
+    chunk.initialized();
   }
 
-  getVoxelAt(voxel: Coords3) {
-    const [vx, vy, vz] = voxel;
+  getVoxelAt(vx: number, vy: number, vz: number) {
+    if (vy < -3) return 2;
 
-    const height = (Math.sin(vx * Math.PI * 4) + Math.sin(vz * Math.PI * 6)) * 20;
-
-    if (height < vy + 1) {
+    const height = 2 * Math.sin(vx / 10) + 3 * Math.cos(vz / 20) + 3;
+    if (vy < height) {
       return 1;
     }
 

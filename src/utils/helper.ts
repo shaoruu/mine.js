@@ -22,7 +22,8 @@ class Helper {
    * @returns
    */
   public static scaleCoordsF = (coords: Coords3, factor: number): Coords3 => {
-    const scaled = vec3.scale(coords, coords, factor);
+    const result = [0, 0, 0];
+    const scaled = vec3.scale(result, coords, factor);
     return vec3.floor(scaled, scaled) as Coords3;
   };
 
@@ -33,8 +34,8 @@ class Helper {
    * @param {Chunk} chunk
    * @returns {Coords3}
    */
-  public static vMapVoxelPosToChunkLocalPos = (worldPos: Coords3, chunkSize: number): Coords3 => {
-    const [vx, vy, vz] = worldPos;
+  public static mapVoxelPosToChunkLocalPos = (voxelPos: Coords3, chunkSize: number): Coords3 => {
+    const [vx, vy, vz] = voxelPos;
 
     return [vx % chunkSize, vy % chunkSize, vz % chunkSize];
   };
@@ -46,8 +47,25 @@ class Helper {
    * @param {number} chunkSize
    * @returns {Coords3}
    */
-  public static vMapVoxelPosToChunkPos = (worldPos: Coords3, chunkSize: number): Coords3 => {
-    return Helper.scaleCoordsF(worldPos, 1 / chunkSize);
+  public static mapVoxelPosToChunkPos = (voxelPos: Coords3, chunkSize: number): Coords3 => {
+    return Helper.scaleCoordsF(voxelPos, 1 / chunkSize);
+  };
+
+  /**
+   * Get the voxel position of a chunk position.
+   *
+   * @static
+   * @param {Coords3} chunkPos
+   * @param {number} chunkSize
+   * @memberof Helper
+   */
+  public static mapChunkPosToVoxelPos = (chunkPos: Coords3, chunkSize: number): Coords3 => {
+    const result = [0, 0, 0] as Coords3;
+
+    vec3.copy(result, chunkPos);
+    vec3.scale(result, result, chunkSize);
+
+    return result;
   };
 
   /**
@@ -57,7 +75,7 @@ class Helper {
    * @param {number} dimension
    * @returns {Coords3}
    */
-  public static vMapWorldPosToVoxelPos = (worldPos: Coords3, dimension: number): Coords3 => {
+  public static mapWorldPosToVoxelPos = (worldPos: Coords3, dimension: number): Coords3 => {
     return Helper.scaleCoordsF(worldPos, 1 / dimension);
   };
 

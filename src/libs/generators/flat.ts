@@ -1,6 +1,5 @@
 import { Engine } from '../..';
 import { Chunk } from '../../app';
-import { Coords3 } from '../types';
 
 import { Generator } from './generator';
 
@@ -26,9 +25,8 @@ class FlatGenerator extends Generator {
 
   generate(chunk: Chunk) {}
 
-  getVoxelAt(voxel: Coords3) {
-    const [_, y] = voxel;
-    if (y <= this.options.height) return 1;
+  getVoxelAt(_: number, vy: number) {
+    if (vy <= this.options.height) return 1;
     return 0;
   }
 }

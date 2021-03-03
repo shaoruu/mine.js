@@ -28,6 +28,10 @@ class Registry {
     this.addMaterial('dirt', { color: '#edc9af' });
     this.addMaterial('grass', { color: '#41980a' });
     this.addMaterial('stone', { color: '#999C9B' });
+
+    this.addBlock('dirt', 'dirt');
+    this.addBlock('grass', 'grass');
+    this.addBlock('stone', 'stone');
   }
 
   addMaterial = (name: string, options: MaterialOptions) => {
@@ -42,12 +46,12 @@ class Registry {
     }
 
     const material = new MeshStandardMaterial(options);
-    this.materials.set(name, material);
+    const matID = this.materials.set(name, material);
 
-    return material;
+    return matID;
   };
 
-  registerBlock = (name: string, type: string) => {
+  addBlock = (name: string, type: string) => {
     const material = this.getMaterial(type);
 
     if (!material) {
@@ -62,9 +66,9 @@ class Registry {
       name,
       material,
     };
-    this.blocks.set(name, newBlock);
+    const blockID = this.blocks.set(name, newBlock);
 
-    return newBlock;
+    return blockID;
   };
 
   getMaterialIndex = (name: string) => {

@@ -20,7 +20,7 @@ const defaultCameraOptions: CameraOptionsType = {
   fov: 75,
   near: 0.1,
   far: 8000,
-  initPos: [10, 10, 10],
+  initPos: [10, 10, -10],
   minPolarAngle: 0,
   maxPolarAngle: Math.PI,
   acceleration: 1,
@@ -176,7 +176,7 @@ class Camera {
   };
 
   get voxel(): Coords3 {
-    return Helper.vMapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);
+    return Helper.mapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);
   }
 
   get position(): Coords3 {

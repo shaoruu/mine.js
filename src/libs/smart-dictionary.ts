@@ -13,6 +13,8 @@ class SmartDictionary<T> {
     const index = this.data.length;
     this.data.push(item);
     this.indices.set(name, index);
+
+    return index;
   }
 
   getIndex(name: string) {
