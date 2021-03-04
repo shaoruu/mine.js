@@ -124,6 +124,10 @@ class World extends EventEmitter {
             this.dirtyChunks.push(newChunk);
             continue;
           }
+
+          if (chunk.isInitialized && !chunk.isDirty) {
+            this.engine.rendering.scene.add(chunk.mesh);
+          }
         }
       }
     }

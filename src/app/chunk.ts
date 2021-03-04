@@ -76,23 +76,21 @@ class Chunk {
 
   // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
   getLocal(lx: number, ly: number, lz: number) {
-    return this.voxels.get(lx, ly, lz);
+    return this.voxels.get(lx + this.padding, ly + this.padding, lz + this.padding);
   }
 
   // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
   setLocal(lx: number, ly: number, lz: number, id: number) {
-    return this.voxels.set(lx, ly, lz, id);
+    return this.voxels.set(lx + this.padding, ly + this.padding, lz + this.padding, id);
   }
 
   getVoxel(vx: number, vy: number, vz: number) {
-    const chunkVPos = Helper.mapChunkPosToVoxelPos(this.coords, this.size);
-    const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], chunkVPos);
+    const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
     return this.getLocal(lx, ly, lz);
   }
 
   setVoxel(vx: number, vy: number, vz: number, id: number) {
-    const chunkVPos = Helper.mapChunkPosToVoxelPos(this.coords, this.size);
-    const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], chunkVPos);
+    const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
     this.setLocal(lx, ly, lz, id);
   }
 
@@ -113,6 +111,9 @@ class Chunk {
     this.geometry.setIndex(indices);
 
     this.mesh = new Mesh(this.geometry, this.material);
+    this.mesh.name = this.name;
+
+    console.log(this.mesh);
 
     this.isDirty = false;
   }
