@@ -8,6 +8,12 @@ module.exports = {
   entry: path.resolve(__dirname, '../src/index.ts'),
   module: {
     rules: [
+      // web workers
+      {
+        test: /\.worker\.ts$/,
+        use: { loader: "worker-loader" },
+      },
+
       // TS
       {
         test: /(\.tsx|\.ts)$/,

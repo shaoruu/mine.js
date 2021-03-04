@@ -34,6 +34,7 @@ class Chunk {
   public mesh: Mesh;
 
   public isDirty = true;
+  public isAdded = false;
   public isInitialized = false;
 
   constructor(engine: Engine, coords: Coords3, { size, dimension, padding }: ChunkOptions) {
@@ -98,11 +99,12 @@ class Chunk {
     this.isInitialized = true;
   }
 
-  buildMesh() {
-    console.log('meshing: ', this.name);
+  async buildMesh() {
+    console.time(`meshing: ${this.name}`);
 
-    const { positions, normals, indices } = Mesher.simpleCull(this);
+    this.removeFromScene();
 
+    const { positions, normals, indices } = await Mesher.simpleCull(this);
     const positionNumComponents = 3;
     const normalNumComponents = 3;
 
@@ -113,9 +115,23 @@ class Chunk {
     this.mesh = new Mesh(this.geometry, this.material);
     this.mesh.name = this.name;
 
-    console.log(this.mesh);
-
     this.isDirty = false;
+
+    console.timeEnd(`meshing: ${this.name}`);
+  }
+
+  addToScene() {
+    if (!this.isAdded && this.mesh) {
+      this.engine.rendering.scene.add(this.mesh);
+      this.isAdded = true;
+    }
+  }
+
+  removeFromScene() {
+    if (this.isAdded && this.mesh) {
+      this.engine.rendering.scene.remove(this.mesh);
+      this.isAdded = false;
+    }
   }
 }
 

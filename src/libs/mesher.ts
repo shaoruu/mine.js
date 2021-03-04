@@ -7,7 +7,7 @@ type MeshResultType = {
 };
 
 class Mesher {
-  static simpleCull(chunk: Chunk): MeshResultType {
+  static async simpleCull(chunk: Chunk): Promise<MeshResultType> {
     const { dimension, minInner, maxInner } = chunk;
 
     const positions: number[] = [];

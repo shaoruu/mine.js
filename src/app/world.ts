@@ -31,7 +31,7 @@ const defaultWorldOptions: WorldOptionsType = {
   dimension: 1,
   generator: 'flat',
   // radius of rendering centered by camera
-  renderRadius: 0,
+  renderRadius: 3,
   // maximum amount of chunks to process per frame tick
   maxChunkPerFrame: 1,
 };
@@ -91,7 +91,7 @@ class World extends EventEmitter {
   }
 
   private checkCamChunk() {
-    const { chunkSize } = this.options;
+    const { chunkSize, renderRadius } = this.options;
 
     const pos = this.engine.camera.voxel;
     const chunkPos = Helper.mapVoxelPosToChunkPos(pos, chunkSize);
@@ -105,28 +105,48 @@ class World extends EventEmitter {
 
       this.surroundCamChunks();
     }
+
+    const [cx, cy, cz] = this.camChunkPos;
+    for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
+      for (let y = cy - renderRadius; y <= cy + renderRadius; y++) {
+        for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
+          const dx = x - cx;
+          const dy = y - cy;
+          const dz = z - cz;
+          if (dx * dx + dy * dy + dz * dz > renderRadius * renderRadius) continue;
+
+          const chunk = this.getChunkByCPos([x, y, z]);
+
+          if (chunk && !chunk.isDirty && chunk.isInitialized) {
+            chunk.addToScene();
+          }
+        }
+      }
+    }
   }
 
   private surroundCamChunks() {
-    const { renderRadius, dimension, chunkSize, chunkPadding } = this.options;
+    const { renderRadius, dimension, chunkSize, chunkPadding, maxChunkPerFrame } = this.options;
 
-    for (let i = -renderRadius; i <= renderRadius; i++) {
-      for (let j = -renderRadius; j <= renderRadius; j++) {
-        for (let k = -renderRadius; j <= renderRadius; j++) {
-          const mChunkPos = vec3.create() as Coords3;
-          vec3.add(mChunkPos, this.camChunkPos, [i, j, k]);
+    let count = 0;
+    const [cx, cy, cz] = this.camChunkPos;
+    for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
+      for (let y = cy - renderRadius; y <= cy + renderRadius; y++) {
+        for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
+          const dx = x - cx;
+          const dy = y - cy;
+          const dz = z - cz;
+          if (dx * dx + dy * dy + dz * dz > renderRadius * renderRadius) continue;
 
-          const chunk = this.getChunkByCPos(mChunkPos);
+          const chunk = this.getChunkByCPos([x, y, z]);
+
           if (!chunk) {
-            const newChunk = new Chunk(this.engine, mChunkPos, { size: chunkSize, dimension, padding: chunkPadding });
+            const newChunk = new Chunk(this.engine, [x, y, z], { size: chunkSize, dimension, padding: chunkPadding });
+            count++;
 
             this.setChunk(newChunk);
             this.dirtyChunks.push(newChunk);
             continue;
-          }
-
-          if (chunk.isInitialized && !chunk.isDirty) {
-            this.engine.rendering.scene.add(chunk.mesh);
           }
         }
       }
@@ -143,7 +163,7 @@ class World extends EventEmitter {
           // if chunk data has not been initialized
           this.requestChunkData(chunk);
           this.dirtyChunks.push(chunk);
-          break;
+          continue;
         }
         chunk.buildMesh();
         count++;
