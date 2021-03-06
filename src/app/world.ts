@@ -29,7 +29,7 @@ const defaultWorldOptions: WorldOptionsType = {
   dimension: 1,
   generator: 'flat',
   // radius of rendering centered by camera
-  renderRadius: 2,
+  renderRadius: 3,
   // maximum amount of chunks to process per frame tick
   maxChunkPerFrame: 1,
 };

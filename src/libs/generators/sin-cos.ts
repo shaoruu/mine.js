@@ -17,7 +17,10 @@ class SinCosGenerator extends Generator {
       for (let vy = min[1]; vy < max[1]; vy++) {
         for (let vz = min[2]; vz < max[2]; vz++) {
           const voxel = this.getVoxelAt(vx, vy, vz);
-          chunk.setVoxel(vx, vy, vz, voxel);
+          if (voxel !== 0) {
+            chunk.isEmpty = false;
+            chunk.setVoxel(vx, vy, vz, voxel);
+          }
         }
       }
     }

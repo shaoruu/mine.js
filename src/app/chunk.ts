@@ -34,6 +34,7 @@ class Chunk {
   public material: MeshStandardMaterial;
   public mesh: Mesh;
 
+  public isEmpty = true;
   public isDirty = true;
   public isAdded = false;
   public isInitialized = false;
@@ -49,7 +50,6 @@ class Chunk {
     this.name = Helper.getChunkName(this.coords);
 
     this.voxels = ndarray(new Int8Array(this.width * this.width * this.width), [this.width, this.width, this.width]);
-    console.log(this.voxels);
 
     this.geometry = new BufferGeometry();
     this.material = this.engine.registry.getMaterial('dirt') || new MeshStandardMaterial({ color: 'green' });
@@ -102,9 +102,8 @@ class Chunk {
   }
 
   async buildMesh() {
-    console.time(`meshing: ${this.name}`);
-
     this.removeFromScene();
+    if (this.isEmpty) return;
 
     const { positions, normals, indices } = await simpleCull(this);
     const positionNumComponents = 3;
@@ -118,8 +117,6 @@ class Chunk {
     this.mesh.name = this.name;
 
     this.isDirty = false;
-
-    console.timeEnd(`meshing: ${this.name}`);
   }
 
   addToScene() {
