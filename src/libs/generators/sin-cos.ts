@@ -11,7 +11,7 @@ class SinCosGenerator extends Generator {
   async generate(chunk: Chunk) {
     const { minOuter: min, maxOuter: max } = chunk;
 
-    console.log(`generating: ${chunk.name}`);
+    console.time(`generating: ${chunk.name}`);
 
     for (let vx = min[0]; vx < max[0]; vx++) {
       for (let vy = min[1]; vy < max[1]; vy++) {
@@ -21,6 +21,8 @@ class SinCosGenerator extends Generator {
         }
       }
     }
+
+    console.timeEnd(`generating: ${chunk.name}`);
 
     chunk.initialized();
   }

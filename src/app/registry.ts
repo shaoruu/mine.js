@@ -46,6 +46,7 @@ class Registry {
     }
 
     const material = new MeshStandardMaterial(options);
+    material.wireframe = true;
     const matID = this.materials.set(name, material);
 
     return matID;

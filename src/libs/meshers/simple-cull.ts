@@ -1,13 +1,43 @@
-import WebWorker from './simple-cull.worker';
-console.log(WebWorker);
+import { Chunk } from '../../app';
+import { Helper } from '../../utils';
+import { MeshResultType } from '../types';
 
-const worker = new WebWorker();
-worker.postMessage({ a: 1 });
-worker.onmessage = (event) => {
-  console.log('event', event);
-};
+import workerSrc from '!raw-loader!./simple-cull.worker';
 
-worker.addEventListener('message', (event) => {
-  console.log('event', event);
-});
-console.log(worker);
+const simpleCullWorker = Helper.loadWorker(workerSrc);
+
+async function simpleCull(chunk: Chunk): Promise<MeshResultType> {
+  const { dimension, padding, voxels, minInner, maxInner } = chunk;
+  const { stride } = voxels;
+
+  const voxelsBuffer = (voxels.data as Int8Array).buffer;
+
+  const result = await new Promise<MeshResultType>((resolve) => {
+    simpleCullWorker.postMessage(
+      {
+        data: voxelsBuffer,
+        configs: {
+          dimension,
+          padding,
+          min: minInner,
+          max: maxInner,
+          stride,
+        },
+      },
+      [voxelsBuffer],
+    );
+
+    simpleCullWorker.onmessage = ({ data }) => {
+      const { positions, normals, indices } = data;
+      resolve({
+        positions: new Float32Array(positions),
+        normals: new Float32Array(normals),
+        indices: new Float32Array(indices),
+      });
+    };
+  });
+
+  return result;
+}
+
+export { simpleCull };

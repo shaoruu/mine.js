@@ -2,7 +2,6 @@ import { EventEmitter } from 'events';
 
 import { Camera, Container, Debug, Registry, Rendering, World } from './app';
 import { Clock } from './libs';
-import './libs/meshers/simple-cull';
 
 type ConfigType = {
   domElement?: HTMLElement;

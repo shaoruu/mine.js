@@ -94,6 +94,15 @@ class Helper {
 
     return ele;
   };
+
+  public static loadWorker = (worker: string) => {
+    if (!window.Worker) throw new Error('Web-workers not supported.');
+
+    const blob = new Blob([worker], { type: 'javascript' });
+    const url = URL.createObjectURL(blob);
+
+    return new Worker(url);
+  };
 }
 
 export { Helper };

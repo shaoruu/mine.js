@@ -1,19 +1,14 @@
 const path = require('path');
-const webpack = require('webpack');
-const TerserPlugin = require('terser-webpack-plugin');
+
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
   context: path.resolve(__dirname, '..'),
   entry: path.resolve(__dirname, '../src/index.ts'),
   module: {
     rules: [
-      // web workers
-      {
-        test: /\.worker\.ts$/,
-        use: { loader: "worker-loader" },
-      },
-
       // TS
       {
         test: /(\.tsx|\.ts)$/,

@@ -1,7 +1,4 @@
-declare module '*.worker' {
-  class WebpackWorker extends Worker {
-    constructor();
-  }
-
-  export default WebpackWorker;
+declare module '!raw-loader!*' {
+  const value: string;
+  export default value;
 }

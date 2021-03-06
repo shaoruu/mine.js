@@ -3,7 +3,8 @@ import ndarray from 'ndarray';
 import { BufferAttribute, BufferGeometry, Mesh, MeshStandardMaterial } from 'three';
 
 import { Engine } from '..';
-import { Coords3, Mesher } from '../libs';
+import { Coords3 } from '../libs';
+import { simpleCull } from '../libs/meshers';
 import { Helper } from '../utils';
 
 type ChunkOptions = {
@@ -48,6 +49,7 @@ class Chunk {
     this.name = Helper.getChunkName(this.coords);
 
     this.voxels = ndarray(new Int8Array(this.width * this.width * this.width), [this.width, this.width, this.width]);
+    console.log(this.voxels);
 
     this.geometry = new BufferGeometry();
     this.material = this.engine.registry.getMaterial('dirt') || new MeshStandardMaterial({ color: 'green' });
@@ -104,13 +106,13 @@ class Chunk {
 
     this.removeFromScene();
 
-    const { positions, normals, indices } = await Mesher.simpleCull(this);
+    const { positions, normals, indices } = await simpleCull(this);
     const positionNumComponents = 3;
     const normalNumComponents = 3;
 
-    this.geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), positionNumComponents));
-    this.geometry.setAttribute('normal', new BufferAttribute(new Float32Array(normals), normalNumComponents));
-    this.geometry.setIndex(indices);
+    this.geometry.setAttribute('position', new BufferAttribute(positions, positionNumComponents));
+    this.geometry.setAttribute('normal', new BufferAttribute(normals, normalNumComponents));
+    this.geometry.setIndex(Array.from(indices));
 
     this.mesh = new Mesh(this.geometry, this.material);
     this.mesh.name = this.name;

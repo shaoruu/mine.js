@@ -1,7 +1,5 @@
 import { EventEmitter } from 'events';
 
-import vec3 from 'gl-vec3';
-
 import { Engine } from '..';
 import {
   Coords3,
@@ -31,7 +29,7 @@ const defaultWorldOptions: WorldOptionsType = {
   dimension: 1,
   generator: 'flat',
   // radius of rendering centered by camera
-  renderRadius: 3,
+  renderRadius: 2,
   // maximum amount of chunks to process per frame tick
   maxChunkPerFrame: 1,
 };
@@ -46,6 +44,7 @@ class World extends EventEmitter {
 
   private chunks: SmartDictionary<Chunk>;
   private dirtyChunks: Chunk[];
+  private chunkBuildQueue: Chunk[];
 
   constructor(engine: Engine, options: Partial<WorldOptionsType> = {}) {
     super();
@@ -61,6 +60,7 @@ class World extends EventEmitter {
 
     this.chunks = new SmartDictionary<Chunk>();
     this.dirtyChunks = [];
+    this.chunkBuildQueue = [];
 
     switch (generator) {
       case 'default':
@@ -126,9 +126,8 @@ class World extends EventEmitter {
   }
 
   private surroundCamChunks() {
-    const { renderRadius, dimension, chunkSize, chunkPadding, maxChunkPerFrame } = this.options;
+    const { renderRadius, dimension, chunkSize, chunkPadding } = this.options;
 
-    let count = 0;
     const [cx, cy, cz] = this.camChunkPos;
     for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
       for (let y = cy - renderRadius; y <= cy + renderRadius; y++) {
@@ -142,7 +141,6 @@ class World extends EventEmitter {
 
           if (!chunk) {
             const newChunk = new Chunk(this.engine, [x, y, z], { size: chunkSize, dimension, padding: chunkPadding });
-            count++;
 
             this.setChunk(newChunk);
             this.dirtyChunks.push(newChunk);
