@@ -23,7 +23,7 @@ class FlatGenerator extends Generator {
     };
   }
 
-  generate(chunk: Chunk) {}
+  async generate(chunk: Chunk) {}
 
   getVoxelAt(_: number, vy: number) {
     if (vy <= this.options.height) return 1;

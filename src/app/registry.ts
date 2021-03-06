@@ -10,7 +10,7 @@ type MaterialOptions = {
 
 type BlockType = {
   name: string;
-  material: MeshStandardMaterial;
+  material: MeshStandardMaterial | null;
 };
 
 class Registry {
@@ -29,6 +29,7 @@ class Registry {
     this.addMaterial('grass', { color: '#41980a' });
     this.addMaterial('stone', { color: '#999C9B' });
 
+    this.addBlock('air');
     this.addBlock('dirt', 'dirt');
     this.addBlock('grass', 'grass');
     this.addBlock('stone', 'stone');
@@ -51,7 +52,16 @@ class Registry {
     return matID;
   };
 
-  addBlock = (name: string, type: string) => {
+  addBlock = (name: string, type = 'none') => {
+    if (type === 'none') {
+      const noneBlock = {
+        name,
+        material: null,
+      };
+      this.blocks.set(name, noneBlock);
+      return noneBlock;
+    }
+
     const material = this.getMaterial(type);
 
     if (!material) {
@@ -66,6 +76,7 @@ class Registry {
       name,
       material,
     };
+
     const blockID = this.blocks.set(name, newBlock);
 
     return blockID;

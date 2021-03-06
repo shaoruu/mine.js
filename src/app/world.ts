@@ -1,15 +1,7 @@
 import { EventEmitter } from 'events';
 
 import { Engine } from '..';
-import {
-  Coords3,
-  GeneratorType,
-  SmartDictionary,
-  DefaultGenerator,
-  FlatGenerator,
-  Generator,
-  SinCosGenerator,
-} from '../libs';
+import { Coords3, GeneratorType, SmartDictionary, FlatGenerator, Generator, SinCosGenerator } from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
@@ -27,9 +19,9 @@ const defaultWorldOptions: WorldOptionsType = {
   chunkSize: 32,
   chunkPadding: 2,
   dimension: 1,
-  generator: 'flat',
+  generator: 'sin-cos',
   // radius of rendering centered by camera
-  renderRadius: 3,
+  renderRadius: 4,
   // maximum amount of chunks to process per frame tick
   maxChunkPerFrame: 1,
 };
@@ -43,8 +35,7 @@ class World extends EventEmitter {
   private camChunkPos: Coords3;
 
   private chunks: SmartDictionary<Chunk>;
-  private dirtyChunks: Chunk[];
-  private chunkBuildQueue: Chunk[];
+  private dirtyChunks: Chunk[]; // chunks that are freshly made
 
   constructor(engine: Engine, options: Partial<WorldOptionsType> = {}) {
     super();
@@ -60,13 +51,11 @@ class World extends EventEmitter {
 
     this.chunks = new SmartDictionary<Chunk>();
     this.dirtyChunks = [];
-    this.chunkBuildQueue = [];
 
     switch (generator) {
-      case 'default':
-        this.generator = new DefaultGenerator(this.engine);
       case 'flat':
         this.generator = new FlatGenerator(this.engine);
+        break;
       case 'sin-cos':
         this.generator = new SinCosGenerator(this.engine);
     }
@@ -155,7 +144,10 @@ class World extends EventEmitter {
     if (this.dirtyChunks.length > 0) {
       let count = 0;
       while (count <= this.options.maxChunkPerFrame && this.dirtyChunks.length > 0) {
+        count++;
+
         const chunk = this.dirtyChunks.shift();
+
         if (!chunk) break;
         if (!chunk.isInitialized) {
           // if chunk data has not been initialized
@@ -163,8 +155,8 @@ class World extends EventEmitter {
           this.dirtyChunks.push(chunk);
           continue;
         }
+
         chunk.buildMesh();
-        count++;
       }
     }
   }
@@ -175,7 +167,9 @@ class World extends EventEmitter {
       return;
     }
 
-    this.generator.generate(chunk);
+    this.generator.generate(chunk).then(() => {
+      chunk.initialized();
+    });
   }
 }
 

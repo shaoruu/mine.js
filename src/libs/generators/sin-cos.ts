@@ -6,6 +6,10 @@ import { Generator } from './generator';
 class SinCosGenerator extends Generator {
   constructor(engine: Engine) {
     super(engine);
+
+    this.useBlockID('dirt');
+    this.useBlockID('grass');
+    this.useBlockID('stone');
   }
 
   async generate(chunk: Chunk) {
@@ -17,8 +21,7 @@ class SinCosGenerator extends Generator {
       for (let vy = min[1]; vy < max[1]; vy++) {
         for (let vz = min[2]; vz < max[2]; vz++) {
           const voxel = this.getVoxelAt(vx, vy, vz);
-          if (voxel !== 0) {
-            chunk.isEmpty = false;
+          if (voxel) {
             chunk.setVoxel(vx, vy, vz, voxel);
           }
         }
@@ -26,19 +29,20 @@ class SinCosGenerator extends Generator {
     }
 
     console.timeEnd(`generating: ${chunk.name}`);
-
-    chunk.initialized();
   }
 
   getVoxelAt(vx: number, vy: number, vz: number) {
-    if (vy < -3) return 2;
+    let blockID = 0;
 
-    const height = 2 * Math.sin(vx / 10) + 3 * Math.cos(vz / 20) + 3;
-    if (vy < height) {
-      return 1;
+    if (vy < -3) blockID = this.getBlockID('stone');
+    else {
+      const height = 2 * Math.sin(vx / 10) + 3 * Math.cos(vz / 20) + 3;
+      if (vy < height) {
+        blockID = this.getBlockID('dirt');
+      }
     }
 
-    return 0;
+    return blockID;
   }
 }
 

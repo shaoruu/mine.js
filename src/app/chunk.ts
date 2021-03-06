@@ -93,6 +93,7 @@ class Chunk {
   }
 
   setVoxel(vx: number, vy: number, vz: number, id: number) {
+    if (id !== 0) this.isEmpty = false;
     const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
     this.setLocal(lx, ly, lz, id);
   }

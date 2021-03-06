@@ -1,5 +1,5 @@
 export type Coords3 = [number, number, number];
-export type GeneratorType = 'default' | 'flat' | 'sin-cos';
+export type GeneratorType = 'flat' | 'sin-cos';
 
 export type MeshResultType = {
   positions: Float32Array;
