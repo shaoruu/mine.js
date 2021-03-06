@@ -4,9 +4,10 @@ import { MeshResultType } from '../types';
 
 import workerSrc from '!raw-loader!./simple-cull.worker';
 
+const DEFAULT_WORKER_COUNT = 20;
 const workers: Worker[] = [];
 
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < DEFAULT_WORKER_COUNT; i++) {
   workers.push(Helper.loadWorker(workerSrc));
 }
 

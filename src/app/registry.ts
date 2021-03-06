@@ -1,4 +1,4 @@
-import { Color, MeshStandardMaterial, Texture } from 'three';
+import { MeshStandardMaterial, Texture } from 'three';
 
 import { Engine } from '..';
 import { SmartDictionary } from '../libs';
