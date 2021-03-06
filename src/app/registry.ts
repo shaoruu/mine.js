@@ -82,6 +82,10 @@ class Registry {
     return blockID;
   };
 
+  getMaterialByIndex = (index: number) => {
+    return this.materials.getByIndex(index);
+  };
+
   getMaterialIndex = (name: string) => {
     return this.materials.getIndex(name);
   };

@@ -17,6 +17,12 @@ class SmartDictionary<T> {
     return index;
   }
 
+  setByIndex(index: number, item: T) {
+    if (!this.data[index]) return;
+    this.data[index] = item;
+    return index;
+  }
+
   getIndex(name: string) {
     const index = this.indices.get(name);
     return index === undefined ? -1 : index;
@@ -25,6 +31,10 @@ class SmartDictionary<T> {
   get(name: string) {
     const index = this.getIndex(name);
     return this.data[index] || null;
+  }
+
+  getByIndex(index: number) {
+    return this.data[index];
   }
 
   delete(name: string) {

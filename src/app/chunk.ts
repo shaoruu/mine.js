@@ -115,6 +115,7 @@ class Chunk {
     this.geometry.setIndex(Array.from(indices));
 
     this.mesh = new Mesh(this.geometry, this.material);
+
     this.mesh.name = this.name;
 
     this.isDirty = false;

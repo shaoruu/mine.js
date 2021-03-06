@@ -76,6 +76,7 @@ onmessage = function (e) {
   const positions = [];
   const normals = [];
   const indices = [];
+  const materials = [];
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;
@@ -95,6 +96,7 @@ onmessage = function (e) {
               for (const pos of corners) {
                 positions.push((pos[0] + vx) * dimension, (pos[1] + vy) * dimension, (pos[2] + vz) * dimension);
                 normals.push(...dir);
+                materials.push(voxel);
               }
               indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);
             }
@@ -107,10 +109,15 @@ onmessage = function (e) {
   const positionsArrayBuffer = new Float32Array(positions).buffer;
   const normalsArrayBuffer = new Float32Array(normals).buffer;
   const indicesArrayBuffer = new Float32Array(indices).buffer;
+  const materialsArrayBuffer = new Float32Array(materials).buffer;
 
-  postMessage({ positions: positionsArrayBuffer, normals: normalsArrayBuffer, indices: indicesArrayBuffer }, [
-    positionsArrayBuffer,
-    normalsArrayBuffer,
-    indicesArrayBuffer,
-  ]);
+  postMessage(
+    {
+      positions: positionsArrayBuffer,
+      normals: normalsArrayBuffer,
+      indices: indicesArrayBuffer,
+      materials: materialsArrayBuffer,
+    },
+    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer, materialsArrayBuffer],
+  );
 };
