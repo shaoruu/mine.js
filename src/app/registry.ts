@@ -1,7 +1,11 @@
-import { MeshStandardMaterial, Texture } from 'three';
+import { MeshStandardMaterial, Texture, CanvasTexture } from 'three';
 
 import { Engine } from '..';
-import { SmartDictionary } from '../libs';
+import { SmartDictionary, TextureMerger } from '../libs';
+
+type RegistryOptionsType = {
+  textureWidth: number;
+};
 
 type MaterialOptions = {
   color?: string;
@@ -13,14 +17,26 @@ type BlockType = {
   material: MeshStandardMaterial | null;
 };
 
+const defaultRegistryOptions: RegistryOptionsType = {
+  textureWidth: 16,
+};
+
 class Registry {
   public engine: Engine;
+  public options: RegistryOptionsType;
 
   public materials: SmartDictionary<MeshStandardMaterial>;
   public blocks: SmartDictionary<BlockType>;
 
-  constructor(engine: Engine) {
+  private textureMap: { [key: string]: Texture } = {};
+  private textureMerger: TextureMerger;
+
+  constructor(engine: Engine, options: Partial<RegistryOptionsType> = {}) {
     this.engine = engine;
+    this.options = {
+      ...defaultRegistryOptions,
+      ...options,
+    };
 
     this.materials = new SmartDictionary<MeshStandardMaterial>();
     this.blocks = new SmartDictionary<BlockType>();
@@ -45,6 +61,19 @@ class Registry {
     if (this.materials.getIndex(name) >= 0) {
       throw new Error(`Error adding material, ${name}: material name taken.`);
     }
+
+    let texture: Texture = map ? this.makeDataTexture(color || '') : new Texture();
+    if (!map) {
+      texture = this.makeDataTexture(color || '');
+    } else {
+      // TODO: handle maps
+    }
+
+    this.textureMap[name] = texture;
+
+    console.log(this.textureMap);
+    this.textureMerger = new TextureMerger(this.textureMap);
+    console.log(this.textureMerger);
 
     const material = new MeshStandardMaterial(options);
     const matID = this.materials.set(name, material);
@@ -101,6 +130,19 @@ class Registry {
   getBlock = (name: string) => {
     return this.blocks.get(name);
   };
+
+  private makeDataTexture(color: string) {
+    const { textureWidth } = this.options;
+    const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
+    tempCanvas.width = textureWidth;
+    tempCanvas.height = textureWidth;
+    const context = tempCanvas.getContext('2d');
+    if (context) {
+      context.fillStyle = color;
+      context.fill();
+    }
+    return new CanvasTexture(tempCanvas);
+  }
 }
 
 export { Registry };
