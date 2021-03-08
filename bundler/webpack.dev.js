@@ -1,11 +1,12 @@
+const path = require('path');
+
+const gulp = require('gulp');
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
+const { merge } = require('webpack-merge');
+
 const pkg = require('../package.json');
 
 const commonConfiguration = require('./webpack.common.js');
-
-const { merge } = require('webpack-merge');
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
-const path = require('path');
-const gulp = require('gulp');
 
 require('../gulpfile');
 

@@ -1,5 +1,5 @@
-const gulp = require('gulp');
 const bs = require('browser-sync').create(); // create a browser sync instance.
+const gulp = require('gulp');
 
 gulp.task('serve', function () {
   bs.init({

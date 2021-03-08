@@ -1,9 +1,10 @@
+const path = require('path');
+
+const { merge } = require('webpack-merge');
+
 const pkg = require('../package.json');
 
 const commonConfiguration = require('./webpack.common.js');
-
-const { merge } = require('webpack-merge');
-const path = require('path');
 
 const config = merge(commonConfiguration, {
   mode: 'production',
