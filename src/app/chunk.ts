@@ -108,11 +108,11 @@ class Chunk {
 
     const positionNumComponents = 3;
     const normalNumComponents = 3;
-    const uvsNumComponents = 2;
+    const uvNumComponents = 2;
 
     this.geometry.setAttribute('position', new BufferAttribute(positions, positionNumComponents));
     this.geometry.setAttribute('normal', new BufferAttribute(normals, normalNumComponents));
-    this.geometry.setAttribute('uvs', new BufferAttribute(uvs, uvsNumComponents));
+    this.geometry.setAttribute('uv', new BufferAttribute(uvs, uvNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
     this.mesh = new Mesh(this.geometry, this.engine.registry.material);

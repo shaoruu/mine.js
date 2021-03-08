@@ -1,10 +1,7 @@
-import { ShaderMaterial, Texture, CanvasTexture, SphereGeometry, Mesh } from 'three';
+import { Texture, CanvasTexture, MeshStandardMaterial } from 'three';
 
 import { Engine } from '..';
-import { BlockMaterialType, BlockMaterialUVType, SmartDictionary, TextureMerger } from '../libs';
-
-import ChunkFragmentShader from './shaders/chunk/fragment.glsl';
-import ChunkVertexShader from './shaders/chunk/vertex.glsl';
+import { BlockMaterialType, BlockMaterialUVType, SmartDictionary, TextureAtlas } from '../libs';
 
 type RegistryOptionsType = {
   textureWidth: number;
@@ -28,14 +25,14 @@ class Registry {
   public engine: Engine;
   public options: RegistryOptionsType;
 
-  public material: ShaderMaterial;
+  public material: MeshStandardMaterial;
   public materials: SmartDictionary<BlockMaterialUVType>;
   public blocks: SmartDictionary<BlockType>;
   public cBlockDictionary: { [key: number]: BlockType }; // caches for block uv
   public cMaterialUVDictionary: { [key: string]: BlockMaterialUVType }; // caches for material uv
 
   private textureMap: { [key: string]: Texture } = {};
-  private textureMerger: TextureMerger;
+  private textureAtlas: TextureAtlas;
 
   constructor(engine: Engine, options: Partial<RegistryOptionsType> = {}) {
     this.engine = engine;
@@ -47,7 +44,6 @@ class Registry {
     this.materials = new SmartDictionary<BlockMaterialUVType>();
     this.blocks = new SmartDictionary<BlockType>();
 
-    this.addMaterial('empty', { color: '#000000' }); // TODO: figure out why the first one doesn't work
     this.addMaterial('dirt', { color: '#edc9af' });
     this.addMaterial('grass', { color: '#41980a' });
     this.addMaterial('stone', { color: '#999C9B' });
@@ -57,7 +53,7 @@ class Registry {
     this.addBlock('grass', 'grass');
     this.addBlock('stone', 'stone');
 
-    console.log(this.blocks.toIndexMap());
+    // console.log(this.blocks.toIndexMap());
     console.log(this.materials.toObject());
   }
 
@@ -74,17 +70,18 @@ class Registry {
 
     const blockTexture: Texture = texture || this.makeCanvasTexture(color || '');
     this.textureMap[name] = blockTexture;
-    this.textureMerger = new TextureMerger(this.textureMap);
-    this.material = new ShaderMaterial({
-      vertexShader: ChunkVertexShader,
-      fragmentShader: ChunkFragmentShader,
-      uniforms: {
-        uTexture: { value: this.textureMerger.mergedTexture },
-      },
+    this.textureAtlas = new TextureAtlas(this.textureMap);
+    this.material = new MeshStandardMaterial({
+      map: this.textureAtlas.mergedTexture,
+      alphaTest: 0.1,
+      transparent: true,
     });
 
-    const { ranges } = this.textureMerger;
-    const matID = this.materials.set(name, ranges[name]);
+    const { ranges } = this.textureAtlas;
+    for (const name in ranges) {
+      this.materials.set(name, ranges[name]);
+    }
+    const matID = this.materials.get(name);
 
     this.updateCache();
 

@@ -1,7 +1,5 @@
 import { EventEmitter } from 'events';
 
-import { Mesh, MeshStandardMaterial, SphereGeometry } from 'three';
-
 import { Camera, Container, Debug, Registry, Rendering, World } from './app';
 import { Clock } from './libs';
 

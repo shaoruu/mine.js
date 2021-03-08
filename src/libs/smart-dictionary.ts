@@ -8,17 +8,20 @@ class SmartDictionary<T> {
   }
 
   set(name: string, item: T) {
-    if (this.indices.get(name)) return;
+    // TODO: must be better way of doing this
+    if (!isNaN(this.indices.get(name) as never)) {
+      this.data[this.indices.get(name) as never] = item;
+      return;
+    }
 
     const index = this.data.length;
-    this.data.push(item);
+    this.data[index] = item;
     this.indices.set(name, index);
 
     return index;
   }
 
   setByIndex(index: number, item: T) {
-    if (!this.data[index]) return;
     this.data[index] = item;
     return index;
   }
