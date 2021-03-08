@@ -148,7 +148,7 @@ class World extends EventEmitter {
 
         const chunk = this.dirtyChunks.shift();
 
-        if (!chunk) break;
+        if (!chunk || chunk.isLoading) break;
         if (!chunk.isInitialized) {
           // if chunk data has not been initialized
           this.requestChunkData(chunk);
@@ -165,6 +165,7 @@ class World extends EventEmitter {
     if (!this.generator) {
       // assume the worst, say the chunk is not empty
       chunk.isEmpty = false;
+      chunk.isLoading = true;
       this.engine.emit('data-needed', chunk);
       return;
     }

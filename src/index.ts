@@ -7,11 +7,13 @@ type ConfigType = {
   canvas?: HTMLCanvasElement;
   domElement: HTMLElement;
   generator: GeneratorType;
+  renderRadius: number;
 };
 
 const defaultConfig: ConfigType = {
   domElement: document.body,
   generator: '',
+  renderRadius: 3,
 };
 
 class Engine extends EventEmitter {
@@ -27,11 +29,10 @@ class Engine extends EventEmitter {
   constructor(params: Partial<ConfigType> = {}) {
     super();
 
-    const { canvas, domElement, generator } = (this.config = {
+    const { canvas, domElement, generator, renderRadius } = (this.config = {
       ...defaultConfig,
       ...params,
     });
-    console.log(this.config, params);
 
     // debug
     this.debug = new Debug(this);
@@ -54,6 +55,7 @@ class Engine extends EventEmitter {
     // world
     this.world = new World(this, {
       generator,
+      renderRadius,
     });
 
     this.clock = new Clock();

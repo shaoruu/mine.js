@@ -2,7 +2,7 @@
 const { Engine } = MineJS;
 
 const engine = new Engine({
-  // generator: 'sin-cos',
+  renderRadius: 2,
 });
 
 // make a terrain worker
@@ -44,6 +44,8 @@ async function generateData(chunk) {
   });
 
   chunk.voxels.data = newVoxels;
+
+  // ?: DEBATABLE
   workers.push(worker);
 }
 

@@ -37,6 +37,7 @@ class Chunk {
   public isDirty = true;
   public isAdded = false;
   public isInitialized = false;
+  public isLoading = false;
 
   constructor(engine: Engine, coords: Coords3, { size, dimension, padding }: ChunkOptions) {
     this.engine = engine;
@@ -98,6 +99,7 @@ class Chunk {
 
   initialized() {
     this.isInitialized = true;
+    this.isLoading = false;
   }
 
   async buildMesh() {
