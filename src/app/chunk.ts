@@ -1,6 +1,6 @@
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
-import { BufferAttribute, BufferGeometry, Mesh, MeshStandardMaterial } from 'three';
+import { BufferAttribute, BufferGeometry, Mesh } from 'three';
 
 import { Engine } from '..';
 import { Coords3 } from '../libs';
@@ -31,7 +31,6 @@ class Chunk {
   public maxOuter: Coords3; // chunk's maximum voxel (padded)
 
   public geometry: BufferGeometry;
-  public material: MeshStandardMaterial;
   public mesh: Mesh;
 
   public isEmpty = true;
@@ -52,7 +51,6 @@ class Chunk {
     this.voxels = ndarray(new Int8Array(this.width * this.width * this.width), [this.width, this.width, this.width]);
 
     this.geometry = new BufferGeometry();
-    this.material = this.engine.registry.getMaterial('dirt') || new MeshStandardMaterial({ color: 'green' });
 
     this.minInner = [0, 0, 0];
     this.minOuter = [0, 0, 0];
@@ -106,15 +104,18 @@ class Chunk {
     this.removeFromScene();
     if (this.isEmpty) return;
 
-    const { positions, normals, indices } = await simpleCull(this);
+    const { positions, normals, indices, uvs } = await simpleCull(this);
+
     const positionNumComponents = 3;
     const normalNumComponents = 3;
+    const uvsNumComponents = 2;
 
     this.geometry.setAttribute('position', new BufferAttribute(positions, positionNumComponents));
     this.geometry.setAttribute('normal', new BufferAttribute(normals, normalNumComponents));
+    this.geometry.setAttribute('uvs', new BufferAttribute(uvs, uvsNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
-    this.mesh = new Mesh(this.geometry, this.material);
+    this.mesh = new Mesh(this.geometry, this.engine.registry.material);
 
     this.mesh.name = this.name;
 

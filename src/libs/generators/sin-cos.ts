@@ -15,7 +15,7 @@ class SinCosGenerator extends Generator {
   async generate(chunk: Chunk) {
     const { minOuter: min, maxOuter: max } = chunk;
 
-    console.time(`generating: ${chunk.name}`);
+    // console.time(`generating: ${chunk.name}`);
 
     for (let vx = min[0]; vx < max[0]; vx++) {
       for (let vy = min[1]; vy < max[1]; vy++) {
@@ -28,7 +28,7 @@ class SinCosGenerator extends Generator {
       }
     }
 
-    console.timeEnd(`generating: ${chunk.name}`);
+    // console.timeEnd(`generating: ${chunk.name}`);
   }
 
   getVoxelAt(vx: number, vy: number, vz: number) {
@@ -38,7 +38,7 @@ class SinCosGenerator extends Generator {
     else {
       const height = 2 * Math.sin(vx / 10) + 3 * Math.cos(vz / 20) + 3;
       if (vy < height) {
-        blockID = this.getBlockID('dirt');
+        blockID = Math.random() > 0.5 ? this.getBlockID('dirt') : this.getBlockID('stone');
       }
     }
 

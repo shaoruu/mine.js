@@ -6,61 +6,67 @@ const FACES = [
   {
     // left
     dir: [-1, 0, 0],
+    mat: 3, // nx
     corners: [
-      [0, 1, 0],
-      [0, 0, 0],
-      [0, 1, 1],
-      [0, 0, 1],
+      { pos: [0, 1, 0], uv: [0, 1] },
+      { pos: [0, 0, 0], uv: [0, 0] },
+      { pos: [0, 1, 1], uv: [1, 1] },
+      { pos: [0, 0, 1], uv: [1, 0] },
     ],
   },
   {
     // right
     dir: [1, 0, 0],
+    mat: 0, // px
     corners: [
-      [1, 1, 1],
-      [1, 0, 1],
-      [1, 1, 0],
-      [1, 0, 0],
+      { pos: [1, 1, 1], uv: [0, 1] },
+      { pos: [1, 0, 1], uv: [0, 0] },
+      { pos: [1, 1, 0], uv: [1, 1] },
+      { pos: [1, 0, 0], uv: [1, 0] },
     ],
   },
   {
     // bottom
     dir: [0, -1, 0],
+    mat: 4, // ny
     corners: [
-      [1, 0, 1],
-      [0, 0, 1],
-      [1, 0, 0],
-      [0, 0, 0],
+      { pos: [1, 0, 1], uv: [1, 0] },
+      { pos: [0, 0, 1], uv: [0, 0] },
+      { pos: [1, 0, 0], uv: [1, 1] },
+      { pos: [0, 0, 0], uv: [0, 1] },
     ],
   },
   {
     // top
     dir: [0, 1, 0],
+    mat: 1, // py
     corners: [
-      [0, 1, 1],
-      [1, 1, 1],
-      [0, 1, 0],
-      [1, 1, 0],
+      { pos: [0, 1, 1], uv: [1, 1] },
+      { pos: [1, 1, 1], uv: [0, 1] },
+      { pos: [0, 1, 0], uv: [1, 0] },
+      { pos: [1, 1, 0], uv: [0, 0] },
     ],
   },
   {
     // back
     dir: [0, 0, -1],
+    mat: 5, // nz
     corners: [
-      [1, 0, 0],
-      [0, 0, 0],
-      [1, 1, 0],
-      [0, 1, 0],
+      { pos: [1, 0, 0], uv: [0, 0] },
+      { pos: [0, 0, 0], uv: [1, 0] },
+      { pos: [1, 1, 0], uv: [0, 1] },
+      { pos: [0, 1, 0], uv: [1, 1] },
     ],
   },
   {
     // front
     dir: [0, 0, 1],
+    mat: 2, // pz
     corners: [
-      [0, 0, 1],
-      [1, 0, 1],
-      [0, 1, 1],
-      [1, 1, 1],
+      { pos: [0, 0, 1], uv: [0, 0] },
+      { pos: [1, 0, 1], uv: [1, 0] },
+      { pos: [0, 1, 1], uv: [0, 1] },
+      { pos: [1, 1, 1], uv: [1, 1] },
     ],
   },
 ];
@@ -68,7 +74,7 @@ const FACES = [
 onmessage = function (e) {
   const {
     data: dataBuffer,
-    configs: { dimension, padding, min, max, stride },
+    configs: { dimension, padding, min, max, stride, blockMats, matUVs },
   } = e.data;
 
   const data = new Int8Array(dataBuffer);
@@ -76,7 +82,7 @@ onmessage = function (e) {
   const positions = [];
   const normals = [];
   const indices = [];
-  const materials = [];
+  const uvs = [];
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;
@@ -87,16 +93,20 @@ onmessage = function (e) {
         const voxel = get(data, lx, ly, lz, stride);
 
         if (voxel) {
+          const { material } = blockMats[voxel];
+          const isArrayMat = Array.isArray(material);
+
           // There is a voxel here but do we need faces for it?
-          for (const { dir, corners } of FACES) {
+          for (const { dir, mat, corners } of FACES) {
             const neighbor = get(data, lx + dir[0], ly + dir[1], lz + dir[2], stride);
             if (!neighbor) {
+              const { startU, endU, startV, endV } = isArrayMat ? matUVs[material[mat]] : matUVs[material];
               // this voxel has no neighbor in this direction so we need a face.
               const ndx = positions.length / 3;
-              for (const pos of corners) {
+              for (const { pos, uv } of corners) {
                 positions.push((pos[0] + vx) * dimension, (pos[1] + vy) * dimension, (pos[2] + vz) * dimension);
                 normals.push(...dir);
-                materials.push(voxel);
+                uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
               }
               indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);
             }
@@ -109,15 +119,15 @@ onmessage = function (e) {
   const positionsArrayBuffer = new Float32Array(positions).buffer;
   const normalsArrayBuffer = new Float32Array(normals).buffer;
   const indicesArrayBuffer = new Float32Array(indices).buffer;
-  const materialsArrayBuffer = new Float32Array(materials).buffer;
+  const uvsArrayBuffer = new Float32Array(uvs).buffer;
 
   postMessage(
     {
       positions: positionsArrayBuffer,
       normals: normalsArrayBuffer,
       indices: indicesArrayBuffer,
-      materials: materialsArrayBuffer,
+      uvs: uvsArrayBuffer,
     },
-    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer, materialsArrayBuffer],
+    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer, uvsArrayBuffer],
   );
 };

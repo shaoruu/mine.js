@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events';
 
+import { Mesh, MeshStandardMaterial, SphereGeometry } from 'three';
+
 import { Camera, Container, Debug, Registry, Rendering, World } from './app';
 import { Clock } from './libs';
 
@@ -53,6 +55,15 @@ class Engine extends EventEmitter {
     this.clock = new Clock();
 
     this.boot();
+
+    // this.rendering.scene.add(
+    //   new Mesh(
+    //     new SphereGeometry(10, 10, 10),
+    //     new MeshStandardMaterial({
+    //       map: this.registry.textureMerger.mergedTexture,
+    //     }),
+    //   ),
+    // );
 
     this.emit('ready');
   }

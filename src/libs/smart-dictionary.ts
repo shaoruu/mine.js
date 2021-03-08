@@ -45,6 +45,23 @@ class SmartDictionary<T> {
   has(name: string) {
     return this.indices.has(name);
   }
+
+  toIndexMap() {
+    const obj: { [key: number]: T } = {};
+    this.indices.forEach((value) => {
+      obj[value] = this.data[value];
+    });
+    return obj;
+  }
+
+  toObject() {
+    const obj: { [key: string]: T } = {};
+    this.indices.forEach((value, key) => {
+      const entry = this.data[value];
+      obj[key] = entry;
+    });
+    return obj;
+  }
 }
 
 export { SmartDictionary };

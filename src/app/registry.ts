@@ -1,7 +1,10 @@
-import { MeshStandardMaterial, Texture, CanvasTexture } from 'three';
+import { ShaderMaterial, Texture, CanvasTexture, SphereGeometry, Mesh } from 'three';
 
 import { Engine } from '..';
-import { SmartDictionary, TextureMerger } from '../libs';
+import { BlockMaterialType, BlockMaterialUVType, SmartDictionary, TextureMerger } from '../libs';
+
+import ChunkFragmentShader from './shaders/chunk/fragment.glsl';
+import ChunkVertexShader from './shaders/chunk/vertex.glsl';
 
 type RegistryOptionsType = {
   textureWidth: number;
@@ -9,12 +12,12 @@ type RegistryOptionsType = {
 
 type MaterialOptions = {
   color?: string;
-  map?: Texture;
+  texture?: Texture;
 };
 
 type BlockType = {
   name: string;
-  material: MeshStandardMaterial | null;
+  material: BlockMaterialType;
 };
 
 const defaultRegistryOptions: RegistryOptionsType = {
@@ -25,8 +28,11 @@ class Registry {
   public engine: Engine;
   public options: RegistryOptionsType;
 
-  public materials: SmartDictionary<MeshStandardMaterial>;
+  public material: ShaderMaterial;
+  public materials: SmartDictionary<BlockMaterialUVType>;
   public blocks: SmartDictionary<BlockType>;
+  public cBlockDictionary: { [key: number]: BlockType }; // caches for block uv
+  public cMaterialUVDictionary: { [key: string]: BlockMaterialUVType }; // caches for material uv
 
   private textureMap: { [key: string]: Texture } = {};
   private textureMerger: TextureMerger;
@@ -38,9 +44,10 @@ class Registry {
       ...options,
     };
 
-    this.materials = new SmartDictionary<MeshStandardMaterial>();
+    this.materials = new SmartDictionary<BlockMaterialUVType>();
     this.blocks = new SmartDictionary<BlockType>();
 
+    this.addMaterial('empty', { color: '#000000' }); // TODO: figure out why the first one doesn't work
     this.addMaterial('dirt', { color: '#edc9af' });
     this.addMaterial('grass', { color: '#41980a' });
     this.addMaterial('stone', { color: '#999C9B' });
@@ -49,12 +56,15 @@ class Registry {
     this.addBlock('dirt', 'dirt');
     this.addBlock('grass', 'grass');
     this.addBlock('stone', 'stone');
+
+    console.log(this.blocks.toIndexMap());
+    console.log(this.materials.toObject());
   }
 
   addMaterial = (name: string, options: MaterialOptions) => {
-    const { color, map } = options;
+    const { color, texture } = options;
 
-    if (!color && !map) {
+    if (!color && !texture) {
       throw new Error(`Error adding material, ${name}: no color or map provided.`);
     }
 
@@ -62,27 +72,31 @@ class Registry {
       throw new Error(`Error adding material, ${name}: material name taken.`);
     }
 
-    let texture: Texture = map ? this.makeDataTexture(color || '') : new Texture();
-    if (!map) {
-      texture = this.makeDataTexture(color || '');
-    } else {
-      // TODO: handle maps
-    }
-
-    this.textureMap[name] = texture;
-
-    console.log(this.textureMap);
+    const blockTexture: Texture = texture || this.makeCanvasTexture(color || '');
+    this.textureMap[name] = blockTexture;
     this.textureMerger = new TextureMerger(this.textureMap);
-    console.log(this.textureMerger);
+    this.material = new ShaderMaterial({
+      vertexShader: ChunkVertexShader,
+      fragmentShader: ChunkFragmentShader,
+      uniforms: {
+        uTexture: { value: this.textureMerger.mergedTexture },
+      },
+    });
 
-    const material = new MeshStandardMaterial(options);
-    const matID = this.materials.set(name, material);
+    const { ranges } = this.textureMerger;
+    const matID = this.materials.set(name, ranges[name]);
+
+    this.updateCache();
 
     return matID;
   };
 
-  addBlock = (name: string, type = 'none') => {
-    if (type === 'none') {
+  addBlock = (name: string, material: BlockMaterialType = null) => {
+    if (this.blocks.getIndex(name) >= 0) {
+      throw new Error(`Error registering block, ${name}: block name taken.`);
+    }
+
+    if (material === null) {
       const noneBlock = {
         name,
         material: null,
@@ -91,14 +105,17 @@ class Registry {
       return noneBlock;
     }
 
-    const material = this.getMaterial(type);
+    if (Array.isArray(material)) {
+      const [px, py, pz, nx, ny, nz] = material;
+      if (!px || !py || !pz || (material.length === 6 && (!nx || !ny || !nz)))
+        throw new Error(`Error registering block, ${name}: containing empty material`);
 
-    if (!material) {
-      throw new Error(`Error registering block, ${name}: material not found.`);
-    }
-
-    if (this.blocks.getIndex(name) >= 0) {
-      throw new Error(`Error registering block, ${name}: block name taken.`);
+      for (let i = 0; i < material.length; i++) {
+        const mat = material[i];
+        if (!this.materials.has(mat)) {
+          throw new Error(`Error registering block, ${name}: material '${mat}'not found.`);
+        }
+      }
     }
 
     const newBlock = {
@@ -107,6 +124,8 @@ class Registry {
     };
 
     const blockID = this.blocks.set(name, newBlock);
+
+    this.updateCache();
 
     return blockID;
   };
@@ -131,17 +150,24 @@ class Registry {
     return this.blocks.get(name);
   };
 
-  private makeDataTexture(color: string) {
+  private makeCanvasTexture(color: string) {
     const { textureWidth } = this.options;
     const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
-    tempCanvas.width = textureWidth;
-    tempCanvas.height = textureWidth;
     const context = tempCanvas.getContext('2d');
+
     if (context) {
+      context.canvas.width = textureWidth;
+      context.canvas.height = textureWidth;
       context.fillStyle = color;
-      context.fill();
+      context.fillRect(0, 0, textureWidth, textureWidth);
     }
-    return new CanvasTexture(tempCanvas);
+
+    return new CanvasTexture(context ? context.canvas : tempCanvas);
+  }
+
+  private updateCache() {
+    this.cBlockDictionary = this.blocks.toIndexMap();
+    this.cMaterialUVDictionary = this.materials.toObject();
   }
 }
 

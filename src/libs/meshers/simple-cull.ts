@@ -12,7 +12,16 @@ for (let i = 0; i < DEFAULT_WORKER_COUNT; i++) {
 }
 
 async function simpleCull(chunk: Chunk): Promise<MeshResultType> {
-  const { dimension, padding, voxels, minInner, maxInner } = chunk;
+  const {
+    dimension,
+    padding,
+    voxels,
+    minInner,
+    maxInner,
+    engine: {
+      registry: { cBlockDictionary, cMaterialUVDictionary },
+    },
+  } = chunk;
   const { stride } = voxels;
 
   const voxelsBuffer = (voxels.data as Int8Array).buffer;
@@ -28,17 +37,20 @@ async function simpleCull(chunk: Chunk): Promise<MeshResultType> {
           min: minInner,
           max: maxInner,
           stride,
+          blockMats: cBlockDictionary,
+          matUVs: cMaterialUVDictionary,
         },
       },
       [voxelsBuffer],
     );
 
     worker.onmessage = ({ data }) => {
-      const { positions, normals, indices } = data;
+      const { positions, normals, indices, uvs } = data;
       resolve({
         positions: new Float32Array(positions),
         normals: new Float32Array(normals),
         indices: new Float32Array(indices),
+        uvs: new Float32Array(uvs),
       });
     };
   });
