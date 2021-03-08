@@ -59,7 +59,6 @@ class TextureAtlas {
         const startY = row * textureDimension;
         const imageWidth = texture.image.width;
         const imageHeight = texture.image.height;
-        console.log(textureName, startX, startY, canvasWidth, canvasHeight, imageWidth, imageHeight);
 
         context.drawImage(texture.image, startX, startY, imageWidth, imageHeight);
 
@@ -74,7 +73,6 @@ class TextureAtlas {
           startV,
           endV,
         };
-        console.log(this.ranges[textureName]);
 
         this.makeCanvasPowerOfTwo(this.canvas);
         this.mergedTexture = new CanvasTexture(this.canvas);

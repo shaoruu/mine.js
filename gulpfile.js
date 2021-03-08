@@ -1,13 +1,21 @@
 const bs = require('browser-sync').create(); // create a browser sync instance.
 const gulp = require('gulp');
 
-gulp.task('serve', function () {
+function serveSimple(filepath) {
   bs.init({
     watch: true,
     notify: false,
     server: {
-      baseDir: ['./examples/basic', './dist'], //added multiple directories
+      baseDir: [filepath, './dist'], //added multiple directories
     },
-    files: ['dist', 'examples/basic'],
+    files: [filepath, 'dist'],
   });
+}
+
+gulp.task('dev', function () {
+  serveSimple('./examples/dev');
+});
+
+gulp.task('basic', function () {
+  serveSimple('./examples/basic');
 });

@@ -21,7 +21,7 @@ const defaultWorldOptions: WorldOptionsType = {
   dimension: 1,
   generator: 'sin-cos',
   // radius of rendering centered by camera
-  renderRadius: 4,
+  renderRadius: 3,
   // maximum amount of chunks to process per frame tick
   maxChunkPerFrame: 1,
 };
@@ -41,8 +41,8 @@ class World extends EventEmitter {
     super();
 
     this.options = {
-      ...options,
       ...defaultWorldOptions,
+      ...options,
     };
 
     const { generator } = this.options;
@@ -163,6 +163,8 @@ class World extends EventEmitter {
 
   private requestChunkData(chunk: Chunk) {
     if (!this.generator) {
+      // assume the worst, say the chunk is not empty
+      chunk.isEmpty = false;
       this.engine.emit('data-needed', chunk);
       return;
     }

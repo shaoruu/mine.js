@@ -1,14 +1,17 @@
 import { EventEmitter } from 'events';
 
 import { Camera, Container, Debug, Registry, Rendering, World } from './app';
-import { Clock } from './libs';
+import { Clock, GeneratorType } from './libs';
 
 type ConfigType = {
-  domElement?: HTMLElement;
+  canvas?: HTMLCanvasElement;
+  domElement: HTMLElement;
+  generator: GeneratorType;
 };
 
 const defaultConfig: ConfigType = {
   domElement: document.body,
+  generator: '',
 };
 
 class Engine extends EventEmitter {
@@ -21,21 +24,22 @@ class Engine extends EventEmitter {
   public registry: Registry;
   public world: World;
 
-  constructor(canvas: HTMLCanvasElement | undefined, params: Partial<ConfigType> = defaultConfig) {
+  constructor(params: Partial<ConfigType> = {}) {
     super();
 
-    this.config = {
-      ...this.config,
+    const { canvas, domElement, generator } = (this.config = {
+      ...defaultConfig,
       ...params,
-    };
+    });
+    console.log(this.config, params);
 
     // debug
     this.debug = new Debug(this);
 
     // container
     this.container = new Container(this, {
-      ...this.config,
       canvas,
+      domElement,
     });
 
     // registry
@@ -48,7 +52,9 @@ class Engine extends EventEmitter {
     this.camera = new Camera(this);
 
     // world
-    this.world = new World(this);
+    this.world = new World(this, {
+      generator,
+    });
 
     this.clock = new Clock();
 
@@ -89,12 +95,7 @@ class Engine extends EventEmitter {
   };
 
   render = () => {
-    // console.log('render');
     this.rendering.render();
-  };
-
-  resize = () => {
-    // console.log('resize');
   };
 }
 

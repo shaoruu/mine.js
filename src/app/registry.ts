@@ -52,9 +52,6 @@ class Registry {
     this.addBlock('dirt', 'dirt');
     this.addBlock('grass', 'grass');
     this.addBlock('stone', 'stone');
-
-    // console.log(this.blocks.toIndexMap());
-    console.log(this.materials.toObject());
   }
 
   addMaterial = (name: string, options: MaterialOptions) => {

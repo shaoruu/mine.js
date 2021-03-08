@@ -34,7 +34,7 @@ devConfigs.plugins.push({
   apply: (compiler) => {
     compiler.hooks.afterEmit.tap('AfterEmitPlugin', () => {
       if (!hasBuilt) {
-        gulp.task('serve')();
+        gulp.task('basic')();
       }
 
       hasBuilt = true;
