@@ -1,10 +1,8 @@
 import { EventEmitter } from 'events';
 
-import { GUI } from 'dat.gui';
 import {
   AmbientLight,
   BackSide,
-  BoxBufferGeometry,
   Color,
   DirectionalLight,
   Mesh,
@@ -53,7 +51,6 @@ class Rendering extends EventEmitter {
   public sky: Mesh;
 
   public options: RenderingOptionsType;
-  public datGUI: GUI;
 
   constructor(engine: Engine, options: Partial<RenderingOptionsType> = {}) {
     super();
@@ -116,7 +113,6 @@ class Rendering extends EventEmitter {
     this.scene.add(this.sky);
 
     this.adjustRenderer();
-    this.debug();
   }
 
   adjustRenderer = () => {
@@ -131,47 +127,6 @@ class Rendering extends EventEmitter {
 
   render = () => {
     this.renderer.render(this.scene, this.engine.camera.threeCamera);
-  };
-
-  debug = () => {
-    this.datGUI = this.engine.debug.gui.addFolder('rendering');
-
-    this.datGUI
-      .add(this.options, 'skyDomeOffset', 200, 2000, 10)
-      // @ts-ignore
-      .onChange((value) => (this.sky.material.uniforms.offset.value = value));
-
-    this.datGUI
-      .addColor(this.options, 'topColor')
-      // @ts-ignore
-      .onFinishChange((value) => this.sky.material.uniforms.topColor.value.set(value));
-    this.datGUI
-      .addColor(this.options, 'bottomColor')
-      // @ts-ignore
-      .onFinishChange((value) => this.sky.material.uniforms.bottomColor.value.set(value));
-    this.datGUI.addColor(this.options, 'clearColor').onFinishChange((value) => this.renderer.setClearColor(value));
-    this.datGUI
-      .addColor(this.options, 'directionalLightColor')
-      .onFinishChange((value) => this.directionalLight.color.set(value));
-    this.datGUI
-      .addColor(this.options, 'ambientLightColor')
-      .onFinishChange((value) => this.ambientLight.color.set(value));
-
-    this.datGUI.open();
-  };
-
-  test = () => {
-    const material = this.engine.registry.getMaterial('dirt');
-    const geometry = new BoxBufferGeometry(1, 1, 1);
-    for (let i = 0; i < 50; i++) {
-      const x = ((Math.random() * 10) | 0) - 5 + 0.5;
-      const y = ((Math.random() * 10) | 0) + 0.5;
-      const z = ((Math.random() * 10) | 0) - 5 + 0.5;
-
-      const mesh = new Mesh(geometry, material || undefined);
-      mesh.position.set(x, y, z);
-      this.scene.add(mesh);
-    }
   };
 
   get renderSize() {

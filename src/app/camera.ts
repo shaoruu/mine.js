@@ -183,6 +183,11 @@ class Camera {
     const { x, y, z } = this.threeCamera.position;
     return [x, y, z];
   }
+
+  get voxelPositionStr() {
+    const { voxel } = this;
+    return `${voxel[0]} ${voxel[1]} ${voxel[2]}`;
+  }
 }
 
 export { Camera };

@@ -79,6 +79,10 @@ class World extends EventEmitter {
     return this.chunks.set(chunk.name, chunk);
   }
 
+  get camChunkPosStr() {
+    return `${this.camChunkPos[0]} ${this.camChunkPos[1]} ${this.camChunkPos[2]}`;
+  }
+
   private checkCamChunk() {
     const { chunkSize, renderRadius } = this.options;
 

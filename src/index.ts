@@ -94,6 +94,7 @@ class Engine extends EventEmitter {
     this.camera.tick();
     this.world.tick();
     this.rendering.tick();
+    this.debug.tick();
   };
 
   render = () => {
