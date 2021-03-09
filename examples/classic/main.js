@@ -2,7 +2,12 @@
 const { Engine } = MineJS;
 
 const engine = new Engine({
-  renderRadius: 2,
+  renderRadius: 5,
+});
+
+engine.on('data-needed', async (chunk) => {
+  await generateData(chunk);
+  chunk.initialized();
 });
 
 // make a terrain worker
@@ -49,7 +54,4 @@ async function generateData(chunk) {
   workers.push(worker);
 }
 
-engine.on('data-needed', async (chunk) => {
-  await generateData(chunk);
-  chunk.initialized();
-});
+engine.start();

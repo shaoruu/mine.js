@@ -26,6 +26,8 @@ class Engine extends EventEmitter {
   public registry: Registry;
   public world: World;
 
+  public paused = true;
+
   constructor(params: Partial<ConfigType> = {}) {
     super();
 
@@ -90,6 +92,8 @@ class Engine extends EventEmitter {
   };
 
   tick = () => {
+    if (this.paused) return;
+
     this.clock.tick();
     this.camera.tick();
     this.world.tick();
@@ -99,6 +103,14 @@ class Engine extends EventEmitter {
 
   render = () => {
     this.rendering.render();
+  };
+
+  start = () => {
+    this.paused = false;
+  };
+
+  pause = () => {
+    this.paused = true;
   };
 }
 

@@ -137,7 +137,6 @@ class World extends EventEmitter {
 
             this.setChunk(newChunk);
             this.dirtyChunks.push(newChunk);
-            continue;
           }
         }
       }
@@ -152,7 +151,11 @@ class World extends EventEmitter {
 
         const chunk = this.dirtyChunks.shift();
 
-        if (!chunk || chunk.isLoading) break;
+        if (!chunk) break;
+        if (chunk.isPending) {
+          this.dirtyChunks.push(chunk);
+          continue;
+        }
         if (!chunk.isInitialized) {
           // if chunk data has not been initialized
           this.requestChunkData(chunk);
@@ -169,7 +172,7 @@ class World extends EventEmitter {
     if (!this.generator) {
       // assume the worst, say the chunk is not empty
       chunk.isEmpty = false;
-      chunk.isLoading = true;
+      chunk.isPending = true;
       this.engine.emit('data-needed', chunk);
       return;
     }

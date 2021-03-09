@@ -5,4 +5,4 @@ const engine = new Engine({
   generator: 'sin-cos',
 });
 
-console.log(engine);
+engine.start();

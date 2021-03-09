@@ -38,7 +38,7 @@ class SinCosGenerator extends Generator {
     else {
       const height = 2 * Math.sin(vx / 10) + 3 * Math.cos(vz / 20) + 3;
       if (vy < height) {
-        blockID = Math.random() > 0.5 ? this.getBlockID('dirt') : this.getBlockID('stone');
+        blockID = Math.random() > 0.5 ? this.getBlockID('grass') : this.getBlockID('stone');
       }
     }
 
