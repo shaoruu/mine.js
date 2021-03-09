@@ -1,3 +1,5 @@
+// AO from https://github.com/joshmarinacci/voxeljs-next/blob/05514704fe109c69072ae819f1032603bdb633d3/src/VoxelMesh.js#L363
+
 const get = (arr, x, y, z, stride) => {
   return arr[x * stride[0] + y * stride[1] + z * stride[2]];
 };
@@ -71,6 +73,22 @@ const FACES = [
   },
 ];
 
+function vertexAO(side1, side2, corner) {
+  if (side1 && side2) {
+    return 0;
+  }
+  return 3 - (side1 + side2 + corner);
+}
+
+function generateAmbientOcclusion(grid) {
+  return [
+    vertexAO(grid[3], grid[1], grid[0]) / 3.0,
+    vertexAO(grid[1], grid[5], grid[2]) / 3.0,
+    vertexAO(grid[5], grid[7], grid[8]) / 3.0,
+    vertexAO(grid[3], grid[7], grid[6]) / 3.0,
+  ];
+}
+
 onmessage = function (e) {
   const {
     data: dataBuffer,
@@ -83,6 +101,7 @@ onmessage = function (e) {
   const normals = [];
   const indices = [];
   const uvs = [];
+  const aos = [];
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;
@@ -103,12 +122,14 @@ onmessage = function (e) {
               const { startU, endU, startV, endV } = isArrayMat ? matUVs[material[mat]] : matUVs[material];
               // this voxel has no neighbor in this direction so we need a face.
               const ndx = positions.length / 3;
+
               for (const { pos, uv } of corners) {
                 positions.push((pos[0] + vx) * dimension, (pos[1] + vy) * dimension, (pos[2] + vz) * dimension);
                 normals.push(...dir);
                 uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
               }
               indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);
+              aos.push(1, 1, 1, 1);
             }
           }
         }
@@ -120,6 +141,7 @@ onmessage = function (e) {
   const normalsArrayBuffer = new Float32Array(normals).buffer;
   const indicesArrayBuffer = new Float32Array(indices).buffer;
   const uvsArrayBuffer = new Float32Array(uvs).buffer;
+  const aosArrayBuffer = new Float32Array(aos).buffer;
 
   postMessage(
     {
@@ -127,7 +149,8 @@ onmessage = function (e) {
       normals: normalsArrayBuffer,
       indices: indicesArrayBuffer,
       uvs: uvsArrayBuffer,
+      aos: aosArrayBuffer,
     },
-    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer, uvsArrayBuffer],
+    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer, uvsArrayBuffer, aosArrayBuffer],
   );
 };

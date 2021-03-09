@@ -106,15 +106,17 @@ class Chunk {
     this.removeFromScene();
     if (this.isEmpty) return;
 
-    const { positions, normals, indices, uvs } = await simpleCull(this);
+    const { positions, normals, indices, uvs, aos } = await simpleCull(this);
 
     const positionNumComponents = 3;
     const normalNumComponents = 3;
     const uvNumComponents = 2;
+    const occlusionNumComponents = 1;
 
     this.geometry.setAttribute('position', new BufferAttribute(positions, positionNumComponents));
     this.geometry.setAttribute('normal', new BufferAttribute(normals, normalNumComponents));
     this.geometry.setAttribute('uv', new BufferAttribute(uvs, uvNumComponents));
+    this.geometry.setAttribute('ao', new BufferAttribute(aos, occlusionNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
     this.mesh = new Mesh(this.geometry, this.engine.registry.material);

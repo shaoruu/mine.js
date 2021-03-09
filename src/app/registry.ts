@@ -1,7 +1,10 @@
-import { Texture, CanvasTexture, MeshStandardMaterial } from 'three';
+import { Texture, CanvasTexture, ShaderMaterial } from 'three';
 
 import { Engine } from '..';
 import { BlockMaterialType, BlockMaterialUVType, SmartDictionary, TextureAtlas } from '../libs';
+
+import ChunkFragmentShader from './shaders/chunk/fragment.glsl';
+import ChunkVertexShader from './shaders/chunk/vertex.glsl';
 
 type RegistryOptionsType = {
   textureWidth: number;
@@ -25,7 +28,7 @@ class Registry {
   public engine: Engine;
   public options: RegistryOptionsType;
 
-  public material: MeshStandardMaterial;
+  public material: ShaderMaterial;
   public materials: SmartDictionary<BlockMaterialUVType>;
   public blocks: SmartDictionary<BlockType>;
   public cBlockDictionary: { [key: number]: BlockType }; // caches for block uv
@@ -68,10 +71,13 @@ class Registry {
     const blockTexture: Texture = texture || this.makeCanvasTexture(color || '');
     this.textureMap[name] = blockTexture;
     this.textureAtlas = new TextureAtlas(this.textureMap);
-    this.material = new MeshStandardMaterial({
-      map: this.textureAtlas.mergedTexture,
-      alphaTest: 0.1,
-      transparent: true,
+    this.material = new ShaderMaterial({
+      vertexShader: ChunkVertexShader,
+      fragmentShader: ChunkFragmentShader,
+      vertexColors: true,
+      uniforms: {
+        uTexture: { value: this.textureAtlas.mergedTexture },
+      },
     });
 
     const { ranges } = this.textureAtlas;
