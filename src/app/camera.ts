@@ -29,7 +29,7 @@ const defaultCameraOptions: CameraOptionsType = {
   maxPolarAngle: Math.PI,
   acceleration: 1,
   flyingInertia: 3,
-  reachDistance: 100,
+  reachDistance: 16,
   lookBlockScale: 1.02,
   lookBlockLerp: 0.7,
 };
@@ -200,6 +200,7 @@ class Camera {
     this.controls.getObject().position.y += this.vel.y;
 
     this.updateLookBlock();
+    console.log(this.engine.world.getVoxelByVoxel(this.targetBlock));
   };
 
   get voxel(): Coords3 {
@@ -235,7 +236,7 @@ class Camera {
     const normal: number[] = [];
 
     const result = raycast(
-      (x, y, z) => world.getVoxelByWorld([x, y, z]) !== 0,
+      (x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)]) !== 0),
       [camPos.x, camPos.y, camPos.z],
       [camDir.x, camDir.y, camDir.z],
       reachDistance * dimension,
@@ -250,7 +251,7 @@ class Camera {
     }
 
     this.lookBlockMesh.visible = true;
-    const flooredPoint = point.map((n) => Math.floor(n));
+    const flooredPoint = point.map((n, i) => Math.floor(parseFloat(n.toFixed(3))) - Number(normal[i] > 0));
 
     const [nx, ny, nz] = normal;
     this.lookBlock = Helper.mapWorldPosToVoxelPos(flooredPoint as Coords3, world.options.dimension);
@@ -259,9 +260,9 @@ class Camera {
     const [lbx, lby, lbz] = this.lookBlock;
     this.lookBlockMesh.position.lerp(
       new Vector3(
-        (lbx - Number(nx > 0)) * dimension + 0.5 * dimension,
-        (lby - Number(ny > 0)) * dimension + 0.5 * dimension,
-        (lbz - Number(nz > 0)) * dimension + 0.5 * dimension,
+        lbx * dimension + 0.5 * dimension,
+        lby * dimension + 0.5 * dimension,
+        lbz * dimension + 0.5 * dimension,
       ),
       lookBlockLerp,
     );
