@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import { Camera, Container, Debug, Registry, Rendering, World } from './app';
+import { Camera, Container, Debug, Inputs, Registry, Rendering, World } from './app';
 import { Clock, GeneratorType } from './libs';
 
 type ConfigType = {
@@ -22,6 +22,7 @@ class Engine extends EventEmitter {
   public clock: Clock;
   public container: Container;
   public rendering: Rendering;
+  public inputs: Inputs;
   public camera: Camera;
   public registry: Registry;
   public world: World;
@@ -50,6 +51,9 @@ class Engine extends EventEmitter {
 
     // rendering
     this.rendering = new Rendering(this);
+
+    // inputs
+    this.inputs = new Inputs(this);
 
     // camera
     this.camera = new Camera(this);

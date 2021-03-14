@@ -16,6 +16,6 @@ gulp.task('dev', function () {
   serveSimple('./examples/dev');
 });
 
-gulp.task('basic', function () {
+gulp.task('classic', function () {
   serveSimple('./examples/classic');
 });

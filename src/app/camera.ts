@@ -200,7 +200,6 @@ class Camera {
     this.controls.getObject().position.y += this.vel.y;
 
     this.updateLookBlock();
-    console.log(this.engine.world.getVoxelByVoxel(this.targetBlock));
   };
 
   get voxel(): Coords3 {
@@ -255,6 +254,7 @@ class Camera {
 
     const [nx, ny, nz] = normal;
     this.lookBlock = Helper.mapWorldPosToVoxelPos(flooredPoint as Coords3, world.options.dimension);
+    // target block is look block summed with the normal
     this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
 
     const [lbx, lby, lbz] = this.lookBlock;
