@@ -4,89 +4,200 @@ const get = (arr, x, y, z, stride) => {
   return arr[x * stride[0] + y * stride[1] + z * stride[2]];
 };
 
+const AO_TABLE = new Uint8Array([75, 153, 204, 255]);
+
 const FACES = [
   {
+    // viewing from -x to +x (head towards +y) (indices):
+    // 0 1 2
+    // 3 i 4 (i for irrelevant)
+    // 5 6 7
+
+    // corners:
+    // 0,1,1  0,1,0
+    // 0,0,1  0,0,0
+
     // left
     dir: [-1, 0, 0],
     mat: 3, // nx
     corners: [
-      { pos: [0, 1, 0], uv: [0, 1] },
-      { pos: [0, 0, 0], uv: [0, 0] },
-      { pos: [0, 1, 1], uv: [1, 1] },
-      { pos: [0, 0, 1], uv: [1, 0] },
+      { pos: [0, 1, 0], uv: [0, 1], side1: 1, side2: 3, corner: 0 },
+      { pos: [0, 0, 0], uv: [0, 0], side1: 3, side2: 6, corner: 5 },
+      { pos: [0, 1, 1], uv: [1, 1], side1: 1, side2: 4, corner: 2 },
+      { pos: [0, 0, 1], uv: [1, 0], side1: 4, side2: 6, corner: 7 },
+    ],
+    neighbors: [
+      [-1, 1, -1], // 0
+      [-1, 1, 0],
+      [-1, 1, 1],
+      [-1, 0, -1], // 3
+      [-1, 0, 1], // 4
+      [-1, -1, -1],
+      [-1, -1, 0],
+      [-1, -1, 1],
     ],
   },
   {
+    // viewing from +x to -x (head towards +y) (indices):
+    // 2 1 0
+    // 4 i 3 (i for irrelevant)
+    // 7 6 5
+
+    // corners:
+    // 1,1,1  1,1,0
+    // 1,0,1  1,0,0
+
     // right
     dir: [1, 0, 0],
     mat: 0, // px
     corners: [
-      { pos: [1, 1, 1], uv: [0, 1] },
-      { pos: [1, 0, 1], uv: [0, 0] },
-      { pos: [1, 1, 0], uv: [1, 1] },
-      { pos: [1, 0, 0], uv: [1, 0] },
+      { pos: [1, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },
+      { pos: [1, 0, 1], uv: [0, 0], side1: 4, side2: 6, corner: 7 },
+      { pos: [1, 1, 0], uv: [1, 1], side1: 1, side2: 3, corner: 0 },
+      { pos: [1, 0, 0], uv: [1, 0], side1: 3, side2: 6, corner: 5 },
+    ],
+    neighbors: [
+      [1, 1, -1], // 0
+      [1, 1, 0],
+      [1, 1, 1],
+      [1, 0, -1], // 3
+      [1, 0, 1], // 4
+      [1, -1, -1],
+      [1, -1, 0],
+      [1, -1, 1],
     ],
   },
   {
+    // viewing from -y to +y (head towards +z) (indices):
+    // 0 1 2
+    // 3 i 4 (i for irrelevant)
+    // 5 6 7
+
+    // corners:
+    // 0,0,1  1,0,1
+    // 0,0,0  1,0,0
+
     // bottom
     dir: [0, -1, 0],
     mat: 4, // ny
     corners: [
-      { pos: [1, 0, 1], uv: [1, 0] },
-      { pos: [0, 0, 1], uv: [0, 0] },
-      { pos: [1, 0, 0], uv: [1, 1] },
-      { pos: [0, 0, 0], uv: [0, 1] },
+      { pos: [1, 0, 1], uv: [1, 0], side1: 1, side2: 4, corner: 2 },
+      { pos: [0, 0, 1], uv: [0, 0], side1: 1, side2: 3, corner: 0 },
+      { pos: [1, 0, 0], uv: [1, 1], side1: 4, side2: 6, corner: 7 },
+      { pos: [0, 0, 0], uv: [0, 1], side1: 3, side2: 6, corner: 5 },
+    ],
+    neighbors: [
+      [-1, -1, 1],
+      [0, -1, 1],
+      [1, -1, 1],
+      [-1, -1, 0],
+      [1, -1, 0],
+      [-1, -1, -1],
+      [0, -1, -1],
+      [1, -1, -1],
     ],
   },
   {
+    // viewing from +y to -y (head towards +z) (indices):
+    // 2 1 0
+    // 4 i 3 (i for irrelevant)
+    // 7 6 5
+
+    // corners:
+    // 1,1,1  0,1,1
+    // 1,1,0  0,1,0
+
     // top
     dir: [0, 1, 0],
     mat: 1, // py
     corners: [
-      { pos: [0, 1, 1], uv: [1, 1] },
-      { pos: [1, 1, 1], uv: [0, 1] },
-      { pos: [0, 1, 0], uv: [1, 0] },
-      { pos: [1, 1, 0], uv: [0, 0] },
+      { pos: [0, 1, 1], uv: [1, 1], side1: 1, side2: 3, corner: 0 },
+      { pos: [1, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },
+      { pos: [0, 1, 0], uv: [1, 0], side1: 3, side2: 6, corner: 5 },
+      { pos: [1, 1, 0], uv: [0, 0], side1: 4, side2: 6, corner: 7 },
+    ],
+    neighbors: [
+      [-1, 1, 1],
+      [0, 1, 1],
+      [1, 1, 1],
+      [-1, 1, 0],
+      [1, 1, 0],
+      [-1, 1, -1],
+      [0, 1, -1],
+      [1, 1, -1],
     ],
   },
   {
+    // viewing from -z to +z (head towards +y) (indices):
+    // 0 1 2
+    // 3 i 4 (i for irrelevant)
+    // 5 6 7
+
+    // corners:
+    // 1,1,0  0,1,0
+    // 1,0,0  0,0,0
+
     // back
     dir: [0, 0, -1],
     mat: 5, // nz
     corners: [
-      { pos: [1, 0, 0], uv: [0, 0] },
-      { pos: [0, 0, 0], uv: [1, 0] },
-      { pos: [1, 1, 0], uv: [0, 1] },
-      { pos: [0, 1, 0], uv: [1, 1] },
+      { pos: [1, 0, 0], uv: [0, 0], side1: 3, side2: 6, corner: 5 },
+      { pos: [0, 0, 0], uv: [1, 0], side1: 4, side2: 6, corner: 7 },
+      { pos: [1, 1, 0], uv: [0, 1], side1: 1, side2: 3, corner: 0 },
+      { pos: [0, 1, 0], uv: [1, 1], side1: 1, side2: 4, corner: 2 },
+    ],
+    neighbors: [
+      [1, 1, -1],
+      [0, 1, -1],
+      [-1, 1, -1],
+      [1, 0, -1],
+      [-1, 0, -1],
+      [1, -1, -1],
+      [0, -1, -1],
+      [-1, -1, -1],
     ],
   },
   {
+    // viewing from +z to -z (head towards +y) (indices):
+    // 2 1 0
+    // 4 i 3 (i for irrelevant)
+    // 7 6 5
+
+    // corners:
+    // 0,1,1  1,1,1
+    // 0,0,1  1,0,1
+
     // front
     dir: [0, 0, 1],
     mat: 2, // pz
     corners: [
-      { pos: [0, 0, 1], uv: [0, 0] },
-      { pos: [1, 0, 1], uv: [1, 0] },
-      { pos: [0, 1, 1], uv: [0, 1] },
-      { pos: [1, 1, 1], uv: [1, 1] },
+      { pos: [0, 0, 1], uv: [0, 0], side1: 4, side2: 6, corner: 7 },
+      { pos: [1, 0, 1], uv: [1, 0], side1: 3, side2: 6, corner: 5 },
+      { pos: [0, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },
+      { pos: [1, 1, 1], uv: [1, 1], side1: 1, side2: 3, corner: 0 },
+    ],
+    neighbors: [
+      [1, 1, 1],
+      [0, 1, 1],
+      [-1, 1, 1],
+      [1, 0, 1],
+      [-1, 0, 1],
+      [1, -1, 1],
+      [0, -1, 1],
+      [-1, -1, 1],
     ],
   },
 ];
 
 function vertexAO(side1, side2, corner) {
-  if (side1 && side2) {
+  const numS1 = Number(side1 !== 0);
+  const numS2 = Number(side2 !== 0);
+  const numC = Number(corner !== 0);
+
+  if (numS1 && numS2) {
     return 0;
   }
-  return 3 - (side1 + side2 + corner);
-}
-
-function generateAmbientOcclusion(grid) {
-  return [
-    vertexAO(grid[3], grid[1], grid[0]) / 3.0,
-    vertexAO(grid[1], grid[5], grid[2]) / 3.0,
-    vertexAO(grid[5], grid[7], grid[8]) / 3.0,
-    vertexAO(grid[3], grid[7], grid[6]) / 3.0,
-  ];
+  return 3 - (numS1 + numS2 + numC);
 }
 
 onmessage = function (e) {
@@ -116,20 +227,30 @@ onmessage = function (e) {
           const isArrayMat = Array.isArray(material);
 
           // There is a voxel here but do we need faces for it?
-          for (const { dir, mat, corners } of FACES) {
+          for (const { dir, mat, corners, neighbors } of FACES) {
             const neighbor = get(data, lx + dir[0], ly + dir[1], lz + dir[2], stride);
             if (!neighbor) {
+              const nearVoxels = neighbors.map(([a, b, c]) => get(data, lx + a, ly + b, lz + c, stride));
               const { startU, endU, startV, endV } = isArrayMat ? matUVs[material[mat]] : matUVs[material];
               // this voxel has no neighbor in this direction so we need a face.
               const ndx = positions.length / 3;
+              const faceAOs = [];
 
-              for (const { pos, uv } of corners) {
+              for (const { pos, uv, side1, side2, corner } of corners) {
                 positions.push((pos[0] + vx) * dimension, (pos[1] + vy) * dimension, (pos[2] + vz) * dimension);
+                faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
                 normals.push(...dir);
                 uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
               }
-              indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);
-              aos.push(1, 1, 1, 1);
+              if (faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2]) {
+                // generate flipped quad
+                indices.push(ndx, ndx + 1, ndx + 3, ndx + 3, ndx + 2, ndx + 0);
+              } else {
+                // generate normal quad
+                indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);
+              }
+
+              aos.push(...faceAOs);
             }
           }
         }
