@@ -41,6 +41,7 @@ class Camera {
 
   public options: CameraOptionsType;
   public lookBlock: Coords3 = [0, 0, 0];
+  public targetBlock: Coords3 = [0, 0, 0];
 
   private acc = new Vector3();
   private vel = new Vector3();
@@ -249,12 +250,13 @@ class Camera {
     }
 
     this.lookBlockMesh.visible = true;
-    const flooredPoint = point.map((n) => parseFloat(n.toFixed(2)));
+    const flooredPoint = point.map((n) => Math.floor(n));
 
-    this.lookBlock = Helper.mapWorldPosToVoxelPos(flooredPoint as Coords3, world.options.dimension);
-    const [lbx, lby, lbz] = this.lookBlock;
     const [nx, ny, nz] = normal;
+    this.lookBlock = Helper.mapWorldPosToVoxelPos(flooredPoint as Coords3, world.options.dimension);
+    this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
 
+    const [lbx, lby, lbz] = this.lookBlock;
     this.lookBlockMesh.position.lerp(
       new Vector3(
         (lbx - Number(nx > 0)) * dimension + 0.5 * dimension,
