@@ -253,11 +253,14 @@ class Camera {
     const flooredPoint = point.map((n, i) => Math.floor(parseFloat(n.toFixed(3))) - Number(normal[i] > 0));
 
     const [nx, ny, nz] = normal;
-    this.lookBlock = Helper.mapWorldPosToVoxelPos(flooredPoint as Coords3, world.options.dimension);
-    // target block is look block summed with the normal
-    this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
+    const newLookBlock = Helper.mapWorldPosToVoxelPos(flooredPoint as Coords3, world.options.dimension);
 
-    const [lbx, lby, lbz] = this.lookBlock;
+    if (world.getVoxelByVoxel(newLookBlock) === 0) {
+      // this means the look block isn't actually a block
+      return;
+    }
+
+    const [lbx, lby, lbz] = newLookBlock;
     this.lookBlockMesh.position.lerp(
       new Vector3(
         lbx * dimension + 0.5 * dimension,
@@ -266,6 +269,10 @@ class Camera {
       ),
       lookBlockLerp,
     );
+
+    this.lookBlock = newLookBlock;
+    // target block is look block summed with the normal
+    this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
   }
 }
 
