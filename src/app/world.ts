@@ -16,7 +16,7 @@ type WorldOptionsType = {
 };
 
 const defaultWorldOptions: WorldOptionsType = {
-  chunkSize: 32,
+  chunkSize: 64,
   chunkPadding: 2,
   dimension: 1,
   generator: 'sin-cos',
