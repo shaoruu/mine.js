@@ -10,7 +10,6 @@ abstract class Generator {
 
   // base: [0, 0, 0] of chunk data
   abstract generate(chunk: Chunk): Promise<void>;
-  abstract getVoxelAt(vx: number, vy: number, vz: number): number;
 
   useBlockID(name: string) {
     const blockIndex = this.engine.registry.getBlockIndex(name);

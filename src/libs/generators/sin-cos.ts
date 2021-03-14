@@ -1,7 +1,17 @@
 import { Engine } from '../..';
 import { Chunk } from '../../app';
+import { Helper } from '../../utils';
 
 import { Generator } from './generator';
+
+import workerSrc from '!raw-loader!./sin-cos.worker';
+
+const DEFAULT_WORKER_COUNT = 20;
+const workers: Worker[] = [];
+
+for (let i = 0; i < DEFAULT_WORKER_COUNT; i++) {
+  workers.push(Helper.loadWorker(workerSrc));
+}
 
 class SinCosGenerator extends Generator {
   constructor(engine: Engine) {
@@ -13,36 +23,42 @@ class SinCosGenerator extends Generator {
   }
 
   async generate(chunk: Chunk) {
-    const { minOuter: min, maxOuter: max } = chunk;
+    const { voxels, minOuter, maxOuter } = chunk;
+    const { stride } = voxels;
 
-    // console.time(`generating: ${chunk.name}`);
+    const voxelsBuffer = (voxels.data as Int8Array).buffer.slice(0);
+    const worker = workers.pop() || Helper.loadWorker(workerSrc);
 
-    for (let vx = min[0]; vx < max[0]; vx++) {
-      for (let vy = min[1]; vy < max[1]; vy++) {
-        for (let vz = min[2]; vz < max[2]; vz++) {
-          const voxel = this.getVoxelAt(vx, vy, vz);
-          if (voxel) {
-            chunk.setVoxel(vx, vy, vz, voxel);
-          }
-        }
-      }
+    const newVoxels = await new Promise((resolve) => {
+      worker.postMessage(
+        {
+          data: voxelsBuffer,
+          configs: {
+            stride,
+            types: {
+              grass: this.getBlockID('grass'),
+              stone: this.getBlockID('stone'),
+            },
+            min: minOuter,
+            max: maxOuter,
+          },
+        },
+        [voxelsBuffer],
+      );
+
+      worker.onmessage = ({ data }) => {
+        const { voxels, isEmpty } = data;
+        chunk.isEmpty = isEmpty;
+        resolve(new Int8Array(voxels));
+      };
+    });
+
+    // @ts-ignore
+    chunk.voxels.data = newVoxels;
+
+    if (workers.length < DEFAULT_WORKER_COUNT) {
+      workers.push(worker);
     }
-
-    // console.timeEnd(`generating: ${chunk.name}`);
-  }
-
-  getVoxelAt(vx: number, vy: number, vz: number) {
-    let blockID = 0;
-
-    if (vy < -3) blockID = this.getBlockID('stone');
-    else {
-      const height = 2 * Math.E ** Math.cos(vx / 10) + 3 * Math.E ** Math.sin(vz / 20) + 3;
-      if (vy < height) {
-        blockID = Math.random() > 0.5 ? this.getBlockID('grass') : this.getBlockID('stone');
-      }
-    }
-
-    return blockID;
   }
 }
 
