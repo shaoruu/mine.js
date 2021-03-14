@@ -39,31 +39,36 @@ function sharedOnLoad() {
     engine.registry.addBlock('stone', 'stone');
     const lolID = engine.registry.addBlock('lol', 'lol');
 
-    let mousePressed = false,
-      eButton = null;
-    document.addEventListener('mousedown', ({ button }) => ((mousePressed = true), (eButton = button)), false);
-    document.addEventListener('mouseup', ({ button }) => ((mousePressed = false), (eButton = button)), false);
-
-    engine.start();
-
-    engine.on('tick-begin', () => {
-      console.log('ok');
-      if (mousePressed) {
-        if (eButton === 0) {
-          engine.world.breakVoxel();
-        } else if (eButton === 1) {
-          const [clx, cly, clz] = engine.camera.lookBlock;
-          for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-              for (let k = -1; k <= 1; k++) {
-                engine.world.setVoxel([clx + i, cly + j, clz + k], 0);
-              }
+    document.addEventListener('mousedown', ({ button }) => {
+      if (button === 0) {
+        engine.world.breakVoxel();
+      } else if (button === 1) {
+        const [clx, cly, clz] = engine.camera.lookBlock;
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            for (let k = -1; k <= 1; k++) {
+              engine.world.setVoxel([clx + i, cly + j, clz + k], 0);
             }
           }
-        } else if (eButton === 2) {
-          engine.world.placeVoxel(lolID);
+        }
+      } else if (button === 2) {
+        engine.world.placeVoxel(lolID);
+      }
+    });
+
+    document.addEventListener('keydown', ({ key }) => {
+      if (key === 'f') {
+        const [px, py, pz] = engine.camera.voxel;
+        for (let i = -10; i <= 10; i++) {
+          for (let j = -10; j <= 10; j++) {
+            for (let k = -10; k <= 10; k++) {
+              engine.world.setVoxel([px + i, py + j, pz + k], 0);
+            }
+          }
         }
       }
     });
+
+    engine.start();
   }
 }
