@@ -6,7 +6,5 @@ varying float vAO;
 void main() {
   vec4 textureColor = texture2D(uTexture, vUv);
 
-  textureColor = textureColor * vAO;
-
-  gl_FragColor = textureColor;
+  gl_FragColor = vec4(textureColor.xyz * vAO, textureColor.w);
 } 

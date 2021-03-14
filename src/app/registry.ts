@@ -72,6 +72,7 @@ class Registry {
     this.textureMap[name] = blockTexture;
     this.textureAtlas = new TextureAtlas(this.textureMap);
     this.material = new ShaderMaterial({
+      transparent: true,
       vertexShader: ChunkVertexShader,
       fragmentShader: ChunkFragmentShader,
       vertexColors: true,
