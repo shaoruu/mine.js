@@ -1,4 +1,5 @@
-import { PerspectiveCamera, Vector3 } from 'three';
+import raycast from 'fast-voxel-raycast';
+import { BoxBufferGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3 } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
 import { Engine } from '..';
@@ -14,6 +15,9 @@ type CameraOptionsType = {
   maxPolarAngle: number;
   acceleration: number;
   flyingInertia: number;
+  reachDistance: number;
+  lookBlockScale: number;
+  lookBlockLerp: number;
 };
 
 const defaultCameraOptions: CameraOptionsType = {
@@ -25,6 +29,9 @@ const defaultCameraOptions: CameraOptionsType = {
   maxPolarAngle: Math.PI,
   acceleration: 1,
   flyingInertia: 3,
+  reachDistance: 100,
+  lookBlockScale: 1.02,
+  lookBlockLerp: 0.7,
 };
 
 class Camera {
@@ -33,6 +40,7 @@ class Camera {
   public controls: PointerLockControls;
 
   public options: CameraOptionsType;
+  public lookBlock: Coords3 = [0, 0, 0];
 
   private acc = new Vector3();
   private vel = new Vector3();
@@ -44,14 +52,13 @@ class Camera {
     front: false,
     back: false,
   };
+  private lookBlockMesh: Mesh;
 
   constructor(engine: Engine, options: Partial<CameraOptionsType> = {}) {
-    this.options = {
+    const { fov, near, far, initPos, lookBlockScale } = (this.options = {
       ...defaultCameraOptions,
       ...options,
-    };
-
-    const { fov, near, far, initPos } = this.options;
+    });
 
     this.engine = engine;
 
@@ -77,6 +84,23 @@ class Camera {
     document.addEventListener('keyup', this.onKeyUp, false);
 
     this.threeCamera.lookAt(new Vector3(0, 0, 0));
+
+    // look block
+    engine.on('ready', () => {
+      const { dimension } = engine.world.options;
+      this.lookBlockMesh = new Mesh(
+        new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
+        new MeshBasicMaterial({
+          color: 'white',
+          alphaTest: 0.2,
+          opacity: 0.3,
+          transparent: true,
+        }),
+      );
+      this.lookBlockMesh.renderOrder = 100000;
+
+      engine.rendering.scene.add(this.lookBlockMesh);
+    });
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {
@@ -173,6 +197,8 @@ class Camera {
     this.controls.moveForward(-this.vel.z);
 
     this.controls.getObject().position.y += this.vel.y;
+
+    this.updateLookBlock();
   };
 
   get voxel(): Coords3 {
@@ -187,6 +213,56 @@ class Camera {
   get voxelPositionStr() {
     const { voxel } = this;
     return `${voxel[0]} ${voxel[1]} ${voxel[2]}`;
+  }
+
+  get lookBlockStr() {
+    const { lookBlock } = this;
+    return `${lookBlock[0]} ${lookBlock[1]} ${lookBlock[2]}`;
+  }
+
+  private updateLookBlock() {
+    const { world } = this.engine;
+    const { dimension } = world.options;
+    const { reachDistance, lookBlockLerp } = this.options;
+
+    const camDir = new Vector3();
+    const camPos = this.threeCamera.position;
+    this.threeCamera.getWorldDirection(camDir);
+    camDir.normalize();
+
+    const point: number[] = [];
+    const normal: number[] = [];
+
+    const result = raycast(
+      (x, y, z) => world.getVoxelByWorld([x, y, z]) !== 0,
+      [camPos.x, camPos.y, camPos.z],
+      [camDir.x, camDir.y, camDir.z],
+      reachDistance * dimension,
+      point,
+      normal,
+    );
+
+    if (!result) {
+      // no target
+      this.lookBlockMesh.visible = false;
+      return;
+    }
+
+    this.lookBlockMesh.visible = true;
+    const flooredPoint = point.map((n) => parseFloat(n.toFixed(2)));
+
+    this.lookBlock = Helper.mapWorldPosToVoxelPos(flooredPoint as Coords3, world.options.dimension);
+    const [lbx, lby, lbz] = this.lookBlock;
+    const [nx, ny, nz] = normal;
+
+    this.lookBlockMesh.position.lerp(
+      new Vector3(
+        (lbx - Number(nx > 0)) * dimension + 0.5 * dimension,
+        (lby - Number(ny > 0)) * dimension + 0.5 * dimension,
+        (lbz - Number(nz > 0)) * dimension + 0.5 * dimension,
+      ),
+      lookBlockLerp,
+    );
   }
 }
 

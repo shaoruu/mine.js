@@ -67,12 +67,29 @@ class World extends EventEmitter {
     this.meshDirtyChunks();
   }
 
-  getChunkByCPos(coords: Coords3) {
-    return this.getChunkByName(Helper.getChunkName(coords));
+  getChunkByCPos(cCoords: Coords3) {
+    return this.getChunkByName(Helper.getChunkName(cCoords));
   }
 
   getChunkByName(chunkName: string) {
     return this.chunks.get(chunkName);
+  }
+
+  getChunkByVoxel(vCoords: Coords3) {
+    const { chunkSize } = this.options;
+    const chunkCoords = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
+    return this.getChunkByCPos(chunkCoords);
+  }
+
+  getVoxelByVoxel(vCoords: Coords3) {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk ? chunk.getVoxel(...vCoords) : null;
+  }
+
+  getVoxelByWorld(wCoords: Coords3) {
+    const { dimension } = this.options;
+    const vCoords = Helper.mapWorldPosToVoxelPos(wCoords, dimension);
+    return this.getVoxelByVoxel(vCoords);
   }
 
   setChunk(chunk: Chunk) {

@@ -1,6 +1,6 @@
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
-import { AxesHelper, DoubleSide, GridHelper, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
+import { AxesHelper, GridHelper } from 'three';
 
 import { Engine } from '..';
 import { Helper } from '../utils';
@@ -129,6 +129,7 @@ class Debug {
     cameraFolder.add(camera.options, 'acceleration', 0, 5, 0.01);
     cameraFolder.add(camera.options, 'flyingInertia', 0, 5, 0.01);
     this.registerDisplay('position', camera, 'voxelPositionStr');
+    this.registerDisplay('looking at', camera, 'lookBlockStr');
   };
 
   tick = () => {

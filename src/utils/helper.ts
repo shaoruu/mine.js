@@ -35,9 +35,10 @@ class Helper {
    * @returns {Coords3}
    */
   public static mapVoxelPosToChunkLocalPos = (voxelPos: Coords3, chunkSize: number): Coords3 => {
+    const [cx, cy, cz] = Helper.mapVoxelPosToChunkPos(voxelPos, chunkSize);
     const [vx, vy, vz] = voxelPos;
 
-    return [vx % chunkSize, vy % chunkSize, vz % chunkSize];
+    return [vx - cx * chunkSize, vy - cy * chunkSize, vz - cz * chunkSize];
   };
 
   /**
