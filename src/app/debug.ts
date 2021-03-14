@@ -121,7 +121,7 @@ class Debug {
 
     // WORLD
     const worldFolder = this.gui.addFolder('world');
-    worldFolder.add(world.options, 'renderRadius', 1, 6, 1);
+    worldFolder.add(world.options, 'renderRadius', 1, 10, 1);
     this.registerDisplay('chunk', world, 'camChunkPosStr');
 
     // CAMERA
