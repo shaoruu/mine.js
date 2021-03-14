@@ -114,8 +114,8 @@ class Registry {
         name,
         material: null,
       };
-      this.blocks.set(name, noneBlock);
-      return noneBlock;
+      const noneBlockID = this.blocks.set(name, noneBlock);
+      return noneBlockID;
     }
 
     if (Array.isArray(material)) {

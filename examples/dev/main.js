@@ -27,8 +27,6 @@ function sharedOnLoad() {
       generator: 'sin-cos',
     });
 
-    console.log(images);
-
     engine.registry.addMaterial('grass-top', { image: images['grass-top'] });
     engine.registry.addMaterial('grass-side', { image: images['grass-side'] });
     engine.registry.addMaterial('grass-bottom', { image: images['dirt'] });
@@ -36,8 +34,7 @@ function sharedOnLoad() {
     engine.registry.addMaterial('lol', { image: images['lol'] });
 
     engine.registry.addBlock('grass', ['grass-top', 'grass-side', 'grass-bottom']);
-    engine.registry.addBlock('stone', 'stone');
-    const lolID = engine.registry.addBlock('lol', 'lol');
+    const stoneID = engine.registry.addBlock('stone', 'stone');
 
     document.addEventListener('mousedown', ({ button }) => {
       if (button === 0) {
@@ -52,7 +49,7 @@ function sharedOnLoad() {
           }
         }
       } else if (button === 2) {
-        engine.world.placeVoxel(lolID);
+        engine.world.placeVoxel(stoneID);
       }
     });
 

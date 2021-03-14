@@ -10,8 +10,9 @@ class SmartDictionary<T> {
   set(name: string, item: T) {
     // TODO: must be better way of doing this
     if (!isNaN(this.indices.get(name) as never)) {
-      this.data[this.indices.get(name) as never] = item;
-      return;
+      const index = this.indices.get(name);
+      this.data[index as never] = item;
+      return index;
     }
 
     const index = this.data.length;

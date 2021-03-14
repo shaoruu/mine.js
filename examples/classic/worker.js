@@ -67,7 +67,5 @@ self.onmessage = function (e) {
     }
   }
 
-  const voxelsBuffer = new Int8Array(dataBuffer).buffer;
-
-  postMessage({ voxels: voxelsBuffer }, [voxelsBuffer]);
+  postMessage({ voxels: data.buffer }, [data.buffer]);
 };

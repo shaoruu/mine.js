@@ -1,9 +1,5 @@
 // AO from https://github.com/joshmarinacci/voxeljs-next/blob/05514704fe109c69072ae819f1032603bdb633d3/src/VoxelMesh.js#L363
 
-const get = (arr, x, y, z, stride) => {
-  return arr[x * stride[0] + y * stride[1] + z * stride[2]];
-};
-
 const AO_TABLE = new Uint8Array([75, 153, 204, 255]);
 
 const FACES = [
@@ -195,6 +191,10 @@ const FACES = [
   },
 ];
 
+const get = (arr, x, y, z, stride) => {
+  return arr[x * stride[0] + y * stride[1] + z * stride[2]];
+};
+
 function vertexAO(side1, side2, corner) {
   const numS1 = Number(side1 !== 0);
   const numS2 = Number(side2 !== 0);
@@ -253,6 +253,7 @@ onmessage = function (e) {
                 normals.push(...dir);
                 uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
               }
+
               if (faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2]) {
                 // generate flipped quad
                 indices.push(ndx, ndx + 1, ndx + 3, ndx + 3, ndx + 2, ndx + 0);

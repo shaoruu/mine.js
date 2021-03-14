@@ -82,20 +82,24 @@ class World extends EventEmitter {
   }
 
   getEdgeChunksByVoxel(vCoords: Coords3) {
-    const { chunkSize } = this.options;
+    const { chunkSize, chunkPadding } = this.options;
     const [cx, cy, cz] = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
     const [lx, ly, lz] = Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
     const edgeChunks: (Chunk | null)[] = [];
     // check if local position is on the edge
     // TODO: fix this hacky way of doing so.
-    if (lx === 0 || ly === 0 || lz === 0 || lx === chunkSize - 1 || ly === chunkSize - 1 || lz === chunkSize - 1) {
-      if (lx === 0) edgeChunks.push(this.getChunkByCPos([cx - 1, cy, cz]));
-      if (ly === 0) edgeChunks.push(this.getChunkByCPos([cx, cy - 1, cz]));
-      if (lz === 0) edgeChunks.push(this.getChunkByCPos([cx, cy, cz - 1]));
-      if (lx === chunkSize - 1) edgeChunks.push(this.getChunkByCPos([cx + 1, cy, cz]));
-      if (ly === chunkSize - 1) edgeChunks.push(this.getChunkByCPos([cx, cy + 1, cz]));
-      if (lz === chunkSize - 1) edgeChunks.push(this.getChunkByCPos([cx, cy, cz + 1]));
-    }
+    const a = lx < chunkPadding;
+    const b = ly < chunkPadding;
+    const c = lz < chunkPadding;
+    const d = lx >= chunkSize - chunkPadding - 1;
+    const e = ly >= chunkSize - chunkPadding - 1;
+    const f = lz >= chunkSize - chunkPadding - 1;
+    if (a) edgeChunks.push(this.getChunkByCPos([cx - 1, cy, cz]));
+    if (b) edgeChunks.push(this.getChunkByCPos([cx, cy - 1, cz]));
+    if (c) edgeChunks.push(this.getChunkByCPos([cx, cy, cz - 1]));
+    if (d) edgeChunks.push(this.getChunkByCPos([cx + 1, cy, cz]));
+    if (e) edgeChunks.push(this.getChunkByCPos([cx, cy + 1, cz]));
+    if (f) edgeChunks.push(this.getChunkByCPos([cx, cy, cz + 1]));
     return edgeChunks.filter(Boolean);
   }
 
