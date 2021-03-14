@@ -98,11 +98,15 @@ class Engine extends EventEmitter {
   tick = () => {
     if (this.paused) return;
 
+    this.emit('tick-begin');
+
     this.clock.tick();
     this.camera.tick();
     this.world.tick();
     this.rendering.tick();
     this.debug.tick();
+
+    this.emit('tick-end');
   };
 
   render = () => {

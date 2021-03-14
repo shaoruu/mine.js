@@ -26,7 +26,7 @@ async function generateData(chunk) {
   const { voxels, minOuter, maxOuter } = chunk;
   const { stride } = voxels;
 
-  const voxelsBuffer = voxels.data.buffer;
+  const voxelsBuffer = voxels.data.buffer.slice(0);
   const worker = workers.pop() || makeWorker();
 
   const newVoxels = await new Promise((resolve) => {

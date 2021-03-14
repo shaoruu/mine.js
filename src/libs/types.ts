@@ -16,7 +16,7 @@ export type BlockType = {
   material: BlockMaterialType;
 };
 
-export type Coords3 = [number, number, number];
+export type Coords3 = [x: number, y: number, z: number];
 export type GeneratorType = 'flat' | 'sin-cos' | '';
 
 export type MeshResultType = {

@@ -93,6 +93,7 @@ class Chunk {
 
   setVoxel(vx: number, vy: number, vz: number, id: number) {
     if (id !== 0) this.isEmpty = false;
+    this.isDirty = true; // mark chunk as dirty
     const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
     this.setLocal(lx, ly, lz, id);
   }
@@ -103,7 +104,9 @@ class Chunk {
   }
 
   async buildMesh() {
-    this.removeFromScene();
+    // mark chunk as built mesh
+    this.isDirty = false;
+
     if (this.isEmpty) return;
 
     const { positions, normals, indices, uvs, aos } = await simpleCull(this);
@@ -121,12 +124,13 @@ class Chunk {
 
     this.mesh = new Mesh(this.geometry, this.engine.registry.material);
     this.mesh.name = this.name;
-
-    this.isDirty = false;
+    this.mesh.renderOrder = 10000;
+    this.mesh.frustumCulled = false;
   }
 
   addToScene() {
-    if (!this.isAdded && this.mesh) {
+    this.removeFromScene();
+    if (this.mesh) {
       this.engine.rendering.scene.add(this.mesh);
       this.isAdded = true;
     }
