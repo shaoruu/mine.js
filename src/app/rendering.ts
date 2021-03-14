@@ -1,45 +1,26 @@
 import { EventEmitter } from 'events';
 
-import {
-  AmbientLight,
-  BackSide,
-  Color,
-  DirectionalLight,
-  Mesh,
-  Scene,
-  ShaderMaterial,
-  SphereGeometry,
-  sRGBEncoding,
-  WebGLRenderer,
-} from 'three';
+import { AmbientLight, Color, DirectionalLight, Scene, sRGBEncoding, WebGLRenderer } from 'three';
 
 import { Engine } from '../';
-
-import skyFragmentShader from './shaders/sky/fragment.glsl';
-import skyVertexShader from './shaders/sky/vertex.glsl';
+import { Sky } from '../libs';
 
 type RenderingOptionsType = {
   clearColor: string;
-  topColor: string;
-  bottomColor: string;
   directionalLightColor: string;
   directionalLightIntensity: number;
   directionalLightPosition: [number, number, number];
   ambientLightColor: string;
   ambientLightIntensity: number;
-  skyDomeOffset: number;
 };
 
 const defaultRenderingOptions: RenderingOptionsType = {
   clearColor: '#b6d2ff',
-  topColor: '#74B3FF',
-  bottomColor: '#eeeeee',
   directionalLightColor: '#ffffff',
   directionalLightIntensity: 0.5,
   directionalLightPosition: [300, 250, -500],
   ambientLightColor: '#ffffff',
   ambientLightIntensity: 0.3,
-  skyDomeOffset: 600,
 };
 
 class Rendering extends EventEmitter {
@@ -48,7 +29,7 @@ class Rendering extends EventEmitter {
   public renderer: WebGLRenderer;
   public directionalLight: DirectionalLight;
   public ambientLight: AmbientLight;
-  public sky: Mesh;
+  public sky: Sky;
 
   public options: RenderingOptionsType;
 
@@ -67,9 +48,6 @@ class Rendering extends EventEmitter {
       directionalLightPosition,
       ambientLightColor,
       ambientLightIntensity,
-      topColor,
-      bottomColor,
-      skyDomeOffset,
     } = this.options;
 
     this.engine = engine;
@@ -94,23 +72,8 @@ class Rendering extends EventEmitter {
     this.scene.add(this.ambientLight);
 
     // sky
-    const uniforms = {
-      topColor: { value: new Color(topColor) },
-      bottomColor: { value: new Color(bottomColor) },
-      offset: { value: skyDomeOffset },
-      exponent: { value: 0.6 },
-    };
-
-    const skyGeo = new SphereGeometry(4000, 32, 15);
-    const skyMat = new ShaderMaterial({
-      uniforms: uniforms,
-      vertexShader: skyVertexShader,
-      fragmentShader: skyFragmentShader,
-      side: BackSide,
-    });
-
-    this.sky = new Mesh(skyGeo, skyMat);
-    this.scene.add(this.sky);
+    this.sky = new Sky();
+    this.scene.add(this.sky.mesh);
 
     this.adjustRenderer();
   }

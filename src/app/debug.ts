@@ -86,16 +86,16 @@ class Debug {
 
     const renderingFolder = this.gui.addFolder('rendering');
     renderingFolder
-      .add(rendering.options, 'skyDomeOffset', 200, 2000, 10)
+      .add(rendering.sky.options, 'domeOffset', 200, 2000, 10)
       // @ts-ignore
       .onChange((value) => (rendering.sky.material.uniforms.offset.value = value));
 
     renderingFolder
-      .addColor(rendering.options, 'topColor')
+      .addColor(rendering.sky.options, 'topColor')
       // @ts-ignore
       .onFinishChange((value) => rendering.sky.material.uniforms.topColor.value.set(value));
     renderingFolder
-      .addColor(rendering.options, 'bottomColor')
+      .addColor(rendering.sky.options, 'bottomColor')
       // @ts-ignore
       .onFinishChange((value) => rendering.sky.material.uniforms.bottomColor.value.set(value));
     renderingFolder
