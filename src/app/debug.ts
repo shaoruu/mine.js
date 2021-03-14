@@ -1,6 +1,6 @@
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
-import { AxesHelper, BoxGeometry, GridHelper, Mesh, MeshBasicMaterial } from 'three';
+import { AxesHelper, DoubleSide, GridHelper, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
 
 import { Engine } from '..';
 import { Helper } from '../utils';
@@ -46,6 +46,15 @@ class Debug {
 
       const gridHelper = new GridHelper(2 * chunkSize * dimension, 2 * chunkSize);
       scene.add(gridHelper);
+    });
+
+    engine.on('start', () => {
+      // textureTest
+      // const testBlock = new PlaneBufferGeometry(4, 4);
+      // const testMat = new MeshBasicMaterial({ map: this.engine.registry.mergedTexture, side: DoubleSide });
+      // const testMesh = new Mesh(testBlock, testMat);
+      // testMesh.position.set(0, 20, 0);
+      // this.engine.rendering.scene.add(testMesh);
     });
   }
 
@@ -116,6 +125,9 @@ class Debug {
     this.registerDisplay('chunk', world, 'camChunkPosStr');
 
     // CAMERA
+    const cameraFolder = this.gui.addFolder('camera');
+    cameraFolder.add(camera.options, 'acceleration', 0, 5, 0.01);
+    cameraFolder.add(camera.options, 'flyingInertia', 0, 5, 0.01);
     this.registerDisplay('position', camera, 'voxelPositionStr');
   };
 

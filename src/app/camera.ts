@@ -20,7 +20,7 @@ const defaultCameraOptions: CameraOptionsType = {
   fov: 75,
   near: 0.1,
   far: 8000,
-  initPos: [10, 10, 10],
+  initPos: [-20, 20, -20],
   minPolarAngle: 0,
   maxPolarAngle: Math.PI,
   acceleration: 1,

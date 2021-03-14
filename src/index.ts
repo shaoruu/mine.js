@@ -107,10 +107,12 @@ class Engine extends EventEmitter {
 
   start = () => {
     this.paused = false;
+    this.emit('start');
   };
 
   pause = () => {
     this.paused = true;
+    this.emit('pause');
   };
 }
 
