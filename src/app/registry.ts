@@ -13,6 +13,7 @@ type RegistryOptionsType = {
 type MaterialOptions = {
   color?: string;
   texture?: Texture;
+  image?: HTMLImageElement;
 };
 
 type BlockType = {
@@ -21,8 +22,16 @@ type BlockType = {
 };
 
 const defaultRegistryOptions: RegistryOptionsType = {
-  textureWidth: 16,
+  textureWidth: 32,
 };
+
+function reportMaterialError(name: string, message: string) {
+  throw new Error(`Error adding material, ${name}: ${message}`);
+}
+
+function reportBlockError(name: string, message: string) {
+  throw new Error(`Error registering block, ${name}: ${message}`);
+}
 
 class Registry {
   public engine: Engine;
@@ -58,20 +67,23 @@ class Registry {
   }
 
   addMaterial = (name: string, options: MaterialOptions) => {
-    const { color, texture } = options;
+    const { textureWidth } = this.options;
+    const { color, image, texture } = options;
 
-    if (!color && !texture) {
-      throw new Error(`Error adding material, ${name}: no color or map provided.`);
+    if (!color && !image && !texture) {
+      reportMaterialError(name, 'no color or map provided.');
     }
 
     if (this.materials.getIndex(name) >= 0) {
-      throw new Error(`Error adding material, ${name}: material name taken.`);
+      // ? Should material be replaceable?
+      console.warn('Material,', name, 'has been replaced.');
     }
 
-    const blockTexture: Texture = texture || this.makeCanvasTexture(color || '');
+    const blockTexture: Texture = texture || image ? this.makeImageTexture(image) : this.makeCanvasTexture(color || '');
     this.textureMap[name] = blockTexture;
-    this.textureAtlas = new TextureAtlas(this.textureMap);
+    this.textureAtlas = new TextureAtlas(this.textureMap, { textureDimension: textureWidth });
     this.material = new ShaderMaterial({
+      // wireframe: true,
       transparent: true,
       vertexShader: ChunkVertexShader,
       fragmentShader: ChunkFragmentShader,
@@ -94,7 +106,7 @@ class Registry {
 
   addBlock = (name: string, material: BlockMaterialType = null) => {
     if (this.blocks.getIndex(name) >= 0) {
-      throw new Error(`Error registering block, ${name}: block name taken.`);
+      console.warn('Block,', name, 'has been replaced.');
     }
 
     if (material === null) {
@@ -107,9 +119,15 @@ class Registry {
     }
 
     if (Array.isArray(material)) {
-      const [px, py, pz, nx, ny, nz] = material;
-      if (!px || !py || !pz || (material.length === 6 && (!nx || !ny || !nz)))
-        throw new Error(`Error registering block, ${name}: containing empty material`);
+      if (material.length !== 3 && material.length !== 6) {
+        reportBlockError(name, 'material array must be in length of 3 or 6.');
+      }
+      // if 3 elements: [top, side, bottom]
+      // if 6 elements: [px, py, pz, nx, ny, nz]
+      const [a, b, c, d, e, f] = material;
+      if ((Array.length === 3 && (!a || !b || !c)) || (Array.length === 6 && (!a || !b || !c || !d || !e || !f))) {
+        reportBlockError(name, 'containing empty material.');
+      }
 
       for (let i = 0; i < material.length; i++) {
         const mat = material[i];
@@ -151,6 +169,10 @@ class Registry {
     return this.blocks.get(name);
   };
 
+  get mergedTexture() {
+    return this.textureAtlas.mergedTexture;
+  }
+
   private makeCanvasTexture(color: string) {
     const { textureWidth } = this.options;
     const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
@@ -164,6 +186,17 @@ class Registry {
     }
 
     return new CanvasTexture(context ? context.canvas : tempCanvas);
+  }
+
+  private makeImageTexture(image?: HTMLImageElement) {
+    if (image) {
+      const { textureWidth } = this.options;
+      image.style.width = `${textureWidth}px`;
+      image.style.height = 'auto';
+    }
+    const texture = new Texture(image);
+    texture.needsUpdate = true;
+    return texture;
   }
 
   private updateCache() {

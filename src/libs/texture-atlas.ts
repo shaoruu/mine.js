@@ -57,15 +57,13 @@ class TextureAtlas {
       if (context) {
         const startX = col * textureDimension;
         const startY = row * textureDimension;
-        const imageWidth = texture.image.width;
-        const imageHeight = texture.image.height;
 
-        context.drawImage(texture.image, startX, startY, imageWidth, imageHeight);
+        context.drawImage(texture.image, startX, startY, textureDimension, textureDimension);
 
         const startU = startX / canvasWidth;
-        const endU = (startX + imageWidth) / canvasWidth;
+        const endU = (startX + textureDimension) / canvasWidth;
         const startV = 1 - startY / canvasHeight;
-        const endV = 1 - (startY + imageHeight) / canvasHeight;
+        const endV = 1 - (startY + textureDimension) / canvasHeight;
 
         this.ranges[textureName] = {
           startU,

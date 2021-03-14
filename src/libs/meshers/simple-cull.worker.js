@@ -19,7 +19,8 @@ const FACES = [
 
     // left
     dir: [-1, 0, 0],
-    mat: 3, // nx
+    mat3: 1, // side
+    mat6: 3, // nx
     corners: [
       { pos: [0, 1, 0], uv: [0, 1], side1: 1, side2: 3, corner: 0 },
       { pos: [0, 0, 0], uv: [0, 0], side1: 3, side2: 6, corner: 5 },
@@ -49,7 +50,8 @@ const FACES = [
 
     // right
     dir: [1, 0, 0],
-    mat: 0, // px
+    mat3: 1, // side
+    mat6: 0, // px
     corners: [
       { pos: [1, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },
       { pos: [1, 0, 1], uv: [0, 0], side1: 4, side2: 6, corner: 7 },
@@ -79,7 +81,8 @@ const FACES = [
 
     // bottom
     dir: [0, -1, 0],
-    mat: 4, // ny
+    mat3: 2, // bottom
+    mat6: 4, // ny
     corners: [
       { pos: [1, 0, 1], uv: [1, 0], side1: 1, side2: 4, corner: 2 },
       { pos: [0, 0, 1], uv: [0, 0], side1: 1, side2: 3, corner: 0 },
@@ -109,7 +112,8 @@ const FACES = [
 
     // top
     dir: [0, 1, 0],
-    mat: 1, // py
+    mat3: 0, // top
+    mat6: 1, // py
     corners: [
       { pos: [0, 1, 1], uv: [1, 1], side1: 1, side2: 3, corner: 0 },
       { pos: [1, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },
@@ -139,7 +143,8 @@ const FACES = [
 
     // back
     dir: [0, 0, -1],
-    mat: 5, // nz
+    mat3: 1, // side
+    mat6: 5, // nz
     corners: [
       { pos: [1, 0, 0], uv: [0, 0], side1: 3, side2: 6, corner: 5 },
       { pos: [0, 0, 0], uv: [1, 0], side1: 4, side2: 6, corner: 7 },
@@ -169,7 +174,8 @@ const FACES = [
 
     // front
     dir: [0, 0, 1],
-    mat: 2, // pz
+    mat3: 1, // side
+    mat6: 2, // pz
     corners: [
       { pos: [0, 0, 1], uv: [0, 0], side1: 4, side2: 6, corner: 7 },
       { pos: [1, 0, 1], uv: [1, 0], side1: 3, side2: 6, corner: 5 },
@@ -225,13 +231,18 @@ onmessage = function (e) {
         if (voxel) {
           const { material } = blockMats[voxel];
           const isArrayMat = Array.isArray(material);
+          const isMat3 = isArrayMat ? material.length === 3 : false;
 
           // There is a voxel here but do we need faces for it?
-          for (const { dir, mat, corners, neighbors } of FACES) {
+          for (const { dir, mat3, mat6, corners, neighbors } of FACES) {
             const neighbor = get(data, lx + dir[0], ly + dir[1], lz + dir[2], stride);
             if (!neighbor) {
               const nearVoxels = neighbors.map(([a, b, c]) => get(data, lx + a, ly + b, lz + c, stride));
-              const { startU, endU, startV, endV } = isArrayMat ? matUVs[material[mat]] : matUVs[material];
+              const { startU, endU, startV, endV } = isArrayMat
+                ? isMat3
+                  ? matUVs[material[mat3]]
+                  : matUVs[material[mat6]]
+                : matUVs[material];
               // this voxel has no neighbor in this direction so we need a face.
               const ndx = positions.length / 3;
               const faceAOs = [];

@@ -1,6 +1,6 @@
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
-import { AxesHelper, GridHelper } from 'three';
+import { AxesHelper, BoxGeometry, GridHelper, Mesh, MeshBasicMaterial } from 'three';
 
 import { Engine } from '..';
 import { Helper } from '../utils';
