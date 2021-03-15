@@ -237,13 +237,14 @@ onmessage = function (e) {
           for (const { dir, mat3, mat6, corners, neighbors } of FACES) {
             const neighbor = get(data, lx + dir[0], ly + dir[1], lz + dir[2], stride);
             if (!neighbor) {
+              // this voxel has no neighbor in this direction so we need a face.
               const nearVoxels = neighbors.map(([a, b, c]) => get(data, lx + a, ly + b, lz + c, stride));
               const { startU, endU, startV, endV } = isArrayMat
                 ? isMat3
                   ? matUVs[material[mat3]]
                   : matUVs[material[mat6]]
                 : matUVs[material];
-              // this voxel has no neighbor in this direction so we need a face.
+
               const ndx = positions.length / 3;
               const faceAOs = [];
 

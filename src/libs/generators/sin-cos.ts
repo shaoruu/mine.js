@@ -4,7 +4,7 @@ import { Helper } from '../../utils';
 
 import { Generator } from './generator';
 
-import workerSrc from '!raw-loader!./sin-cos.worker';
+import workerSrc from '!raw-loader!./workers/sin-cos.worker';
 
 const DEFAULT_WORKER_COUNT = 20;
 const workers: Worker[] = [];
@@ -36,6 +36,7 @@ class SinCosGenerator extends Generator {
           configs: {
             stride,
             types: {
+              dirt: this.getBlockID('dirt'),
               grass: this.getBlockID('grass'),
               stone: this.getBlockID('stone'),
             },

@@ -2,7 +2,7 @@ import { Chunk } from '../../app';
 import { Helper } from '../../utils';
 import { MeshResultType } from '../types';
 
-import workerSrc from '!raw-loader!./simple-cull.worker';
+import workerSrc from '!raw-loader!./workers/simple-cull.worker';
 
 const DEFAULT_WORKER_COUNT = 20;
 const workers: Worker[] = [];

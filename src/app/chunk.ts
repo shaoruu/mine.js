@@ -32,10 +32,12 @@ class Chunk {
 
   public geometry: BufferGeometry;
   public mesh: Mesh;
+  public altMesh: Mesh | undefined; // this way, this.mesh is in existence until ready to change, avoiding empty chunk frames
 
   public isEmpty = true;
   public isDirty = true;
   public isAdded = false;
+  public isMeshing = false; // is meshing
   public isInitialized = false;
   public isPending = false; // pending for client-side terrain generation
 
@@ -92,10 +94,15 @@ class Chunk {
   }
 
   setVoxel(vx: number, vy: number, vz: number, id: number) {
-    if (id !== 0) this.isEmpty = false;
-    this.isDirty = true; // mark chunk as dirty
+    // if voxel type doesn't change (might conflict with lighting)
+    if (this.getVoxel(vx, vy, vz) === id) return;
+
     const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
     this.setLocal(lx, ly, lz, id);
+
+    // change chunk state
+    if (id !== 0) this.isEmpty = false;
+    this.isDirty = true; // mark chunk as dirty
   }
 
   initialized() {
@@ -104,8 +111,7 @@ class Chunk {
   }
 
   async buildMesh() {
-    // mark chunk as built mesh
-    this.isDirty = false;
+    this.isMeshing = true;
 
     if (this.isEmpty) return;
 
@@ -122,16 +128,22 @@ class Chunk {
     this.geometry.setAttribute('ao', new BufferAttribute(aos, occlusionNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
-    this.mesh = new Mesh(this.geometry, this.engine.registry.material);
-    this.mesh.name = this.name;
-    this.mesh.renderOrder = 10000;
-    this.mesh.frustumCulled = false;
+    this.altMesh = new Mesh(this.geometry, this.engine.registry.material);
+    this.altMesh.name = this.name;
+    this.altMesh.renderOrder = 10000;
+    this.altMesh.frustumCulled = false;
+
+    // mark chunk as built mesh
+    this.isDirty = false;
+    this.isMeshing = false;
   }
 
   addToScene() {
     this.removeFromScene();
-    if (this.mesh) {
-      this.engine.rendering.scene.add(this.mesh);
+    if (this.altMesh) {
+      this.engine.rendering.scene.add(this.altMesh);
+      this.mesh = this.altMesh;
+      this.altMesh = undefined;
       this.isAdded = true;
     }
   }

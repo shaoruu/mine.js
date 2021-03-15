@@ -91,9 +91,9 @@ class World extends EventEmitter {
     const a = lx < chunkPadding;
     const b = ly < chunkPadding;
     const c = lz < chunkPadding;
-    const d = lx >= chunkSize - chunkPadding - 1;
-    const e = ly >= chunkSize - chunkPadding - 1;
-    const f = lz >= chunkSize - chunkPadding - 1;
+    const d = lx >= chunkSize - chunkPadding;
+    const e = ly >= chunkSize - chunkPadding;
+    const f = lz >= chunkSize - chunkPadding;
     if (a) edgeChunks.push(this.getChunkByCPos([cx - 1, cy, cz]));
     if (b) edgeChunks.push(this.getChunkByCPos([cx, cy - 1, cz]));
     if (c) edgeChunks.push(this.getChunkByCPos([cx, cy, cz - 1]));
@@ -174,8 +174,8 @@ class World extends EventEmitter {
                 // this means chunk is dirty. two possibilities:
                 // 1. chunk has just been populated with terrain data
                 // 2. chunk is modified
-                if (!this.dirtyChunks.includes(chunk)) {
-                  this.dirtyChunks.unshift(chunk);
+                if (!chunk.isMeshing) {
+                  chunk.buildMesh();
                 }
               }
             }
@@ -227,6 +227,9 @@ class World extends EventEmitter {
           // if chunk data has not been initialized
           this.requestChunkData(chunk);
           this.dirtyChunks.push(chunk);
+          continue;
+        }
+        if (chunk.isMeshing) {
           continue;
         }
 

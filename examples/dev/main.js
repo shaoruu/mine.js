@@ -9,7 +9,9 @@ const imagesMap = {
   'grass-side': 'resources/grass_side.png',
   dirt: 'resources/dirt.png',
   stone: 'resources/stone.png',
-  lol: 'resources/lol.png',
+  lol: 'resources/lol.jpeg',
+  lol2: 'resources/lol.png',
+  lol3: 'resources/chug2.png',
 };
 
 Object.keys(imagesMap).forEach((key) => {
@@ -30,27 +32,38 @@ function sharedOnLoad() {
     engine.registry.addMaterial('grass-top', { image: images['grass-top'] });
     engine.registry.addMaterial('grass-side', { image: images['grass-side'] });
     engine.registry.addMaterial('grass-bottom', { image: images['dirt'] });
+    engine.registry.addMaterial('dirt', { image: images['dirt'] });
     engine.registry.addMaterial('stone', { image: images['stone'] });
     engine.registry.addMaterial('lol', { image: images['lol'] });
+    engine.registry.addMaterial('lol2', { image: images['lol2'] });
+    engine.registry.addMaterial('lol3', { image: images['lol3'] });
 
     engine.registry.addBlock('grass', ['grass-top', 'grass-side', 'grass-bottom']);
     const stoneID = engine.registry.addBlock('stone', 'stone');
-    const lolID = engine.registry.addBlock('lol', 'lol');
+    const lolID = engine.registry.addBlock('lol', ['lol', 'lol2', 'lol3']);
 
     document.addEventListener('mousedown', ({ button }) => {
       if (button === 0) {
-        engine.world.breakVoxel();
-      } else if (button === 2) {
         const [clx, cly, clz] = engine.camera.lookBlock;
         for (let i = -1; i <= 1; i++) {
           for (let j = -1; j <= 1; j++) {
             for (let k = -1; k <= 1; k++) {
-              engine.world.setVoxel([clx + i, cly + j, clz + k], lolID);
+              engine.world.setVoxel([clx + i, cly + j, clz + k], 0);
+            }
+          }
+        }
+        engine.world.breakVoxel();
+      } else if (button === 2) {
+        const [ctx, cty, ctz] = engine.camera.targetBlock;
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            for (let k = -1; k <= 1; k++) {
+              engine.world.setVoxel([ctx + i, cty + j, ctz + k], stoneID);
             }
           }
         }
       } else if (button === 2) {
-        engine.world.placeVoxel(lolID);
+        engine.world.placeVoxel(stoneID);
       }
     });
 

@@ -3,16 +3,12 @@ function set(arr, x, y, z, stride, value) {
   return value;
 }
 
-function getVoxelAt(vx, vy, vz, types) {
+function getVoxelAt(_, vy, __, types) {
   let blockID = 0;
 
-  const height = 5 * Math.E ** Math.cos(vx / 10) + 8 * Math.E ** Math.sin(vz / 20) - 10;
-  if (vy < height) {
-    blockID = Math.random() > 0.5 ? types.grass : types.stone;
-  }
-  // if (vy < 0) {
-  //   blockID = types.grass;
-  // }
+  if (vy === -1) blockID = types.grass;
+  else if (vy < -1 && vy >= -3) blockID = types.dirt;
+  else if (vy < -3) blockID = types.stone;
 
   return blockID;
 }

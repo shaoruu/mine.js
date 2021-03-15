@@ -78,6 +78,7 @@ class TextureAtlas {
         this.mergedTexture.wrapT = ClampToEdgeWrapping;
         this.mergedTexture.minFilter = NearestFilter;
         this.mergedTexture.magFilter = NearestFilter;
+        this.mergedTexture.generateMipmaps = false;
         this.mergedTexture.needsUpdate = true;
       }
 
