@@ -34,18 +34,18 @@ class Debug {
       this.setupAll();
       this.mount();
 
-      const {
-        rendering: { scene },
-        world: {
-          options: { chunkSize, dimension },
-        },
-      } = this.engine;
+      // const {
+      //   rendering: { scene },
+      //   world: {
+      //     options: { chunkSize, dimension },
+      //   },
+      // } = this.engine;
 
-      const axesHelper = new AxesHelper(5);
-      engine.rendering.scene.add(axesHelper);
+      // const axesHelper = new AxesHelper(5);
+      // engine.rendering.scene.add(axesHelper);
 
-      const gridHelper = new GridHelper(2 * chunkSize * dimension, 2 * chunkSize);
-      scene.add(gridHelper);
+      // const gridHelper = new GridHelper(2 * chunkSize * dimension, 2 * chunkSize);
+      // scene.add(gridHelper);
     });
 
     engine.on('start', () => {

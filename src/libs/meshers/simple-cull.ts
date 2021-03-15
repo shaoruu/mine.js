@@ -57,9 +57,7 @@ async function simpleCull(chunk: Chunk): Promise<MeshResultType> {
   });
 
   //? DEBATABLE
-  if (workers.length < DEFAULT_WORKER_COUNT) {
-    workers.push(worker);
-  }
+  workers.push(worker);
 
   return result;
 }

@@ -13,7 +13,7 @@ type ConfigType = {
 const defaultConfig: ConfigType = {
   domElement: document.body,
   generator: '',
-  renderRadius: 3,
+  renderRadius: 4,
 };
 
 class Engine extends EventEmitter {

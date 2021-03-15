@@ -16,7 +16,7 @@ type WorldOptionsType = {
 };
 
 const defaultWorldOptions: WorldOptionsType = {
-  chunkSize: 64,
+  chunkSize: 32,
   chunkPadding: 2,
   dimension: 1,
   generator: 'sin-cos',
@@ -81,11 +81,11 @@ class World extends EventEmitter {
     return this.getChunkByCPos(chunkCoords);
   }
 
-  getEdgeChunksByVoxel(vCoords: Coords3) {
+  getNeighborChunksByVoxel(vCoords: Coords3) {
     const { chunkSize, chunkPadding } = this.options;
     const [cx, cy, cz] = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
     const [lx, ly, lz] = Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
-    const edgeChunks: (Chunk | null)[] = [];
+    const neighborChunks: (Chunk | null)[] = [];
     // check if local position is on the edge
     // TODO: fix this hacky way of doing so.
     const a = lx < chunkPadding;
@@ -94,13 +94,13 @@ class World extends EventEmitter {
     const d = lx >= chunkSize - chunkPadding;
     const e = ly >= chunkSize - chunkPadding;
     const f = lz >= chunkSize - chunkPadding;
-    if (a) edgeChunks.push(this.getChunkByCPos([cx - 1, cy, cz]));
-    if (b) edgeChunks.push(this.getChunkByCPos([cx, cy - 1, cz]));
-    if (c) edgeChunks.push(this.getChunkByCPos([cx, cy, cz - 1]));
-    if (d) edgeChunks.push(this.getChunkByCPos([cx + 1, cy, cz]));
-    if (e) edgeChunks.push(this.getChunkByCPos([cx, cy + 1, cz]));
-    if (f) edgeChunks.push(this.getChunkByCPos([cx, cy, cz + 1]));
-    return edgeChunks.filter(Boolean);
+    if (a) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz]));
+    if (b) neighborChunks.push(this.getChunkByCPos([cx, cy - 1, cz]));
+    if (c) neighborChunks.push(this.getChunkByCPos([cx, cy, cz - 1]));
+    if (d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz]));
+    if (e) neighborChunks.push(this.getChunkByCPos([cx, cy + 1, cz]));
+    if (f) neighborChunks.push(this.getChunkByCPos([cx, cy, cz + 1]));
+    return neighborChunks.filter(Boolean);
   }
 
   getVoxelByVoxel(vCoords: Coords3) {
@@ -121,16 +121,24 @@ class World extends EventEmitter {
   setVoxel(vCoords: Coords3, type: number) {
     const chunk = this.getChunkByVoxel(vCoords);
     chunk?.setVoxel(...vCoords, type);
-    const neighborChunks = this.getEdgeChunksByVoxel(vCoords);
+    const neighborChunks = this.getNeighborChunksByVoxel(vCoords);
     neighborChunks.forEach((c) => c?.setVoxel(...vCoords, type));
+
+    for (const c of neighborChunks) {
+      if (c && c.getVoxel(...vCoords) !== type) console.log(c.getVoxel(...vCoords), type);
+    }
   }
 
   breakVoxel() {
-    this.setVoxel(this.engine.camera.lookBlock, 0);
+    if (this.engine.camera.lookBlock) {
+      this.setVoxel(this.engine.camera.lookBlock, 0);
+    }
   }
 
   placeVoxel(type: number) {
-    this.setVoxel(this.engine.camera.targetBlock, type);
+    if (this.engine.camera.targetBlock) {
+      this.setVoxel(this.engine.camera.targetBlock, type);
+    }
   }
 
   get camChunkPosStr() {
@@ -160,6 +168,8 @@ class World extends EventEmitter {
           const dx = x - cx;
           const dy = y - cy;
           const dz = z - cz;
+
+          // sphere of chunks around camera effect
           if (dx * dx + dy * dy + dz * dz > renderRadius * renderRadius) continue;
 
           const chunk = this.getChunkByCPos([x, y, z]);
@@ -220,12 +230,14 @@ class World extends EventEmitter {
 
         if (!chunk) break;
         if (chunk.isPending) {
+          // waiting for client-side generation, will mesh once done.
           this.dirtyChunks.push(chunk);
           continue;
         }
         if (!chunk.isInitialized) {
           // if chunk data has not been initialized
           this.requestChunkData(chunk);
+          // push it back, so when it's finished, it gets meshed.
           this.dirtyChunks.push(chunk);
           continue;
         }

@@ -42,37 +42,49 @@ function sharedOnLoad() {
     const stoneID = engine.registry.addBlock('stone', 'stone');
     const lolID = engine.registry.addBlock('lol', ['lol', 'lol2', 'lol3']);
 
-    document.addEventListener('mousedown', ({ button }) => {
-      if (button === 0) {
-        const [clx, cly, clz] = engine.camera.lookBlock;
-        for (let i = -1; i <= 1; i++) {
-          for (let j = -1; j <= 1; j++) {
-            for (let k = -1; k <= 1; k++) {
-              engine.world.setVoxel([clx + i, cly + j, clz + k], 0);
+    let eButton,
+      down = false;
+    document.addEventListener('mousedown', ({ button }) => ((down = true), (eButton = button)), false);
+    document.addEventListener('mouseup', () => {
+      down = false;
+    });
+
+    engine.on('tick-begin', () => {
+      if (down) {
+        if (eButton === 0) {
+          if (!engine.camera.lookBlock) return;
+          const [clx, cly, clz] = engine.camera.lookBlock;
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              for (let k = -1; k <= 1; k++) {
+                engine.world.setVoxel([clx + i, cly + j, clz + k], 0);
+              }
             }
           }
-        }
-        engine.world.breakVoxel();
-      } else if (button === 2) {
-        const [ctx, cty, ctz] = engine.camera.targetBlock;
-        for (let i = -1; i <= 1; i++) {
-          for (let j = -1; j <= 1; j++) {
-            for (let k = -1; k <= 1; k++) {
-              engine.world.setVoxel([ctx + i, cty + j, ctz + k], stoneID);
+          engine.world.breakVoxel();
+        } else if (eButton === 2) {
+          if (!engine.camera.targetBlock) return;
+          const [ctx, cty, ctz] = engine.camera.targetBlock;
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              for (let k = -1; k <= 1; k++) {
+                engine.world.setVoxel([ctx + i, cty + j, ctz + k], lolID);
+              }
             }
           }
+        } else if (eButton === 2) {
+          engine.world.placeVoxel(stoneID);
         }
-      } else if (button === 2) {
-        engine.world.placeVoxel(stoneID);
       }
     });
 
-    document.addEventListener('keydown', ({ key }) => {
+    document.addEventListener('keypress', ({ key }) => {
       if (key === 'f') {
+        const range = 10;
         const [px, py, pz] = engine.camera.voxel;
-        for (let i = -10; i <= 10; i++) {
-          for (let j = -10; j <= 10; j++) {
-            for (let k = -10; k <= 10; k++) {
+        for (let i = -range; i <= range; i++) {
+          for (let j = -range; j <= range; j++) {
+            for (let k = -range; k <= range; k++) {
               engine.world.setVoxel([px + i, py + j, pz + k], 0);
             }
           }

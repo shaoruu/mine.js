@@ -29,7 +29,7 @@ const defaultCameraOptions: CameraOptionsType = {
   maxPolarAngle: Math.PI,
   acceleration: 1,
   flyingInertia: 3,
-  reachDistance: 16,
+  reachDistance: 50,
   lookBlockScale: 1.02,
   lookBlockLerp: 0.7,
 };
@@ -40,8 +40,8 @@ class Camera {
   public controls: PointerLockControls;
 
   public options: CameraOptionsType;
-  public lookBlock: Coords3 = [0, 0, 0];
-  public targetBlock: Coords3 = [0, 0, 0];
+  public lookBlock: Coords3 | null = [0, 0, 0];
+  public targetBlock: Coords3 | null = [0, 0, 0];
 
   private acc = new Vector3();
   private vel = new Vector3();
@@ -218,7 +218,7 @@ class Camera {
 
   get lookBlockStr() {
     const { lookBlock } = this;
-    return `${lookBlock[0]} ${lookBlock[1]} ${lookBlock[2]}`;
+    return lookBlock ? `${lookBlock[0]} ${lookBlock[1]} ${lookBlock[2]}` : 'None';
   }
 
   private updateLookBlock() {
@@ -246,6 +246,8 @@ class Camera {
     if (!result) {
       // no target
       this.lookBlockMesh.visible = false;
+      this.lookBlock = null;
+      this.targetBlock = null;
       return;
     }
 

@@ -89,12 +89,14 @@ class Chunk {
   }
 
   getVoxel(vx: number, vy: number, vz: number) {
+    if (!this.contains(vx, vy, vz)) return;
     const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
     return this.getLocal(lx, ly, lz);
   }
 
   setVoxel(vx: number, vy: number, vz: number, id: number) {
     // if voxel type doesn't change (might conflict with lighting)
+    if (!this.contains(vx, vy, vz)) return;
     if (this.getVoxel(vx, vy, vz) === id) return;
 
     const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
@@ -102,7 +104,8 @@ class Chunk {
 
     // change chunk state
     if (id !== 0) this.isEmpty = false;
-    this.isDirty = true; // mark chunk as dirty
+    // mark chunk as dirty
+    this.isDirty = true;
   }
 
   initialized() {
@@ -110,10 +113,28 @@ class Chunk {
     this.isPending = false;
   }
 
-  async buildMesh() {
-    this.isMeshing = true;
+  contains(vx: number, vy: number, vz: number) {
+    const { padding, size } = this;
+    const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
 
-    if (this.isEmpty) return;
+    return (
+      lx >= -padding &&
+      lx <= size + padding - 1 &&
+      ly >= -padding &&
+      ly <= size + padding - 1 &&
+      lz >= -padding &&
+      lz <= size + padding - 1
+    );
+  }
+
+  async buildMesh() {
+    if (this.isEmpty) {
+      // if it's empty, it can't be dirty
+      this.isDirty = false;
+      return;
+    }
+
+    this.isMeshing = true;
 
     const { positions, normals, indices, uvs, aos } = await simpleCull(this);
 
