@@ -35,21 +35,22 @@ function sharedOnLoad() {
 
     engine.registry.addBlock('grass', ['grass-top', 'grass-side', 'grass-bottom']);
     const stoneID = engine.registry.addBlock('stone', 'stone');
+    const lolID = engine.registry.addBlock('lol', 'lol');
 
     document.addEventListener('mousedown', ({ button }) => {
       if (button === 0) {
         engine.world.breakVoxel();
-      } else if (button === 1) {
+      } else if (button === 2) {
         const [clx, cly, clz] = engine.camera.lookBlock;
         for (let i = -1; i <= 1; i++) {
           for (let j = -1; j <= 1; j++) {
             for (let k = -1; k <= 1; k++) {
-              engine.world.setVoxel([clx + i, cly + j, clz + k], 0);
+              engine.world.setVoxel([clx + i, cly + j, clz + k], lolID);
             }
           }
         }
       } else if (button === 2) {
-        engine.world.placeVoxel(stoneID);
+        engine.world.placeVoxel(lolID);
       }
     });
 

@@ -64,6 +64,11 @@ class Registry {
     this.addBlock('dirt', 'dirt');
     this.addBlock('grass', 'grass');
     this.addBlock('stone', 'stone');
+
+    engine.on('ready', () => {
+      // texture bleeding?
+      this.textureAtlas.mergedTexture.anisotropy = this.engine.rendering.renderer.capabilities.getMaxAnisotropy();
+    });
   }
 
   addMaterial = (name: string, options: MaterialOptions) => {
