@@ -34,8 +34,9 @@ class World extends EventEmitter {
   private camChunkName: string;
   private camChunkPos: Coords3;
 
-  private chunks: SmartDictionary<Chunk>;
-  private dirtyChunks: Chunk[]; // chunks that are freshly made
+  private chunks: SmartDictionary<Chunk> = new SmartDictionary();
+  private dirtyChunks: Chunk[] = []; // chunks that are freshly made
+  private visibleChunks: Chunk[] = [];
 
   constructor(engine: Engine, options: Partial<WorldOptionsType> = {}) {
     super();
@@ -48,9 +49,6 @@ class World extends EventEmitter {
     const { generator } = this.options;
 
     this.engine = engine;
-
-    this.chunks = new SmartDictionary<Chunk>();
-    this.dirtyChunks = [];
 
     switch (generator) {
       case 'flat':
@@ -163,6 +161,14 @@ class World extends EventEmitter {
     }
   }
 
+  addAsVisible(chunk: Chunk) {
+    this.visibleChunks.push(chunk);
+  }
+
+  removeAsVisible(chunk: Chunk) {
+    this.visibleChunks.splice(this.visibleChunks.indexOf(chunk), 1);
+  }
+
   get camChunkPosStr() {
     return `${this.camChunkPos[0]} ${this.camChunkPos[1]} ${this.camChunkPos[2]}`;
   }
@@ -242,8 +248,8 @@ class World extends EventEmitter {
     }
 
     const deleteDistance = renderRadius * chunkSize * dimension;
-    for (const chunk of this.chunks.data) {
-      if (chunk.isAdded && chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
+    for (const chunk of this.visibleChunks) {
+      if (chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
         chunk.removeFromScene();
       }
     }

@@ -131,6 +131,7 @@ class Chunk {
     this.removeFromScene();
     if (!this.isAdded && this.altMesh) {
       this.engine.rendering.scene.add(this.altMesh);
+      this.engine.world.addAsVisible(this);
       this.mesh = this.altMesh;
       this.isAdded = true;
     }
@@ -139,6 +140,7 @@ class Chunk {
   removeFromScene() {
     if (this.isAdded && this.mesh) {
       this.engine.rendering.scene.remove(this.mesh);
+      this.engine.world.removeAsVisible(this);
       this.isAdded = false;
     }
   }
