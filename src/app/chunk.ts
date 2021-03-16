@@ -122,9 +122,26 @@ class Chunk {
     );
   }
 
-  toLocal = (vx: number, vy: number, vz: number) => {
-    return vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
-  };
+  distTo(vx: number, vy: number, vz: number) {
+    const [mx, my, mz] = this.minInner;
+    return Math.sqrt((mx - vx) * (mx - vx) + (my - vy) * (my - vy) + (mz - vz) * (mz - vz));
+  }
+
+  addToScene() {
+    this.removeFromScene();
+    if (!this.isAdded && this.altMesh) {
+      this.engine.rendering.scene.add(this.altMesh);
+      this.mesh = this.altMesh;
+      this.isAdded = true;
+    }
+  }
+
+  removeFromScene() {
+    if (this.isAdded && this.mesh) {
+      this.engine.rendering.scene.remove(this.mesh);
+      this.isAdded = false;
+    }
+  }
 
   async initialized() {
     this.isInitialized = true;
@@ -167,22 +184,9 @@ class Chunk {
     this.isMeshing = false;
   }
 
-  addToScene() {
-    this.removeFromScene();
-    if (this.altMesh) {
-      this.engine.rendering.scene.add(this.altMesh);
-      this.mesh = this.altMesh;
-      this.altMesh = undefined;
-      this.isAdded = true;
-    }
-  }
-
-  removeFromScene() {
-    if (this.isAdded && this.mesh) {
-      this.engine.rendering.scene.remove(this.mesh);
-      this.isAdded = false;
-    }
-  }
+  private toLocal = (vx: number, vy: number, vz: number) => {
+    return vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
+  };
 }
 
 export { Chunk };
