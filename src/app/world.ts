@@ -94,19 +94,37 @@ class World extends EventEmitter {
     const d = lx >= chunkSize - chunkPadding;
     const e = ly >= chunkSize - chunkPadding;
     const f = lz >= chunkSize - chunkPadding;
+
+    // direct neighbors
     if (a) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz]));
     if (b) neighborChunks.push(this.getChunkByCPos([cx, cy - 1, cz]));
     if (c) neighborChunks.push(this.getChunkByCPos([cx, cy, cz - 1]));
     if (d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz]));
     if (e) neighborChunks.push(this.getChunkByCPos([cx, cy + 1, cz]));
     if (f) neighborChunks.push(this.getChunkByCPos([cx, cy, cz + 1]));
+
+    // side-to-side diagonals
     if (a && b) neighborChunks.push(this.getChunkByCPos([cx - 1, cy - 1, cz]));
+    if (a && c) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz - 1]));
+    if (a && e) neighborChunks.push(this.getChunkByCPos([cx - 1, cy + 1, cz]));
+    if (a && f) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz + 1]));
     if (b && c) neighborChunks.push(this.getChunkByCPos([cx, cy - 1, cz - 1]));
-    if (c && a) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz - 1]));
+    if (b && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy - 1, cz]));
+    if (b && f) neighborChunks.push(this.getChunkByCPos([cx, cy - 1, cz + 1]));
+    if (c && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz - 1]));
+    if (c && e) neighborChunks.push(this.getChunkByCPos([cx, cy + 1, cz - 1]));
     if (d && e) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz]));
+    if (d && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz + 1]));
     if (e && f) neighborChunks.push(this.getChunkByCPos([cx, cy + 1, cz + 1]));
-    if (f && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz + 1]));
+
+    // direct diagonals
     if (a && b && c) neighborChunks.push(this.getChunkByCPos([cx - 1, cy - 1, cz - 1]));
+    if (a && b && f) neighborChunks.push(this.getChunkByCPos([cx - 1, cy - 1, cz + 1]));
+    if (a && c && e) neighborChunks.push(this.getChunkByCPos([cx - 1, cy + 1, cz - 1]));
+    if (a && e && f) neighborChunks.push(this.getChunkByCPos([cx - 1, cy + 1, cz + 1]));
+    if (b && c && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy - 1, cz - 1]));
+    if (b && d && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy - 1, cz + 1]));
+    if (c && d && e) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz - 1]));
     if (d && e && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz + 1]));
     return neighborChunks.filter(Boolean);
   }

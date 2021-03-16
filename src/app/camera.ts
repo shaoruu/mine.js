@@ -29,7 +29,7 @@ const defaultCameraOptions: CameraOptionsType = {
   maxPolarAngle: Math.PI,
   acceleration: 1,
   flyingInertia: 3,
-  reachDistance: 100,
+  reachDistance: 32,
   lookBlockScale: 1.02,
   lookBlockLerp: 0.7,
 };
