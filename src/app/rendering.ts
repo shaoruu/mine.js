@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import { AmbientLight, Color, DirectionalLight, Scene, sRGBEncoding, WebGLRenderer } from 'three';
+import { Color, Scene, sRGBEncoding, WebGLRenderer } from 'three';
 
 import { Engine } from '../';
 import { Sky } from '../libs';
@@ -8,27 +8,17 @@ import { Sky } from '../libs';
 type RenderingOptionsType = {
   clearColor: string;
   directionalLightColor: string;
-  directionalLightIntensity: number;
-  directionalLightPosition: [number, number, number];
-  ambientLightColor: string;
-  ambientLightIntensity: number;
 };
 
 const defaultRenderingOptions: RenderingOptionsType = {
   clearColor: '#b6d2ff',
   directionalLightColor: '#ffffff',
-  directionalLightIntensity: 0.5,
-  directionalLightPosition: [300, 250, -500],
-  ambientLightColor: '#ffffff',
-  ambientLightIntensity: 0.3,
 };
 
 class Rendering extends EventEmitter {
   public engine: Engine;
   public scene: Scene;
   public renderer: WebGLRenderer;
-  public directionalLight: DirectionalLight;
-  public ambientLight: AmbientLight;
   public sky: Sky;
 
   public options: RenderingOptionsType;
@@ -41,14 +31,7 @@ class Rendering extends EventEmitter {
       ...options,
     };
 
-    const {
-      clearColor,
-      directionalLightColor,
-      directionalLightIntensity,
-      directionalLightPosition,
-      ambientLightColor,
-      ambientLightIntensity,
-    } = this.options;
+    const { clearColor } = this.options;
 
     this.engine = engine;
 
@@ -61,15 +44,6 @@ class Rendering extends EventEmitter {
     });
     this.renderer.setClearColor(new Color(clearColor));
     this.renderer.outputEncoding = sRGBEncoding;
-
-    // directional light
-    this.directionalLight = new DirectionalLight(directionalLightColor, directionalLightIntensity);
-    this.directionalLight.position.set(...directionalLightPosition);
-    this.scene.add(this.directionalLight);
-
-    // ambient light
-    this.ambientLight = new AmbientLight(ambientLightColor, ambientLightIntensity);
-    this.scene.add(this.ambientLight);
 
     // sky
     this.sky = new Sky();
@@ -103,4 +77,4 @@ class Rendering extends EventEmitter {
   }
 }
 
-export { Rendering };
+export { Rendering, RenderingOptionsType };

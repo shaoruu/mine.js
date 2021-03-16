@@ -1,19 +1,34 @@
 import { EventEmitter } from 'events';
 
-import { Camera, Container, Debug, Inputs, Registry, Rendering, World } from './app';
-import { Clock, GeneratorType } from './libs';
+import {
+  Camera,
+  Container,
+  ContainerOptionsType,
+  Debug,
+  Inputs,
+  Registry,
+  Rendering,
+  World,
+  WorldOptionsType,
+} from './app';
+import { Clock } from './libs';
 
 type ConfigType = {
-  canvas?: HTMLCanvasElement;
-  domElement: HTMLElement;
-  generator: GeneratorType;
-  renderRadius: number;
+  debug: boolean;
+  containerOptions: Partial<ContainerOptionsType>;
+  worldOptions: Partial<WorldOptionsType>;
 };
 
 const defaultConfig: ConfigType = {
-  domElement: document.body,
-  generator: '',
-  renderRadius: 4,
+  debug: true,
+  containerOptions: {
+    canvas: undefined,
+    domElement: document.body,
+  },
+  worldOptions: {
+    generator: 'sin-cos',
+    renderRadius: 5,
+  },
 };
 
 class Engine extends EventEmitter {
@@ -32,19 +47,18 @@ class Engine extends EventEmitter {
   constructor(params: Partial<ConfigType> = {}) {
     super();
 
-    const { canvas, domElement, generator, renderRadius } = (this.config = {
+    const { debug, containerOptions, worldOptions } = (this.config = {
       ...defaultConfig,
       ...params,
     });
 
     // debug
-    this.debug = new Debug(this);
+    if (debug) {
+      this.debug = new Debug(this);
+    }
 
     // container
-    this.container = new Container(this, {
-      canvas,
-      domElement,
-    });
+    this.container = new Container(this, containerOptions);
 
     // registry
     this.registry = new Registry(this);
@@ -59,35 +73,27 @@ class Engine extends EventEmitter {
     this.camera = new Camera(this);
 
     // world
-    this.world = new World(this, {
-      generator,
-      renderRadius,
-    });
+    this.world = new World(this, worldOptions);
 
     this.clock = new Clock();
 
     this.boot();
-
-    // this.rendering.scene.add(
-    //   new Mesh(
-    //     new SphereGeometry(10, 10, 10),
-    //     new MeshStandardMaterial({
-    //       map: this.registry.textureMerger.mergedTexture,
-    //     }),
-    //   ),
-    // );
 
     this.emit('ready');
   }
 
   boot = () => {
     const cycle = () => {
-      this.debug.stats.begin();
+      if (this.debug) {
+        this.debug.stats.begin();
+      }
 
       this.tick();
       this.render();
 
-      this.debug.stats.end();
+      if (this.debug) {
+        this.debug.stats.end();
+      }
 
       requestAnimationFrame(cycle);
     };
@@ -104,7 +110,10 @@ class Engine extends EventEmitter {
     this.camera.tick();
     this.world.tick();
     this.rendering.tick();
-    this.debug.tick();
+
+    if (this.debug) {
+      this.debug.tick();
+    }
 
     this.emit('tick-end');
   };

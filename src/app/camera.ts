@@ -278,4 +278,4 @@ class Camera {
   }
 }
 
-export { Camera };
+export { Camera, CameraOptionsType };

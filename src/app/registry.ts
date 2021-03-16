@@ -210,4 +210,4 @@ class Registry {
   }
 }
 
-export { Registry };
+export { Registry, RegistryOptionsType };

@@ -16,7 +16,7 @@ type WorldOptionsType = {
 };
 
 const defaultWorldOptions: WorldOptionsType = {
-  chunkSize: 48,
+  chunkSize: 32,
   chunkPadding: 2,
   dimension: 1,
   generator: 'sin-cos',
@@ -287,4 +287,4 @@ class World extends EventEmitter {
   }
 }
 
-export { World };
+export { World, WorldOptionsType };

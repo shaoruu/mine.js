@@ -57,4 +57,4 @@ class Container extends EventEmitter {
   };
 }
 
-export { Container };
+export { Container, ContainerOptionsType };

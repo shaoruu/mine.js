@@ -1,6 +1,6 @@
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
-import { AxesHelper, GridHelper } from 'three';
+// import { AxesHelper, GridHelper } from 'three';
 
 import { Engine } from '..';
 import { Helper } from '../utils';
@@ -110,12 +110,6 @@ class Debug {
     renderingFolder
       .addColor(rendering.options, 'clearColor')
       .onFinishChange((value) => rendering.renderer.setClearColor(value));
-    renderingFolder
-      .addColor(rendering.options, 'directionalLightColor')
-      .onFinishChange((value) => rendering.directionalLight.color.set(value));
-    renderingFolder
-      .addColor(rendering.options, 'ambientLightColor')
-      .onFinishChange((value) => rendering.ambientLight.color.set(value));
 
     renderingFolder.open();
 
