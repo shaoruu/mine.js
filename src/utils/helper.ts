@@ -1,6 +1,6 @@
 import vec3 from 'gl-vec3';
 
-import { Coords3 } from '../libs';
+import { AABB, Coords3 } from '../libs';
 
 class Helper {
   /**
@@ -103,6 +103,18 @@ class Helper {
     const url = URL.createObjectURL(blob);
 
     return new Worker(url);
+  };
+
+  public static approxEquals = (a: number, b: number) => {
+    return Math.abs(a - b) < 1e-5;
+  };
+
+  public static cloneAABB = (tgt: AABB, src: AABB) => {
+    for (let i = 0; i < 3; i++) {
+      tgt.base[i] = src.base[i];
+      tgt.max[i] = src.max[i];
+      tgt.vec[i] = src.vec[i];
+    }
   };
 }
 
