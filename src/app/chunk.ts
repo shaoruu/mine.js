@@ -150,6 +150,7 @@ class Chunk {
     const uvNumComponents = 2;
     const occlusionNumComponents = 1;
 
+    this.geometry.dispose();
     this.geometry.setAttribute('position', new BufferAttribute(positions, positionNumComponents));
     this.geometry.setAttribute('normal', new BufferAttribute(normals, normalNumComponents));
     this.geometry.setAttribute('uv', new BufferAttribute(uvs, uvNumComponents));

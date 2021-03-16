@@ -235,7 +235,7 @@ class World extends EventEmitter {
             const newChunk = new Chunk(this.engine, [x, y, z], { size: chunkSize, dimension, padding: chunkPadding });
 
             this.setChunk(newChunk);
-            this.dirtyChunks.unshift(newChunk);
+            this.dirtyChunks.push(newChunk);
           }
         }
       }

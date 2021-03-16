@@ -122,6 +122,11 @@ class Engine extends EventEmitter {
     this.paused = true;
     this.emit('pause');
   };
+
+  // if pointerlock is locked
+  get isLocked() {
+    return this.camera.controls.isLocked;
+  }
 }
 
 export { Engine };
