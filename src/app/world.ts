@@ -16,14 +16,14 @@ type WorldOptionsType = {
 };
 
 const defaultWorldOptions: WorldOptionsType = {
-  chunkSize: 32,
+  chunkSize: 48,
   chunkPadding: 2,
   dimension: 1,
   generator: 'sin-cos',
   // radius of rendering centered by camera
   renderRadius: 3,
   // maximum amount of chunks to process per frame tick
-  maxChunkPerFrame: 1,
+  maxChunkPerFrame: 2,
 };
 
 class World extends EventEmitter {
@@ -100,6 +100,14 @@ class World extends EventEmitter {
     if (d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz]));
     if (e) neighborChunks.push(this.getChunkByCPos([cx, cy + 1, cz]));
     if (f) neighborChunks.push(this.getChunkByCPos([cx, cy, cz + 1]));
+    if (a && b) neighborChunks.push(this.getChunkByCPos([cx - 1, cy - 1, cz]));
+    if (b && c) neighborChunks.push(this.getChunkByCPos([cx, cy - 1, cz - 1]));
+    if (c && a) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz - 1]));
+    if (d && e) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz]));
+    if (e && f) neighborChunks.push(this.getChunkByCPos([cx, cy + 1, cz + 1]));
+    if (f && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz + 1]));
+    if (a && b && c) neighborChunks.push(this.getChunkByCPos([cx - 1, cy - 1, cz - 1]));
+    if (d && e && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz + 1]));
     return neighborChunks.filter(Boolean);
   }
 
@@ -123,10 +131,6 @@ class World extends EventEmitter {
     chunk?.setVoxel(...vCoords, type);
     const neighborChunks = this.getNeighborChunksByVoxel(vCoords);
     neighborChunks.forEach((c) => c?.setVoxel(...vCoords, type));
-
-    for (const c of neighborChunks) {
-      if (c && c.getVoxel(...vCoords) !== type) console.log(c.getVoxel(...vCoords), type);
-    }
   }
 
   breakVoxel() {
@@ -228,30 +232,18 @@ class World extends EventEmitter {
 
         const chunk = this.dirtyChunks.shift();
 
-        if (!chunk) break;
-        if (chunk.isPending) {
-          // waiting for client-side generation, will mesh once done.
-          this.dirtyChunks.push(chunk);
-          continue;
-        }
-        if (!chunk.isInitialized) {
-          // if chunk data has not been initialized
-          this.requestChunkData(chunk);
-          // push it back, so when it's finished, it gets meshed.
-          this.dirtyChunks.push(chunk);
-          continue;
-        }
-        if (chunk.isMeshing) {
-          continue;
-        }
-
-        chunk.buildMesh();
+        if (!chunk) break; // array is empty?
+        // chunk needs to be populated with terrain data
+        // `isInitialized` will be switched to true once terrain data is set
+        this.requestChunkData(chunk);
+        continue;
       }
     }
   }
 
-  private requestChunkData(chunk: Chunk) {
+  private async requestChunkData(chunk: Chunk) {
     if (!this.generator) {
+      // client side terrain generation, call chunk.initialized once finished.
       // assume the worst, say the chunk is not empty
       chunk.isEmpty = false;
       chunk.isPending = true;
@@ -259,9 +251,8 @@ class World extends EventEmitter {
       return;
     }
 
-    this.generator.generate(chunk).then(() => {
-      chunk.initialized();
-    });
+    await this.generator.generate(chunk);
+    await chunk.initialized();
   }
 }
 

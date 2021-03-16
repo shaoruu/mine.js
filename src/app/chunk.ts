@@ -38,7 +38,7 @@ class Chunk {
   public isDirty = true;
   public isAdded = false;
   public isMeshing = false; // is meshing
-  public isInitialized = false;
+  public isInitialized = false; // is populated with terrain info
   public isPending = false; // pending for client-side terrain generation
 
   constructor(engine: Engine, coords: Coords3, { size, dimension, padding }: ChunkOptions) {
@@ -90,16 +90,16 @@ class Chunk {
 
   getVoxel(vx: number, vy: number, vz: number) {
     if (!this.contains(vx, vy, vz)) return;
-    const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
+    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
     return this.getLocal(lx, ly, lz);
   }
 
   setVoxel(vx: number, vy: number, vz: number, id: number) {
-    // if voxel type doesn't change (might conflict with lighting)
     if (!this.contains(vx, vy, vz)) return;
+    // if voxel type doesn't change (might conflict with lighting)
     if (this.getVoxel(vx, vy, vz) === id) return;
 
-    const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
+    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
     this.setLocal(lx, ly, lz, id);
 
     // change chunk state
@@ -108,23 +108,30 @@ class Chunk {
     this.isDirty = true;
   }
 
-  initialized() {
-    this.isInitialized = true;
-    this.isPending = false;
-  }
-
   contains(vx: number, vy: number, vz: number) {
     const { padding, size } = this;
-    const [lx, ly, lz] = vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
+    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
 
     return (
       lx >= -padding &&
-      lx <= size + padding - 1 &&
+      lx < size + padding &&
       ly >= -padding &&
-      ly <= size + padding - 1 &&
+      ly < size + padding &&
       lz >= -padding &&
-      lz <= size + padding - 1
+      lz < size + padding
     );
+  }
+
+  toLocal = (vx: number, vy: number, vz: number) => {
+    return vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
+  };
+
+  async initialized() {
+    this.isInitialized = true;
+    this.isPending = false;
+
+    // build mesh once initialized
+    await this.buildMesh();
   }
 
   async buildMesh() {

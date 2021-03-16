@@ -79,13 +79,21 @@ function sharedOnLoad() {
     });
 
     document.addEventListener('keypress', ({ key }) => {
+      const range = 10;
+      const [px, py, pz] = engine.camera.voxel;
       if (key === 'f') {
-        const range = 10;
-        const [px, py, pz] = engine.camera.voxel;
         for (let i = -range; i <= range; i++) {
           for (let j = -range; j <= range; j++) {
             for (let k = -range; k <= range; k++) {
               engine.world.setVoxel([px + i, py + j, pz + k], 0);
+            }
+          }
+        }
+      } else if (key === 'g') {
+        for (let i = -range; i <= range; i++) {
+          for (let j = -range; j <= range; j++) {
+            for (let k = -range; k <= range; k++) {
+              engine.world.setVoxel([px + i, py + j, pz + k], lolID);
             }
           }
         }
