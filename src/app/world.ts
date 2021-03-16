@@ -235,9 +235,16 @@ class World extends EventEmitter {
             const newChunk = new Chunk(this.engine, [x, y, z], { size: chunkSize, dimension, padding: chunkPadding });
 
             this.setChunk(newChunk);
-            this.dirtyChunks.unshift(newChunk);
+            this.dirtyChunks.push(newChunk);
           }
         }
+      }
+    }
+
+    const deleteDistance = renderRadius * chunkSize * dimension;
+    for (const chunk of this.chunks.data) {
+      if (chunk.isAdded && chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
+        chunk.removeFromScene();
       }
     }
   }

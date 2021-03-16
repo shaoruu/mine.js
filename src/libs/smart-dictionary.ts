@@ -50,6 +50,10 @@ class SmartDictionary<T> {
     return this.indices.has(name);
   }
 
+  exists(item: T) {
+    return this.data.includes(item);
+  }
+
   toIndexMap() {
     const obj: { [key: number]: T } = {};
     this.indices.forEach((value) => {
