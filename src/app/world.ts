@@ -31,6 +31,8 @@ class World extends EventEmitter {
   public generator: Generator;
   public options: WorldOptionsType;
 
+  public isReady = false;
+
   private camChunkName: string;
   private camChunkPos: Coords3;
 
@@ -207,6 +209,7 @@ class World extends EventEmitter {
       this.surroundCamChunks();
     }
 
+    let chunksLoaded = 0;
     const [cx, cy, cz] = this.camChunkPos;
     for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
       for (let y = cy - renderRadius; y <= cy + renderRadius; y++) {
@@ -222,6 +225,7 @@ class World extends EventEmitter {
 
           if (chunk) {
             if (chunk.isInitialized) {
+              chunksLoaded++;
               if (!chunk.isDirty) {
                 if (!chunk.isAdded) {
                   chunk.addToScene();
@@ -238,6 +242,11 @@ class World extends EventEmitter {
           }
         }
       }
+    }
+
+    if (chunksLoaded === this.chunks.data.length) {
+      this.isReady = true;
+      this.engine.emit('world-ready');
     }
   }
 
@@ -265,6 +274,7 @@ class World extends EventEmitter {
       }
     }
 
+    // if the chunk is too far away, remove from scene.
     const deleteDistance = renderRadius * chunkSize * dimension;
     for (const chunk of this.visibleChunks) {
       if (chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {

@@ -29,7 +29,7 @@ class Physics {
 
   test() {
     // context
-    const position = [0, 20, 0];
+    const position = [0, 40, 0];
     const size = [1, 1, 1];
 
     // create body
@@ -53,7 +53,10 @@ class Physics {
   }
 
   tick() {
-    const { delta } = this.engine.clock;
+    const { world, clock } = this.engine;
+    if (!world.isReady) return;
+
+    const { delta } = clock;
     this.core.tick(delta);
 
     // update render
