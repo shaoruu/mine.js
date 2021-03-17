@@ -8,23 +8,13 @@ type ContainerOptionsType = {
   canvas?: HTMLCanvasElement;
 };
 
-const defaultContainerOptions: ContainerOptionsType = {
-  domElement: document.body,
-  canvas: undefined,
-};
-
 class Container extends EventEmitter {
   public engine: Engine;
   public domElement: HTMLElement = document.body;
   public canvas: HTMLCanvasElement;
 
-  constructor(engine: Engine, options: Partial<ContainerOptionsType> = {}) {
+  constructor(engine: Engine, options: ContainerOptionsType) {
     super();
-
-    options = {
-      ...defaultContainerOptions,
-      ...options,
-    };
 
     this.engine = engine;
 

@@ -1,5 +1,3 @@
-import { Object3D, Vector3 } from 'three';
-
 import { Engine } from '..';
 import { Physics as PhysicsCore, RigidBody } from '../libs';
 
@@ -11,27 +9,15 @@ type PhysicsOptionsType = {
   fluidDensity: number;
 };
 
-const defaultPhysicsOptions: PhysicsOptionsType = {
-  gravity: [0, -20, 0],
-  minBounceImpulse: 0.5,
-  airDrag: 0.1,
-  fluidDrag: 0.4,
-  fluidDensity: 2.0,
-};
-
 class Physics {
   public options: PhysicsOptionsType;
   public engine: Engine;
 
   public core: PhysicsCore;
 
-  constructor(engine: Engine, options: Partial<PhysicsOptionsType>) {
-    this.options = {
-      ...defaultPhysicsOptions,
-      ...options,
-    };
-
+  constructor(engine: Engine, options: PhysicsOptionsType) {
     this.engine = engine;
+    this.options = options;
 
     const testSolidity = (wx: number, wy: number, wz: number) => {
       return engine.world.getSolidityByWorld([wx, wy, wz]);

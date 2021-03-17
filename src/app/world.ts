@@ -15,17 +15,6 @@ type WorldOptionsType = {
   maxChunkPerFrame: number;
 };
 
-const defaultWorldOptions: WorldOptionsType = {
-  chunkSize: 32,
-  chunkPadding: 2,
-  dimension: 1,
-  generator: 'sin-cos',
-  // radius of rendering centered by camera
-  renderRadius: 3,
-  // maximum amount of chunks to process per frame tick
-  maxChunkPerFrame: 2,
-};
-
 class World extends EventEmitter {
   public engine: Engine;
   public generator: Generator;
@@ -40,11 +29,10 @@ class World extends EventEmitter {
   private dirtyChunks: Chunk[] = []; // chunks that are freshly made
   private visibleChunks: Chunk[] = [];
 
-  constructor(engine: Engine, options: Partial<WorldOptionsType> = {}) {
+  constructor(engine: Engine, options: WorldOptionsType) {
     super();
 
     this.options = {
-      ...defaultWorldOptions,
       ...options,
     };
 

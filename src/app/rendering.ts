@@ -8,13 +8,9 @@ import { Engine } from '../';
 import { Sky } from '../libs';
 
 type RenderingOptionsType = {
+  fogColor: string;
   clearColor: string;
   directionalLightColor: string;
-};
-
-const defaultRenderingOptions: RenderingOptionsType = {
-  clearColor: '#b6d2ff',
-  directionalLightColor: '#ffffff',
 };
 
 class Rendering extends EventEmitter {
@@ -26,17 +22,11 @@ class Rendering extends EventEmitter {
 
   public options: RenderingOptionsType;
 
-  constructor(engine: Engine, options: Partial<RenderingOptionsType> = {}) {
+  constructor(engine: Engine, options: RenderingOptionsType) {
     super();
 
-    this.options = {
-      ...defaultRenderingOptions,
-      ...options,
-    };
-
-    const { clearColor } = this.options;
-
     this.engine = engine;
+    const { clearColor } = (this.options = options);
 
     // three.js scene
     this.scene = new Scene();

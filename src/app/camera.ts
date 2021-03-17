@@ -23,23 +23,6 @@ type CameraOptionsType = {
   cameraWidth: number;
 };
 
-const defaultCameraOptions: CameraOptionsType = {
-  fov: 75,
-  near: 0.1,
-  far: 8000,
-  initPos: [20, 20, 20],
-  minPolarAngle: 0,
-  maxPolarAngle: Math.PI,
-  acceleration: 1,
-  flyingInertia: 3,
-  reachDistance: 32,
-  lookBlockScale: 1.02,
-  lookBlockLerp: 0.7,
-  distToGround: 1.6,
-  distToTop: 0.2,
-  cameraWidth: 0.8,
-};
-
 class Camera {
   public engine: Engine;
   public threeCamera: PerspectiveCamera;
@@ -63,13 +46,9 @@ class Camera {
   };
   private lookBlockMesh: Mesh;
 
-  constructor(engine: Engine, options: Partial<CameraOptionsType> = {}) {
-    const { fov, near, far, initPos, lookBlockScale, distToGround, distToTop, cameraWidth } = (this.options = {
-      ...defaultCameraOptions,
-      ...options,
-    });
-
+  constructor(engine: Engine, options: CameraOptionsType) {
     this.engine = engine;
+    const { fov, near, far, initPos, lookBlockScale, distToGround, distToTop, cameraWidth } = (this.options = options);
 
     // three.js camera
     this.threeCamera = new PerspectiveCamera(fov, this.engine.rendering.aspectRatio, near, far);

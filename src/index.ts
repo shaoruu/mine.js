@@ -2,14 +2,19 @@ import { EventEmitter } from 'events';
 
 import {
   Camera,
+  CameraOptionsType,
   Container,
   ContainerOptionsType,
   Debug,
   Entities,
+  EntitiesOptionsType,
   Inputs,
   Physics,
+  PhysicsOptionsType,
   Registry,
+  RegistryOptionsType,
   Rendering,
+  RenderingOptionsType,
   World,
   WorldOptionsType,
 } from './app';
@@ -17,8 +22,13 @@ import { Clock } from './libs';
 
 type ConfigType = {
   debug: boolean;
-  containerOptions: Partial<ContainerOptionsType>;
-  worldOptions: Partial<WorldOptionsType>;
+  containerOptions: ContainerOptionsType;
+  cameraOptions: CameraOptionsType;
+  worldOptions: WorldOptionsType;
+  entitiesOptions: EntitiesOptionsType;
+  physicsOptions: PhysicsOptionsType;
+  registryOptions: RegistryOptionsType;
+  renderingOptions: RenderingOptionsType;
 };
 
 const defaultConfig: ConfigType = {
@@ -27,9 +37,51 @@ const defaultConfig: ConfigType = {
     canvas: undefined,
     domElement: document.body,
   },
+  cameraOptions: {
+    fov: 75,
+    near: 0.1,
+    far: 8000,
+    initPos: [20, 20, 20],
+    minPolarAngle: 0,
+    maxPolarAngle: Math.PI,
+    acceleration: 1,
+    flyingInertia: 3,
+    reachDistance: 32,
+    lookBlockScale: 1.02,
+    lookBlockLerp: 0.7,
+    distToGround: 1.6,
+    distToTop: 0.2,
+    cameraWidth: 0.8,
+  },
   worldOptions: {
     generator: 'sin-cos',
     renderRadius: 5,
+    chunkSize: 32,
+    chunkPadding: 2,
+    dimension: 1,
+    // radius of rendering centered by camera
+    // maximum amount of chunks to process per frame tick
+    maxChunkPerFrame: 2,
+  },
+  entitiesOptions: {
+    movementLerp: true,
+    movementLerpFactor: 0.4,
+    maxEntities: 1000,
+  },
+  physicsOptions: {
+    gravity: [0, -20, 0],
+    minBounceImpulse: 0.5,
+    airDrag: 0.1,
+    fluidDrag: 0.4,
+    fluidDensity: 2.0,
+  },
+  registryOptions: {
+    textureWidth: 32,
+  },
+  renderingOptions: {
+    fogColor: '#ffffff',
+    clearColor: '#b6d2ff',
+    directionalLightColor: '#ffffff',
   },
 };
 
@@ -51,7 +103,16 @@ class Engine extends EventEmitter {
   constructor(params: Partial<ConfigType> = {}) {
     super();
 
-    const { debug, containerOptions, worldOptions } = (this.config = {
+    const {
+      debug,
+      cameraOptions,
+      containerOptions,
+      entitiesOptions,
+      physicsOptions,
+      registryOptions,
+      renderingOptions,
+      worldOptions,
+    } = (this.config = {
       ...defaultConfig,
       ...params,
     });
@@ -65,25 +126,25 @@ class Engine extends EventEmitter {
     this.container = new Container(this, containerOptions);
 
     // registry
-    this.registry = new Registry(this);
+    this.registry = new Registry(this, registryOptions);
 
     // rendering
-    this.rendering = new Rendering(this);
+    this.rendering = new Rendering(this, renderingOptions);
 
     // inputs
     this.inputs = new Inputs(this);
 
     // camera
-    this.camera = new Camera(this);
+    this.camera = new Camera(this, cameraOptions);
 
     // world
     this.world = new World(this, worldOptions);
 
     // physics
-    this.physics = new Physics(this);
+    this.physics = new Physics(this, physicsOptions);
 
     // entities
-    this.entities = new Entities(this);
+    this.entities = new Entities(this, entitiesOptions);
 
     // time
     this.clock = new Clock();

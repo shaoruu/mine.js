@@ -10,12 +10,6 @@ type EntitiesOptionsType = {
   maxEntities: number;
 };
 
-const defaultEntitiesOptions: EntitiesOptionsType = {
-  movementLerp: true,
-  movementLerpFactor: 0.4,
-  maxEntities: 1000,
-};
-
 class Entities {
   public options: EntitiesOptionsType;
 
@@ -23,13 +17,9 @@ class Entities {
 
   public list: SmartDictionary<EntityType> = new SmartDictionary();
 
-  constructor(engine: Engine, options: Partial<EntitiesOptionsType> = {}) {
-    this.options = {
-      ...defaultEntitiesOptions,
-      ...options,
-    };
-
+  constructor(engine: Engine, options: EntitiesOptionsType) {
     this.engine = engine;
+    this.options = options;
   }
 
   addEntity(
@@ -79,4 +69,4 @@ class Entities {
   }
 }
 
-export { Entities };
+export { Entities, EntitiesOptionsType };

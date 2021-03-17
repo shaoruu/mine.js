@@ -1,4 +1,4 @@
-import { Texture, CanvasTexture, ShaderMaterial } from 'three';
+import { Texture, CanvasTexture, ShaderMaterial, Color } from 'three';
 
 import { Engine } from '..';
 import { BlockMaterialType, BlockMaterialUVType, SmartDictionary, TextureAtlas } from '../libs';
@@ -19,10 +19,6 @@ type MaterialOptions = {
 type BlockType = {
   name: string;
   material: BlockMaterialType;
-};
-
-const defaultRegistryOptions: RegistryOptionsType = {
-  textureWidth: 32,
 };
 
 function reportMaterialError(name: string, message: string) {
@@ -46,12 +42,9 @@ class Registry {
   private textureMap: { [key: string]: Texture } = {};
   private textureAtlas: TextureAtlas;
 
-  constructor(engine: Engine, options: Partial<RegistryOptionsType> = {}) {
+  constructor(engine: Engine, options: RegistryOptionsType) {
     this.engine = engine;
-    this.options = {
-      ...defaultRegistryOptions,
-      ...options,
-    };
+    this.options = options;
 
     this.materials = new SmartDictionary<BlockMaterialUVType>();
     this.blocks = new SmartDictionary<BlockType>();
@@ -74,6 +67,7 @@ class Registry {
   addMaterial = (name: string, options: MaterialOptions) => {
     const { textureWidth } = this.options;
     const { color, image, texture } = options;
+    const { chunkSize, dimension, renderRadius } = this.engine.config.worldOptions;
 
     if (!color && !image && !texture) {
       reportMaterialError(name, 'no color or map provided.');
@@ -89,12 +83,18 @@ class Registry {
     this.textureAtlas = new TextureAtlas(this.textureMap, { textureDimension: textureWidth });
     this.material = new ShaderMaterial({
       // wireframe: true,
+      fog: true,
       transparent: true,
       vertexShader: ChunkVertexShader,
       fragmentShader: ChunkFragmentShader,
       vertexColors: true,
       uniforms: {
         uTexture: { value: this.textureAtlas.mergedTexture },
+        uFogColor: { value: new Color(this.engine.config.renderingOptions.fogColor) },
+        uFogNear: { value: (renderRadius - 1) * chunkSize * dimension },
+        uFogFar: { value: renderRadius * chunkSize * dimension },
+        // uFogNear: { value: 100 },
+        // uFogFar: { value: 5000 },
       },
     });
 
