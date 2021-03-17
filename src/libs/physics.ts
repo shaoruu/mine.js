@@ -5,6 +5,7 @@ import { Helper } from '../utils';
 
 import { AABB } from './aabb';
 import { RigidBody } from './rigid-body';
+import { BodyOptionsType } from './types';
 
 // huge thanks to https://github.com/andyhall/voxel-physics-engine/blob/master/src/index.js
 
@@ -55,15 +56,22 @@ class Physics {
     };
   }
 
-  addBody(
-    aabb: AABB = new AABB([0, 0, 0], [1, 1, 1]),
-    mass = 1,
-    friction = 1,
-    restitution = 0,
-    gravityMultiplier = 1,
-    onCollide: () => void = () => {},
-    autoStep = false,
-  ) {
+  addBody(options: Partial<BodyOptionsType>) {
+    const defaultOptions = {
+      aabb: new AABB([0, 0, 0], [1, 1, 1]),
+      mass: 1,
+      friction: 1,
+      restitution: 0,
+      gravityMultiplier: 1,
+      onCollide: () => {},
+      autoStep: false,
+    };
+
+    const { aabb, mass, friction, restitution, gravityMultiplier, onCollide, autoStep } = {
+      ...defaultOptions,
+      ...options,
+    };
+
     const b = new RigidBody(aabb, mass, friction, restitution, gravityMultiplier, onCollide, autoStep);
     this.bodies.push(b);
     return b;

@@ -1,3 +1,9 @@
+import { Object3D } from 'three';
+
+import { AABB } from './aabb';
+import { Brain } from './brain';
+import { RigidBody } from './rigid-body';
+
 export type BlockMaterialType =
   | string
   | [string, string, string]
@@ -16,7 +22,24 @@ export type BlockType = {
   material: BlockMaterialType;
 };
 
+export type BodyOptionsType = {
+  aabb: AABB;
+  mass: number;
+  friction: number;
+  restitution: number;
+  gravityMultiplier: number;
+  onCollide: (impacts?: number[]) => void;
+  autoStep: boolean;
+};
+
 export type Coords3 = [x: number, y: number, z: number];
+
+export type EntityType = {
+  body: RigidBody;
+  brain: Brain;
+  object: Object3D;
+};
+
 export type GeneratorType = 'flat' | 'sin-cos' | '';
 
 export type MeshResultType = {

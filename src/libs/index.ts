@@ -1,4 +1,5 @@
 export * from './aabb';
+export * from './brain';
 export * from './clock';
 export * from './generators';
 export * from './meshers';

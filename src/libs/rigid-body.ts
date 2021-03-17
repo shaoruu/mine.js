@@ -23,7 +23,7 @@ class RigidBody {
     public friction: number,
     public restitution: number,
     public gravityMultiplier: number,
-    public onCollide: (impacts: number[]) => void,
+    public onCollide: (impacts?: number[]) => void,
     public autoStep: boolean,
   ) {
     this.airDrag = -1;

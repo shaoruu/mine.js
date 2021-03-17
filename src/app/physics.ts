@@ -29,12 +29,12 @@ class Physics {
 
   test() {
     // context
-    const position = [0, 40, 0];
+    const position = [0, 10, 0];
     const size = [1, 1, 1];
 
     // create body
     const aabb = new AABB(position, size);
-    const rigidBody = this.core.addBody(aabb, 0.2);
+    const rigidBody = this.core.addBody({ aabb, mass: 0.2 });
 
     // create render
     this.testMesh = new Mesh(new BoxBufferGeometry(...size));

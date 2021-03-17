@@ -3,7 +3,7 @@ import { BoxBufferGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3 
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
 import { Engine } from '..';
-import { Coords3 } from '../libs';
+import { Coords3, EntityType } from '../libs';
 import { Helper } from '../utils';
 
 type CameraOptionsType = {
@@ -42,6 +42,7 @@ class Camera {
   public options: CameraOptionsType;
   public lookBlock: Coords3 | null = [0, 0, 0];
   public targetBlock: Coords3 | null = [0, 0, 0];
+  public camEntity: EntityType;
 
   private acc = new Vector3();
   private vel = new Vector3();
@@ -88,6 +89,10 @@ class Camera {
 
     // look block
     engine.on('ready', () => {
+      // register camera as entity
+      this.camEntity = engine.entities.addEntity('camera', this.controls.getObject(), [1, 2, 1]);
+
+      // set up look block mesh
       const { dimension } = engine.world.options;
       this.lookBlockMesh = new Mesh(
         new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
@@ -172,6 +177,7 @@ class Camera {
 
   tick = () => {
     const { delta } = this.engine.clock;
+    const { state } = this.camEntity.brain;
 
     const { right, left, up, down, front, back } = this.movements;
     const { acceleration, flyingInertia } = this.options;
@@ -181,23 +187,47 @@ class Camera {
     movementVec.z = Number(front) - Number(back);
     movementVec.normalize();
 
-    const yMovement = Number(up) - Number(down);
+    const fb = front ? (back ? 0 : 1) : back ? -1 : 0;
+    const rl = right ? (left ? 0 : 1) : left ? -1 : 0;
 
-    this.acc.x = -movementVec.x * acceleration;
-    this.acc.y = yMovement * acceleration;
-    this.acc.z = -movementVec.z * acceleration;
+    const temp = new Vector3(0, 0, 0);
+    this.controls.getDirection(temp);
+    let camHeading = this.threeCamera.rotation.y;
 
-    this.vel.x -= this.vel.x * flyingInertia * delta;
-    this.vel.y -= this.vel.y * flyingInertia * delta;
-    this.vel.z -= this.vel.z * flyingInertia * delta;
+    if ((fb | rl) === 0) {
+      state.running = false;
+    } else {
+      state.running = true;
+      if (fb) {
+        if (fb == -1) camHeading += Math.PI;
+        if (rl) {
+          camHeading += Math.PI * fb * rl; // didn't plan this but it works!
+        }
+      } else {
+        camHeading += (rl * Math.PI) / 2;
+      }
+      state.rotation = camHeading;
+    }
 
-    this.vel.add(this.acc.multiplyScalar(delta));
-    this.acc.set(0, 0, 0);
+    state.jumping = up ? (down ? false : true) : down ? false : false;
 
-    this.controls.moveRight(-this.vel.x);
-    this.controls.moveForward(-this.vel.z);
+    // const yMovement = Number(up) - Number(down);
 
-    this.controls.getObject().position.y += this.vel.y;
+    // this.acc.x = -movementVec.x * acceleration;
+    // this.acc.y = yMovement * acceleration;
+    // this.acc.z = -movementVec.z * acceleration;
+
+    // this.vel.x -= this.vel.x * flyingInertia * delta;
+    // this.vel.y -= this.vel.y * flyingInertia * delta;
+    // this.vel.z -= this.vel.z * flyingInertia * delta;
+
+    // this.vel.add(this.acc.multiplyScalar(delta));
+    // this.acc.set(0, 0, 0);
+
+    // this.controls.moveRight(-this.vel.x);
+    // this.controls.moveForward(-this.vel.z);
+
+    // this.controls.getObject().position.y += this.vel.y;
 
     this.updateLookBlock();
   };
