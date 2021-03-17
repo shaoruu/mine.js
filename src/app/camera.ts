@@ -1,5 +1,5 @@
 import raycast from 'fast-voxel-raycast';
-import { BoxBufferGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3 } from 'three';
+import { BoxBufferGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3, BufferGeometry } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
 import { Engine } from '..';
@@ -18,6 +18,9 @@ type CameraOptionsType = {
   reachDistance: number;
   lookBlockScale: number;
   lookBlockLerp: number;
+  distToGround: number;
+  distToTop: number;
+  cameraWidth: number;
 };
 
 const defaultCameraOptions: CameraOptionsType = {
@@ -32,6 +35,9 @@ const defaultCameraOptions: CameraOptionsType = {
   reachDistance: 32,
   lookBlockScale: 1.02,
   lookBlockLerp: 0.7,
+  distToGround: 1.6,
+  distToTop: 0.2,
+  cameraWidth: 0.8,
 };
 
 class Camera {
@@ -42,6 +48,8 @@ class Camera {
   public options: CameraOptionsType;
   public lookBlock: Coords3 | null = [0, 0, 0];
   public targetBlock: Coords3 | null = [0, 0, 0];
+  public camGeometry: BufferGeometry;
+  public camMesh: Mesh;
   public camEntity: EntityType;
 
   private vec = new Vector3();
@@ -56,7 +64,7 @@ class Camera {
   private lookBlockMesh: Mesh;
 
   constructor(engine: Engine, options: Partial<CameraOptionsType> = {}) {
-    const { fov, near, far, initPos, lookBlockScale } = (this.options = {
+    const { fov, near, far, initPos, lookBlockScale, distToGround, distToTop, cameraWidth } = (this.options = {
       ...defaultCameraOptions,
       ...options,
     });
@@ -71,8 +79,12 @@ class Camera {
     this.engine.rendering.scene.add(this.controls.getObject());
     this.engine.container.canvas.onclick = () => this.controls.lock();
 
+    // initialize camera position
     this.controls.getObject().position.set(...initPos);
+    this.threeCamera.lookAt(new Vector3(0, 0, 0));
 
+    // listen to resize, and adjust accordingly
+    // ? should move to it's own logic for all event listeners?
     window.addEventListener('resize', () => {
       engine.container.fitCanvas();
       engine.rendering.adjustRenderer();
@@ -81,18 +93,33 @@ class Camera {
       this.threeCamera.updateProjectionMatrix();
     });
 
+    // movement handling
     document.addEventListener('keydown', this.onKeyDown, false);
     document.addEventListener('keyup', this.onKeyUp, false);
 
-    this.threeCamera.lookAt(new Vector3(0, 0, 0));
-
     // look block
     engine.on('ready', () => {
+      const { dimension } = engine.world.options;
+
+      const cameraWorldWidth = cameraWidth * dimension;
+      const cameraWorldHeight = (distToGround + distToTop) * dimension;
+
+      // set up camera's mesh
+      this.camGeometry = new BoxBufferGeometry(cameraWorldWidth, cameraWorldHeight, cameraWorldWidth);
+      this.camMesh = new Mesh(this.camGeometry);
+      this.threeCamera.add(this.camMesh);
+      this.camMesh.position.y -= distToGround * dimension;
+      engine.rendering.scene.add(this.camMesh);
+
       // register camera as entity
-      this.camEntity = engine.entities.addEntity('camera', this.controls.getObject(), [0.5, 2, 0.5]);
+      this.camEntity = engine.entities.addEntity(
+        'camera',
+        this.threeCamera,
+        [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth],
+        [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0],
+      );
 
       // set up look block mesh
-      const { dimension } = engine.world.options;
       this.lookBlockMesh = new Mesh(
         new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
         new MeshBasicMaterial({

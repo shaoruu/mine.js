@@ -52,20 +52,10 @@ class Physics {
     this.core.tick(delta);
   }
 
-  getObjectPositionFromRB(rigidBody: RigidBody) {
+  getPositionFromRB(rigidBody: RigidBody) {
     const [px, py, pz] = rigidBody.getPosition();
     const { vec } = rigidBody.aabb;
     return [px + vec[0] / 2, py + vec[1] / 2, pz + vec[2] / 2];
-  }
-
-  setPositionFromPhysics(rigidBody: RigidBody, object: Object3D) {
-    const [px, py, pz] = this.getObjectPositionFromRB(rigidBody);
-    object.position.set(px, py, pz);
-  }
-
-  lerpPositionFromPhysics(rigidBody: RigidBody, object: Object3D, lerpFactor: number) {
-    const [px, py, pz] = this.getObjectPositionFromRB(rigidBody);
-    object.position.lerp(new Vector3(px, py, pz), lerpFactor);
   }
 }
 

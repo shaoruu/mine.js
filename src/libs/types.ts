@@ -37,6 +37,7 @@ export type Coords3 = [x: number, y: number, z: number];
 export type EntityType = {
   body: RigidBody;
   brain: Brain;
+  offsets: [number, number, number];
   object: Object3D;
 };
 
