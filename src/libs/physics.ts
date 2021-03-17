@@ -1,6 +1,7 @@
 import vec3 from 'gl-vec3';
 import sweep from 'voxel-aabb-sweep';
 
+import { PhysicsOptionsType } from '../app';
 import { Helper } from '../utils';
 
 import { AABB } from './aabb';
@@ -11,24 +12,7 @@ import { BodyOptionsType } from './types';
 
 type TestFunctionType = (vx: number, vy: number, vz: number) => boolean;
 
-type PhysicsOptionsType = {
-  gravity: [number, number, number];
-  minBounceImpulse: number;
-  airDrag: number;
-  fluidDrag: number;
-  fluidDensity: number;
-};
-
-const defaultPhysicsOptions: PhysicsOptionsType = {
-  gravity: [0, -10, 0],
-  minBounceImpulse: 0.5,
-  airDrag: 0.1,
-  fluidDrag: 0.4,
-  fluidDensity: 2.0,
-};
-
 class Physics {
-  public options: PhysicsOptionsType;
   public bodies: RigidBody[] = [];
 
   private a = vec3.create();
@@ -48,13 +32,8 @@ class Physics {
   constructor(
     private testSolid: TestFunctionType,
     private testFluid: TestFunctionType,
-    options: Partial<PhysicsOptionsType> = {},
-  ) {
-    this.options = {
-      ...defaultPhysicsOptions,
-      ...options,
-    };
-  }
+    public options: PhysicsOptionsType,
+  ) {}
 
   addBody(options: Partial<BodyOptionsType>) {
     const defaultOptions = {

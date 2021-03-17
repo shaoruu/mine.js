@@ -89,7 +89,7 @@ class Camera {
     // look block
     engine.on('ready', () => {
       // register camera as entity
-      this.camEntity = engine.entities.addEntity('camera', this.controls.getObject(), [1, 2, 1]);
+      this.camEntity = engine.entities.addEntity('camera', this.controls.getObject(), [0.5, 2, 0.5]);
 
       // set up look block mesh
       const { dimension } = engine.world.options;

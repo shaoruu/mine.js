@@ -4,10 +4,14 @@ import { Engine } from '..';
 import { AABB, Brain, EntityType, RigidBody, SmartDictionary } from '../libs';
 
 type EntitiesOptionsType = {
+  movementLerp: boolean;
+  movementLerpFactor: number;
   maxEntities: number;
 };
 
 const defaultEntitiesOptions: EntitiesOptionsType = {
+  movementLerp: true,
+  movementLerpFactor: 0.4,
   maxEntities: 1000,
 };
 
@@ -55,8 +59,13 @@ class Entities {
   }
 
   tick() {
+    const { movementLerp, movementLerpFactor } = this.options;
     this.list.data.forEach((entity) => {
-      this.engine.physics.setPositionFromPhysics(entity.body, entity.object);
+      if (movementLerp) {
+        this.engine.physics.lerpPositionFromPhysics(entity.body, entity.object, movementLerpFactor);
+      } else {
+        this.engine.physics.setPositionFromPhysics(entity.body, entity.object);
+      }
     });
   }
 }
