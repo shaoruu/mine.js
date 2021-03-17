@@ -20,7 +20,7 @@ type PhysicsOptionsType = {
 };
 
 const defaultPhysicsOptions: PhysicsOptionsType = {
-  gravity: [0, -30, 0],
+  gravity: [0, -10, 0],
   minBounceImpulse: 0.5,
   airDrag: 0.1,
   fluidDrag: 0.4,

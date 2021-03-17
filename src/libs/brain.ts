@@ -17,7 +17,7 @@ type BrainOptionsType = {
 };
 
 type BrainStateType = {
-  rotation: number; // radians, heading location
+  heading: number; // radians, heading location
   running: boolean;
   jumping: boolean;
 
@@ -38,11 +38,11 @@ const defaultBrainOptions: BrainOptionsType = {
   jumpImpulse: 10,
   jumpForce: 12,
   jumpTime: 500,
-  airJumps: 100000,
+  airJumps: 1,
 };
 
 const defaultBrainState: BrainStateType = {
-  rotation: 0,
+  heading: 0,
   running: false,
   jumping: false,
 
@@ -118,7 +118,7 @@ class Brain {
       vec3.set(m, 0, 0, speed);
 
       // rotate move vector to entity's heading
-      vec3.rotateY(m, m, this.zeroVec, this.state.rotation);
+      vec3.rotateY(m, m, this.zeroVec, this.state.heading);
 
       // push vector to achieve desired speed & dir
       // following code to adjust 2D velocity to desired amount is patterned on Quake:

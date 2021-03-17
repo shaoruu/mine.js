@@ -1,15 +1,12 @@
-import { BoxBufferGeometry, Mesh, Object3D } from 'three';
+import { Object3D } from 'three';
 
 import { Engine } from '..';
-import { AABB, Physics as PhysicsCore, RigidBody } from '../libs';
+import { Physics as PhysicsCore, RigidBody } from '../libs';
 
 class Physics {
   public engine: Engine;
 
   public core: PhysicsCore;
-
-  private testMesh: Mesh;
-  private testRB: RigidBody;
 
   constructor(engine: Engine) {
     this.engine = engine;
@@ -23,33 +20,6 @@ class Physics {
     };
 
     this.core = new PhysicsCore(testSolidity, testFluidity);
-
-    this.test();
-  }
-
-  test() {
-    // context
-    const position = [0, 10, 0];
-    const size = [1, 1, 1];
-
-    // create body
-    const aabb = new AABB(position, size);
-    const rigidBody = this.core.addBody({ aabb, mass: 0.2 });
-
-    // create render
-    this.testMesh = new Mesh(new BoxBufferGeometry(...size));
-    this.testMesh.position.set(position[0], position[1], position[2]);
-    this.testRB = rigidBody;
-    this.engine.rendering.scene.add(this.testMesh);
-
-    document.addEventListener('keydown', ({ key }) => {
-      if (key === 'x') {
-        this.testRB.applyForce([0, 100, 0]);
-      }
-      if (key === 'c') {
-        this.testRB.applyForce([Math.random() * 100 - 50, Math.random() * 100, Math.random() * 100 - 50]);
-      }
-    });
   }
 
   tick() {
@@ -58,9 +28,6 @@ class Physics {
 
     const { delta } = clock;
     this.core.tick(delta);
-
-    // update render
-    this.setPositionFromPhysics(this.testRB, this.testMesh);
   }
 
   setPositionFromPhysics(rigidBody: RigidBody, object: Object3D) {

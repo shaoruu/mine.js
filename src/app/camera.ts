@@ -44,8 +44,7 @@ class Camera {
   public targetBlock: Coords3 | null = [0, 0, 0];
   public camEntity: EntityType;
 
-  private acc = new Vector3();
-  private vel = new Vector3();
+  private vec = new Vector3();
   private movements = {
     up: false,
     down: false,
@@ -176,58 +175,45 @@ class Camera {
   };
 
   tick = () => {
-    const { delta } = this.engine.clock;
     const { state } = this.camEntity.brain;
 
     const { right, left, up, down, front, back } = this.movements;
-    const { acceleration, flyingInertia } = this.options;
-
-    const movementVec = new Vector3();
-    movementVec.x = Number(right) - Number(left);
-    movementVec.z = Number(front) - Number(back);
-    movementVec.normalize();
 
     const fb = front ? (back ? 0 : 1) : back ? -1 : 0;
-    const rl = right ? (left ? 0 : 1) : left ? -1 : 0;
+    const rl = left ? (right ? 0 : 1) : right ? -1 : 0;
 
-    const temp = new Vector3(0, 0, 0);
-    this.controls.getDirection(temp);
-    let camHeading = this.threeCamera.rotation.y;
+    // get the frontwards-backwards direction vectors
+    this.vec.setFromMatrixColumn(this.threeCamera.matrix, 0);
+    this.vec.crossVectors(this.threeCamera.up, this.vec);
+    const { x: forwardX, z: forwardZ } = this.vec;
+
+    // get the side-ways vectors
+    this.vec.setFromMatrixColumn(this.threeCamera.matrix, 0);
+    const { x: sideX, z: sideZ } = this.vec;
+
+    const totalX = forwardX + sideX;
+    const totalZ = forwardZ + sideZ;
+
+    let angle = Math.atan2(totalX, totalZ);
 
     if ((fb | rl) === 0) {
       state.running = false;
     } else {
       state.running = true;
       if (fb) {
-        if (fb == -1) camHeading += Math.PI;
+        if (fb === -1) angle += Math.PI;
         if (rl) {
-          camHeading += Math.PI * fb * rl; // didn't plan this but it works!
+          angle += (Math.PI / 4) * fb * rl;
         }
       } else {
-        camHeading += (rl * Math.PI) / 2;
+        angle += (rl * Math.PI) / 2;
       }
-      state.rotation = camHeading;
+      // not sure why add Math.PI / 4, but it was always off by that.
+      state.heading = angle + Math.PI / 4;
     }
 
+    // set jump as true, and brain will handle the jumping
     state.jumping = up ? (down ? false : true) : down ? false : false;
-
-    // const yMovement = Number(up) - Number(down);
-
-    // this.acc.x = -movementVec.x * acceleration;
-    // this.acc.y = yMovement * acceleration;
-    // this.acc.z = -movementVec.z * acceleration;
-
-    // this.vel.x -= this.vel.x * flyingInertia * delta;
-    // this.vel.y -= this.vel.y * flyingInertia * delta;
-    // this.vel.z -= this.vel.z * flyingInertia * delta;
-
-    // this.vel.add(this.acc.multiplyScalar(delta));
-    // this.acc.set(0, 0, 0);
-
-    // this.controls.moveRight(-this.vel.x);
-    // this.controls.moveForward(-this.vel.z);
-
-    // this.controls.getObject().position.y += this.vel.y;
 
     this.updateLookBlock();
   };
