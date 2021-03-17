@@ -69,7 +69,7 @@ const defaultConfig: ConfigType = {
     maxEntities: 1000,
   },
   physicsOptions: {
-    gravity: [0, -20, 0],
+    gravity: [0, -24, 0],
     minBounceImpulse: 0.5,
     airDrag: 0.1,
     fluidDrag: 0.4,

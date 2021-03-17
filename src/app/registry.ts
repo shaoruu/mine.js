@@ -91,7 +91,7 @@ class Registry {
       uniforms: {
         uTexture: { value: this.textureAtlas.mergedTexture },
         uFogColor: { value: new Color(this.engine.config.renderingOptions.fogColor) },
-        uFogNear: { value: (renderRadius - 1) * chunkSize * dimension },
+        uFogNear: { value: (renderRadius - 2) * chunkSize * dimension },
         uFogFar: { value: renderRadius * chunkSize * dimension },
         // uFogNear: { value: 100 },
         // uFogFar: { value: 5000 },
