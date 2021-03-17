@@ -2,7 +2,7 @@ export * from './camera';
 export * from './chunk';
 export * from './container';
 export * from './debug';
-export * from './entity';
+export * from './entities';
 export * from './inputs';
 export * from './physics';
 export * from './registry';

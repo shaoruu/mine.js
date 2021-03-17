@@ -2,6 +2,8 @@ export * from './aabb';
 export * from './clock';
 export * from './generators';
 export * from './meshers';
+export * from './physics';
+export * from './rigid-body';
 export * from './sky';
 export * from './smart-dictionary';
 export * from './texture-atlas';

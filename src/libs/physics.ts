@@ -61,7 +61,7 @@ class Physics {
     friction = 1,
     restitution = 0,
     gravityMultiplier = 1,
-    onCollide: () => void,
+    onCollide: () => void = () => {},
     autoStep = false,
   ) {
     const b = new RigidBody(aabb, mass, friction, restitution, gravityMultiplier, onCollide, autoStep);

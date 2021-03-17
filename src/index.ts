@@ -6,6 +6,7 @@ import {
   ContainerOptionsType,
   Debug,
   Inputs,
+  Physics,
   Registry,
   Rendering,
   World,
@@ -41,6 +42,7 @@ class Engine extends EventEmitter {
   public camera: Camera;
   public registry: Registry;
   public world: World;
+  public physics: Physics;
 
   public paused = true;
 
@@ -75,6 +77,10 @@ class Engine extends EventEmitter {
     // world
     this.world = new World(this, worldOptions);
 
+    // physics
+    this.physics = new Physics(this);
+
+    // time
     this.clock = new Clock();
 
     this.boot();
@@ -107,6 +113,7 @@ class Engine extends EventEmitter {
     this.emit('tick-begin');
 
     this.clock.tick();
+    this.physics.tick();
     this.camera.tick();
     this.world.tick();
     this.rendering.tick();

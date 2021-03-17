@@ -133,9 +133,27 @@ class World extends EventEmitter {
   }
 
   getVoxelByWorld(wCoords: Coords3) {
-    const { dimension } = this.options;
-    const vCoords = Helper.mapWorldPosToVoxelPos(wCoords, dimension);
+    const vCoords = Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
     return this.getVoxelByVoxel(vCoords);
+  }
+
+  getSolidityByVoxel(vCoords: Coords3) {
+    return this.getVoxelByVoxel(vCoords) !== 0;
+  }
+
+  getFluidityByVoxel(vCoords: Coords3) {
+    // TODO
+    return false;
+  }
+
+  getSolidityByWorld(wCoords: Coords3) {
+    const vCoords = Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+    return this.getSolidityByVoxel(vCoords);
+  }
+
+  getFluidityByWorld(wCoords: Coords3) {
+    const vCoords = Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+    return this.getFluidityByVoxel(vCoords);
   }
 
   setChunk(chunk: Chunk) {
