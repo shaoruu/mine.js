@@ -38,7 +38,7 @@ const defaultBrainOptions: BrainOptionsType = {
   jumpImpulse: 8,
   jumpForce: 1,
   jumpTime: 50,
-  airJumps: 0,
+  airJumps: 100000,
 };
 
 const defaultBrainState: BrainStateType = {
