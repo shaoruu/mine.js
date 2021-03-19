@@ -15,6 +15,7 @@ async function simpleCull(chunk: Chunk): Promise<MeshResultType> {
   const {
     dimension,
     padding,
+    lights,
     voxels,
     minInner,
     maxInner,
@@ -25,12 +26,14 @@ async function simpleCull(chunk: Chunk): Promise<MeshResultType> {
   const { stride } = voxels;
 
   const voxelsBuffer = (voxels.data as Int8Array).buffer.slice(0);
+  const lightsBuffer = (lights.data as Int8Array).buffer.slice(0);
   const worker = workers.pop() || Helper.loadWorker(workerSrc);
 
   const result = await new Promise<MeshResultType>((resolve) => {
     worker.postMessage(
       {
         data: voxelsBuffer,
+        lights: lightsBuffer,
         configs: {
           dimension,
           padding,
@@ -41,17 +44,18 @@ async function simpleCull(chunk: Chunk): Promise<MeshResultType> {
           matUVs: cMaterialUVDictionary,
         },
       },
-      [voxelsBuffer],
+      [voxelsBuffer, lightsBuffer],
     );
 
     worker.onmessage = ({ data }) => {
-      const { positions, normals, indices, uvs, aos } = data;
+      const { positions, normals, indices, uvs, aos, lights } = data;
       resolve({
         positions: new Float32Array(positions),
         normals: new Float32Array(normals),
         indices: new Float32Array(indices),
         uvs: new Float32Array(uvs),
         aos: new Float32Array(aos),
+        lights: new Float32Array(lights),
       });
     };
   });

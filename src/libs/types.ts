@@ -49,4 +49,5 @@ export type MeshResultType = {
   indices: Float32Array;
   uvs: Float32Array;
   aos: Float32Array;
+  lights: Float32Array;
 };

@@ -10,15 +10,30 @@ type RegistryOptionsType = {
   textureWidth: number;
 };
 
-type MaterialOptions = {
+type MaterialOptionsType = {
   color?: string;
   texture?: Texture;
   image?: HTMLImageElement;
 };
 
+type BlockOptionsType = {
+  lightLevel: number;
+
+  // states
+  isFluid: boolean;
+  isEmpty: boolean;
+};
+
 type BlockType = {
   name: string;
   material: BlockMaterialType;
+  options: BlockOptionsType;
+};
+
+const defaultBlockOptions: BlockOptionsType = {
+  lightLevel: 0,
+  isFluid: false,
+  isEmpty: false,
 };
 
 function reportMaterialError(name: string, message: string) {
@@ -64,7 +79,7 @@ class Registry {
     });
   }
 
-  addMaterial = (name: string, options: MaterialOptions) => {
+  addMaterial = (name: string, options: MaterialOptionsType) => {
     const { textureWidth } = this.options;
     const { color, image, texture } = options;
     const { chunkSize, dimension, renderRadius } = this.engine.config.worldOptions;
@@ -109,7 +124,15 @@ class Registry {
     return matID;
   };
 
-  addBlock = (name: string, material: BlockMaterialType = null) => {
+  addBlock = (name: string, material: BlockMaterialType = null, options: Partial<BlockOptionsType> = {}) => {
+    const fullOptions = {
+      ...defaultBlockOptions,
+      ...options,
+    };
+
+    // options filtering
+    fullOptions.lightLevel = Math.min(fullOptions.lightLevel, this.engine.config.worldOptions.maxLightLevel);
+
     if (this.blocks.getIndex(name) >= 0) {
       console.warn('Block,', name, 'has been replaced.');
     }
@@ -118,6 +141,7 @@ class Registry {
       const noneBlock = {
         name,
         material: null,
+        options: fullOptions,
       };
       const noneBlockID = this.blocks.set(name, noneBlock);
       return noneBlockID;
@@ -145,6 +169,7 @@ class Registry {
     const newBlock = {
       name,
       material,
+      options: fullOptions,
     };
 
     const blockID = this.blocks.set(name, newBlock);
@@ -164,6 +189,10 @@ class Registry {
 
   getMaterial = (name: string) => {
     return this.materials.get(name);
+  };
+
+  getBlockByIndex = (index: number) => {
+    return this.blocks.getByIndex(index);
   };
 
   getBlockIndex = (name: string) => {

@@ -13,6 +13,13 @@ type WorldOptionsType = {
   generator?: GeneratorType;
   renderRadius: number;
   maxChunkPerFrame: number;
+  maxLightLevel: number;
+};
+
+type LightNode = {
+  level: number;
+  chunk: Chunk;
+  voxel: Coords3;
 };
 
 class World extends EventEmitter {
@@ -69,19 +76,20 @@ class World extends EventEmitter {
     return this.getChunkByCPos(chunkCoords);
   }
 
-  getNeighborChunksByVoxel(vCoords: Coords3) {
-    const { chunkSize, chunkPadding } = this.options;
+  getNeighborChunksByVoxel(vCoords: Coords3, padding = this.options.chunkPadding) {
+    const { chunkSize } = this.options;
     const [cx, cy, cz] = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
     const [lx, ly, lz] = Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
     const neighborChunks: (Chunk | null)[] = [];
+
     // check if local position is on the edge
     // TODO: fix this hacky way of doing so.
-    const a = lx < chunkPadding;
-    const b = ly < chunkPadding;
-    const c = lz < chunkPadding;
-    const d = lx >= chunkSize - chunkPadding;
-    const e = ly >= chunkSize - chunkPadding;
-    const f = lz >= chunkSize - chunkPadding;
+    const a = lx < padding;
+    const b = ly < padding;
+    const c = lz < padding;
+    const d = lx >= chunkSize - padding;
+    const e = ly >= chunkSize - padding;
+    const f = lz >= chunkSize - padding;
 
     // direct neighbors
     if (a) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz]));
@@ -114,6 +122,7 @@ class World extends EventEmitter {
     if (b && d && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy - 1, cz + 1]));
     if (c && d && e) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz - 1]));
     if (d && e && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz + 1]));
+
     return neighborChunks.filter(Boolean);
   }
 
@@ -155,6 +164,14 @@ class World extends EventEmitter {
     chunk?.setVoxel(...vCoords, type);
     const neighborChunks = this.getNeighborChunksByVoxel(vCoords);
     neighborChunks.forEach((c) => c?.setVoxel(...vCoords, type));
+
+    // lighting
+    const {
+      options: { lightLevel },
+    } = this.engine.registry.getBlockByIndex(type);
+    if (lightLevel > 0) {
+      this.floodTorchLight(...vCoords, lightLevel);
+    }
   }
 
   breakVoxel() {
@@ -166,6 +183,196 @@ class World extends EventEmitter {
   placeVoxel(type: number) {
     if (this.engine.camera.targetBlock) {
       this.setVoxel(this.engine.camera.targetBlock, type);
+    }
+  }
+
+  floodTorchLight(vx: number, vy: number, vz: number, level: number) {
+    // flood-fill lighting
+    const sourceChunk = this.getChunkByVoxel([vx, vy, vz]);
+    if (!sourceChunk) return;
+    sourceChunk.setTorchLight(vx, vy, vz, level);
+
+    const lightBfsQueue: LightNode[] = [];
+    lightBfsQueue.push({
+      level,
+      voxel: [vx, vy, vz],
+      chunk: sourceChunk,
+    });
+
+    while (lightBfsQueue.length !== 0) {
+      const lightNode = lightBfsQueue.shift();
+
+      if (lightNode) {
+        const {
+          level,
+          chunk,
+          voxel: [vx, vy, vz],
+        } = lightNode;
+
+        const [cx, cy, cz] = chunk.coords;
+
+        // px
+        if (chunk.contains(vx + 1, vy, vz, 0)) {
+          if (chunk.getVoxel(vx + 1, vy, vz) === 0 && chunk.getTorchLight(vx + 1, vy, vz) + 2 <= level) {
+            chunk.setTorchLight(vx + 1, vy, vz, level - 1);
+            lightBfsQueue.push({
+              chunk,
+              level: level - 1,
+              voxel: [vx + 1, vy, vz],
+            });
+          }
+        } else {
+          const neighborChunk = this.getChunkByCPos([cx + 1, cy, cz]);
+          if (neighborChunk) {
+            if (
+              neighborChunk.getVoxel(vx + 1, vy, vz) === 0 &&
+              neighborChunk.getTorchLight(vx + 1, vy, vz) + 2 <= level
+            ) {
+              neighborChunk.setTorchLight(vx + 1, vy, vz, level - 1);
+              lightBfsQueue.push({
+                chunk: neighborChunk,
+                level: level - 1,
+                voxel: [vx + 1, vy, vz],
+              });
+            }
+          }
+        }
+
+        // nx
+        if (chunk.contains(vx - 1, vy, vz, 0)) {
+          if (chunk.getVoxel(vx - 1, vy, vz) === 0 && chunk.getTorchLight(vx - 1, vy, vz) + 2 <= level) {
+            chunk.setTorchLight(vx - 1, vy, vz, level - 1);
+            lightBfsQueue.push({
+              chunk,
+              level: level - 1,
+              voxel: [vx - 1, vy, vz],
+            });
+          }
+        } else {
+          const neighborChunk = this.getChunkByCPos([cx - 1, cy, cz]);
+          if (neighborChunk) {
+            if (
+              neighborChunk.getVoxel(vx - 1, vy, vz) === 0 &&
+              neighborChunk.getTorchLight(vx - 1, vy, vz) + 2 <= level
+            ) {
+              neighborChunk.setTorchLight(vx - 1, vy, vz, level - 1);
+              lightBfsQueue.push({
+                chunk: neighborChunk,
+                level: level - 1,
+                voxel: [vx - 1, vy, vz],
+              });
+            }
+          }
+        }
+
+        // py
+        if (chunk.contains(vx, vy + 1, vz, 0)) {
+          if (chunk.getVoxel(vx, vy + 1, vz) === 0 && chunk.getTorchLight(vx, vy + 1, vz) + 2 <= level) {
+            chunk.setTorchLight(vx, vy + 1, vz, level - 1);
+            lightBfsQueue.push({
+              chunk,
+              level: level - 1,
+              voxel: [vx, vy + 1, vz],
+            });
+          }
+        } else {
+          const neighborChunk = this.getChunkByCPos([cx, cy + 1, cz]);
+          if (neighborChunk) {
+            if (
+              neighborChunk.getVoxel(vx, vy + 1, vz) === 0 &&
+              neighborChunk.getTorchLight(vx, vy + 1, vz) + 2 <= level
+            ) {
+              neighborChunk.setTorchLight(vx, vy + 1, vz, level - 1);
+              lightBfsQueue.push({
+                chunk: neighborChunk,
+                level: level - 1,
+                voxel: [vx, vy + 1, vz],
+              });
+            }
+          }
+        }
+
+        // ny
+        if (chunk.contains(vx, vy - 1, vz, 0)) {
+          if (chunk.getVoxel(vx, vy - 1, vz) === 0 && chunk.getTorchLight(vx, vy - 1, vz) + 2 <= level) {
+            chunk.setTorchLight(vx, vy - 1, vz, level - 1);
+            lightBfsQueue.push({
+              chunk,
+              level: level - 1,
+              voxel: [vx, vy - 1, vz],
+            });
+          }
+        } else {
+          const neighborChunk = this.getChunkByCPos([cx, cy - 1, cz]);
+          if (neighborChunk) {
+            if (
+              neighborChunk.getVoxel(vx, vy - 1, vz) === 0 &&
+              neighborChunk.getTorchLight(vx, vy - 1, vz) + 2 <= level
+            ) {
+              neighborChunk.setTorchLight(vx, vy - 1, vz, level - 1);
+              lightBfsQueue.push({
+                chunk: neighborChunk,
+                level: level - 1,
+                voxel: [vx, vy - 1, vz],
+              });
+            }
+          }
+        }
+
+        // pz
+        if (chunk.contains(vx, vy, vz + 1, 0)) {
+          if (chunk.getVoxel(vx, vy, vz + 1) === 0 && chunk.getTorchLight(vx, vy, vz + 1) + 2 <= level) {
+            chunk.setTorchLight(vx, vy, vz + 1, level - 1);
+            lightBfsQueue.push({
+              chunk,
+              level: level - 1,
+              voxel: [vx, vy, vz + 1],
+            });
+          }
+        } else {
+          const neighborChunk = this.getChunkByCPos([cx, cy, cz + 1]);
+          if (neighborChunk) {
+            if (
+              neighborChunk.getVoxel(vx, vy, vz + 1) === 0 &&
+              neighborChunk.getTorchLight(vx, vy, vz + 1) + 2 <= level
+            ) {
+              neighborChunk.setTorchLight(vx, vy, vz + 1, level - 1);
+              lightBfsQueue.push({
+                chunk: neighborChunk,
+                level: level - 1,
+                voxel: [vx, vy, vz + 1],
+              });
+            }
+          }
+        }
+
+        // nz
+        if (chunk.contains(vx, vy, vz - 1, 0)) {
+          if (chunk.getVoxel(vx, vy, vz - 1) === 0 && chunk.getTorchLight(vx, vy, vz - 1) + 2 <= level) {
+            chunk.setTorchLight(vx, vy, vz - 1, level - 1);
+            lightBfsQueue.push({
+              chunk,
+              level: level - 1,
+              voxel: [vx, vy, vz - 1],
+            });
+          }
+        } else {
+          const neighborChunk = this.getChunkByCPos([cx, cy, cz - 1]);
+          if (neighborChunk) {
+            if (
+              neighborChunk.getVoxel(vx, vy, vz - 1) === 0 &&
+              neighborChunk.getTorchLight(vx, vy, vz - 1) + 2 <= level
+            ) {
+              neighborChunk.setTorchLight(vx, vy, vz - 1, level - 1);
+              lightBfsQueue.push({
+                chunk: neighborChunk,
+                level: level - 1,
+                voxel: [vx, vy, vz - 1],
+              });
+            }
+          }
+        }
+      }
     }
   }
 

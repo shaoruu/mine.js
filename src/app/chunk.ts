@@ -14,9 +14,10 @@ type ChunkOptions = {
 };
 
 class Chunk {
+  public engine: Engine;
   public coords: Coords3;
   public voxels: ndarray;
-  public engine: Engine;
+  public lights: ndarray;
 
   public name: string;
   public size: number;
@@ -52,6 +53,7 @@ class Chunk {
     this.name = Helper.getChunkName(this.coords);
 
     this.voxels = ndarray(new Int8Array(this.width * this.width * this.width), [this.width, this.width, this.width]);
+    this.lights = ndarray(new Int8Array(this.width * this.width * this.width), [this.width, this.width, this.width]);
 
     this.geometry = new BufferGeometry();
 
@@ -88,6 +90,36 @@ class Chunk {
     return this.voxels.set(lx + this.padding, ly + this.padding, lz + this.padding, id);
   }
 
+  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  getLocalTorchLight(lx: number, ly: number, lz: number) {
+    return this.lights.get(lx + this.padding, ly + this.padding, lz + this.padding) & 0xf;
+  }
+
+  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  setLocalTorchLight(lx: number, ly: number, lz: number, level: number) {
+    return this.lights.set(
+      lx + this.padding,
+      ly + this.padding,
+      lz + this.padding,
+      (this.getLocalTorchLight(lx, ly, lz) & 0xf0) | level,
+    );
+  }
+
+  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  getLocalSunlight(lx: number, ly: number, lz: number) {
+    return (this.lights.get(lx + this.padding, ly + this.padding, lz + this.padding) >> 4) & 0xf;
+  }
+
+  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  setLocalSunlight(lx: number, ly: number, lz: number, level: number) {
+    return this.lights.set(
+      lx + this.padding,
+      ly + this.padding,
+      lz + this.padding,
+      (this.getLocalSunlight(lx, ly, lz) & 0xf0) | (level << 4),
+    );
+  }
+
   getVoxel(vx: number, vy: number, vz: number) {
     if (!this.contains(vx, vy, vz)) return;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
@@ -108,8 +140,21 @@ class Chunk {
     this.isDirty = true;
   }
 
-  contains(vx: number, vy: number, vz: number) {
-    const { padding, size } = this;
+  getTorchLight(vx: number, vy: number, vz: number) {
+    if (!this.contains(vx, vy, vz)) return 0; // ?
+    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
+    return this.getLocalTorchLight(lx, ly, lz);
+  }
+
+  setTorchLight(vx: number, vy: number, vz: number, level: number) {
+    if (!this.contains(vx, vy, vz)) return;
+    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
+    this.setLocalTorchLight(lx, ly, lz, level);
+    this.isDirty = true; // mesh rebuilt needed if light changes
+  }
+
+  contains(vx: number, vy: number, vz: number, padding = this.padding) {
+    const { size } = this;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
 
     return (
@@ -162,18 +207,20 @@ class Chunk {
 
     this.isMeshing = true;
 
-    const { positions, normals, indices, uvs, aos } = await simpleCull(this);
+    const { positions, normals, indices, uvs, aos, lights } = await simpleCull(this);
 
     const positionNumComponents = 3;
     const normalNumComponents = 3;
     const uvNumComponents = 2;
     const occlusionNumComponents = 1;
+    const lightsNumComponents = 1;
 
     this.geometry.dispose();
     this.geometry.setAttribute('position', new BufferAttribute(positions, positionNumComponents));
     this.geometry.setAttribute('normal', new BufferAttribute(normals, normalNumComponents));
     this.geometry.setAttribute('uv', new BufferAttribute(uvs, uvNumComponents));
     this.geometry.setAttribute('ao', new BufferAttribute(aos, occlusionNumComponents));
+    this.geometry.setAttribute('light', new BufferAttribute(lights, lightsNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
     this.altMesh = new Mesh(this.geometry, this.engine.registry.material);

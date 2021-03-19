@@ -9,6 +9,7 @@ const imagesMap = {
   'grass-side': 'resources/grass_side.png',
   dirt: 'resources/dirt.png',
   stone: 'resources/stone.png',
+  'not-sure': 'resources/not-sure.png',
 };
 
 Object.keys(imagesMap).forEach((key) => {
@@ -31,9 +32,13 @@ function sharedOnLoad() {
     engine.registry.addMaterial('grass-bottom', { image: images['dirt'] });
     engine.registry.addMaterial('dirt', { image: images['dirt'] });
     engine.registry.addMaterial('stone', { image: images['stone'] });
+    engine.registry.addMaterial('not-sure', { image: images['not-sure'] });
 
     engine.registry.addBlock('grass', ['grass-top', 'grass-side', 'grass-bottom']);
     const stoneID = engine.registry.addBlock('stone', 'stone');
+    const notSureID = engine.registry.addBlock('not-sure', 'not-sure', {
+      lightLevel: 15,
+    });
 
     document.addEventListener(
       'mousedown',
@@ -53,7 +58,7 @@ function sharedOnLoad() {
             }
           }
         } else if (button === 2) {
-          engine.world.placeVoxel(stoneID);
+          engine.world.placeVoxel(notSureID);
         }
       },
       false,

@@ -191,9 +191,13 @@ const FACES = [
   },
 ];
 
-const get = (arr, x, y, z, stride) => {
+function get(arr, x, y, z, stride) {
   return arr[x * stride[0] + y * stride[1] + z * stride[2]];
-};
+}
+
+function getTorchLight(arr, x, y, z, stride) {
+  return get(arr, x, y, z, stride) & 0xf;
+}
 
 function vertexAO(side1, side2, corner) {
   const numS1 = Number(side1 !== 0);
@@ -209,16 +213,19 @@ function vertexAO(side1, side2, corner) {
 onmessage = function (e) {
   const {
     data: dataBuffer,
+    lights: lightsBuffer,
     configs: { dimension, padding, min, max, stride, blockMats, matUVs },
   } = e.data;
 
   const data = new Int8Array(dataBuffer);
+  const lights = new Int8Array(lightsBuffer);
 
   const positions = [];
   const normals = [];
   const indices = [];
   const uvs = [];
   const aos = [];
+  const lightLevels = [];
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;
@@ -237,6 +244,7 @@ onmessage = function (e) {
           for (const { dir, mat3, mat6, corners, neighbors } of FACES) {
             const neighbor = get(data, lx + dir[0], ly + dir[1], lz + dir[2], stride);
             if (!neighbor) {
+              const lightLevel = getTorchLight(lights, lx + dir[0], ly + dir[1], lz + dir[2], stride);
               // this voxel has no neighbor in this direction so we need a face.
               const nearVoxels = neighbors.map(([a, b, c]) => get(data, lx + a, ly + b, lz + c, stride));
               const { startU, endU, startV, endV } = isArrayMat
@@ -264,6 +272,7 @@ onmessage = function (e) {
               }
 
               aos.push(...faceAOs);
+              lightLevels.push(lightLevel, lightLevel, lightLevel, lightLevel);
             }
           }
         }
@@ -276,6 +285,7 @@ onmessage = function (e) {
   const indicesArrayBuffer = new Float32Array(indices).buffer;
   const uvsArrayBuffer = new Float32Array(uvs).buffer;
   const aosArrayBuffer = new Float32Array(aos).buffer;
+  const lightLevelsArrayBuffer = new Float32Array(lightLevels).buffer;
 
   postMessage(
     {
@@ -284,7 +294,15 @@ onmessage = function (e) {
       indices: indicesArrayBuffer,
       uvs: uvsArrayBuffer,
       aos: aosArrayBuffer,
+      lights: lightLevelsArrayBuffer,
     },
-    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer, uvsArrayBuffer, aosArrayBuffer],
+    [
+      positionsArrayBuffer,
+      normalsArrayBuffer,
+      indicesArrayBuffer,
+      uvsArrayBuffer,
+      aosArrayBuffer,
+      lightLevelsArrayBuffer,
+    ],
   );
 };
