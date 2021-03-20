@@ -11,6 +11,10 @@ function getVoxelAt(vx, vy, vz, types) {
     blockID = Math.random() > 0.5 ? types.grass : types.stone;
   }
 
+  if (vy === -1) blockID = types.grass;
+  else if (vy < -1 && vy >= -3) blockID = types.dirt;
+  else if (vy < -3) blockID = types.stone;
+
   return blockID;
 }
 
