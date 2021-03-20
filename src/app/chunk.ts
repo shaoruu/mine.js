@@ -141,7 +141,7 @@ class Chunk {
   }
 
   getTorchLight(vx: number, vy: number, vz: number) {
-    if (!this.contains(vx, vy, vz)) return 0; // ?
+    // if (!this.contains(vx, vy, vz)) return 0; // ?
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
     return this.getLocalTorchLight(lx, ly, lz);
   }
