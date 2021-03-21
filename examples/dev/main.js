@@ -65,7 +65,7 @@ function sharedOnLoad() {
     );
 
     document.addEventListener('keypress', ({ key }) => {
-      const range = 10;
+      const range = 3;
       if (key === 'f') {
         const [px, py, pz] = engine.camera.voxel;
         for (let i = -range; i <= range; i++) {

@@ -66,7 +66,7 @@ class World extends EventEmitter {
     this.checkCamChunk();
     this.meshDirtyChunks();
 
-    const MAX = 100; // max blocks per tick
+    const MAX = 300; // max blocks per tick
     const SLICE = this.batchedChanges.splice(0, MAX);
     SLICE.forEach(({ voxel, type }) => {
       const chunk = this.getChunkByVoxel(voxel);
@@ -240,8 +240,6 @@ class World extends EventEmitter {
     const lightRemovalBfsQueue: LightNode[] = [];
     const lightBfsQueue: LightNode[] = [];
     const sourceLevel = this.getTorchLight([vx, vy, vz]);
-
-    if (sourceLevel === 0) return;
 
     this.setTorchLight([vx, vy, vz], 0);
 
