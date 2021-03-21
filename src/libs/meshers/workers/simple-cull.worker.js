@@ -214,12 +214,20 @@ function vertexAO(side1, side2, corner) {
   return 3 - (numS1 + numS2 + numC);
 }
 
+function contains(vx, vy, vz, min, max) {
+  const [sx, sy, sz] = min;
+  const [ex, ey, ez] = max;
+  return sx <= vx && ex >= vx && sy <= vy && ey >= vy && sz <= vz && ez >= vz;
+}
+
 onmessage = function (e) {
   const {
     data: dataBuffer,
     lights: lightsBuffer,
     configs: { dimension, padding, min, max, stride, blockMats, matUVs },
   } = e.data;
+
+  const useSmoothLight = true;
 
   const data = new Int8Array(dataBuffer);
   const lights = new Int8Array(lightsBuffer);
@@ -229,13 +237,12 @@ onmessage = function (e) {
   const indices = [];
   const uvs = [];
   const aos = [];
-  const lightLevels = [];
+  let lightLevels = [];
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;
 
-  const vertexToLight = {};
-  const vertexOrder = [];
+  const vertexToLight = new Map();
 
   for (let vx = startX, lx = padding; vx < endX; ++vx, ++lx) {
     for (let vy = startY, ly = padding; vy < endY; ++vy, ++ly) {
@@ -249,9 +256,15 @@ onmessage = function (e) {
 
           // There is a voxel here but do we need faces for it?
           for (const { dir, mat3, mat6, corners, neighbors } of FACES) {
-            const neighbor = get(data, lx + dir[0], ly + dir[1], lz + dir[2], stride);
+            // neighbor local xyz
+            const nlx = lx + dir[0];
+            const nly = ly + dir[1];
+            const nlz = lz + dir[2];
+
+            const neighbor = get(data, nlx, nly, nlz, stride);
+
             if (!neighbor) {
-              const lightLevel = getTorchLight(lights, lx + dir[0], ly + dir[1], lz + dir[2], stride);
+              const lightLevel = getTorchLight(lights, nlx, nly, nlz, stride);
               // this voxel has no neighbor in this direction so we need a face.
               const nearVoxels = neighbors.map(([a, b, c]) => get(data, lx + a, ly + b, lz + c, stride));
               const { startU, endU, startV, endV } = isArrayMat
@@ -264,20 +277,46 @@ onmessage = function (e) {
               const faceAOs = [];
 
               for (const { pos, uv, side1, side2, corner } of corners) {
-                positions.push((pos[0] + vx) * dimension, (pos[1] + vy) * dimension, (pos[2] + vz) * dimension);
-                const rep = toRep((pos[0] + vx) * dimension, (pos[1] + vy) * dimension, (pos[2] + vz) * dimension);
-                if (vertexToLight[rep]) {
-                  vertexToLight[rep] = {
-                    count: vertexToLight[rep].count + 1,
-                    level: vertexToLight[rep].level + lightLevel,
-                  };
-                } else {
-                  vertexToLight[rep] = {
-                    count: 1,
-                    level: lightLevel,
-                  };
+                const posX = pos[0] + vx;
+                const posY = pos[1] + vy;
+                const posZ = pos[2] + vz;
+
+                if (useSmoothLight) {
+                  const rep = toRep(posX * dimension, posY * dimension, posZ * dimension);
+                  if (vertexToLight.has(rep)) {
+                    const { count, level } = vertexToLight.get(rep);
+                    vertexToLight.set(rep, {
+                      count: count + 1,
+                      level: level + lightLevel,
+                    });
+                  } else {
+                    vertexToLight.set(rep, {
+                      count: 1,
+                      level: lightLevel,
+                    });
+                  }
+                  const test = [
+                    [posX, startX, [-1, 0, 0]],
+                    [posY, startY, [0, -1, 0]],
+                    [posZ, startZ, [0, 0, -1]],
+                    // position can be voxel + 1, thus can reach end
+                    [posX, endX, [1, 0, 0]],
+                    [posY, endY, [0, 1, 0]],
+                    [posZ, endZ, [0, 0, 1]],
+                  ];
+                  test.forEach(([posA, posB, [a, b, c]]) => {
+                    if (posA === posB) {
+                      const lightLevelN = getTorchLight(lights, nlx + a, nly + b, nlz + c, stride);
+                      const { count, level } = vertexToLight.get(rep);
+                      vertexToLight.set(rep, {
+                        count: count + 1,
+                        level: level + lightLevelN,
+                      });
+                    }
+                  });
+                  lightLevels.push(rep);
                 }
-                vertexOrder.push(rep);
+                positions.push(posX * dimension, posY * dimension, posZ * dimension);
                 faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
                 normals.push(...dir);
                 uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
@@ -292,7 +331,9 @@ onmessage = function (e) {
               }
 
               aos.push(...faceAOs);
-              // lightLevels.push(lightLevel, lightLevel, lightLevel, lightLevel);
+              if (!useSmoothLight) {
+                lightLevels.push(lightLevel, lightLevel, lightLevel, lightLevel);
+              }
             }
           }
         }
@@ -300,9 +341,19 @@ onmessage = function (e) {
     }
   }
 
-  vertexOrder.forEach((rep) => {
-    lightLevels.push(vertexToLight[rep].level / vertexToLight[rep].count);
-  });
+  console.log(
+    Array.from(vertexToLight.keys())
+      .map((k) => vertexToLight.get(k))
+      .filter((vtl) => vtl.count !== 4)
+      .map((k) => k.count),
+  );
+
+  if (useSmoothLight) {
+    lightLevels = lightLevels.map((rep) => {
+      const { count, level } = vertexToLight.get(rep);
+      return level / count;
+    });
+  }
 
   const positionsArrayBuffer = new Float32Array(positions).buffer;
   const normalsArrayBuffer = new Float32Array(normals).buffer;
