@@ -191,6 +191,10 @@ const FACES = [
   },
 ];
 
+function toRep(x, y, z) {
+  return `${x}|` + `${y}` + `|${z}`;
+}
+
 function get(arr, x, y, z, stride) {
   return arr[x * stride[0] + y * stride[1] + z * stride[2]];
 }
@@ -230,6 +234,9 @@ onmessage = function (e) {
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;
 
+  const vertexToLight = {};
+  const vertexOrder = [];
+
   for (let vx = startX, lx = padding; vx < endX; ++vx, ++lx) {
     for (let vy = startY, ly = padding; vy < endY; ++vy, ++ly) {
       for (let vz = startZ, lz = padding; vz < endZ; ++vz, ++lz) {
@@ -258,6 +265,19 @@ onmessage = function (e) {
 
               for (const { pos, uv, side1, side2, corner } of corners) {
                 positions.push((pos[0] + vx) * dimension, (pos[1] + vy) * dimension, (pos[2] + vz) * dimension);
+                const rep = toRep((pos[0] + vx) * dimension, (pos[1] + vy) * dimension, (pos[2] + vz) * dimension);
+                if (vertexToLight[rep]) {
+                  vertexToLight[rep] = {
+                    count: vertexToLight[rep].count + 1,
+                    level: vertexToLight[rep].level + lightLevel,
+                  };
+                } else {
+                  vertexToLight[rep] = {
+                    count: 1,
+                    level: lightLevel,
+                  };
+                }
+                vertexOrder.push(rep);
                 faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
                 normals.push(...dir);
                 uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
@@ -272,13 +292,17 @@ onmessage = function (e) {
               }
 
               aos.push(...faceAOs);
-              lightLevels.push(lightLevel, lightLevel, lightLevel, lightLevel);
+              // lightLevels.push(lightLevel, lightLevel, lightLevel, lightLevel);
             }
           }
         }
       }
     }
   }
+
+  vertexOrder.forEach((rep) => {
+    lightLevels.push(vertexToLight[rep].level / vertexToLight[rep].count);
+  });
 
   const positionsArrayBuffer = new Float32Array(positions).buffer;
   const normalsArrayBuffer = new Float32Array(normals).buffer;
