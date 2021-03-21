@@ -341,12 +341,12 @@ onmessage = function (e) {
     }
   }
 
-  console.log(
-    Array.from(vertexToLight.keys())
-      .map((k) => vertexToLight.get(k))
-      .filter((vtl) => vtl.count !== 4)
-      .map((k) => k.count),
-  );
+  // console.log(
+  //   Array.from(vertexToLight.keys())
+  //     .map((k) => vertexToLight.get(k))
+  //     .filter((vtl) => vtl.count !== 4)
+  //     .map((k) => k.count),
+  // );
 
   if (useSmoothLight) {
     lightLevels = lightLevels.map((rep) => {

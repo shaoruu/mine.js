@@ -21,6 +21,11 @@ type LightNode = {
   voxel: Coords3;
 };
 
+type VoxelChangeType = {
+  voxel: Coords3;
+  type: number;
+};
+
 class World extends EventEmitter {
   public engine: Engine;
   public generator: Generator;
@@ -34,6 +39,7 @@ class World extends EventEmitter {
   private chunks: SmartDictionary<Chunk> = new SmartDictionary();
   private dirtyChunks: Chunk[] = []; // chunks that are freshly made
   private visibleChunks: Chunk[] = [];
+  private batchedChanges: VoxelChangeType[] = [];
 
   constructor(engine: Engine, options: WorldOptionsType) {
     super();
@@ -59,6 +65,25 @@ class World extends EventEmitter {
     // Check camera position
     this.checkCamChunk();
     this.meshDirtyChunks();
+
+    const MAX = 100; // max blocks per tick
+    const SLICE = this.batchedChanges.splice(0, MAX);
+    SLICE.forEach(({ voxel, type }) => {
+      const chunk = this.getChunkByVoxel(voxel);
+      chunk?.setVoxel(...voxel, type);
+      const neighborChunks = this.getNeighborChunksByVoxel(voxel);
+      neighborChunks.forEach((c) => c?.setVoxel(...voxel, type));
+
+      // lighting
+      const {
+        options: { lightLevel },
+      } = this.engine.registry.getBlockByIndex(type);
+      if (lightLevel > 0) {
+        this.floodTorchLight(...voxel, lightLevel);
+      } else {
+        this.removeTorchLight(...voxel);
+      }
+    });
   }
 
   getChunkByCPos(cCoords: Coords3) {
@@ -159,20 +184,10 @@ class World extends EventEmitter {
   }
 
   setVoxel(vCoords: Coords3, type: number) {
-    const chunk = this.getChunkByVoxel(vCoords);
-    chunk?.setVoxel(...vCoords, type);
-    const neighborChunks = this.getNeighborChunksByVoxel(vCoords);
-    neighborChunks.forEach((c) => c?.setVoxel(...vCoords, type));
-
-    // lighting
-    const {
-      options: { lightLevel },
-    } = this.engine.registry.getBlockByIndex(type);
-    if (lightLevel > 0) {
-      this.floodTorchLight(...vCoords, lightLevel);
-    } else {
-      this.removeTorchLight(...vCoords);
-    }
+    this.batchedChanges.push({
+      voxel: vCoords,
+      type,
+    });
   }
 
   breakVoxel() {
@@ -193,6 +208,7 @@ class World extends EventEmitter {
   }
 
   setTorchLight(vCoords: Coords3, level: number) {
+    if (this.getTorchLight(vCoords) === level) return;
     const chunk = this.getChunkByVoxel(vCoords);
     chunk?.setTorchLight(...vCoords, level);
     const neighborChunks = this.getNeighborChunksByVoxel(vCoords);
@@ -220,18 +236,19 @@ class World extends EventEmitter {
   // resource: https://www.seedofandromeda.com/blogs/29-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-1
   removeTorchLight(vx: number, vy: number, vz: number) {
     // flood-fill lighting removal
-    const sourceChunk = this.getChunkByVoxel([vx, vy, vz]);
-    if (!sourceChunk) return;
 
     const lightRemovalBfsQueue: LightNode[] = [];
     const lightBfsQueue: LightNode[] = [];
+    const sourceLevel = this.getTorchLight([vx, vy, vz]);
+
+    if (sourceLevel === 0) return;
+
+    this.setTorchLight([vx, vy, vz], 0);
 
     lightRemovalBfsQueue.push({
-      level: sourceChunk.getTorchLight(vx, vy, vz),
+      level: sourceLevel,
       voxel: [vx, vy, vz],
     });
-
-    sourceChunk.setTorchLight(vx, vy, vz, 0);
 
     while (lightRemovalBfsQueue.length !== 0) {
       const lightNode = lightRemovalBfsQueue.shift();
@@ -276,6 +293,7 @@ class World extends EventEmitter {
   }
 
   propagateLightQueue(lightQueue: LightNode[]) {
+    // console.time('propagation');
     while (lightQueue.length !== 0) {
       const lightNode = lightQueue.shift();
 
@@ -314,6 +332,7 @@ class World extends EventEmitter {
         });
       }
     }
+    // console.timeEnd('propagation');
   }
 
   addAsVisible(chunk: Chunk) {
