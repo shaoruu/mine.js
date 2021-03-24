@@ -57,7 +57,9 @@ class SinCosGenerator extends Generator {
     // @ts-ignore
     chunk.voxels.data = newVoxels;
 
-    workers.push(worker);
+    if (workers.length < DEFAULT_WORKER_COUNT) {
+      workers.push(worker);
+    }
   }
 }
 
