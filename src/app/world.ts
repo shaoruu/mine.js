@@ -13,6 +13,7 @@ type WorldOptionsType = {
   generator?: GeneratorType;
   renderRadius: number;
   maxChunkPerFrame: number;
+  maxBlockPerFrame: number;
   maxLightLevel: number;
 };
 
@@ -66,24 +67,30 @@ class World extends EventEmitter {
     this.checkCamChunk();
     this.meshDirtyChunks();
 
-    const MAX = 300; // max blocks per tick
-    const SLICE = this.batchedChanges.splice(0, MAX);
-    SLICE.forEach(({ voxel, type }) => {
+    const toBeChanged = this.batchedChanges.splice(0, this.options.maxBlockPerFrame);
+
+    const lightPlacement: LightNode[] = [];
+    const lightRemoval: LightNode[] = [];
+
+    toBeChanged.forEach(({ voxel, type }) => {
+      const lightLevel = this.engine.registry.getLightByIndex(type);
+      const originalLevel = this.engine.registry.getLightByIndex(Number(this.getVoxelByVoxel(voxel)));
+
       const chunk = this.getChunkByVoxel(voxel);
       chunk?.setVoxel(...voxel, type);
       const neighborChunks = this.getNeighborChunksByVoxel(voxel);
       neighborChunks.forEach((c) => c?.setVoxel(...voxel, type));
 
       // lighting
-      const {
-        options: { lightLevel },
-      } = this.engine.registry.getBlockByIndex(type);
       if (lightLevel > 0) {
-        this.floodTorchLight(...voxel, lightLevel);
+        lightPlacement.push({ voxel, level: lightLevel });
       } else {
-        this.removeTorchLight(...voxel);
+        lightRemoval.push({ voxel, level: originalLevel });
       }
     });
+
+    this.removeTorchLights(lightRemoval);
+    this.propagateLightQueue(lightPlacement);
   }
 
   getChunkByCPos(cCoords: Coords3) {
@@ -234,27 +241,20 @@ class World extends EventEmitter {
   }
 
   // resource: https://www.seedofandromeda.com/blogs/29-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-1
-  removeTorchLight(vx: number, vy: number, vz: number) {
+  removeTorchLights(lightRemovalBfsQueue: LightNode[]) {
     // flood-fill lighting removal
 
-    const lightRemovalBfsQueue: LightNode[] = [];
+    // lightRemovalBfsQueue = lightRemovalBfsQueue.filter(({ voxel }) => this.getVoxelByVoxel(voxel) === 0);
+    // from high to low
+    lightRemovalBfsQueue.sort((a, b) => b.level - a.level);
+
     const lightBfsQueue: LightNode[] = [];
-    const sourceLevel = this.getTorchLight([vx, vy, vz]);
-
-    this.setTorchLight([vx, vy, vz], 0);
-
-    lightRemovalBfsQueue.push({
-      level: sourceLevel,
-      voxel: [vx, vy, vz],
-    });
 
     while (lightRemovalBfsQueue.length !== 0) {
       const lightNode = lightRemovalBfsQueue.shift();
       if (lightNode) {
-        const {
-          level,
-          voxel: [vx, vy, vz],
-        } = lightNode;
+        const { level, voxel } = lightNode;
+        const [vx, vy, vz] = voxel;
 
         const directions = [
           [1, 0, 0],
@@ -264,6 +264,8 @@ class World extends EventEmitter {
           [0, 0, 1],
           [0, 0, -1],
         ];
+
+        this.setTorchLight(voxel, 0);
 
         directions.forEach(([dirX, dirY, dirZ]) => {
           const newVX = vx + dirX;

@@ -203,6 +203,14 @@ class Registry {
     return this.blocks.get(name);
   };
 
+  getLightByIndex = (index: number) => {
+    return this.getBlockByIndex(index).options.lightLevel;
+  };
+
+  getLight = (name: string) => {
+    return this.getBlock(name)?.options.lightLevel;
+  };
+
   get mergedTexture() {
     return this.textureAtlas.mergedTexture;
   }

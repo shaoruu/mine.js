@@ -214,12 +214,6 @@ function vertexAO(side1, side2, corner) {
   return 3 - (numS1 + numS2 + numC);
 }
 
-function contains(vx, vy, vz, min, max) {
-  const [sx, sy, sz] = min;
-  const [ex, ey, ez] = max;
-  return sx <= vx && ex >= vx && sy <= vy && ey >= vy && sz <= vz && ez >= vz;
-}
-
 onmessage = function (e) {
   const {
     data: dataBuffer,
