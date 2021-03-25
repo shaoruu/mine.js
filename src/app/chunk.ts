@@ -205,6 +205,8 @@ class Chunk {
       return;
     }
 
+    // don't need to be meshed again
+    this.isDirty = false;
     this.isMeshing = true;
 
     const { positions, normals, indices, uvs, aos, lights } = await simpleCull(this);
@@ -229,7 +231,6 @@ class Chunk {
     this.altMesh.frustumCulled = false;
 
     // mark chunk as built mesh
-    this.isDirty = false;
     this.isMeshing = false;
   }
 

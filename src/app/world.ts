@@ -73,24 +73,28 @@ class World extends EventEmitter {
     const lightRemoval: LightNode[] = [];
 
     toBeChanged.forEach(({ voxel, type }) => {
-      const lightLevel = this.engine.registry.getLightByIndex(type);
-      const originalLevel = this.engine.registry.getLightByIndex(Number(this.getVoxelByVoxel(voxel)));
+      if (this.getVoxelByVoxel(voxel) === type) return;
 
       const chunk = this.getChunkByVoxel(voxel);
       chunk?.setVoxel(...voxel, type);
       const neighborChunks = this.getNeighborChunksByVoxel(voxel);
       neighborChunks.forEach((c) => c?.setVoxel(...voxel, type));
 
+      const lightLevel = this.engine.registry.getLightByIndex(type);
+
       // lighting
       if (lightLevel > 0) {
         lightPlacement.push({ voxel, level: lightLevel });
       } else {
-        lightRemoval.push({ voxel, level: originalLevel });
+        const blockLight = this.getTorchLight(voxel);
+        if (blockLight > 0) {
+          lightRemoval.push({ voxel, level: blockLight });
+        }
       }
     });
 
-    this.removeTorchLights(lightRemoval);
     this.propagateLightQueue(lightPlacement);
+    this.removeTorchLights(lightRemoval);
   }
 
   getChunkByCPos(cCoords: Coords3) {
@@ -215,29 +219,10 @@ class World extends EventEmitter {
   }
 
   setTorchLight(vCoords: Coords3, level: number) {
-    if (this.getTorchLight(vCoords) === level) return;
     const chunk = this.getChunkByVoxel(vCoords);
     chunk?.setTorchLight(...vCoords, level);
     const neighborChunks = this.getNeighborChunksByVoxel(vCoords);
     neighborChunks.forEach((c) => c?.setTorchLight(...vCoords, level));
-  }
-
-  // resource: https://www.seedofandromeda.com/blogs/29-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-1
-  floodTorchLight(vx: number, vy: number, vz: number, level: number) {
-    // flood-fill lighting
-    const sourceChunk = this.getChunkByVoxel([vx, vy, vz]);
-    if (!sourceChunk) return;
-
-    this.setTorchLight([vx, vy, vz], level);
-
-    const lightBfsQueue: LightNode[] = [];
-    // push the source light as a starting point, spread out while adding new nodes into this queue
-    lightBfsQueue.push({
-      level,
-      voxel: [vx, vy, vz],
-    });
-
-    this.propagateLightQueue(lightBfsQueue);
   }
 
   // resource: https://www.seedofandromeda.com/blogs/29-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-1
@@ -247,6 +232,10 @@ class World extends EventEmitter {
     // lightRemovalBfsQueue = lightRemovalBfsQueue.filter(({ voxel }) => this.getVoxelByVoxel(voxel) === 0);
     // from high to low
     lightRemovalBfsQueue.sort((a, b) => b.level - a.level);
+    lightRemovalBfsQueue.forEach(({ voxel }) => this.setTorchLight(voxel, 0));
+
+    const temp = new Set<string>();
+    lightRemovalBfsQueue.forEach(({ voxel }) => temp.add(`${voxel[0]}|${voxel[1]}|${voxel[2]}`));
 
     const lightBfsQueue: LightNode[] = [];
 
@@ -265,12 +254,12 @@ class World extends EventEmitter {
           [0, 0, -1],
         ];
 
-        this.setTorchLight(voxel, 0);
-
         directions.forEach(([dirX, dirY, dirZ]) => {
           const newVX = vx + dirX;
           const newVY = vy + dirY;
           const newVZ = vz + dirZ;
+
+          if (temp.has(`${newVX}|${newVY}|${newVZ}`)) return;
 
           const neighborLevel = this.getTorchLight([newVX, newVY, newVZ]);
           if (neighborLevel !== 0 && neighborLevel < level) {
@@ -280,6 +269,7 @@ class World extends EventEmitter {
               voxel: [newVX, newVY, newVZ],
             });
           } else if (neighborLevel >= level) {
+            console.log(neighborLevel, level);
             lightBfsQueue.push({
               level: neighborLevel,
               voxel: [newVX, newVY, newVZ],
@@ -288,6 +278,8 @@ class World extends EventEmitter {
         });
       }
     }
+
+    if (lightBfsQueue.length) console.log(lightBfsQueue.length, lightBfsQueue[0]);
 
     this.propagateLightQueue(lightBfsQueue);
   }
@@ -298,10 +290,10 @@ class World extends EventEmitter {
       const lightNode = lightQueue.shift();
 
       if (lightNode) {
-        const {
-          level,
-          voxel: [vx, vy, vz],
-        } = lightNode;
+        const { level, voxel } = lightNode;
+        const [vx, vy, vz] = voxel;
+
+        this.setTorchLight(voxel, level);
 
         // 6 directions, representing the 6 faces of a block
         const directions = [

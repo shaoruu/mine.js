@@ -62,7 +62,7 @@ const defaultConfig: ConfigType = {
     // radius of rendering centered by camera
     // maximum amount of chunks to process per frame tick
     maxChunkPerFrame: 2,
-    maxBlockPerFrame: 300,
+    maxBlockPerFrame: 500,
     maxLightLevel: 16,
   },
   entitiesOptions: {
