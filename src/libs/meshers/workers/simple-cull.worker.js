@@ -290,16 +290,38 @@ onmessage = function (e) {
                     });
                   }
                   const test = [
-                    [posX, startX, [-1, 0, 0]],
-                    [posY, startY, [0, -1, 0]],
-                    [posZ, startZ, [0, 0, -1]],
+                    [posX === startX, [-1, 0, 0]],
+                    [posY === startY, [0, -1, 0]],
+                    [posZ === startZ, [0, 0, -1]],
                     // position can be voxel + 1, thus can reach end
-                    [posX, endX, [1, 0, 0]],
-                    [posY, endY, [0, 1, 0]],
-                    [posZ, endZ, [0, 0, 1]],
+                    [posX === endX, [1, 0, 0]],
+                    [posY === endY, [0, 1, 0]],
+                    [posZ === endZ, [0, 0, 1]],
+                    // edges
+                    [posX === startX && posY === startY, [-1, -1, 0]],
+                    [posX === startX && posZ === startZ, [-1, 0, -1]],
+                    [posX === startX && posY === endY, [-1, 1, 0]],
+                    [posX === startX && posZ === endZ, [-1, 0, 1]],
+                    [posX === endX && posY === startY, [1, -1, 0]],
+                    [posX === endX && posZ === startZ, [1, 0, -1]],
+                    [posX === endX && posY === endY, [1, 1, 0]],
+                    [posX === endX && posZ === endZ, [1, 0, 1]],
+                    [posY === startY && posZ === startZ, [0, -1, -1]],
+                    [posY === endY && posZ === startZ, [0, 1, -1]],
+                    [posY === startY && posZ === endZ, [0, -1, 1]],
+                    [posY === endY && posZ === endZ, [0, 1, 1]],
+                    // corners
+                    [posX === startX && posY === startY && posZ === startZ, [-1, -1, -1]],
+                    [posX === startX && posY === startY && posZ === endZ, [-1, -1, 1]],
+                    [posX === startX && posY === endY && posZ === startZ, [-1, 1, -1]],
+                    [posX === startX && posY === endY && posZ === endZ, [-1, 1, 1]],
+                    [posX === endX && posY === startY && posZ === startZ, [1, -1, -1]],
+                    [posX === endX && posY === startY && posZ === endZ, [1, -1, 1]],
+                    [posX === endX && posY === endY && posZ === startZ, [1, 1, -1]],
+                    [posX === endX && posY === endY && posZ === endZ, [1, 1, 1]],
                   ];
-                  test.forEach(([posA, posB, [a, b, c]]) => {
-                    if (posA === posB) {
+                  test.forEach(([check, [a, b, c]]) => {
+                    if (check) {
                       const lightLevelN = getTorchLight(lights, nlx + a, nly + b, nlz + c, stride);
                       const { count, level } = vertexToLight.get(rep);
                       vertexToLight.set(rep, {

@@ -41,6 +41,7 @@ class Chunk {
   public isMeshing = false; // is meshing
   public isInitialized = false; // is populated with terrain info
   public isPending = false; // pending for client-side terrain generation
+  public sunlightApplied = false;
 
   constructor(engine: Engine, coords: Coords3, { size, dimension, padding }: ChunkOptions) {
     this.engine = engine;
@@ -195,6 +196,7 @@ class Chunk {
     this.isPending = false;
 
     // build mesh once initialized
+    // this.engine.world.applySunlight(this);
     await this.buildMesh();
   }
 

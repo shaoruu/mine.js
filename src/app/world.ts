@@ -87,14 +87,14 @@ class World extends EventEmitter {
         lightPlacement.push({ voxel, level: lightLevel });
       } else {
         const blockLight = this.getTorchLight(voxel);
-        if (blockLight > 0) {
-          lightRemoval.push({ voxel, level: blockLight });
-        }
+        // if (blockLight > 0) {
+        lightRemoval.push({ voxel, level: blockLight });
+        // }
       }
     });
 
-    this.propagateLightQueue(lightPlacement);
     this.removeTorchLights(lightRemoval);
+    this.propagateLightQueue(lightPlacement);
   }
 
   getChunkByCPos(cCoords: Coords3) {
@@ -113,6 +113,7 @@ class World extends EventEmitter {
 
   getNeighborChunksByVoxel(vCoords: Coords3, padding = this.options.chunkPadding) {
     const { chunkSize } = this.options;
+    const chunk = this.getChunkByVoxel(vCoords);
     const [cx, cy, cz] = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
     const [lx, ly, lz] = Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
     const neighborChunks: (Chunk | null)[] = [];
@@ -158,7 +159,7 @@ class World extends EventEmitter {
     if (c && d && e) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz - 1]));
     if (d && e && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz + 1]));
 
-    return neighborChunks.filter(Boolean);
+    return neighborChunks.filter(Boolean).filter((c) => c !== chunk);
   }
 
   getVoxelByVoxel(vCoords: Coords3) {
@@ -225,6 +226,35 @@ class World extends EventEmitter {
     neighborChunks.forEach((c) => c?.setTorchLight(...vCoords, level));
   }
 
+  applySunlight(chunk: Chunk) {
+    const {
+      coords: [cx, cy, cz],
+    } = chunk;
+
+    const topChunk = this.getChunkByCPos([cx, cy + 1, cz]);
+    if (topChunk) {
+      this.applySunlight(topChunk);
+    } else {
+      const { minInner, maxInner } = chunk;
+      const [endX, endY, endZ] = maxInner;
+      const sunlightNodes: LightNode[] = [];
+
+      for (let vx = minInner[0]; vx < endX; vx++) {
+        for (let vz = minInner[2]; vz < endZ; vz++) {
+          const topVoxel: Coords3 = [vx, endY - 1, vz];
+          if (this.getVoxelByVoxel(topVoxel) === 0) {
+            sunlightNodes.push({
+              level: 16,
+              voxel: topVoxel,
+            });
+          }
+        }
+      }
+
+      this.propagateLightQueue(sunlightNodes, true);
+    }
+  }
+
   // resource: https://www.seedofandromeda.com/blogs/29-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-1
   removeTorchLights(lightRemovalBfsQueue: LightNode[]) {
     // flood-fill lighting removal
@@ -269,7 +299,6 @@ class World extends EventEmitter {
               voxel: [newVX, newVY, newVZ],
             });
           } else if (neighborLevel >= level) {
-            console.log(neighborLevel, level);
             lightBfsQueue.push({
               level: neighborLevel,
               voxel: [newVX, newVY, newVZ],
@@ -279,12 +308,10 @@ class World extends EventEmitter {
       }
     }
 
-    if (lightBfsQueue.length) console.log(lightBfsQueue.length, lightBfsQueue[0]);
-
     this.propagateLightQueue(lightBfsQueue);
   }
 
-  propagateLightQueue(lightQueue: LightNode[]) {
+  propagateLightQueue(lightQueue: LightNode[], isSunlight = false) {
     // console.time('propagation');
     while (lightQueue.length !== 0) {
       const lightNode = lightQueue.shift();
@@ -305,19 +332,29 @@ class World extends EventEmitter {
           [0, 0, -1],
         ];
 
-        directions.forEach(([dirX, dirY, dirZ]) => {
+        const sunlightDirections = [
+          [1, 0, 0, -1],
+          [-1, 0, 0, -1],
+          [0, -1, 0, 0],
+          [0, 0, 1, -1],
+          [0, 0, -1, -1],
+        ];
+
+        (isSunlight ? sunlightDirections : directions).forEach(([dirX, dirY, dirZ, delta]) => {
           // neighboring voxel coordinates
           const newVX = vx + dirX;
           const newVY = vy + dirY;
           const newVZ = vz + dirZ;
 
+          delta = isSunlight ? delta : -1;
+
           if (
             this.getVoxelByVoxel([newVX, newVY, newVZ]) === 0 &&
             this.getTorchLight([newVX, newVY, newVZ]) + 2 <= level
           ) {
-            this.setTorchLight([newVX, newVY, newVZ], level - 1);
+            this.setTorchLight([newVX, newVY, newVZ], level + delta);
             lightQueue.push({
-              level: level - 1,
+              level: level + delta,
               voxel: [newVX, newVY, newVZ],
             });
           }
