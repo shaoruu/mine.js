@@ -1,7 +1,16 @@
 import { EventEmitter } from 'events';
 
 import { Engine } from '..';
-import { Coords3, GeneratorType, SmartDictionary, FlatGenerator, Generator, SinCosGenerator } from '../libs';
+import {
+  Coords3,
+  GeneratorType,
+  SmartDictionary,
+  FlatGenerator,
+  Generator,
+  SinCosGenerator,
+  LightNode,
+  fillLights,
+} from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
@@ -15,11 +24,6 @@ type WorldOptionsType = {
   maxChunkPerFrame: number;
   maxBlockPerFrame: number;
   maxLightLevel: number;
-};
-
-type LightNode = {
-  level: number;
-  voxel: Coords3;
 };
 
 type VoxelChangeType = {
@@ -93,8 +97,12 @@ class World extends EventEmitter {
       }
     });
 
+    if (lightPlacement.length !== 0) {
+      const temp = this.getChunkByVoxel(lightPlacement[0].voxel);
+      if (temp) fillLights(lightPlacement, temp);
+    }
     this.removeTorchLights(lightRemoval);
-    this.propagateLightQueue(lightPlacement);
+    // this.propagateLightQueue(lightPlacement);
   }
 
   getChunkByCPos(cCoords: Coords3) {
@@ -226,33 +234,47 @@ class World extends EventEmitter {
     neighborChunks.forEach((c) => c?.setTorchLight(...vCoords, level));
   }
 
+  getSunlight(vCoords: Coords3) {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk?.getSunlight(...vCoords) || 0;
+  }
+
+  setSunlight(vCoords: Coords3, level: number) {
+    const chunk = this.getChunkByVoxel(vCoords);
+    chunk?.setSunlight(...vCoords, level);
+    const neighborChunks = this.getNeighborChunksByVoxel(vCoords);
+    neighborChunks.forEach((c) => c?.setSunlight(...vCoords, level));
+  }
+
   applySunlight(chunk: Chunk) {
     const {
       coords: [cx, cy, cz],
     } = chunk;
 
     const topChunk = this.getChunkByCPos([cx, cy + 1, cz]);
-    if (topChunk) {
-      this.applySunlight(topChunk);
-    } else {
-      const { minInner, maxInner } = chunk;
-      const [endX, endY, endZ] = maxInner;
-      const sunlightNodes: LightNode[] = [];
+    if (topChunk)
+      // top chunk is the only chunk needed to fill light
+      return;
 
-      for (let vx = minInner[0]; vx < endX; vx++) {
-        for (let vz = minInner[2]; vz < endZ; vz++) {
-          const topVoxel: Coords3 = [vx, endY - 1, vz];
-          if (this.getVoxelByVoxel(topVoxel) === 0) {
-            sunlightNodes.push({
-              level: 16,
-              voxel: topVoxel,
-            });
-          }
+    const { minInner, maxInner } = chunk;
+    const [endX, endY, endZ] = maxInner;
+    const sunlightNodes: LightNode[] = [];
+
+    for (let vx = minInner[0]; vx < endX; vx++) {
+      for (let vz = minInner[2]; vz < endZ; vz++) {
+        const topVoxel: Coords3 = [vx, endY - 1, vz];
+        if (this.getVoxelByVoxel(topVoxel) === 0) {
+          sunlightNodes.push({
+            level: 16,
+            voxel: topVoxel,
+          });
         }
       }
-
-      this.propagateLightQueue(sunlightNodes, true);
     }
+
+    console.time('sunlight');
+    this.propagateLightQueue(sunlightNodes, true);
+    console.timeEnd('sunlight');
   }
 
   // resource: https://www.seedofandromeda.com/blogs/29-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-1
@@ -320,7 +342,8 @@ class World extends EventEmitter {
         const { level, voxel } = lightNode;
         const [vx, vy, vz] = voxel;
 
-        this.setTorchLight(voxel, level);
+        if (isSunlight) this.setSunlight(voxel, level);
+        else this.setTorchLight(voxel, level);
 
         // 6 directions, representing the 6 faces of a block
         const directions = [
@@ -350,9 +373,11 @@ class World extends EventEmitter {
 
           if (
             this.getVoxelByVoxel([newVX, newVY, newVZ]) === 0 &&
-            this.getTorchLight([newVX, newVY, newVZ]) + 2 <= level
+            (isSunlight ? this.getSunlight([newVX, newVY, newVZ]) : this.getTorchLight([newVX, newVY, newVZ])) + 2 <=
+              level
           ) {
-            this.setTorchLight([newVX, newVY, newVZ], level + delta);
+            if (isSunlight) this.setSunlight([newVX, newVY, newVZ], level + delta);
+            else this.setTorchLight([newVX, newVY, newVZ], level + delta);
             lightQueue.push({
               level: level + delta,
               voxel: [newVX, newVY, newVZ],

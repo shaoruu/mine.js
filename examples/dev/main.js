@@ -65,7 +65,7 @@ function sharedOnLoad() {
     );
 
     document.addEventListener('keypress', ({ key }) => {
-      const range = 10;
+      const range = 3;
       if (key === 'f') {
         const [px, py, pz] = engine.camera.voxel;
         for (let i = -range; i <= range; i++) {
@@ -84,6 +84,18 @@ function sharedOnLoad() {
               if (i * i + j * j + k * k > range * range) continue;
 
               engine.world.setVoxel([clx + i, cly + j, clz + k], 0);
+            }
+          }
+        }
+      } else if (key === 'x') {
+        if (!engine.camera.lookBlock) return;
+        const [clx, cly, clz] = engine.camera.lookBlock;
+        for (let i = -range; i <= range; i++) {
+          for (let j = -range; j <= range; j++) {
+            for (let k = -range; k <= range; k++) {
+              if (i * i + j * j + k * k > range * range) continue;
+
+              engine.world.setVoxel([clx + i, cly + j, clz + k], notSureID);
             }
           }
         }

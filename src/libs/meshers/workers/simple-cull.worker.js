@@ -231,6 +231,7 @@ onmessage = function (e) {
   const indices = [];
   const uvs = [];
   const aos = [];
+
   let lightLevels = [];
 
   const [startX, startY, startZ] = min;

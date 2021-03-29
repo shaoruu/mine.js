@@ -154,6 +154,18 @@ class Chunk {
     this.isDirty = true; // mesh rebuilt needed if light changes
   }
 
+  getSunlight(vx: number, vy: number, vz: number) {
+    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
+    return this.getLocalSunlight(lx, ly, lz);
+  }
+
+  setSunlight(vx: number, vy: number, vz: number, level: number) {
+    if (!this.contains(vx, vy, vz)) return;
+    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
+    this.setLocalSunlight(lx, ly, lz, level);
+    this.isDirty = true;
+  }
+
   contains(vx: number, vy: number, vz: number, padding = this.padding) {
     const { size } = this;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);

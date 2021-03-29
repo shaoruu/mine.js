@@ -15,6 +15,17 @@ class Helper {
   };
 
   /**
+   * Given a chunk name, return the coordinates of the chunk
+   *
+   * @param {string} name
+   * @param {string} [concat='|']
+   * @returns
+   */
+  public static parseChunkName = (name: string, concat = '|') => {
+    return name.split(concat).map((s: string) => parseInt(s, 10));
+  };
+
+  /**
    * Scale coordinates and floor them.
    *
    * @param {Coords3} coords

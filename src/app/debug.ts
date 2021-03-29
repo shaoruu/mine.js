@@ -1,5 +1,6 @@
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
+import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial } from 'three';
 // import { AxesHelper, GridHelper } from 'three';
 
 import { Engine } from '..';
@@ -11,6 +12,7 @@ class Debug {
   public stats: Stats;
   public dataWrapper: HTMLDivElement;
   public dataEntires: { ele: HTMLParagraphElement; obj: any; attribute: string; name: string }[] = [];
+  public chunkHighlight: Mesh;
 
   constructor(engine: Engine) {
     this.engine = engine;
@@ -20,6 +22,15 @@ class Debug {
 
     // FPS indicator
     this.stats = new Stats();
+
+    const {
+      worldOptions: { chunkSize, dimension },
+    } = engine.config;
+    const width = chunkSize * dimension;
+    this.chunkHighlight = new Mesh(
+      new BoxGeometry(width, width, width, 2, 2, 2),
+      new MeshBasicMaterial({ wireframe: true, side: DoubleSide }),
+    );
 
     // move dat.gui panel to the top
     const { parentElement } = this.gui.domElement;
@@ -33,6 +44,8 @@ class Debug {
       this.makeDOM();
       this.setupAll();
       this.mount();
+
+      engine.rendering.scene.add(this.chunkHighlight);
 
       // const {
       //   rendering: { scene },
@@ -131,6 +144,15 @@ class Debug {
       const newValue = obj[attribute];
       ele.innerHTML = `${name}: ${newValue}`;
     }
+
+    const { camChunkPosStr } = this.engine.world;
+    const [cx, cy, cz] = Helper.parseChunkName(camChunkPosStr, ' ');
+    const { chunkSize, dimension } = this.engine.world.options;
+    this.chunkHighlight.position.set(
+      (cx + 0.5) * chunkSize * dimension,
+      (cy + 0.5) * chunkSize * dimension,
+      (cz + 0.5) * chunkSize * dimension,
+    );
   };
 
   registerDisplay(name: string, object: any, attribute: string) {
