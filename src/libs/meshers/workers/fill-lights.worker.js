@@ -5,14 +5,14 @@ function contains(voxel, min, max) {
   return vx < ex && vx >= sx && vy < ey && vy >= sy && vz < ez && vz >= sz;
 }
 
-function inPadding(voxel, coords, padding, size) {
-  const [cx, cy, cz] = coords;
+function inPadding(voxel, coords, padding, size, maxHeight) {
+  const [cx, cz] = coords;
   return (
     contains(
       voxel,
-      [cx * size - padding, cy * size - padding, cz * size - padding],
-      [(cx + 1) * size + padding, (cy + 1) * size + padding, (cz + 1) * size + padding],
-    ) && !contains(voxel, [cx * size, cy * size, cz * size], [(cx + 1) * size, (cy + 1) * size, (cz + 1) * size])
+      [cx * size - padding, 0, cz * size - padding],
+      [(cx + 1) * size + padding, maxHeight, (cz + 1) * size + padding],
+    ) && !contains(voxel, [cx * size, 0, cz * size], [(cx + 1) * size, maxHeight, (cz + 1) * size])
   );
 }
 
@@ -43,8 +43,16 @@ function setTorchLight(arr, x, y, z, stride, value) {
   set(arr, x, y, z, stride, (get(arr, x, y, z, stride) & 0xf0) | value);
 }
 
+function getSunlight(arr, x, y, z, stride) {
+  return (get(arr, x, y, z, stride) >> 4) & 0xf;
+}
+
+function setSunlight(arr, x, y, z, stride, value) {
+  set(arr, x, y, z, stride, (get(arr, x, y, z, stride) & 0xf) | (value << 4));
+}
+
 function toName(coords) {
-  return `${coords[0]}|${coords[1]}|${coords[2]}`;
+  return `${coords[0]}|${coords[1]}`;
 }
 
 // sample queue:
@@ -67,7 +75,7 @@ const directions = [
 const sunlightDirections = [
   [1, 0, 0, -1],
   [-1, 0, 0, -1],
-  [0, -1, 0, -1],
+  [0, -1, 0, 0],
   [0, 0, 1, -1],
   [0, 0, -1, -1],
 ];
@@ -78,10 +86,10 @@ onmessage = function (e) {
     isSunlight,
     data: dataBuffer,
     lights: lightsBuffer,
-    configs: { padding, coords, stride, size, minOuter, maxOuter, minInner, maxInner },
+    configs: { padding, coords, stride, size, minOuter, maxOuter, maxHeight },
   } = e.data;
 
-  const [cx, cy, cz] = coords;
+  const [cx, cz] = coords;
 
   const data = new Int8Array(dataBuffer);
   const lights = new Int8Array(lightsBuffer);
@@ -100,10 +108,9 @@ onmessage = function (e) {
       // the voxel is outside of the current chunk, thus push it to continueQueues
       if (level !== 0 && !contains(voxel, minOuter, maxOuter)) {
         const ncx = Math.floor(vx / size);
-        const ncy = Math.floor(vy / size);
         const ncz = Math.floor(vz / size);
 
-        const name = toName(ncx, ncy, ncz);
+        const name = toName(ncx, ncz);
         if (continueQueues[name]) continueQueues[name].push(lightNode);
         else continueQueues[name] = [lightNode];
 
@@ -121,11 +128,10 @@ onmessage = function (e) {
         const [newLX, newLY, newLZ] = toLocal([newVX, newVY, newVZ], minOuter);
 
         const newCX = Math.floor(newVX / size);
-        const newCY = Math.floor(newVY / size);
         const newCZ = Math.floor(newVZ / size);
 
         const newVoxel = [newVX, newVY, newVZ];
-        const newCoords = [newCX, newCY, newCZ];
+        const newCoords = [newCX, newCZ];
         const newNode = {
           level: level + delta,
           voxel: newVoxel,
@@ -143,29 +149,32 @@ onmessage = function (e) {
 
         if (
           get(data, newLX, newLY, newLZ, stride) === 0 &&
-          getTorchLight(lights, newLX, newLY, newLZ, stride) + 2 <= level
+          (isSunlight
+            ? getSunlight(lights, newLX, newLY, newLZ, stride)
+            : getTorchLight(lights, newLX, newLY, newLZ, stride)) +
+            2 <=
+            level
         ) {
-          setTorchLight(lights, newLX, newLY, newLZ, stride, level + delta);
+          if (isSunlight) setSunlight(lights, newLX, newLY, newLZ, stride, level + delta);
+          else setTorchLight(lights, newLX, newLY, newLZ, stride, level + delta);
 
           // TODO: FASTER WAY OF DOING SO
           for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
-              for (let k = -1; k <= 1; k++) {
-                if (i === 0 && j === 0 && k == 0) continue;
-                const nCoords = [cx + i, cy + j, cz + k];
-                if (inPadding(newVoxel, nCoords, padding, size)) {
-                  simpleSets.push({
-                    ...newNode,
-                    coords: nCoords,
-                  });
-                }
+              if (i === 0 && j == 0) continue;
+              const nCoords = [cx + i, cz + j];
+              if (inPadding(newVoxel, nCoords, padding, size, maxHeight)) {
+                simpleSets.push({
+                  ...newNode,
+                  coords: nCoords,
+                });
               }
             }
           }
 
           // this means the newVoxel is in the padding of the current chunk
           // thus, should set neighboring coords.
-          if (inPadding(newVoxel, coords, padding, size)) {
+          if (inPadding(newVoxel, coords, padding, size, maxHeight)) {
             simpleSets.push({
               ...newNode,
               coords: newCoords,

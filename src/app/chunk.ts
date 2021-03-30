@@ -3,24 +3,26 @@ import ndarray from 'ndarray';
 import { BufferAttribute, BufferGeometry, Mesh } from 'three';
 
 import { Engine } from '..';
-import { Coords3 } from '../libs';
+import { Coords2, Coords3 } from '../libs';
 import { simpleCull } from '../libs/meshers';
 import { Helper } from '../utils';
 
 type ChunkOptions = {
   size: number;
+  maxHeight: number;
   dimension: number;
   padding: number;
 };
 
 class Chunk {
   public engine: Engine;
-  public coords: Coords3;
+  public coords: Coords2;
   public voxels: ndarray;
   public lights: ndarray;
 
   public name: string;
   public size: number;
+  public maxHeight: number;
   public dimension: number;
   public padding: number;
   public width: number;
@@ -43,18 +45,27 @@ class Chunk {
   public isPending = false; // pending for client-side terrain generation
   public sunlightApplied = false;
 
-  constructor(engine: Engine, coords: Coords3, { size, dimension, padding }: ChunkOptions) {
+  constructor(engine: Engine, coords: Coords2, { size, dimension, padding, maxHeight }: ChunkOptions) {
     this.engine = engine;
     this.coords = coords;
 
     this.size = size;
+    this.maxHeight = maxHeight;
     this.dimension = dimension;
     this.padding = padding;
     this.width = size + padding * 2;
     this.name = Helper.getChunkName(this.coords);
 
-    this.voxels = ndarray(new Int8Array(this.width * this.width * this.width), [this.width, this.width, this.width]);
-    this.lights = ndarray(new Int8Array(this.width * this.width * this.width), [this.width, this.width, this.width]);
+    this.voxels = ndarray(new Int8Array(this.width * this.maxHeight * this.width), [
+      this.width,
+      this.maxHeight,
+      this.width,
+    ]);
+    this.lights = ndarray(new Int8Array(this.width * this.maxHeight * this.width), [
+      this.width,
+      this.maxHeight,
+      this.width,
+    ]);
 
     this.geometry = new BufferGeometry();
 
@@ -63,59 +74,62 @@ class Chunk {
     this.maxInner = [0, 0, 0];
     this.maxOuter = [0, 0, 0];
 
+    const [cx, cz] = coords;
+    const coords3 = [cx, 0, cz];
+
     // initialize
-    vec3.copy(this.minInner, coords);
-    vec3.copy(this.minOuter, coords);
-    vec3.copy(this.maxInner, coords);
-    vec3.copy(this.maxOuter, coords);
+    vec3.copy(this.minInner, coords3);
+    vec3.copy(this.minOuter, coords3);
+    vec3.copy(this.maxInner, coords3);
+    vec3.copy(this.maxOuter, coords3);
 
     // calculate
-    const paddingVec = [padding, padding, padding];
+    const paddingVec = [padding, 0, padding];
     vec3.scale(this.minOuter, this.minOuter, size);
     vec3.sub(this.minOuter, this.minOuter, paddingVec);
     vec3.add(this.minInner, this.minOuter, paddingVec);
-    vec3.copy(this.maxOuter, coords);
-    vec3.add(this.maxOuter, this.maxOuter, [1, 1, 1]);
+    vec3.add(this.maxOuter, this.maxOuter, [1, 0, 1]);
     vec3.scale(this.maxOuter, this.maxOuter, size);
+    vec3.add(this.maxOuter, this.maxOuter, [0, maxHeight, 0]);
     vec3.add(this.maxOuter, this.maxOuter, paddingVec);
     vec3.sub(this.maxInner, this.maxOuter, paddingVec);
   }
 
-  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
   getLocal(lx: number, ly: number, lz: number) {
-    return this.voxels.get(lx + this.padding, ly + this.padding, lz + this.padding);
+    return this.voxels.get(lx + this.padding, ly, lz + this.padding);
   }
 
-  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
   setLocal(lx: number, ly: number, lz: number, id: number) {
-    return this.voxels.set(lx + this.padding, ly + this.padding, lz + this.padding, id);
+    return this.voxels.set(lx + this.padding, ly, lz + this.padding, id);
   }
 
-  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
   getLocalTorchLight(lx: number, ly: number, lz: number) {
-    return this.lights.get(lx + this.padding, ly + this.padding, lz + this.padding) & 0xf;
+    return this.lights.get(lx + this.padding, ly, lz + this.padding) & 0xf;
   }
 
-  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
   setLocalTorchLight(lx: number, ly: number, lz: number, level: number) {
     return this.lights.set(
       lx + this.padding,
-      ly + this.padding,
+      ly,
       lz + this.padding,
       (this.getLocalTorchLight(lx, ly, lz) & 0xf0) | level,
     );
   }
 
-  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
   getLocalSunlight(lx: number, ly: number, lz: number) {
-    return (this.lights.get(lx + this.padding, ly + this.padding, lz + this.padding) >> 4) & 0xf;
+    return (this.lights.get(lx + this.padding, ly, lz + this.padding) >> 4) & 0xf;
   }
 
-  // goes from [-padding, -padding, -padding] to [size + padding - 1, size + padding - 1, size + padding - 1]
+  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
   setLocalSunlight(lx: number, ly: number, lz: number, level: number) {
     return this.lights.set(
       lx + this.padding,
-      ly + this.padding,
+      ly,
       lz + this.padding,
       (this.getLocalSunlight(lx, ly, lz) & 0xf0) | (level << 4),
     );
@@ -167,22 +181,15 @@ class Chunk {
   }
 
   contains(vx: number, vy: number, vz: number, padding = this.padding) {
-    const { size } = this;
+    const { size, maxHeight } = this;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
 
-    return (
-      lx >= -padding &&
-      lx < size + padding &&
-      ly >= -padding &&
-      ly < size + padding &&
-      lz >= -padding &&
-      lz < size + padding
-    );
+    return lx >= -padding && lx < size + padding && ly >= 0 && ly < maxHeight && lz >= -padding && lz < size + padding;
   }
 
-  distTo(vx: number, vy: number, vz: number) {
-    const [mx, my, mz] = this.minInner;
-    return Math.sqrt((mx - vx) * (mx - vx) + (my - vy) * (my - vy) + (mz - vz) * (mz - vz));
+  distTo(vx: number, _: number, vz: number) {
+    const [mx, , mz] = this.minInner;
+    return Math.sqrt((mx - vx) * (mx - vx) + (mz - vz) * (mz - vz));
   }
 
   addToScene() {

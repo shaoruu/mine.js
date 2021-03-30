@@ -24,11 +24,11 @@ class Debug {
     this.stats = new Stats();
 
     const {
-      worldOptions: { chunkSize, dimension },
+      worldOptions: { chunkSize, dimension, maxHeight },
     } = engine.config;
     const width = chunkSize * dimension;
     this.chunkHighlight = new Mesh(
-      new BoxGeometry(width, width, width, 2, 2, 2),
+      new BoxGeometry(width, maxHeight * dimension, width),
       new MeshBasicMaterial({ wireframe: true, side: DoubleSide }),
     );
 
@@ -146,11 +146,11 @@ class Debug {
     }
 
     const { camChunkPosStr } = this.engine.world;
-    const [cx, cy, cz] = Helper.parseChunkName(camChunkPosStr, ' ');
-    const { chunkSize, dimension } = this.engine.world.options;
+    const [cx, cz] = Helper.parseChunkName(camChunkPosStr, ' ');
+    const { chunkSize, maxHeight, dimension } = this.engine.world.options;
     this.chunkHighlight.position.set(
       (cx + 0.5) * chunkSize * dimension,
-      (cy + 0.5) * chunkSize * dimension,
+      0.5 * maxHeight * dimension,
       (cz + 0.5) * chunkSize * dimension,
     );
   };

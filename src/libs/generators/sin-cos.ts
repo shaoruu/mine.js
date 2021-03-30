@@ -23,7 +23,7 @@ class SinCosGenerator extends Generator {
   }
 
   async generate(chunk: Chunk) {
-    const { voxels, minOuter, maxOuter } = chunk;
+    const { voxels, minOuter, maxOuter, maxHeight } = chunk;
     const { stride } = voxels;
 
     const voxelsBuffer = (voxels.data as Int8Array).buffer.slice(0);
@@ -35,6 +35,7 @@ class SinCosGenerator extends Generator {
           data: voxelsBuffer,
           configs: {
             stride,
+            maxHeight,
             types: {
               dirt: this.getBlockID('dirt'),
               grass: this.getBlockID('grass'),

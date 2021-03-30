@@ -1,6 +1,6 @@
 import vec3 from 'gl-vec3';
 
-import { AABB, Coords3 } from '../libs';
+import { AABB, Coords2, Coords3 } from '../libs';
 
 class Helper {
   /**
@@ -10,8 +10,8 @@ class Helper {
    * @param {string} [concat='|']
    * @returns
    */
-  public static getChunkName = (coords: Coords3, concat = '|') => {
-    return coords[0] + concat + coords[1] + concat + coords[2];
+  public static getChunkName = (coords: Coords2, concat = '|') => {
+    return coords[0] + concat + coords[1];
   };
 
   /**
@@ -46,10 +46,10 @@ class Helper {
    * @returns {Coords3}
    */
   public static mapVoxelPosToChunkLocalPos = (voxelPos: Coords3, chunkSize: number): Coords3 => {
-    const [cx, cy, cz] = Helper.mapVoxelPosToChunkPos(voxelPos, chunkSize);
+    const [cx, cz] = Helper.mapVoxelPosToChunkPos(voxelPos, chunkSize);
     const [vx, vy, vz] = voxelPos;
 
-    return [vx - cx * chunkSize, vy - cy * chunkSize, vz - cz * chunkSize];
+    return [vx - cx * chunkSize, vy, vz - cz * chunkSize];
   };
 
   /**
@@ -57,10 +57,11 @@ class Helper {
    *
    * @param {Coords3} worldPos
    * @param {number} chunkSize
-   * @returns {Coords3}
+   * @returns {Coords2}
    */
-  public static mapVoxelPosToChunkPos = (voxelPos: Coords3, chunkSize: number): Coords3 => {
-    return Helper.scaleCoordsF(voxelPos, 1 / chunkSize);
+  public static mapVoxelPosToChunkPos = (voxelPos: Coords3, chunkSize: number): Coords2 => {
+    const coords3 = Helper.scaleCoordsF(voxelPos, 1 / chunkSize);
+    return [coords3[0], coords3[2]];
   };
 
   /**

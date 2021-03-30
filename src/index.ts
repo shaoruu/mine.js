@@ -54,9 +54,10 @@ const defaultConfig: ConfigType = {
     cameraWidth: 0.8,
   },
   worldOptions: {
+    maxHeight: 256,
     generator: 'sin-cos',
-    renderRadius: 5,
-    chunkSize: 32,
+    renderRadius: 10,
+    chunkSize: 16,
     chunkPadding: 2,
     dimension: 1,
     // radius of rendering centered by camera

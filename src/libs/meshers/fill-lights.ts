@@ -1,6 +1,6 @@
 import { Chunk } from '../../app';
 import { Helper } from '../../utils';
-import { Coords3, LightNode } from '../types';
+import { Coords2, Coords3, LightNode } from '../types';
 
 import workerSrc from '!raw-loader!./workers/fill-lights.worker';
 
@@ -13,13 +13,13 @@ for (let i = 0; i < DEFAULT_WORKER_COUNT; i++) {
 
 type FillResultsType = {
   lights: Int8Array;
-  simpleSets: { level: number; voxel: Coords3; coords: Coords3 }[];
+  simpleSets: { level: number; voxel: Coords3; coords: Coords2 }[];
   continueQueues: {
     [name: string]: LightNode[];
   };
 };
 
-async function fillLights(queue: LightNode[], chunk: Chunk): Promise<void> {
+async function fillLights(queue: LightNode[], chunk: Chunk, isSunlight = false): Promise<void> {
   const {
     voxels,
     lights,
@@ -29,13 +29,15 @@ async function fillLights(queue: LightNode[], chunk: Chunk): Promise<void> {
     maxOuter,
     minInner,
     maxInner,
+    maxHeight,
     coords,
     engine: { world },
   } = chunk;
   const { stride } = voxels;
 
   queue.forEach(({ voxel, level }) => {
-    world.setTorchLight(voxel, level);
+    if (isSunlight) world.setSunlight(voxel, level);
+    else world.setTorchLight(voxel, level);
   });
 
   const voxelsBuffer = (voxels.data as Int8Array).buffer.slice(0);
@@ -45,6 +47,7 @@ async function fillLights(queue: LightNode[], chunk: Chunk): Promise<void> {
   const { lights: newChunkLights, continueQueues, simpleSets } = await new Promise<FillResultsType>((resolve) => {
     worker.postMessage({
       queue,
+      isSunlight,
       data: voxelsBuffer,
       lights: lightsBuffer,
       configs: {
@@ -56,6 +59,7 @@ async function fillLights(queue: LightNode[], chunk: Chunk): Promise<void> {
         maxOuter,
         minInner,
         maxInner,
+        maxHeight,
       },
     });
 
@@ -75,17 +79,18 @@ async function fillLights(queue: LightNode[], chunk: Chunk): Promise<void> {
   // set the paddings of neighboring chunks
   simpleSets.forEach(({ voxel, level, coords }) => {
     const chunk = world.getChunkByCPos(coords);
-    chunk?.setTorchLight(...voxel, level);
+    if (isSunlight) chunk?.setSunlight(...voxel, level);
+    else chunk?.setTorchLight(...voxel, level);
   });
 
   // continue propagation
   for (const name of Object.keys(continueQueues)) {
     const coords = Helper.parseChunkName(name);
-    const chunk = world.getChunkByCPos(coords as Coords3);
+    const chunk = world.getChunkByCPos(coords as Coords2);
     if (chunk) {
       const newQueue = continueQueues[name];
       chunk.isDirty = true;
-      await fillLights(newQueue, chunk);
+      await fillLights(newQueue, chunk, isSunlight);
     }
   }
 

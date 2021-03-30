@@ -10,12 +10,14 @@ import {
   SinCosGenerator,
   LightNode,
   fillLights,
+  Coords2,
 } from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
 
 type WorldOptionsType = {
+  maxHeight: number;
   chunkSize: number;
   chunkPadding: number;
   dimension: number;
@@ -39,7 +41,7 @@ class World extends EventEmitter {
   public isReady = false;
 
   private camChunkName: string;
-  private camChunkPos: Coords3;
+  private camChunkPos: Coords2;
 
   private chunks: SmartDictionary<Chunk> = new SmartDictionary();
   private dirtyChunks: Chunk[] = []; // chunks that are freshly made
@@ -105,7 +107,7 @@ class World extends EventEmitter {
     // this.propagateLightQueue(lightPlacement);
   }
 
-  getChunkByCPos(cCoords: Coords3) {
+  getChunkByCPos(cCoords: Coords2) {
     return this.getChunkByName(Helper.getChunkName(cCoords));
   }
 
@@ -122,50 +124,28 @@ class World extends EventEmitter {
   getNeighborChunksByVoxel(vCoords: Coords3, padding = this.options.chunkPadding) {
     const { chunkSize } = this.options;
     const chunk = this.getChunkByVoxel(vCoords);
-    const [cx, cy, cz] = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
-    const [lx, ly, lz] = Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
+    const [cx, cz] = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
+    const [lx, , lz] = Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
     const neighborChunks: (Chunk | null)[] = [];
 
     // check if local position is on the edge
     // TODO: fix this hacky way of doing so.
     const a = lx < padding;
-    const b = ly < padding;
-    const c = lz < padding;
-    const d = lx >= chunkSize - padding;
-    const e = ly >= chunkSize - padding;
-    const f = lz >= chunkSize - padding;
+    const b = lz < padding;
+    const c = lx >= chunkSize - padding;
+    const d = lz >= chunkSize - padding;
 
     // direct neighbors
-    if (a) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz]));
-    if (b) neighborChunks.push(this.getChunkByCPos([cx, cy - 1, cz]));
-    if (c) neighborChunks.push(this.getChunkByCPos([cx, cy, cz - 1]));
-    if (d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz]));
-    if (e) neighborChunks.push(this.getChunkByCPos([cx, cy + 1, cz]));
-    if (f) neighborChunks.push(this.getChunkByCPos([cx, cy, cz + 1]));
+    if (a) neighborChunks.push(this.getChunkByCPos([cx - 1, cz]));
+    if (b) neighborChunks.push(this.getChunkByCPos([cx, cz - 1]));
+    if (c) neighborChunks.push(this.getChunkByCPos([cx + 1, cz]));
+    if (d) neighborChunks.push(this.getChunkByCPos([cx, cz + 1]));
 
     // side-to-side diagonals
-    if (a && b) neighborChunks.push(this.getChunkByCPos([cx - 1, cy - 1, cz]));
-    if (a && c) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz - 1]));
-    if (a && e) neighborChunks.push(this.getChunkByCPos([cx - 1, cy + 1, cz]));
-    if (a && f) neighborChunks.push(this.getChunkByCPos([cx - 1, cy, cz + 1]));
-    if (b && c) neighborChunks.push(this.getChunkByCPos([cx, cy - 1, cz - 1]));
-    if (b && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy - 1, cz]));
-    if (b && f) neighborChunks.push(this.getChunkByCPos([cx, cy - 1, cz + 1]));
-    if (c && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz - 1]));
-    if (c && e) neighborChunks.push(this.getChunkByCPos([cx, cy + 1, cz - 1]));
-    if (d && e) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz]));
-    if (d && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy, cz + 1]));
-    if (e && f) neighborChunks.push(this.getChunkByCPos([cx, cy + 1, cz + 1]));
-
-    // direct diagonals
-    if (a && b && c) neighborChunks.push(this.getChunkByCPos([cx - 1, cy - 1, cz - 1]));
-    if (a && b && f) neighborChunks.push(this.getChunkByCPos([cx - 1, cy - 1, cz + 1]));
-    if (a && c && e) neighborChunks.push(this.getChunkByCPos([cx - 1, cy + 1, cz - 1]));
-    if (a && e && f) neighborChunks.push(this.getChunkByCPos([cx - 1, cy + 1, cz + 1]));
-    if (b && c && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cy - 1, cz - 1]));
-    if (b && d && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy - 1, cz + 1]));
-    if (c && d && e) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz - 1]));
-    if (d && e && f) neighborChunks.push(this.getChunkByCPos([cx + 1, cy + 1, cz + 1]));
+    if (a && b) neighborChunks.push(this.getChunkByCPos([cx - 1, cz - 1]));
+    if (a && d) neighborChunks.push(this.getChunkByCPos([cx - 1, cz + 1]));
+    if (b && c) neighborChunks.push(this.getChunkByCPos([cx + 1, cz - 1]));
+    if (c && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cz + 1]));
 
     return neighborChunks.filter(Boolean).filter((c) => c !== chunk);
   }
@@ -248,13 +228,13 @@ class World extends EventEmitter {
 
   applySunlight(chunk: Chunk) {
     const {
-      coords: [cx, cy, cz],
+      coords: [cx, cz],
     } = chunk;
 
-    const topChunk = this.getChunkByCPos([cx, cy + 1, cz]);
-    if (topChunk)
-      // top chunk is the only chunk needed to fill light
-      return;
+    const topChunk = this.getChunkByCPos([cx, cz]);
+
+    // top chunk is the only chunk needed to fill light
+    if (topChunk) return;
 
     const { minInner, maxInner } = chunk;
     const [endX, endY, endZ] = maxInner;
@@ -273,7 +253,7 @@ class World extends EventEmitter {
     }
 
     console.time('sunlight');
-    this.propagateLightQueue(sunlightNodes, true);
+    fillLights(sunlightNodes, chunk, true);
     console.timeEnd('sunlight');
   }
 
@@ -398,7 +378,7 @@ class World extends EventEmitter {
   }
 
   get camChunkPosStr() {
-    return `${this.camChunkPos[0]} ${this.camChunkPos[1]} ${this.camChunkPos[2]}`;
+    return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
   }
 
   private checkCamChunk() {
@@ -418,33 +398,30 @@ class World extends EventEmitter {
     }
 
     let chunksLoaded = 0;
-    const [cx, cy, cz] = this.camChunkPos;
+    const [cx, cz] = this.camChunkPos;
     for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
-      for (let y = cy - renderRadius; y <= cy + renderRadius; y++) {
-        for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
-          const dx = x - cx;
-          const dy = y - cy;
-          const dz = z - cz;
+      for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
+        const dx = x - cx;
+        const dz = z - cz;
 
-          // sphere of chunks around camera effect
-          if (dx * dx + dy * dy + dz * dz > renderRadius * renderRadius) continue;
+        // sphere of chunks around camera effect
+        if (dx * dx + dz * dz > renderRadius * renderRadius) continue;
 
-          const chunk = this.getChunkByCPos([x, y, z]);
+        const chunk = this.getChunkByCPos([x, z]);
 
-          if (chunk) {
-            if (chunk.isInitialized) {
-              chunksLoaded++;
-              if (!chunk.isDirty) {
-                if (!chunk.isAdded) {
-                  chunk.addToScene();
-                }
-              } else {
-                // this means chunk is dirty. two possibilities:
-                // 1. chunk has just been populated with terrain data
-                // 2. chunk is modified
-                if (!chunk.isMeshing) {
-                  chunk.buildMesh();
-                }
+        if (chunk) {
+          if (chunk.isInitialized) {
+            chunksLoaded++;
+            if (!chunk.isDirty) {
+              if (!chunk.isAdded) {
+                chunk.addToScene();
+              }
+            } else {
+              // this means chunk is dirty. two possibilities:
+              // 1. chunk has just been populated with terrain data
+              // 2. chunk is modified
+              if (!chunk.isMeshing) {
+                chunk.buildMesh();
               }
             }
           }
@@ -459,25 +436,27 @@ class World extends EventEmitter {
   }
 
   private surroundCamChunks() {
-    const { renderRadius, dimension, chunkSize, chunkPadding } = this.options;
+    const { renderRadius, dimension, chunkSize, chunkPadding, maxHeight } = this.options;
 
-    const [cx, cy, cz] = this.camChunkPos;
+    const [cx, cz] = this.camChunkPos;
     for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
-      for (let y = cy - renderRadius; y <= cy + renderRadius; y++) {
-        for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
-          const dx = x - cx;
-          const dy = y - cy;
-          const dz = z - cz;
-          if (dx * dx + dy * dy + dz * dz > renderRadius * renderRadius) continue;
+      for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
+        const dx = x - cx;
+        const dz = z - cz;
+        if (dx * dx + dz * dz > renderRadius * renderRadius) continue;
 
-          const chunk = this.getChunkByCPos([x, y, z]);
+        const chunk = this.getChunkByCPos([x, z]);
 
-          if (!chunk) {
-            const newChunk = new Chunk(this.engine, [x, y, z], { size: chunkSize, dimension, padding: chunkPadding });
+        if (!chunk) {
+          const newChunk = new Chunk(this.engine, [x, z], {
+            maxHeight,
+            dimension,
+            size: chunkSize,
+            padding: chunkPadding,
+          });
 
-            this.setChunk(newChunk);
-            this.dirtyChunks.push(newChunk);
-          }
+          this.setChunk(newChunk);
+          this.dirtyChunks.push(newChunk);
         }
       }
     }

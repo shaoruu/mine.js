@@ -99,6 +99,13 @@ function sharedOnLoad() {
             }
           }
         }
+      } else if (key === 'z') {
+        const [px, py, pz] = engine.camera.voxel;
+        for (let i = -range; i <= range; i++) {
+          for (let j = -range; j <= range; j++) {
+            engine.world.setVoxel([px + i, py + 2, pz + j], notSureID);
+          }
+        }
       }
     });
 

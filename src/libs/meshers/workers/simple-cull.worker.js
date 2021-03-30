@@ -203,6 +203,10 @@ function getTorchLight(arr, x, y, z, stride) {
   return get(arr, x, y, z, stride) & 0xf;
 }
 
+function getSunlight(arr, x, y, z, stride) {
+  return (get(arr, x, y, z, stride) >> 4) & 0xf;
+}
+
 function vertexAO(side1, side2, corner) {
   const numS1 = Number(side1 !== 0);
   const numS2 = Number(side2 !== 0);
@@ -232,7 +236,8 @@ onmessage = function (e) {
   const uvs = [];
   const aos = [];
 
-  let lightLevels = [];
+  let sunlightLevels = [];
+  let torchLightLevels = [];
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;
@@ -240,7 +245,7 @@ onmessage = function (e) {
   const vertexToLight = new Map();
 
   for (let vx = startX, lx = padding; vx < endX; ++vx, ++lx) {
-    for (let vy = startY, ly = padding; vy < endY; ++vy, ++ly) {
+    for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {
       for (let vz = startZ, lz = padding; vz < endZ; ++vz, ++lz) {
         const voxel = get(data, lx, ly, lz, stride);
 
@@ -259,7 +264,8 @@ onmessage = function (e) {
             const neighbor = get(data, nlx, nly, nlz, stride);
 
             if (!neighbor) {
-              const lightLevel = getTorchLight(lights, nlx, nly, nlz, stride);
+              const torchLightLevel = getTorchLight(lights, nlx, nly, nlz, stride);
+              const sunlightLevel = getSunlight(lights, nlx, nly, nlz, stride);
               // this voxel has no neighbor in this direction so we need a face.
               const nearVoxels = neighbors.map(([a, b, c]) => get(data, lx + a, ly + b, lz + c, stride));
               const { startU, endU, startV, endV } = isArrayMat
@@ -279,15 +285,17 @@ onmessage = function (e) {
                 if (useSmoothLight) {
                   const rep = toRep(posX * dimension, posY * dimension, posZ * dimension);
                   if (vertexToLight.has(rep)) {
-                    const { count, level } = vertexToLight.get(rep);
+                    const { count, torchLight, sunlight } = vertexToLight.get(rep);
                     vertexToLight.set(rep, {
                       count: count + 1,
-                      level: level + lightLevel,
+                      torchLight: torchLight + torchLightLevel,
+                      sunlight: sunlight + sunlightLevel,
                     });
                   } else {
                     vertexToLight.set(rep, {
                       count: 1,
-                      level: lightLevel,
+                      torchLight: torchLightLevel,
+                      sunlight: sunlightLevel,
                     });
                   }
                   const test = [
@@ -323,15 +331,18 @@ onmessage = function (e) {
                   ];
                   test.forEach(([check, [a, b, c]]) => {
                     if (check) {
-                      const lightLevelN = getTorchLight(lights, nlx + a, nly + b, nlz + c, stride);
-                      const { count, level } = vertexToLight.get(rep);
+                      const torchLightLevelN = getTorchLight(lights, nlx + a, nly + b, nlz + c, stride);
+                      const sunlightLevelN = getSunlight(lights, nlx + a, nly + b, nlz + c, stride);
+                      const { count, torchLight, sunlight } = vertexToLight.get(rep);
                       vertexToLight.set(rep, {
                         count: count + 1,
-                        level: level + lightLevelN,
+                        torchLight: torchLight + torchLightLevelN,
+                        sunlight: sunlight + sunlightLevelN,
                       });
                     }
                   });
-                  lightLevels.push(rep);
+                  sunlightLevels.push(rep);
+                  torchLightLevels.push(rep);
                 }
                 positions.push(posX * dimension, posY * dimension, posZ * dimension);
                 faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
@@ -349,7 +360,8 @@ onmessage = function (e) {
 
               aos.push(...faceAOs);
               if (!useSmoothLight) {
-                lightLevels.push(lightLevel, lightLevel, lightLevel, lightLevel);
+                sunlightLevels.push(sunlightLevel, sunlightLevel, sunlightLevel, sunlightLevel);
+                torchLightLevels.push(torchLightLevel, torchLightLevel, torchLightLevel, torchLightLevel);
               }
             }
           }
@@ -366,9 +378,13 @@ onmessage = function (e) {
   // );
 
   if (useSmoothLight) {
-    lightLevels = lightLevels.map((rep) => {
-      const { count, level } = vertexToLight.get(rep);
-      return level / count;
+    sunlightLevels = sunlightLevels.map((rep) => {
+      const { sunlight, count } = vertexToLight.get(rep);
+      return sunlight / count;
+    });
+    torchLightLevels = torchLightLevels.map((rep) => {
+      const { torchLight, count } = vertexToLight.get(rep);
+      return torchLight / count;
     });
   }
 
@@ -377,7 +393,7 @@ onmessage = function (e) {
   const indicesArrayBuffer = new Float32Array(indices).buffer;
   const uvsArrayBuffer = new Float32Array(uvs).buffer;
   const aosArrayBuffer = new Float32Array(aos).buffer;
-  const lightLevelsArrayBuffer = new Float32Array(lightLevels).buffer;
+  const lightLevelsArrayBuffer = new Float32Array(torchLightLevels).buffer;
 
   postMessage(
     {
