@@ -393,6 +393,8 @@ onmessage = function (e) {
   const indicesArrayBuffer = new Float32Array(indices).buffer;
   const uvsArrayBuffer = new Float32Array(uvs).buffer;
   const aosArrayBuffer = new Float32Array(aos).buffer;
+  const torchLightLevelsArrayBuffer = new Float32Array(torchLightLevels).buffer;
+  const sunlightLevelsArrayBuffer = new Float32Array(sunlightLevels).buffer;
   const lightLevelsArrayBuffer = new Float32Array(torchLightLevels).buffer;
 
   postMessage(
@@ -402,6 +404,8 @@ onmessage = function (e) {
       indices: indicesArrayBuffer,
       uvs: uvsArrayBuffer,
       aos: aosArrayBuffer,
+      torchLights: torchLightLevelsArrayBuffer,
+      sunlights: sunlightLevelsArrayBuffer,
       lights: lightLevelsArrayBuffer,
     },
     [
@@ -410,6 +414,8 @@ onmessage = function (e) {
       indicesArrayBuffer,
       uvsArrayBuffer,
       aosArrayBuffer,
+      torchLightLevelsArrayBuffer,
+      sunlightLevelsArrayBuffer,
       lightLevelsArrayBuffer,
     ],
   );

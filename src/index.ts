@@ -41,7 +41,7 @@ const defaultConfig: ConfigType = {
     fov: 75,
     near: 0.1,
     far: 8000,
-    initPos: [20, 20, 20],
+    initPos: [-19, 2, 18],
     minPolarAngle: 0,
     maxPolarAngle: Math.PI,
     acceleration: 1,
@@ -56,8 +56,8 @@ const defaultConfig: ConfigType = {
   worldOptions: {
     maxHeight: 256,
     generator: 'sin-cos',
-    renderRadius: 10,
-    chunkSize: 16,
+    renderRadius: 8,
+    chunkSize: 12,
     chunkPadding: 2,
     dimension: 1,
     // radius of rendering centered by camera

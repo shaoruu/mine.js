@@ -35,6 +35,10 @@ function set(arr, x, y, z, stride, value) {
   return value;
 }
 
+function get2(arr, x, z, stride) {
+  return arr[x * stride[0] + z * stride[1]];
+}
+
 function getTorchLight(arr, x, y, z, stride) {
   return get(arr, x, y, z, stride) & 0xf;
 }
@@ -72,18 +76,9 @@ const directions = [
   [0, 0, -1],
 ];
 
-const sunlightDirections = [
-  [1, 0, 0, -1],
-  [-1, 0, 0, -1],
-  [0, -1, 0, 0],
-  [0, 0, 1, -1],
-  [0, 0, -1, -1],
-];
-
 onmessage = function (e) {
   const {
     queue,
-    isSunlight,
     data: dataBuffer,
     lights: lightsBuffer,
     configs: { padding, coords, stride, size, minOuter, maxOuter, maxHeight },
@@ -117,13 +112,11 @@ onmessage = function (e) {
         continue;
       }
 
-      (isSunlight ? sunlightDirections : directions).forEach(([dirX, dirY, dirZ, delta]) => {
+      directions.forEach(([dirX, dirY, dirZ]) => {
         // new neighboring BLOCK
         const newVX = vx + dirX;
         const newVY = vy + dirY;
         const newVZ = vz + dirZ;
-
-        delta = isSunlight ? delta : -1;
 
         const [newLX, newLY, newLZ] = toLocal([newVX, newVY, newVZ], minOuter);
 
@@ -133,7 +126,7 @@ onmessage = function (e) {
         const newVoxel = [newVX, newVY, newVZ];
         const newCoords = [newCX, newCZ];
         const newNode = {
-          level: level + delta,
+          level: level + -1,
           voxel: newVoxel,
         };
 
@@ -149,14 +142,9 @@ onmessage = function (e) {
 
         if (
           get(data, newLX, newLY, newLZ, stride) === 0 &&
-          (isSunlight
-            ? getSunlight(lights, newLX, newLY, newLZ, stride)
-            : getTorchLight(lights, newLX, newLY, newLZ, stride)) +
-            2 <=
-            level
+          getTorchLight(lights, newLX, newLY, newLZ, stride) + 2 <= level
         ) {
-          if (isSunlight) setSunlight(lights, newLX, newLY, newLZ, stride, level + delta);
-          else setTorchLight(lights, newLX, newLY, newLZ, stride, level + delta);
+          setTorchLight(lights, newLX, newLY, newLZ, stride, level - 1);
 
           // TODO: FASTER WAY OF DOING SO
           for (let i = -1; i <= 1; i++) {
@@ -170,15 +158,15 @@ onmessage = function (e) {
                 });
               }
             }
-          }
 
-          // this means the newVoxel is in the padding of the current chunk
-          // thus, should set neighboring coords.
-          if (inPadding(newVoxel, coords, padding, size, maxHeight)) {
-            simpleSets.push({
-              ...newNode,
-              coords: newCoords,
-            });
+            // this means the newVoxel is in the padding of the current chunk
+            // thus, should set neighboring coords.
+            if (inPadding(newVoxel, coords, padding, size, maxHeight)) {
+              simpleSets.push({
+                ...newNode,
+                coords: newCoords,
+              });
+            }
           }
 
           queue.push(newNode);

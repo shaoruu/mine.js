@@ -99,12 +99,9 @@ class World extends EventEmitter {
       }
     });
 
-    if (lightPlacement.length !== 0) {
-      const temp = this.getChunkByVoxel(lightPlacement[0].voxel);
-      if (temp) fillLights(lightPlacement, temp);
-    }
     this.removeTorchLights(lightRemoval);
-    // this.propagateLightQueue(lightPlacement);
+    // offload this kind of propagation to another thread
+    fillLights(lightPlacement, this);
   }
 
   getChunkByCPos(cCoords: Coords2) {
@@ -226,16 +223,7 @@ class World extends EventEmitter {
     neighborChunks.forEach((c) => c?.setSunlight(...vCoords, level));
   }
 
-  applySunlight(chunk: Chunk) {
-    const {
-      coords: [cx, cz],
-    } = chunk;
-
-    const topChunk = this.getChunkByCPos([cx, cz]);
-
-    // top chunk is the only chunk needed to fill light
-    if (topChunk) return;
-
+  async applySunlight(chunk: Chunk) {
     const { minInner, maxInner } = chunk;
     const [endX, endY, endZ] = maxInner;
     const sunlightNodes: LightNode[] = [];
@@ -251,17 +239,13 @@ class World extends EventEmitter {
         }
       }
     }
-
-    console.time('sunlight');
-    fillLights(sunlightNodes, chunk, true);
-    console.timeEnd('sunlight');
   }
 
   // resource: https://www.seedofandromeda.com/blogs/29-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-1
   removeTorchLights(lightRemovalBfsQueue: LightNode[]) {
+    if (lightRemovalBfsQueue.length === 0) return;
     // flood-fill lighting removal
 
-    // lightRemovalBfsQueue = lightRemovalBfsQueue.filter(({ voxel }) => this.getVoxelByVoxel(voxel) === 0);
     // from high to low
     lightRemovalBfsQueue.sort((a, b) => b.level - a.level);
     lightRemovalBfsQueue.forEach(({ voxel }) => this.setTorchLight(voxel, 0));
@@ -314,7 +298,7 @@ class World extends EventEmitter {
   }
 
   propagateLightQueue(lightQueue: LightNode[], isSunlight = false) {
-    // console.time('propagation');
+    // propagate light on the main thread
     while (lightQueue.length !== 0) {
       const lightNode = lightQueue.shift();
 
@@ -366,7 +350,6 @@ class World extends EventEmitter {
         });
       }
     }
-    // console.timeEnd('propagation');
   }
 
   addAsVisible(chunk: Chunk) {

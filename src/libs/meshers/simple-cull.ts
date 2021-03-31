@@ -48,14 +48,15 @@ async function simpleCull(chunk: Chunk): Promise<MeshResultType> {
     );
 
     worker.onmessage = ({ data }) => {
-      const { positions, normals, indices, uvs, aos, lights } = data;
+      const { positions, normals, indices, uvs, aos, sunlights, torchLights } = data;
       resolve({
         positions: new Float32Array(positions),
         normals: new Float32Array(normals),
         indices: new Float32Array(indices),
         uvs: new Float32Array(uvs),
         aos: new Float32Array(aos),
-        lights: new Float32Array(lights),
+        sunlights: new Float32Array(sunlights),
+        torchLights: new Float32Array(torchLights),
       });
     };
   });

@@ -51,7 +51,9 @@ async function generateData(chunk) {
   chunk.voxels.data = newVoxels;
 
   // ?: DEBATABLE
-  workers.push(worker);
+  if (workers.length < DEFAULT_WORKER_COUNT) {
+    workers.push(worker);
+  }
 }
 
 engine.start();

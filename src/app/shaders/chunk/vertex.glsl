@@ -1,14 +1,17 @@
 attribute float ao;
-attribute float light;
+attribute float sunlight;
+attribute float torchLight;
 
 varying vec2 vUv;
 varying float vAO;
-varying float vLight;
+varying float vSunlight;
+varying float vTorchLight;
 
 void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 
   vUv = uv;
   vAO = ao;
-  vLight = light;
+  vSunlight = sunlight;
+  vTorchLight = torchLight;
 } 

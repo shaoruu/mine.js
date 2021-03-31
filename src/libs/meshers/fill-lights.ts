@@ -1,4 +1,4 @@
-import { Chunk } from '../../app';
+import { Chunk, World } from '../../app';
 import { Helper } from '../../utils';
 import { Coords2, Coords3, LightNode } from '../types';
 
@@ -19,49 +19,50 @@ type FillResultsType = {
   };
 };
 
-async function fillLights(queue: LightNode[], chunk: Chunk, isSunlight = false): Promise<void> {
-  const {
-    voxels,
-    lights,
-    padding,
-    size,
-    minOuter,
-    maxOuter,
-    minInner,
-    maxInner,
-    maxHeight,
-    coords,
-    engine: { world },
-  } = chunk;
+async function fillLights(queue: LightNode[], world: World): Promise<void> {
+  if (queue.length === 0) return;
+
+  const { voxel: firstVoxel } = queue[0];
+  const chunk = world.getChunkByVoxel(firstVoxel);
+
+  // chunk isn't even in range
+  if (!chunk) return;
+
+  const { voxels, lights, padding, size, minOuter, maxOuter, minInner, maxInner, maxHeight, coords, heightMap } = chunk;
   const { stride } = voxels;
+  const { stride: hmStride } = heightMap;
 
   queue.forEach(({ voxel, level }) => {
-    if (isSunlight) world.setSunlight(voxel, level);
-    else world.setTorchLight(voxel, level);
+    world.setTorchLight(voxel, level);
   });
 
   const voxelsBuffer = (voxels.data as Int8Array).buffer.slice(0);
   const lightsBuffer = (lights.data as Int8Array).buffer.slice(0);
+  const heightMapBuffer = (heightMap.data as Int8Array).buffer.slice(0);
   const worker = workers.pop() || Helper.loadWorker(workerSrc);
 
   const { lights: newChunkLights, continueQueues, simpleSets } = await new Promise<FillResultsType>((resolve) => {
-    worker.postMessage({
-      queue,
-      isSunlight,
-      data: voxelsBuffer,
-      lights: lightsBuffer,
-      configs: {
-        padding,
-        coords,
-        stride,
-        size,
-        minOuter,
-        maxOuter,
-        minInner,
-        maxInner,
-        maxHeight,
+    worker.postMessage(
+      {
+        queue,
+        data: voxelsBuffer,
+        lights: lightsBuffer,
+        heightMap: heightMapBuffer,
+        configs: {
+          padding,
+          coords,
+          stride,
+          size,
+          hmStride,
+          minOuter,
+          maxOuter,
+          minInner,
+          maxInner,
+          maxHeight,
+        },
       },
-    });
+      [voxelsBuffer, lightsBuffer, heightMapBuffer],
+    );
 
     worker.onmessage = ({ data }) => {
       const { lights: newLightsBuffer, simpleSets, continueQueues } = data;
@@ -79,19 +80,13 @@ async function fillLights(queue: LightNode[], chunk: Chunk, isSunlight = false):
   // set the paddings of neighboring chunks
   simpleSets.forEach(({ voxel, level, coords }) => {
     const chunk = world.getChunkByCPos(coords);
-    if (isSunlight) chunk?.setSunlight(...voxel, level);
-    else chunk?.setTorchLight(...voxel, level);
+    chunk?.setTorchLight(...voxel, level);
   });
 
   // continue propagation
   for (const name of Object.keys(continueQueues)) {
-    const coords = Helper.parseChunkName(name);
-    const chunk = world.getChunkByCPos(coords as Coords2);
-    if (chunk) {
-      const newQueue = continueQueues[name];
-      chunk.isDirty = true;
-      await fillLights(newQueue, chunk, isSunlight);
-    }
+    const newQueue = continueQueues[name];
+    await fillLights(newQueue, world);
   }
 
   if (workers.length < DEFAULT_WORKER_COUNT) {

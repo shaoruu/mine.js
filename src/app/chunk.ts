@@ -5,6 +5,7 @@ import { BufferAttribute, BufferGeometry, Mesh } from 'three';
 import { Engine } from '..';
 import { Coords2, Coords3 } from '../libs';
 import { simpleCull } from '../libs/meshers';
+import { makeHeightMap } from '../libs/meshers/make-height-map';
 import { Helper } from '../utils';
 
 type ChunkOptions = {
@@ -19,6 +20,7 @@ class Chunk {
   public coords: Coords2;
   public voxels: ndarray;
   public lights: ndarray;
+  public heightMap: ndarray;
 
   public name: string;
   public size: number;
@@ -66,6 +68,7 @@ class Chunk {
       this.maxHeight,
       this.width,
     ]);
+    this.heightMap = ndarray(new Int8Array(this.width * this.width), [this.width, this.width]);
 
     this.geometry = new BufferGeometry();
 
@@ -131,7 +134,7 @@ class Chunk {
       lx + this.padding,
       ly,
       lz + this.padding,
-      (this.getLocalSunlight(lx, ly, lz) & 0xf0) | (level << 4),
+      (this.getLocalSunlight(lx, ly, lz) & 0xf) | (level << 4),
     );
   }
 
@@ -212,10 +215,10 @@ class Chunk {
 
   async initialized() {
     this.isInitialized = true;
-    this.isPending = false;
 
     // build mesh once initialized
-    // this.engine.world.applySunlight(this);
+    await makeHeightMap(this);
+    // await this.engine.world.applySunlight(this);
     await this.buildMesh();
   }
 
@@ -230,20 +233,22 @@ class Chunk {
     this.isDirty = false;
     this.isMeshing = true;
 
-    const { positions, normals, indices, uvs, aos, lights } = await simpleCull(this);
+    const { positions, normals, indices, uvs, aos, sunlights, torchLights } = await simpleCull(this);
 
     const positionNumComponents = 3;
     const normalNumComponents = 3;
     const uvNumComponents = 2;
     const occlusionNumComponents = 1;
-    const lightsNumComponents = 1;
+    const sunlightsNumComponents = 1;
+    const torchLightsNumComponents = 1;
 
     this.geometry.dispose();
     this.geometry.setAttribute('position', new BufferAttribute(positions, positionNumComponents));
     this.geometry.setAttribute('normal', new BufferAttribute(normals, normalNumComponents));
     this.geometry.setAttribute('uv', new BufferAttribute(uvs, uvNumComponents));
     this.geometry.setAttribute('ao', new BufferAttribute(aos, occlusionNumComponents));
-    this.geometry.setAttribute('light', new BufferAttribute(lights, lightsNumComponents));
+    this.geometry.setAttribute('sunlight', new BufferAttribute(sunlights, sunlightsNumComponents));
+    this.geometry.setAttribute('torchLight', new BufferAttribute(torchLights, torchLightsNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
     this.altMesh = new Mesh(this.geometry, this.engine.registry.material);
@@ -253,6 +258,7 @@ class Chunk {
 
     // mark chunk as built mesh
     this.isMeshing = false;
+    this.isPending = false;
   }
 
   private toLocal = (vx: number, vy: number, vz: number) => {
