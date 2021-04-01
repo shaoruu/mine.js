@@ -257,7 +257,7 @@ class Camera {
     const normal: number[] = [];
 
     const result = raycast(
-      (x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)]) !== 0),
+      (x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])),
       [camPos.x, camPos.y, camPos.z],
       [camDir.x, camDir.y, camDir.z],
       reachDistance * dimension,
@@ -279,7 +279,7 @@ class Camera {
     const [nx, ny, nz] = normal;
     const newLookBlock = Helper.mapWorldPosToVoxelPos(flooredPoint as Coords3, world.options.dimension);
 
-    if (world.getVoxelByVoxel(newLookBlock) === 0) {
+    if (!world.getVoxelByVoxel(newLookBlock)) {
       // this means the look block isn't actually a block
       return;
     }

@@ -158,7 +158,7 @@ class World extends EventEmitter {
   }
 
   getSolidityByVoxel(vCoords: Coords3) {
-    return this.getVoxelByVoxel(vCoords) !== 0;
+    return !!this.getVoxelByVoxel(vCoords);
   }
 
   getFluidityByVoxel(vCoords: Coords3) {
