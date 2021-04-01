@@ -45,7 +45,7 @@ class Debug {
       this.setupAll();
       this.mount();
 
-      engine.rendering.scene.add(this.chunkHighlight);
+      // engine.rendering.scene.add(this.chunkHighlight);
 
       // const {
       //   rendering: { scene },
@@ -104,7 +104,10 @@ class Debug {
 
   setupAll = () => {
     // RENDERING
-    const { rendering, camera, world } = this.engine;
+    const { rendering, registry, camera, world } = this.engine;
+    const {
+      options: { chunkSize, dimension },
+    } = world;
 
     const renderingFolder = this.gui.addFolder('rendering');
     renderingFolder
@@ -128,7 +131,10 @@ class Debug {
 
     // WORLD
     const worldFolder = this.gui.addFolder('world');
-    worldFolder.add(world.options, 'renderRadius', 1, 10, 1);
+    worldFolder.add(world.options, 'renderRadius', 1, 10, 1).onFinishChange((value) => {
+      registry.material.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
+      registry.material.uniforms.uFogFar.value = value * chunkSize * dimension;
+    });
     this.registerDisplay('chunk', world, 'camChunkPosStr');
 
     // CAMERA

@@ -160,6 +160,10 @@ class Chunk {
     }
   }
 
+  dispose() {
+    this.geometry.dispose();
+  }
+
   async initialized() {
     this.isInitialized = true;
     this.isPending = false;

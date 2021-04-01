@@ -29,10 +29,13 @@ function getOctavePerlin3(x, y, z) {
   return (total / maxVal) * AMPLIFIER + HEIGHT_OFFSET;
 }
 
-function getVoxelAt(vx, vy, vz) {
+function getVoxelAt(vx, vy, vz, maxHeight) {
   let blockID = 0;
 
-  const perlinValue = noise.perlin3(vx * SCALE, vy * SCALE, vz * SCALE);
+  if (vy === 0) return 4;
+  if (vy === maxHeight - 1) return 0;
+
+  const perlinValue = getOctavePerlin3(vx, vy, vz) - vy * SCALE;
 
   if (test < 10) {
     // console.log(perlinValue);
@@ -40,7 +43,7 @@ function getVoxelAt(vx, vy, vz) {
   }
 
   if (perlinValue > -0.2) {
-    blockID = Math.random() > 0.5 ? 3 : 2;
+    blockID = vy % 3 === 2 ? 2 : vy % 2 === 1 ? 1 : 3;
   }
 
   // const test = noise.perlin3(vx * SCALE, vy * SCALE, vz * SCALE) * 10;
@@ -64,7 +67,7 @@ function getVoxelAt(vx, vy, vz) {
 self.onmessage = function (e) {
   const {
     data: dataBuffer,
-    configs: { min, max, stride },
+    configs: { min, max, stride, maxHeight },
   } = e.data;
 
   const data = new Uint8Array(dataBuffer);
@@ -75,7 +78,7 @@ self.onmessage = function (e) {
   for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {
     for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {
       for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {
-        const voxel = getVoxelAt(vx, vy, vz);
+        const voxel = getVoxelAt(vx, vy, vz, maxHeight);
         set(data, lx, ly, lz, stride, voxel);
       }
     }

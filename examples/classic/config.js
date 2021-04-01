@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 // terrain generation
-const SCALE = 0.01;
-const OCTAVES = 5;
-const PERSISTANCE = 1;
-const LACUNARITY = 1.5;
-const HEIGHT_OFFSET = 2.3;
-const AMPLIFIER = 0.2;
+const SCALE = 0.008;
+const OCTAVES = 8;
+const PERSISTANCE = 1.6;
+const LACUNARITY = 1.2;
+const HEIGHT_OFFSET = 0.5;
+const AMPLIFIER = 3;
