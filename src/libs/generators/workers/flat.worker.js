@@ -19,7 +19,7 @@ self.onmessage = function (e) {
     configs: { min, max, stride, types },
   } = e.data;
 
-  const data = new Int8Array(dataBuffer);
+  const data = new Uint8Array(dataBuffer);
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;

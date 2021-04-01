@@ -1,13 +1,11 @@
 // Engine options object, and engine instantiation:
 const { Engine } = MineJS;
 
-const engine = new Engine({
-  renderRadius: 5,
-});
+const engine = new Engine();
 
 engine.on('data-needed', async (chunk) => {
   await generateData(chunk);
-  chunk.initialized();
+  await chunk.initialized();
 });
 
 // make a terrain worker
@@ -44,7 +42,7 @@ async function generateData(chunk) {
 
     worker.onmessage = ({ data }) => {
       const { voxels } = data;
-      resolve(new Int8Array(voxels));
+      resolve(new Uint8Array(voxels));
     };
   });
 

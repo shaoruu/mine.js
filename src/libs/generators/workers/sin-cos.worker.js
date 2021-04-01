@@ -10,8 +10,8 @@ function getVoxelAt(vx, vy, vz, types, maxHeight) {
   if (vy === 0) return types.stone;
   if (vy < 0) return 0;
 
-  const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20) + 10;
-  const height2 = -(5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20)) + 10;
+  const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20) + 30;
+  const height2 = 0;
   if (vy < height1 && vy > height2) {
     blockID = Math.random() > 0.5 ? types.grass : types.stone;
   }
@@ -25,7 +25,7 @@ self.onmessage = function (e) {
     configs: { min, max, stride, types, maxHeight },
   } = e.data;
 
-  const data = new Int8Array(dataBuffer);
+  const data = new Uint8Array(dataBuffer);
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;

@@ -112,6 +112,14 @@ class Camera {
 
       engine.rendering.scene.add(this.lookBlockMesh);
     });
+
+    engine.on('world-ready', () => {
+      const maxHeight = engine.world.getMaxHeightByVoxel(this.options.initPos);
+      const [ix, iy, iz] = this.options.initPos;
+      if (iy < maxHeight) {
+        this.teleport([ix, maxHeight, iz]);
+      }
+    });
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {
@@ -223,6 +231,19 @@ class Camera {
 
     this.updateLookBlock();
   };
+
+  teleport(voxel: Coords3) {
+    const {
+      config: {
+        worldOptions: { dimension },
+      },
+    } = this.engine;
+    const [vx, vy, vz] = voxel;
+    const newPosition = [vx * dimension, (vy + 2) * dimension, vz * dimension];
+
+    this.camEntity.body.setPosition(newPosition);
+    return newPosition;
+  }
 
   get voxel(): Coords3 {
     return Helper.mapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);

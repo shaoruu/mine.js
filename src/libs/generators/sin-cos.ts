@@ -26,7 +26,7 @@ class SinCosGenerator extends Generator {
     const { voxels, minOuter, maxOuter, maxHeight } = chunk;
     const { stride } = voxels;
 
-    const voxelsBuffer = (voxels.data as Int8Array).buffer.slice(0);
+    const voxelsBuffer = (voxels.data as Uint8Array).buffer.slice(0);
     const worker = workers.pop() || Helper.loadWorker(workerSrc);
 
     const newVoxels = await new Promise((resolve) => {
@@ -51,7 +51,7 @@ class SinCosGenerator extends Generator {
       worker.onmessage = ({ data }) => {
         const { voxels, isEmpty } = data;
         chunk.isEmpty = isEmpty;
-        resolve(new Int8Array(voxels));
+        resolve(new Uint8Array(voxels));
       };
     });
 

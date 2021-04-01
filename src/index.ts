@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events';
 
+import merge from 'deepmerge';
+
 import {
   Camera,
   CameraOptionsType,
@@ -35,13 +37,13 @@ const defaultConfig: ConfigType = {
   debug: true,
   containerOptions: {
     canvas: undefined,
-    domElement: document.body,
+    domElement: undefined,
   },
   cameraOptions: {
     fov: 75,
     near: 0.1,
     far: 8000,
-    initPos: [-19, 2, 18],
+    initPos: [10, 10, 10],
     minPolarAngle: 0,
     maxPolarAngle: Math.PI,
     acceleration: 1,
@@ -55,9 +57,9 @@ const defaultConfig: ConfigType = {
   },
   worldOptions: {
     maxHeight: 256,
-    generator: 'sin-cos',
-    renderRadius: 8,
-    chunkSize: 12,
+    generator: '',
+    renderRadius: 12,
+    chunkSize: 16,
     chunkPadding: 2,
     dimension: 1,
     // radius of rendering centered by camera
@@ -113,10 +115,7 @@ class Engine extends EventEmitter {
       registryOptions,
       renderingOptions,
       worldOptions,
-    } = (this.config = {
-      ...defaultConfig,
-      ...params,
-    });
+    } = (this.config = merge(defaultConfig, params));
 
     // debug
     if (debug) {

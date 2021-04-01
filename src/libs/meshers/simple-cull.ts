@@ -24,7 +24,7 @@ async function simpleCull(chunk: Chunk): Promise<MeshResultType> {
   } = chunk;
   const { stride } = voxels;
 
-  const voxelsBuffer = (voxels.data as Int8Array).buffer.slice(0);
+  const voxelsBuffer = (voxels.data as Uint8Array).buffer.slice(0);
   const worker = workers.pop() || Helper.loadWorker(workerSrc);
 
   const result = await new Promise<MeshResultType>((resolve) => {

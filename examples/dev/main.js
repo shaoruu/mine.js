@@ -24,7 +24,9 @@ function sharedOnLoad() {
 
   if (loaded === Object.keys(images).length) {
     const engine = new Engine({
-      generator: 'sin-cos',
+      worldOptions: {
+        generator: 'sin-cos',
+      },
     });
 
     engine.registry.addMaterial('grass-top', { image: images['grass-top'] });
@@ -34,8 +36,8 @@ function sharedOnLoad() {
     engine.registry.addMaterial('stone', { image: images['stone'] });
     engine.registry.addMaterial('not-sure', { image: images['not-sure'] });
 
-    engine.registry.addBlock('grass', ['grass-top', 'grass-side', 'grass-bottom']);
-    const stoneID = engine.registry.addBlock('stone', 'stone');
+    // engine.registry.addBlock('grass', ['grass-top', 'grass-side', 'grass-bottom']);
+    // const stoneID = engine.registry.addBlock('stone', 'stone');
     const notSureID = engine.registry.addBlock('not-sure', 'not-sure');
 
     document.addEventListener(

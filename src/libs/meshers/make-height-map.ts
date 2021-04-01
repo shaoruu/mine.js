@@ -15,11 +15,11 @@ async function makeHeightMap(chunk: Chunk): Promise<void> {
   const { stride: hmStride } = heightMap;
   const { stride } = voxels;
 
-  const voxelsBuffer = (voxels.data as Int8Array).buffer.slice(0);
-  const heightMapBuffer = (heightMap.data as Int8Array).buffer.slice(0);
+  const voxelsBuffer = (voxels.data as Uint8Array).buffer.slice(0);
+  const heightMapBuffer = (heightMap.data as Uint8Array).buffer.slice(0);
   const worker = workers.pop() || Helper.loadWorker(workerSrc);
 
-  const newHeightMapData = await new Promise<Int8Array>((resolve) => {
+  const newHeightMapData = await new Promise<Uint8Array>((resolve) => {
     worker.postMessage(
       {
         data: voxelsBuffer,
@@ -36,11 +36,11 @@ async function makeHeightMap(chunk: Chunk): Promise<void> {
     );
 
     worker.onmessage = ({ data: newHeightMapBuffer }) => {
-      resolve(new Int8Array(newHeightMapBuffer));
+      resolve(new Uint8Array(newHeightMapBuffer));
     };
   });
 
-  heightMap.data = newHeightMapData;
+  chunk.heightMap.data = newHeightMapData;
 
   if (workers.length < DEFAULT_WORKER_COUNT) {
     workers.push(worker);

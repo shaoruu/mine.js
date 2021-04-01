@@ -4,7 +4,7 @@ import { Engine } from '..';
 import { Helper } from '../utils';
 
 type ContainerOptionsType = {
-  domElement: HTMLElement;
+  domElement?: HTMLElement;
   canvas?: HTMLCanvasElement;
 };
 

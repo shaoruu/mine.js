@@ -127,6 +127,11 @@ class World extends EventEmitter {
     return this.getVoxelByVoxel(vCoords);
   }
 
+  getMaxHeightByVoxel(vCoords: Coords3) {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk ? chunk.getMaxHeightLocal(vCoords[0], vCoords[2]) : 0;
+  }
+
   getSolidityByVoxel(vCoords: Coords3) {
     return !!this.getVoxelByVoxel(vCoords);
   }
@@ -229,7 +234,7 @@ class World extends EventEmitter {
       }
     }
 
-    if (chunksLoaded === this.chunks.data.length) {
+    if (!this.isReady && chunksLoaded === this.chunks.data.length) {
       this.isReady = true;
       this.engine.emit('world-ready');
     }
@@ -294,6 +299,7 @@ class World extends EventEmitter {
       chunk.isEmpty = false;
       chunk.isPending = true;
       this.engine.emit('data-needed', chunk);
+
       return;
     }
 

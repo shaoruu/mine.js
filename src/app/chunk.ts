@@ -56,12 +56,12 @@ class Chunk {
     this.width = size + padding * 2;
     this.name = Helper.getChunkName(this.coords);
 
-    this.voxels = ndarray(new Int8Array(this.width * this.maxHeight * this.width), [
+    this.voxels = ndarray(new Uint8Array(this.width * this.maxHeight * this.width), [
       this.width,
       this.maxHeight,
       this.width,
     ]);
-    this.heightMap = ndarray(new Int8Array(this.width * this.width), [this.width, this.width]);
+    this.heightMap = ndarray(new Uint8Array(this.width * this.width), [this.width, this.width]);
 
     this.geometry = new BufferGeometry();
 
@@ -99,6 +99,15 @@ class Chunk {
   // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
   setLocal(lx: number, ly: number, lz: number, id: number) {
     return this.voxels.set(lx + this.padding, ly, lz + this.padding, id);
+  }
+
+  getMaxHeightLocal(lx: number, lz: number) {
+    return this.heightMap.get(lx, lz);
+  }
+
+  getMaxHeight(vx: number, vz: number) {
+    const [lx, , lz] = this.toLocal(vx, 0, vz);
+    return this.getMaxHeightLocal(lx, lz);
   }
 
   getVoxel(vx: number, vy: number, vz: number) {
@@ -153,6 +162,7 @@ class Chunk {
 
   async initialized() {
     this.isInitialized = true;
+    this.isPending = false;
 
     // build mesh once initialized
     await makeHeightMap(this);
@@ -191,7 +201,6 @@ class Chunk {
 
     // mark chunk as built mesh
     this.isMeshing = false;
-    this.isPending = false;
   }
 
   private toLocal = (vx: number, vy: number, vz: number) => {

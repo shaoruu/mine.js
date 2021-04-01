@@ -1,6 +1,8 @@
 importScripts('config.js');
 importScripts('perlin.js');
 
+let test = 0;
+
 const { noise } = NOISE;
 noise.seed(123123);
 
@@ -30,11 +32,23 @@ function getOctavePerlin3(x, y, z) {
 function getVoxelAt(vx, vy, vz) {
   let blockID = 0;
 
-  const perlinValue = getOctavePerlin3((vx * SCALE) / 100, (vy * SCALE) / 100, (vz * SCALE) / 1000) - (vy * 4) / SCALE;
+  const perlinValue = noise.perlin3(vx * SCALE, vy * SCALE, vz * SCALE);
+
+  if (test < 10) {
+    // console.log(perlinValue);
+    test++;
+  }
 
   if (perlinValue > -0.2) {
-    blockID = 2;
+    blockID = Math.random() > 0.5 ? 3 : 2;
   }
+
+  // const test = noise.perlin3(vx * SCALE, vy * SCALE, vz * SCALE) * 10;
+  // const value = (test + 0.5) * 2 + 100;
+
+  // if (vy < value) {
+  //   blockID = 2;
+  // }
 
   // if (vy < -3) blockID = 3;
   // else {
@@ -53,7 +67,7 @@ self.onmessage = function (e) {
     configs: { min, max, stride },
   } = e.data;
 
-  const data = new Int8Array(dataBuffer);
+  const data = new Uint8Array(dataBuffer);
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;

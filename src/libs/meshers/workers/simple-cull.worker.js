@@ -212,7 +212,7 @@ onmessage = function (e) {
     configs: { dimension, padding, min, max, stride, blockMats, matUVs },
   } = e.data;
 
-  const data = new Int8Array(dataBuffer);
+  const data = new Uint8Array(dataBuffer);
 
   const positions = [];
   const normals = [];
