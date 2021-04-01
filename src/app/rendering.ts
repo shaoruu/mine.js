@@ -10,7 +10,6 @@ import { Sky } from '../libs';
 type RenderingOptionsType = {
   fogColor: string;
   clearColor: string;
-  directionalLightColor: string;
 };
 
 class Rendering extends EventEmitter {

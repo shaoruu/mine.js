@@ -64,7 +64,6 @@ const defaultConfig: ConfigType = {
     // maximum amount of chunks to process per frame tick
     maxChunkPerFrame: 2,
     maxBlockPerFrame: 500,
-    maxLightLevel: 16,
   },
   entitiesOptions: {
     movementLerp: true,
@@ -84,7 +83,6 @@ const defaultConfig: ConfigType = {
   renderingOptions: {
     fogColor: '#ffffff',
     clearColor: '#b6d2ff',
-    directionalLightColor: '#ffffff',
   },
 };
 

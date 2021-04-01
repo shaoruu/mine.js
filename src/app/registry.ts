@@ -17,8 +17,6 @@ type MaterialOptionsType = {
 };
 
 type BlockOptionsType = {
-  lightLevel: number;
-
   // states
   isFluid: boolean;
   isEmpty: boolean;
@@ -31,7 +29,6 @@ type BlockType = {
 };
 
 const defaultBlockOptions: BlockOptionsType = {
-  lightLevel: 0,
   isFluid: false,
   isEmpty: false,
 };
@@ -130,9 +127,6 @@ class Registry {
       ...options,
     };
 
-    // options filtering
-    fullOptions.lightLevel = Math.min(fullOptions.lightLevel, this.engine.config.worldOptions.maxLightLevel);
-
     if (this.blocks.getIndex(name) >= 0) {
       console.warn('Block,', name, 'has been replaced.');
     }
@@ -201,14 +195,6 @@ class Registry {
 
   getBlock = (name: string) => {
     return this.blocks.get(name);
-  };
-
-  getLightByIndex = (index: number) => {
-    return this.getBlockByIndex(index).options.lightLevel;
-  };
-
-  getLight = (name: string) => {
-    return this.getBlock(name)?.options.lightLevel;
   };
 
   get mergedTexture() {

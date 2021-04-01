@@ -44,17 +44,10 @@ export type EntityType = {
 
 export type GeneratorType = 'flat' | 'sin-cos' | '';
 
-export type LightNode = {
-  level: number;
-  voxel: Coords3;
-};
-
 export type MeshResultType = {
   positions: Float32Array;
   normals: Float32Array;
   indices: Float32Array;
   uvs: Float32Array;
   aos: Float32Array;
-  torchLights: Float32Array;
-  sunlights: Float32Array;
 };

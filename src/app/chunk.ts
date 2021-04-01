@@ -19,7 +19,6 @@ class Chunk {
   public engine: Engine;
   public coords: Coords2;
   public voxels: ndarray;
-  public lights: ndarray;
   public heightMap: ndarray;
 
   public name: string;
@@ -45,7 +44,6 @@ class Chunk {
   public isMeshing = false; // is meshing
   public isInitialized = false; // is populated with terrain info
   public isPending = false; // pending for client-side terrain generation
-  public sunlightApplied = false;
 
   constructor(engine: Engine, coords: Coords2, { size, dimension, padding, maxHeight }: ChunkOptions) {
     this.engine = engine;
@@ -59,11 +57,6 @@ class Chunk {
     this.name = Helper.getChunkName(this.coords);
 
     this.voxels = ndarray(new Int8Array(this.width * this.maxHeight * this.width), [
-      this.width,
-      this.maxHeight,
-      this.width,
-    ]);
-    this.lights = ndarray(new Int8Array(this.width * this.maxHeight * this.width), [
       this.width,
       this.maxHeight,
       this.width,
@@ -108,36 +101,6 @@ class Chunk {
     return this.voxels.set(lx + this.padding, ly, lz + this.padding, id);
   }
 
-  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
-  getLocalTorchLight(lx: number, ly: number, lz: number) {
-    return this.lights.get(lx + this.padding, ly, lz + this.padding) & 0xf;
-  }
-
-  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
-  setLocalTorchLight(lx: number, ly: number, lz: number, level: number) {
-    return this.lights.set(
-      lx + this.padding,
-      ly,
-      lz + this.padding,
-      (this.getLocalTorchLight(lx, ly, lz) & 0xf0) | level,
-    );
-  }
-
-  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
-  getLocalSunlight(lx: number, ly: number, lz: number) {
-    return (this.lights.get(lx + this.padding, ly, lz + this.padding) >> 4) & 0xf;
-  }
-
-  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
-  setLocalSunlight(lx: number, ly: number, lz: number, level: number) {
-    return this.lights.set(
-      lx + this.padding,
-      ly,
-      lz + this.padding,
-      (this.getLocalSunlight(lx, ly, lz) & 0xf) | (level << 4),
-    );
-  }
-
   getVoxel(vx: number, vy: number, vz: number) {
     if (!this.contains(vx, vy, vz)) return;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
@@ -146,7 +109,7 @@ class Chunk {
 
   setVoxel(vx: number, vy: number, vz: number, id: number) {
     if (!this.contains(vx, vy, vz)) return;
-    // if voxel type doesn't change (might conflict with lighting)
+    // if voxel type doesn't change
     if (this.getVoxel(vx, vy, vz) === id) return;
 
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
@@ -155,31 +118,6 @@ class Chunk {
     // change chunk state
     if (id !== 0) this.isEmpty = false;
     // mark chunk as dirty
-    this.isDirty = true;
-  }
-
-  getTorchLight(vx: number, vy: number, vz: number) {
-    // if (!this.contains(vx, vy, vz)) return 0; // ?
-    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-    return this.getLocalTorchLight(lx, ly, lz);
-  }
-
-  setTorchLight(vx: number, vy: number, vz: number, level: number) {
-    if (!this.contains(vx, vy, vz)) return;
-    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-    this.setLocalTorchLight(lx, ly, lz, level);
-    this.isDirty = true; // mesh rebuilt needed if light changes
-  }
-
-  getSunlight(vx: number, vy: number, vz: number) {
-    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-    return this.getLocalSunlight(lx, ly, lz);
-  }
-
-  setSunlight(vx: number, vy: number, vz: number, level: number) {
-    if (!this.contains(vx, vy, vz)) return;
-    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-    this.setLocalSunlight(lx, ly, lz, level);
     this.isDirty = true;
   }
 
@@ -218,7 +156,6 @@ class Chunk {
 
     // build mesh once initialized
     await makeHeightMap(this);
-    // await this.engine.world.applySunlight(this);
     await this.buildMesh();
   }
 
@@ -233,22 +170,18 @@ class Chunk {
     this.isDirty = false;
     this.isMeshing = true;
 
-    const { positions, normals, indices, uvs, aos, sunlights, torchLights } = await simpleCull(this);
+    const { positions, normals, indices, uvs, aos } = await simpleCull(this);
 
     const positionNumComponents = 3;
     const normalNumComponents = 3;
     const uvNumComponents = 2;
     const occlusionNumComponents = 1;
-    const sunlightsNumComponents = 1;
-    const torchLightsNumComponents = 1;
 
     this.geometry.dispose();
     this.geometry.setAttribute('position', new BufferAttribute(positions, positionNumComponents));
     this.geometry.setAttribute('normal', new BufferAttribute(normals, normalNumComponents));
     this.geometry.setAttribute('uv', new BufferAttribute(uvs, uvNumComponents));
     this.geometry.setAttribute('ao', new BufferAttribute(aos, occlusionNumComponents));
-    this.geometry.setAttribute('sunlight', new BufferAttribute(sunlights, sunlightsNumComponents));
-    this.geometry.setAttribute('torchLight', new BufferAttribute(torchLights, torchLightsNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
     this.altMesh = new Mesh(this.geometry, this.engine.registry.material);

@@ -1,17 +1,7 @@
 import { EventEmitter } from 'events';
 
 import { Engine } from '..';
-import {
-  Coords3,
-  GeneratorType,
-  SmartDictionary,
-  FlatGenerator,
-  Generator,
-  SinCosGenerator,
-  LightNode,
-  fillLights,
-  Coords2,
-} from '../libs';
+import { Coords3, GeneratorType, SmartDictionary, FlatGenerator, Generator, SinCosGenerator, Coords2 } from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
@@ -25,7 +15,6 @@ type WorldOptionsType = {
   renderRadius: number;
   maxChunkPerFrame: number;
   maxBlockPerFrame: number;
-  maxLightLevel: number;
 };
 
 type VoxelChangeType = {
@@ -75,9 +64,6 @@ class World extends EventEmitter {
 
     const toBeChanged = this.batchedChanges.splice(0, this.options.maxBlockPerFrame);
 
-    const lightPlacement: LightNode[] = [];
-    const lightRemoval: LightNode[] = [];
-
     toBeChanged.forEach(({ voxel, type }) => {
       if (this.getVoxelByVoxel(voxel) === type) return;
 
@@ -85,23 +71,7 @@ class World extends EventEmitter {
       chunk?.setVoxel(...voxel, type);
       const neighborChunks = this.getNeighborChunksByVoxel(voxel);
       neighborChunks.forEach((c) => c?.setVoxel(...voxel, type));
-
-      const lightLevel = this.engine.registry.getLightByIndex(type);
-
-      // lighting
-      if (lightLevel > 0) {
-        lightPlacement.push({ voxel, level: lightLevel });
-      } else {
-        const blockLight = this.getTorchLight(voxel);
-        // if (blockLight > 0) {
-        lightRemoval.push({ voxel, level: blockLight });
-        // }
-      }
     });
-
-    this.removeTorchLights(lightRemoval);
-    // offload this kind of propagation to another thread
-    fillLights(lightPlacement, this);
   }
 
   getChunkByCPos(cCoords: Coords2) {
@@ -196,159 +166,6 @@ class World extends EventEmitter {
   placeVoxel(type: number) {
     if (this.engine.camera.targetBlock) {
       this.setVoxel(this.engine.camera.targetBlock, type);
-    }
-  }
-
-  getTorchLight(vCoords: Coords3) {
-    const chunk = this.getChunkByVoxel(vCoords);
-    return chunk?.getTorchLight(...vCoords) || 0;
-  }
-
-  setTorchLight(vCoords: Coords3, level: number) {
-    const chunk = this.getChunkByVoxel(vCoords);
-    chunk?.setTorchLight(...vCoords, level);
-    const neighborChunks = this.getNeighborChunksByVoxel(vCoords);
-    neighborChunks.forEach((c) => c?.setTorchLight(...vCoords, level));
-  }
-
-  getSunlight(vCoords: Coords3) {
-    const chunk = this.getChunkByVoxel(vCoords);
-    return chunk?.getSunlight(...vCoords) || 0;
-  }
-
-  setSunlight(vCoords: Coords3, level: number) {
-    const chunk = this.getChunkByVoxel(vCoords);
-    chunk?.setSunlight(...vCoords, level);
-    const neighborChunks = this.getNeighborChunksByVoxel(vCoords);
-    neighborChunks.forEach((c) => c?.setSunlight(...vCoords, level));
-  }
-
-  async applySunlight(chunk: Chunk) {
-    const { minInner, maxInner } = chunk;
-    const [endX, endY, endZ] = maxInner;
-    const sunlightNodes: LightNode[] = [];
-
-    for (let vx = minInner[0]; vx < endX; vx++) {
-      for (let vz = minInner[2]; vz < endZ; vz++) {
-        const topVoxel: Coords3 = [vx, endY - 1, vz];
-        if (this.getVoxelByVoxel(topVoxel) === 0) {
-          sunlightNodes.push({
-            level: 16,
-            voxel: topVoxel,
-          });
-        }
-      }
-    }
-  }
-
-  // resource: https://www.seedofandromeda.com/blogs/29-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-1
-  removeTorchLights(lightRemovalBfsQueue: LightNode[]) {
-    if (lightRemovalBfsQueue.length === 0) return;
-    // flood-fill lighting removal
-
-    // from high to low
-    lightRemovalBfsQueue.sort((a, b) => b.level - a.level);
-    lightRemovalBfsQueue.forEach(({ voxel }) => this.setTorchLight(voxel, 0));
-
-    const temp = new Set<string>();
-    lightRemovalBfsQueue.forEach(({ voxel }) => temp.add(`${voxel[0]}|${voxel[1]}|${voxel[2]}`));
-
-    const lightBfsQueue: LightNode[] = [];
-
-    while (lightRemovalBfsQueue.length !== 0) {
-      const lightNode = lightRemovalBfsQueue.shift();
-      if (lightNode) {
-        const { level, voxel } = lightNode;
-        const [vx, vy, vz] = voxel;
-
-        const directions = [
-          [1, 0, 0],
-          [-1, 0, 0],
-          [0, 1, 0],
-          [0, -1, 0],
-          [0, 0, 1],
-          [0, 0, -1],
-        ];
-
-        directions.forEach(([dirX, dirY, dirZ]) => {
-          const newVX = vx + dirX;
-          const newVY = vy + dirY;
-          const newVZ = vz + dirZ;
-
-          if (temp.has(`${newVX}|${newVY}|${newVZ}`)) return;
-
-          const neighborLevel = this.getTorchLight([newVX, newVY, newVZ]);
-          if (neighborLevel !== 0 && neighborLevel < level) {
-            this.setTorchLight([newVX, newVY, newVZ], 0);
-            lightRemovalBfsQueue.push({
-              level: neighborLevel,
-              voxel: [newVX, newVY, newVZ],
-            });
-          } else if (neighborLevel >= level) {
-            lightBfsQueue.push({
-              level: neighborLevel,
-              voxel: [newVX, newVY, newVZ],
-            });
-          }
-        });
-      }
-    }
-
-    this.propagateLightQueue(lightBfsQueue);
-  }
-
-  propagateLightQueue(lightQueue: LightNode[], isSunlight = false) {
-    // propagate light on the main thread
-    while (lightQueue.length !== 0) {
-      const lightNode = lightQueue.shift();
-
-      if (lightNode) {
-        const { level, voxel } = lightNode;
-        const [vx, vy, vz] = voxel;
-
-        if (isSunlight) this.setSunlight(voxel, level);
-        else this.setTorchLight(voxel, level);
-
-        // 6 directions, representing the 6 faces of a block
-        const directions = [
-          [1, 0, 0],
-          [-1, 0, 0],
-          [0, 1, 0],
-          [0, -1, 0],
-          [0, 0, 1],
-          [0, 0, -1],
-        ];
-
-        const sunlightDirections = [
-          [1, 0, 0, -1],
-          [-1, 0, 0, -1],
-          [0, -1, 0, 0],
-          [0, 0, 1, -1],
-          [0, 0, -1, -1],
-        ];
-
-        (isSunlight ? sunlightDirections : directions).forEach(([dirX, dirY, dirZ, delta]) => {
-          // neighboring voxel coordinates
-          const newVX = vx + dirX;
-          const newVY = vy + dirY;
-          const newVZ = vz + dirZ;
-
-          delta = isSunlight ? delta : -1;
-
-          if (
-            this.getVoxelByVoxel([newVX, newVY, newVZ]) === 0 &&
-            (isSunlight ? this.getSunlight([newVX, newVY, newVZ]) : this.getTorchLight([newVX, newVY, newVZ])) + 2 <=
-              level
-          ) {
-            if (isSunlight) this.setSunlight([newVX, newVY, newVZ], level + delta);
-            else this.setTorchLight([newVX, newVY, newVZ], level + delta);
-            lightQueue.push({
-              level: level + delta,
-              voxel: [newVX, newVY, newVZ],
-            });
-          }
-        });
-      }
     }
   }
 

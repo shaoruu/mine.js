@@ -36,9 +36,7 @@ function sharedOnLoad() {
 
     engine.registry.addBlock('grass', ['grass-top', 'grass-side', 'grass-bottom']);
     const stoneID = engine.registry.addBlock('stone', 'stone');
-    const notSureID = engine.registry.addBlock('not-sure', 'not-sure', {
-      lightLevel: 15,
-    });
+    const notSureID = engine.registry.addBlock('not-sure', 'not-sure');
 
     document.addEventListener(
       'mousedown',
