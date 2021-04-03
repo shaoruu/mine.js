@@ -43,6 +43,10 @@ class SmartDictionary<T> {
 
   delete(name: string) {
     // TODO: figure out a way to remove data too
+    const index = this.indices.get(name);
+    if (index) {
+      delete this.data[index];
+    }
     return this.indices.delete(name);
   }
 
