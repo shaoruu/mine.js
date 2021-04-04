@@ -58,7 +58,7 @@ const defaultConfig: ConfigType = {
   worldOptions: {
     maxHeight: 256,
     generator: '',
-    renderRadius: 5,
+    renderRadius: 8,
     chunkSize: 12,
     chunkPadding: 2,
     dimension: 1,

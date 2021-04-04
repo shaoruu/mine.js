@@ -271,8 +271,6 @@ class World extends EventEmitter {
     for (const chunk of this.visibleChunks) {
       if (chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
         chunk.removeFromScene();
-        chunk.dispose();
-        this.chunks.delete(chunk.name);
       }
     }
   }
