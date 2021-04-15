@@ -1,6 +1,5 @@
-import express from 'express';
 import cors from 'cors';
-import gulp from 'gulp';
+import express from 'express';
 
 require('../gulpfile');
 
@@ -15,10 +14,4 @@ if (isProduction) {
   app.use(express.static('public'));
 }
 
-let isHosted = false;
-app.listen(port, () => {
-  if (!isProduction && !isHosted) {
-    gulp.task('dev')();
-    isHosted = true;
-  }
-});
+app.listen(port, () => {});

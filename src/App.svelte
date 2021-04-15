@@ -1,31 +1,27 @@
 <script lang="ts">
-  import { WebGLRenderer } from 'three';
-  export let name: string;
+  console.log('hi2');
 </script>
 
 <main>
-  <h1>Hello {name}!</h1>
-  <p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+  <canvas id="mine-container" />
 </main>
+
+<svelte:head>
+  <title>MineJS - Game</title>
+</svelte:head>
 
 <style>
   main {
-    text-align: center;
-    padding: 1em;
-    max-width: 240px;
-    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  h1 {
-    color: #b65151;
-    text-transform: uppercase;
-    font-size: 4em;
-    font-weight: 100;
-  }
-
-  @media (min-width: 640px) {
-    main {
-      max-width: none;
-    }
+  #mine-container {
+    background: black;
+    width: 100%;
+    height: 100%;
   }
 </style>

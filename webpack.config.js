@@ -56,6 +56,10 @@ module.exports = {
           fullySpecified: false,
         },
       },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset/resource',
+      },
     ],
   },
   mode,

@@ -1,6 +1,5 @@
 .DS_Store
 node_modules
-# public/bundle.*
-public
+public/bundle.*
 package-lock.json
 yarn.lock
