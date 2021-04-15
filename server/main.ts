@@ -1,18 +1,24 @@
 import express from 'express';
-import path from 'path';
-import chalk from 'chalk';
 import cors from 'cors';
+import gulp from 'gulp';
+
+require('../gulpfile');
 
 const app = express();
-const port = process.env.PORT || 4000;
+const port = parseInt(process.env.PORT, 10) || 4000;
+
+const isProduction = 'production' === process.env.NODE_ENV;
 
 app.use(cors());
 
-app.use(express.static('public'));
-app.get('*', (_, res) => {
-  res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
-});
+if (isProduction) {
+  app.use(express.static('public'));
+}
 
+let isHosted = false;
 app.listen(port, () => {
-  console.log(`🚀  Server is up at ${chalk.green(`http://localhost:${port}`)}`);
+  if (!isProduction && !isHosted) {
+    gulp.task('dev')();
+    isHosted = true;
+  }
 });

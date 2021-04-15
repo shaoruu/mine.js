@@ -1,11 +1,8 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "isolatedModules": false,
-    "types": ["node", "svelte"],
-    "typeRoots": ["./node_modules/@types"]
+    "isolatedModules": false
   },
-
-  "include": ["client/**/*", "server/**/*"],
-  "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules/*", "__sapper__/*", "static/*"]
 }
