@@ -1,5 +1,8 @@
 {
-  "watch": ["server"],
   "ext": "ts",
-  "exec": "ts-node ./server/main.ts"
+  "watch": ["server"],
+  "exec": "ts-node ./server/main.ts",
+  "env": {
+    "NODE_ENV": "development"
+  }
 }

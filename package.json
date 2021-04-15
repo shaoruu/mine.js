@@ -45,7 +45,7 @@
     "build": "cross-env NODE_ENV=production webpack",
     "server": "nodemon",
     "client": "webpack",
-    "watch": "yarn gulp dev",
+    "watch": "gulp dev -L",
     "dev": "npm-run-all --parallel server client watch",
     "start": "cross-env NODE_ENV=production nodemon",
     "validate": "svelte-check"
