@@ -1,0 +1,35 @@
+import { PhysicsOptionsType } from '../app';
+import { AABB } from './aabb';
+import { RigidBody } from './rigid-body';
+import { BodyOptionsType } from './types';
+declare type TestFunctionType = (vx: number, vy: number, vz: number) => boolean;
+declare class Physics {
+    private testSolid;
+    private testFluid;
+    options: PhysicsOptionsType;
+    bodies: RigidBody[];
+    private a;
+    private dv;
+    private dx;
+    private impacts;
+    private oldResting;
+    private sleepVec;
+    private fluidVec;
+    private lateralVel;
+    private tmpBox;
+    private tmpResting;
+    private targetPos;
+    private upvec;
+    private leftover;
+    constructor(testSolid: TestFunctionType, testFluid: TestFunctionType, options: PhysicsOptionsType);
+    addBody(options: Partial<BodyOptionsType>): RigidBody;
+    removeBody(b: RigidBody): undefined;
+    tick(dt: number): void;
+    iterateBody(b: RigidBody, dt: number, noGravity: boolean): void;
+    applyFluidForces(body: RigidBody): void;
+    applyFrictionByAxis(axis: number, body: RigidBody, dvel: number[]): void;
+    processCollisions(box: AABB, velocity: number[], resting: number[]): any;
+    tryAutoStepping(b: RigidBody, oldBox: AABB, dx: number[]): void;
+    bodyAsleep(body: RigidBody, dt: number, noGravity: boolean): boolean;
+}
+export { Physics };

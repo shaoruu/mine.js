@@ -4,7 +4,7 @@ import express from 'express';
 require('../gulpfile');
 
 const app = express();
-const port = parseInt(process.env.PORT, 10) || 4000;
+const port = process.env.PORT || 4000;
 
 const isProduction = 'production' === process.env.NODE_ENV;
 
