@@ -1,17 +1,8 @@
-import cors from 'cors';
-import express from 'express';
+import { World } from './core';
 
-require('../gulpfile');
-
-const app = express();
 const port = process.env.PORT || 4000;
-
 const isProduction = 'production' === process.env.NODE_ENV;
 
-app.use(cors());
+const world = new World({ port, isProduction, maxClients: 10, pingInterval: 50000 });
 
-if (isProduction) {
-  app.use(express.static('public'));
-}
-
-app.listen(port, () => {});
+world.listen();

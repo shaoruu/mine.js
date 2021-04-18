@@ -37,9 +37,11 @@ message Message {
     TELEPORT = 8;
     UPDATE = 9;
   }
+
   Type type = 1;
   string json = 2;
   string text = 3;
+
   repeated Chunk chunks = 4;
   Signal signal = 5;
 }
