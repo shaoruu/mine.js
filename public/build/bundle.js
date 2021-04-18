@@ -2961,7 +2961,7 @@ class Helper {
  * @param {string} [concat='|']
  * @returns
  */
-Helper.getChunkName = (coords, concat = '|') => {
+Helper.getChunkName = (coords, concat = '_') => {
     return coords[0] + concat + coords[1];
 };
 /**

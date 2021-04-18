@@ -1,7 +1,8 @@
+import fs from 'fs';
+
 import { protocol } from '../../protocol';
 
-import { Chunk } from './chunk';
-import { ClientType, Network, NetworkOptionsType } from './network';
+import { ClientType, Network, NetworkOptionsType, Chunk } from '.';
 
 type WorldOptionsType = NetworkOptionsType & {
   storage: string;
@@ -17,9 +18,18 @@ class World extends Network {
 
   constructor(public options: WorldOptionsType) {
     super(options);
+
+    this.initStorage();
   }
 
-  setupStorage = () => {};
+  initStorage = () => {
+    // if storage doesn't exist, make directory
+    const { storage } = this.options;
+
+    if (!fs.existsSync(storage)) {
+      fs.mkdirSync(storage);
+    }
+  };
 
   getChunkByCPos = () => {};
 

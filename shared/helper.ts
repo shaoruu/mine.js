@@ -10,7 +10,7 @@ class Helper {
    * @param {string} [concat='|']
    * @returns
    */
-  public static getChunkName = (coords: Coords2, concat = '|') => {
+  public static getChunkName = (coords: Coords2, concat = '_') => {
     return coords[0] + concat + coords[1];
   };
 
