@@ -5,6 +5,6 @@
     "importsNotUsedAsValues": "preserve",
     "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["src/**/*"],
+  "include": ["client/**/*"],
   "exclude": ["node_modules/*", "__sapper__/*", "static/*"]
 }

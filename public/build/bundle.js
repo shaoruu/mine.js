@@ -1,10 +1,10 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./src/core/camera.ts":
-/*!****************************!*\
-  !*** ./src/core/camera.ts ***!
-  \****************************/
+/***/ "./client/core/camera.ts":
+/*!*******************************!*\
+  !*** ./client/core/camera.ts ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -14,11 +14,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! fast-voxel-raycast */ "./node_modules/fast-voxel-raycast/index.js");
 /* harmony import */ var fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three/examples/jsm/controls/PointerLockControls */ "./node_modules/three/examples/jsm/controls/PointerLockControls.js");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! three/examples/jsm/controls/PointerLockControls */ "./node_modules/three/examples/jsm/controls/PointerLockControls.js");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+
 
 
 
@@ -29,7 +31,7 @@ class Camera {
     constructor(engine, options) {
         this.lookBlock = [0, 0, 0];
         this.targetBlock = [0, 0, 0];
-        this.vec = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+        this.vec = new three__WEBPACK_IMPORTED_MODULE_5__.Vector3();
         this.movements = {
             up: false,
             down: false,
@@ -132,14 +134,14 @@ class Camera {
         this.engine = engine;
         const { fov, near, far, initPos, lookBlockScale, distToGround, distToTop, cameraWidth } = (this.options = options);
         // three.js camera
-        this.threeCamera = new three__WEBPACK_IMPORTED_MODULE_4__.PerspectiveCamera(fov, this.engine.rendering.aspectRatio, near, far);
+        this.threeCamera = new three__WEBPACK_IMPORTED_MODULE_5__.PerspectiveCamera(fov, this.engine.rendering.aspectRatio, near, far);
         // three.js pointerlock controls
-        this.controls = new three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_5__.PointerLockControls(this.threeCamera, this.engine.container.canvas);
+        this.controls = new three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_6__.PointerLockControls(this.threeCamera, this.engine.container.canvas);
         this.engine.rendering.scene.add(this.controls.getObject());
         this.engine.container.canvas.onclick = () => this.controls.lock();
         // initialize camera position
         this.controls.getObject().position.set(...initPos);
-        this.threeCamera.lookAt(new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(0, 0, 0));
+        this.threeCamera.lookAt(new three__WEBPACK_IMPORTED_MODULE_5__.Vector3(0, 0, 0));
         // listen to resize, and adjust accordingly
         // ? should move to it's own logic for all event listeners?
         window.addEventListener('resize', () => {
@@ -157,15 +159,15 @@ class Camera {
             const cameraWorldWidth = cameraWidth * dimension;
             const cameraWorldHeight = (distToGround + distToTop) * dimension;
             // set up camera's mesh
-            this.camGeometry = new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(cameraWorldWidth, cameraWorldHeight, cameraWorldWidth);
-            this.camMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(this.camGeometry);
+            this.camGeometry = new three__WEBPACK_IMPORTED_MODULE_5__.BoxBufferGeometry(cameraWorldWidth, cameraWorldHeight, cameraWorldWidth);
+            this.camMesh = new three__WEBPACK_IMPORTED_MODULE_5__.Mesh(this.camGeometry);
             this.threeCamera.add(this.camMesh);
             this.camMesh.position.y -= distToGround * dimension;
             engine.rendering.scene.add(this.camMesh);
             // register camera as entity
             this.camEntity = engine.entities.addEntity('camera', this.threeCamera, [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth], [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0]);
             // set up look block mesh
-            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
+            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_5__.Mesh(new three__WEBPACK_IMPORTED_MODULE_5__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_5__.MeshBasicMaterial({
                 color: 'white',
                 alphaTest: 0.2,
                 opacity: 0.3,
@@ -190,7 +192,7 @@ class Camera {
         return newPosition;
     }
     get voxel() {
-        return _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);
+        return _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);
     }
     get position() {
         const { x, y, z } = this.threeCamera.position;
@@ -208,7 +210,7 @@ class Camera {
         const { world } = this.engine;
         const { dimension } = world.options;
         const { reachDistance, lookBlockLerp } = this.options;
-        const camDir = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+        const camDir = new three__WEBPACK_IMPORTED_MODULE_5__.Vector3();
         const camPos = this.threeCamera.position;
         this.threeCamera.getWorldDirection(camDir);
         camDir.normalize();
@@ -225,13 +227,13 @@ class Camera {
         this.lookBlockMesh.visible = true;
         const flooredPoint = point.map((n, i) => Math.floor(parseFloat(n.toFixed(3))) - Number(normal[i] > 0));
         const [nx, ny, nz] = normal;
-        const newLookBlock = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos(flooredPoint, world.options.dimension);
+        const newLookBlock = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(flooredPoint, world.options.dimension);
         if (!world.getVoxelByVoxel(newLookBlock)) {
             // this means the look block isn't actually a block
             return;
         }
         const [lbx, lby, lbz] = newLookBlock;
-        this.lookBlockMesh.position.lerp(new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(lbx * dimension + 0.5 * dimension, lby * dimension + 0.5 * dimension, lbz * dimension + 0.5 * dimension), lookBlockLerp);
+        this.lookBlockMesh.position.lerp(new three__WEBPACK_IMPORTED_MODULE_5__.Vector3(lbx * dimension + 0.5 * dimension, lby * dimension + 0.5 * dimension, lbz * dimension + 0.5 * dimension), lookBlockLerp);
         this.lookBlock = newLookBlock;
         // target block is look block summed with the normal
         this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
@@ -242,10 +244,10 @@ class Camera {
 
 /***/ }),
 
-/***/ "./src/core/chunk.ts":
-/*!***************************!*\
-  !*** ./src/core/chunk.ts ***!
-  \***************************/
+/***/ "./client/core/chunk.ts":
+/*!******************************!*\
+  !*** ./client/core/chunk.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -258,11 +260,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ndarray */ "./node_modules/ndarray/ndarray.js");
 /* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(ndarray__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
-/* harmony import */ var _libs_meshers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../libs/meshers */ "./src/libs/meshers/index.ts");
-/* harmony import */ var _libs_meshers_make_height_map__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../libs/meshers/make-height-map */ "./src/libs/meshers/make-height-map.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _libs_meshers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../libs/meshers */ "./client/libs/meshers/index.ts");
+/* harmony import */ var _libs_meshers_make_height_map__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../libs/meshers/make-height-map */ "./client/libs/meshers/make-height-map.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
@@ -422,10 +424,10 @@ class Chunk {
 
 /***/ }),
 
-/***/ "./src/core/container.ts":
-/*!*******************************!*\
-  !*** ./src/core/container.ts ***!
-  \*******************************/
+/***/ "./client/core/container.ts":
+/*!**********************************!*\
+  !*** ./client/core/container.ts ***!
+  \**********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -435,8 +437,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! events */ "./node_modules/events/events.js");
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
@@ -473,10 +475,10 @@ class Container extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
 
 /***/ }),
 
-/***/ "./src/core/debug.ts":
-/*!***************************!*\
-  !*** ./src/core/debug.ts ***!
-  \***************************/
+/***/ "./client/core/debug.ts":
+/*!******************************!*\
+  !*** ./client/core/debug.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -488,8 +490,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var stats_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! stats.js */ "./node_modules/stats.js/build/stats.min.js");
 /* harmony import */ var stats_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(stats_js__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
@@ -629,10 +631,10 @@ class Debug {
 
 /***/ }),
 
-/***/ "./src/core/engine.ts":
-/*!****************************!*\
-  !*** ./src/core/engine.ts ***!
-  \****************************/
+/***/ "./client/core/engine.ts":
+/*!*******************************!*\
+  !*** ./client/core/engine.ts ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -644,8 +646,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! deepmerge */ "./node_modules/deepmerge/dist/cjs.js");
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(deepmerge__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./src/core/index.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
 
 
 
@@ -786,10 +788,10 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
 
 /***/ }),
 
-/***/ "./src/core/entities.ts":
-/*!******************************!*\
-  !*** ./src/core/entities.ts ***!
-  \******************************/
+/***/ "./client/core/entities.ts":
+/*!*********************************!*\
+  !*** ./client/core/entities.ts ***!
+  \*********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -798,9 +800,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Entities": () => (/* binding */ Entities)
 /* harmony export */ });
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
-/* harmony import */ var _libs_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs/types */ "./src/libs/types.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _libs_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs/types */ "./client/libs/types.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
@@ -850,10 +852,10 @@ class Entities {
 
 /***/ }),
 
-/***/ "./src/core/index.ts":
-/*!***************************!*\
-  !*** ./src/core/index.ts ***!
-  \***************************/
+/***/ "./client/core/index.ts":
+/*!******************************!*\
+  !*** ./client/core/index.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -871,17 +873,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Rendering": () => (/* reexport safe */ _rendering__WEBPACK_IMPORTED_MODULE_9__.Rendering),
 /* harmony export */   "World": () => (/* reexport safe */ _world__WEBPACK_IMPORTED_MODULE_10__.World)
 /* harmony export */ });
-/* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./camera */ "./src/core/camera.ts");
-/* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./chunk */ "./src/core/chunk.ts");
-/* harmony import */ var _container__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./container */ "./src/core/container.ts");
-/* harmony import */ var _debug__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./debug */ "./src/core/debug.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
-/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities */ "./src/core/entities.ts");
-/* harmony import */ var _inputs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./inputs */ "./src/core/inputs.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./physics */ "./src/core/physics.ts");
-/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./registry */ "./src/core/registry.ts");
-/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./rendering */ "./src/core/rendering.ts");
-/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./world */ "./src/core/world.ts");
+/* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./camera */ "./client/core/camera.ts");
+/* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./chunk */ "./client/core/chunk.ts");
+/* harmony import */ var _container__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./container */ "./client/core/container.ts");
+/* harmony import */ var _debug__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./debug */ "./client/core/debug.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities */ "./client/core/entities.ts");
+/* harmony import */ var _inputs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./inputs */ "./client/core/inputs.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./physics */ "./client/core/physics.ts");
+/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./registry */ "./client/core/registry.ts");
+/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./rendering */ "./client/core/rendering.ts");
+/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./world */ "./client/core/world.ts");
 
 
 
@@ -897,10 +899,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/core/inputs.ts":
-/*!****************************!*\
-  !*** ./src/core/inputs.ts ***!
-  \****************************/
+/***/ "./client/core/inputs.ts":
+/*!*******************************!*\
+  !*** ./client/core/inputs.ts ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -910,8 +912,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var mousetrap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mousetrap */ "./node_modules/mousetrap/mousetrap.js");
 /* harmony import */ var mousetrap__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(mousetrap__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
@@ -946,10 +948,10 @@ class Inputs {
 
 /***/ }),
 
-/***/ "./src/core/physics.ts":
-/*!*****************************!*\
-  !*** ./src/core/physics.ts ***!
-  \*****************************/
+/***/ "./client/core/physics.ts":
+/*!********************************!*\
+  !*** ./client/core/physics.ts ***!
+  \********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -957,8 +959,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Physics": () => (/* binding */ Physics)
 /* harmony export */ });
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 class Physics {
@@ -991,10 +993,10 @@ class Physics {
 
 /***/ }),
 
-/***/ "./src/core/registry.ts":
-/*!******************************!*\
-  !*** ./src/core/registry.ts ***!
-  \******************************/
+/***/ "./client/core/registry.ts":
+/*!*********************************!*\
+  !*** ./client/core/registry.ts ***!
+  \*********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1003,10 +1005,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Registry": () => (/* binding */ Registry)
 /* harmony export */ });
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
-/* harmony import */ var _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shaders/chunk/fragment.glsl */ "./src/core/shaders/chunk/fragment.glsl");
-/* harmony import */ var _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./shaders/chunk/vertex.glsl */ "./src/core/shaders/chunk/vertex.glsl");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+/* harmony import */ var _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shaders/chunk/fragment.glsl */ "./client/core/shaders/chunk/fragment.glsl");
+/* harmony import */ var _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./shaders/chunk/vertex.glsl */ "./client/core/shaders/chunk/vertex.glsl");
 
 
 
@@ -1172,10 +1174,10 @@ class Registry {
 
 /***/ }),
 
-/***/ "./src/core/rendering.ts":
-/*!*******************************!*\
-  !*** ./src/core/rendering.ts ***!
-  \*******************************/
+/***/ "./client/core/rendering.ts":
+/*!**********************************!*\
+  !*** ./client/core/rendering.ts ***!
+  \**********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1188,8 +1190,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var three_examples_jsm_postprocessing_EffectComposer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three/examples/jsm/postprocessing/EffectComposer */ "./node_modules/three/examples/jsm/postprocessing/EffectComposer.js");
 /* harmony import */ var three_examples_jsm_postprocessing_RenderPass__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three/examples/jsm/postprocessing/RenderPass */ "./node_modules/three/examples/jsm/postprocessing/RenderPass.js");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
@@ -1247,10 +1249,10 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
 
 /***/ }),
 
-/***/ "./src/core/world.ts":
-/*!***************************!*\
-  !*** ./src/core/world.ts ***!
-  \***************************/
+/***/ "./client/core/world.ts":
+/*!******************************!*\
+  !*** ./client/core/world.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1260,10 +1262,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! events */ "./node_modules/events/events.js");
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
-/* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./chunk */ "./src/core/chunk.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./engine */ "./src/core/engine.ts");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./chunk */ "./client/core/chunk.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+
 
 
 
@@ -1273,7 +1277,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     constructor(engine, options) {
         super();
         this.isReady = false;
-        this.chunks = new _libs__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
+        this.chunks = new _libs__WEBPACK_IMPORTED_MODULE_2__.SmartDictionary();
         this.dirtyChunks = []; // chunks that are freshly made
         this.visibleChunks = [];
         this.batchedChanges = [];
@@ -1282,10 +1286,10 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.engine = engine;
         switch (generator) {
             case 'flat':
-                this.generator = new _libs__WEBPACK_IMPORTED_MODULE_1__.FlatGenerator(this.engine);
+                this.generator = new _libs__WEBPACK_IMPORTED_MODULE_2__.FlatGenerator(this.engine);
                 break;
             case 'sin-cos':
-                this.generator = new _libs__WEBPACK_IMPORTED_MODULE_1__.SinCosGenerator(this.engine);
+                this.generator = new _libs__WEBPACK_IMPORTED_MODULE_2__.SinCosGenerator(this.engine);
         }
     }
     tick() {
@@ -1303,21 +1307,21 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         });
     }
     getChunkByCPos(cCoords) {
-        return this.getChunkByName(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getChunkName(cCoords));
+        return this.getChunkByName(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(cCoords));
     }
     getChunkByName(chunkName) {
         return this.chunks.get(chunkName);
     }
     getChunkByVoxel(vCoords) {
         const { chunkSize } = this.options;
-        const chunkCoords = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
+        const chunkCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
         return this.getChunkByCPos(chunkCoords);
     }
     getNeighborChunksByVoxel(vCoords, padding = this.options.chunkPadding) {
         const { chunkSize } = this.options;
         const chunk = this.getChunkByVoxel(vCoords);
-        const [cx, cz] = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
-        const [lx, , lz] = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
+        const [cx, cz] = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
+        const [lx, , lz] = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
         const neighborChunks = [];
         // check if local position is on the edge
         // TODO: fix this hacky way of doing so.
@@ -1350,7 +1354,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         return chunk ? chunk.getVoxel(...vCoords) : null;
     }
     getVoxelByWorld(wCoords) {
-        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
         return this.getVoxelByVoxel(vCoords);
     }
     getMaxHeightByVoxel(vCoords) {
@@ -1365,11 +1369,11 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         return false;
     }
     getSolidityByWorld(wCoords) {
-        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
         return this.getSolidityByVoxel(vCoords);
     }
     getFluidityByWorld(wCoords) {
-        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
         return this.getFluidityByVoxel(vCoords);
     }
     setChunk(chunk) {
@@ -1403,8 +1407,8 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     checkCamChunk() {
         const { chunkSize, renderRadius } = this.options;
         const pos = this.engine.camera.voxel;
-        const chunkPos = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapVoxelPosToChunkPos(pos, chunkSize);
-        const chunkName = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getChunkName(chunkPos);
+        const chunkPos = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(pos, chunkSize);
+        const chunkName = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(chunkPos);
         if (chunkName !== this.camChunkName) {
             this.engine.emit('chunk-changed', chunkPos);
             this.camChunkName = chunkName;
@@ -1457,7 +1461,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                     continue;
                 const chunk = this.getChunkByCPos([x, z]);
                 if (!chunk) {
-                    const newChunk = new _chunk__WEBPACK_IMPORTED_MODULE_3__.Chunk(this.engine, [x, z], {
+                    const newChunk = new _chunk__WEBPACK_IMPORTED_MODULE_4__.Chunk(this.engine, [x, z], {
                         maxHeight,
                         dimension,
                         size: chunkSize,
@@ -1509,10 +1513,10 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
 
 /***/ }),
 
-/***/ "./src/libs/aabb.ts":
-/*!**************************!*\
-  !*** ./src/libs/aabb.ts ***!
-  \**************************/
+/***/ "./client/libs/aabb.ts":
+/*!*****************************!*\
+  !*** ./client/libs/aabb.ts ***!
+  \*****************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1610,10 +1614,10 @@ class AABB {
 
 /***/ }),
 
-/***/ "./src/libs/brain.ts":
-/*!***************************!*\
-  !*** ./src/libs/brain.ts ***!
-  \***************************/
+/***/ "./client/libs/brain.ts":
+/*!******************************!*\
+  !*** ./client/libs/brain.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1623,7 +1627,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! gl-vec3 */ "./node_modules/gl-vec3/index.js");
 /* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(gl_vec3__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./rigid-body */ "./src/libs/rigid-body.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
 
 
 const defaultBrainOptions = {
@@ -1737,10 +1741,10 @@ class Brain {
 
 /***/ }),
 
-/***/ "./src/libs/clock.ts":
-/*!***************************!*\
-  !*** ./src/libs/clock.ts ***!
-  \***************************/
+/***/ "./client/libs/clock.ts":
+/*!******************************!*\
+  !*** ./client/libs/clock.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1748,7 +1752,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Clock": () => (/* binding */ Clock)
 /* harmony export */ });
-/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./smart-dictionary */ "./src/libs/smart-dictionary.ts");
+/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./smart-dictionary */ "./client/libs/smart-dictionary.ts");
 
 const defaultClockOptions = {
     maxDelta: 0.3,
@@ -1784,10 +1788,10 @@ class Clock {
 
 /***/ }),
 
-/***/ "./src/libs/generators/flat.ts":
-/*!*************************************!*\
-  !*** ./src/libs/generators/flat.ts ***!
-  \*************************************/
+/***/ "./client/libs/generators/flat.ts":
+/*!****************************************!*\
+  !*** ./client/libs/generators/flat.ts ***!
+  \****************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1795,8 +1799,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "FlatGenerator": () => (/* binding */ FlatGenerator)
 /* harmony export */ });
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./src/core/index.ts");
-/* harmony import */ var _generator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./generator */ "./src/libs/generators/generator.ts");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
+/* harmony import */ var _generator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./generator */ "./client/libs/generators/generator.ts");
 
 
 const defaultFlatGeneratorOptions = {
@@ -1819,10 +1823,10 @@ class FlatGenerator extends _generator__WEBPACK_IMPORTED_MODULE_1__.Generator {
 
 /***/ }),
 
-/***/ "./src/libs/generators/generator.ts":
-/*!******************************************!*\
-  !*** ./src/libs/generators/generator.ts ***!
-  \******************************************/
+/***/ "./client/libs/generators/generator.ts":
+/*!*********************************************!*\
+  !*** ./client/libs/generators/generator.ts ***!
+  \*********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1832,7 +1836,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ndarray */ "./node_modules/ndarray/ndarray.js");
 /* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(ndarray__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core */ "./src/core/index.ts");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
 
 
 class Generator {
@@ -1861,10 +1865,10 @@ class Generator {
 
 /***/ }),
 
-/***/ "./src/libs/generators/index.ts":
-/*!**************************************!*\
-  !*** ./src/libs/generators/index.ts ***!
-  \**************************************/
+/***/ "./client/libs/generators/index.ts":
+/*!*****************************************!*\
+  !*** ./client/libs/generators/index.ts ***!
+  \*****************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1874,9 +1878,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Generator": () => (/* reexport safe */ _generator__WEBPACK_IMPORTED_MODULE_1__.Generator),
 /* harmony export */   "SinCosGenerator": () => (/* reexport safe */ _sin_cos__WEBPACK_IMPORTED_MODULE_2__.SinCosGenerator)
 /* harmony export */ });
-/* harmony import */ var _flat__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./flat */ "./src/libs/generators/flat.ts");
-/* harmony import */ var _generator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./generator */ "./src/libs/generators/generator.ts");
-/* harmony import */ var _sin_cos__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./sin-cos */ "./src/libs/generators/sin-cos.ts");
+/* harmony import */ var _flat__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./flat */ "./client/libs/generators/flat.ts");
+/* harmony import */ var _generator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./generator */ "./client/libs/generators/generator.ts");
+/* harmony import */ var _sin_cos__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./sin-cos */ "./client/libs/generators/sin-cos.ts");
 
 
 
@@ -1884,10 +1888,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/libs/generators/sin-cos.ts":
-/*!****************************************!*\
-  !*** ./src/libs/generators/sin-cos.ts ***!
-  \****************************************/
+/***/ "./client/libs/generators/sin-cos.ts":
+/*!*******************************************!*\
+  !*** ./client/libs/generators/sin-cos.ts ***!
+  \*******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1895,10 +1899,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "SinCosGenerator": () => (/* binding */ SinCosGenerator)
 /* harmony export */ });
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./src/core/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils */ "./src/utils/index.ts");
-/* harmony import */ var _generator__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./generator */ "./src/libs/generators/generator.ts");
-/* harmony import */ var _raw_loader_workers_sin_cos_worker__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !raw-loader!./workers/sin-cos.worker */ "./node_modules/raw-loader/dist/cjs.js!./src/libs/generators/workers/sin-cos.worker.js");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils */ "./client/utils/index.ts");
+/* harmony import */ var _generator__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./generator */ "./client/libs/generators/generator.ts");
+/* harmony import */ var _raw_loader_workers_sin_cos_worker__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !raw-loader!./workers/sin-cos.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/generators/workers/sin-cos.worker.js");
 
 
 
@@ -1953,10 +1957,10 @@ class SinCosGenerator extends _generator__WEBPACK_IMPORTED_MODULE_2__.Generator 
 
 /***/ }),
 
-/***/ "./src/libs/index.ts":
-/*!***************************!*\
-  !*** ./src/libs/index.ts ***!
-  \***************************/
+/***/ "./client/libs/index.ts":
+/*!******************************!*\
+  !*** ./client/libs/index.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1976,18 +1980,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "TextureAtlas": () => (/* reexport safe */ _texture_atlas__WEBPACK_IMPORTED_MODULE_9__.TextureAtlas),
 /* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_11__.VoxelOctree)
 /* harmony export */ });
-/* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./src/libs/aabb.ts");
-/* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./src/libs/brain.ts");
-/* harmony import */ var _clock__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./clock */ "./src/libs/clock.ts");
-/* harmony import */ var _generators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./generators */ "./src/libs/generators/index.ts");
-/* harmony import */ var _meshers__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./meshers */ "./src/libs/meshers/index.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./physics */ "./src/libs/physics.ts");
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./rigid-body */ "./src/libs/rigid-body.ts");
-/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./sky */ "./src/libs/sky.ts");
-/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./smart-dictionary */ "./src/libs/smart-dictionary.ts");
-/* harmony import */ var _texture_atlas__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./texture-atlas */ "./src/libs/texture-atlas.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./types */ "./src/libs/types.ts");
-/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./voxel-octree */ "./src/libs/voxel-octree.ts");
+/* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
+/* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
+/* harmony import */ var _clock__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./clock */ "./client/libs/clock.ts");
+/* harmony import */ var _generators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./generators */ "./client/libs/generators/index.ts");
+/* harmony import */ var _meshers__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./meshers */ "./client/libs/meshers/index.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
+/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
+/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./smart-dictionary */ "./client/libs/smart-dictionary.ts");
+/* harmony import */ var _texture_atlas__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./texture-atlas */ "./client/libs/texture-atlas.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
 
 
 
@@ -2004,10 +2008,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/libs/meshers/index.ts":
-/*!***********************************!*\
-  !*** ./src/libs/meshers/index.ts ***!
-  \***********************************/
+/***/ "./client/libs/meshers/index.ts":
+/*!**************************************!*\
+  !*** ./client/libs/meshers/index.ts ***!
+  \**************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2015,16 +2019,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_0__.simpleCull)
 /* harmony export */ });
-/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./simple-cull */ "./src/libs/meshers/simple-cull.ts");
+/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/meshers/simple-cull.ts");
 
 
 
 /***/ }),
 
-/***/ "./src/libs/meshers/make-height-map.ts":
-/*!*********************************************!*\
-  !*** ./src/libs/meshers/make-height-map.ts ***!
-  \*********************************************/
+/***/ "./client/libs/meshers/make-height-map.ts":
+/*!************************************************!*\
+  !*** ./client/libs/meshers/make-height-map.ts ***!
+  \************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2032,9 +2036,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "makeHeightMap": () => (/* binding */ makeHeightMap)
 /* harmony export */ });
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./src/core/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils */ "./src/utils/index.ts");
-/* harmony import */ var _raw_loader_workers_make_height_map_worker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! !raw-loader!./workers/make-height-map.worker */ "./node_modules/raw-loader/dist/cjs.js!./src/libs/meshers/workers/make-height-map.worker.js");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils */ "./client/utils/index.ts");
+/* harmony import */ var _raw_loader_workers_make_height_map_worker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! !raw-loader!./workers/make-height-map.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/make-height-map.worker.js");
 
 
 
@@ -2076,10 +2080,10 @@ async function makeHeightMap(chunk) {
 
 /***/ }),
 
-/***/ "./src/libs/meshers/simple-cull.ts":
-/*!*****************************************!*\
-  !*** ./src/libs/meshers/simple-cull.ts ***!
-  \*****************************************/
+/***/ "./client/libs/meshers/simple-cull.ts":
+/*!********************************************!*\
+  !*** ./client/libs/meshers/simple-cull.ts ***!
+  \********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2087,10 +2091,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "simpleCull": () => (/* binding */ simpleCull)
 /* harmony export */ });
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./src/core/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils */ "./src/utils/index.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../types */ "./src/libs/types.ts");
-/* harmony import */ var _raw_loader_workers_simple_cull_worker__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !raw-loader!./workers/simple-cull.worker */ "./node_modules/raw-loader/dist/cjs.js!./src/libs/meshers/workers/simple-cull.worker.js");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils */ "./client/utils/index.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../types */ "./client/libs/types.ts");
+/* harmony import */ var _raw_loader_workers_simple_cull_worker__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !raw-loader!./workers/simple-cull.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/simple-cull.worker.js");
 
 
 
@@ -2140,10 +2144,10 @@ async function simpleCull(chunk) {
 
 /***/ }),
 
-/***/ "./src/libs/physics.ts":
-/*!*****************************!*\
-  !*** ./src/libs/physics.ts ***!
-  \*****************************/
+/***/ "./client/libs/physics.ts":
+/*!********************************!*\
+  !*** ./client/libs/physics.ts ***!
+  \********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2155,11 +2159,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(gl_vec3__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! voxel-aabb-sweep */ "./node_modules/voxel-aabb-sweep/index.js");
 /* harmony import */ var voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core */ "./src/core/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
-/* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./aabb */ "./src/libs/aabb.ts");
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./rigid-body */ "./src/libs/rigid-body.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./types */ "./src/libs/types.ts");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core */ "./client/core/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
 
 
 
@@ -2445,10 +2449,10 @@ class Physics {
 
 /***/ }),
 
-/***/ "./src/libs/rigid-body.ts":
-/*!********************************!*\
-  !*** ./src/libs/rigid-body.ts ***!
-  \********************************/
+/***/ "./client/libs/rigid-body.ts":
+/*!***********************************!*\
+  !*** ./client/libs/rigid-body.ts ***!
+  \***********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2458,7 +2462,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! gl-vec3 */ "./node_modules/gl-vec3/index.js");
 /* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(gl_vec3__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./aabb */ "./src/libs/aabb.ts");
+/* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 
 
 // massive thanks to https://github.com/andyhall/voxel-physics-engine/blob/master/src/rigidBody.js
@@ -2516,10 +2520,10 @@ class RigidBody {
 
 /***/ }),
 
-/***/ "./src/libs/sky.ts":
-/*!*************************!*\
-  !*** ./src/libs/sky.ts ***!
-  \*************************/
+/***/ "./client/libs/sky.ts":
+/*!****************************!*\
+  !*** ./client/libs/sky.ts ***!
+  \****************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2528,8 +2532,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Sky": () => (/* binding */ Sky)
 /* harmony export */ });
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./shaders/sky/fragment.glsl */ "./src/libs/shaders/sky/fragment.glsl");
-/* harmony import */ var _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shaders/sky/vertex.glsl */ "./src/libs/shaders/sky/vertex.glsl");
+/* harmony import */ var _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./shaders/sky/fragment.glsl */ "./client/libs/shaders/sky/fragment.glsl");
+/* harmony import */ var _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shaders/sky/vertex.glsl */ "./client/libs/shaders/sky/vertex.glsl");
 
 
 
@@ -2563,10 +2567,10 @@ class Sky {
 
 /***/ }),
 
-/***/ "./src/libs/smart-dictionary.ts":
-/*!**************************************!*\
-  !*** ./src/libs/smart-dictionary.ts ***!
-  \**************************************/
+/***/ "./client/libs/smart-dictionary.ts":
+/*!*****************************************!*\
+  !*** ./client/libs/smart-dictionary.ts ***!
+  \*****************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2641,10 +2645,10 @@ class SmartDictionary {
 
 /***/ }),
 
-/***/ "./src/libs/texture-atlas.ts":
-/*!***********************************!*\
-  !*** ./src/libs/texture-atlas.ts ***!
-  \***********************************/
+/***/ "./client/libs/texture-atlas.ts":
+/*!**************************************!*\
+  !*** ./client/libs/texture-atlas.ts ***!
+  \**************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2743,17 +2747,17 @@ class TextureAtlas {
 
 /***/ }),
 
-/***/ "./src/libs/types.ts":
-/*!***************************!*\
-  !*** ./src/libs/types.ts ***!
-  \***************************/
+/***/ "./client/libs/types.ts":
+/*!******************************!*\
+  !*** ./client/libs/types.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./src/libs/aabb.ts");
-/* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./src/libs/brain.ts");
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./rigid-body */ "./src/libs/rigid-body.ts");
+/* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
+/* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
 
 
 
@@ -2762,10 +2766,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/libs/voxel-octree.ts":
-/*!**********************************!*\
-  !*** ./src/libs/voxel-octree.ts ***!
-  \**********************************/
+/***/ "./client/libs/voxel-octree.ts":
+/*!*************************************!*\
+  !*** ./client/libs/voxel-octree.ts ***!
+  \*************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2780,10 +2784,10 @@ class VoxelOctree {
 
 /***/ }),
 
-/***/ "./src/utils/helper.ts":
-/*!*****************************!*\
-  !*** ./src/utils/helper.ts ***!
-  \*****************************/
+/***/ "./client/utils/helper.ts":
+/*!********************************!*\
+  !*** ./client/utils/helper.ts ***!
+  \********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2793,7 +2797,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! gl-vec3 */ "./node_modules/gl-vec3/index.js");
 /* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(gl_vec3__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./src/libs/index.ts");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+
 
 
 class Helper {
@@ -2913,10 +2919,10 @@ Helper.cloneAABB = (tgt, src) => {
 
 /***/ }),
 
-/***/ "./src/utils/index.ts":
-/*!****************************!*\
-  !*** ./src/utils/index.ts ***!
-  \****************************/
+/***/ "./client/utils/index.ts":
+/*!*******************************!*\
+  !*** ./client/utils/index.ts ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2924,7 +2930,158 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_0__.Helper)
 /* harmony export */ });
-/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./helper */ "./src/utils/helper.ts");
+/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./helper */ "./client/utils/helper.ts");
+
+
+
+/***/ }),
+
+/***/ "./shared/helper.ts":
+/*!**************************!*\
+  !*** ./shared/helper.ts ***!
+  \**************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Helper": () => (/* binding */ Helper)
+/* harmony export */ });
+/* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! gl-vec3 */ "./node_modules/gl-vec3/index.js");
+/* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(gl_vec3__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../shared */ "./shared/index.ts");
+
+
+class Helper {
+}
+/**
+ * Given a coordinate of a chunk, return the chunk representation.
+ *
+ * @param {Coords3} coords
+ * @param {string} [concat='|']
+ * @returns
+ */
+Helper.getChunkName = (coords, concat = '|') => {
+    return coords[0] + concat + coords[1];
+};
+/**
+ * Given a chunk name, return the coordinates of the chunk
+ *
+ * @param {string} name
+ * @param {string} [concat='|']
+ * @returns
+ */
+Helper.parseChunkName = (name, concat = '|') => {
+    return name.split(concat).map((s) => parseInt(s, 10));
+};
+/**
+ * Scale coordinates and floor them.
+ *
+ * @param {Coords3} coords
+ * @param {number} factor
+ * @returns
+ */
+Helper.scaleCoordsF = (coords, factor) => {
+    const result = [0, 0, 0];
+    const scaled = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(result, coords, factor);
+    return gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().floor(scaled, scaled);
+};
+/**
+ * Map voxel position to local position in current chunk.
+ *
+ * @param {Coords3} worldPos
+ * @param {Chunk} chunk
+ * @returns {Coords3}
+ */
+Helper.mapVoxelPosToChunkLocalPos = (voxelPos, chunkSize) => {
+    const [cx, cz] = Helper.mapVoxelPosToChunkPos(voxelPos, chunkSize);
+    const [vx, vy, vz] = voxelPos;
+    return [vx - cx * chunkSize, vy, vz - cz * chunkSize];
+};
+/**
+ * Map voxel position to the current chunk position.
+ *
+ * @param {Coords3} worldPos
+ * @param {number} chunkSize
+ * @returns {Coords2}
+ */
+Helper.mapVoxelPosToChunkPos = (voxelPos, chunkSize) => {
+    const coords3 = Helper.scaleCoordsF(voxelPos, 1 / chunkSize);
+    return [coords3[0], coords3[2]];
+};
+/**
+ * Get the voxel position of a chunk position.
+ *
+ * @static
+ * @param {Coords3} chunkPos
+ * @param {number} chunkSize
+ * @memberof Helper
+ */
+Helper.mapChunkPosToVoxelPos = (chunkPos, chunkSize) => {
+    const result = [0, 0, 0];
+    gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(result, chunkPos);
+    gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(result, result, chunkSize);
+    return result;
+};
+/**
+ * Map world position to voxel position.
+ *
+ * @param {Coords3} worldPos
+ * @param {number} dimension
+ * @returns {Coords3}
+ */
+Helper.mapWorldPosToVoxelPos = (worldPos, dimension) => {
+    return Helper.scaleCoordsF(worldPos, 1 / dimension);
+};
+/**
+ * Apply style to given element.
+ *
+ * @param {HTMLElement} ele
+ * @param {Partial<CSSStyleDeclaration>} style
+ * @returns {HTMLElement}
+ */
+Helper.applyStyle = (ele, style) => {
+    Object.keys(style).forEach((key) => {
+        const attribute = style[key];
+        ele.style[key] = attribute;
+    });
+    return ele;
+};
+Helper.approxEquals = (a, b) => {
+    return Math.abs(a - b) < 1e-5;
+};
+
+
+
+/***/ }),
+
+/***/ "./shared/index.ts":
+/*!*************************!*\
+  !*** ./shared/index.ts ***!
+  \*************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_0__.Helper)
+/* harmony export */ });
+/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./helper */ "./shared/helper.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
+
+
+
+
+/***/ }),
+
+/***/ "./shared/types.ts":
+/*!*************************!*\
+  !*** ./shared/types.ts ***!
+  \*************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
 
 
 
@@ -7494,10 +7651,10 @@ function isSlowBuffer (obj) {
 
 /***/ }),
 
-/***/ "./src/global.css":
-/*!************************!*\
-  !*** ./src/global.css ***!
-  \************************/
+/***/ "./client/global.css":
+/*!***************************!*\
+  !*** ./client/global.css ***!
+  \***************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -8935,10 +9092,10 @@ module.exports = wrappedNDArrayCtor
 
 /***/ }),
 
-/***/ "./src/core/shaders/chunk/fragment.glsl":
-/*!**********************************************!*\
-  !*** ./src/core/shaders/chunk/fragment.glsl ***!
-  \**********************************************/
+/***/ "./client/core/shaders/chunk/fragment.glsl":
+/*!*************************************************!*\
+  !*** ./client/core/shaders/chunk/fragment.glsl ***!
+  \*************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -8950,10 +9107,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/core/shaders/chunk/vertex.glsl":
-/*!********************************************!*\
-  !*** ./src/core/shaders/chunk/vertex.glsl ***!
-  \********************************************/
+/***/ "./client/core/shaders/chunk/vertex.glsl":
+/*!***********************************************!*\
+  !*** ./client/core/shaders/chunk/vertex.glsl ***!
+  \***********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -8965,10 +9122,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./node_modules/raw-loader/dist/cjs.js!./src/libs/generators/workers/sin-cos.worker.js":
-/*!*********************************************************************************************!*\
-  !*** ./node_modules/raw-loader/dist/cjs.js!./src/libs/generators/workers/sin-cos.worker.js ***!
-  \*********************************************************************************************/
+/***/ "./node_modules/raw-loader/dist/cjs.js!./client/libs/generators/workers/sin-cos.worker.js":
+/*!************************************************************************************************!*\
+  !*** ./node_modules/raw-loader/dist/cjs.js!./client/libs/generators/workers/sin-cos.worker.js ***!
+  \************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -8980,10 +9137,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./node_modules/raw-loader/dist/cjs.js!./src/libs/meshers/workers/make-height-map.worker.js":
-/*!**************************************************************************************************!*\
-  !*** ./node_modules/raw-loader/dist/cjs.js!./src/libs/meshers/workers/make-height-map.worker.js ***!
-  \**************************************************************************************************/
+/***/ "./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/make-height-map.worker.js":
+/*!*****************************************************************************************************!*\
+  !*** ./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/make-height-map.worker.js ***!
+  \*****************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -8995,10 +9152,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./node_modules/raw-loader/dist/cjs.js!./src/libs/meshers/workers/simple-cull.worker.js":
-/*!**********************************************************************************************!*\
-  !*** ./node_modules/raw-loader/dist/cjs.js!./src/libs/meshers/workers/simple-cull.worker.js ***!
-  \**********************************************************************************************/
+/***/ "./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/simple-cull.worker.js":
+/*!*************************************************************************************************!*\
+  !*** ./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/simple-cull.worker.js ***!
+  \*************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -9010,10 +9167,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/libs/shaders/sky/fragment.glsl":
-/*!********************************************!*\
-  !*** ./src/libs/shaders/sky/fragment.glsl ***!
-  \********************************************/
+/***/ "./client/libs/shaders/sky/fragment.glsl":
+/*!***********************************************!*\
+  !*** ./client/libs/shaders/sky/fragment.glsl ***!
+  \***********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -9025,10 +9182,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/libs/shaders/sky/vertex.glsl":
-/*!******************************************!*\
-  !*** ./src/libs/shaders/sky/vertex.glsl ***!
-  \******************************************/
+/***/ "./client/libs/shaders/sky/vertex.glsl":
+/*!*********************************************!*\
+  !*** ./client/libs/shaders/sky/vertex.glsl ***!
+  \*********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -10188,10 +10345,10 @@ const createProxiedComponent = (
 
 /***/ }),
 
-/***/ "./src/App.svelte":
-/*!************************!*\
-  !*** ./src/App.svelte ***!
-  \************************/
+/***/ "./client/App.svelte":
+/*!***************************!*\
+  !*** ./client/App.svelte ***!
+  \***************************/
 /***/ ((module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -10200,20 +10357,20 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var svelte_internal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! svelte/internal */ "./node_modules/svelte/internal/index.mjs");
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./core */ "./src/core/index.ts");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
 /* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
 /* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
-/* src/App.svelte generated by Svelte v3.37.0 */
+/* client/App.svelte generated by Svelte v3.37.0 */
 
 
 
-const file = "src/App.svelte";
+const file = "client/App.svelte";
 
 function add_css() {
 	var style = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("style");
 	style.id = "svelte-aqrs35-style";
-	style.textContent = "main.svelte-aqrs35{width:100%;height:100%;display:flex;align-items:center;justify-content:center}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiQXBwLnN2ZWx0ZSIsIm1hcHBpbmdzIjoiQUFDRSxJQUFBLGNBQUEsQ0FBQSxBQUNFLEtBQUEsQ0FBQSxJQUFXLENBQ1gsTUFBQSxDQUFBLElBQVksQ0FDWixPQUFBLENBQUEsSUFBYSxDQUNiLFdBQUEsQ0FBQSxNQUFtQixDQUNuQixlQUFBLENBQUEsTUFBdUIsQUFDekIsQ0FBQSIsIm5hbWVzIjpbXSwic291cmNlcyI6WyJzcmMvQXBwLnN2ZWx0ZSJdfQ== */";
+	style.textContent = "main.svelte-aqrs35{width:100%;height:100%;display:flex;align-items:center;justify-content:center}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiQXBwLnN2ZWx0ZSIsIm1hcHBpbmdzIjoiQUFDRSxJQUFBLGNBQUEsQ0FBQSxBQUNFLEtBQUEsQ0FBQSxJQUFXLENBQ1gsTUFBQSxDQUFBLElBQVksQ0FDWixPQUFBLENBQUEsSUFBYSxDQUNiLFdBQUEsQ0FBQSxNQUFtQixDQUNuQixlQUFBLENBQUEsTUFBdUIsQUFDekIsQ0FBQSIsIm5hbWVzIjpbXSwic291cmNlcyI6WyJjbGllbnQvQXBwLnN2ZWx0ZSJdfQ== */";
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(document.head, style);
 }
 
@@ -10328,7 +10485,7 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"src/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-aqrs35-style", nonCssHash: "fsr68h", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-aqrs35-style", nonCssHash: "1baw86h", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
 if (typeof add_css !== 'undefined' && !document.getElementById("svelte-aqrs35-style")) add_css();
@@ -63362,15 +63519,15 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
-/*!*********************!*\
-  !*** ./src/main.ts ***!
-  \*********************/
+/*!************************!*\
+  !*** ./client/main.ts ***!
+  \************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _global_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./global.css */ "./src/global.css");
-/* harmony import */ var _App_svelte__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./App.svelte */ "./src/App.svelte");
+/* harmony import */ var _global_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./global.css */ "./client/global.css");
+/* harmony import */ var _App_svelte__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./App.svelte */ "./client/App.svelte");
 
 
 const app = new _App_svelte__WEBPACK_IMPORTED_MODULE_1__.default({

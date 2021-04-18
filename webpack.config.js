@@ -8,10 +8,10 @@ const prod = mode === 'production';
 
 module.exports = {
   entry: {
-    'build/bundle': ['./src/main.ts'],
+    'build/bundle': ['./client/main.ts'],
   },
   resolve: {
-    modules: [path.resolve('node_modules'), path.resolve('src')],
+    modules: [path.resolve('node_modules'), path.resolve('client')],
     alias: {
       svelte: path.dirname(require.resolve('svelte/package.json')),
     },

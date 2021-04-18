@@ -1,6 +1,7 @@
 import vec3 from 'gl-vec3';
 
-import { AABB, Coords2, Coords3 } from '../libs';
+import { Coords2, Coords3 } from '../../shared';
+import { AABB } from '../libs';
 
 class Helper {
   /**

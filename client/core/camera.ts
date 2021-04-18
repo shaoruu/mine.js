@@ -2,7 +2,8 @@ import raycast from 'fast-voxel-raycast';
 import { BoxBufferGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3, BufferGeometry } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
-import { Coords3, EntityType } from '../libs';
+import { Coords3 } from '../../shared';
+import { EntityType } from '../libs';
 import { Helper } from '../utils';
 
 import { Engine } from './engine';

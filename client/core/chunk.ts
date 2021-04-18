@@ -2,7 +2,7 @@ import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
 import { BufferAttribute, BufferGeometry, Mesh } from 'three';
 
-import { Coords2, Coords3 } from '../libs';
+import { Coords2, Coords3 } from '../../shared';
 import { simpleCull } from '../libs/meshers';
 import { makeHeightMap } from '../libs/meshers/make-height-map';
 import { Helper } from '../utils';
