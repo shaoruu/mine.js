@@ -1,5 +1,4 @@
-import { createCanvas, Canvas } from 'canvas';
-import { PNG } from 'pngjs';
+import { createCanvas, Canvas, Image } from 'canvas';
 
 type TextureAtlasOptionsType = {
   textureDimension: number;
@@ -15,7 +14,7 @@ class TextureAtlas {
   public ranges: { [key: string]: { startV: number; endV: number; startU: number; endU: number } } = {};
   public canvas: Canvas;
 
-  constructor(textureMap: { [key: string]: PNG }, options: Partial<TextureAtlasOptionsType> = {}) {
+  constructor(textureMap: { [key: string]: Image }, options: Partial<TextureAtlasOptionsType> = {}) {
     const { textureDimension } = (this.options = {
       ...defaultTextureAtlasOptions,
       ...options,
@@ -43,7 +42,7 @@ class TextureAtlas {
         const startY = row * textureDimension;
 
         // ? idk if this works
-        context.drawImage(texture.data, startX, startY, textureDimension, textureDimension);
+        context.drawImage(texture, startX, startY, textureDimension, textureDimension);
 
         const startU = startX / canvasWidth;
         const endU = (startX + textureDimension) / canvasWidth;
