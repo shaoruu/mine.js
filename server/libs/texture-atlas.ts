@@ -79,6 +79,10 @@ class TextureAtlas {
       this.canvas = newCanvas;
     }
   }
+
+  get dataURL() {
+    return this.canvas.toDataURL();
+  }
 }
 
 export { TextureAtlas };
