@@ -1,3 +1,5 @@
+import { TypeMap } from '../../shared';
+
 import { Chunk } from './chunk';
 
 type GeneratorTypes = 'sin-cos' | 'flat';
@@ -35,7 +37,7 @@ class Generator {
 
     const types = registry.getTypeMap(['dirt', 'stone', 'grass']);
 
-    function getVoxelAt(vx: number, vy: number, vz: number, types, maxHeight) {
+    function getVoxelAt(vx: number, vy: number, vz: number, types: TypeMap, maxHeight: number) {
       let blockID = 0;
 
       if (vy >= maxHeight) return 0;

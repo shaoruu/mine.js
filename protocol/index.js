@@ -24,10 +24,12 @@ $root.protocol = (function() {
          * Properties of a Geometry.
          * @memberof protocol
          * @interface IGeometry
-         * @property {Uint8Array|null} [color] Geometry color
-         * @property {Uint8Array|null} [light] Geometry light
-         * @property {Uint8Array|null} [position] Geometry position
-         * @property {Uint8Array|null} [uv] Geometry uv
+         * @property {Array.<number>|null} [lights] Geometry lights
+         * @property {Array.<number>|null} [indices] Geometry indices
+         * @property {Array.<number>|null} [positions] Geometry positions
+         * @property {Array.<number>|null} [normals] Geometry normals
+         * @property {Array.<number>|null} [uvs] Geometry uvs
+         * @property {Array.<number>|null} [aos] Geometry aos
          */
 
         /**
@@ -39,6 +41,12 @@ $root.protocol = (function() {
          * @param {protocol.IGeometry=} [properties] Properties to set
          */
         function Geometry(properties) {
+            this.lights = [];
+            this.indices = [];
+            this.positions = [];
+            this.normals = [];
+            this.uvs = [];
+            this.aos = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -46,36 +54,52 @@ $root.protocol = (function() {
         }
 
         /**
-         * Geometry color.
-         * @member {Uint8Array} color
+         * Geometry lights.
+         * @member {Array.<number>} lights
          * @memberof protocol.Geometry
          * @instance
          */
-        Geometry.prototype.color = $util.newBuffer([]);
+        Geometry.prototype.lights = $util.emptyArray;
 
         /**
-         * Geometry light.
-         * @member {Uint8Array} light
+         * Geometry indices.
+         * @member {Array.<number>} indices
          * @memberof protocol.Geometry
          * @instance
          */
-        Geometry.prototype.light = $util.newBuffer([]);
+        Geometry.prototype.indices = $util.emptyArray;
 
         /**
-         * Geometry position.
-         * @member {Uint8Array} position
+         * Geometry positions.
+         * @member {Array.<number>} positions
          * @memberof protocol.Geometry
          * @instance
          */
-        Geometry.prototype.position = $util.newBuffer([]);
+        Geometry.prototype.positions = $util.emptyArray;
 
         /**
-         * Geometry uv.
-         * @member {Uint8Array} uv
+         * Geometry normals.
+         * @member {Array.<number>} normals
          * @memberof protocol.Geometry
          * @instance
          */
-        Geometry.prototype.uv = $util.newBuffer([]);
+        Geometry.prototype.normals = $util.emptyArray;
+
+        /**
+         * Geometry uvs.
+         * @member {Array.<number>} uvs
+         * @memberof protocol.Geometry
+         * @instance
+         */
+        Geometry.prototype.uvs = $util.emptyArray;
+
+        /**
+         * Geometry aos.
+         * @member {Array.<number>} aos
+         * @memberof protocol.Geometry
+         * @instance
+         */
+        Geometry.prototype.aos = $util.emptyArray;
 
         /**
          * Creates a new Geometry instance using the specified properties.
@@ -101,14 +125,42 @@ $root.protocol = (function() {
         Geometry.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.color != null && Object.hasOwnProperty.call(message, "color"))
-                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.color);
-            if (message.light != null && Object.hasOwnProperty.call(message, "light"))
-                writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.light);
-            if (message.position != null && Object.hasOwnProperty.call(message, "position"))
-                writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.position);
-            if (message.uv != null && Object.hasOwnProperty.call(message, "uv"))
-                writer.uint32(/* id 4, wireType 2 =*/34).bytes(message.uv);
+            if (message.lights != null && message.lights.length) {
+                writer.uint32(/* id 2, wireType 2 =*/18).fork();
+                for (var i = 0; i < message.lights.length; ++i)
+                    writer.float(message.lights[i]);
+                writer.ldelim();
+            }
+            if (message.indices != null && message.indices.length) {
+                writer.uint32(/* id 3, wireType 2 =*/26).fork();
+                for (var i = 0; i < message.indices.length; ++i)
+                    writer.float(message.indices[i]);
+                writer.ldelim();
+            }
+            if (message.positions != null && message.positions.length) {
+                writer.uint32(/* id 4, wireType 2 =*/34).fork();
+                for (var i = 0; i < message.positions.length; ++i)
+                    writer.float(message.positions[i]);
+                writer.ldelim();
+            }
+            if (message.normals != null && message.normals.length) {
+                writer.uint32(/* id 5, wireType 2 =*/42).fork();
+                for (var i = 0; i < message.normals.length; ++i)
+                    writer.float(message.normals[i]);
+                writer.ldelim();
+            }
+            if (message.uvs != null && message.uvs.length) {
+                writer.uint32(/* id 6, wireType 2 =*/50).fork();
+                for (var i = 0; i < message.uvs.length; ++i)
+                    writer.float(message.uvs[i]);
+                writer.ldelim();
+            }
+            if (message.aos != null && message.aos.length) {
+                writer.uint32(/* id 7, wireType 2 =*/58).fork();
+                for (var i = 0; i < message.aos.length; ++i)
+                    writer.float(message.aos[i]);
+                writer.ldelim();
+            }
             return writer;
         };
 
@@ -143,17 +195,65 @@ $root.protocol = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.color = reader.bytes();
-                    break;
                 case 2:
-                    message.light = reader.bytes();
+                    if (!(message.lights && message.lights.length))
+                        message.lights = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.lights.push(reader.float());
+                    } else
+                        message.lights.push(reader.float());
                     break;
                 case 3:
-                    message.position = reader.bytes();
+                    if (!(message.indices && message.indices.length))
+                        message.indices = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.indices.push(reader.float());
+                    } else
+                        message.indices.push(reader.float());
                     break;
                 case 4:
-                    message.uv = reader.bytes();
+                    if (!(message.positions && message.positions.length))
+                        message.positions = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.positions.push(reader.float());
+                    } else
+                        message.positions.push(reader.float());
+                    break;
+                case 5:
+                    if (!(message.normals && message.normals.length))
+                        message.normals = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.normals.push(reader.float());
+                    } else
+                        message.normals.push(reader.float());
+                    break;
+                case 6:
+                    if (!(message.uvs && message.uvs.length))
+                        message.uvs = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.uvs.push(reader.float());
+                    } else
+                        message.uvs.push(reader.float());
+                    break;
+                case 7:
+                    if (!(message.aos && message.aos.length))
+                        message.aos = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.aos.push(reader.float());
+                    } else
+                        message.aos.push(reader.float());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -190,18 +290,48 @@ $root.protocol = (function() {
         Geometry.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.color != null && message.hasOwnProperty("color"))
-                if (!(message.color && typeof message.color.length === "number" || $util.isString(message.color)))
-                    return "color: buffer expected";
-            if (message.light != null && message.hasOwnProperty("light"))
-                if (!(message.light && typeof message.light.length === "number" || $util.isString(message.light)))
-                    return "light: buffer expected";
-            if (message.position != null && message.hasOwnProperty("position"))
-                if (!(message.position && typeof message.position.length === "number" || $util.isString(message.position)))
-                    return "position: buffer expected";
-            if (message.uv != null && message.hasOwnProperty("uv"))
-                if (!(message.uv && typeof message.uv.length === "number" || $util.isString(message.uv)))
-                    return "uv: buffer expected";
+            if (message.lights != null && message.hasOwnProperty("lights")) {
+                if (!Array.isArray(message.lights))
+                    return "lights: array expected";
+                for (var i = 0; i < message.lights.length; ++i)
+                    if (typeof message.lights[i] !== "number")
+                        return "lights: number[] expected";
+            }
+            if (message.indices != null && message.hasOwnProperty("indices")) {
+                if (!Array.isArray(message.indices))
+                    return "indices: array expected";
+                for (var i = 0; i < message.indices.length; ++i)
+                    if (typeof message.indices[i] !== "number")
+                        return "indices: number[] expected";
+            }
+            if (message.positions != null && message.hasOwnProperty("positions")) {
+                if (!Array.isArray(message.positions))
+                    return "positions: array expected";
+                for (var i = 0; i < message.positions.length; ++i)
+                    if (typeof message.positions[i] !== "number")
+                        return "positions: number[] expected";
+            }
+            if (message.normals != null && message.hasOwnProperty("normals")) {
+                if (!Array.isArray(message.normals))
+                    return "normals: array expected";
+                for (var i = 0; i < message.normals.length; ++i)
+                    if (typeof message.normals[i] !== "number")
+                        return "normals: number[] expected";
+            }
+            if (message.uvs != null && message.hasOwnProperty("uvs")) {
+                if (!Array.isArray(message.uvs))
+                    return "uvs: array expected";
+                for (var i = 0; i < message.uvs.length; ++i)
+                    if (typeof message.uvs[i] !== "number")
+                        return "uvs: number[] expected";
+            }
+            if (message.aos != null && message.hasOwnProperty("aos")) {
+                if (!Array.isArray(message.aos))
+                    return "aos: array expected";
+                for (var i = 0; i < message.aos.length; ++i)
+                    if (typeof message.aos[i] !== "number")
+                        return "aos: number[] expected";
+            }
             return null;
         };
 
@@ -217,26 +347,48 @@ $root.protocol = (function() {
             if (object instanceof $root.protocol.Geometry)
                 return object;
             var message = new $root.protocol.Geometry();
-            if (object.color != null)
-                if (typeof object.color === "string")
-                    $util.base64.decode(object.color, message.color = $util.newBuffer($util.base64.length(object.color)), 0);
-                else if (object.color.length)
-                    message.color = object.color;
-            if (object.light != null)
-                if (typeof object.light === "string")
-                    $util.base64.decode(object.light, message.light = $util.newBuffer($util.base64.length(object.light)), 0);
-                else if (object.light.length)
-                    message.light = object.light;
-            if (object.position != null)
-                if (typeof object.position === "string")
-                    $util.base64.decode(object.position, message.position = $util.newBuffer($util.base64.length(object.position)), 0);
-                else if (object.position.length)
-                    message.position = object.position;
-            if (object.uv != null)
-                if (typeof object.uv === "string")
-                    $util.base64.decode(object.uv, message.uv = $util.newBuffer($util.base64.length(object.uv)), 0);
-                else if (object.uv.length)
-                    message.uv = object.uv;
+            if (object.lights) {
+                if (!Array.isArray(object.lights))
+                    throw TypeError(".protocol.Geometry.lights: array expected");
+                message.lights = [];
+                for (var i = 0; i < object.lights.length; ++i)
+                    message.lights[i] = Number(object.lights[i]);
+            }
+            if (object.indices) {
+                if (!Array.isArray(object.indices))
+                    throw TypeError(".protocol.Geometry.indices: array expected");
+                message.indices = [];
+                for (var i = 0; i < object.indices.length; ++i)
+                    message.indices[i] = Number(object.indices[i]);
+            }
+            if (object.positions) {
+                if (!Array.isArray(object.positions))
+                    throw TypeError(".protocol.Geometry.positions: array expected");
+                message.positions = [];
+                for (var i = 0; i < object.positions.length; ++i)
+                    message.positions[i] = Number(object.positions[i]);
+            }
+            if (object.normals) {
+                if (!Array.isArray(object.normals))
+                    throw TypeError(".protocol.Geometry.normals: array expected");
+                message.normals = [];
+                for (var i = 0; i < object.normals.length; ++i)
+                    message.normals[i] = Number(object.normals[i]);
+            }
+            if (object.uvs) {
+                if (!Array.isArray(object.uvs))
+                    throw TypeError(".protocol.Geometry.uvs: array expected");
+                message.uvs = [];
+                for (var i = 0; i < object.uvs.length; ++i)
+                    message.uvs[i] = Number(object.uvs[i]);
+            }
+            if (object.aos) {
+                if (!Array.isArray(object.aos))
+                    throw TypeError(".protocol.Geometry.aos: array expected");
+                message.aos = [];
+                for (var i = 0; i < object.aos.length; ++i)
+                    message.aos[i] = Number(object.aos[i]);
+            }
             return message;
         };
 
@@ -253,44 +405,44 @@ $root.protocol = (function() {
             if (!options)
                 options = {};
             var object = {};
-            if (options.defaults) {
-                if (options.bytes === String)
-                    object.color = "";
-                else {
-                    object.color = [];
-                    if (options.bytes !== Array)
-                        object.color = $util.newBuffer(object.color);
-                }
-                if (options.bytes === String)
-                    object.light = "";
-                else {
-                    object.light = [];
-                    if (options.bytes !== Array)
-                        object.light = $util.newBuffer(object.light);
-                }
-                if (options.bytes === String)
-                    object.position = "";
-                else {
-                    object.position = [];
-                    if (options.bytes !== Array)
-                        object.position = $util.newBuffer(object.position);
-                }
-                if (options.bytes === String)
-                    object.uv = "";
-                else {
-                    object.uv = [];
-                    if (options.bytes !== Array)
-                        object.uv = $util.newBuffer(object.uv);
-                }
+            if (options.arrays || options.defaults) {
+                object.lights = [];
+                object.indices = [];
+                object.positions = [];
+                object.normals = [];
+                object.uvs = [];
+                object.aos = [];
             }
-            if (message.color != null && message.hasOwnProperty("color"))
-                object.color = options.bytes === String ? $util.base64.encode(message.color, 0, message.color.length) : options.bytes === Array ? Array.prototype.slice.call(message.color) : message.color;
-            if (message.light != null && message.hasOwnProperty("light"))
-                object.light = options.bytes === String ? $util.base64.encode(message.light, 0, message.light.length) : options.bytes === Array ? Array.prototype.slice.call(message.light) : message.light;
-            if (message.position != null && message.hasOwnProperty("position"))
-                object.position = options.bytes === String ? $util.base64.encode(message.position, 0, message.position.length) : options.bytes === Array ? Array.prototype.slice.call(message.position) : message.position;
-            if (message.uv != null && message.hasOwnProperty("uv"))
-                object.uv = options.bytes === String ? $util.base64.encode(message.uv, 0, message.uv.length) : options.bytes === Array ? Array.prototype.slice.call(message.uv) : message.uv;
+            if (message.lights && message.lights.length) {
+                object.lights = [];
+                for (var j = 0; j < message.lights.length; ++j)
+                    object.lights[j] = options.json && !isFinite(message.lights[j]) ? String(message.lights[j]) : message.lights[j];
+            }
+            if (message.indices && message.indices.length) {
+                object.indices = [];
+                for (var j = 0; j < message.indices.length; ++j)
+                    object.indices[j] = options.json && !isFinite(message.indices[j]) ? String(message.indices[j]) : message.indices[j];
+            }
+            if (message.positions && message.positions.length) {
+                object.positions = [];
+                for (var j = 0; j < message.positions.length; ++j)
+                    object.positions[j] = options.json && !isFinite(message.positions[j]) ? String(message.positions[j]) : message.positions[j];
+            }
+            if (message.normals && message.normals.length) {
+                object.normals = [];
+                for (var j = 0; j < message.normals.length; ++j)
+                    object.normals[j] = options.json && !isFinite(message.normals[j]) ? String(message.normals[j]) : message.normals[j];
+            }
+            if (message.uvs && message.uvs.length) {
+                object.uvs = [];
+                for (var j = 0; j < message.uvs.length; ++j)
+                    object.uvs[j] = options.json && !isFinite(message.uvs[j]) ? String(message.uvs[j]) : message.uvs[j];
+            }
+            if (message.aos && message.aos.length) {
+                object.aos = [];
+                for (var j = 0; j < message.aos.length; ++j)
+                    object.aos[j] = options.json && !isFinite(message.aos[j]) ? String(message.aos[j]) : message.aos[j];
+            }
             return object;
         };
 
@@ -315,7 +467,6 @@ $root.protocol = (function() {
          * @memberof protocol
          * @interface IMesh
          * @property {protocol.IGeometry|null} [opaque] Mesh opaque
-         * @property {protocol.IGeometry|null} [transparent] Mesh transparent
          */
 
         /**
@@ -340,14 +491,6 @@ $root.protocol = (function() {
          * @instance
          */
         Mesh.prototype.opaque = null;
-
-        /**
-         * Mesh transparent.
-         * @member {protocol.IGeometry|null|undefined} transparent
-         * @memberof protocol.Mesh
-         * @instance
-         */
-        Mesh.prototype.transparent = null;
 
         /**
          * Creates a new Mesh instance using the specified properties.
@@ -375,8 +518,6 @@ $root.protocol = (function() {
                 writer = $Writer.create();
             if (message.opaque != null && Object.hasOwnProperty.call(message, "opaque"))
                 $root.protocol.Geometry.encode(message.opaque, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            if (message.transparent != null && Object.hasOwnProperty.call(message, "transparent"))
-                $root.protocol.Geometry.encode(message.transparent, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
@@ -413,9 +554,6 @@ $root.protocol = (function() {
                 switch (tag >>> 3) {
                 case 1:
                     message.opaque = $root.protocol.Geometry.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.transparent = $root.protocol.Geometry.decode(reader, reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -457,11 +595,6 @@ $root.protocol = (function() {
                 if (error)
                     return "opaque." + error;
             }
-            if (message.transparent != null && message.hasOwnProperty("transparent")) {
-                var error = $root.protocol.Geometry.verify(message.transparent);
-                if (error)
-                    return "transparent." + error;
-            }
             return null;
         };
 
@@ -482,11 +615,6 @@ $root.protocol = (function() {
                     throw TypeError(".protocol.Mesh.opaque: object expected");
                 message.opaque = $root.protocol.Geometry.fromObject(object.opaque);
             }
-            if (object.transparent != null) {
-                if (typeof object.transparent !== "object")
-                    throw TypeError(".protocol.Mesh.transparent: object expected");
-                message.transparent = $root.protocol.Geometry.fromObject(object.transparent);
-            }
             return message;
         };
 
@@ -503,14 +631,10 @@ $root.protocol = (function() {
             if (!options)
                 options = {};
             var object = {};
-            if (options.defaults) {
+            if (options.defaults)
                 object.opaque = null;
-                object.transparent = null;
-            }
             if (message.opaque != null && message.hasOwnProperty("opaque"))
                 object.opaque = $root.protocol.Geometry.toObject(message.opaque, options);
-            if (message.transparent != null && message.hasOwnProperty("transparent"))
-                object.transparent = $root.protocol.Geometry.toObject(message.transparent, options);
             return object;
         };
 
@@ -829,216 +953,6 @@ $root.protocol = (function() {
         return Chunk;
     })();
 
-    protocol.Signal = (function() {
-
-        /**
-         * Properties of a Signal.
-         * @memberof protocol
-         * @interface ISignal
-         * @property {string|null} [peer] Signal peer
-         * @property {string|null} [signal] Signal signal
-         */
-
-        /**
-         * Constructs a new Signal.
-         * @memberof protocol
-         * @classdesc Represents a Signal.
-         * @implements ISignal
-         * @constructor
-         * @param {protocol.ISignal=} [properties] Properties to set
-         */
-        function Signal(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Signal peer.
-         * @member {string} peer
-         * @memberof protocol.Signal
-         * @instance
-         */
-        Signal.prototype.peer = "";
-
-        /**
-         * Signal signal.
-         * @member {string} signal
-         * @memberof protocol.Signal
-         * @instance
-         */
-        Signal.prototype.signal = "";
-
-        /**
-         * Creates a new Signal instance using the specified properties.
-         * @function create
-         * @memberof protocol.Signal
-         * @static
-         * @param {protocol.ISignal=} [properties] Properties to set
-         * @returns {protocol.Signal} Signal instance
-         */
-        Signal.create = function create(properties) {
-            return new Signal(properties);
-        };
-
-        /**
-         * Encodes the specified Signal message. Does not implicitly {@link protocol.Signal.verify|verify} messages.
-         * @function encode
-         * @memberof protocol.Signal
-         * @static
-         * @param {protocol.ISignal} message Signal message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Signal.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.peer != null && Object.hasOwnProperty.call(message, "peer"))
-                writer.uint32(/* id 1, wireType 2 =*/10).string(message.peer);
-            if (message.signal != null && Object.hasOwnProperty.call(message, "signal"))
-                writer.uint32(/* id 2, wireType 2 =*/18).string(message.signal);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Signal message, length delimited. Does not implicitly {@link protocol.Signal.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof protocol.Signal
-         * @static
-         * @param {protocol.ISignal} message Signal message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Signal.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Signal message from the specified reader or buffer.
-         * @function decode
-         * @memberof protocol.Signal
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {protocol.Signal} Signal
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Signal.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protocol.Signal();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1:
-                    message.peer = reader.string();
-                    break;
-                case 2:
-                    message.signal = reader.string();
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Signal message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof protocol.Signal
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protocol.Signal} Signal
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Signal.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Signal message.
-         * @function verify
-         * @memberof protocol.Signal
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Signal.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.peer != null && message.hasOwnProperty("peer"))
-                if (!$util.isString(message.peer))
-                    return "peer: string expected";
-            if (message.signal != null && message.hasOwnProperty("signal"))
-                if (!$util.isString(message.signal))
-                    return "signal: string expected";
-            return null;
-        };
-
-        /**
-         * Creates a Signal message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof protocol.Signal
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {protocol.Signal} Signal
-         */
-        Signal.fromObject = function fromObject(object) {
-            if (object instanceof $root.protocol.Signal)
-                return object;
-            var message = new $root.protocol.Signal();
-            if (object.peer != null)
-                message.peer = String(object.peer);
-            if (object.signal != null)
-                message.signal = String(object.signal);
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Signal message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof protocol.Signal
-         * @static
-         * @param {protocol.Signal} message Signal
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Signal.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.peer = "";
-                object.signal = "";
-            }
-            if (message.peer != null && message.hasOwnProperty("peer"))
-                object.peer = message.peer;
-            if (message.signal != null && message.hasOwnProperty("signal"))
-                object.signal = message.signal;
-            return object;
-        };
-
-        /**
-         * Converts this Signal to JSON.
-         * @function toJSON
-         * @memberof protocol.Signal
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Signal.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        return Signal;
-    })();
-
     protocol.Message = (function() {
 
         /**
@@ -1049,7 +963,6 @@ $root.protocol = (function() {
          * @property {string|null} [json] Message json
          * @property {string|null} [text] Message text
          * @property {Array.<protocol.IChunk>|null} [chunks] Message chunks
-         * @property {protocol.ISignal|null} [signal] Message signal
          */
 
         /**
@@ -1101,14 +1014,6 @@ $root.protocol = (function() {
         Message.prototype.chunks = $util.emptyArray;
 
         /**
-         * Message signal.
-         * @member {protocol.ISignal|null|undefined} signal
-         * @memberof protocol.Message
-         * @instance
-         */
-        Message.prototype.signal = null;
-
-        /**
          * Creates a new Message instance using the specified properties.
          * @function create
          * @memberof protocol.Message
@@ -1141,8 +1046,6 @@ $root.protocol = (function() {
             if (message.chunks != null && message.chunks.length)
                 for (var i = 0; i < message.chunks.length; ++i)
                     $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-            if (message.signal != null && Object.hasOwnProperty.call(message, "signal"))
-                $root.protocol.Signal.encode(message.signal, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             return writer;
         };
 
@@ -1191,9 +1094,6 @@ $root.protocol = (function() {
                         message.chunks = [];
                     message.chunks.push($root.protocol.Chunk.decode(reader, reader.uint32()));
                     break;
-                case 5:
-                    message.signal = $root.protocol.Signal.decode(reader, reader.uint32());
-                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1241,7 +1141,6 @@ $root.protocol = (function() {
                 case 6:
                 case 7:
                 case 8:
-                case 9:
                     break;
                 }
             if (message.json != null && message.hasOwnProperty("json"))
@@ -1258,11 +1157,6 @@ $root.protocol = (function() {
                     if (error)
                         return "chunks." + error;
                 }
-            }
-            if (message.signal != null && message.hasOwnProperty("signal")) {
-                var error = $root.protocol.Signal.verify(message.signal);
-                if (error)
-                    return "signal." + error;
             }
             return null;
         };
@@ -1304,17 +1198,13 @@ $root.protocol = (function() {
             case 6:
                 message.type = 6;
                 break;
-            case "SIGNAL":
+            case "TELEPORT":
             case 7:
                 message.type = 7;
                 break;
-            case "TELEPORT":
+            case "UPDATE":
             case 8:
                 message.type = 8;
-                break;
-            case "UPDATE":
-            case 9:
-                message.type = 9;
                 break;
             }
             if (object.json != null)
@@ -1330,11 +1220,6 @@ $root.protocol = (function() {
                         throw TypeError(".protocol.Message.chunks: object expected");
                     message.chunks[i] = $root.protocol.Chunk.fromObject(object.chunks[i]);
                 }
-            }
-            if (object.signal != null) {
-                if (typeof object.signal !== "object")
-                    throw TypeError(".protocol.Message.signal: object expected");
-                message.signal = $root.protocol.Signal.fromObject(object.signal);
             }
             return message;
         };
@@ -1358,7 +1243,6 @@ $root.protocol = (function() {
                 object.type = options.enums === String ? "ERROR" : 1;
                 object.json = "";
                 object.text = "";
-                object.signal = null;
             }
             if (message.type != null && message.hasOwnProperty("type"))
                 object.type = options.enums === String ? $root.protocol.Message.Type[message.type] : message.type;
@@ -1371,8 +1255,6 @@ $root.protocol = (function() {
                 for (var j = 0; j < message.chunks.length; ++j)
                     object.chunks[j] = $root.protocol.Chunk.toObject(message.chunks[j], options);
             }
-            if (message.signal != null && message.hasOwnProperty("signal"))
-                object.signal = $root.protocol.Signal.toObject(message.signal, options);
             return object;
         };
 
@@ -1397,9 +1279,8 @@ $root.protocol = (function() {
          * @property {number} LEAVE=4 LEAVE value
          * @property {number} LOAD=5 LOAD value
          * @property {number} PICK=6 PICK value
-         * @property {number} SIGNAL=7 SIGNAL value
-         * @property {number} TELEPORT=8 TELEPORT value
-         * @property {number} UPDATE=9 UPDATE value
+         * @property {number} TELEPORT=7 TELEPORT value
+         * @property {number} UPDATE=8 UPDATE value
          */
         Message.Type = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -1409,9 +1290,8 @@ $root.protocol = (function() {
             values[valuesById[4] = "LEAVE"] = 4;
             values[valuesById[5] = "LOAD"] = 5;
             values[valuesById[6] = "PICK"] = 6;
-            values[valuesById[7] = "SIGNAL"] = 7;
-            values[valuesById[8] = "TELEPORT"] = 8;
-            values[valuesById[9] = "UPDATE"] = 9;
+            values[valuesById[7] = "TELEPORT"] = 7;
+            values[valuesById[8] = "UPDATE"] = 8;
             return values;
         })();
 

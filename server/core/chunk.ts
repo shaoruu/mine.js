@@ -6,13 +6,15 @@ import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
 
 import { Coords2, Coords3, Helper } from '../../shared';
+import { MeshType } from '../libs';
 
-import { World } from '.';
+import { World, Mesher, Generator, GeneratorTypes } from '.';
 
 type ChunkOptionsType = {
   size: number;
   maxHeight: number;
   dimension: number;
+  generation: GeneratorTypes;
 };
 
 class Chunk {
@@ -21,11 +23,15 @@ class Chunk {
   public heightMap: ndarray;
 
   public name: string;
-  public min: Coords3;
-  public max: Coords3;
+
+  public min: Coords3 = [0, 0, 0];
+  public max: Coords3 = [0, 0, 0];
 
   public needsSaving = false;
+  public needsMeshing = true;
   public isEmpty = true;
+
+  public mesh: MeshType;
 
   constructor(public coords: Coords2, public world: World, public options: ChunkOptionsType) {
     const { size, maxHeight } = options;
@@ -43,6 +49,13 @@ class Chunk {
     vec3.scale(this.min, this.min, size);
     vec3.add(this.max, this.max, [1, 0, 1]);
     vec3.scale(this.max, this.max, size);
+    vec3.add(this.max, this.max, [0, maxHeight, 0]);
+
+    try {
+      this.load();
+    } catch (e) {
+      this.generate();
+    }
   }
 
   getVoxel = (voxel: Coords3) => {
@@ -110,6 +123,11 @@ class Chunk {
 
   generate = () => {
     // generate terrain, height map, and mesh
+    const { generation } = this.options;
+    Generator.generate(this, generation);
+    // TODO: lighting
+    this.generateHeightMap();
+    this.save();
   };
 
   generateHeightMap = () => {
@@ -147,7 +165,29 @@ class Chunk {
 
   remesh = () => {
     // rebuild mesh
+    this.mesh = Mesher.meshChunk(this);
+    this.needsMeshing = false;
   };
+
+  get protocol() {
+    return {
+      x: this.coords[0],
+      y: this.coords[1],
+      meshes: [
+        {
+          opaque: {
+            lights: this.lights.data,
+            indices: this.mesh.indices,
+            positions: this.mesh.positions,
+            normals: this.mesh.normals,
+            uvs: this.mesh.uvs,
+            aos: this.mesh.aos,
+          },
+        },
+      ],
+      voxels: this.voxels.data,
+    };
+  }
 
   private toLocal = (voxel: Coords3) => {
     const [vx, vy, vz] = voxel;

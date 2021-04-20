@@ -5,6 +5,7 @@ export * from './debug';
 export * from './engine';
 export * from './entities';
 export * from './inputs';
+export * from './network';
 export * from './physics';
 export * from './registry';
 export * from './rendering';

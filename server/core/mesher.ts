@@ -2,7 +2,7 @@ import { AO_TABLE, FACES } from './constants';
 
 import { Chunk, Registry } from '.';
 
-function vertexAO(side1, side2, corner) {
+function vertexAO(side1: number, side2: number, corner: number) {
   const numS1 = Number(side1 !== 0);
   const numS2 = Number(side2 !== 0);
   const numC = Number(corner !== 0);
@@ -56,7 +56,7 @@ class Mesher {
               const isNeighborSolid = registry.getSolidityByID(neighbor);
 
               if (!isNeighborSolid) {
-                const nearVoxels = neighbors.map(([a, b, c]) => world.getVoxelByVoxel([nvx, nvy, nvz]));
+                const nearVoxels = neighbors.map(([a, b, c]) => world.getVoxelByVoxel([nvx + a, nvy + b, nvz + c]));
 
                 const { startU, endU, startV, endV } = isMat1
                   ? uvMap[texture.all]
@@ -95,11 +95,11 @@ class Mesher {
     }
 
     return {
-      aos,
-      indices,
-      normals,
-      positions,
-      uvs,
+      aos: new Float32Array(aos),
+      indices: new Float32Array(indices),
+      normals: new Float32Array(normals),
+      positions: new Float32Array(positions),
+      uvs: new Float32Array(uvs),
     };
   };
 }

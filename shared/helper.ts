@@ -21,7 +21,7 @@ class Helper {
    * @param {string} [concat='|']
    * @returns
    */
-  public static parseChunkName = (name: string, concat = '|') => {
+  public static parseChunkName = (name: string, concat = '_') => {
     return name.split(concat).map((s: string) => parseInt(s, 10));
   };
 

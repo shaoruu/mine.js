@@ -4,17 +4,17 @@ import path from 'path';
 import { protocol } from '../../protocol';
 import { Coords2, Coords3, Helper, SmartDictionary } from '../../shared';
 
-import { Registry } from './registry';
-
-import { ClientType, Network, NetworkOptionsType, Chunk } from '.';
+import { ClientType, Network, NetworkOptionsType, Chunk, GeneratorTypes, Registry } from '.';
 
 type WorldOptionsType = NetworkOptionsType & {
   storage: string;
+  preload: number;
   chunkSize: number;
   dimension: number;
   maxHeight: number;
   renderRadius: number;
   maxLightLevel: number;
+  generation: GeneratorTypes;
 };
 
 class World extends Network {
@@ -28,6 +28,8 @@ class World extends Network {
     this.registry = new Registry({ basePath: path.join(__dirname, '..', 'blocks') });
 
     this.initStorage();
+    this.setupRoutes();
+    this.preloadChunks();
   }
 
   initStorage = () => {
@@ -39,12 +41,43 @@ class World extends Network {
     }
   };
 
+  setupRoutes = () => {
+    // texture atlas
+    this.app.get('/atlas', (_, res) => {
+      res.setHeader('Content-Type', 'image/png');
+      this.registry.textureAtlas.canvas.createPNGStream().pipe(res);
+    });
+  };
+
+  preloadChunks = () => {
+    const { preload } = this.options;
+    console.log(`Preloading ${(preload * 2 + 1) ** 2} chunks...`);
+    for (let x = -preload; x <= preload; x++) {
+      for (let z = -preload; z <= preload; z++) {
+        this.getChunkByCPos([x, z]).remesh();
+      }
+    }
+    console.log(`Preloaded ${(preload * 2 + 1) ** 2} chunks.`);
+  };
+
   getChunkByCPos = (cCoords: Coords2) => {
     return this.getChunkByName(Helper.getChunkName(cCoords));
   };
 
   getChunkByName = (chunkName: string) => {
-    return this.chunks.get(chunkName);
+    let chunk = this.chunks.get(chunkName);
+    if (!chunk) {
+      const { chunkSize, generation, dimension, maxHeight } = this.options;
+      const coords = Helper.parseChunkName(chunkName) as Coords2;
+      chunk = new Chunk(coords, this, {
+        dimension,
+        maxHeight,
+        generation,
+        size: chunkSize,
+      });
+      this.chunks.set(chunkName, chunk);
+    }
+    return chunk;
   };
 
   getChunkByVoxel = (vCoords: Coords3) => {
@@ -96,7 +129,14 @@ class World extends Network {
   };
 
   onInit = (client: ClientType) => {
-    super.onInit(client);
+    const chunk = this.getChunkByCPos([0, 0]);
+
+    client.send(
+      Network.encode({
+        type: 'INIT',
+        chunks: [chunk.protocol],
+      }),
+    );
   };
 }
 

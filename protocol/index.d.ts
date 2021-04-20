@@ -5,17 +5,23 @@ export namespace protocol {
     /** Properties of a Geometry. */
     interface IGeometry {
 
-        /** Geometry color */
-        color?: (Uint8Array|null);
+        /** Geometry lights */
+        lights?: (number[]|null);
 
-        /** Geometry light */
-        light?: (Uint8Array|null);
+        /** Geometry indices */
+        indices?: (number[]|null);
 
-        /** Geometry position */
-        position?: (Uint8Array|null);
+        /** Geometry positions */
+        positions?: (number[]|null);
 
-        /** Geometry uv */
-        uv?: (Uint8Array|null);
+        /** Geometry normals */
+        normals?: (number[]|null);
+
+        /** Geometry uvs */
+        uvs?: (number[]|null);
+
+        /** Geometry aos */
+        aos?: (number[]|null);
     }
 
     /** Represents a Geometry. */
@@ -27,17 +33,23 @@ export namespace protocol {
          */
         constructor(properties?: protocol.IGeometry);
 
-        /** Geometry color. */
-        public color: Uint8Array;
+        /** Geometry lights. */
+        public lights: number[];
 
-        /** Geometry light. */
-        public light: Uint8Array;
+        /** Geometry indices. */
+        public indices: number[];
 
-        /** Geometry position. */
-        public position: Uint8Array;
+        /** Geometry positions. */
+        public positions: number[];
 
-        /** Geometry uv. */
-        public uv: Uint8Array;
+        /** Geometry normals. */
+        public normals: number[];
+
+        /** Geometry uvs. */
+        public uvs: number[];
+
+        /** Geometry aos. */
+        public aos: number[];
 
         /**
          * Creates a new Geometry instance using the specified properties.
@@ -115,9 +127,6 @@ export namespace protocol {
 
         /** Mesh opaque */
         opaque?: (protocol.IGeometry|null);
-
-        /** Mesh transparent */
-        transparent?: (protocol.IGeometry|null);
     }
 
     /** Represents a Mesh. */
@@ -131,9 +140,6 @@ export namespace protocol {
 
         /** Mesh opaque. */
         public opaque?: (protocol.IGeometry|null);
-
-        /** Mesh transparent. */
-        public transparent?: (protocol.IGeometry|null);
 
         /**
          * Creates a new Mesh instance using the specified properties.
@@ -314,102 +320,6 @@ export namespace protocol {
         public toJSON(): { [k: string]: any };
     }
 
-    /** Properties of a Signal. */
-    interface ISignal {
-
-        /** Signal peer */
-        peer?: (string|null);
-
-        /** Signal signal */
-        signal?: (string|null);
-    }
-
-    /** Represents a Signal. */
-    class Signal implements ISignal {
-
-        /**
-         * Constructs a new Signal.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protocol.ISignal);
-
-        /** Signal peer. */
-        public peer: string;
-
-        /** Signal signal. */
-        public signal: string;
-
-        /**
-         * Creates a new Signal instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns Signal instance
-         */
-        public static create(properties?: protocol.ISignal): protocol.Signal;
-
-        /**
-         * Encodes the specified Signal message. Does not implicitly {@link protocol.Signal.verify|verify} messages.
-         * @param message Signal message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protocol.ISignal, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified Signal message, length delimited. Does not implicitly {@link protocol.Signal.verify|verify} messages.
-         * @param message Signal message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protocol.ISignal, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a Signal message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns Signal
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protocol.Signal;
-
-        /**
-         * Decodes a Signal message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns Signal
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protocol.Signal;
-
-        /**
-         * Verifies a Signal message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a Signal message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns Signal
-         */
-        public static fromObject(object: { [k: string]: any }): protocol.Signal;
-
-        /**
-         * Creates a plain object from a Signal message. Also converts values to other types if specified.
-         * @param message Signal
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protocol.Signal, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this Signal to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
     /** Properties of a Message. */
     interface IMessage {
 
@@ -424,9 +334,6 @@ export namespace protocol {
 
         /** Message chunks */
         chunks?: (protocol.IChunk[]|null);
-
-        /** Message signal */
-        signal?: (protocol.ISignal|null);
     }
 
     /** Represents a Message. */
@@ -449,9 +356,6 @@ export namespace protocol {
 
         /** Message chunks. */
         public chunks: protocol.IChunk[];
-
-        /** Message signal. */
-        public signal?: (protocol.ISignal|null);
 
         /**
          * Creates a new Message instance using the specified properties.
@@ -534,9 +438,8 @@ export namespace protocol {
             LEAVE = 4,
             LOAD = 5,
             PICK = 6,
-            SIGNAL = 7,
-            TELEPORT = 8,
-            UPDATE = 9
+            TELEPORT = 7,
+            UPDATE = 8
         }
     }
 }

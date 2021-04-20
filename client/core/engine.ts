@@ -13,6 +13,8 @@ import {
   Entities,
   EntitiesOptionsType,
   Inputs,
+  Network,
+  NetworkOptionsType,
   Physics,
   PhysicsOptionsType,
   Registry,
@@ -32,6 +34,7 @@ type ConfigType = {
   physics: PhysicsOptionsType;
   registry: RegistryOptionsType;
   rendering: RenderingOptionsType;
+  network: NetworkOptionsType;
 };
 
 const defaultConfig: ConfigType = {
@@ -87,12 +90,16 @@ const defaultConfig: ConfigType = {
     fogColor: '#ffffff',
     clearColor: '#b6d2ff',
   },
+  network: {
+    url: 'http://localhost:4000',
+  },
 };
 
 class Engine extends EventEmitter {
   public config: ConfigType;
   public debug: Debug;
   public clock: Clock;
+  public network: Network;
   public container: Container;
   public rendering: Rendering;
   public inputs: Inputs;
@@ -107,7 +114,7 @@ class Engine extends EventEmitter {
   constructor(params: DeepPartial<ConfigType> = {}) {
     super();
 
-    const { debug, camera, container, entities, physics, registry, rendering, world } = (this.config = merge(
+    const { debug, camera, container, entities, physics, registry, rendering, world, network } = (this.config = merge(
       defaultConfig,
       params,
     ));
@@ -116,6 +123,9 @@ class Engine extends EventEmitter {
     if (debug) {
       this.debug = new Debug(this);
     }
+
+    // network
+    this.network = new Network(this, network);
 
     // container
     this.container = new Container(this, container);

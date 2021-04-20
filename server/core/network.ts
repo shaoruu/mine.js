@@ -6,7 +6,7 @@ import zlib from 'zlib';
 import chalk from 'chalk';
 import cors from 'cors';
 import express, { Express } from 'express';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 
 import { protocol } from '../../protocol';
@@ -70,7 +70,7 @@ class Network extends EventEmitter {
       return;
     }
 
-    client.id = uuid.v4();
+    client.id = uuidv4();
     client.isAlive = true;
 
     this.onInit(client);

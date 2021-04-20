@@ -2,15 +2,16 @@ syntax = "proto3";
 package protocol;
 
 message Geometry {
-  bytes color = 1;
-  bytes light = 2;
-  bytes position = 3;
-  bytes uv = 4;
+  repeated float lights = 2;
+  repeated float indices = 3;
+  repeated float positions = 4;
+  repeated float normals = 5;
+  repeated float uvs = 6;
+  repeated float aos = 7;
 }
 
 message Mesh {
   Geometry opaque = 1;
-  Geometry transparent = 2;
 }
 
 message Chunk {
@@ -18,11 +19,6 @@ message Chunk {
   int32 z = 2;
   repeated Mesh meshes = 3;
   repeated int32 voxels = 4;
-}
-
-message Signal {
-  string peer = 1;
-  string signal = 2;
 }
 
 message Message {
@@ -33,9 +29,8 @@ message Message {
     LEAVE = 4;
     LOAD = 5;
     PICK = 6;
-    SIGNAL = 7;
-    TELEPORT = 8;
-    UPDATE = 9;
+    TELEPORT = 7;
+    UPDATE = 8;
   }
 
   Type type = 1;
@@ -43,5 +38,4 @@ message Message {
   string text = 3;
 
   repeated Chunk chunks = 4;
-  Signal signal = 5;
 }
