@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events';
 
 import { Coords2, Coords3 } from '../../shared';
-import { GeneratorType, SmartDictionary, FlatGenerator, Generator, SinCosGenerator } from '../libs';
+import { SmartDictionary } from '../../shared';
+import { GeneratorType, FlatGenerator, Generator, SinCosGenerator } from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';

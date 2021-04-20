@@ -1,74 +1,70 @@
-import fs from 'fs';
-import path from 'path';
+import { Chunk } from './chunk';
 
-import { Image } from 'canvas';
-
-import { BlockType, TextureAtlas } from '../libs';
-
-type GeneratorOptionsType = {
-  basePath: string;
-};
+type GeneratorTypes = 'sin-cos' | 'flat';
 
 class Generator {
-  public blockTypes: { [key: string]: BlockType } = {};
-  public textureAtlas: TextureAtlas;
-
-  constructor(public options: GeneratorOptionsType) {
-    this.loadBlockTypes();
-  }
-
-  getBlockUV = (name: string) => {
-    const block = this.blockTypes[name];
-    if (!block) {
-      console.error(`Block ${name} not found.`);
-      process.exit(1);
+  static generate = (chunk: Chunk, type: GeneratorTypes) => {
+    switch (type) {
+      case 'sin-cos':
+        Generator.sincos(chunk);
+        break;
+      case 'flat':
+        Generator.flat(chunk);
+        break;
     }
   };
 
-  loadBlockTypes = () => {
-    // load blocks' files from `basePath`
-    const { basePath } = this.options;
-    const textureMap: { [key: string]: Image } = {};
+  static flat = (chunk: Chunk) => {
+    // TODO
+    const {} = chunk;
+  };
 
-    const modelFiles = fs.readdirSync(path.join(basePath, 'models'));
-    for (const modelFile of modelFiles) {
-      const block = require(path.join(basePath, 'models', modelFile)) as BlockType;
-      const { name, textures } = block;
+  static sincos = (chunk: Chunk) => {
+    const {
+      voxels,
+      min,
+      max,
+      options: { maxHeight },
+      world: { registry },
+    } = chunk;
 
-      this.blockTypes[name] = block;
+    const [startX, startY, startZ] = min;
+    const [endX, endY, endZ] = max;
 
-      if (textures) {
-        const length = Object.keys(textures).length;
-        if (length !== 1 && length !== 3 && length !== 6) {
-          console.error('Wrong texture format.');
-          process.exit(1);
-        }
+    let isEmpty = true;
 
-        switch (length) {
-          case 1: {
-            const texture = fs.readFileSync(path.join(basePath, 'assets', textures.all));
-            const img = new Image();
-            img.src = texture;
-            textureMap[textures.all] = img;
-            break;
-          }
-          case 3:
-          case 6: {
-            for (const side of Object.keys(textures)) {
-              const textureFile = textures[side];
-              const texture = fs.readFileSync(path.join(basePath, 'assets', textureFile));
-              const img = new Image();
-              img.src = texture;
-              textureMap[textureFile] = img;
-            }
-            break;
+    const types = registry.getTypeMap(['dirt', 'stone', 'grass']);
+
+    function getVoxelAt(vx: number, vy: number, vz: number, types, maxHeight) {
+      let blockID = 0;
+
+      if (vy >= maxHeight) return 0;
+      if (vy === 0) return types.stone;
+      if (vy < 0) return 0;
+
+      const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20) + 30;
+      const height2 = 0;
+      if (vy < height1 && vy > height2) {
+        blockID = Math.random() > 0.5 ? types.grass : types.stone;
+      }
+
+      return blockID;
+    }
+
+    for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {
+      for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {
+        for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {
+          const voxel = getVoxelAt(vx, vy, vz, types, maxHeight);
+          if (voxel) {
+            isEmpty = false;
+            voxels.set(lx, ly, lz, voxel);
           }
         }
       }
     }
 
-    this.textureAtlas = new TextureAtlas(textureMap);
+    chunk.isEmpty = isEmpty;
   };
 }
 
-export { Generator };
+export { Generator, GeneratorTypes };

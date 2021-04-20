@@ -800,8 +800,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Entities": () => (/* binding */ Entities)
 /* harmony export */ });
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var _libs_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs/types */ "./client/libs/types.ts");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
 /* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
@@ -809,7 +809,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class Entities {
     constructor(engine, options) {
-        this.list = new _libs__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
+        this.list = new _shared__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
         this.engine = engine;
         this.options = options;
     }
@@ -817,9 +817,9 @@ class Entities {
         if (this.list.data.length >= this.options.maxEntities)
             throw new Error(`Failed to add entity, ${name}: max entities reached.`);
         const { physics } = this.engine;
-        const aabb = new _libs__WEBPACK_IMPORTED_MODULE_0__.AABB(object.position.toArray(), size);
+        const aabb = new _libs__WEBPACK_IMPORTED_MODULE_1__.AABB(object.position.toArray(), size);
         const rigidBody = physics.core.addBody(Object.assign({ aabb }, options));
-        const brain = new _libs__WEBPACK_IMPORTED_MODULE_0__.Brain(rigidBody);
+        const brain = new _libs__WEBPACK_IMPORTED_MODULE_1__.Brain(rigidBody);
         const newEntity = {
             brain,
             object,
@@ -912,15 +912,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var mousetrap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mousetrap */ "./node_modules/mousetrap/mousetrap.js");
 /* harmony import */ var mousetrap__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(mousetrap__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
 /* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
 class Inputs {
     constructor(engine) {
-        this.combos = new _libs__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
-        this.callbacks = new _libs__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
+        this.combos = new _shared__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
+        this.callbacks = new _shared__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
         this.engine = engine;
         this.add('forward', 'w');
         this.add('backward', 's');
@@ -1004,11 +1004,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Registry": () => (/* binding */ Registry)
 /* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-/* harmony import */ var _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shaders/chunk/fragment.glsl */ "./client/core/shaders/chunk/fragment.glsl");
-/* harmony import */ var _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./shaders/chunk/vertex.glsl */ "./client/core/shaders/chunk/vertex.glsl");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+/* harmony import */ var _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./shaders/chunk/fragment.glsl */ "./client/core/shaders/chunk/fragment.glsl");
+/* harmony import */ var _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./shaders/chunk/vertex.glsl */ "./client/core/shaders/chunk/vertex.glsl");
+
 
 
 
@@ -1040,17 +1042,17 @@ class Registry {
             }
             const blockTexture = texture || image ? this.makeImageTexture(image) : this.makeCanvasTexture(color || '');
             this.textureMap[name] = blockTexture;
-            this.textureAtlas = new _libs__WEBPACK_IMPORTED_MODULE_0__.TextureAtlas(this.textureMap, { textureDimension: textureWidth });
-            this.material = new three__WEBPACK_IMPORTED_MODULE_4__.ShaderMaterial({
+            this.textureAtlas = new _libs__WEBPACK_IMPORTED_MODULE_1__.TextureAtlas(this.textureMap, { textureDimension: textureWidth });
+            this.material = new three__WEBPACK_IMPORTED_MODULE_5__.ShaderMaterial({
                 // wireframe: true,
                 fog: true,
                 transparent: true,
-                vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_3__.default,
-                fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
+                vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_4__.default,
+                fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_3__.default,
                 vertexColors: true,
                 uniforms: {
                     uTexture: { value: this.textureAtlas.mergedTexture },
-                    uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_4__.Color(this.engine.config.rendering.fogColor) },
+                    uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_5__.Color(this.engine.config.rendering.fogColor) },
                     uFogNear: { value: renderRadius * 0.6 * chunkSize * dimension },
                     uFogFar: { value: renderRadius * chunkSize * dimension },
                     // uFogNear: { value: 100 },
@@ -1125,8 +1127,8 @@ class Registry {
         };
         this.engine = engine;
         this.options = options;
-        this.materials = new _libs__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
-        this.blocks = new _libs__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
+        this.materials = new _shared__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
+        this.blocks = new _shared__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
         this.addMaterial('dirt', { color: '#edc9af' });
         this.addMaterial('grass', { color: '#41980a' });
         this.addMaterial('stone', { color: '#999C9B' });
@@ -1152,7 +1154,7 @@ class Registry {
             context.fillStyle = color;
             context.fillRect(0, 0, textureWidth, textureWidth);
         }
-        return new three__WEBPACK_IMPORTED_MODULE_4__.CanvasTexture(context ? context.canvas : tempCanvas);
+        return new three__WEBPACK_IMPORTED_MODULE_5__.CanvasTexture(context ? context.canvas : tempCanvas);
     }
     makeImageTexture(image) {
         if (image) {
@@ -1160,7 +1162,7 @@ class Registry {
             image.style.width = `${textureWidth}px`;
             image.style.height = 'auto';
         }
-        const texture = new three__WEBPACK_IMPORTED_MODULE_4__.Texture(image);
+        const texture = new three__WEBPACK_IMPORTED_MODULE_5__.Texture(image);
         texture.needsUpdate = true;
         return texture;
     }
@@ -1273,11 +1275,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     constructor(engine, options) {
         super();
         this.isReady = false;
-        this.chunks = new _libs__WEBPACK_IMPORTED_MODULE_2__.SmartDictionary();
+        this.chunks = new _shared__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
         this.dirtyChunks = []; // chunks that are freshly made
         this.visibleChunks = [];
         this.batchedChanges = [];
@@ -1752,7 +1755,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Clock": () => (/* binding */ Clock)
 /* harmony export */ });
-/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./smart-dictionary */ "./client/libs/smart-dictionary.ts");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
 
 const defaultClockOptions = {
     maxDelta: 0.3,
@@ -1762,7 +1765,7 @@ class Clock {
         this.options = Object.assign(Object.assign({}, defaultClockOptions), options);
         this.lastFrameTime = Date.now();
         this.delta = 0;
-        this.intervals = new _smart_dictionary__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
+        this.intervals = new _shared__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
     }
     tick() {
         const now = Date.now();
@@ -1976,9 +1979,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_5__.Physics),
 /* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_6__.RigidBody),
 /* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_7__.Sky),
-/* harmony export */   "SmartDictionary": () => (/* reexport safe */ _smart_dictionary__WEBPACK_IMPORTED_MODULE_8__.SmartDictionary),
-/* harmony export */   "TextureAtlas": () => (/* reexport safe */ _texture_atlas__WEBPACK_IMPORTED_MODULE_9__.TextureAtlas),
-/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_11__.VoxelOctree)
+/* harmony export */   "TextureAtlas": () => (/* reexport safe */ _texture_atlas__WEBPACK_IMPORTED_MODULE_8__.TextureAtlas),
+/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_10__.VoxelOctree)
 /* harmony export */ });
 /* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 /* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
@@ -1988,11 +1990,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
 /* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
 /* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
-/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./smart-dictionary */ "./client/libs/smart-dictionary.ts");
-/* harmony import */ var _texture_atlas__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./texture-atlas */ "./client/libs/texture-atlas.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
-/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
-
+/* harmony import */ var _texture_atlas__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./texture-atlas */ "./client/libs/texture-atlas.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
 
 
 
@@ -2567,84 +2567,6 @@ class Sky {
 
 /***/ }),
 
-/***/ "./client/libs/smart-dictionary.ts":
-/*!*****************************************!*\
-  !*** ./client/libs/smart-dictionary.ts ***!
-  \*****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SmartDictionary": () => (/* binding */ SmartDictionary)
-/* harmony export */ });
-class SmartDictionary {
-    constructor() {
-        this.data = [];
-        this.indices = new Map();
-    }
-    set(name, item) {
-        // TODO: must be better way of doing this
-        if (!isNaN(this.indices.get(name))) {
-            const index = this.indices.get(name);
-            this.data[index] = item;
-            return index;
-        }
-        const index = this.data.length;
-        this.data[index] = item;
-        this.indices.set(name, index);
-        return index;
-    }
-    setByIndex(index, item) {
-        this.data[index] = item;
-        return index;
-    }
-    getIndex(name) {
-        const index = this.indices.get(name);
-        return index === undefined ? -1 : index;
-    }
-    get(name) {
-        const index = this.getIndex(name);
-        return this.data[index] || null;
-    }
-    getByIndex(index) {
-        return this.data[index];
-    }
-    delete(name) {
-        // TODO: figure out a way to remove data too
-        const index = this.indices.get(name);
-        if (index) {
-            delete this.data[index];
-        }
-        return this.indices.delete(name);
-    }
-    has(name) {
-        return this.indices.has(name);
-    }
-    exists(item) {
-        return this.data.includes(item);
-    }
-    toIndexMap() {
-        const obj = {};
-        this.indices.forEach((value) => {
-            obj[value] = this.data[value];
-        });
-        return obj;
-    }
-    toObject() {
-        const obj = {};
-        this.indices.forEach((value, key) => {
-            const entry = this.data[value];
-            obj[key] = entry;
-        });
-        return obj;
-    }
-}
-
-
-
-/***/ }),
-
 /***/ "./client/libs/texture-atlas.ts":
 /*!**************************************!*\
   !*** ./client/libs/texture-atlas.ts ***!
@@ -3064,11 +2986,92 @@ Helper.approxEquals = (a, b) => {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_0__.Helper)
+/* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_0__.Helper),
+/* harmony export */   "SmartDictionary": () => (/* reexport safe */ _smart_dictionary__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary)
 /* harmony export */ });
 /* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./helper */ "./shared/helper.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
+/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./smart-dictionary */ "./shared/smart-dictionary.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
 
+
+
+
+
+/***/ }),
+
+/***/ "./shared/smart-dictionary.ts":
+/*!************************************!*\
+  !*** ./shared/smart-dictionary.ts ***!
+  \************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "SmartDictionary": () => (/* binding */ SmartDictionary)
+/* harmony export */ });
+class SmartDictionary {
+    constructor() {
+        this.data = [];
+        this.indices = new Map();
+    }
+    set(name, item) {
+        // TODO: must be better way of doing this
+        if (!isNaN(this.indices.get(name))) {
+            const index = this.indices.get(name);
+            this.data[index] = item;
+            return index;
+        }
+        const index = this.data.length;
+        this.data[index] = item;
+        this.indices.set(name, index);
+        return index;
+    }
+    setByIndex(index, item) {
+        this.data[index] = item;
+        return index;
+    }
+    getIndex(name) {
+        const index = this.indices.get(name);
+        return index === undefined ? -1 : index;
+    }
+    get(name) {
+        const index = this.getIndex(name);
+        return this.data[index] || null;
+    }
+    getByIndex(index) {
+        return this.data[index];
+    }
+    delete(name) {
+        // TODO: figure out a way to remove data too
+        const index = this.indices.get(name);
+        if (index) {
+            delete this.data[index];
+        }
+        return this.indices.delete(name);
+    }
+    has(name) {
+        return this.indices.has(name);
+    }
+    exists(item) {
+        return this.data.includes(item);
+    }
+    toIndexMap() {
+        const obj = {};
+        this.indices.forEach((value) => {
+            obj[value] = this.data[value];
+        });
+        return obj;
+    }
+    toObject() {
+        const obj = {};
+        this.indices.forEach((value, key) => {
+            const entry = this.data[value];
+            obj[key] = entry;
+        });
+        return obj;
+    }
+}
 
 
 

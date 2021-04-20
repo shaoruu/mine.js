@@ -1,6 +1,7 @@
 import { BlockType } from '../../libs';
 
 const Grass: BlockType = {
+  id: 2,
   name: 'grass',
   isEmpty: false,
   isSolid: true,

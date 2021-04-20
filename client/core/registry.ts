@@ -1,6 +1,7 @@
 import { Texture, CanvasTexture, ShaderMaterial, Color } from 'three';
 
-import { BlockMaterialType, BlockMaterialUVType, SmartDictionary, TextureAtlas } from '../libs';
+import { SmartDictionary } from '../../shared';
+import { BlockMaterialType, BlockMaterialUVType, TextureAtlas } from '../libs';
 
 import { Engine } from './engine';
 import ChunkFragmentShader from './shaders/chunk/fragment.glsl';

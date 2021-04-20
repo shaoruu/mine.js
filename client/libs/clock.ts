@@ -1,4 +1,4 @@
-import { SmartDictionary } from './smart-dictionary';
+import { SmartDictionary } from '../../shared';
 
 type ClockOptions = {
   maxDelta: number;

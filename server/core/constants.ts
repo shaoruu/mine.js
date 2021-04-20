@@ -13,8 +13,8 @@ export const FACES = [
 
     // left
     dir: [-1, 0, 0],
-    mat3: 1, // side
-    mat6: 3, // nx
+    mat3: 'side', // side
+    mat6: 'nx', // nx
     corners: [
       { pos: [0, 1, 0], uv: [0, 1], side1: 1, side2: 3, corner: 0 },
       { pos: [0, 0, 0], uv: [0, 0], side1: 3, side2: 6, corner: 5 },
@@ -44,8 +44,8 @@ export const FACES = [
 
     // right
     dir: [1, 0, 0],
-    mat3: 1, // side
-    mat6: 0, // px
+    mat3: 'side', // side
+    mat6: 'px', // px
     corners: [
       { pos: [1, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },
       { pos: [1, 0, 1], uv: [0, 0], side1: 4, side2: 6, corner: 7 },
@@ -75,8 +75,8 @@ export const FACES = [
 
     // bottom
     dir: [0, -1, 0],
-    mat3: 2, // bottom
-    mat6: 4, // ny
+    mat3: 'bottom', // bottom
+    mat6: 'ny', // ny
     corners: [
       { pos: [1, 0, 1], uv: [1, 0], side1: 1, side2: 4, corner: 2 },
       { pos: [0, 0, 1], uv: [0, 0], side1: 1, side2: 3, corner: 0 },
@@ -106,8 +106,8 @@ export const FACES = [
 
     // top
     dir: [0, 1, 0],
-    mat3: 0, // top
-    mat6: 1, // py
+    mat3: 'top', // top
+    mat6: 'py', // py
     corners: [
       { pos: [0, 1, 1], uv: [1, 1], side1: 1, side2: 3, corner: 0 },
       { pos: [1, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },
@@ -137,8 +137,8 @@ export const FACES = [
 
     // back
     dir: [0, 0, -1],
-    mat3: 1, // side
-    mat6: 5, // nz
+    mat3: 'side', // side
+    mat6: 'nz', // nz
     corners: [
       { pos: [1, 0, 0], uv: [0, 0], side1: 3, side2: 6, corner: 5 },
       { pos: [0, 0, 0], uv: [1, 0], side1: 4, side2: 6, corner: 7 },
@@ -168,8 +168,8 @@ export const FACES = [
 
     // front
     dir: [0, 0, 1],
-    mat3: 1, // side
-    mat6: 2, // pz
+    mat3: 'side', // side
+    mat6: 'pz', // pz
     corners: [
       { pos: [0, 0, 1], uv: [0, 0], side1: 4, side2: 6, corner: 7 },
       { pos: [1, 0, 1], uv: [1, 0], side1: 3, side2: 6, corner: 5 },

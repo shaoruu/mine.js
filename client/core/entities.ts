@@ -1,7 +1,7 @@
 import { Object3D, Vector3 } from 'three';
 
-import { AABB, Brain, EntityType, SmartDictionary } from '../libs';
-import { BodyOptionsType } from '../libs/types';
+import { SmartDictionary } from '../../shared';
+import { AABB, Brain, EntityType, BodyOptionsType } from '../libs';
 
 import { Engine } from './engine';
 

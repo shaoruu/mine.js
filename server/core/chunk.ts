@@ -20,15 +20,19 @@ class Chunk {
   public lights: ndarray;
   public heightMap: ndarray;
 
+  public name: string;
   public min: Coords3;
   public max: Coords3;
 
   public needsSaving = false;
+  public isEmpty = true;
 
   constructor(public coords: Coords2, public world: World, public options: ChunkOptionsType) {
     const { size, maxHeight } = options;
     const [cx, cz] = coords;
     const coords3 = [cx, 0, cz];
+
+    this.name = Helper.getChunkName(coords);
 
     this.voxels = ndarray(new Uint8Array(size * maxHeight * size), [size, maxHeight, size]);
     this.lights = ndarray(new Uint8Array(size * maxHeight * size), [size, maxHeight, size]);

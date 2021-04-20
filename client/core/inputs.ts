@@ -1,6 +1,6 @@
 import Mousetrap from 'mousetrap';
 
-import { SmartDictionary } from '../libs';
+import { SmartDictionary } from '../../shared';
 
 import { Engine } from './engine';
 class Inputs {

@@ -1,8 +1,6 @@
 import path from 'path';
 
-import { Generator, World } from './core';
-
-const generator = new Generator({ basePath: path.join(__dirname, 'blocks') });
+import { World } from './core';
 
 const world = new World({
   dimension: 1,
@@ -18,6 +16,8 @@ const world = new World({
 });
 
 world.listen();
+
+console.log(world.registry.getTypeMap(['dirt']));
 
 // import { loadImage } from 'canvas';
 
