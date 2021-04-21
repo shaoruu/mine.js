@@ -1026,11 +1026,11 @@ class Camera {
             engine.rendering.scene.add(this.lookBlockMesh);
         });
         engine.on('world-ready', () => {
-            const maxHeight = engine.world.getMaxHeightByVoxel(this.options.initPos);
-            const [ix, iy, iz] = this.options.initPos;
-            if (iy < maxHeight) {
-                this.teleport([ix, maxHeight, iz]);
-            }
+            // const maxHeight = engine.world.getMaxHeightByVoxel(this.options.initPos);
+            // const [ix, iy, iz] = this.options.initPos;
+            // if (iy < maxHeight) {
+            //   this.teleport([ix, maxHeight, iz]);
+            // }
         });
     }
     teleport(voxel) {
@@ -1108,14 +1108,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(gl_vec3__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ndarray */ "./node_modules/ndarray/ndarray.js");
 /* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(ndarray__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
-/* harmony import */ var _libs_meshers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../libs/meshers */ "./client/libs/meshers/index.ts");
-/* harmony import */ var _libs_meshers_make_height_map__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../libs/meshers/make-height-map */ "./client/libs/meshers/make-height-map.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-
-
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
@@ -1123,7 +1119,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class Chunk {
-    constructor(engine, coords, { size, dimension, padding, maxHeight }) {
+    constructor(engine, coords, { size, dimension, maxHeight }) {
+        this.engine = engine;
+        this.coords = coords;
+        // voxel position references in voxel space
+        this.min = [0, 0, 0];
+        this.max = [0, 0, 0];
         this.isEmpty = true;
         this.isDirty = true;
         this.isAdded = false;
@@ -1131,88 +1132,38 @@ class Chunk {
         this.isInitialized = false; // is populated with terrain info
         this.isPending = false; // pending for client-side terrain generation
         this.toLocal = (vx, vy, vz) => {
-            return gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub([0, 0, 0], [vx, vy, vz], this.minInner);
+            return gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub([0, 0, 0], [vx, vy, vz], this.min);
         };
-        this.engine = engine;
-        this.coords = coords;
         this.size = size;
         this.maxHeight = maxHeight;
         this.dimension = dimension;
-        this.padding = padding;
-        this.width = size + padding * 2;
-        this.name = _utils__WEBPACK_IMPORTED_MODULE_5__.Helper.getChunkName(this.coords);
-        this.voxels = ndarray__WEBPACK_IMPORTED_MODULE_1___default()(new Uint8Array(this.width * this.maxHeight * this.width), [
-            this.width,
-            this.maxHeight,
-            this.width,
-        ]);
-        this.heightMap = ndarray__WEBPACK_IMPORTED_MODULE_1___default()(new Uint8Array(this.width * this.width), [this.width, this.width]);
-        this.geometry = new three__WEBPACK_IMPORTED_MODULE_7__.BufferGeometry();
-        this.minInner = [0, 0, 0];
-        this.minOuter = [0, 0, 0];
-        this.maxInner = [0, 0, 0];
-        this.maxOuter = [0, 0, 0];
+        this.name = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(this.coords);
+        this.voxels = ndarray__WEBPACK_IMPORTED_MODULE_1___default()(new Uint8Array(size * maxHeight * size), [size, maxHeight, size]);
+        this.geometry = new three__WEBPACK_IMPORTED_MODULE_5__.BufferGeometry();
         const [cx, cz] = coords;
         const coords3 = [cx, 0, cz];
         // initialize
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.minInner, coords3);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.minOuter, coords3);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.maxInner, coords3);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.maxOuter, coords3);
-        // calculate
-        const paddingVec = [padding, 0, padding];
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.minOuter, this.minOuter, size);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub(this.minOuter, this.minOuter, paddingVec);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.minInner, this.minOuter, paddingVec);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.maxOuter, this.maxOuter, [1, 0, 1]);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.maxOuter, this.maxOuter, size);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.maxOuter, this.maxOuter, [0, maxHeight, 0]);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.maxOuter, this.maxOuter, paddingVec);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub(this.maxInner, this.maxOuter, paddingVec);
-    }
-    // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
-    getLocal(lx, ly, lz) {
-        return this.voxels.get(lx + this.padding, ly, lz + this.padding);
-    }
-    // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
-    setLocal(lx, ly, lz, id) {
-        return this.voxels.set(lx + this.padding, ly, lz + this.padding, id);
-    }
-    getMaxHeightLocal(lx, lz) {
-        return this.heightMap.get(lx, lz);
-    }
-    getMaxHeight(vx, vz) {
-        const [lx, , lz] = this.toLocal(vx, 0, vz);
-        return this.getMaxHeightLocal(lx, lz);
+        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.min, coords3);
+        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.max, coords3);
+        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.min, this.min, size);
+        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.max, this.max, [1, 0, 1]);
+        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.max, this.max, size);
+        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.max, this.max, [0, maxHeight, 0]);
     }
     getVoxel(vx, vy, vz) {
         if (!this.contains(vx, vy, vz))
             return;
         const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-        return this.getLocal(lx, ly, lz);
+        return this.voxels.get(lx, ly, lz);
     }
-    setVoxel(vx, vy, vz, id) {
-        if (!this.contains(vx, vy, vz))
-            return;
-        // if voxel type doesn't change
-        if (this.getVoxel(vx, vy, vz) === id)
-            return;
-        const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-        this.setLocal(lx, ly, lz, id);
-        // change chunk state
-        if (id !== 0)
-            this.isEmpty = false;
-        // mark chunk as dirty
-        this.isDirty = true;
-    }
-    contains(vx, vy, vz, padding = this.padding) {
+    contains(vx, vy, vz, padding = 0) {
         const { size, maxHeight } = this;
         const [lx, ly, lz] = this.toLocal(vx, vy, vz);
         return lx >= -padding && lx < size + padding && ly >= 0 && ly < maxHeight && lz >= -padding && lz < size + padding;
     }
     distTo(vx, _, vz) {
-        const [mx, , mz] = this.minInner;
-        return Math.sqrt((mx - vx) * (mx - vx) + (mz - vz) * (mz - vz));
+        const [mx, , mz] = this.min;
+        return Math.sqrt((mx + this.size / 2 - vx) * (mx + this.size / 2 - vx) + (mz + this.size / 2 - vz) * (mz - vz));
     }
     addToScene() {
         this.removeFromScene();
@@ -1233,34 +1184,20 @@ class Chunk {
     dispose() {
         this.geometry.dispose();
     }
-    async initialized() {
-        this.isInitialized = true;
-        this.isPending = false;
-        // build mesh once initialized
-        await (0,_libs_meshers_make_height_map__WEBPACK_IMPORTED_MODULE_4__.makeHeightMap)(this);
-        await this.buildMesh();
-    }
-    async buildMesh() {
-        if (this.isEmpty) {
-            // if it's empty, it can't be dirty
-            this.isDirty = false;
-            return;
-        }
-        // don't need to be meshed again
-        this.isDirty = false;
+    setupMesh(meshData) {
+        const { positions, normals, indices, uvs, aos } = meshData;
         this.isMeshing = true;
-        const { positions, normals, indices, uvs, aos } = await (0,_libs_meshers__WEBPACK_IMPORTED_MODULE_3__.simpleCull)(this);
         const positionNumComponents = 3;
         const normalNumComponents = 3;
         const uvNumComponents = 2;
         const occlusionNumComponents = 1;
         this.geometry.dispose();
-        this.geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_7__.BufferAttribute(positions, positionNumComponents));
-        this.geometry.setAttribute('normal', new three__WEBPACK_IMPORTED_MODULE_7__.BufferAttribute(normals, normalNumComponents));
-        this.geometry.setAttribute('uv', new three__WEBPACK_IMPORTED_MODULE_7__.BufferAttribute(uvs, uvNumComponents));
-        this.geometry.setAttribute('ao', new three__WEBPACK_IMPORTED_MODULE_7__.BufferAttribute(aos, occlusionNumComponents));
+        this.geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_5__.BufferAttribute(new Float32Array(positions), positionNumComponents));
+        this.geometry.setAttribute('normal', new three__WEBPACK_IMPORTED_MODULE_5__.BufferAttribute(new Float32Array(normals), normalNumComponents));
+        this.geometry.setAttribute('uv', new three__WEBPACK_IMPORTED_MODULE_5__.BufferAttribute(new Float32Array(uvs), uvNumComponents));
+        this.geometry.setAttribute('ao', new three__WEBPACK_IMPORTED_MODULE_5__.BufferAttribute(new Float32Array(aos), occlusionNumComponents));
         this.geometry.setIndex(Array.from(indices));
-        this.altMesh = new three__WEBPACK_IMPORTED_MODULE_7__.Mesh(this.geometry, this.engine.registry.material);
+        this.altMesh = new three__WEBPACK_IMPORTED_MODULE_5__.Mesh(this.geometry, this.engine.registry.material);
         this.altMesh.name = this.name;
         this.altMesh.renderOrder = 10000;
         this.altMesh.frustumCulled = false;
@@ -1294,6 +1231,8 @@ __webpack_require__.r(__webpack_exports__);
 class Container extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     constructor(engine, options) {
         super();
+        this.engine = engine;
+        this.options = options;
         this.domElement = document.body;
         this.setupCanvas = (options) => {
             const { canvas = document.createElement('canvas'), domElement = document.body } = options;
@@ -1315,7 +1254,6 @@ class Container extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.canvas.style.width = `${this.domElement.clientWidth}px`;
             this.canvas.style.height = `${this.domElement.clientHeight}px`;
         };
-        this.engine = engine;
         this.setupCanvas(options);
     }
 }
@@ -1349,6 +1287,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class Debug {
     constructor(engine) {
+        this.engine = engine;
         this.dataEntires = [];
         this.makeDataEntry = () => {
             const dataEntry = document.createElement('p');
@@ -1423,7 +1362,6 @@ class Debug {
             const { chunkSize, maxHeight, dimension } = this.engine.world.options;
             this.chunkHighlight.position.set((cx + 0.5) * chunkSize * dimension, 0.5 * maxHeight * dimension, (cz + 0.5) * chunkSize * dimension);
         };
-        this.engine = engine;
         // dat.gui
         this.gui = new dat_gui__WEBPACK_IMPORTED_MODULE_0__.GUI();
         // FPS indicator
@@ -1442,7 +1380,7 @@ class Debug {
             this.makeDOM();
             this.setupAll();
             this.mount();
-            // engine.rendering.scene.add(this.chunkHighlight);
+            engine.rendering.scene.add(this.chunkHighlight);
             // const {
             //   rendering: { scene },
             //   world: {
@@ -1511,7 +1449,7 @@ const defaultConfig = {
         fov: 75,
         near: 0.1,
         far: 8000,
-        initPos: [10, 10, 10],
+        initPos: [10, 20, 10],
         minPolarAngle: 0,
         maxPolarAngle: Math.PI,
         acceleration: 1,
@@ -1527,8 +1465,7 @@ const defaultConfig = {
         maxHeight: 256,
         generator: '',
         renderRadius: 8,
-        chunkSize: 12,
-        chunkPadding: 2,
+        chunkSize: 16,
         dimension: 1,
         // radius of rendering centered by camera
         // maximum amount of chunks to process per frame tick
@@ -1555,7 +1492,7 @@ const defaultConfig = {
         clearColor: '#b6d2ff',
     },
     network: {
-        url: 'http://localhost:4000',
+        url: `http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}`,
     },
 };
 class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
@@ -1577,7 +1514,7 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             cycle();
         };
         this.tick = () => {
-            if (this.paused)
+            if (this.paused || !this.network.connected)
                 return;
             this.emit('tick-begin');
             // pre-ticks for before physics
@@ -1663,9 +1600,9 @@ __webpack_require__.r(__webpack_exports__);
 
 class Entities {
     constructor(engine, options) {
-        this.list = new _shared__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
         this.engine = engine;
         this.options = options;
+        this.list = new _shared__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
     }
     addEntity(name, object, size, offsets = [0, 0, 0], options = {}) {
         if (this.list.data.length >= this.options.maxEntities)
@@ -1776,9 +1713,9 @@ __webpack_require__.r(__webpack_exports__);
 
 class Inputs {
     constructor(engine) {
+        this.engine = engine;
         this.combos = new _shared__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
         this.callbacks = new _shared__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
-        this.engine = engine;
         this.add('forward', 'w');
         this.add('backward', 's');
         this.add('left', 'a');
@@ -1828,6 +1765,7 @@ class Network {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
+        this.connected = false;
         this.connect = (url) => {
             const socket = new URL(url);
             socket.protocol = socket.protocol.replace(/http/, 'ws');
@@ -1837,14 +1775,35 @@ class Network {
             server.sendEvent = (event) => {
                 server.send(Network.encode(event));
             };
+            server.onopen = () => (this.connected = true);
             server.onerror = (e) => console.error(e);
             server.onmessage = this.onMessage;
+            server.onclose = () => (this.connected = false);
             server.serverURL = url;
             this.server = server;
         };
         this.onEvent = (event) => {
-            const { chunks } = event;
-            console.log(chunks[0].meshes[0].opaque);
+            const { type } = event;
+            switch (type) {
+                case 'INIT': {
+                    const { chunks } = event;
+                    const { engine: { world }, } = this;
+                    for (const chunkData of chunks) {
+                        world.handleServerChunk(chunkData);
+                    }
+                    world.isReady = true;
+                    this.engine.emit('world-ready');
+                    break;
+                }
+                case 'LOAD': {
+                    const { chunks } = event;
+                    const { engine: { world }, } = this;
+                    for (const chunkData of chunks) {
+                        world.handleServerChunk(chunkData);
+                    }
+                    break;
+                }
+            }
         };
         this.onMessage = ({ data }) => {
             let event;
@@ -1871,10 +1830,10 @@ class Network {
         return message;
     }
     static encode(message) {
-        message.type = _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.Type[message.type];
         if (message.json) {
             message.json = JSON.stringify(message.json);
         }
+        message.type = Message.Type[message.type];
         return _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.encode(_protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.create(message)).finish();
     }
 }
@@ -1902,6 +1861,7 @@ class Physics {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
+        this.isPaused = true;
         const testSolidity = (wx, wy, wz) => {
             return engine.world.getSolidityByWorld([wx, wy, wz]);
         };
@@ -1909,10 +1869,17 @@ class Physics {
             return engine.world.getFluidityByVoxel([wx, wy, wz]);
         };
         this.core = new _libs__WEBPACK_IMPORTED_MODULE_0__.Physics(testSolidity, testFluidity, this.options);
+        document.addEventListener('keypress', ({ key }) => {
+            if (key === 'f') {
+                this.isPaused = !this.isPaused;
+            }
+        });
     }
     tick() {
         const { world, clock } = this.engine;
         if (!world.isReady)
+            return;
+        if (this.isPaused)
             return;
         const { delta } = clock;
         this.core.tick(delta);
@@ -1951,159 +1918,50 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const defaultBlockOptions = {
-    isFluid: false,
-    isEmpty: false,
-};
-function reportMaterialError(name, message) {
-    throw new Error(`Error adding material, ${name}: ${message}`);
-}
-function reportBlockError(name, message) {
-    throw new Error(`Error registering block, ${name}: ${message}`);
-}
 class Registry {
     constructor(engine, options) {
-        this.textureMap = {};
-        this.addMaterial = (name, options) => {
-            const { textureWidth } = this.options;
-            const { color, image, texture } = options;
-            const { chunkSize, dimension, renderRadius } = this.engine.config.world;
-            if (!color && !image && !texture) {
-                reportMaterialError(name, 'no color or map provided.');
-            }
-            if (this.materials.getIndex(name) >= 0) {
-                // ? Should material be replaceable?
-                console.warn('Material,', name, 'has been replaced.');
-            }
-            const blockTexture = texture || image ? this.makeImageTexture(image) : this.makeCanvasTexture(color || '');
-            this.textureMap[name] = blockTexture;
-            this.textureAtlas = new _libs__WEBPACK_IMPORTED_MODULE_1__.TextureAtlas(this.textureMap, { textureDimension: textureWidth });
-            this.material = new three__WEBPACK_IMPORTED_MODULE_5__.ShaderMaterial({
-                // wireframe: true,
-                fog: true,
-                transparent: true,
-                vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_4__.default,
-                fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_3__.default,
-                vertexColors: true,
-                uniforms: {
-                    uTexture: { value: this.textureAtlas.mergedTexture },
-                    uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_5__.Color(this.engine.config.rendering.fogColor) },
-                    uFogNear: { value: renderRadius * 0.6 * chunkSize * dimension },
-                    uFogFar: { value: renderRadius * chunkSize * dimension },
-                    // uFogNear: { value: 100 },
-                    // uFogFar: { value: 5000 },
-                },
-            });
-            const { ranges } = this.textureAtlas;
-            for (const name in ranges) {
-                this.materials.set(name, ranges[name]);
-            }
-            const matID = this.materials.get(name);
-            this.updateCache();
-            return matID;
-        };
-        this.addBlock = (name, material = null, options = {}) => {
-            const fullOptions = Object.assign(Object.assign({}, defaultBlockOptions), options);
-            if (this.blocks.getIndex(name) >= 0) {
-                console.warn('Block,', name, 'has been replaced.');
-            }
-            if (material === null) {
-                const noneBlock = {
-                    name,
-                    material: null,
-                    options: fullOptions,
-                };
-                const noneBlockID = this.blocks.set(name, noneBlock);
-                return noneBlockID;
-            }
-            if (Array.isArray(material)) {
-                if (material.length !== 3 && material.length !== 6) {
-                    reportBlockError(name, 'material array must be in length of 3 or 6.');
-                }
-                // if 3 elements: [top, side, bottom]
-                // if 6 elements: [px, py, pz, nx, ny, nz]
-                const [a, b, c, d, e, f] = material;
-                if ((Array.length === 3 && (!a || !b || !c)) || (Array.length === 6 && (!a || !b || !c || !d || !e || !f))) {
-                    reportBlockError(name, 'containing empty material.');
-                }
-                for (let i = 0; i < material.length; i++) {
-                    const mat = material[i];
-                    if (!this.materials.has(mat)) {
-                        throw new Error(`Error registering block, ${name}: material '${mat}'not found.`);
-                    }
-                }
-            }
-            const newBlock = {
-                name,
-                material,
-                options: fullOptions,
-            };
-            const blockID = this.blocks.set(name, newBlock);
-            this.updateCache();
-            return blockID;
-        };
-        this.getMaterialByIndex = (index) => {
-            return this.materials.getByIndex(index);
-        };
-        this.getMaterialIndex = (name) => {
-            return this.materials.getIndex(name);
-        };
-        this.getMaterial = (name) => {
-            return this.materials.get(name);
-        };
-        this.getBlockByIndex = (index) => {
-            return this.blocks.getByIndex(index);
-        };
-        this.getBlockIndex = (name) => {
-            return this.blocks.getIndex(name);
-        };
-        this.getBlock = (name) => {
-            return this.blocks.get(name);
-        };
         this.engine = engine;
         this.options = options;
-        this.materials = new _shared__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
-        this.blocks = new _shared__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
-        this.addMaterial('dirt', { color: '#edc9af' });
-        this.addMaterial('grass', { color: '#41980a' });
-        this.addMaterial('stone', { color: '#999C9B' });
-        this.addBlock('air');
-        this.addBlock('dirt', 'dirt');
-        this.addBlock('grass', 'grass');
-        this.addBlock('stone', 'stone');
+        const { chunkSize, dimension, renderRadius } = this.engine.config.world;
+        const uTexture = { value: undefined };
+        this.material = new three__WEBPACK_IMPORTED_MODULE_5__.ShaderMaterial({
+            // wireframe: true,
+            fog: true,
+            transparent: true,
+            vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_4__.default,
+            fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_3__.default,
+            vertexColors: true,
+            uniforms: {
+                uTexture,
+                uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_5__.Color(this.engine.config.rendering.fogColor) },
+                uFogNear: { value: renderRadius * 0.6 * chunkSize * dimension },
+                uFogFar: { value: renderRadius * chunkSize * dimension },
+                // uFogNear: { value: 100 },
+                // uFogFar: { value: 5000 },
+            },
+        });
+        fetch(`http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}/atlas`)
+            .then((response) => {
+            return response.blob();
+        })
+            .then((blob) => {
+            const url = URL.createObjectURL(blob);
+            const image = new Image();
+            image.src = url;
+            image.onload = () => {
+                const texture = new three__WEBPACK_IMPORTED_MODULE_5__.CanvasTexture(image);
+                texture.wrapS = three__WEBPACK_IMPORTED_MODULE_5__.ClampToEdgeWrapping;
+                texture.wrapT = three__WEBPACK_IMPORTED_MODULE_5__.ClampToEdgeWrapping;
+                texture.minFilter = three__WEBPACK_IMPORTED_MODULE_5__.NearestFilter;
+                texture.magFilter = three__WEBPACK_IMPORTED_MODULE_5__.NearestFilter;
+                texture.generateMipmaps = false;
+                texture.needsUpdate = true;
+                uTexture.value = texture;
+            };
+        });
         engine.on('ready', () => {
             // texture bleeding?
-            this.textureAtlas.mergedTexture.anisotropy = this.engine.rendering.renderer.capabilities.getMaxAnisotropy();
         });
-    }
-    get mergedTexture() {
-        return this.textureAtlas.mergedTexture;
-    }
-    makeCanvasTexture(color) {
-        const { textureWidth } = this.options;
-        const tempCanvas = document.createElement('canvas');
-        const context = tempCanvas.getContext('2d');
-        if (context) {
-            context.canvas.width = textureWidth;
-            context.canvas.height = textureWidth;
-            context.fillStyle = color;
-            context.fillRect(0, 0, textureWidth, textureWidth);
-        }
-        return new three__WEBPACK_IMPORTED_MODULE_5__.CanvasTexture(context ? context.canvas : tempCanvas);
-    }
-    makeImageTexture(image) {
-        if (image) {
-            const { textureWidth } = this.options;
-            image.style.width = `${textureWidth}px`;
-            image.style.height = 'auto';
-        }
-        const texture = new three__WEBPACK_IMPORTED_MODULE_5__.Texture(image);
-        texture.needsUpdate = true;
-        return texture;
-    }
-    updateCache() {
-        this.cBlockDictionary = this.blocks.toIndexMap();
-        this.cMaterialUVDictionary = this.materials.toObject();
     }
 }
 
@@ -2138,6 +1996,8 @@ __webpack_require__.r(__webpack_exports__);
 class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     constructor(engine, options) {
         super();
+        this.engine = engine;
+        this.options = options;
         this.adjustRenderer = () => {
             const { width, height } = this.renderSize;
             this.renderer.setSize(width, height);
@@ -2151,8 +2011,7 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.render = () => {
             this.composer.render();
         };
-        this.engine = engine;
-        const { clearColor } = (this.options = options);
+        const { clearColor } = options;
         // three.js scene
         this.scene = new three__WEBPACK_IMPORTED_MODULE_3__.Scene();
         // renderer
@@ -2214,35 +2073,16 @@ __webpack_require__.r(__webpack_exports__);
 class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     constructor(engine, options) {
         super();
-        this.isReady = false;
-        this.chunks = new _shared__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
-        this.dirtyChunks = []; // chunks that are freshly made
-        this.visibleChunks = [];
-        this.batchedChanges = [];
-        this.options = Object.assign({}, options);
-        const { generator } = this.options;
         this.engine = engine;
-        switch (generator) {
-            case 'flat':
-                this.generator = new _libs__WEBPACK_IMPORTED_MODULE_2__.FlatGenerator(this.engine);
-                break;
-            case 'sin-cos':
-                this.generator = new _libs__WEBPACK_IMPORTED_MODULE_2__.SinCosGenerator(this.engine);
-        }
+        this.options = options;
+        this.isReady = false;
+        this.pendingChunks = [];
+        this.chunks = new _shared__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
+        this.visibleChunks = [];
     }
     tick() {
-        // Check camera position
         this.checkCamChunk();
-        this.meshDirtyChunks();
-        const toBeChanged = this.batchedChanges.splice(0, this.options.maxBlockPerFrame);
-        toBeChanged.forEach(({ voxel, type }) => {
-            if (this.getVoxelByVoxel(voxel) === type)
-                return;
-            const chunk = this.getChunkByVoxel(voxel);
-            chunk === null || chunk === void 0 ? void 0 : chunk.setVoxel(...voxel, type);
-            const neighborChunks = this.getNeighborChunksByVoxel(voxel);
-            neighborChunks.forEach((c) => c === null || c === void 0 ? void 0 : c.setVoxel(...voxel, type));
-        });
+        this.requestChunks();
     }
     getChunkByCPos(cCoords) {
         return this.getChunkByName(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(cCoords));
@@ -2255,7 +2095,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         const chunkCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
         return this.getChunkByCPos(chunkCoords);
     }
-    getNeighborChunksByVoxel(vCoords, padding = this.options.chunkPadding) {
+    getNeighborChunksByVoxel(vCoords, padding = 0) {
         const { chunkSize } = this.options;
         const chunk = this.getChunkByVoxel(vCoords);
         const [cx, cz] = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
@@ -2295,10 +2135,6 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
         return this.getVoxelByVoxel(vCoords);
     }
-    getMaxHeightByVoxel(vCoords) {
-        const chunk = this.getChunkByVoxel(vCoords);
-        return chunk ? chunk.getMaxHeightLocal(vCoords[0], vCoords[2]) : 0;
-    }
     getSolidityByVoxel(vCoords) {
         return !!this.getVoxelByVoxel(vCoords);
     }
@@ -2314,14 +2150,24 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
         return this.getFluidityByVoxel(vCoords);
     }
+    handleServerChunk(serverChunk) {
+        const { x: cx, z: cz } = serverChunk;
+        const coords = [cx, cz];
+        let chunk = this.getChunkByCPos(coords);
+        if (!chunk) {
+            const { chunkSize, dimension, maxHeight } = this.options;
+            chunk = new _chunk__WEBPACK_IMPORTED_MODULE_4__.Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
+            this.setChunk(chunk);
+        }
+        chunk.setupMesh(serverChunk.meshes[0].opaque);
+        chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+        chunk.addToScene();
+    }
     setChunk(chunk) {
         return this.chunks.set(chunk.name, chunk);
     }
     setVoxel(vCoords, type) {
-        this.batchedChanges.push({
-            voxel: vCoords,
-            type,
-        });
+        // TODO
     }
     breakVoxel() {
         if (this.engine.camera.lookBlock) {
@@ -2364,21 +2210,9 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                     continue;
                 const chunk = this.getChunkByCPos([x, z]);
                 if (chunk) {
-                    if (chunk.isInitialized) {
-                        chunksLoaded++;
-                        if (!chunk.isDirty) {
-                            if (!chunk.isAdded) {
-                                chunk.addToScene();
-                            }
-                        }
-                        else {
-                            // this means chunk is dirty. two possibilities:
-                            // 1. chunk has just been populated with terrain data
-                            // 2. chunk is modified
-                            if (!chunk.isMeshing) {
-                                chunk.buildMesh();
-                            }
-                        }
+                    chunksLoaded++;
+                    if (!chunk.isAdded) {
+                        chunk.addToScene();
                     }
                 }
             }
@@ -2389,7 +2223,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         }
     }
     surroundCamChunks() {
-        const { renderRadius, dimension, chunkSize, chunkPadding, maxHeight } = this.options;
+        const { renderRadius, chunkSize, dimension } = this.options;
         const [cx, cz] = this.camChunkPos;
         for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
             for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
@@ -2399,51 +2233,30 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                     continue;
                 const chunk = this.getChunkByCPos([x, z]);
                 if (!chunk) {
-                    const newChunk = new _chunk__WEBPACK_IMPORTED_MODULE_4__.Chunk(this.engine, [x, z], {
-                        maxHeight,
-                        dimension,
-                        size: chunkSize,
-                        padding: chunkPadding,
-                    });
-                    this.setChunk(newChunk);
-                    this.dirtyChunks.push(newChunk);
+                    this.pendingChunks.push([x, z]);
                 }
             }
         }
         // if the chunk is too far away, remove from scene.
-        const deleteDistance = renderRadius * chunkSize * dimension;
+        const deleteDistance = renderRadius * chunkSize * 1.414;
         for (const chunk of this.visibleChunks) {
             if (chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
                 chunk.removeFromScene();
             }
         }
     }
-    meshDirtyChunks() {
-        if (this.dirtyChunks.length > 0) {
-            let count = 0;
-            while (count <= this.options.maxChunkPerFrame && this.dirtyChunks.length > 0) {
-                count++;
-                const chunk = this.dirtyChunks.shift();
-                if (!chunk)
-                    break; // array is empty?
-                // chunk needs to be populated with terrain data
-                // `isInitialized` will be switched to true once terrain data is set
-                this.requestChunkData(chunk);
-                continue;
-            }
-        }
-    }
-    async requestChunkData(chunk) {
-        if (!this.generator) {
-            // client side terrain generation, call chunk.initialized once finished.
-            // assume the worst, say the chunk is not empty
-            chunk.isEmpty = false;
-            chunk.isPending = true;
-            this.engine.emit('data-needed', chunk);
+    requestChunks() {
+        // separate chunk request into frames to avoid clogging
+        const { maxChunkPerFrame } = this.options;
+        if (this.pendingChunks.length === 0)
             return;
-        }
-        await this.generator.generate(chunk);
-        await chunk.initialized();
+        const framePendingChunks = this.pendingChunks.splice(0, maxChunkPerFrame);
+        framePendingChunks.forEach(([cx, cz]) => {
+            this.engine.network.server.sendEvent({
+                type: 'LOAD',
+                chunks: [{ x: cx, z: cz }],
+            });
+        });
     }
 }
 
@@ -2914,8 +2727,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_5__.Physics),
 /* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_6__.RigidBody),
 /* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_7__.Sky),
-/* harmony export */   "TextureAtlas": () => (/* reexport safe */ _texture_atlas__WEBPACK_IMPORTED_MODULE_8__.TextureAtlas),
-/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_10__.VoxelOctree)
+/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_9__.VoxelOctree)
 /* harmony export */ });
 /* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 /* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
@@ -2925,10 +2737,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
 /* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
 /* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
-/* harmony import */ var _texture_atlas__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./texture-atlas */ "./client/libs/texture-atlas.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
-/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
-
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
 
 
 
@@ -2955,61 +2765,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_0__.simpleCull)
 /* harmony export */ });
 /* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/meshers/simple-cull.ts");
-
-
-
-/***/ }),
-
-/***/ "./client/libs/meshers/make-height-map.ts":
-/*!************************************************!*\
-  !*** ./client/libs/meshers/make-height-map.ts ***!
-  \************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "makeHeightMap": () => (/* binding */ makeHeightMap)
-/* harmony export */ });
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils */ "./client/utils/index.ts");
-/* harmony import */ var _raw_loader_workers_make_height_map_worker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! !raw-loader!./workers/make-height-map.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/make-height-map.worker.js");
-
-
-
-const DEFAULT_WORKER_COUNT = 20;
-const workers = [];
-for (let i = 0; i < DEFAULT_WORKER_COUNT; i++) {
-    workers.push(_utils__WEBPACK_IMPORTED_MODULE_1__.Helper.loadWorker(_raw_loader_workers_make_height_map_worker__WEBPACK_IMPORTED_MODULE_2__.default));
-}
-async function makeHeightMap(chunk) {
-    const { voxels, heightMap, padding, minInner, maxInner } = chunk;
-    const { stride: hmStride } = heightMap;
-    const { stride } = voxels;
-    const voxelsBuffer = voxels.data.buffer.slice(0);
-    const heightMapBuffer = heightMap.data.buffer.slice(0);
-    const worker = workers.pop() || _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.loadWorker(_raw_loader_workers_make_height_map_worker__WEBPACK_IMPORTED_MODULE_2__.default);
-    const newHeightMapData = await new Promise((resolve) => {
-        worker.postMessage({
-            data: voxelsBuffer,
-            heightMap: heightMapBuffer,
-            configs: {
-                padding,
-                min: minInner,
-                max: maxInner,
-                stride,
-                hmStride,
-            },
-        }, [voxelsBuffer, heightMapBuffer]);
-        worker.onmessage = ({ data: newHeightMapBuffer }) => {
-            resolve(new Uint8Array(newHeightMapBuffer));
-        };
-    });
-    chunk.heightMap.data = newHeightMapData;
-    if (workers.length < DEFAULT_WORKER_COUNT) {
-        workers.push(worker);
-    }
-}
 
 
 
@@ -3502,108 +3257,6 @@ class Sky {
 
 /***/ }),
 
-/***/ "./client/libs/texture-atlas.ts":
-/*!**************************************!*\
-  !*** ./client/libs/texture-atlas.ts ***!
-  \**************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "TextureAtlas": () => (/* binding */ TextureAtlas)
-/* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-
-const defaultTextureAtlasOptions = {
-    textureDimension: 16,
-};
-class TextureAtlas {
-    constructor(textureMap, options = {}) {
-        var _a;
-        this.ranges = {};
-        this.dataURLs = {};
-        this.canvas = document.createElement('canvas');
-        const { textureDimension } = (this.options = Object.assign(Object.assign({}, defaultTextureAtlasOptions), options));
-        const countPerSide = Math.ceil(Math.sqrt(Object.keys(textureMap).length));
-        const canvasWidth = countPerSide * textureDimension;
-        const canvasHeight = countPerSide * textureDimension;
-        this.canvas.width = canvasWidth;
-        this.canvas.height = canvasHeight;
-        let row = 0;
-        let col = 0;
-        for (const textureName in textureMap) {
-            if (col >= countPerSide) {
-                col = 0;
-                row++;
-            }
-            const texture = textureMap[textureName];
-            if (texture instanceof three__WEBPACK_IMPORTED_MODULE_0__.CompressedTexture) {
-                throw new Error('CompressedTextures are not supported.');
-            }
-            // saving the textures
-            if (typeof texture.image.toDataURL === 'undefined') {
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = texture.image.naturalWidth;
-                tempCanvas.height = texture.image.naturalHeight;
-                (_a = tempCanvas.getContext('2d')) === null || _a === void 0 ? void 0 : _a.drawImage(texture.image, 0, 0);
-                this.dataURLs[textureName] = tempCanvas.toDataURL();
-            }
-            else {
-                this.dataURLs[textureName] = texture.image.toDataURL();
-            }
-            const context = this.canvas.getContext('2d');
-            if (context) {
-                const startX = col * textureDimension;
-                const startY = row * textureDimension;
-                context.drawImage(texture.image, startX, startY, textureDimension, textureDimension);
-                const startU = startX / canvasWidth;
-                const endU = (startX + textureDimension) / canvasWidth;
-                const startV = 1 - startY / canvasHeight;
-                const endV = 1 - (startY + textureDimension) / canvasHeight;
-                this.ranges[textureName] = {
-                    startU,
-                    endU,
-                    startV,
-                    endV,
-                };
-                this.makeCanvasPowerOfTwo(this.canvas);
-                this.mergedTexture = new three__WEBPACK_IMPORTED_MODULE_0__.CanvasTexture(this.canvas);
-                this.mergedTexture.wrapS = three__WEBPACK_IMPORTED_MODULE_0__.ClampToEdgeWrapping;
-                this.mergedTexture.wrapT = three__WEBPACK_IMPORTED_MODULE_0__.ClampToEdgeWrapping;
-                this.mergedTexture.minFilter = three__WEBPACK_IMPORTED_MODULE_0__.NearestFilter;
-                this.mergedTexture.magFilter = three__WEBPACK_IMPORTED_MODULE_0__.NearestFilter;
-                this.mergedTexture.generateMipmaps = false;
-                this.mergedTexture.needsUpdate = true;
-            }
-            col++;
-        }
-    }
-    makeCanvasPowerOfTwo(canvas) {
-        var _a;
-        let setCanvas = false;
-        if (!canvas) {
-            canvas = this.canvas;
-            setCanvas = true;
-        }
-        const oldWidth = canvas.width;
-        const oldHeight = canvas.height;
-        const newWidth = Math.pow(2, Math.round(Math.log(oldWidth) / Math.log(2)));
-        const newHeight = Math.pow(2, Math.round(Math.log(oldHeight) / Math.log(2)));
-        const newCanvas = document.createElement('canvas');
-        newCanvas.width = newWidth;
-        newCanvas.height = newHeight;
-        (_a = newCanvas.getContext('2d')) === null || _a === void 0 ? void 0 : _a.drawImage(canvas, 0, 0, newWidth, newHeight);
-        if (setCanvas) {
-            this.canvas = newCanvas;
-        }
-    }
-}
-
-
-
-/***/ }),
-
 /***/ "./client/libs/types.ts":
 /*!******************************!*\
   !*** ./client/libs/types.ts ***!
@@ -3793,6 +3446,22 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./shared/config.ts":
+/*!**************************!*\
+  !*** ./shared/config.ts ***!
+  \**************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "SHARED_CONFIG": () => (/* binding */ SHARED_CONFIG)
+/* harmony export */ });
+const SHARED_CONFIG = {};
+
+
+/***/ }),
+
 /***/ "./shared/helper.ts":
 /*!**************************!*\
   !*** ./shared/helper.ts ***!
@@ -3921,12 +3590,15 @@ Helper.approxEquals = (a, b) => {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_0__.Helper),
-/* harmony export */   "SmartDictionary": () => (/* reexport safe */ _smart_dictionary__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary)
+/* harmony export */   "SHARED_CONFIG": () => (/* reexport safe */ _config__WEBPACK_IMPORTED_MODULE_0__.SHARED_CONFIG),
+/* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_1__.Helper),
+/* harmony export */   "SmartDictionary": () => (/* reexport safe */ _smart_dictionary__WEBPACK_IMPORTED_MODULE_2__.SmartDictionary)
 /* harmony export */ });
-/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./helper */ "./shared/helper.ts");
-/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./smart-dictionary */ "./shared/smart-dictionary.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
+/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config */ "./shared/config.ts");
+/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./helper */ "./shared/helper.ts");
+/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./smart-dictionary */ "./shared/smart-dictionary.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
+
 
 
 
@@ -18755,7 +18427,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform sampler2D uTexture;\nuniform vec3 uFogColor;\nuniform float uFogNear;\nuniform float uFogFar;\n\nvarying vec2 vUv; // u, v \nvarying float vAO;\n\nvoid main() {\n  vec4 textureColor = texture2D(uTexture, vUv);\n\n  gl_FragColor = vec4(textureColor.rgb * vAO, textureColor.w);\n\n  // fog\n  float depth = gl_FragCoord.z / gl_FragCoord.w;\n  float fogFactor = smoothstep( uFogNear, uFogFar, depth );\n  gl_FragColor.rgb = mix( gl_FragColor.rgb, uFogColor, fogFactor );\n} ");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform sampler2D uTexture;\nuniform vec3 uFogColor;\nuniform float uFogNear;\nuniform float uFogFar;\n\nvarying vec2 vUv; // u, v \nvarying float vAO;\n\nvoid main() {\n  vec4 textureColor = texture2D(uTexture, vUv);\n\n  gl_FragColor = vec4(textureColor.rgb * vAO, textureColor.w);\n\n  // fog\n  // float depth = gl_FragCoord.z / gl_FragCoord.w;\n  // float fogFactor = smoothstep( uFogNear, uFogFar, depth );\n  // gl_FragColor.rgb = mix( gl_FragColor.rgb, uFogColor, fogFactor );\n} ");
 
 /***/ }),
 
@@ -18786,21 +18458,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("function set(arr, x, y, z, stride, value) {\n  arr[x * stride[0] + y * stride[1] + z * stride[2]] = value;\n  return value;\n}\n\nfunction getVoxelAt(vx, vy, vz, types, maxHeight) {\n  let blockID = 0;\n\n  if (vy >= maxHeight) return 0;\n  if (vy === 0) return types.stone;\n  if (vy < 0) return 0;\n\n  const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20) + 30;\n  const height2 = 0;\n  if (vy < height1 && vy > height2) {\n    blockID = Math.random() > 0.5 ? types.grass : types.stone;\n  }\n\n  return blockID;\n}\n\nself.onmessage = function (e) {\n  const {\n    data: dataBuffer,\n    configs: { min, max, stride, types, maxHeight },\n  } = e.data;\n\n  const data = new Uint8Array(dataBuffer);\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  let isEmpty = true;\n\n  for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {\n    for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {\n      for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {\n        const voxel = getVoxelAt(vx, vy, vz, types, maxHeight);\n        if (voxel) {\n          isEmpty = false;\n          set(data, lx, ly, lz, stride, voxel);\n        }\n      }\n    }\n  }\n\n  postMessage({ voxels: data.buffer, isEmpty }, [data.buffer]);\n};\n");
-
-/***/ }),
-
-/***/ "./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/make-height-map.worker.js":
-/*!*****************************************************************************************************!*\
-  !*** ./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/make-height-map.worker.js ***!
-  \*****************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("function get(arr, x, y, z, stride) {\n  return arr[x * stride[0] + y * stride[1] + z * stride[2]];\n}\n\nfunction set2(arr, x, z, stride, value) {\n  arr[x * stride[0] + z * stride[1]] = value;\n}\n\nonmessage = function (e) {\n  const {\n    data: dataBuffer,\n    heightMap: heightMapBuffer,\n    configs: { padding, min, max, stride, hmStride },\n  } = e.data;\n\n  const data = new Uint8Array(dataBuffer);\n  const heightMap = new Uint8Array(heightMapBuffer);\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  for (let lx = padding; lx < endX - startX; lx++) {\n    for (let lz = padding; lz < endZ - startZ; lz++) {\n      let maxHeight = 0;\n\n      for (let ly = endY - startY - 1; ly >= 0; ly--) {\n        if (get(data, lx, ly, lz, stride) !== 0) {\n          maxHeight = ly;\n          break;\n        }\n      }\n\n      set2(heightMap, lx, lz, hmStride, maxHeight);\n    }\n  }\n\n  postMessage(heightMap.buffer, [heightMap.buffer]);\n};\n");
 
 /***/ }),
 

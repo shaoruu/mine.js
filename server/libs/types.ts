@@ -22,11 +22,3 @@ export type BlockType = {
   isTransparent: boolean;
   textures?: TextureType;
 };
-
-export type MeshType = {
-  positions: Float32Array;
-  normals: Float32Array;
-  indices: Float32Array;
-  uvs: Float32Array;
-  aos: Float32Array;
-};

@@ -2,9 +2,7 @@ import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
 import { BufferAttribute, BufferGeometry, Mesh } from 'three';
 
-import { Coords2, Coords3 } from '../../shared';
-import { simpleCull } from '../libs/meshers';
-import { makeHeightMap } from '../libs/meshers/make-height-map';
+import { Coords2, Coords3, MeshType } from '../../shared';
 import { Helper } from '../utils';
 
 import { Engine } from './engine';
@@ -13,27 +11,20 @@ type ChunkOptions = {
   size: number;
   maxHeight: number;
   dimension: number;
-  padding: number;
 };
 
 class Chunk {
-  public engine: Engine;
-  public coords: Coords2;
   public voxels: ndarray;
-  public heightMap: ndarray;
 
   public name: string;
   public size: number;
   public maxHeight: number;
   public dimension: number;
-  public padding: number;
   public width: number;
 
   // voxel position references in voxel space
-  public minInner: Coords3; // chunk's minimum voxel (not padded)
-  public minOuter: Coords3; // chunk's minimum voxel (padded)
-  public maxInner: Coords3; // chunk's maximum voxel (not padded)
-  public maxOuter: Coords3; // chunk's maximum voxel (padded)
+  public min: Coords3 = [0, 0, 0];
+  public max: Coords3 = [0, 0, 0];
 
   public geometry: BufferGeometry;
   public mesh: Mesh;
@@ -46,92 +37,35 @@ class Chunk {
   public isInitialized = false; // is populated with terrain info
   public isPending = false; // pending for client-side terrain generation
 
-  constructor(engine: Engine, coords: Coords2, { size, dimension, padding, maxHeight }: ChunkOptions) {
-    this.engine = engine;
-    this.coords = coords;
-
+  constructor(public engine: Engine, public coords: Coords2, { size, dimension, maxHeight }: ChunkOptions) {
     this.size = size;
     this.maxHeight = maxHeight;
     this.dimension = dimension;
-    this.padding = padding;
-    this.width = size + padding * 2;
     this.name = Helper.getChunkName(this.coords);
 
-    this.voxels = ndarray(new Uint8Array(this.width * this.maxHeight * this.width), [
-      this.width,
-      this.maxHeight,
-      this.width,
-    ]);
-    this.heightMap = ndarray(new Uint8Array(this.width * this.width), [this.width, this.width]);
+    this.voxels = ndarray(new Uint8Array(size * maxHeight * size), [size, maxHeight, size]);
 
     this.geometry = new BufferGeometry();
-
-    this.minInner = [0, 0, 0];
-    this.minOuter = [0, 0, 0];
-    this.maxInner = [0, 0, 0];
-    this.maxOuter = [0, 0, 0];
 
     const [cx, cz] = coords;
     const coords3 = [cx, 0, cz];
 
     // initialize
-    vec3.copy(this.minInner, coords3);
-    vec3.copy(this.minOuter, coords3);
-    vec3.copy(this.maxInner, coords3);
-    vec3.copy(this.maxOuter, coords3);
-
-    // calculate
-    const paddingVec = [padding, 0, padding];
-    vec3.scale(this.minOuter, this.minOuter, size);
-    vec3.sub(this.minOuter, this.minOuter, paddingVec);
-    vec3.add(this.minInner, this.minOuter, paddingVec);
-    vec3.add(this.maxOuter, this.maxOuter, [1, 0, 1]);
-    vec3.scale(this.maxOuter, this.maxOuter, size);
-    vec3.add(this.maxOuter, this.maxOuter, [0, maxHeight, 0]);
-    vec3.add(this.maxOuter, this.maxOuter, paddingVec);
-    vec3.sub(this.maxInner, this.maxOuter, paddingVec);
-  }
-
-  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
-  getLocal(lx: number, ly: number, lz: number) {
-    return this.voxels.get(lx + this.padding, ly, lz + this.padding);
-  }
-
-  // goes from [-padding, 0, -padding] to [size + padding - 1, maxHeight - 1, size + padding - 1]
-  setLocal(lx: number, ly: number, lz: number, id: number) {
-    return this.voxels.set(lx + this.padding, ly, lz + this.padding, id);
-  }
-
-  getMaxHeightLocal(lx: number, lz: number) {
-    return this.heightMap.get(lx, lz);
-  }
-
-  getMaxHeight(vx: number, vz: number) {
-    const [lx, , lz] = this.toLocal(vx, 0, vz);
-    return this.getMaxHeightLocal(lx, lz);
+    vec3.copy(this.min, coords3);
+    vec3.copy(this.max, coords3);
+    vec3.scale(this.min, this.min, size);
+    vec3.add(this.max, this.max, [1, 0, 1]);
+    vec3.scale(this.max, this.max, size);
+    vec3.add(this.max, this.max, [0, maxHeight, 0]);
   }
 
   getVoxel(vx: number, vy: number, vz: number) {
     if (!this.contains(vx, vy, vz)) return;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-    return this.getLocal(lx, ly, lz);
+    return this.voxels.get(lx, ly, lz);
   }
 
-  setVoxel(vx: number, vy: number, vz: number, id: number) {
-    if (!this.contains(vx, vy, vz)) return;
-    // if voxel type doesn't change
-    if (this.getVoxel(vx, vy, vz) === id) return;
-
-    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-    this.setLocal(lx, ly, lz, id);
-
-    // change chunk state
-    if (id !== 0) this.isEmpty = false;
-    // mark chunk as dirty
-    this.isDirty = true;
-  }
-
-  contains(vx: number, vy: number, vz: number, padding = this.padding) {
+  contains(vx: number, vy: number, vz: number, padding = 0) {
     const { size, maxHeight } = this;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
 
@@ -139,8 +73,8 @@ class Chunk {
   }
 
   distTo(vx: number, _: number, vz: number) {
-    const [mx, , mz] = this.minInner;
-    return Math.sqrt((mx - vx) * (mx - vx) + (mz - vz) * (mz - vz));
+    const [mx, , mz] = this.min;
+    return Math.sqrt((mx + this.size / 2 - vx) * (mx + this.size / 2 - vx) + (mz + this.size / 2 - vz) * (mz - vz));
   }
 
   addToScene() {
@@ -165,27 +99,10 @@ class Chunk {
     this.geometry.dispose();
   }
 
-  async initialized() {
-    this.isInitialized = true;
-    this.isPending = false;
+  setupMesh(meshData: MeshType) {
+    const { positions, normals, indices, uvs, aos } = meshData;
 
-    // build mesh once initialized
-    await makeHeightMap(this);
-    await this.buildMesh();
-  }
-
-  async buildMesh() {
-    if (this.isEmpty) {
-      // if it's empty, it can't be dirty
-      this.isDirty = false;
-      return;
-    }
-
-    // don't need to be meshed again
-    this.isDirty = false;
     this.isMeshing = true;
-
-    const { positions, normals, indices, uvs, aos } = await simpleCull(this);
 
     const positionNumComponents = 3;
     const normalNumComponents = 3;
@@ -193,10 +110,10 @@ class Chunk {
     const occlusionNumComponents = 1;
 
     this.geometry.dispose();
-    this.geometry.setAttribute('position', new BufferAttribute(positions, positionNumComponents));
-    this.geometry.setAttribute('normal', new BufferAttribute(normals, normalNumComponents));
-    this.geometry.setAttribute('uv', new BufferAttribute(uvs, uvNumComponents));
-    this.geometry.setAttribute('ao', new BufferAttribute(aos, occlusionNumComponents));
+    this.geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), positionNumComponents));
+    this.geometry.setAttribute('normal', new BufferAttribute(new Float32Array(normals), normalNumComponents));
+    this.geometry.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), uvNumComponents));
+    this.geometry.setAttribute('ao', new BufferAttribute(new Float32Array(aos), occlusionNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
     this.altMesh = new Mesh(this.geometry, this.engine.registry.material);
@@ -209,7 +126,7 @@ class Chunk {
   }
 
   private toLocal = (vx: number, vy: number, vz: number) => {
-    return vec3.sub([0, 0, 0], [vx, vy, vz], this.minInner);
+    return vec3.sub([0, 0, 0], [vx, vy, vz], this.min);
   };
 }
 

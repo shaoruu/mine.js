@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 
-import { Coords2, Coords3 } from '../../shared';
+import { Coords2, Coords3, MeshType } from '../../shared';
 import { SmartDictionary } from '../../shared';
-import { GeneratorType, FlatGenerator, Generator, SinCosGenerator } from '../libs';
+import { GeneratorType } from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
@@ -11,7 +11,6 @@ import { Engine } from './engine';
 type WorldOptionsType = {
   maxHeight: number;
   chunkSize: number;
-  chunkPadding: number;
   dimension: number;
   generator?: GeneratorType;
   renderRadius: number;
@@ -19,61 +18,25 @@ type WorldOptionsType = {
   maxBlockPerFrame: number;
 };
 
-type VoxelChangeType = {
-  voxel: Coords3;
-  type: number;
-};
+type ServerChunkType = { x: number; z: number; meshes: { opaque: MeshType }[]; voxels: Uint8Array };
 
 class World extends EventEmitter {
-  public engine: Engine;
-  public generator: Generator;
-  public options: WorldOptionsType;
-
   public isReady = false;
 
   private camChunkName: string;
   private camChunkPos: Coords2;
 
+  private pendingChunks: Coords2[] = [];
   private chunks: SmartDictionary<Chunk> = new SmartDictionary();
-  private dirtyChunks: Chunk[] = []; // chunks that are freshly made
   private visibleChunks: Chunk[] = [];
-  private batchedChanges: VoxelChangeType[] = [];
 
-  constructor(engine: Engine, options: WorldOptionsType) {
+  constructor(public engine: Engine, public options: WorldOptionsType) {
     super();
-
-    this.options = {
-      ...options,
-    };
-
-    const { generator } = this.options;
-
-    this.engine = engine;
-
-    switch (generator) {
-      case 'flat':
-        this.generator = new FlatGenerator(this.engine);
-        break;
-      case 'sin-cos':
-        this.generator = new SinCosGenerator(this.engine);
-    }
   }
 
   tick() {
-    // Check camera position
     this.checkCamChunk();
-    this.meshDirtyChunks();
-
-    const toBeChanged = this.batchedChanges.splice(0, this.options.maxBlockPerFrame);
-
-    toBeChanged.forEach(({ voxel, type }) => {
-      if (this.getVoxelByVoxel(voxel) === type) return;
-
-      const chunk = this.getChunkByVoxel(voxel);
-      chunk?.setVoxel(...voxel, type);
-      const neighborChunks = this.getNeighborChunksByVoxel(voxel);
-      neighborChunks.forEach((c) => c?.setVoxel(...voxel, type));
-    });
+    this.requestChunks();
   }
 
   getChunkByCPos(cCoords: Coords2) {
@@ -90,7 +53,7 @@ class World extends EventEmitter {
     return this.getChunkByCPos(chunkCoords);
   }
 
-  getNeighborChunksByVoxel(vCoords: Coords3, padding = this.options.chunkPadding) {
+  getNeighborChunksByVoxel(vCoords: Coords3, padding = 0) {
     const { chunkSize } = this.options;
     const chunk = this.getChunkByVoxel(vCoords);
     const [cx, cz] = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
@@ -129,11 +92,6 @@ class World extends EventEmitter {
     return this.getVoxelByVoxel(vCoords);
   }
 
-  getMaxHeightByVoxel(vCoords: Coords3) {
-    const chunk = this.getChunkByVoxel(vCoords);
-    return chunk ? chunk.getMaxHeightLocal(vCoords[0], vCoords[2]) : 0;
-  }
-
   getSolidityByVoxel(vCoords: Coords3) {
     return !!this.getVoxelByVoxel(vCoords);
   }
@@ -153,15 +111,29 @@ class World extends EventEmitter {
     return this.getFluidityByVoxel(vCoords);
   }
 
+  handleServerChunk(serverChunk: ServerChunkType) {
+    const { x: cx, z: cz } = serverChunk;
+    const coords = [cx, cz] as Coords2;
+
+    let chunk = this.getChunkByCPos(coords);
+
+    if (!chunk) {
+      const { chunkSize, dimension, maxHeight } = this.options;
+      chunk = new Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
+      this.setChunk(chunk);
+    }
+
+    chunk.setupMesh(serverChunk.meshes[0].opaque);
+    chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+    chunk.addToScene();
+  }
+
   setChunk(chunk: Chunk) {
     return this.chunks.set(chunk.name, chunk);
   }
 
   setVoxel(vCoords: Coords3, type: number) {
-    this.batchedChanges.push({
-      voxel: vCoords,
-      type,
-    });
+    // TODO
   }
 
   breakVoxel() {
@@ -217,20 +189,10 @@ class World extends EventEmitter {
         const chunk = this.getChunkByCPos([x, z]);
 
         if (chunk) {
-          if (chunk.isInitialized) {
-            chunksLoaded++;
-            if (!chunk.isDirty) {
-              if (!chunk.isAdded) {
-                chunk.addToScene();
-              }
-            } else {
-              // this means chunk is dirty. two possibilities:
-              // 1. chunk has just been populated with terrain data
-              // 2. chunk is modified
-              if (!chunk.isMeshing) {
-                chunk.buildMesh();
-              }
-            }
+          chunksLoaded++;
+
+          if (!chunk.isAdded) {
+            chunk.addToScene();
           }
         }
       }
@@ -243,9 +205,10 @@ class World extends EventEmitter {
   }
 
   private surroundCamChunks() {
-    const { renderRadius, dimension, chunkSize, chunkPadding, maxHeight } = this.options;
+    const { renderRadius, chunkSize, dimension } = this.options;
 
     const [cx, cz] = this.camChunkPos;
+
     for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
       for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
         const dx = x - cx;
@@ -255,21 +218,13 @@ class World extends EventEmitter {
         const chunk = this.getChunkByCPos([x, z]);
 
         if (!chunk) {
-          const newChunk = new Chunk(this.engine, [x, z], {
-            maxHeight,
-            dimension,
-            size: chunkSize,
-            padding: chunkPadding,
-          });
-
-          this.setChunk(newChunk);
-          this.dirtyChunks.push(newChunk);
+          this.pendingChunks.push([x, z]);
         }
       }
     }
 
     // if the chunk is too far away, remove from scene.
-    const deleteDistance = renderRadius * chunkSize * dimension;
+    const deleteDistance = renderRadius * chunkSize * 1.414;
     for (const chunk of this.visibleChunks) {
       if (chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
         chunk.removeFromScene();
@@ -277,36 +232,17 @@ class World extends EventEmitter {
     }
   }
 
-  private meshDirtyChunks() {
-    if (this.dirtyChunks.length > 0) {
-      let count = 0;
-      while (count <= this.options.maxChunkPerFrame && this.dirtyChunks.length > 0) {
-        count++;
-
-        const chunk = this.dirtyChunks.shift();
-
-        if (!chunk) break; // array is empty?
-        // chunk needs to be populated with terrain data
-        // `isInitialized` will be switched to true once terrain data is set
-        this.requestChunkData(chunk);
-        continue;
-      }
-    }
-  }
-
-  private async requestChunkData(chunk: Chunk) {
-    if (!this.generator) {
-      // client side terrain generation, call chunk.initialized once finished.
-      // assume the worst, say the chunk is not empty
-      chunk.isEmpty = false;
-      chunk.isPending = true;
-      this.engine.emit('data-needed', chunk);
-
-      return;
-    }
-
-    await this.generator.generate(chunk);
-    await chunk.initialized();
+  private requestChunks() {
+    // separate chunk request into frames to avoid clogging
+    const { maxChunkPerFrame } = this.options;
+    if (this.pendingChunks.length === 0) return;
+    const framePendingChunks = this.pendingChunks.splice(0, maxChunkPerFrame);
+    framePendingChunks.forEach(([cx, cz]) => {
+      this.engine.network.server.sendEvent({
+        type: 'LOAD',
+        chunks: [{ x: cx, z: cz }],
+      });
+    });
   }
 }
 

@@ -5,8 +5,7 @@ import zlib from 'zlib';
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
 
-import { Coords2, Coords3, Helper } from '../../shared';
-import { MeshType } from '../libs';
+import { Coords2, Coords3, Helper, MeshType } from '../../shared';
 
 import { World, Mesher, Generator, GeneratorTypes } from '.';
 
@@ -59,19 +58,19 @@ class Chunk {
   }
 
   getVoxel = (voxel: Coords3) => {
-    return this.voxels.get(...voxel);
+    return this.voxels.get(...this.toLocal(voxel));
   };
 
   setVoxel = (voxel: Coords3, type: number) => {
-    return this.voxels.set(...voxel, type);
+    return this.voxels.set(...this.toLocal(voxel), type);
   };
 
   getLight = (voxel: Coords3) => {
-    return this.lights.get(...voxel);
+    return this.lights.get(...this.toLocal(voxel));
   };
 
   setLight = (voxel: Coords3, level: number) => {
-    return this.lights.set(...voxel, level);
+    return this.lights.set(...this.toLocal(voxel), level);
   };
 
   getMaxHeight = (column: Coords2) => {
@@ -170,9 +169,11 @@ class Chunk {
   };
 
   get protocol() {
+    if (!this.mesh) this.remesh();
+
     return {
       x: this.coords[0],
-      y: this.coords[1],
+      z: this.coords[1],
       meshes: [
         {
           opaque: {
@@ -190,8 +191,7 @@ class Chunk {
   }
 
   private toLocal = (voxel: Coords3) => {
-    const [vx, vy, vz] = voxel;
-    return vec3.sub([0, 0, 0], [vx, vy, vz], this.min);
+    return vec3.sub([0, 0, 0], voxel, this.min);
   };
 }
 

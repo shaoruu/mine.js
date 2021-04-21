@@ -35,16 +35,15 @@ class Generator {
 
     let isEmpty = true;
 
-    const types = registry.getTypeMap(['dirt', 'stone', 'grass']);
+    const types = registry.getTypeMap(['air', 'dirt', 'stone', 'grass']);
 
     function getVoxelAt(vx: number, vy: number, vz: number, types: TypeMap, maxHeight: number) {
-      let blockID = 0;
+      let blockID = types.air;
 
       if (vy >= maxHeight) return 0;
       if (vy === 0) return types.stone;
-      if (vy < 0) return 0;
 
-      const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20) + 30;
+      const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20);
       const height2 = 0;
       if (vy < height1 && vy > height2) {
         blockID = Math.random() > 0.5 ? types.grass : types.stone;

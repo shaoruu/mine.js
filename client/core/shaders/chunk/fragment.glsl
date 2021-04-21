@@ -12,7 +12,7 @@ void main() {
   gl_FragColor = vec4(textureColor.rgb * vAO, textureColor.w);
 
   // fog
-  float depth = gl_FragCoord.z / gl_FragCoord.w;
-  float fogFactor = smoothstep( uFogNear, uFogFar, depth );
-  gl_FragColor.rgb = mix( gl_FragColor.rgb, uFogColor, fogFactor );
+  // float depth = gl_FragCoord.z / gl_FragCoord.w;
+  // float fogFactor = smoothstep( uFogNear, uFogFar, depth );
+  // gl_FragColor.rgb = mix( gl_FragColor.rgb, uFogColor, fogFactor );
 } 

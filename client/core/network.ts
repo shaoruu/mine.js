@@ -18,6 +18,8 @@ type NetworkOptionsType = {
 class Network {
   public server: CustomWebSocket;
 
+  public connected = false;
+
   constructor(public engine: Engine, public options: NetworkOptionsType) {
     this.connect(options.url);
   }
@@ -32,16 +34,42 @@ class Network {
     server.sendEvent = (event) => {
       server.send(Network.encode(event));
     };
+    server.onopen = () => (this.connected = true);
     server.onerror = (e) => console.error(e);
     server.onmessage = this.onMessage;
+    server.onclose = () => (this.connected = false);
     server.serverURL = url;
 
     this.server = server;
   };
 
   onEvent = (event) => {
-    const { chunks } = event;
-    console.log(chunks[0].meshes[0].opaque);
+    const { type } = event;
+
+    switch (type) {
+      case 'INIT': {
+        const { chunks } = event;
+        const {
+          engine: { world },
+        } = this;
+        for (const chunkData of chunks) {
+          world.handleServerChunk(chunkData);
+        }
+        world.isReady = true;
+        this.engine.emit('world-ready');
+        break;
+      }
+      case 'LOAD': {
+        const { chunks } = event;
+        const {
+          engine: { world },
+        } = this;
+        for (const chunkData of chunks) {
+          world.handleServerChunk(chunkData);
+        }
+        break;
+      }
+    }
   };
 
   onMessage = ({ data }) => {
@@ -68,10 +96,10 @@ class Network {
   }
 
   static encode(message) {
-    message.type = protocol.Message.Type[message.type];
     if (message.json) {
       message.json = JSON.stringify(message.json);
     }
+    message.type = Message.Type[message.type];
     return protocol.Message.encode(protocol.Message.create(message)).finish();
   }
 }

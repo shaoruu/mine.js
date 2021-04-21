@@ -47,7 +47,7 @@ const defaultConfig: ConfigType = {
     fov: 75,
     near: 0.1,
     far: 8000,
-    initPos: [10, 10, 10],
+    initPos: [10, 20, 10],
     minPolarAngle: 0,
     maxPolarAngle: Math.PI,
     acceleration: 1,
@@ -63,8 +63,7 @@ const defaultConfig: ConfigType = {
     maxHeight: 256,
     generator: '',
     renderRadius: 8,
-    chunkSize: 12,
-    chunkPadding: 2,
+    chunkSize: 16,
     dimension: 1,
     // radius of rendering centered by camera
     // maximum amount of chunks to process per frame tick
@@ -91,7 +90,9 @@ const defaultConfig: ConfigType = {
     clearColor: '#b6d2ff',
   },
   network: {
-    url: 'http://localhost:4000',
+    url: `http://${window.location.hostname}${
+      window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''
+    }`,
   },
 };
 
@@ -179,7 +180,7 @@ class Engine extends EventEmitter {
   };
 
   tick = () => {
-    if (this.paused) return;
+    if (this.paused || !this.network.connected) return;
 
     this.emit('tick-begin');
 

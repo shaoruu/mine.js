@@ -12,16 +12,9 @@ type EntitiesOptionsType = {
 };
 
 class Entities {
-  public options: EntitiesOptionsType;
-
-  public engine: Engine;
-
   public list: SmartDictionary<EntityType> = new SmartDictionary();
 
-  constructor(engine: Engine, options: EntitiesOptionsType) {
-    this.engine = engine;
-    this.options = options;
-  }
+  constructor(public engine: Engine, public options: EntitiesOptionsType) {}
 
   addEntity(
     name: string,

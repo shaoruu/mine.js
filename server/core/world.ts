@@ -1,8 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { protocol } from '../../protocol';
-import { Coords2, Coords3, Helper, SmartDictionary } from '../../shared';
+import { Coords2, Coords3, Helper } from '../../shared';
 
 import { ClientType, Network, NetworkOptionsType, Chunk, GeneratorTypes, Registry } from '.';
 
@@ -20,7 +19,7 @@ type WorldOptionsType = NetworkOptionsType & {
 class World extends Network {
   public registry: Registry;
 
-  public chunks: SmartDictionary<Chunk> = new SmartDictionary();
+  public chunks: Map<string, Chunk> = new Map();
 
   constructor(public options: WorldOptionsType) {
     super(options);
@@ -90,7 +89,7 @@ class World extends Network {
 
   getVoxelByVoxel = (vCoords: Coords3) => {
     const chunk = this.getChunkByVoxel(vCoords);
-    return chunk ? chunk.getVoxel(vCoords) : null;
+    return chunk ? chunk.getVoxel(vCoords) : 0;
   };
 
   getVoxelByWorld = (wCoords: Coords3) => {
@@ -119,22 +118,43 @@ class World extends Network {
 
   setVoxel = () => {};
 
-  onRequest = (client: ClientType, request: protocol.Message) => {
-    super.onRequest(client, request);
-
+  onRequest = (client: ClientType, request) => {
     switch (request.type) {
+      case 'LOAD': {
+        const chunks: Chunk[] = [];
+        const { chunks: chunksData } = request;
+        for (const chunkData of chunksData) {
+          const { x: cx, z: cz } = chunkData;
+          const chunk = this.getChunkByCPos([cx, cz]);
+          if (chunk.needsMeshing) chunk.remesh();
+          chunks.push(chunk);
+        }
+        this.sendChunks(client, chunks);
+        break;
+      }
       default:
         break;
     }
   };
 
   onInit = (client: ClientType) => {
-    const chunk = this.getChunkByCPos([0, 0]);
+    const test = 2;
+    const chunks: Chunk[] = [];
 
+    for (let x = -test; x <= test; x++) {
+      for (let z = -test; z <= test; z++) {
+        chunks.push(this.getChunkByCPos([x, z]));
+      }
+    }
+
+    this.sendChunks(client, chunks, 'INIT');
+  };
+
+  sendChunks = (client: ClientType, chunks: Chunk[], type = 'LOAD') => {
     client.send(
       Network.encode({
-        type: 'INIT',
-        chunks: [chunk.protocol],
+        type,
+        chunks: chunks.map((c) => c.protocol),
       }),
     );
   };

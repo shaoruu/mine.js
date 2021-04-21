@@ -10,14 +10,11 @@ type ContainerOptionsType = {
 };
 
 class Container extends EventEmitter {
-  public engine: Engine;
   public domElement: HTMLElement = document.body;
   public canvas: HTMLCanvasElement;
 
-  constructor(engine: Engine, options: ContainerOptionsType) {
+  constructor(public engine: Engine, public options: ContainerOptionsType) {
     super();
-
-    this.engine = engine;
 
     this.setupCanvas(options);
   }

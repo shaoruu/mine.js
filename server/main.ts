@@ -14,7 +14,8 @@ const world = new World({
   generation: 'sin-cos',
   port: process.env.PORT || 4000,
   storage: path.join(__dirname, '..', 'data'),
-  isProduction: 'production' === process.env.NODE_ENV,
+  // isProduction: 'production' === process.env.NODE_ENV,
+  isProduction: true,
 });
 
 world.listen();

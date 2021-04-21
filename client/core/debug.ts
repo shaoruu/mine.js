@@ -8,16 +8,13 @@ import { Helper } from '../utils';
 import { Engine } from './engine';
 
 class Debug {
-  public engine: Engine;
   public gui: dat.GUI;
   public stats: Stats;
   public dataWrapper: HTMLDivElement;
   public dataEntires: { ele: HTMLParagraphElement; obj: any; attribute: string; name: string }[] = [];
   public chunkHighlight: Mesh;
 
-  constructor(engine: Engine) {
-    this.engine = engine;
-
+  constructor(public engine: Engine) {
     // dat.gui
     this.gui = new GUI();
 
@@ -46,7 +43,7 @@ class Debug {
       this.setupAll();
       this.mount();
 
-      // engine.rendering.scene.add(this.chunkHighlight);
+      engine.rendering.scene.add(this.chunkHighlight);
 
       // const {
       //   rendering: { scene },

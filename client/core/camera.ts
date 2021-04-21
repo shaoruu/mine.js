@@ -116,11 +116,11 @@ class Camera {
     });
 
     engine.on('world-ready', () => {
-      const maxHeight = engine.world.getMaxHeightByVoxel(this.options.initPos);
-      const [ix, iy, iz] = this.options.initPos;
-      if (iy < maxHeight) {
-        this.teleport([ix, maxHeight, iz]);
-      }
+      // const maxHeight = engine.world.getMaxHeightByVoxel(this.options.initPos);
+      // const [ix, iy, iz] = this.options.initPos;
+      // if (iy < maxHeight) {
+      //   this.teleport([ix, maxHeight, iz]);
+      // }
     });
   }
 

@@ -3,9 +3,9 @@ import { AO_TABLE, FACES } from './constants';
 import { Chunk, Registry } from '.';
 
 function vertexAO(side1: number, side2: number, corner: number) {
-  const numS1 = Number(side1 !== 0);
-  const numS2 = Number(side2 !== 0);
-  const numC = Number(corner !== 0);
+  const numS1 = Number(side1 !== 0 && side1 !== undefined);
+  const numS2 = Number(side2 !== 0 && side2 !== undefined);
+  const numC = Number(corner !== 0 && corner !== undefined);
 
   if (numS1 && numS2) {
     return 0;
@@ -18,7 +18,6 @@ class Mesher {
     const {
       min,
       max,
-      voxels,
       world,
       options: { dimension },
     } = chunk;
@@ -33,10 +32,10 @@ class Mesher {
     const [startX, startY, startZ] = min;
     const [endX, endY, endZ] = max;
 
-    for (let vx = startX, lx = 0; vx < endX; vx++, lx++) {
-      for (let vy = startY, ly = 0; vy < endY; vy++, ly++) {
-        for (let vz = startZ, lz = 0; vz < endZ; vz++, lz++) {
-          const voxel = voxels.get(lx, ly, lz);
+    for (let vx = startX; vx < endX; vx++) {
+      for (let vy = startY; vy < endY; vy++) {
+        for (let vz = startZ; vz < endZ; vz++) {
+          const voxel = world.getVoxelByVoxel([vx, vy, vz]);
           const isSolid = registry.getSolidityByID(voxel);
 
           if (isSolid) {
@@ -56,7 +55,7 @@ class Mesher {
               const isNeighborSolid = registry.getSolidityByID(neighbor);
 
               if (!isNeighborSolid) {
-                const nearVoxels = neighbors.map(([a, b, c]) => world.getVoxelByVoxel([nvx + a, nvy + b, nvz + c]));
+                const nearVoxels = neighbors.map(([a, b, c]) => world.getVoxelByVoxel([vx + a, vy + b, vz + c]));
 
                 const { startU, endU, startV, endV } = isMat1
                   ? uvMap[texture.all]

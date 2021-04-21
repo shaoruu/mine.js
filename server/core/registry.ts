@@ -20,6 +20,7 @@ class Registry {
   }
 
   getTransparencyByID = (id: number) => {
+    if (id === undefined) return true;
     return this.getBlockByID(id).isTransparent;
   };
 
@@ -28,6 +29,7 @@ class Registry {
   };
 
   getFluidityByID = (id: number) => {
+    if (id === undefined) return false;
     return this.getBlockByID(id).isFluid;
   };
 
@@ -36,6 +38,7 @@ class Registry {
   };
 
   getSolidityByID = (id: number) => {
+    if (id === undefined) return false;
     return this.getBlockByID(id).isSolid;
   };
 

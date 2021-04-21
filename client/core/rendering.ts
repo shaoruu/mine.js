@@ -14,19 +14,15 @@ type RenderingOptionsType = {
 };
 
 class Rendering extends EventEmitter {
-  public engine: Engine;
   public scene: Scene;
   public renderer: WebGLRenderer;
   public composer: EffectComposer;
   public sky: Sky;
 
-  public options: RenderingOptionsType;
-
-  constructor(engine: Engine, options: RenderingOptionsType) {
+  constructor(public engine: Engine, public options: RenderingOptionsType) {
     super();
 
-    this.engine = engine;
-    const { clearColor } = (this.options = options);
+    const { clearColor } = options;
 
     // three.js scene
     this.scene = new Scene();

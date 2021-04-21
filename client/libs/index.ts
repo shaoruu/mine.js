@@ -6,6 +6,5 @@ export * from './meshers';
 export * from './physics';
 export * from './rigid-body';
 export * from './sky';
-export * from './texture-atlas';
 export * from './types';
 export * from './voxel-octree';

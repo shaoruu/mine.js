@@ -4,13 +4,10 @@ import { SmartDictionary } from '../../shared';
 
 import { Engine } from './engine';
 class Inputs {
-  public engine: Engine;
   public combos: SmartDictionary<string> = new SmartDictionary();
   public callbacks: SmartDictionary<() => void> = new SmartDictionary();
 
-  constructor(engine: Engine) {
-    this.engine = engine;
-
+  constructor(public engine: Engine) {
     this.add('forward', 'w');
     this.add('backward', 's');
     this.add('left', 'a');
