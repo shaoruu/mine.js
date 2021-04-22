@@ -19,7 +19,6 @@ type WorldOptionsType = NetworkOptionsType & {
 class World extends Network {
   public registry: Registry;
 
-  public loadingQueue: { x: number; z: number }[] = [];
   public chunks: Map<string, Chunk> = new Map();
 
   constructor(public options: WorldOptionsType) {
@@ -124,11 +123,10 @@ class World extends Network {
 
   onRequest = (client: ClientType, request) => {
     switch (request.type) {
-      case 'LOAD': {
+      case 'REQUEST': {
         const chunks: Chunk[] = [];
         const { x, z } = request.json;
         // TODO: check x z validity
-        this.loadingQueue.push(request.json);
         const chunk = this.getChunkByCPos([x, z]);
         if (chunk.needsMeshing) chunk.remesh();
         chunks.push(chunk);

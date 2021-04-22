@@ -1141,6 +1141,7 @@ $root.protocol = (function() {
                 case 6:
                 case 7:
                 case 8:
+                case 9:
                     break;
                 }
             if (message.json != null && message.hasOwnProperty("json"))
@@ -1205,6 +1206,10 @@ $root.protocol = (function() {
             case "UPDATE":
             case 8:
                 message.type = 8;
+                break;
+            case "REQUEST":
+            case 9:
+                message.type = 9;
                 break;
             }
             if (object.json != null)
@@ -1281,6 +1286,7 @@ $root.protocol = (function() {
          * @property {number} PICK=6 PICK value
          * @property {number} TELEPORT=7 TELEPORT value
          * @property {number} UPDATE=8 UPDATE value
+         * @property {number} REQUEST=9 REQUEST value
          */
         Message.Type = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -1292,6 +1298,7 @@ $root.protocol = (function() {
             values[valuesById[6] = "PICK"] = 6;
             values[valuesById[7] = "TELEPORT"] = 7;
             values[valuesById[8] = "UPDATE"] = 8;
+            values[valuesById[9] = "REQUEST"] = 9;
             return values;
         })();
 

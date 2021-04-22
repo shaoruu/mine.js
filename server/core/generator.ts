@@ -25,7 +25,7 @@ class Generator {
   static hilly = (chunk: Chunk) => {
     if (!noise) {
       // @ts-ignore
-      noise = new Noise.Noise(Math.random());
+      noise = new Noise.Noise(1000);
     }
 
     const {
@@ -36,7 +36,7 @@ class Generator {
       min,
       max,
       voxels,
-      options: { maxHeight },
+      world: { registry },
     } = chunk;
 
     const [startX, startY, startZ] = min;
@@ -44,7 +44,9 @@ class Generator {
 
     let isEmpty = true;
 
-    function getOctaveSimplex3(x, y, z) {
+    const types = registry.getTypeMap(['dirt', 'grass', 'stone']);
+
+    function getOctaveSimplex3(x: number, y: number, z: number) {
       let total = 0;
       let frequency = 1;
       let amplitude = 1;
@@ -59,35 +61,48 @@ class Generator {
         frequency *= LACUNARITY;
       }
 
-      return (total / maxVal) * AMPLIFIER + HEIGHT_OFFSET;
+      return (total / maxVal) * AMPLIFIER + HEIGHT_OFFSET - y * SCALE;
     }
 
-    function getVoxelAt(vx: number, vy: number, vz: number, maxHeight: number) {
-      let blockID = 0;
-
-      if (vy === 0) return 4;
-      if (vy === maxHeight - 1) return 0;
-
-      const perlinValue = getOctaveSimplex3(vx, vy, vz) - vy * SCALE;
-
-      if (perlinValue > -0.2) {
-        blockID = vy % 3 === 2 ? 2 : vy % 2 === 1 ? 1 : 3;
-      }
-
-      return blockID;
+    function isSolidAt(vx: number, vy: number, vz: number) {
+      return getOctaveSimplex3(vx, vy, vz) > -0.2;
     }
 
+    // basic shapes
     for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {
-      for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {
-        for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {
-          const voxel = getVoxelAt(vx, vy, vz, maxHeight);
-          if (voxel) {
+      for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {
+        for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {
+          const isSolid = isSolidAt(vx, vy, vz);
+          const isSolidTop = isSolidAt(vx, vy + 1, vz);
+          const isSolidTop2 = isSolidAt(vx, vy + 2, vz);
+
+          if (isSolid) {
             isEmpty = false;
-            voxels.set(lx, ly, lz, voxel);
+            if (!isSolidTop && !isSolidTop2) {
+              voxels.set(lx, ly, lz, types.grass);
+              if (getOctaveSimplex3(vx, vy, vz) > -0.195) {
+                voxels.set(lx, ly - 1, lz, types.dirt);
+                if (getOctaveSimplex3(vx, vy, vz) > -0.197) {
+                  voxels.set(lx, ly - 2, lz, types.dirt);
+                }
+              }
+            } else {
+              voxels.set(lx, ly, lz, types.stone);
+            }
           }
         }
       }
     }
+
+    // chunk.generateHeightMap();
+
+    // // surface painting
+    // for (let vx = startX; vx < endX; ++vx) {
+    //   for (let vz = startZ; vz < endZ; ++vz) {
+    //     const columnHeight = chunk.getMaxHeight([vx, vz]);
+    //     chunk.setVoxel([vx, columnHeight, vz], types.grass);
+    //   }
+    // }
 
     chunk.isEmpty = isEmpty;
   };

@@ -223,6 +223,9 @@ class World extends EventEmitter {
       }
     }
 
+    // make pending chunks radiate from player, might have easier ways of doing so
+    this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
+
     // if the chunk is too far away, remove from scene.
     const deleteDistance = renderRadius * chunkSize * 1.414;
     for (const chunk of this.visibleChunks) {
@@ -241,7 +244,7 @@ class World extends EventEmitter {
       const rep = Helper.getChunkName([cx, cz]);
       if (this.requestedChunks.has(rep)) return;
       this.engine.network.server.sendEvent({
-        type: 'LOAD',
+        type: 'REQUEST',
         json: { x: cx, z: cz },
       });
       this.requestedChunks.add(rep);

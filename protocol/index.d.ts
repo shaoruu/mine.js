@@ -439,7 +439,8 @@ export namespace protocol {
             LOAD = 5,
             PICK = 6,
             TELEPORT = 7,
-            UPDATE = 8
+            UPDATE = 8,
+            REQUEST = 9
         }
     }
 }

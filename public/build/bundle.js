@@ -1509,7 +1509,7 @@ const defaultConfig = {
         dimension: 1,
         // radius of rendering centered by camera
         // maximum amount of chunks to process per frame tick
-        maxChunkPerFrame: 2,
+        maxChunkPerFrame: 3,
         maxBlockPerFrame: 500,
     },
     entities: {
@@ -2269,6 +2269,8 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                 }
             }
         }
+        // make pending chunks radiate from player, might have easier ways of doing so
+        this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
         // if the chunk is too far away, remove from scene.
         const deleteDistance = renderRadius * chunkSize * 1.414;
         for (const chunk of this.visibleChunks) {
@@ -2288,7 +2290,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             if (this.requestedChunks.has(rep))
                 return;
             this.engine.network.server.sendEvent({
-                type: 'LOAD',
+                type: 'REQUEST',
                 json: { x: cx, z: cz },
             });
             this.requestedChunks.add(rep);
@@ -73912,6 +73914,7 @@ $root.protocol = (function() {
                 case 6:
                 case 7:
                 case 8:
+                case 9:
                     break;
                 }
             if (message.json != null && message.hasOwnProperty("json"))
@@ -73976,6 +73979,10 @@ $root.protocol = (function() {
             case "UPDATE":
             case 8:
                 message.type = 8;
+                break;
+            case "REQUEST":
+            case 9:
+                message.type = 9;
                 break;
             }
             if (object.json != null)
@@ -74052,6 +74059,7 @@ $root.protocol = (function() {
          * @property {number} PICK=6 PICK value
          * @property {number} TELEPORT=7 TELEPORT value
          * @property {number} UPDATE=8 UPDATE value
+         * @property {number} REQUEST=9 REQUEST value
          */
         Message.Type = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -74063,6 +74071,7 @@ $root.protocol = (function() {
             values[valuesById[6] = "PICK"] = 6;
             values[valuesById[7] = "TELEPORT"] = 7;
             values[valuesById[8] = "UPDATE"] = 8;
+            values[valuesById[9] = "REQUEST"] = 9;
             return values;
         })();
 
