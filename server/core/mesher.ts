@@ -19,6 +19,7 @@ class Mesher {
       min,
       max,
       world,
+      topY,
       options: { dimension },
     } = chunk;
     const { registry } = world;
@@ -30,10 +31,10 @@ class Mesher {
     const aos = [];
 
     const [startX, startY, startZ] = min;
-    const [endX, endY, endZ] = max;
+    const [endX, , endZ] = max;
 
     for (let vx = startX; vx < endX; vx++) {
-      for (let vy = startY; vy < endY; vy++) {
+      for (let vy = startY; vy < topY + 1; vy++) {
         for (let vz = startZ; vz < endZ; vz++) {
           const voxel = world.getVoxelByVoxel([vx, vy, vz]);
           const isSolid = registry.getSolidityByID(voxel);

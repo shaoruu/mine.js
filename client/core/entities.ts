@@ -1,6 +1,5 @@
 import { Object3D, Vector3 } from 'three';
 
-import { SmartDictionary } from '../../shared';
 import { AABB, Brain, EntityType, BodyOptionsType } from '../libs';
 
 import { Engine } from './engine';
@@ -12,7 +11,7 @@ type EntitiesOptionsType = {
 };
 
 class Entities {
-  public list: SmartDictionary<EntityType> = new SmartDictionary();
+  public list: Map<string, EntityType> = new Map();
 
   constructor(public engine: Engine, public options: EntitiesOptionsType) {}
 
@@ -23,7 +22,7 @@ class Entities {
     offsets: [number, number, number] = [0, 0, 0],
     options: Partial<BodyOptionsType> = {},
   ) {
-    if (this.list.data.length >= this.options.maxEntities)
+    if (this.list.size >= this.options.maxEntities)
       throw new Error(`Failed to add entity, ${name}: max entities reached.`);
 
     const { physics } = this.engine;
@@ -44,15 +43,22 @@ class Entities {
     return newEntity;
   }
 
+  removeEntity(name: string) {
+    const entity = this.list.get(name);
+    if (!entity) return;
+    this.engine.physics.core.removeBody(entity.body);
+    return this.list.delete(name);
+  }
+
   preTick() {
-    this.list.data.forEach((entity) => {
+    this.list.forEach((entity) => {
       entity.brain.tick(this.engine.clock.delta);
     });
   }
 
   tick() {
     const { movementLerp, movementLerpFactor } = this.options;
-    this.list.data.forEach(({ object, body, offsets }) => {
+    this.list.forEach(({ object, body, offsets }) => {
       const [px, py, pz] = this.engine.physics.getPositionFromRB(body);
       if (movementLerp) {
         object.position.lerp(new Vector3(px + offsets[0], py + offsets[1], pz + offsets[2]), movementLerpFactor);

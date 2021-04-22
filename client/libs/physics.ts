@@ -43,7 +43,7 @@ class Physics {
       restitution: 0,
       gravityMultiplier: 1,
       onCollide: () => {},
-      autoStep: true,
+      autoStep: false,
     };
 
     const { aabb, mass, friction, restitution, gravityMultiplier, onCollide, autoStep } = {

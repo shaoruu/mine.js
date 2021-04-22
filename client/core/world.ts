@@ -27,6 +27,7 @@ class World extends EventEmitter {
   private camChunkPos: Coords2;
 
   private pendingChunks: Coords2[] = [];
+  private requestedChunks: Set<string> = new Set();
   private chunks: SmartDictionary<Chunk> = new SmartDictionary();
   private visibleChunks: Chunk[] = [];
 
@@ -115,6 +116,8 @@ class World extends EventEmitter {
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
 
+    this.requestedChunks.delete(Helper.getChunkName(coords));
+
     let chunk = this.getChunkByCPos(coords);
 
     if (!chunk) {
@@ -125,7 +128,6 @@ class World extends EventEmitter {
 
     chunk.setupMesh(serverChunk.meshes[0].opaque);
     chunk.voxels.data = new Uint8Array(serverChunk.voxels);
-    chunk.addToScene();
   }
 
   setChunk(chunk: Chunk) {
@@ -176,7 +178,7 @@ class World extends EventEmitter {
       this.surroundCamChunks();
     }
 
-    let chunksLoaded = 0;
+    let supposed = 0;
     const [cx, cz] = this.camChunkPos;
     for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
       for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
@@ -189,23 +191,21 @@ class World extends EventEmitter {
         const chunk = this.getChunkByCPos([x, z]);
 
         if (chunk) {
-          chunksLoaded++;
-
-          if (!chunk.isAdded) {
-            chunk.addToScene();
-          }
+          chunk.addToScene();
         }
+
+        supposed++;
       }
     }
 
-    if (!this.isReady && chunksLoaded === this.chunks.data.length) {
+    if (!this.isReady && supposed <= this.chunks.data.length) {
       this.isReady = true;
       this.engine.emit('world-ready');
     }
   }
 
   private surroundCamChunks() {
-    const { renderRadius, chunkSize, dimension } = this.options;
+    const { renderRadius, chunkSize } = this.options;
 
     const [cx, cz] = this.camChunkPos;
 
@@ -217,7 +217,7 @@ class World extends EventEmitter {
 
         const chunk = this.getChunkByCPos([x, z]);
 
-        if (!chunk) {
+        if (!chunk && !this.requestedChunks.has(Helper.getChunkName([x, z]))) {
           this.pendingChunks.push([x, z]);
         }
       }
@@ -238,10 +238,13 @@ class World extends EventEmitter {
     if (this.pendingChunks.length === 0) return;
     const framePendingChunks = this.pendingChunks.splice(0, maxChunkPerFrame);
     framePendingChunks.forEach(([cx, cz]) => {
+      const rep = Helper.getChunkName([cx, cz]);
+      if (this.requestedChunks.has(rep)) return;
       this.engine.network.server.sendEvent({
         type: 'LOAD',
-        chunks: [{ x: cx, z: cz }],
+        json: { x: cx, z: cz },
       });
+      this.requestedChunks.add(rep);
     });
   }
 }

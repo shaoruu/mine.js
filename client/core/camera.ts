@@ -37,6 +37,8 @@ class Camera {
   public camMesh: Mesh;
   public camEntity: EntityType;
 
+  private acc = new Vector3();
+  private vel = new Vector3();
   private vec = new Vector3();
   private movements = {
     up: false,
@@ -47,10 +49,11 @@ class Camera {
     back: false,
   };
   private lookBlockMesh: Mesh;
+  private godMode = false;
 
   constructor(engine: Engine, options: CameraOptionsType) {
     this.engine = engine;
-    const { fov, near, far, initPos, lookBlockScale, distToGround, distToTop, cameraWidth } = (this.options = options);
+    const { fov, near, far, initPos, lookBlockScale, distToGround } = (this.options = options);
 
     // three.js camera
     this.threeCamera = new PerspectiveCamera(fov, this.engine.rendering.aspectRatio, near, far);
@@ -80,27 +83,10 @@ class Camera {
 
     // look block
     engine.on('ready', () => {
-      const { dimension } = engine.world.options;
+      // register camera as entity      // set up look block mesh
+      const { dimension } = engine.config.world;
+      this.addCamEntity();
 
-      const cameraWorldWidth = cameraWidth * dimension;
-      const cameraWorldHeight = (distToGround + distToTop) * dimension;
-
-      // set up camera's mesh
-      this.camGeometry = new BoxBufferGeometry(cameraWorldWidth, cameraWorldHeight, cameraWorldWidth);
-      this.camMesh = new Mesh(this.camGeometry);
-      this.threeCamera.add(this.camMesh);
-      this.camMesh.position.y -= distToGround * dimension;
-      engine.rendering.scene.add(this.camMesh);
-
-      // register camera as entity
-      this.camEntity = engine.entities.addEntity(
-        'camera',
-        this.threeCamera,
-        [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth],
-        [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0],
-      );
-
-      // set up look block mesh
       this.lookBlockMesh = new Mesh(
         new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
         new MeshBasicMaterial({
@@ -115,12 +101,10 @@ class Camera {
       engine.rendering.scene.add(this.lookBlockMesh);
     });
 
-    engine.on('world-ready', () => {
-      // const maxHeight = engine.world.getMaxHeightByVoxel(this.options.initPos);
-      // const [ix, iy, iz] = this.options.initPos;
-      // if (iy < maxHeight) {
-      //   this.teleport([ix, maxHeight, iz]);
-      // }
+    document.addEventListener('keypress', ({ key }) => {
+      if (key === 'f') {
+        this.toggleGodMode();
+      }
     });
   }
 
@@ -191,6 +175,45 @@ class Camera {
   };
 
   tick = () => {
+    if (this.godMode) {
+      this.godModeMovements();
+    } else {
+      this.moveCamEntity();
+    }
+    this.updateLookBlock();
+  };
+
+  godModeMovements() {
+    const { delta } = this.engine.clock;
+
+    const { right, left, up, down, front, back } = this.movements;
+    const { acceleration, flyingInertia } = this.options;
+
+    const movementVec = new Vector3();
+    movementVec.x = Number(right) - Number(left);
+    movementVec.z = Number(front) - Number(back);
+    movementVec.normalize();
+
+    const yMovement = Number(up) - Number(down);
+
+    this.acc.x = -movementVec.x * acceleration;
+    this.acc.y = yMovement * acceleration;
+    this.acc.z = -movementVec.z * acceleration;
+
+    this.vel.x -= this.vel.x * flyingInertia * delta;
+    this.vel.y -= this.vel.y * flyingInertia * delta;
+    this.vel.z -= this.vel.z * flyingInertia * delta;
+
+    this.vel.add(this.acc.multiplyScalar(delta));
+    this.acc.set(0, 0, 0);
+
+    this.controls.moveRight(-this.vel.x);
+    this.controls.moveForward(-this.vel.z);
+
+    this.controls.getObject().position.y += this.vel.y;
+  }
+
+  moveCamEntity() {
     const { state } = this.camEntity.brain;
 
     const { right, left, up, down, front, back } = this.movements;
@@ -230,9 +253,7 @@ class Camera {
 
     // set jump as true, and brain will handle the jumping
     state.jumping = up ? (down ? false : true) : down ? false : false;
-
-    this.updateLookBlock();
-  };
+  }
 
   teleport(voxel: Coords3) {
     const {
@@ -245,6 +266,32 @@ class Camera {
 
     this.camEntity.body.setPosition(newPosition);
     return newPosition;
+  }
+
+  toggleGodMode() {
+    this.godMode = !this.godMode;
+    if (this.godMode) {
+      this.vel.set(0, 0, 0);
+      this.acc.set(0, 0, 0);
+      this.engine.entities.removeEntity('camera');
+    } else {
+      // activated again
+      this.addCamEntity();
+    }
+  }
+
+  addCamEntity() {
+    const { cameraWidth, distToGround, distToTop } = this.options;
+    const { dimension } = this.engine.world.options;
+    const cameraWorldWidth = cameraWidth * dimension;
+    const cameraWorldHeight = (distToGround + distToTop) * dimension;
+
+    this.camEntity = this.engine.entities.addEntity(
+      'camera',
+      this.threeCamera,
+      [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth],
+      [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0],
+    );
   }
 
   get voxel(): Coords3 {

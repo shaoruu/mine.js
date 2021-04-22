@@ -311,6 +311,11 @@
   resolved "https://registry.npmjs.org/@types/node/-/node-13.13.50.tgz"
   integrity sha512-y7kkh+hX/0jZNxMyBR/6asG0QMSaPSzgeVK63dhWHl4QAXCQB8lExXmzLL6SzmOgKHydtawpMnNhlDbv7DXPEA==
 
+"@types/noisejs@^0.0.28":
+  version "0.0.28"
+  resolved "https://registry.yarnpkg.com/@types/noisejs/-/noisejs-0.0.28.tgz#797ac259d592004f8e13526cc9afeaf9f1fcb26e"
+  integrity sha1-eXrCWdWSAE+OE1Jsya/q+fH8sm4=
+
 "@types/pako@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@types/pako/-/pako-1.0.1.tgz#33b237f3c9aff44d0f82fe63acffa4a365ef4a61"
@@ -1080,7 +1085,7 @@ binary-extensions@^2.0.0:
   resolved "https://registry.npmjs.org/binary-extensions/-/binary-extensions-2.2.0.tgz"
   integrity sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==
 
-bindings@^1.5.0:
+bindings@^1.3.0, bindings@^1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.5.0.tgz#10353c9e945334bc0511a6d90b38fbc7c9c504df"
   integrity sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==
@@ -2780,6 +2785,14 @@ fastest-levenshtein@^1.0.12:
   version "1.0.12"
   resolved "https://registry.npmjs.org/fastest-levenshtein/-/fastest-levenshtein-1.0.12.tgz"
   integrity sha512-On2N+BpYJ15xIC974QNVuYGMOlEVt4s0EOI3wwMqOmK1fdDY+FN/zltPV8vosq4ad4c/gJ1KHScUn/6AWIgiow==
+
+fastnoisejs@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/fastnoisejs/-/fastnoisejs-1.0.1.tgz#7bba76315bdc1832f5ab0aeb01ffbc22f10fc403"
+  integrity sha512-WTLjLSSry0gYku0ElfDrNwWwrVLOSilXN9S0S4ePfgUSQF/XPiPSAq0x/1AGRDbVhehmYt9OwowvsI23g9gY9g==
+  dependencies:
+    bindings "^1.3.0"
+    node-addon-api "^1.2.0"
 
 fastq@^1.6.0:
   version "1.11.0"
@@ -4852,6 +4865,11 @@ nice-try@^1.0.4:
   resolved "https://registry.npmjs.org/nice-try/-/nice-try-1.0.5.tgz"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
 
+node-addon-api@^1.2.0:
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-1.7.2.tgz#3df30b95720b53c24e59948b49532b662444f54d"
+  integrity sha512-ibPK3iA+vaY1eEjESkQkM0BbCqFOaZMiXRTtdB0u7b4djtY6JnsjvPdUHVMg6xQt3B8fpTTWHI9A+ADjM9frzg==
+
 node-fetch@^2.6.1:
   version "2.6.1"
   resolved "https://registry.npmjs.org/node-fetch/-/node-fetch-2.6.1.tgz"
@@ -4898,6 +4916,11 @@ nodemon@^2.0.7:
     touch "^3.1.0"
     undefsafe "^2.0.3"
     update-notifier "^4.1.0"
+
+noisejs@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/noisejs/-/noisejs-2.1.0.tgz#84b4c4cd04ff43367034f65253e213e0d9fe1aff"
+  integrity sha1-hLTEzQT/QzZwNPZSU+IT4Nn+Gv8=
 
 nopt@^4.0.1:
   version "4.0.3"

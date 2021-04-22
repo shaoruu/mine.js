@@ -13,8 +13,6 @@ type PhysicsOptionsType = {
 class Physics {
   public core: PhysicsCore;
 
-  public isPaused = true;
-
   constructor(public engine: Engine, public options: PhysicsOptionsType) {
     const testSolidity = (wx: number, wy: number, wz: number) => {
       return engine.world.getSolidityByWorld([wx, wy, wz]);
@@ -25,18 +23,11 @@ class Physics {
     };
 
     this.core = new PhysicsCore(testSolidity, testFluidity, this.options);
-
-    document.addEventListener('keypress', ({ key }) => {
-      if (key === 'f') {
-        this.isPaused = !this.isPaused;
-      }
-    });
   }
 
   tick() {
     const { world, clock } = this.engine;
     if (!world.isReady) return;
-    if (this.isPaused) return;
 
     const { delta } = clock;
     this.core.tick(delta);

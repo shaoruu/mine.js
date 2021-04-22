@@ -31,6 +31,7 @@ class Chunk {
   public isEmpty = true;
 
   public mesh: MeshType;
+  public topY: number = Number.MIN_SAFE_INTEGER;
 
   constructor(public coords: Coords2, public world: World, public options: ChunkOptionsType) {
     const { size, maxHeight } = options;
@@ -138,6 +139,7 @@ class Chunk {
         for (let ly = maxHeight - 1; ly >= 0; ly--) {
           // TODO: air check
           if (ly === 0 || this.voxels.get(lx, ly, lz) !== 0) {
+            if (this.topY < ly) this.topY = ly;
             this.heightMap.set(lx, lz, ly);
             break;
           }
@@ -164,7 +166,9 @@ class Chunk {
 
   remesh = () => {
     // rebuild mesh
+    // console.time(this.name);
     this.mesh = Mesher.meshChunk(this);
+    // console.timeEnd(this.name);
     this.needsMeshing = false;
   };
 

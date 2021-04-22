@@ -19,6 +19,7 @@ type WorldOptionsType = NetworkOptionsType & {
 class World extends Network {
   public registry: Registry;
 
+  public loadingQueue: { x: number; z: number }[] = [];
   public chunks: Map<string, Chunk> = new Map();
 
   constructor(public options: WorldOptionsType) {
@@ -97,7 +98,10 @@ class World extends Network {
     return this.getVoxelByVoxel(vCoords);
   };
 
-  getMaxHeightByVoxel = () => {};
+  getMaxHeightByVoxel = (column: Coords2) => {
+    const chunk = this.getChunkByCPos(column);
+    return chunk.getMaxHeight(column);
+  };
 
   getSolidityByVoxel = (vCoords: Coords3) => {};
 
@@ -122,13 +126,12 @@ class World extends Network {
     switch (request.type) {
       case 'LOAD': {
         const chunks: Chunk[] = [];
-        const { chunks: chunksData } = request;
-        for (const chunkData of chunksData) {
-          const { x: cx, z: cz } = chunkData;
-          const chunk = this.getChunkByCPos([cx, cz]);
-          if (chunk.needsMeshing) chunk.remesh();
-          chunks.push(chunk);
-        }
+        const { x, z } = request.json;
+        // TODO: check x z validity
+        this.loadingQueue.push(request.json);
+        const chunk = this.getChunkByCPos([x, z]);
+        if (chunk.needsMeshing) chunk.remesh();
+        chunks.push(chunk);
         this.sendChunks(client, chunks);
         break;
       }
@@ -147,7 +150,14 @@ class World extends Network {
       }
     }
 
-    this.sendChunks(client, chunks, 'INIT');
+    client.send(
+      Network.encode({
+        type: 'INIT',
+        json: {
+          spawn: [0, this.getMaxHeightByVoxel([0, 0]), 0],
+        },
+      }),
+    );
   };
 
   sendChunks = (client: ClientType, chunks: Chunk[], type = 'LOAD') => {

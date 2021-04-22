@@ -1,4 +1,5 @@
 export * from './chunk';
+export * from './constants';
 export * from './generator';
 export * from './mesher';
 export * from './network';

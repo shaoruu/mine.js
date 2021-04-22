@@ -11,11 +11,10 @@ const world = new World({
   renderRadius: 8,
   maxLightLevel: 16,
   pingInterval: 50000,
-  generation: 'sin-cos',
+  generation: 'hilly',
   port: process.env.PORT || 4000,
   storage: path.join(__dirname, '..', 'data'),
-  // isProduction: 'production' === process.env.NODE_ENV,
-  isProduction: true,
+  isProduction: 'production' === process.env.NODE_ENV,
 });
 
 world.listen();

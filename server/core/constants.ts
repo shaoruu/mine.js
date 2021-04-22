@@ -1,3 +1,16 @@
+// terrain generation
+export const TERRAIN_CONFIG = {
+  HILLY: {
+    SCALE: 0.009,
+    OCTAVES: 3,
+    PERSISTANCE: 0.9,
+    LACUNARITY: 0.3,
+    HEIGHT_OFFSET: 0.3,
+    AMPLIFIER: 1.4,
+  },
+};
+
+// meshing
 export const AO_TABLE = new Uint8Array([75, 153, 204, 255]);
 
 export const FACES = [

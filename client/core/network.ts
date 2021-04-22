@@ -48,14 +48,10 @@ class Network {
 
     switch (type) {
       case 'INIT': {
-        const { chunks } = event;
         const {
-          engine: { world },
-        } = this;
-        for (const chunkData of chunks) {
-          world.handleServerChunk(chunkData);
-        }
-        world.isReady = true;
+          json: { spawn },
+        } = event;
+        this.engine.camera.teleport(spawn);
         this.engine.emit('world-ready');
         break;
       }
