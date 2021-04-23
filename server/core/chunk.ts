@@ -4,7 +4,6 @@ import zlib from 'zlib';
 
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
-import pool from 'typedarray-pool';
 
 import { Coords2, Coords3, Helper, MeshType } from '../../shared';
 
