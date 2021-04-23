@@ -5,8 +5,11 @@ export namespace protocol {
     /** Properties of a Geometry. */
     interface IGeometry {
 
-        /** Geometry lights */
-        lights?: (number[]|null);
+        /** Geometry torchLights */
+        torchLights?: (number[]|null);
+
+        /** Geometry sunlights */
+        sunlights?: (number[]|null);
 
         /** Geometry indices */
         indices?: (number[]|null);
@@ -33,8 +36,11 @@ export namespace protocol {
          */
         constructor(properties?: protocol.IGeometry);
 
-        /** Geometry lights. */
-        public lights: number[];
+        /** Geometry torchLights. */
+        public torchLights: number[];
+
+        /** Geometry sunlights. */
+        public sunlights: number[];
 
         /** Geometry indices. */
         public indices: number[];

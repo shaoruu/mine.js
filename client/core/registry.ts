@@ -45,7 +45,7 @@ class Registry {
       uniforms: {
         uTexture,
         uFogColor: { value: new Color(this.engine.config.rendering.fogColor) },
-        uFogNear: { value: renderRadius * 0.6 * chunkSize * dimension },
+        uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
         uFogFar: { value: renderRadius * chunkSize * dimension },
         // uFogNear: { value: 100 },
         // uFogFar: { value: 5000 },

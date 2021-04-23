@@ -9,4 +9,6 @@ export type MeshType = {
   indices: Float32Array;
   uvs: Float32Array;
   aos: Float32Array;
+  sunlights: Float32Array;
+  torchLights: Float32Array;
 };

@@ -18,6 +18,7 @@
     "@types/pako": "^1.0.1",
     "@types/pngjs": "^6.0.0",
     "@types/stats.js": "^0.17.0",
+    "@types/typedarray-pool": "^1.1.2",
     "@types/uuid": "^8.3.0",
     "@types/ws": "^7.4.1",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
@@ -79,6 +80,7 @@
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.3",
     "@types/three": "^0.127.1",
+    "buffer": "^6.0.3",
     "dat.gui": "^0.7.7",
     "deepmerge": "^4.2.2",
     "fast-voxel-raycast": "^0.1.1",
@@ -90,6 +92,7 @@
     "raw-loader": "^4.0.2",
     "stats.js": "^0.17.0",
     "three": "^0.127.0",
+    "typedarray-pool": "^1.2.0",
     "voxel-aabb-sweep": "^0.5.0"
   }
 }

@@ -18,17 +18,24 @@ class Mesher {
     const {
       min,
       max,
-      world,
       topY,
+      world,
       options: { dimension },
     } = chunk;
-    const { registry } = world;
+
+    const {
+      registry,
+      options: { useSmoothLighting },
+    } = world;
 
     const positions = [];
     const normals = [];
     const indices = [];
     const uvs = [];
     const aos = [];
+
+    const sunlightLevels: number[] = [];
+    const torchLightLevels: number[] = [];
 
     const [startX, startY, startZ] = min;
     const [endX, , endZ] = max;
@@ -57,6 +64,8 @@ class Mesher {
 
               if (!isNeighborSolid) {
                 const nearVoxels = neighbors.map(([a, b, c]) => world.getVoxelByVoxel([vx + a, vy + b, vz + c]));
+                const torchLightLevel = world.getTorchLight([nvx, nvy, nvz]);
+                const sunlightLevel = world.getSunlight([nvx, nvy, nvz]);
 
                 const { startU, endU, startV, endV } = isMat1
                   ? uvMap[texture.all]
@@ -87,6 +96,10 @@ class Mesher {
                 }
 
                 aos.push(...faceAOs);
+                if (!useSmoothLighting) {
+                  torchLightLevels.push(torchLightLevel, torchLightLevel, torchLightLevel, torchLightLevel);
+                  sunlightLevels.push(sunlightLevel, sunlightLevel, sunlightLevel, sunlightLevel);
+                }
               }
             }
           }
@@ -100,6 +113,8 @@ class Mesher {
       normals: new Float32Array(normals),
       positions: new Float32Array(positions),
       uvs: new Float32Array(uvs),
+      sunlights: new Float32Array(sunlightLevels),
+      torchLights: new Float32Array(torchLightLevels),
     };
   };
 }

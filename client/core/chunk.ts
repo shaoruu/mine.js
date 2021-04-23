@@ -1,6 +1,7 @@
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
-import { BufferAttribute, BufferGeometry, Mesh } from 'three';
+import { BufferGeometry, Float32BufferAttribute, Int8BufferAttribute, Mesh } from 'three';
+import pool from 'typedarray-pool';
 
 import { Coords2, Coords3, MeshType } from '../../shared';
 import { Helper } from '../utils';
@@ -43,7 +44,7 @@ class Chunk {
     this.dimension = dimension;
     this.name = Helper.getChunkName(this.coords);
 
-    this.voxels = ndarray(new Uint8Array(size * maxHeight * size), [size, maxHeight, size]);
+    this.voxels = ndarray(pool.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
 
     this.geometry = new BufferGeometry();
 
@@ -97,10 +98,11 @@ class Chunk {
 
   dispose() {
     this.geometry.dispose();
+    pool.free(this.voxels.data);
   }
 
   setupMesh(meshData: MeshType) {
-    const { positions, normals, indices, uvs, aos } = meshData;
+    const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData;
 
     this.isMeshing = true;
 
@@ -108,17 +110,20 @@ class Chunk {
     const normalNumComponents = 3;
     const uvNumComponents = 2;
     const occlusionNumComponents = 1;
+    const sunlightsNumComponents = 1;
+    const torchLightsNumComponents = 1;
 
     this.geometry.dispose();
-    this.geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), positionNumComponents));
-    this.geometry.setAttribute('normal', new BufferAttribute(new Float32Array(normals), normalNumComponents));
-    this.geometry.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), uvNumComponents));
-    this.geometry.setAttribute('ao', new BufferAttribute(new Float32Array(aos), occlusionNumComponents));
+    this.geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
+    this.geometry.setAttribute('normal', new Int8BufferAttribute(normals, normalNumComponents));
+    this.geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
+    this.geometry.setAttribute('ao', new Float32BufferAttribute(aos, occlusionNumComponents));
+    this.geometry.setAttribute('sunlight', new Float32BufferAttribute(sunlights, sunlightsNumComponents));
+    this.geometry.setAttribute('torchLight', new Float32BufferAttribute(torchLights, torchLightsNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
     this.altMesh = new Mesh(this.geometry, this.engine.registry.material);
     this.altMesh.name = this.name;
-    this.altMesh.renderOrder = 10000;
     this.altMesh.frustumCulled = false;
 
     // mark chunk as built mesh
@@ -126,7 +131,7 @@ class Chunk {
   }
 
   private toLocal = (vx: number, vy: number, vz: number) => {
-    return vec3.sub([0, 0, 0], [vx, vy, vz], this.min);
+    return vec3.sub([0, 0, 0], [vx, vy, vz], this.min) as Coords3;
   };
 }
 

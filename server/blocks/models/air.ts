@@ -7,6 +7,7 @@ const Air: BlockType = {
   isSolid: false,
   isFluid: false,
   isTransparent: true,
+  isLight: false,
 };
 
 module.exports = Air;

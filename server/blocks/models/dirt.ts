@@ -7,6 +7,7 @@ const Dirt: BlockType = {
   isSolid: true,
   isFluid: false,
   isTransparent: false,
+  isLight: false,
   textures: {
     all: 'dirt.png',
   },

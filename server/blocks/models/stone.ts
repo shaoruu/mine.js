@@ -7,6 +7,7 @@ const Stone: BlockType = {
   isSolid: true,
   isFluid: false,
   isTransparent: false,
+  isLight: false,
   textures: {
     all: 'stone.png',
   },

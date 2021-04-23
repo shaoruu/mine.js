@@ -5,6 +5,17 @@ import { Coords2, Coords3, Helper } from '../../shared';
 
 import { ClientType, Network, NetworkOptionsType, Chunk, GeneratorTypes, Registry } from '.';
 
+const chunkNeighbors = [
+  { x: -1, z: -1 },
+  { x: 0, z: -1 },
+  { x: 1, z: -1 },
+  { x: -1, z: 0 },
+  { x: 1, z: 0 },
+  { x: -1, z: 1 },
+  { x: 0, z: 1 },
+  { x: 1, z: 1 },
+];
+
 type WorldOptionsType = NetworkOptionsType & {
   storage: string;
   preload: number;
@@ -13,6 +24,7 @@ type WorldOptionsType = NetworkOptionsType & {
   maxHeight: number;
   renderRadius: number;
   maxLightLevel: number;
+  useSmoothLighting: boolean;
   generation: GeneratorTypes;
 };
 
@@ -66,12 +78,11 @@ class World extends Network {
   getChunkByName = (chunkName: string) => {
     let chunk = this.chunks.get(chunkName);
     if (!chunk) {
-      const { chunkSize, generation, dimension, maxHeight } = this.options;
+      const { chunkSize, dimension, maxHeight } = this.options;
       const coords = Helper.parseChunkName(chunkName) as Coords2;
       chunk = new Chunk(coords, this, {
         dimension,
         maxHeight,
-        generation,
         size: chunkSize,
       });
       this.chunks.set(chunkName, chunk);
@@ -85,7 +96,14 @@ class World extends Network {
     return this.getChunkByCPos(chunkCoords);
   };
 
-  getNeighborChunksByVoxel = () => {};
+  getNeighborChunks = (coords: Coords2) => {
+    const [cx, cz] = coords;
+    const chunks: Chunk[] = [];
+    chunkNeighbors.forEach((offset) => {
+      chunks.push(this.getChunkByCPos([cx + offset.x, cz + offset.z]));
+    });
+    return chunks;
+  };
 
   getVoxelByVoxel = (vCoords: Coords3) => {
     const chunk = this.getChunkByVoxel(vCoords);
@@ -97,8 +115,28 @@ class World extends Network {
     return this.getVoxelByVoxel(vCoords);
   };
 
-  getMaxHeightByVoxel = (column: Coords2) => {
-    const chunk = this.getChunkByCPos(column);
+  getTorchLight(vCoords: Coords3) {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk.getTorchLight(vCoords) || 0;
+  }
+
+  setTorchLight(vCoords: Coords3, level: number) {
+    const chunk = this.getChunkByVoxel(vCoords);
+    chunk.setTorchLight(vCoords, level);
+  }
+
+  getSunlight(vCoords: Coords3) {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk.getSunlight(vCoords);
+  }
+
+  setSunlight(vCoords: Coords3, level: number) {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk.setSunlight(vCoords, level);
+  }
+
+  getMaxHeight = (column: Coords2) => {
+    const chunk = this.getChunkByVoxel([column[0], 0, column[1]]);
     return chunk.getMaxHeight(column);
   };
 
@@ -124,13 +162,12 @@ class World extends Network {
   onRequest = (client: ClientType, request) => {
     switch (request.type) {
       case 'REQUEST': {
-        const chunks: Chunk[] = [];
         const { x, z } = request.json;
         // TODO: check x z validity
         const chunk = this.getChunkByCPos([x, z]);
-        if (chunk.needsMeshing) chunk.remesh();
-        chunks.push(chunk);
-        this.sendChunks(client, chunks);
+        if (chunk.mesh) chunk.remesh();
+        console.log(`requested: ${x} ${z}`);
+        this.sendChunks(client, [chunk]);
         break;
       }
       default:
@@ -152,7 +189,7 @@ class World extends Network {
       Network.encode({
         type: 'INIT',
         json: {
-          spawn: [0, this.getMaxHeightByVoxel([0, 0]), 0],
+          spawn: [0, this.getMaxHeight([0, 0]), 0],
         },
       }),
     );

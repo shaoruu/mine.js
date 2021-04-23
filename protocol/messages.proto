@@ -2,7 +2,8 @@ syntax = "proto3";
 package protocol;
 
 message Geometry {
-  repeated float lights = 2;
+  repeated float torchLights = 1;
+  repeated float sunlights = 2;
   repeated float indices = 3;
   repeated float positions = 4;
   repeated float normals = 5;

@@ -24,7 +24,8 @@ $root.protocol = (function() {
          * Properties of a Geometry.
          * @memberof protocol
          * @interface IGeometry
-         * @property {Array.<number>|null} [lights] Geometry lights
+         * @property {Array.<number>|null} [torchLights] Geometry torchLights
+         * @property {Array.<number>|null} [sunlights] Geometry sunlights
          * @property {Array.<number>|null} [indices] Geometry indices
          * @property {Array.<number>|null} [positions] Geometry positions
          * @property {Array.<number>|null} [normals] Geometry normals
@@ -41,7 +42,8 @@ $root.protocol = (function() {
          * @param {protocol.IGeometry=} [properties] Properties to set
          */
         function Geometry(properties) {
-            this.lights = [];
+            this.torchLights = [];
+            this.sunlights = [];
             this.indices = [];
             this.positions = [];
             this.normals = [];
@@ -54,12 +56,20 @@ $root.protocol = (function() {
         }
 
         /**
-         * Geometry lights.
-         * @member {Array.<number>} lights
+         * Geometry torchLights.
+         * @member {Array.<number>} torchLights
          * @memberof protocol.Geometry
          * @instance
          */
-        Geometry.prototype.lights = $util.emptyArray;
+        Geometry.prototype.torchLights = $util.emptyArray;
+
+        /**
+         * Geometry sunlights.
+         * @member {Array.<number>} sunlights
+         * @memberof protocol.Geometry
+         * @instance
+         */
+        Geometry.prototype.sunlights = $util.emptyArray;
 
         /**
          * Geometry indices.
@@ -125,10 +135,16 @@ $root.protocol = (function() {
         Geometry.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.lights != null && message.lights.length) {
+            if (message.torchLights != null && message.torchLights.length) {
+                writer.uint32(/* id 1, wireType 2 =*/10).fork();
+                for (var i = 0; i < message.torchLights.length; ++i)
+                    writer.float(message.torchLights[i]);
+                writer.ldelim();
+            }
+            if (message.sunlights != null && message.sunlights.length) {
                 writer.uint32(/* id 2, wireType 2 =*/18).fork();
-                for (var i = 0; i < message.lights.length; ++i)
-                    writer.float(message.lights[i]);
+                for (var i = 0; i < message.sunlights.length; ++i)
+                    writer.float(message.sunlights[i]);
                 writer.ldelim();
             }
             if (message.indices != null && message.indices.length) {
@@ -195,15 +211,25 @@ $root.protocol = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 2:
-                    if (!(message.lights && message.lights.length))
-                        message.lights = [];
+                case 1:
+                    if (!(message.torchLights && message.torchLights.length))
+                        message.torchLights = [];
                     if ((tag & 7) === 2) {
                         var end2 = reader.uint32() + reader.pos;
                         while (reader.pos < end2)
-                            message.lights.push(reader.float());
+                            message.torchLights.push(reader.float());
                     } else
-                        message.lights.push(reader.float());
+                        message.torchLights.push(reader.float());
+                    break;
+                case 2:
+                    if (!(message.sunlights && message.sunlights.length))
+                        message.sunlights = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.sunlights.push(reader.float());
+                    } else
+                        message.sunlights.push(reader.float());
                     break;
                 case 3:
                     if (!(message.indices && message.indices.length))
@@ -290,12 +316,19 @@ $root.protocol = (function() {
         Geometry.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.lights != null && message.hasOwnProperty("lights")) {
-                if (!Array.isArray(message.lights))
-                    return "lights: array expected";
-                for (var i = 0; i < message.lights.length; ++i)
-                    if (typeof message.lights[i] !== "number")
-                        return "lights: number[] expected";
+            if (message.torchLights != null && message.hasOwnProperty("torchLights")) {
+                if (!Array.isArray(message.torchLights))
+                    return "torchLights: array expected";
+                for (var i = 0; i < message.torchLights.length; ++i)
+                    if (typeof message.torchLights[i] !== "number")
+                        return "torchLights: number[] expected";
+            }
+            if (message.sunlights != null && message.hasOwnProperty("sunlights")) {
+                if (!Array.isArray(message.sunlights))
+                    return "sunlights: array expected";
+                for (var i = 0; i < message.sunlights.length; ++i)
+                    if (typeof message.sunlights[i] !== "number")
+                        return "sunlights: number[] expected";
             }
             if (message.indices != null && message.hasOwnProperty("indices")) {
                 if (!Array.isArray(message.indices))
@@ -347,12 +380,19 @@ $root.protocol = (function() {
             if (object instanceof $root.protocol.Geometry)
                 return object;
             var message = new $root.protocol.Geometry();
-            if (object.lights) {
-                if (!Array.isArray(object.lights))
-                    throw TypeError(".protocol.Geometry.lights: array expected");
-                message.lights = [];
-                for (var i = 0; i < object.lights.length; ++i)
-                    message.lights[i] = Number(object.lights[i]);
+            if (object.torchLights) {
+                if (!Array.isArray(object.torchLights))
+                    throw TypeError(".protocol.Geometry.torchLights: array expected");
+                message.torchLights = [];
+                for (var i = 0; i < object.torchLights.length; ++i)
+                    message.torchLights[i] = Number(object.torchLights[i]);
+            }
+            if (object.sunlights) {
+                if (!Array.isArray(object.sunlights))
+                    throw TypeError(".protocol.Geometry.sunlights: array expected");
+                message.sunlights = [];
+                for (var i = 0; i < object.sunlights.length; ++i)
+                    message.sunlights[i] = Number(object.sunlights[i]);
             }
             if (object.indices) {
                 if (!Array.isArray(object.indices))
@@ -406,17 +446,23 @@ $root.protocol = (function() {
                 options = {};
             var object = {};
             if (options.arrays || options.defaults) {
-                object.lights = [];
+                object.torchLights = [];
+                object.sunlights = [];
                 object.indices = [];
                 object.positions = [];
                 object.normals = [];
                 object.uvs = [];
                 object.aos = [];
             }
-            if (message.lights && message.lights.length) {
-                object.lights = [];
-                for (var j = 0; j < message.lights.length; ++j)
-                    object.lights[j] = options.json && !isFinite(message.lights[j]) ? String(message.lights[j]) : message.lights[j];
+            if (message.torchLights && message.torchLights.length) {
+                object.torchLights = [];
+                for (var j = 0; j < message.torchLights.length; ++j)
+                    object.torchLights[j] = options.json && !isFinite(message.torchLights[j]) ? String(message.torchLights[j]) : message.torchLights[j];
+            }
+            if (message.sunlights && message.sunlights.length) {
+                object.sunlights = [];
+                for (var j = 0; j < message.sunlights.length; ++j)
+                    object.sunlights[j] = options.json && !isFinite(message.sunlights[j]) ? String(message.sunlights[j]) : message.sunlights[j];
             }
             if (message.indices && message.indices.length) {
                 object.indices = [];

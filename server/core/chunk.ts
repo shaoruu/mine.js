@@ -4,17 +4,26 @@ import zlib from 'zlib';
 
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
+import pool from 'typedarray-pool';
 
 import { Coords2, Coords3, Helper, MeshType } from '../../shared';
 
-import { World, Mesher, Generator, GeneratorTypes } from '.';
+import { World, Mesher, Generator } from '.';
 
 type ChunkOptionsType = {
   size: number;
   maxHeight: number;
   dimension: number;
-  generation: GeneratorTypes;
 };
+
+const voxelNeighbors = [
+  { x: 1, y: 0, z: 0 },
+  { x: -1, y: 0, z: 0 },
+  { x: 0, y: 0, z: 1 },
+  { x: 0, y: 0, z: -1 },
+  { x: 0, y: 1, z: 0 },
+  { x: 0, y: -1, z: 0 },
+];
 
 class Chunk {
   public voxels: ndarray;
@@ -27,7 +36,7 @@ class Chunk {
   public max: Coords3 = [0, 0, 0];
 
   public needsSaving = false;
-  public needsMeshing = true;
+  public needsPropagation = false;
   public isEmpty = true;
 
   public mesh: MeshType;
@@ -67,13 +76,41 @@ class Chunk {
     return this.voxels.set(...this.toLocal(voxel), type);
   };
 
-  getLight = (voxel: Coords3) => {
-    return this.lights.get(...this.toLocal(voxel));
-  };
+  getLocalTorchLight(lCoords: Coords3) {
+    return this.lights.get(...lCoords) & 0xf;
+  }
 
-  setLight = (voxel: Coords3, level: number) => {
-    return this.lights.set(...this.toLocal(voxel), level);
-  };
+  setLocalTorchLight(lCoords: Coords3, level: number) {
+    return this.lights.set(...lCoords, (this.lights.get(...lCoords) & 0xf0) | level);
+  }
+
+  getLocalSunlight(lCoords: Coords3) {
+    return (this.lights.get(...lCoords) >> 4) & 0xf;
+  }
+
+  setLocalSunlight(lCoords: Coords3, level: number) {
+    return this.lights.set(...lCoords, (this.lights.get(...lCoords) & 0xf) | (level << 4));
+  }
+
+  getTorchLight(vCoords: Coords3) {
+    const lCoords = this.toLocal(vCoords);
+    return this.getLocalTorchLight(lCoords);
+  }
+
+  setTorchLight(vCoords: Coords3, level: number) {
+    const lCoords = this.toLocal(vCoords);
+    this.setLocalTorchLight(lCoords, level);
+  }
+
+  getSunlight(vCoords: Coords3) {
+    const lCoords = this.toLocal(vCoords);
+    return this.getLocalSunlight(lCoords);
+  }
+
+  setSunlight(vCoords: Coords3, level: number) {
+    const lCoords = this.toLocal(vCoords);
+    this.setLocalSunlight(lCoords, level);
+  }
 
   getMaxHeight = (column: Coords2) => {
     const [lx, , lz] = this.toLocal([column[0], 0, column[1]]);
@@ -125,7 +162,8 @@ class Chunk {
 
   generate = () => {
     // generate terrain, height map, and mesh
-    const { generation } = this.options;
+    this.needsPropagation = true;
+    const { generation } = this.world.options;
     Generator.generate(this, generation);
     // TODO: lighting
     this.generateHeightMap();
@@ -150,12 +188,100 @@ class Chunk {
     }
   };
 
+  // huge help from https://github.com/danielesteban/blocks/blob/master/server/chunk.js
   propagate = () => {
     // light propagation
+    this.needsPropagation = false;
+
+    const { world, min, max } = this;
+    const { registry } = world;
+    const { maxLightLevel } = world.options;
+    const { maxHeight } = this.options;
+
+    const lightQueue: Coords3[] = [];
+    const sunlightQueue: Coords3[] = [];
+
+    const [startX, startY, startZ] = min;
+    const [endX, endY, endZ] = max;
+
+    for (let vx = startX; vx < endX; vx++) {
+      for (let vy = startY; vy < endY; vy++) {
+        for (let vz = startZ; vz < endZ; vz++) {
+          const voxel = [vx, vy, vz] as Coords3;
+          const typeID = world.getVoxelByVoxel(voxel);
+          const blockType = registry.getBlockByID(typeID);
+
+          if (blockType.isLight) {
+            world.setTorchLight(voxel, blockType.lightLevel);
+            lightQueue.push(voxel);
+          }
+        }
+      }
+    }
+
+    const top = maxHeight - 1;
+    for (let vx = startX; vx < endX; vx++) {
+      for (let vz = startZ; vz < endZ; vz++) {
+        const voxel = [vx, top, vz] as Coords3;
+        const typeID = world.getVoxelByVoxel(voxel);
+        const blockType = registry.getBlockByID(typeID);
+        if (blockType.isTransparent) {
+          world.setSunlight(voxel, maxLightLevel);
+          sunlightQueue.push(voxel);
+        }
+      }
+    }
+
+    this.floodLight(lightQueue);
+    this.floodLight(sunlightQueue, true);
+
+    // todo: save
   };
 
-  floodLight = () => {
+  floodLight = (queue: Coords3[], isSunlight = false) => {
     // flood light from source
+    const { world } = this;
+    const { maxHeight } = this.options;
+    const { registry } = world;
+    const { maxLightLevel } = world.options;
+
+    while (queue.length) {
+      const voxel = queue.shift();
+      const [vx, vy, vz] = voxel;
+      const light = isSunlight ? world.getSunlight(voxel) : world.getTorchLight(voxel);
+
+      voxelNeighbors.forEach((offset) => {
+        const ny = vy + offset.y;
+
+        if (ny < 0 || ny >= maxHeight) {
+          return;
+        }
+
+        const nx = vx + offset.x;
+        const nz = vz + offset.z;
+        const sd = isSunlight && offset.y === -1 && light === maxLightLevel;
+        const nl = light - (sd ? 0 : 1);
+        const nVoxel = [nx, ny, nz] as Coords3;
+        const typeID = world.getVoxelByVoxel(nVoxel);
+        const blockType = registry.getBlockByID(typeID);
+
+        if (
+          !blockType.isTransparent ||
+          (isSunlight && offset.y !== -1 && light === maxLightLevel && ny > world.getMaxHeight([nx, nz])) ||
+          (isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel)) >= nl
+        ) {
+          return;
+        }
+
+        if (isSunlight) {
+          world.setSunlight(nVoxel, nl);
+        } else {
+          world.setTorchLight(nVoxel, nl);
+        }
+
+        queue.push(nVoxel);
+      });
+    }
   };
 
   removeLight = () => {
@@ -168,10 +294,24 @@ class Chunk {
 
   remesh = () => {
     // rebuild mesh
+    // propagate light first
     // console.time(this.name);
-    this.mesh = Mesher.meshChunk(this);
+    if (this.needsPropagation) this.propagate();
+
+    // propagate neighbor chunks
+    this.world.getNeighborChunks(this.coords).forEach((neighbor) => {
+      if (neighbor.needsPropagation) {
+        neighbor.propagate();
+      }
+    });
     // console.timeEnd(this.name);
-    this.needsMeshing = false;
+
+    // mesh TODO: sub chunk meshes
+    this.mesh = Mesher.meshChunk(this);
+  };
+
+  toLocal = (voxel: Coords3) => {
+    return vec3.sub([0, 0, 0], voxel, this.min) as Coords3;
   };
 
   get protocol() {
@@ -182,23 +322,12 @@ class Chunk {
       z: this.coords[1],
       meshes: [
         {
-          opaque: {
-            lights: this.lights.data,
-            indices: this.mesh.indices,
-            positions: this.mesh.positions,
-            normals: this.mesh.normals,
-            uvs: this.mesh.uvs,
-            aos: this.mesh.aos,
-          },
+          opaque: this.mesh,
         },
       ],
       voxels: this.voxels.data,
     };
   }
-
-  private toLocal = (voxel: Coords3) => {
-    return vec3.sub([0, 0, 0], voxel, this.min);
-  };
 }
 
 export { Chunk };

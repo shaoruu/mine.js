@@ -16,6 +16,14 @@ export const TERRAIN_CONFIG = {
     HEIGHT_OFFSET: 0.3,
     AMPLIFIER: 1.4,
   },
+  // HILLY: {
+  //   SCALE: 0.008,
+  //   OCTAVES: 8,
+  //   PERSISTANCE: 1.6,
+  //   LACUNARITY: 1.2,
+  //   HEIGHT_OFFSET: 0.5,
+  //   AMPLIFIER: 3,
+  // },
 };
 
 // meshing

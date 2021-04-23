@@ -28,7 +28,8 @@ class World extends EventEmitter {
 
   private pendingChunks: Coords2[] = [];
   private requestedChunks: Set<string> = new Set();
-  private chunks: SmartDictionary<Chunk> = new SmartDictionary();
+  private receivedChunks: ServerChunkType[] = [];
+  private chunks: Map<string, Chunk> = new Map();
   private visibleChunks: Chunk[] = [];
 
   constructor(public engine: Engine, public options: WorldOptionsType) {
@@ -38,6 +39,7 @@ class World extends EventEmitter {
   tick() {
     this.checkCamChunk();
     this.requestChunks();
+    this.meshChunks();
   }
 
   getChunkByCPos(cCoords: Coords2) {
@@ -115,19 +117,9 @@ class World extends EventEmitter {
   handleServerChunk(serverChunk: ServerChunkType) {
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
-
+    console.log(`received: ${cx} ${cz}`);
     this.requestedChunks.delete(Helper.getChunkName(coords));
-
-    let chunk = this.getChunkByCPos(coords);
-
-    if (!chunk) {
-      const { chunkSize, dimension, maxHeight } = this.options;
-      chunk = new Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
-      this.setChunk(chunk);
-    }
-
-    chunk.setupMesh(serverChunk.meshes[0].opaque);
-    chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+    this.receivedChunks.push(serverChunk);
   }
 
   setChunk(chunk: Chunk) {
@@ -198,7 +190,7 @@ class World extends EventEmitter {
       }
     }
 
-    if (!this.isReady && supposed <= this.chunks.data.length) {
+    if (!this.isReady && supposed <= this.chunks.size) {
       this.isReady = true;
       this.engine.emit('world-ready');
     }
@@ -223,6 +215,10 @@ class World extends EventEmitter {
       }
     }
 
+    this.pendingChunks = Array.from(new Set(this.pendingChunks.map((pc) => Helper.getChunkName(pc)))).map(
+      (pcStr) => Helper.parseChunkName(pcStr) as Coords2,
+    );
+
     // make pending chunks radiate from player, might have easier ways of doing so
     this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
 
@@ -231,23 +227,54 @@ class World extends EventEmitter {
     for (const chunk of this.visibleChunks) {
       if (chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
         chunk.removeFromScene();
+        chunk.dispose();
+        this.chunks.delete(chunk.name);
       }
     }
   }
 
   private requestChunks() {
     // separate chunk request into frames to avoid clogging
-    const { maxChunkPerFrame } = this.options;
     if (this.pendingChunks.length === 0) return;
-    const framePendingChunks = this.pendingChunks.splice(0, maxChunkPerFrame);
-    framePendingChunks.forEach(([cx, cz]) => {
-      const rep = Helper.getChunkName([cx, cz]);
-      if (this.requestedChunks.has(rep)) return;
-      this.engine.network.server.sendEvent({
-        type: 'REQUEST',
-        json: { x: cx, z: cz },
+
+    const { maxChunkPerFrame } = this.options;
+
+    // don't clog up the server
+    if (this.requestedChunks.size < maxChunkPerFrame) {
+      const framePendingChunks = this.pendingChunks.splice(0, maxChunkPerFrame);
+      framePendingChunks.forEach(([cx, cz]) => {
+        const rep = Helper.getChunkName([cx, cz]);
+        if (this.requestedChunks.has(rep)) return;
+        this.engine.network.server.sendEvent({
+          type: 'REQUEST',
+          json: { x: cx, z: cz },
+        });
+        this.requestedChunks.add(rep);
       });
-      this.requestedChunks.add(rep);
+    }
+  }
+
+  private meshChunks() {
+    // separate chunk meshing into frames to avoid clogging
+    if (this.receivedChunks.length === 0) return;
+
+    const { maxChunkPerFrame } = this.options;
+
+    const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkPerFrame);
+    frameReceivedChunks.forEach((serverChunk) => {
+      const { x: cx, z: cz } = serverChunk;
+      const coords = [cx, cz] as Coords2;
+
+      let chunk = this.getChunkByCPos(coords);
+
+      if (!chunk) {
+        const { chunkSize, dimension, maxHeight } = this.options;
+        chunk = new Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
+        this.setChunk(chunk);
+      }
+
+      chunk.setupMesh(serverChunk.meshes[0].opaque);
+      chunk.voxels.data = new Uint8Array(serverChunk.voxels);
     });
   }
 }
