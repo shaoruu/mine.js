@@ -3,7 +3,7 @@ import path from 'path';
 import { World } from './core';
 
 const world = new World({
-  preload: 12,
+  preload: 1,
   dimension: 1,
   chunkSize: 8,
   maxClients: 10,

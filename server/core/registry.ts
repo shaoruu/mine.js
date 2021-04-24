@@ -10,6 +10,10 @@ type RegistryOptionsType = {
   basePath: string;
 };
 
+type TextureMapType = {
+  [key: string]: Image;
+};
+
 class Registry {
   public blockTypes: { [key: string]: BlockType } = {};
   public blockTypesArr: BlockType[] = [];
@@ -104,10 +108,33 @@ class Registry {
     return typeMap;
   };
 
+  loadTexture = (textureFile: string, textureMap: TextureMapType) => {
+    const { basePath } = this.options;
+    const extension = path.extname(textureFile);
+    switch (extension) {
+      case '.png':
+      case '.jpg':
+      case '.jpeg': {
+        const texture = fs.readFileSync(path.join(basePath, 'assets', 'images', textureFile));
+        const img = new Image();
+        img.src = texture;
+        textureMap[textureFile] = img;
+        break;
+      }
+      case '.ts': {
+        const img = require(path.join(basePath, 'assets', 'procedural', textureFile));
+        if (!(img instanceof Image))
+          throw new Error(`Procedural texture exports the wrong type. Has to be exporting an Image: ${textureFile}`);
+        textureMap[textureFile] = img;
+        break;
+      }
+    }
+  };
+
   loadBlockTypes = () => {
     // load blocks' files from `basePath`
     const { basePath } = this.options;
-    const textureMap: { [key: string]: Image } = {};
+    const textureMap: TextureMapType = {};
 
     const modelFiles = fs.readdirSync(path.join(basePath, 'models'));
     for (const modelFile of modelFiles) {
@@ -126,20 +153,13 @@ class Registry {
 
         switch (length) {
           case 1: {
-            const texture = fs.readFileSync(path.join(basePath, 'assets', textures.all));
-            const img = new Image();
-            img.src = texture;
-            textureMap[textures.all] = img;
+            this.loadTexture(textures.all, textureMap);
             break;
           }
           case 3:
           case 6: {
             for (const side of Object.keys(textures)) {
-              const textureFile = textures[side];
-              const texture = fs.readFileSync(path.join(basePath, 'assets', textureFile));
-              const img = new Image();
-              img.src = texture;
-              textureMap[textureFile] = img;
+              this.loadTexture(textures[side], textureMap);
             }
             break;
           }

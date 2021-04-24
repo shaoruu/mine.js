@@ -1,6 +1,6 @@
 import Noise from 'noisejs';
 
-import { TypeMap } from '../../shared';
+import { Coords3 } from '../../shared';
 
 import { Chunk, TERRAIN_CONFIG } from '.';
 
@@ -10,19 +10,41 @@ let noise: Noise;
 
 class Generator {
   static generate = (chunk: Chunk, type: GeneratorTypes) => {
-    switch (type) {
-      case 'sin-cos':
-        Generator.sincos(chunk);
-        break;
-      case 'flat':
-        Generator.flat(chunk);
-        break;
-      case 'hilly':
-        Generator.hilly(chunk);
+    const { min, max, voxels } = chunk;
+
+    const [startX, startY, startZ] = min;
+    const [endX, endY, endZ] = max;
+
+    const isEmpty = true;
+
+    for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {
+      for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {
+        for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {
+          let voxelID = 0;
+          switch (type) {
+            case 'sin-cos':
+              voxelID = Generator.sincos([vx, vy, vz], chunk);
+              break;
+            case 'flat':
+              // voxelID = Generator.flat([vx, vy, vz]);
+              break;
+            case 'hilly':
+              voxelID = Generator.hilly([vx, vy, vz], chunk);
+          }
+
+          voxels.set(lx, ly, lz, voxelID);
+        }
+      }
     }
+
+    chunk.isEmpty = isEmpty;
   };
 
-  static hilly = (chunk: Chunk) => {
+  static hilly = ([vx, vy, vz]: Coords3, chunk: Chunk) => {
+    const {
+      world: { registry },
+    } = chunk;
+
     if (!noise) {
       // @ts-ignore
       noise = new Noise.Noise(1000);
@@ -31,18 +53,6 @@ class Generator {
     const {
       HILLY: { OCTAVES, SCALE, PERSISTANCE, LACUNARITY, AMPLIFIER, HEIGHT_OFFSET },
     } = TERRAIN_CONFIG;
-
-    const {
-      min,
-      max,
-      voxels,
-      world: { registry },
-    } = chunk;
-
-    const [startX, startY, startZ] = min;
-    const [endX, endY, endZ] = max;
-
-    let isEmpty = true;
 
     const types = registry.getTypeMap(['dirt', 'grass', 'stone']);
 
@@ -68,94 +78,49 @@ class Generator {
       return getOctaveSimplex3(vx, vy, vz) > -0.2;
     }
 
-    // basic shapes
-    for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {
-      for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {
-        for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {
-          const isSolid = isSolidAt(vx, vy, vz);
-          const isSolidTop = isSolidAt(vx, vy + 1, vz);
-          const isSolidTop2 = isSolidAt(vx, vy + 2, vz);
+    const isSolid = isSolidAt(vx, vy, vz);
+    const isSolidTop = isSolidAt(vx, vy + 1, vz);
+    const isSolidTop2 = isSolidAt(vx, vy + 2, vz);
 
-          if (isSolid) {
-            isEmpty = false;
-            if (!isSolidTop && !isSolidTop2) {
-              voxels.set(lx, ly, lz, types.grass);
-              if (getOctaveSimplex3(vx, vy, vz) > -0.195) {
-                voxels.set(lx, ly - 1, lz, types.dirt);
-                if (getOctaveSimplex3(vx, vy, vz) > -0.197) {
-                  voxels.set(lx, ly - 2, lz, types.dirt);
-                }
-              }
-            } else {
-              voxels.set(lx, ly, lz, types.stone);
-            }
-          }
-        }
+    let blockID = types.air;
+
+    if (isSolid) {
+      if (!isSolidTop && !isSolidTop2) {
+        blockID = types.grass;
+      } else {
+        blockID = types.stone;
       }
     }
 
-    // chunk.generateHeightMap();
-
-    // // surface painting
-    // for (let vx = startX; vx < endX; ++vx) {
-    //   for (let vz = startZ; vz < endZ; ++vz) {
-    //     const columnHeight = chunk.getMaxHeight([vx, vz]);
-    //     chunk.setVoxel([vx, columnHeight, vz], types.grass);
-    //   }
-    // }
-
-    chunk.isEmpty = isEmpty;
+    return blockID;
   };
 
-  static flat = (chunk: Chunk) => {
+  static heightMap = (chunk: Chunk) => {};
+
+  static flat = ([vx, vy, vz]: Coords3) => {
     // TODO
-    const {} = chunk;
   };
 
-  static sincos = (chunk: Chunk) => {
+  static sincos = ([vx, vy, vz]: Coords3, chunk: Chunk) => {
     const {
-      voxels,
-      min,
-      max,
-      options: { maxHeight },
       world: { registry },
+      options: { maxHeight },
     } = chunk;
-
-    const [startX, startY, startZ] = min;
-    const [endX, endY, endZ] = max;
-
-    let isEmpty = true;
 
     const types = registry.getTypeMap(['air', 'dirt', 'stone', 'grass']);
 
-    function getVoxelAt(vx: number, vy: number, vz: number, types: TypeMap, maxHeight: number) {
-      let blockID = types.air;
+    let blockID = types.air;
 
-      if (vy >= maxHeight) return 0;
-      if (vy === 0) return types.stone;
+    if (vy >= maxHeight) return 0;
+    if (vy === 0) return types.stone;
 
-      const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20);
-      const height2 = 0;
-      if (vy < height1 && vy > height2) {
-        blockID = Math.random() > 0.5 ? types.grass : types.stone;
-      }
-
-      return blockID;
+    const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20);
+    const height2 = 0;
+    if (vy < height1 && vy > height2) {
+      blockID = Math.random() > 0.5 ? types.grass : types.stone;
     }
 
-    for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {
-      for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {
-        for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {
-          const voxel = getVoxelAt(vx, vy, vz, types, maxHeight);
-          if (voxel) {
-            isEmpty = false;
-            voxels.set(lx, ly, lz, voxel);
-          }
-        }
-      }
-    }
-
-    chunk.isEmpty = isEmpty;
+    return blockID;
   };
 }
 
