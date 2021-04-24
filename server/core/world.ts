@@ -171,7 +171,6 @@ class World extends Network {
         // TODO: check x z validity
         const chunk = this.getChunkByCPos([x, z]);
         if (chunk.mesh) chunk.remesh();
-        console.log(`requested: ${x} ${z}`);
         this.sendChunks(client, [chunk]);
         break;
       }

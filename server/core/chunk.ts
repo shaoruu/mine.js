@@ -15,6 +15,11 @@ type ChunkOptionsType = {
   dimension: number;
 };
 
+type LightNode = {
+  voxel: Coords3;
+  level: number;
+};
+
 const voxelNeighbors = [
   { x: 1, y: 0, z: 0 },
   { x: -1, y: 0, z: 0 },
@@ -196,15 +201,14 @@ class Chunk {
 
   // huge help from https://github.com/danielesteban/blocks/blob/master/server/chunk.js
   propagate = () => {
-    console.time(this.name);
     // light propagation
     this.needsPropagation = false;
 
     const { world, min, max } = this;
     const { maxLightLevel } = world.options;
 
-    const lightQueue: Coords3[] = [];
-    const sunlightQueue: Coords3[] = [];
+    const lightQueue: LightNode[] = [];
+    const sunlightQueue: LightNode[] = [];
 
     const [startX, startY, startZ] = min;
     const [endX, endY, endZ] = max;
@@ -223,13 +227,19 @@ class Chunk {
               if (this.contains([vx + ox, vy, vz + oz])) {
                 if (world.getMaxHeight([vx + ox, vz + oz]) > vy) {
                   // means sunlight should propagate here horizontally
-                  sunlightQueue.push(voxel);
+                  sunlightQueue.push({
+                    voxel: voxel,
+                    level: maxLightLevel,
+                  });
                 }
               }
             });
           } else if (blockType.isLight) {
             world.setTorchLight(voxel, blockType.lightLevel);
-            lightQueue.push(voxel);
+            lightQueue.push({
+              voxel: voxel,
+              level: blockType.lightLevel,
+            });
           }
         }
       }
@@ -237,41 +247,37 @@ class Chunk {
 
     this.floodLight(lightQueue);
     this.floodLight(sunlightQueue, true);
-    console.timeEnd(this.name);
 
     // todo: save
   };
 
-  floodLight = (queue: Coords3[], isSunlight = false) => {
+  floodLight = (queue: LightNode[], isSunlight = false) => {
     // flood light from source
     const { world } = this;
     const { maxHeight } = this.options;
-    const { registry } = world;
     const { maxLightLevel } = world.options;
 
     while (queue.length) {
-      const voxel = queue.shift();
+      const { voxel, level } = queue.shift();
       const [vx, vy, vz] = voxel;
-      const light = isSunlight ? world.getSunlight(voxel) : world.getTorchLight(voxel);
 
       voxelNeighbors.forEach((offset) => {
-        const ny = vy + offset.y;
+        const nvy = vy + offset.y;
 
-        if (ny < 0 || ny >= maxHeight) {
+        if (nvy < 0 || nvy >= maxHeight) {
           return;
         }
 
-        const nx = vx + offset.x;
-        const nz = vz + offset.z;
-        const sd = isSunlight && offset.y === -1 && light === maxLightLevel;
-        const nl = light - (sd ? 0 : 1);
-        const nVoxel = [nx, ny, nz] as Coords3;
-        const typeID = world.getVoxelByVoxel(nVoxel);
-        const blockType = registry.getBlockByID(typeID);
+        const nvx = vx + offset.x;
+        const nvz = vz + offset.z;
+        const sd = isSunlight && offset.y === -1 && level === maxLightLevel;
+        const nl = level - (sd ? 0 : 1);
+        const nVoxel = [nvx, nvy, nvz] as Coords3;
+        const blockType = world.getBlockTypeByVoxel(nVoxel);
 
         if (
           !blockType.isTransparent ||
-          (isSunlight && offset.y !== -1 && light === maxLightLevel && ny > world.getMaxHeight([nx, nz])) ||
+          (isSunlight && offset.y !== -1 && level === maxLightLevel && nvy > world.getMaxHeight([nvx, nvz])) ||
           (isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel)) >= nl
         ) {
           return;
@@ -283,7 +289,10 @@ class Chunk {
           world.setTorchLight(nVoxel, nl);
         }
 
-        queue.push(nVoxel);
+        queue.push({
+          voxel: nVoxel,
+          level: nl,
+        });
       });
     }
   };

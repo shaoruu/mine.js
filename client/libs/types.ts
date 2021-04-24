@@ -43,8 +43,6 @@ export type EntityType = {
   object: Object3D;
 };
 
-export type GeneratorType = 'flat' | 'sin-cos' | '';
-
 export type MeshResultType = {
   positions: Float32Array;
   normals: Float32Array;

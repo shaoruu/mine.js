@@ -43,7 +43,7 @@ class Debug {
       this.setupAll();
       this.mount();
 
-      engine.rendering.scene.add(this.chunkHighlight);
+      // engine.rendering.scene.add(this.chunkHighlight);
 
       // const {
       //   rendering: { scene },

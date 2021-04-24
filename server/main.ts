@@ -3,11 +3,11 @@ import path from 'path';
 import { World } from './core';
 
 const world = new World({
-  preload: 1,
+  preload: 12,
   dimension: 1,
-  chunkSize: 16,
+  chunkSize: 8,
   maxClients: 10,
-  maxHeight: 256,
+  maxHeight: 128,
   renderRadius: 8,
   maxLightLevel: 15,
   pingInterval: 50000,

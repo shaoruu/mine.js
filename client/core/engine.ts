@@ -60,15 +60,15 @@ const defaultConfig: ConfigType = {
     cameraWidth: 0.8,
   },
   world: {
-    maxHeight: 256,
-    generator: '',
-    renderRadius: 9,
-    chunkSize: 16,
+    maxHeight: 128,
+    renderRadius: 12,
+    requestRadius: 14,
+    chunkSize: 8,
     dimension: 1,
     // radius of rendering centered by camera
     // maximum amount of chunks to process per frame tick
-    maxChunkRequestPerFrame: 2,
-    maxChunkProcessPerFrame: 2,
+    maxChunkRequestPerFrame: 12,
+    maxChunkProcessPerFrame: 8,
     maxBlockPerFrame: 500,
   },
   entities: {

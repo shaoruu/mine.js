@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 
 import { Coords2, Coords3, MeshType } from '../../shared';
-import { GeneratorType } from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
@@ -11,8 +10,8 @@ type WorldOptionsType = {
   maxHeight: number;
   chunkSize: number;
   dimension: number;
-  generator?: GeneratorType;
   renderRadius: number;
+  requestRadius: number;
   maxChunkRequestPerFrame: number;
   maxChunkProcessPerFrame: number;
   maxBlockPerFrame: number;
@@ -117,7 +116,6 @@ class World extends EventEmitter {
   handleServerChunk(serverChunk: ServerChunkType) {
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
-    console.log(`received: ${cx} ${cz}`);
     this.requestedChunks.delete(Helper.getChunkName(coords));
     this.receivedChunks.push(serverChunk);
   }
@@ -197,15 +195,15 @@ class World extends EventEmitter {
   }
 
   private surroundCamChunks() {
-    const { renderRadius, chunkSize } = this.options;
+    const { renderRadius, requestRadius, chunkSize } = this.options;
 
     const [cx, cz] = this.camChunkPos;
 
-    for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
-      for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
+    for (let x = cx - requestRadius; x <= cx + requestRadius; x++) {
+      for (let z = cz - requestRadius; z <= cz + requestRadius; z++) {
         const dx = x - cx;
         const dz = z - cz;
-        if (dx * dx + dz * dz > renderRadius * renderRadius) continue;
+        if (dx * dx + dz * dz > requestRadius * requestRadius) continue;
 
         const chunk = this.getChunkByCPos([x, z]);
 

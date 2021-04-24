@@ -3919,7 +3919,7 @@ class Debug {
             this.makeDOM();
             this.setupAll();
             this.mount();
-            engine.rendering.scene.add(this.chunkHighlight);
+            // engine.rendering.scene.add(this.chunkHighlight);
             // const {
             //   rendering: { scene },
             //   world: {
@@ -4001,15 +4001,15 @@ const defaultConfig = {
         cameraWidth: 0.8,
     },
     world: {
-        maxHeight: 256,
-        generator: '',
-        renderRadius: 9,
-        chunkSize: 16,
+        maxHeight: 128,
+        renderRadius: 12,
+        requestRadius: 14,
+        chunkSize: 8,
         dimension: 1,
         // radius of rendering centered by camera
         // maximum amount of chunks to process per frame tick
-        maxChunkRequestPerFrame: 2,
-        maxChunkProcessPerFrame: 2,
+        maxChunkRequestPerFrame: 12,
+        maxChunkProcessPerFrame: 8,
         maxBlockPerFrame: 500,
     },
     entities: {
@@ -4592,11 +4592,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! events */ "./node_modules/events/events.js");
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
-/* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./chunk */ "./client/core/chunk.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./chunk */ "./client/core/chunk.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
@@ -4620,21 +4618,21 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.meshChunks();
     }
     getChunkByCPos(cCoords) {
-        return this.getChunkByName(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(cCoords));
+        return this.getChunkByName(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getChunkName(cCoords));
     }
     getChunkByName(chunkName) {
         return this.chunks.get(chunkName);
     }
     getChunkByVoxel(vCoords) {
         const { chunkSize } = this.options;
-        const chunkCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
+        const chunkCoords = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
         return this.getChunkByCPos(chunkCoords);
     }
     getNeighborChunksByVoxel(vCoords, padding = 0) {
         const { chunkSize } = this.options;
         const chunk = this.getChunkByVoxel(vCoords);
-        const [cx, cz] = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
-        const [lx, , lz] = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
+        const [cx, cz] = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
+        const [lx, , lz] = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
         const neighborChunks = [];
         // check if local position is on the edge
         // TODO: fix this hacky way of doing so.
@@ -4667,7 +4665,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         return chunk ? chunk.getVoxel(...vCoords) : null;
     }
     getVoxelByWorld(wCoords) {
-        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
         return this.getVoxelByVoxel(vCoords);
     }
     getSolidityByVoxel(vCoords) {
@@ -4678,18 +4676,17 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         return false;
     }
     getSolidityByWorld(wCoords) {
-        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
         return this.getSolidityByVoxel(vCoords);
     }
     getFluidityByWorld(wCoords) {
-        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
         return this.getFluidityByVoxel(vCoords);
     }
     handleServerChunk(serverChunk) {
         const { x: cx, z: cz } = serverChunk;
         const coords = [cx, cz];
-        console.log(`received: ${cx} ${cz}`);
-        this.requestedChunks.delete(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(coords));
+        this.requestedChunks.delete(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getChunkName(coords));
         this.receivedChunks.push(serverChunk);
     }
     setChunk(chunk) {
@@ -4720,8 +4717,8 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     checkCamChunk() {
         const { chunkSize, renderRadius } = this.options;
         const pos = this.engine.camera.voxel;
-        const chunkPos = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(pos, chunkSize);
-        const chunkName = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(chunkPos);
+        const chunkPos = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapVoxelPosToChunkPos(pos, chunkSize);
+        const chunkName = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getChunkName(chunkPos);
         if (chunkName !== this.camChunkName) {
             this.engine.emit('chunk-changed', chunkPos);
             this.camChunkName = chunkName;
@@ -4750,21 +4747,21 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         }
     }
     surroundCamChunks() {
-        const { renderRadius, chunkSize } = this.options;
+        const { renderRadius, requestRadius, chunkSize } = this.options;
         const [cx, cz] = this.camChunkPos;
-        for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
-            for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
+        for (let x = cx - requestRadius; x <= cx + requestRadius; x++) {
+            for (let z = cz - requestRadius; z <= cz + requestRadius; z++) {
                 const dx = x - cx;
                 const dz = z - cz;
-                if (dx * dx + dz * dz > renderRadius * renderRadius)
+                if (dx * dx + dz * dz > requestRadius * requestRadius)
                     continue;
                 const chunk = this.getChunkByCPos([x, z]);
-                if (!chunk && !this.requestedChunks.has(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName([x, z]))) {
+                if (!chunk && !this.requestedChunks.has(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getChunkName([x, z]))) {
                     this.pendingChunks.push([x, z]);
                 }
             }
         }
-        this.pendingChunks = Array.from(new Set(this.pendingChunks.map((pc) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(pc)))).map((pcStr) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.parseChunkName(pcStr));
+        this.pendingChunks = Array.from(new Set(this.pendingChunks.map((pc) => _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getChunkName(pc)))).map((pcStr) => _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.parseChunkName(pcStr));
         // make pending chunks radiate from player, might have easier ways of doing so
         this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
         // if the chunk is too far away, remove from scene.
@@ -4786,7 +4783,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         if (this.requestedChunks.size < maxChunkRequestPerFrame) {
             const framePendingChunks = this.pendingChunks.splice(0, maxChunkRequestPerFrame);
             framePendingChunks.forEach(([cx, cz]) => {
-                const rep = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName([cx, cz]);
+                const rep = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getChunkName([cx, cz]);
                 if (this.requestedChunks.has(rep))
                     return;
                 this.engine.network.server.sendEvent({
@@ -4809,7 +4806,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             let chunk = this.getChunkByCPos(coords);
             if (!chunk) {
                 const { chunkSize, dimension, maxHeight } = this.options;
-                chunk = new _chunk__WEBPACK_IMPORTED_MODULE_4__.Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
+                chunk = new _chunk__WEBPACK_IMPORTED_MODULE_3__.Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
                 this.setChunk(chunk);
             }
             chunk.setupMesh(serverChunk.meshes[0].opaque);
@@ -5097,175 +5094,6 @@ class Clock {
 
 /***/ }),
 
-/***/ "./client/libs/generators/flat.ts":
-/*!****************************************!*\
-  !*** ./client/libs/generators/flat.ts ***!
-  \****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "FlatGenerator": () => (/* binding */ FlatGenerator)
-/* harmony export */ });
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
-/* harmony import */ var _generator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./generator */ "./client/libs/generators/generator.ts");
-
-
-const defaultFlatGeneratorOptions = {
-    height: 5,
-};
-class FlatGenerator extends _generator__WEBPACK_IMPORTED_MODULE_1__.Generator {
-    constructor(engine, options = {}) {
-        super(engine);
-        this.options = Object.assign(Object.assign({}, defaultFlatGeneratorOptions), options);
-    }
-    async generate(chunk) { }
-    getVoxelAt(_, vy) {
-        if (vy <= this.options.height)
-            return 1;
-        return 0;
-    }
-}
-
-
-
-/***/ }),
-
-/***/ "./client/libs/generators/generator.ts":
-/*!*********************************************!*\
-  !*** ./client/libs/generators/generator.ts ***!
-  \*********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Generator": () => (/* binding */ Generator)
-/* harmony export */ });
-/* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ndarray */ "./node_modules/ndarray/ndarray.js");
-/* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(ndarray__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
-
-
-class Generator {
-    constructor(engine) {
-        this.engine = engine;
-        this.blockTypes = new Map();
-    }
-    useBlockID(name) {
-        const blockIndex = this.engine.registry.getBlockIndex(name);
-        this.blockTypes.set(name, blockIndex);
-        return blockIndex;
-    }
-    getBlockID(name) {
-        const blockID = this.blockTypes.get(name);
-        if (blockID === undefined)
-            throw new Error(`Generator cannot find block of type: ${name}`);
-        return blockID;
-    }
-    getChunkSize(data) {
-        const { shape } = data;
-        return shape[0];
-    }
-}
-
-
-
-/***/ }),
-
-/***/ "./client/libs/generators/index.ts":
-/*!*****************************************!*\
-  !*** ./client/libs/generators/index.ts ***!
-  \*****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "FlatGenerator": () => (/* reexport safe */ _flat__WEBPACK_IMPORTED_MODULE_0__.FlatGenerator),
-/* harmony export */   "Generator": () => (/* reexport safe */ _generator__WEBPACK_IMPORTED_MODULE_1__.Generator),
-/* harmony export */   "SinCosGenerator": () => (/* reexport safe */ _sin_cos__WEBPACK_IMPORTED_MODULE_2__.SinCosGenerator)
-/* harmony export */ });
-/* harmony import */ var _flat__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./flat */ "./client/libs/generators/flat.ts");
-/* harmony import */ var _generator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./generator */ "./client/libs/generators/generator.ts");
-/* harmony import */ var _sin_cos__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./sin-cos */ "./client/libs/generators/sin-cos.ts");
-
-
-
-
-
-/***/ }),
-
-/***/ "./client/libs/generators/sin-cos.ts":
-/*!*******************************************!*\
-  !*** ./client/libs/generators/sin-cos.ts ***!
-  \*******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SinCosGenerator": () => (/* binding */ SinCosGenerator)
-/* harmony export */ });
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils */ "./client/utils/index.ts");
-/* harmony import */ var _generator__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./generator */ "./client/libs/generators/generator.ts");
-/* harmony import */ var _raw_loader_workers_sin_cos_worker__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !raw-loader!./workers/sin-cos.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/generators/workers/sin-cos.worker.js");
-
-
-
-
-const DEFAULT_WORKER_COUNT = 20;
-const workers = [];
-for (let i = 0; i < DEFAULT_WORKER_COUNT; i++) {
-    workers.push(_utils__WEBPACK_IMPORTED_MODULE_1__.Helper.loadWorker(_raw_loader_workers_sin_cos_worker__WEBPACK_IMPORTED_MODULE_3__.default));
-}
-class SinCosGenerator extends _generator__WEBPACK_IMPORTED_MODULE_2__.Generator {
-    constructor(engine) {
-        super(engine);
-        this.useBlockID('dirt');
-        this.useBlockID('grass');
-        this.useBlockID('stone');
-    }
-    async generate(chunk) {
-        const { voxels, minOuter, maxOuter, maxHeight } = chunk;
-        const { stride } = voxels;
-        const voxelsBuffer = voxels.data.buffer.slice(0);
-        const worker = workers.pop() || _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.loadWorker(_raw_loader_workers_sin_cos_worker__WEBPACK_IMPORTED_MODULE_3__.default);
-        const newVoxels = await new Promise((resolve) => {
-            worker.postMessage({
-                data: voxelsBuffer,
-                configs: {
-                    stride,
-                    maxHeight,
-                    types: {
-                        dirt: this.getBlockID('dirt'),
-                        grass: this.getBlockID('grass'),
-                        stone: this.getBlockID('stone'),
-                    },
-                    min: minOuter,
-                    max: maxOuter,
-                },
-            }, [voxelsBuffer]);
-            worker.onmessage = ({ data }) => {
-                const { voxels, isEmpty } = data;
-                chunk.isEmpty = isEmpty;
-                resolve(new Uint8Array(voxels));
-            };
-        });
-        // @ts-ignore
-        chunk.voxels.data = newVoxels;
-        if (workers.length < DEFAULT_WORKER_COUNT) {
-            workers.push(worker);
-        }
-    }
-}
-
-
-
-/***/ }),
-
 /***/ "./client/libs/index.ts":
 /*!******************************!*\
   !*** ./client/libs/index.ts ***!
@@ -5278,25 +5106,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "AABB": () => (/* reexport safe */ _aabb__WEBPACK_IMPORTED_MODULE_0__.AABB),
 /* harmony export */   "Brain": () => (/* reexport safe */ _brain__WEBPACK_IMPORTED_MODULE_1__.Brain),
 /* harmony export */   "Clock": () => (/* reexport safe */ _clock__WEBPACK_IMPORTED_MODULE_2__.Clock),
-/* harmony export */   "FlatGenerator": () => (/* reexport safe */ _generators__WEBPACK_IMPORTED_MODULE_3__.FlatGenerator),
-/* harmony export */   "Generator": () => (/* reexport safe */ _generators__WEBPACK_IMPORTED_MODULE_3__.Generator),
-/* harmony export */   "SinCosGenerator": () => (/* reexport safe */ _generators__WEBPACK_IMPORTED_MODULE_3__.SinCosGenerator),
-/* harmony export */   "simpleCull": () => (/* reexport safe */ _meshers__WEBPACK_IMPORTED_MODULE_4__.simpleCull),
-/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_5__.Physics),
-/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_6__.RigidBody),
-/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_7__.Sky),
-/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_9__.VoxelOctree)
+/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_3__.Physics),
+/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_4__.RigidBody),
+/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_5__.Sky),
+/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_7__.VoxelOctree)
 /* harmony export */ });
 /* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 /* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
 /* harmony import */ var _clock__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./clock */ "./client/libs/clock.ts");
-/* harmony import */ var _generators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./generators */ "./client/libs/generators/index.ts");
-/* harmony import */ var _meshers__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./meshers */ "./client/libs/meshers/index.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
-/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
-/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
+/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
 
 
 
@@ -5304,89 +5126,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-
-
-
-/***/ }),
-
-/***/ "./client/libs/meshers/index.ts":
-/*!**************************************!*\
-  !*** ./client/libs/meshers/index.ts ***!
-  \**************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_0__.simpleCull)
-/* harmony export */ });
-/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/meshers/simple-cull.ts");
-
-
-
-/***/ }),
-
-/***/ "./client/libs/meshers/simple-cull.ts":
-/*!********************************************!*\
-  !*** ./client/libs/meshers/simple-cull.ts ***!
-  \********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "simpleCull": () => (/* binding */ simpleCull)
-/* harmony export */ });
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core */ "./client/core/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils */ "./client/utils/index.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../types */ "./client/libs/types.ts");
-/* harmony import */ var _raw_loader_workers_simple_cull_worker__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !raw-loader!./workers/simple-cull.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/simple-cull.worker.js");
-
-
-
-
-const DEFAULT_WORKER_COUNT = 20;
-const workers = [];
-for (let i = 0; i < DEFAULT_WORKER_COUNT; i++) {
-    workers.push(_utils__WEBPACK_IMPORTED_MODULE_1__.Helper.loadWorker(_raw_loader_workers_simple_cull_worker__WEBPACK_IMPORTED_MODULE_3__.default));
-}
-async function simpleCull(chunk) {
-    const { dimension, padding, voxels, minInner, maxInner, engine: { registry: { cBlockDictionary, cMaterialUVDictionary }, }, } = chunk;
-    const { stride } = voxels;
-    const voxelsBuffer = voxels.data.buffer.slice(0);
-    const worker = workers.pop() || _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.loadWorker(_raw_loader_workers_simple_cull_worker__WEBPACK_IMPORTED_MODULE_3__.default);
-    const result = await new Promise((resolve) => {
-        worker.postMessage({
-            data: voxelsBuffer,
-            configs: {
-                dimension,
-                padding,
-                min: minInner,
-                max: maxInner,
-                stride,
-                blockMats: cBlockDictionary,
-                matUVs: cMaterialUVDictionary,
-            },
-        }, [voxelsBuffer]);
-        worker.onmessage = ({ data }) => {
-            const { positions, normals, indices, uvs, aos } = data;
-            resolve({
-                positions: new Float32Array(positions),
-                normals: new Float32Array(normals),
-                indices: new Float32Array(indices),
-                uvs: new Float32Array(uvs),
-                aos: new Float32Array(aos),
-            });
-        };
-    });
-    //? DEBATABLE
-    if (workers.length < DEFAULT_WORKER_COUNT) {
-        workers.push(worker);
-    }
-    return result;
-}
 
 
 
@@ -21101,36 +20840,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("attribute float ao;\nattribute float sunlight;\nattribute float torchLight;\n\nvarying vec2 vUv;\nvarying float vAO;\nvarying float vSunlight;\nvarying float vTorchLight;\n\nvoid main() {\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n\n  vUv = uv;\n  vAO = ao;\n  vSunlight = sunlight;\n  vTorchLight = torchLight;\n} ");
-
-/***/ }),
-
-/***/ "./node_modules/raw-loader/dist/cjs.js!./client/libs/generators/workers/sin-cos.worker.js":
-/*!************************************************************************************************!*\
-  !*** ./node_modules/raw-loader/dist/cjs.js!./client/libs/generators/workers/sin-cos.worker.js ***!
-  \************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("function set(arr, x, y, z, stride, value) {\n  arr[x * stride[0] + y * stride[1] + z * stride[2]] = value;\n  return value;\n}\n\nfunction getVoxelAt(vx, vy, vz, types, maxHeight) {\n  let blockID = 0;\n\n  if (vy >= maxHeight) return 0;\n  if (vy === 0) return types.stone;\n  if (vy < 0) return 0;\n\n  const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20) + 30;\n  const height2 = 0;\n  if (vy < height1 && vy > height2) {\n    blockID = Math.random() > 0.5 ? types.grass : types.stone;\n  }\n\n  return blockID;\n}\n\nself.onmessage = function (e) {\n  const {\n    data: dataBuffer,\n    configs: { min, max, stride, types, maxHeight },\n  } = e.data;\n\n  const data = new Uint8Array(dataBuffer);\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  let isEmpty = true;\n\n  for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {\n    for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {\n      for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {\n        const voxel = getVoxelAt(vx, vy, vz, types, maxHeight);\n        if (voxel) {\n          isEmpty = false;\n          set(data, lx, ly, lz, stride, voxel);\n        }\n      }\n    }\n  }\n\n  postMessage({ voxels: data.buffer, isEmpty }, [data.buffer]);\n};\n");
-
-/***/ }),
-
-/***/ "./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/simple-cull.worker.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/raw-loader/dist/cjs.js!./client/libs/meshers/workers/simple-cull.worker.js ***!
-  \*************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("// AO from https://github.com/joshmarinacci/voxeljs-next/blob/05514704fe109c69072ae819f1032603bdb633d3/src/VoxelMesh.js#L363\n\nconst AO_TABLE = new Uint8Array([75, 153, 204, 255]);\n\nconst FACES = [\n  {\n    // viewing from -x to +x (head towards +y) (indices):\n    // 0 1 2\n    // 3 i 4 (i for irrelevant)\n    // 5 6 7\n\n    // corners:\n    // 0,1,1  0,1,0\n    // 0,0,1  0,0,0\n\n    // left\n    dir: [-1, 0, 0],\n    mat3: 1, // side\n    mat6: 3, // nx\n    corners: [\n      { pos: [0, 1, 0], uv: [0, 1], side1: 1, side2: 3, corner: 0 },\n      { pos: [0, 0, 0], uv: [0, 0], side1: 3, side2: 6, corner: 5 },\n      { pos: [0, 1, 1], uv: [1, 1], side1: 1, side2: 4, corner: 2 },\n      { pos: [0, 0, 1], uv: [1, 0], side1: 4, side2: 6, corner: 7 },\n    ],\n    neighbors: [\n      [-1, 1, -1], // 0\n      [-1, 1, 0],\n      [-1, 1, 1],\n      [-1, 0, -1], // 3\n      [-1, 0, 1], // 4\n      [-1, -1, -1],\n      [-1, -1, 0],\n      [-1, -1, 1],\n    ],\n  },\n  {\n    // viewing from +x to -x (head towards +y) (indices):\n    // 2 1 0\n    // 4 i 3 (i for irrelevant)\n    // 7 6 5\n\n    // corners:\n    // 1,1,1  1,1,0\n    // 1,0,1  1,0,0\n\n    // right\n    dir: [1, 0, 0],\n    mat3: 1, // side\n    mat6: 0, // px\n    corners: [\n      { pos: [1, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },\n      { pos: [1, 0, 1], uv: [0, 0], side1: 4, side2: 6, corner: 7 },\n      { pos: [1, 1, 0], uv: [1, 1], side1: 1, side2: 3, corner: 0 },\n      { pos: [1, 0, 0], uv: [1, 0], side1: 3, side2: 6, corner: 5 },\n    ],\n    neighbors: [\n      [1, 1, -1], // 0\n      [1, 1, 0],\n      [1, 1, 1],\n      [1, 0, -1], // 3\n      [1, 0, 1], // 4\n      [1, -1, -1],\n      [1, -1, 0],\n      [1, -1, 1],\n    ],\n  },\n  {\n    // viewing from -y to +y (head towards +z) (indices):\n    // 0 1 2\n    // 3 i 4 (i for irrelevant)\n    // 5 6 7\n\n    // corners:\n    // 0,0,1  1,0,1\n    // 0,0,0  1,0,0\n\n    // bottom\n    dir: [0, -1, 0],\n    mat3: 2, // bottom\n    mat6: 4, // ny\n    corners: [\n      { pos: [1, 0, 1], uv: [1, 0], side1: 1, side2: 4, corner: 2 },\n      { pos: [0, 0, 1], uv: [0, 0], side1: 1, side2: 3, corner: 0 },\n      { pos: [1, 0, 0], uv: [1, 1], side1: 4, side2: 6, corner: 7 },\n      { pos: [0, 0, 0], uv: [0, 1], side1: 3, side2: 6, corner: 5 },\n    ],\n    neighbors: [\n      [-1, -1, 1],\n      [0, -1, 1],\n      [1, -1, 1],\n      [-1, -1, 0],\n      [1, -1, 0],\n      [-1, -1, -1],\n      [0, -1, -1],\n      [1, -1, -1],\n    ],\n  },\n  {\n    // viewing from +y to -y (head towards +z) (indices):\n    // 2 1 0\n    // 4 i 3 (i for irrelevant)\n    // 7 6 5\n\n    // corners:\n    // 1,1,1  0,1,1\n    // 1,1,0  0,1,0\n\n    // top\n    dir: [0, 1, 0],\n    mat3: 0, // top\n    mat6: 1, // py\n    corners: [\n      { pos: [0, 1, 1], uv: [1, 1], side1: 1, side2: 3, corner: 0 },\n      { pos: [1, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },\n      { pos: [0, 1, 0], uv: [1, 0], side1: 3, side2: 6, corner: 5 },\n      { pos: [1, 1, 0], uv: [0, 0], side1: 4, side2: 6, corner: 7 },\n    ],\n    neighbors: [\n      [-1, 1, 1],\n      [0, 1, 1],\n      [1, 1, 1],\n      [-1, 1, 0],\n      [1, 1, 0],\n      [-1, 1, -1],\n      [0, 1, -1],\n      [1, 1, -1],\n    ],\n  },\n  {\n    // viewing from -z to +z (head towards +y) (indices):\n    // 0 1 2\n    // 3 i 4 (i for irrelevant)\n    // 5 6 7\n\n    // corners:\n    // 1,1,0  0,1,0\n    // 1,0,0  0,0,0\n\n    // back\n    dir: [0, 0, -1],\n    mat3: 1, // side\n    mat6: 5, // nz\n    corners: [\n      { pos: [1, 0, 0], uv: [0, 0], side1: 3, side2: 6, corner: 5 },\n      { pos: [0, 0, 0], uv: [1, 0], side1: 4, side2: 6, corner: 7 },\n      { pos: [1, 1, 0], uv: [0, 1], side1: 1, side2: 3, corner: 0 },\n      { pos: [0, 1, 0], uv: [1, 1], side1: 1, side2: 4, corner: 2 },\n    ],\n    neighbors: [\n      [1, 1, -1],\n      [0, 1, -1],\n      [-1, 1, -1],\n      [1, 0, -1],\n      [-1, 0, -1],\n      [1, -1, -1],\n      [0, -1, -1],\n      [-1, -1, -1],\n    ],\n  },\n  {\n    // viewing from +z to -z (head towards +y) (indices):\n    // 2 1 0\n    // 4 i 3 (i for irrelevant)\n    // 7 6 5\n\n    // corners:\n    // 0,1,1  1,1,1\n    // 0,0,1  1,0,1\n\n    // front\n    dir: [0, 0, 1],\n    mat3: 1, // side\n    mat6: 2, // pz\n    corners: [\n      { pos: [0, 0, 1], uv: [0, 0], side1: 4, side2: 6, corner: 7 },\n      { pos: [1, 0, 1], uv: [1, 0], side1: 3, side2: 6, corner: 5 },\n      { pos: [0, 1, 1], uv: [0, 1], side1: 1, side2: 4, corner: 2 },\n      { pos: [1, 1, 1], uv: [1, 1], side1: 1, side2: 3, corner: 0 },\n    ],\n    neighbors: [\n      [1, 1, 1],\n      [0, 1, 1],\n      [-1, 1, 1],\n      [1, 0, 1],\n      [-1, 0, 1],\n      [1, -1, 1],\n      [0, -1, 1],\n      [-1, -1, 1],\n    ],\n  },\n];\n\nfunction get(arr, x, y, z, stride) {\n  return arr[x * stride[0] + y * stride[1] + z * stride[2]];\n}\n\nfunction vertexAO(side1, side2, corner) {\n  const numS1 = Number(side1 !== 0);\n  const numS2 = Number(side2 !== 0);\n  const numC = Number(corner !== 0);\n\n  if (numS1 && numS2) {\n    return 0;\n  }\n  return 3 - (numS1 + numS2 + numC);\n}\n\nonmessage = function (e) {\n  const {\n    data: dataBuffer,\n    configs: { dimension, padding, min, max, stride, blockMats, matUVs },\n  } = e.data;\n\n  const data = new Uint8Array(dataBuffer);\n\n  const positions = [];\n  const normals = [];\n  const indices = [];\n  const uvs = [];\n  const aos = [];\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  for (let vx = startX, lx = padding; vx < endX; ++vx, ++lx) {\n    for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {\n      for (let vz = startZ, lz = padding; vz < endZ; ++vz, ++lz) {\n        const voxel = get(data, lx, ly, lz, stride);\n\n        if (voxel) {\n          const { material } = blockMats[voxel];\n          const isArrayMat = Array.isArray(material);\n          const isMat3 = isArrayMat ? material.length === 3 : false;\n\n          // There is a voxel here but do we need faces for it?\n          for (const { dir, mat3, mat6, corners, neighbors } of FACES) {\n            // neighbor local xyz\n            const nlx = lx + dir[0];\n            const nly = ly + dir[1];\n            const nlz = lz + dir[2];\n\n            const neighbor = get(data, nlx, nly, nlz, stride);\n\n            if (!neighbor) {\n              // this voxel has no neighbor in this direction so we need a face.\n              const nearVoxels = neighbors.map(([a, b, c]) => get(data, lx + a, ly + b, lz + c, stride));\n              const { startU, endU, startV, endV } = isArrayMat\n                ? isMat3\n                  ? matUVs[material[mat3]]\n                  : matUVs[material[mat6]]\n                : matUVs[material];\n\n              const ndx = positions.length / 3;\n              const faceAOs = [];\n\n              for (const { pos, uv, side1, side2, corner } of corners) {\n                const posX = pos[0] + vx;\n                const posY = pos[1] + vy;\n                const posZ = pos[2] + vz;\n\n                positions.push(posX * dimension, posY * dimension, posZ * dimension);\n                faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);\n                normals.push(...dir);\n                uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);\n              }\n\n              if (faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2]) {\n                // generate flipped quad\n                indices.push(ndx, ndx + 1, ndx + 3, ndx + 3, ndx + 2, ndx + 0);\n              } else {\n                // generate normal quad\n                indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);\n              }\n\n              aos.push(...faceAOs);\n            }\n          }\n        }\n      }\n    }\n  }\n\n  const positionsArrayBuffer = new Float32Array(positions).buffer;\n  const normalsArrayBuffer = new Float32Array(normals).buffer;\n  const indicesArrayBuffer = new Float32Array(indices).buffer;\n  const uvsArrayBuffer = new Float32Array(uvs).buffer;\n  const aosArrayBuffer = new Float32Array(aos).buffer;\n\n  postMessage(\n    {\n      positions: positionsArrayBuffer,\n      normals: normalsArrayBuffer,\n      indices: indicesArrayBuffer,\n      uvs: uvsArrayBuffer,\n      aos: aosArrayBuffer,\n    },\n    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer, uvsArrayBuffer, aosArrayBuffer],\n  );\n};\n");
 
 /***/ }),
 
