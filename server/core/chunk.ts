@@ -71,12 +71,12 @@ class Chunk {
     vec3.scale(this.max, this.max, size);
     vec3.add(this.max, this.max, [0, maxHeight, 0]);
 
-    this.generate();
-    // try {
-    //   this.load();
-    // } catch (e) {
-    //   this.generate();
-    // }
+    // this.generate();
+    try {
+      this.load();
+    } catch (e) {
+      this.generate();
+    }
   }
 
   getVoxel = (voxel: Coords3) => {

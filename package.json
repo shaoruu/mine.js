@@ -67,7 +67,7 @@
   },
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack",
-    "server": "nodemon",
+    "server": "cross-env NODE_ENV=development nodemon",
     "client": "webpack",
     "watch": "gulp dev -L",
     "compile:ts": "pbts -o protocol/index.d.ts protocol/index.js",
