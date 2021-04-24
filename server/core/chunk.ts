@@ -71,12 +71,12 @@ class Chunk {
     vec3.scale(this.max, this.max, size);
     vec3.add(this.max, this.max, [0, maxHeight, 0]);
 
-    // this.generate();
-    try {
-      this.load();
-    } catch (e) {
-      this.generate();
-    }
+    this.generate();
+    // try {
+    //   this.load();
+    // } catch (e) {
+    //   this.generate();
+    // }
   }
 
   getVoxel = (voxel: Coords3) => {
@@ -224,14 +224,12 @@ class Chunk {
             world.setSunlight(voxel, maxLightLevel);
 
             voxelHorizontalNeighbors.forEach(({ x: ox, z: oz }) => {
-              if (this.contains([vx + ox, vy, vz + oz])) {
-                if (world.getMaxHeight([vx + ox, vz + oz]) > vy) {
-                  // means sunlight should propagate here horizontally
-                  sunlightQueue.push({
-                    voxel: voxel,
-                    level: maxLightLevel,
-                  });
-                }
+              if (world.getMaxHeight([vx + ox, vz + oz]) > vy) {
+                // means sunlight should propagate here horizontally
+                sunlightQueue.push({
+                  voxel: voxel,
+                  level: maxLightLevel,
+                });
               }
             });
           } else if (blockType.isLight) {

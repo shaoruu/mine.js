@@ -1,3 +1,5 @@
+import { Coords3, Helper } from '../../shared';
+
 import { AO_TABLE, FACES } from './constants';
 
 import { Chunk, Registry } from '.';
@@ -34,11 +36,16 @@ class Mesher {
     const uvs = [];
     const aos = [];
 
-    const sunlightLevels: number[] = [];
-    const torchLightLevels: number[] = [];
+    let sunlightLevels: number[] = [];
+    let torchLightLevels: number[] = [];
+
+    const smoothSunlightLevels: string[] = [];
+    const smoothTorchlightLevels: string[] = [];
 
     const [startX, startY, startZ] = min;
-    const [endX, , endZ] = max;
+    const [endX, endY, endZ] = max;
+
+    const vertexToLight: Map<string, { count: number; torchLight: number; sunlight: number }> = new Map();
 
     for (let vx = startX; vx < endX; vx++) {
       for (let vy = startY; vy < topY + 1; vy++) {
@@ -81,6 +88,73 @@ class Mesher {
                   const posY = pos[1] + vy;
                   const posZ = pos[2] + vz;
 
+                  if (useSmoothLighting) {
+                    const rep = Helper.getVoxelName([posX * dimension, posY * dimension, posZ * dimension]);
+
+                    if (vertexToLight.has(rep)) {
+                      const { count, torchLight, sunlight } = vertexToLight.get(rep);
+                      vertexToLight.set(rep, {
+                        count: count + 1,
+                        torchLight: torchLight + torchLightLevel,
+                        sunlight: sunlight + sunlightLevel,
+                      });
+                    } else {
+                      vertexToLight.set(rep, {
+                        count: 1,
+                        torchLight: torchLightLevel,
+                        sunlight: sunlightLevel,
+                      });
+                    }
+
+                    const test: [boolean, Coords3][] = [
+                      [posX === startX, [-1, 0, 0]],
+                      [posY === startY, [0, -1, 0]],
+                      [posZ === startZ, [0, 0, -1]],
+                      // position can be voxel + 1, thus can reach end
+                      [posX === endX, [1, 0, 0]],
+                      [posY === endY, [0, 1, 0]],
+                      [posZ === endZ, [0, 0, 1]],
+                      // edges
+                      [posX === startX && posY === startY, [-1, -1, 0]],
+                      [posX === startX && posZ === startZ, [-1, 0, -1]],
+                      [posX === startX && posY === endY, [-1, 1, 0]],
+                      [posX === startX && posZ === endZ, [-1, 0, 1]],
+                      [posX === endX && posY === startY, [1, -1, 0]],
+                      [posX === endX && posZ === startZ, [1, 0, -1]],
+                      [posX === endX && posY === endY, [1, 1, 0]],
+                      [posX === endX && posZ === endZ, [1, 0, 1]],
+                      [posY === startY && posZ === startZ, [0, -1, -1]],
+                      [posY === endY && posZ === startZ, [0, 1, -1]],
+                      [posY === startY && posZ === endZ, [0, -1, 1]],
+                      [posY === endY && posZ === endZ, [0, 1, 1]],
+                      // corners
+                      [posX === startX && posY === startY && posZ === startZ, [-1, -1, -1]],
+                      [posX === startX && posY === startY && posZ === endZ, [-1, -1, 1]],
+                      [posX === startX && posY === endY && posZ === startZ, [-1, 1, -1]],
+                      [posX === startX && posY === endY && posZ === endZ, [-1, 1, 1]],
+                      [posX === endX && posY === startY && posZ === startZ, [1, -1, -1]],
+                      [posX === endX && posY === startY && posZ === endZ, [1, -1, 1]],
+                      [posX === endX && posY === endY && posZ === startZ, [1, 1, -1]],
+                      [posX === endX && posY === endY && posZ === endZ, [1, 1, 1]],
+                    ];
+
+                    test.forEach(([check, [a, b, c]]) => {
+                      if (check) {
+                        const torchLightLevelN = world.getTorchLight([nvx + a, nvy + b, nvz + c]);
+                        const sunlightLevelN = world.getSunlight([nvx + a, nvy + b, nvz + c]);
+                        const { count, torchLight, sunlight } = vertexToLight.get(rep);
+                        vertexToLight.set(rep, {
+                          count: count + 1,
+                          torchLight: torchLight + torchLightLevelN,
+                          sunlight: sunlight + sunlightLevelN,
+                        });
+                      }
+                    });
+
+                    smoothSunlightLevels.push(rep);
+                    smoothTorchlightLevels.push(rep);
+                  }
+
                   positions.push(posX * dimension, posY * dimension, posZ * dimension);
                   faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
                   normals.push(...dir);
@@ -105,6 +179,17 @@ class Mesher {
           }
         }
       }
+    }
+
+    if (useSmoothLighting) {
+      sunlightLevels = smoothSunlightLevels.map((rep) => {
+        const { sunlight, count } = vertexToLight.get(rep);
+        return sunlight / count;
+      });
+      torchLightLevels = smoothTorchlightLevels.map((rep) => {
+        const { torchLight, count } = vertexToLight.get(rep);
+        return torchLight / count;
+      });
     }
 
     return {
