@@ -115,25 +115,30 @@ class World extends Network {
     return this.getVoxelByVoxel(vCoords);
   };
 
-  getTorchLight(vCoords: Coords3) {
+  getTorchLight = (vCoords: Coords3) => {
     const chunk = this.getChunkByVoxel(vCoords);
     return chunk.getTorchLight(vCoords) || 0;
-  }
+  };
 
-  setTorchLight(vCoords: Coords3, level: number) {
+  setTorchLight = (vCoords: Coords3, level: number) => {
     const chunk = this.getChunkByVoxel(vCoords);
     chunk.setTorchLight(vCoords, level);
-  }
+  };
 
-  getSunlight(vCoords: Coords3) {
+  getSunlight = (vCoords: Coords3) => {
     const chunk = this.getChunkByVoxel(vCoords);
     return chunk.getSunlight(vCoords);
-  }
+  };
 
-  setSunlight(vCoords: Coords3, level: number) {
+  setSunlight = (vCoords: Coords3, level: number) => {
     const chunk = this.getChunkByVoxel(vCoords);
     return chunk.setSunlight(vCoords, level);
-  }
+  };
+
+  getBlockTypeByVoxel = (vCoords: Coords3) => {
+    const typeID = this.getVoxelByVoxel(vCoords);
+    return this.registry.getBlockByID(typeID);
+  };
 
   getMaxHeight = (column: Coords2) => {
     const chunk = this.getChunkByVoxel([column[0], 0, column[1]]);

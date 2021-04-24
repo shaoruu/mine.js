@@ -4008,7 +4008,8 @@ const defaultConfig = {
         dimension: 1,
         // radius of rendering centered by camera
         // maximum amount of chunks to process per frame tick
-        maxChunkPerFrame: 3,
+        maxChunkRequestPerFrame: 2,
+        maxChunkProcessPerFrame: 2,
         maxBlockPerFrame: 500,
     },
     entities: {
@@ -4601,7 +4602,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     constructor(engine, options) {
         super();
@@ -4781,10 +4781,10 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         // separate chunk request into frames to avoid clogging
         if (this.pendingChunks.length === 0)
             return;
-        const { maxChunkPerFrame } = this.options;
+        const { maxChunkRequestPerFrame } = this.options;
         // don't clog up the server
-        if (this.requestedChunks.size < maxChunkPerFrame) {
-            const framePendingChunks = this.pendingChunks.splice(0, maxChunkPerFrame);
+        if (this.requestedChunks.size < maxChunkRequestPerFrame) {
+            const framePendingChunks = this.pendingChunks.splice(0, maxChunkRequestPerFrame);
             framePendingChunks.forEach(([cx, cz]) => {
                 const rep = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName([cx, cz]);
                 if (this.requestedChunks.has(rep))
@@ -4801,8 +4801,8 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         // separate chunk meshing into frames to avoid clogging
         if (this.receivedChunks.length === 0)
             return;
-        const { maxChunkPerFrame } = this.options;
-        const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkPerFrame);
+        const { maxChunkProcessPerFrame } = this.options;
+        const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkProcessPerFrame);
         frameReceivedChunks.forEach((serverChunk) => {
             const { x: cx, z: cz } = serverChunk;
             const coords = [cx, cz];
@@ -6038,92 +6038,38 @@ __webpack_require__.r(__webpack_exports__);
 
 class Helper {
 }
-/**
- * Given a coordinate of a chunk, return the chunk representation.
- *
- * @param {Coords3} coords
- * @param {string} [concat='|']
- * @returns
- */
 Helper.getChunkName = (coords, concat = '_') => {
     return coords[0] + concat + coords[1];
 };
-/**
- * Given a chunk name, return the coordinates of the chunk
- *
- * @param {string} name
- * @param {string} [concat='|']
- * @returns
- */
+Helper.getVoxelName = (coords, concat = '_') => {
+    return coords[0] + concat + coords[1] + concat + coords[2];
+};
 Helper.parseChunkName = (name, concat = '_') => {
     return name.split(concat).map((s) => parseInt(s, 10));
 };
-/**
- * Scale coordinates and floor them.
- *
- * @param {Coords3} coords
- * @param {number} factor
- * @returns
- */
 Helper.scaleCoordsF = (coords, factor) => {
     const result = [0, 0, 0];
     const scaled = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(result, coords, factor);
     return gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().floor(scaled, scaled);
 };
-/**
- * Map voxel position to local position in current chunk.
- *
- * @param {Coords3} worldPos
- * @param {Chunk} chunk
- * @returns {Coords3}
- */
 Helper.mapVoxelPosToChunkLocalPos = (voxelPos, chunkSize) => {
     const [cx, cz] = Helper.mapVoxelPosToChunkPos(voxelPos, chunkSize);
     const [vx, vy, vz] = voxelPos;
     return [vx - cx * chunkSize, vy, vz - cz * chunkSize];
 };
-/**
- * Map voxel position to the current chunk position.
- *
- * @param {Coords3} worldPos
- * @param {number} chunkSize
- * @returns {Coords2}
- */
 Helper.mapVoxelPosToChunkPos = (voxelPos, chunkSize) => {
     const coords3 = Helper.scaleCoordsF(voxelPos, 1 / chunkSize);
     return [coords3[0], coords3[2]];
 };
-/**
- * Get the voxel position of a chunk position.
- *
- * @static
- * @param {Coords3} chunkPos
- * @param {number} chunkSize
- * @memberof Helper
- */
 Helper.mapChunkPosToVoxelPos = (chunkPos, chunkSize) => {
     const result = [0, 0, 0];
     gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(result, chunkPos);
     gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(result, result, chunkSize);
     return result;
 };
-/**
- * Map world position to voxel position.
- *
- * @param {Coords3} worldPos
- * @param {number} dimension
- * @returns {Coords3}
- */
 Helper.mapWorldPosToVoxelPos = (worldPos, dimension) => {
     return Helper.scaleCoordsF(worldPos, 1 / dimension);
 };
-/**
- * Apply style to given element.
- *
- * @param {HTMLElement} ele
- * @param {Partial<CSSStyleDeclaration>} style
- * @returns {HTMLElement}
- */
 Helper.applyStyle = (ele, style) => {
     Object.keys(style).forEach((key) => {
         const attribute = style[key];
@@ -22379,8 +22325,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var svelte_internal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! svelte/internal */ "./node_modules/svelte/internal/index.mjs");
 /* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
-/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
-/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
+/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
+/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* client/App.svelte generated by Svelte v3.37.0 */
 
@@ -22506,7 +22452,7 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-aqrs35-style", nonCssHash: "1baw86h", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-aqrs35-style", nonCssHash: "1baw86h", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
 if (typeof add_css !== 'undefined' && !document.getElementById("svelte-aqrs35-style")) add_css();

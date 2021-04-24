@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 
 import { Coords2, Coords3, MeshType } from '../../shared';
-import { SmartDictionary } from '../../shared';
 import { GeneratorType } from '../libs';
 import { Helper } from '../utils';
 
@@ -14,7 +13,8 @@ type WorldOptionsType = {
   dimension: number;
   generator?: GeneratorType;
   renderRadius: number;
-  maxChunkPerFrame: number;
+  maxChunkRequestPerFrame: number;
+  maxChunkProcessPerFrame: number;
   maxBlockPerFrame: number;
 };
 
@@ -237,11 +237,11 @@ class World extends EventEmitter {
     // separate chunk request into frames to avoid clogging
     if (this.pendingChunks.length === 0) return;
 
-    const { maxChunkPerFrame } = this.options;
+    const { maxChunkRequestPerFrame } = this.options;
 
     // don't clog up the server
-    if (this.requestedChunks.size < maxChunkPerFrame) {
-      const framePendingChunks = this.pendingChunks.splice(0, maxChunkPerFrame);
+    if (this.requestedChunks.size < maxChunkRequestPerFrame) {
+      const framePendingChunks = this.pendingChunks.splice(0, maxChunkRequestPerFrame);
       framePendingChunks.forEach(([cx, cz]) => {
         const rep = Helper.getChunkName([cx, cz]);
         if (this.requestedChunks.has(rep)) return;
@@ -258,9 +258,9 @@ class World extends EventEmitter {
     // separate chunk meshing into frames to avoid clogging
     if (this.receivedChunks.length === 0) return;
 
-    const { maxChunkPerFrame } = this.options;
+    const { maxChunkProcessPerFrame } = this.options;
 
-    const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkPerFrame);
+    const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkProcessPerFrame);
     frameReceivedChunks.forEach((serverChunk) => {
       const { x: cx, z: cz } = serverChunk;
       const coords = [cx, cz] as Coords2;
