@@ -43,9 +43,9 @@ class Player {
     const { lookBlockScale } = options;
 
     // three.js pointerlock controls
-    this.controls = new PointerLockControls(engine.camera.threeCamera, this.engine.container.canvas);
-    this.engine.rendering.scene.add(this.controls.getObject());
-    this.engine.container.canvas.onclick = () => this.controls.lock();
+    this.controls = new PointerLockControls(engine.camera.threeCamera, engine.container.canvas);
+    engine.rendering.scene.add(this.controls.getObject());
+    engine.container.canvas.onclick = () => this.controls.lock();
 
     // movement handling
     document.addEventListener('keydown', this.onKeyDown, false);
@@ -71,7 +71,7 @@ class Player {
       engine.rendering.scene.add(this.lookBlockMesh);
     });
 
-    this.engine.inputs.bind('f', () => this.toggleGodMode());
+    engine.inputs.bind('f', () => this.toggleGodMode());
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {
