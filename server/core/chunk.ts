@@ -295,12 +295,145 @@ class Chunk {
     }
   };
 
-  removeLight = () => {
+  removeLight = (voxel: Coords3, isSunlight = false) => {
     // remove light and back-propagate
+    const { world } = this;
+    const { maxHeight } = this.options;
+    const { maxLightLevel } = world.options;
+
+    const fill: LightNode[] = [];
+    const queue: LightNode[] = [];
+
+    queue.push({ voxel, level: isSunlight ? world.getSunlight(voxel) : world.getTorchLight(voxel) });
+
+    if (isSunlight) {
+      world.setSunlight(voxel, 0);
+    } else {
+      world.setTorchLight(voxel, 0);
+    }
+
+    while (queue.length) {
+      const { voxel, level } = queue.shift();
+      const [vx, vy, vz] = voxel;
+
+      voxelNeighbors.forEach((offset) => {
+        const nvy = vy + offset.y;
+
+        if (nvy < 0 || nvy >= maxHeight) {
+          return;
+        }
+
+        const nvx = vx + offset.x;
+        const nvz = vz + offset.z;
+
+        const nVoxel = [nvx, nvy, nvz] as Coords3;
+        const nl = isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel);
+
+        if (nl === 0) {
+          return;
+        }
+
+        if (nl < level || (isSunlight && offset.y === -1 && level === maxLightLevel && nl === maxLightLevel)) {
+          queue.push({
+            voxel: [nvx, nvy, nvz],
+            level: nl,
+          });
+          if (isSunlight) world.setSunlight(nVoxel, 0);
+          else world.setTorchLight(nVoxel, 0);
+        } else if (nl >= level) {
+          fill.push({
+            voxel: [nvx, nvy, nvz],
+            level: nl,
+          });
+        }
+      });
+    }
+
+    this.floodLight(fill, isSunlight);
   };
 
-  update = () => {
-    // update a voxel and rebuild mesh
+  update = (voxel: Coords3, type: number) => {
+    // update blocks
+    const { world, needsPropagation } = this;
+    const { maxHeight } = this.options;
+    const { maxLightLevel } = world.options;
+    const { registry } = world;
+    const [vx, vy, vz] = voxel;
+    const height = world.getMaxHeight([vx, vz]);
+    const currentType = world.getBlockTypeByVoxel(voxel);
+    const updatedType = world.getBlockTypeByType(type);
+
+    // updating the new block
+
+    // update height map
+    if (registry.isAir(type)) {
+      if (vy === height) {
+        // on max height, should set max height to lower
+        for (let y = vy - 1; y >= 0; y--) {
+          if (y === 0 || registry.isAir(world.getVoxelByVoxel([vx, y, vz]))) {
+            world.setMaxHeight([vx, vz], y);
+            break;
+          }
+        }
+      }
+    } else if (height < vy) {
+      world.setMaxHeight([vx, vz], vy);
+    }
+
+    // update light levels
+    if (!needsPropagation) {
+      if (currentType.isLight) {
+        // remove leftover light
+        this.removeLight(voxel);
+      } else if (currentType.isTransparent && !updatedType.isTransparent) {
+        // remove light if solid block is placed.
+        [false, true].forEach((isSunlight) => {
+          const level = isSunlight ? world.getSunlight(voxel) : world.getTorchLight(voxel);
+          if (level !== 0) {
+            this.removeLight(voxel, isSunlight);
+          }
+        });
+      }
+
+      if (updatedType.isLight) {
+        // placing a light
+        world.setTorchLight(voxel, updatedType.lightLevel);
+        this.floodLight([{ voxel, level: updatedType.lightLevel }]);
+      } else if (updatedType.isTransparent && !currentType.isTransparent) {
+        // solid block removed
+        [false, true].forEach((isSunlight) => {
+          const queue = [];
+          if (isSunlight && vy === maxHeight - 1) {
+            // propagate sunlight down
+            world.setSunlight(voxel, maxLightLevel);
+            queue.push(voxel);
+          } else {
+            voxelNeighbors.forEach((offset) => {
+              const nvy = vy + offset.y;
+
+              if (nvy < 0 || nvy >= maxHeight) {
+                return;
+              }
+
+              const nvx = vx + offset.x;
+              const nvz = vz + offset.z;
+              const nVoxel = [nvx, nvy, nvz] as Coords3;
+              const { isLight, isTransparent } = world.getBlockTypeByVoxel([nvx, nvy, nvz]);
+
+              // need propagation after solid block removed
+              if (
+                isSunlight
+                  ? world.getSunlight(nVoxel)
+                  : world.getTorchLight(nVoxel) !== 0 && (isTransparent || (isLight && !isSunlight))
+              ) {
+                queue.push(nVoxel);
+              }
+            });
+          }
+          this.floodLight(queue, isSunlight);
+        });
+      }
+    }
   };
 
   remesh = () => {

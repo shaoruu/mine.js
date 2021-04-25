@@ -1,5 +1,6 @@
 uniform sampler2D uTexture;
 uniform vec3 uFogColor;
+uniform vec3 uFogNearColor;
 uniform float uFogNear;
 uniform float uFogFar;
 
@@ -16,6 +17,6 @@ void main() {
 
   // fog
   float depth = gl_FragCoord.z / gl_FragCoord.w;
-  float fogFactor = smoothstep( uFogNear, uFogFar, depth );
-  gl_FragColor.rgb = mix( gl_FragColor.rgb, uFogColor, fogFactor );
+  float fogFactor = smoothstep(uFogNear, uFogFar, depth);
+  gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);
 } 

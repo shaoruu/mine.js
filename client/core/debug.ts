@@ -92,7 +92,7 @@ class Debug {
 
   setupAll = () => {
     // RENDERING
-    const { rendering, registry, camera, world } = this.engine;
+    const { rendering, registry, player, camera, world } = this.engine;
     const {
       options: { chunkSize, dimension },
     } = world;
@@ -125,12 +125,15 @@ class Debug {
     });
     this.registerDisplay('chunk', world, 'camChunkPosStr');
 
+    // PLAYER
+    const playerFolder = this.gui.addFolder('player');
+    playerFolder.add(player.options, 'acceleration', 0, 5, 0.01);
+    playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01);
+    this.registerDisplay('looking at', player, 'lookBlockStr');
+
     // CAMERA
-    const cameraFolder = this.gui.addFolder('camera');
-    cameraFolder.add(camera.options, 'acceleration', 0, 5, 0.01);
-    cameraFolder.add(camera.options, 'flyingInertia', 0, 5, 0.01);
+    // const cameraFolder = this.gui.addFolder('camera');
     this.registerDisplay('position', camera, 'voxelPositionStr');
-    this.registerDisplay('looking at', camera, 'lookBlockStr');
 
     // REGISTRY
     const registryFolder = this.gui.addFolder('registry');

@@ -129,14 +129,14 @@ class World extends EventEmitter {
   }
 
   breakVoxel() {
-    if (this.engine.camera.lookBlock) {
-      this.setVoxel(this.engine.camera.lookBlock, 0);
+    if (this.engine.player.lookBlock) {
+      this.setVoxel(this.engine.player.lookBlock, 0);
     }
   }
 
   placeVoxel(type: number) {
-    if (this.engine.camera.targetBlock) {
-      this.setVoxel(this.engine.camera.targetBlock, type);
+    if (this.engine.player.targetBlock) {
+      this.setVoxel(this.engine.player.targetBlock, type);
     }
   }
 

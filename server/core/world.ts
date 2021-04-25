@@ -140,9 +140,18 @@ class World extends Network {
     return this.registry.getBlockByID(typeID);
   };
 
+  getBlockTypeByType = (type: number) => {
+    return this.registry.getBlockByID(type);
+  };
+
   getMaxHeight = (column: Coords2) => {
     const chunk = this.getChunkByVoxel([column[0], 0, column[1]]);
     return chunk.getMaxHeight(column);
+  };
+
+  setMaxHeight = (column: Coords2, height: number) => {
+    const chunk = this.getChunkByVoxel([column[0], 0, column[1]]);
+    return chunk.setMaxHeight(column, height);
   };
 
   getSolidityByVoxel = (vCoords: Coords3) => {};
@@ -166,7 +175,10 @@ class World extends Network {
     return this.chunks.set(chunk.name, chunk);
   };
 
-  setVoxel = () => {};
+  setVoxel = (voxel: Coords3, type: number) => {
+    const chunk = this.getChunkByVoxel(voxel);
+    return chunk.setVoxel(voxel, type);
+  };
 
   onRequest = (client: ClientType, request) => {
     switch (request.type) {
@@ -176,6 +188,51 @@ class World extends Network {
         const chunk = this.getChunkByCPos([x, z]);
         if (chunk.mesh) chunk.remesh();
         this.sendChunks(client, [chunk]);
+        break;
+      }
+      case 'UPDATE': {
+        const { maxHeight } = this.options;
+        const { x, y, z, type: typeStr } = request.json || {};
+
+        const vx = parseInt(x, 10);
+        const vy = parseInt(y, 10);
+        const vz = parseInt(z, 10);
+        const type = parseInt(typeStr, 10);
+        const voxel = [vx, vy, vz] as Coords3;
+
+        // fool proof
+        if (
+          Number.isNaN(x) ||
+          Number.isNaN(y) ||
+          Number.isNaN(z) ||
+          Number.isNaN(type) ||
+          y <= 0 ||
+          y >= maxHeight ||
+          !this.registry.getBlockByID(type).name
+        ) {
+          return;
+        }
+
+        const chunk = this.getChunkByVoxel(voxel);
+        if (chunk.needsPropagation) return;
+
+        const currentType = this.getVoxelByVoxel(voxel);
+        if (
+          (this.registry.isAir(currentType) && this.registry.isAir(type)) ||
+          (!this.registry.isAir(currentType) && !this.registry.isAir(type))
+        ) {
+          return;
+        }
+
+        chunk.update(voxel, type);
+
+        this.broadcast({
+          type: 'UPDATE',
+          chunks: [chunk, ...this.getNeighborChunks(chunk.coords)].map((chunk) => {
+            chunk.remesh();
+            return chunk.protocol;
+          }),
+        });
         break;
       }
       default:

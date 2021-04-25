@@ -108,6 +108,10 @@ class Registry {
     return typeMap;
   };
 
+  isAir = (type: number) => {
+    return this.getBlockByID(type).name === 'air';
+  };
+
   loadTexture = (textureFile: string, textureMap: TextureMapType) => {
     const { basePath } = this.options;
     const extension = path.extname(textureFile);

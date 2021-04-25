@@ -10,6 +10,7 @@ import { Engine } from './engine';
 
 type RenderingOptionsType = {
   fogColor: string;
+  fogNearColor: string;
   clearColor: string;
 };
 

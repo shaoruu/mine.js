@@ -7,6 +7,7 @@ export * from './entities';
 export * from './inputs';
 export * from './network';
 export * from './physics';
+export * from './player';
 export * from './registry';
 export * from './rendering';
 export * from './world';

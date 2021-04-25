@@ -1,16 +1,3 @@
-import { BlockType } from '../../libs';
+import { makeColorBlock } from '../../utils';
 
-const Green: BlockType = {
-  id: 11,
-  name: 'green',
-  isEmpty: false,
-  isSolid: true,
-  isFluid: false,
-  isTransparent: false,
-  isLight: false,
-  textures: {
-    all: 'blue.ts',
-  },
-};
-
-module.exports = Green;
+module.exports = makeColorBlock({ id: 11, name: 'green' });

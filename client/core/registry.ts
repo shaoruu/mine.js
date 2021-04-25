@@ -25,6 +25,7 @@ class Registry {
       uniforms: {
         uTexture: this.atlasUniform,
         uFogColor: { value: new Color(this.engine.config.rendering.fogColor) },
+        uFogNearColor: { value: new Color(this.engine.config.rendering.fogNearColor) },
         uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
         uFogFar: { value: renderRadius * chunkSize * dimension },
         // uFogNear: { value: 100 },

@@ -3354,111 +3354,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Camera": () => (/* binding */ Camera)
 /* harmony export */ });
-/* harmony import */ var fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! fast-voxel-raycast */ "./node_modules/fast-voxel-raycast/index.js");
-/* harmony import */ var fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! three/examples/jsm/controls/PointerLockControls */ "./node_modules/three/examples/jsm/controls/PointerLockControls.js");
-/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-
-
-
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
 
 class Camera {
     constructor(engine, options) {
-        this.lookBlock = [0, 0, 0];
-        this.targetBlock = [0, 0, 0];
-        this.acc = new three__WEBPACK_IMPORTED_MODULE_5__.Vector3();
-        this.vel = new three__WEBPACK_IMPORTED_MODULE_5__.Vector3();
-        this.vec = new three__WEBPACK_IMPORTED_MODULE_5__.Vector3();
-        this.movements = {
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-            front: false,
-            back: false,
-        };
-        this.godMode = false;
-        this.onKeyDown = ({ code }) => {
-            if (!this.controls.isLocked)
-                return;
-            switch (code) {
-                case 'ArrowUp':
-                case 'KeyW':
-                    this.movements.front = true;
-                    break;
-                case 'ArrowLeft':
-                case 'KeyA':
-                    this.movements.left = true;
-                    break;
-                case 'ArrowDown':
-                case 'KeyS':
-                    this.movements.back = true;
-                    break;
-                case 'ArrowRight':
-                case 'KeyD':
-                    this.movements.right = true;
-                    break;
-                case 'Space':
-                    this.movements.up = true;
-                    break;
-                case 'ShiftLeft':
-                    this.movements.down = true;
-                    break;
-            }
-        };
-        this.onKeyUp = ({ code }) => {
-            switch (code) {
-                case 'ArrowUp':
-                case 'KeyW':
-                    this.movements.front = false;
-                    break;
-                case 'ArrowLeft':
-                case 'KeyA':
-                    this.movements.left = false;
-                    break;
-                case 'ArrowDown':
-                case 'KeyS':
-                    this.movements.back = false;
-                    break;
-                case 'ArrowRight':
-                case 'KeyD':
-                    this.movements.right = false;
-                    break;
-                case 'Space':
-                    this.movements.up = false;
-                    break;
-                case 'ShiftLeft':
-                    this.movements.down = false;
-                    break;
-            }
-        };
-        this.tick = () => {
-            if (this.godMode) {
-                this.godModeMovements();
-            }
-            else {
-                this.moveCamEntity();
-            }
-            this.updateLookBlock();
-        };
         this.engine = engine;
-        const { fov, near, far, initPos, lookBlockScale, distToGround } = (this.options = options);
+        const { fov, near, far } = (this.options = options);
         // three.js camera
-        this.threeCamera = new three__WEBPACK_IMPORTED_MODULE_5__.PerspectiveCamera(fov, this.engine.rendering.aspectRatio, near, far);
-        // three.js pointerlock controls
-        this.controls = new three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_6__.PointerLockControls(this.threeCamera, this.engine.container.canvas);
-        this.engine.rendering.scene.add(this.controls.getObject());
-        this.engine.container.canvas.onclick = () => this.controls.lock();
+        this.threeCamera = new three__WEBPACK_IMPORTED_MODULE_3__.PerspectiveCamera(fov, this.engine.rendering.aspectRatio, near, far);
         // initialize camera position
-        this.controls.getObject().position.set(...initPos);
-        this.threeCamera.lookAt(new three__WEBPACK_IMPORTED_MODULE_5__.Vector3(0, 0, 0));
+        this.threeCamera.lookAt(new three__WEBPACK_IMPORTED_MODULE_3__.Vector3(0, 0, 0));
         // listen to resize, and adjust accordingly
         // ? should move to it's own logic for all event listeners?
         window.addEventListener('resize', () => {
@@ -3467,114 +3378,9 @@ class Camera {
             this.threeCamera.aspect = engine.rendering.aspectRatio;
             this.threeCamera.updateProjectionMatrix();
         });
-        // movement handling
-        document.addEventListener('keydown', this.onKeyDown, false);
-        document.addEventListener('keyup', this.onKeyUp, false);
-        // look block
-        engine.on('ready', () => {
-            // register camera as entity      // set up look block mesh
-            const { dimension } = engine.config.world;
-            this.addCamEntity();
-            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_5__.Mesh(new three__WEBPACK_IMPORTED_MODULE_5__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_5__.MeshBasicMaterial({
-                color: 'white',
-                alphaTest: 0.2,
-                opacity: 0.3,
-                transparent: true,
-            }));
-            this.lookBlockMesh.renderOrder = 100000;
-            engine.rendering.scene.add(this.lookBlockMesh);
-        });
-        document.addEventListener('keypress', ({ key }) => {
-            if (key === 'f') {
-                this.toggleGodMode();
-            }
-        });
-    }
-    godModeMovements() {
-        const { delta } = this.engine.clock;
-        const { right, left, up, down, front, back } = this.movements;
-        const { acceleration, flyingInertia } = this.options;
-        const movementVec = new three__WEBPACK_IMPORTED_MODULE_5__.Vector3();
-        movementVec.x = Number(right) - Number(left);
-        movementVec.z = Number(front) - Number(back);
-        movementVec.normalize();
-        const yMovement = Number(up) - Number(down);
-        this.acc.x = -movementVec.x * acceleration;
-        this.acc.y = yMovement * acceleration;
-        this.acc.z = -movementVec.z * acceleration;
-        this.vel.x -= this.vel.x * flyingInertia * delta;
-        this.vel.y -= this.vel.y * flyingInertia * delta;
-        this.vel.z -= this.vel.z * flyingInertia * delta;
-        this.vel.add(this.acc.multiplyScalar(delta));
-        this.acc.set(0, 0, 0);
-        this.controls.moveRight(-this.vel.x);
-        this.controls.moveForward(-this.vel.z);
-        this.controls.getObject().position.y += this.vel.y;
-    }
-    moveCamEntity() {
-        const { state } = this.camEntity.brain;
-        const { right, left, up, down, front, back } = this.movements;
-        const fb = front ? (back ? 0 : 1) : back ? -1 : 0;
-        const rl = left ? (right ? 0 : 1) : right ? -1 : 0;
-        // get the frontwards-backwards direction vectors
-        this.vec.setFromMatrixColumn(this.threeCamera.matrix, 0);
-        this.vec.crossVectors(this.threeCamera.up, this.vec);
-        const { x: forwardX, z: forwardZ } = this.vec;
-        // get the side-ways vectors
-        this.vec.setFromMatrixColumn(this.threeCamera.matrix, 0);
-        const { x: sideX, z: sideZ } = this.vec;
-        const totalX = forwardX + sideX;
-        const totalZ = forwardZ + sideZ;
-        let angle = Math.atan2(totalX, totalZ);
-        if ((fb | rl) === 0) {
-            state.running = false;
-        }
-        else {
-            state.running = true;
-            if (fb) {
-                if (fb === -1)
-                    angle += Math.PI;
-                if (rl) {
-                    angle += (Math.PI / 4) * fb * rl;
-                }
-            }
-            else {
-                angle += (rl * Math.PI) / 2;
-            }
-            // not sure why add Math.PI / 4, but it was always off by that.
-            state.heading = angle + Math.PI / 4;
-        }
-        // set jump as true, and brain will handle the jumping
-        state.jumping = up ? (down ? false : true) : down ? false : false;
-    }
-    teleport(voxel) {
-        const { config: { world: { dimension }, }, } = this.engine;
-        const [vx, vy, vz] = voxel;
-        const newPosition = [vx * dimension, (vy + 2) * dimension, vz * dimension];
-        this.camEntity.body.setPosition(newPosition);
-        return newPosition;
-    }
-    toggleGodMode() {
-        this.godMode = !this.godMode;
-        if (this.godMode) {
-            this.vel.set(0, 0, 0);
-            this.acc.set(0, 0, 0);
-            this.engine.entities.removeEntity('camera');
-        }
-        else {
-            // activated again
-            this.addCamEntity();
-        }
-    }
-    addCamEntity() {
-        const { cameraWidth, distToGround, distToTop } = this.options;
-        const { dimension } = this.engine.world.options;
-        const cameraWorldWidth = cameraWidth * dimension;
-        const cameraWorldHeight = (distToGround + distToTop) * dimension;
-        this.camEntity = this.engine.entities.addEntity('camera', this.threeCamera, [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth], [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0]);
     }
     get voxel() {
-        return _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);
+        return _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.mapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);
     }
     get position() {
         const { x, y, z } = this.threeCamera.position;
@@ -3583,42 +3389,6 @@ class Camera {
     get voxelPositionStr() {
         const { voxel } = this;
         return `${voxel[0]} ${voxel[1]} ${voxel[2]}`;
-    }
-    get lookBlockStr() {
-        const { lookBlock } = this;
-        return lookBlock ? `${lookBlock[0]} ${lookBlock[1]} ${lookBlock[2]}` : 'None';
-    }
-    updateLookBlock() {
-        const { world } = this.engine;
-        const { dimension } = world.options;
-        const { reachDistance, lookBlockLerp } = this.options;
-        const camDir = new three__WEBPACK_IMPORTED_MODULE_5__.Vector3();
-        const camPos = this.threeCamera.position;
-        this.threeCamera.getWorldDirection(camDir);
-        camDir.normalize();
-        const point = [];
-        const normal = [];
-        const result = fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default()((x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])), [camPos.x, camPos.y, camPos.z], [camDir.x, camDir.y, camDir.z], reachDistance * dimension, point, normal);
-        if (!result) {
-            // no target
-            this.lookBlockMesh.visible = false;
-            this.lookBlock = null;
-            this.targetBlock = null;
-            return;
-        }
-        this.lookBlockMesh.visible = true;
-        const flooredPoint = point.map((n, i) => Math.floor(parseFloat(n.toFixed(3))) - Number(normal[i] > 0));
-        const [nx, ny, nz] = normal;
-        const newLookBlock = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(flooredPoint, world.options.dimension);
-        if (!world.getVoxelByVoxel(newLookBlock)) {
-            // this means the look block isn't actually a block
-            return;
-        }
-        const [lbx, lby, lbz] = newLookBlock;
-        this.lookBlockMesh.position.lerp(new three__WEBPACK_IMPORTED_MODULE_5__.Vector3(lbx * dimension + 0.5 * dimension, lby * dimension + 0.5 * dimension, lbz * dimension + 0.5 * dimension), lookBlockLerp);
-        this.lookBlock = newLookBlock;
-        // target block is look block summed with the normal
-        this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
     }
 }
 
@@ -3858,7 +3628,7 @@ class Debug {
         };
         this.setupAll = () => {
             // RENDERING
-            const { rendering, registry, camera, world } = this.engine;
+            const { rendering, registry, player, camera, world } = this.engine;
             const { options: { chunkSize, dimension }, } = world;
             const renderingFolder = this.gui.addFolder('rendering');
             renderingFolder
@@ -3884,12 +3654,14 @@ class Debug {
                 registry.chunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
             });
             this.registerDisplay('chunk', world, 'camChunkPosStr');
+            // PLAYER
+            const playerFolder = this.gui.addFolder('player');
+            playerFolder.add(player.options, 'acceleration', 0, 5, 0.01);
+            playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01);
+            this.registerDisplay('looking at', player, 'lookBlockStr');
             // CAMERA
-            const cameraFolder = this.gui.addFolder('camera');
-            cameraFolder.add(camera.options, 'acceleration', 0, 5, 0.01);
-            cameraFolder.add(camera.options, 'flyingInertia', 0, 5, 0.01);
+            // const cameraFolder = this.gui.addFolder('camera');
             this.registerDisplay('position', camera, 'voxelPositionStr');
-            this.registerDisplay('looking at', camera, 'lookBlockStr');
             // REGISTRY
             const registryFolder = this.gui.addFolder('registry');
             registryFolder.add({
@@ -3994,9 +3766,10 @@ const defaultConfig = {
         fov: 75,
         near: 0.1,
         far: 8000,
-        initPos: [10, 130, 10],
         minPolarAngle: 0,
         maxPolarAngle: Math.PI,
+    },
+    player: {
         acceleration: 1,
         flyingInertia: 3,
         reachDistance: 32,
@@ -4004,7 +3777,7 @@ const defaultConfig = {
         lookBlockLerp: 0.7,
         distToGround: 1.6,
         distToTop: 0.2,
-        cameraWidth: 0.8,
+        bodyWidth: 0.8,
     },
     world: {
         maxHeight: 128,
@@ -4014,7 +3787,7 @@ const defaultConfig = {
         dimension: 1,
         // radius of rendering centered by camera
         // maximum amount of chunks to process per frame tick
-        maxChunkRequestPerFrame: 12,
+        maxChunkRequestPerFrame: 3,
         maxChunkProcessPerFrame: 16,
         maxBlockPerFrame: 500,
     },
@@ -4034,7 +3807,8 @@ const defaultConfig = {
         textureWidth: 32,
     },
     rendering: {
-        fogColor: '#ffffff',
+        fogColor: '#fff',
+        fogNearColor: '#eee',
         clearColor: '#b6d2ff',
     },
     network: {
@@ -4066,7 +3840,7 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             // pre-ticks for before physics
             this.entities.preTick();
             this.clock.tick();
-            this.camera.tick();
+            this.player.tick();
             this.physics.tick();
             this.entities.tick();
             this.world.tick();
@@ -4087,7 +3861,7 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.paused = true;
             this.emit('pause');
         };
-        const { debug, camera, container, entities, physics, registry, rendering, world, network } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
+        const { camera, container, debug, entities, network, physics, player, registry, rendering, world, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
         // debug
         if (debug) {
             this.debug = new ___WEBPACK_IMPORTED_MODULE_3__.Debug(this);
@@ -4106,6 +3880,8 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.camera = new ___WEBPACK_IMPORTED_MODULE_3__.Camera(this, camera);
         // world
         this.world = new ___WEBPACK_IMPORTED_MODULE_3__.World(this, world);
+        // player
+        this.player = new ___WEBPACK_IMPORTED_MODULE_3__.Player(this, player);
         // physics
         this.physics = new ___WEBPACK_IMPORTED_MODULE_3__.Physics(this, physics);
         // entities
@@ -4117,7 +3893,7 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     }
     // if pointerlock is locked
     get isLocked() {
-        return this.camera.controls.isLocked;
+        return this.player.controls.isLocked;
     }
 }
 
@@ -4212,9 +3988,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Inputs": () => (/* reexport safe */ _inputs__WEBPACK_IMPORTED_MODULE_6__.Inputs),
 /* harmony export */   "Network": () => (/* reexport safe */ _network__WEBPACK_IMPORTED_MODULE_7__.Network),
 /* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_8__.Physics),
-/* harmony export */   "Registry": () => (/* reexport safe */ _registry__WEBPACK_IMPORTED_MODULE_9__.Registry),
-/* harmony export */   "Rendering": () => (/* reexport safe */ _rendering__WEBPACK_IMPORTED_MODULE_10__.Rendering),
-/* harmony export */   "World": () => (/* reexport safe */ _world__WEBPACK_IMPORTED_MODULE_11__.World)
+/* harmony export */   "Player": () => (/* reexport safe */ _player__WEBPACK_IMPORTED_MODULE_9__.Player),
+/* harmony export */   "Registry": () => (/* reexport safe */ _registry__WEBPACK_IMPORTED_MODULE_10__.Registry),
+/* harmony export */   "Rendering": () => (/* reexport safe */ _rendering__WEBPACK_IMPORTED_MODULE_11__.Rendering),
+/* harmony export */   "World": () => (/* reexport safe */ _world__WEBPACK_IMPORTED_MODULE_12__.World)
 /* harmony export */ });
 /* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./camera */ "./client/core/camera.ts");
 /* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./chunk */ "./client/core/chunk.ts");
@@ -4225,9 +4002,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _inputs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./inputs */ "./client/core/inputs.ts");
 /* harmony import */ var _network__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./network */ "./client/core/network.ts");
 /* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./physics */ "./client/core/physics.ts");
-/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./registry */ "./client/core/registry.ts");
-/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./rendering */ "./client/core/rendering.ts");
-/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./world */ "./client/core/world.ts");
+/* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./player */ "./client/core/player.ts");
+/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./registry */ "./client/core/registry.ts");
+/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./rendering */ "./client/core/rendering.ts");
+/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./world */ "./client/core/world.ts");
+
 
 
 
@@ -4274,9 +4053,16 @@ class Inputs {
         this.combos.set(name, combo);
     }
     bind(name, callback) {
-        const combo = this.combos.get(name);
+        let combo = this.combos.get(name);
         if (!combo) {
-            throw new Error(`Error registering input, ${name}: not found.`);
+            if (name.length === 1) {
+                // single keys
+                this.add(name, name);
+                combo = name;
+            }
+            else {
+                throw new Error(`Error registering input, ${name}: not found.`);
+            }
         }
         mousetrap__WEBPACK_IMPORTED_MODULE_0___default().bind(combo, callback);
     }
@@ -4336,7 +4122,7 @@ class Network {
             switch (type) {
                 case 'INIT': {
                     const { json: { spawn }, } = event;
-                    this.engine.camera.teleport(spawn);
+                    this.engine.player.teleport(spawn);
                     this.engine.emit('world-ready');
                     break;
                 }
@@ -4432,6 +4218,261 @@ class Physics {
 
 /***/ }),
 
+/***/ "./client/core/player.ts":
+/*!*******************************!*\
+  !*** ./client/core/player.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Player": () => (/* binding */ Player)
+/* harmony export */ });
+/* harmony import */ var fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! fast-voxel-raycast */ "./node_modules/fast-voxel-raycast/index.js");
+/* harmony import */ var fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three/examples/jsm/controls/PointerLockControls */ "./node_modules/three/examples/jsm/controls/PointerLockControls.js");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+
+
+
+
+
+
+class Player {
+    constructor(engine, options) {
+        this.engine = engine;
+        this.options = options;
+        this.lookBlock = [0, 0, 0];
+        this.targetBlock = [0, 0, 0];
+        this.acc = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+        this.vel = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+        this.vec = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+        this.movements = {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            front: false,
+            back: false,
+        };
+        this.godMode = false;
+        this.onKeyDown = ({ code }) => {
+            if (!this.controls.isLocked)
+                return;
+            switch (code) {
+                case 'ArrowUp':
+                case 'KeyW':
+                    this.movements.front = true;
+                    break;
+                case 'ArrowLeft':
+                case 'KeyA':
+                    this.movements.left = true;
+                    break;
+                case 'ArrowDown':
+                case 'KeyS':
+                    this.movements.back = true;
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    this.movements.right = true;
+                    break;
+                case 'Space':
+                    this.movements.up = true;
+                    break;
+                case 'ShiftLeft':
+                    this.movements.down = true;
+                    break;
+            }
+        };
+        this.onKeyUp = ({ code }) => {
+            switch (code) {
+                case 'ArrowUp':
+                case 'KeyW':
+                    this.movements.front = false;
+                    break;
+                case 'ArrowLeft':
+                case 'KeyA':
+                    this.movements.left = false;
+                    break;
+                case 'ArrowDown':
+                case 'KeyS':
+                    this.movements.back = false;
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    this.movements.right = false;
+                    break;
+                case 'Space':
+                    this.movements.up = false;
+                    break;
+                case 'ShiftLeft':
+                    this.movements.down = false;
+                    break;
+            }
+        };
+        this.tick = () => {
+            if (this.godMode) {
+                this.godModeMovements();
+            }
+            else {
+                this.moveCamEntity();
+            }
+            this.updateLookBlock();
+        };
+        const { lookBlockScale } = options;
+        // three.js pointerlock controls
+        this.controls = new three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_5__.PointerLockControls(engine.camera.threeCamera, this.engine.container.canvas);
+        this.engine.rendering.scene.add(this.controls.getObject());
+        this.engine.container.canvas.onclick = () => this.controls.lock();
+        // movement handling
+        document.addEventListener('keydown', this.onKeyDown, false);
+        document.addEventListener('keyup', this.onKeyUp, false);
+        // look block
+        engine.on('ready', () => {
+            // register camera as entity      // set up look block mesh
+            const { dimension } = engine.config.world;
+            this.addCamEntity();
+            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
+                color: 'white',
+                alphaTest: 0.2,
+                opacity: 0.3,
+                transparent: true,
+            }));
+            this.lookBlockMesh.renderOrder = 100000;
+            engine.rendering.scene.add(this.lookBlockMesh);
+        });
+        this.engine.inputs.bind('f', () => this.toggleGodMode());
+    }
+    godModeMovements() {
+        const { delta } = this.engine.clock;
+        const { right, left, up, down, front, back } = this.movements;
+        const { acceleration, flyingInertia } = this.options;
+        const movementVec = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+        movementVec.x = Number(right) - Number(left);
+        movementVec.z = Number(front) - Number(back);
+        movementVec.normalize();
+        const yMovement = Number(up) - Number(down);
+        this.acc.x = -movementVec.x * acceleration;
+        this.acc.y = yMovement * acceleration;
+        this.acc.z = -movementVec.z * acceleration;
+        this.vel.x -= this.vel.x * flyingInertia * delta;
+        this.vel.y -= this.vel.y * flyingInertia * delta;
+        this.vel.z -= this.vel.z * flyingInertia * delta;
+        this.vel.add(this.acc.multiplyScalar(delta));
+        this.acc.set(0, 0, 0);
+        this.controls.moveRight(-this.vel.x);
+        this.controls.moveForward(-this.vel.z);
+        this.controls.getObject().position.y += this.vel.y;
+    }
+    moveCamEntity() {
+        const { threeCamera } = this.engine.camera;
+        const { state } = this.camEntity.brain;
+        const { right, left, up, down, front, back } = this.movements;
+        const fb = front ? (back ? 0 : 1) : back ? -1 : 0;
+        const rl = left ? (right ? 0 : 1) : right ? -1 : 0;
+        // get the frontwards-backwards direction vectors
+        this.vec.setFromMatrixColumn(threeCamera.matrix, 0);
+        this.vec.crossVectors(threeCamera.up, this.vec);
+        const { x: forwardX, z: forwardZ } = this.vec;
+        // get the side-ways vectors
+        this.vec.setFromMatrixColumn(threeCamera.matrix, 0);
+        const { x: sideX, z: sideZ } = this.vec;
+        const totalX = forwardX + sideX;
+        const totalZ = forwardZ + sideZ;
+        let angle = Math.atan2(totalX, totalZ);
+        if ((fb | rl) === 0) {
+            state.running = false;
+        }
+        else {
+            state.running = true;
+            if (fb) {
+                if (fb === -1)
+                    angle += Math.PI;
+                if (rl) {
+                    angle += (Math.PI / 4) * fb * rl;
+                }
+            }
+            else {
+                angle += (rl * Math.PI) / 2;
+            }
+            // not sure why add Math.PI / 4, but it was always off by that.
+            state.heading = angle + Math.PI / 4;
+        }
+        // set jump as true, and brain will handle the jumping
+        state.jumping = up ? (down ? false : true) : down ? false : false;
+    }
+    teleport(voxel) {
+        const { config: { world: { dimension }, }, } = this.engine;
+        const [vx, vy, vz] = voxel;
+        const newPosition = [vx * dimension, (vy + 2) * dimension, vz * dimension];
+        this.camEntity.body.setPosition(newPosition);
+        return newPosition;
+    }
+    toggleGodMode() {
+        this.godMode = !this.godMode;
+        if (this.godMode) {
+            this.vel.set(0, 0, 0);
+            this.acc.set(0, 0, 0);
+            this.engine.entities.removeEntity('camera');
+        }
+        else {
+            // activated again
+            this.addCamEntity();
+        }
+    }
+    addCamEntity() {
+        const { bodyWidth, distToGround, distToTop } = this.options;
+        const { dimension } = this.engine.world.options;
+        const cameraWorldWidth = bodyWidth * dimension;
+        const cameraWorldHeight = (distToGround + distToTop) * dimension;
+        this.camEntity = this.engine.entities.addEntity('camera', this.engine.camera.threeCamera, [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth], [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0]);
+    }
+    get lookBlockStr() {
+        const { lookBlock } = this;
+        return lookBlock ? `${lookBlock[0]} ${lookBlock[1]} ${lookBlock[2]}` : 'None';
+    }
+    updateLookBlock() {
+        const { world, camera } = this.engine;
+        const { dimension } = world.options;
+        const { reachDistance, lookBlockLerp } = this.options;
+        const camDir = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+        const camPos = camera.threeCamera.position;
+        camera.threeCamera.getWorldDirection(camDir);
+        camDir.normalize();
+        const point = [];
+        const normal = [];
+        const result = fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default()((x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])), [camPos.x, camPos.y, camPos.z], [camDir.x, camDir.y, camDir.z], reachDistance * dimension, point, normal);
+        if (!result) {
+            // no target
+            this.lookBlockMesh.visible = false;
+            this.lookBlock = null;
+            this.targetBlock = null;
+            return;
+        }
+        this.lookBlockMesh.visible = true;
+        const flooredPoint = point.map((n, i) => Math.floor(parseFloat(n.toFixed(3))) - Number(normal[i] > 0));
+        const [nx, ny, nz] = normal;
+        const newLookBlock = _shared__WEBPACK_IMPORTED_MODULE_1__.Helper.mapWorldPosToVoxelPos(flooredPoint, world.options.dimension);
+        if (!world.getVoxelByVoxel(newLookBlock)) {
+            // this means the look block isn't actually a block
+            return;
+        }
+        const [lbx, lby, lbz] = newLookBlock;
+        this.lookBlockMesh.position.lerp(new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(lbx * dimension + 0.5 * dimension, lby * dimension + 0.5 * dimension, lbz * dimension + 0.5 * dimension), lookBlockLerp);
+        this.lookBlock = newLookBlock;
+        // target block is look block summed with the normal
+        this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./client/core/registry.ts":
 /*!*********************************!*\
   !*** ./client/core/registry.ts ***!
@@ -4467,6 +4508,7 @@ class Registry {
             uniforms: {
                 uTexture: this.atlasUniform,
                 uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(this.engine.config.rendering.fogColor) },
+                uFogNearColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(this.engine.config.rendering.fogNearColor) },
                 uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
                 uFogFar: { value: renderRadius * chunkSize * dimension },
                 // uFogNear: { value: 100 },
@@ -4694,13 +4736,13 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         // TODO
     }
     breakVoxel() {
-        if (this.engine.camera.lookBlock) {
-            this.setVoxel(this.engine.camera.lookBlock, 0);
+        if (this.engine.player.lookBlock) {
+            this.setVoxel(this.engine.player.lookBlock, 0);
         }
     }
     placeVoxel(type) {
-        if (this.engine.camera.targetBlock) {
-            this.setVoxel(this.engine.camera.targetBlock, type);
+        if (this.engine.player.targetBlock) {
+            this.setVoxel(this.engine.player.targetBlock, type);
         }
     }
     addAsVisible(chunk) {
@@ -20739,7 +20781,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform sampler2D uTexture;\nuniform vec3 uFogColor;\nuniform float uFogNear;\nuniform float uFogFar;\n\nvarying vec2 vUv; // u, v \nvarying float vAO;\nvarying float vSunlight;\nvarying float vTorchLight;\n\nvoid main() {\n  vec4 textureColor = texture2D(uTexture, vUv);\n\n  gl_FragColor = vec4(textureColor.rgb, textureColor.w);\n  gl_FragColor.rgb *= min((vSunlight + vTorchLight) / 16.0 + 0.2, 1.0) * vAO;\n\n  // fog\n  float depth = gl_FragCoord.z / gl_FragCoord.w;\n  float fogFactor = smoothstep( uFogNear, uFogFar, depth );\n  gl_FragColor.rgb = mix( gl_FragColor.rgb, uFogColor, fogFactor );\n} ");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform sampler2D uTexture;\nuniform vec3 uFogColor;\nuniform vec3 uFogNearColor;\nuniform float uFogNear;\nuniform float uFogFar;\n\nvarying vec2 vUv; // u, v \nvarying float vAO;\nvarying float vSunlight;\nvarying float vTorchLight;\n\nvoid main() {\n  vec4 textureColor = texture2D(uTexture, vUv);\n\n  gl_FragColor = vec4(textureColor.rgb, textureColor.w);\n  gl_FragColor.rgb *= min((vSunlight + vTorchLight) / 16.0 + 0.2, 1.0) * vAO;\n\n  // fog\n  float depth = gl_FragCoord.z / gl_FragCoord.w;\n  float fogFactor = smoothstep(uFogNear, uFogFar, depth);\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);\n} ");
 
 /***/ }),
 

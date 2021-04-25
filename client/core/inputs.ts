@@ -17,10 +17,16 @@ class Inputs {
   }
 
   bind(name: string, callback: () => void) {
-    const combo = this.combos.get(name);
+    let combo = this.combos.get(name);
 
     if (!combo) {
-      throw new Error(`Error registering input, ${name}: not found.`);
+      if (name.length === 1) {
+        // single keys
+        this.add(name, name);
+        combo = name;
+      } else {
+        throw new Error(`Error registering input, ${name}: not found.`);
+      }
     }
 
     Mousetrap.bind(combo, callback);

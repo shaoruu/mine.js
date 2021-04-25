@@ -17,6 +17,8 @@ import {
   NetworkOptionsType,
   Physics,
   PhysicsOptionsType,
+  Player,
+  PlayerOptionsType,
   Registry,
   RegistryOptionsType,
   Rendering,
@@ -29,6 +31,7 @@ type ConfigType = {
   debug: boolean;
   container: ContainerOptionsType;
   camera: CameraOptionsType;
+  player: PlayerOptionsType;
   world: WorldOptionsType;
   entities: EntitiesOptionsType;
   physics: PhysicsOptionsType;
@@ -47,9 +50,10 @@ const defaultConfig: ConfigType = {
     fov: 75,
     near: 0.1,
     far: 8000,
-    initPos: [10, 130, 10],
     minPolarAngle: 0,
     maxPolarAngle: Math.PI,
+  },
+  player: {
     acceleration: 1,
     flyingInertia: 3,
     reachDistance: 32,
@@ -57,7 +61,7 @@ const defaultConfig: ConfigType = {
     lookBlockLerp: 0.7,
     distToGround: 1.6,
     distToTop: 0.2,
-    cameraWidth: 0.8,
+    bodyWidth: 0.8,
   },
   world: {
     maxHeight: 128,
@@ -67,7 +71,7 @@ const defaultConfig: ConfigType = {
     dimension: 1,
     // radius of rendering centered by camera
     // maximum amount of chunks to process per frame tick
-    maxChunkRequestPerFrame: 12,
+    maxChunkRequestPerFrame: 3,
     maxChunkProcessPerFrame: 16,
     maxBlockPerFrame: 500,
   },
@@ -87,7 +91,8 @@ const defaultConfig: ConfigType = {
     textureWidth: 32,
   },
   rendering: {
-    fogColor: '#ffffff',
+    fogColor: '#fff',
+    fogNearColor: '#eee',
     clearColor: '#b6d2ff',
   },
   network: {
@@ -108,6 +113,7 @@ class Engine extends EventEmitter {
   public camera: Camera;
   public registry: Registry;
   public world: World;
+  public player: Player;
   public physics: Physics;
   public entities: Entities;
 
@@ -116,10 +122,18 @@ class Engine extends EventEmitter {
   constructor(params: DeepPartial<ConfigType> = {}) {
     super();
 
-    const { debug, camera, container, entities, physics, registry, rendering, world, network } = (this.config = merge(
-      defaultConfig,
-      params,
-    ));
+    const {
+      camera,
+      container,
+      debug,
+      entities,
+      network,
+      physics,
+      player,
+      registry,
+      rendering,
+      world,
+    } = (this.config = merge(defaultConfig, params));
 
     // debug
     if (debug) {
@@ -146,6 +160,9 @@ class Engine extends EventEmitter {
 
     // world
     this.world = new World(this, world);
+
+    // player
+    this.player = new Player(this, player);
 
     // physics
     this.physics = new Physics(this, physics);
@@ -189,7 +206,7 @@ class Engine extends EventEmitter {
     this.entities.preTick();
 
     this.clock.tick();
-    this.camera.tick();
+    this.player.tick();
     this.physics.tick();
     this.entities.tick();
     this.world.tick();
@@ -218,7 +235,7 @@ class Engine extends EventEmitter {
 
   // if pointerlock is locked
   get isLocked() {
-    return this.camera.controls.isLocked;
+    return this.player.controls.isLocked;
   }
 }
 

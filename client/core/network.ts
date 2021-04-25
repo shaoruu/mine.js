@@ -51,7 +51,7 @@ class Network {
         const {
           json: { spawn },
         } = event;
-        this.engine.camera.teleport(spawn);
+        this.engine.player.teleport(spawn);
         this.engine.emit('world-ready');
         break;
       }
