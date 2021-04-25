@@ -3928,7 +3928,10 @@ class Entities {
         if (this.list.size >= this.options.maxEntities)
             throw new Error(`Failed to add entity, ${name}: max entities reached.`);
         const { physics } = this.engine;
-        const aabb = new _libs__WEBPACK_IMPORTED_MODULE_0__.AABB(object.position.toArray(), size);
+        const { x, y, z } = object.position;
+        const [sx, sy, sz] = size;
+        const [ox, oy, oz] = offsets;
+        const aabb = new _libs__WEBPACK_IMPORTED_MODULE_0__.AABB([x - sx / 2 - ox, y - sy / 2 - oy, z - sz / 2 - oz], size);
         const rigidBody = physics.core.addBody(Object.assign({ aabb }, options));
         const brain = new _libs__WEBPACK_IMPORTED_MODULE_0__.Brain(rigidBody);
         const newEntity = {
@@ -4044,10 +4047,32 @@ class Inputs {
         this.engine = engine;
         this.combos = new Map();
         this.callbacks = new Map();
+        this.clickCallbacks = new Map();
         this.add('forward', 'w');
         this.add('backward', 's');
         this.add('left', 'a');
         this.add('right', 'd');
+        this.add('space', 'space');
+        this.add('dbl-space', 'space space');
+        this.initClickListener();
+    }
+    initClickListener() {
+        ['left', 'middle', 'right'].forEach((type) => this.clickCallbacks.set(type, []));
+        document.addEventListener('mousedown', ({ button }) => {
+            if (!this.engine.isLocked)
+                return;
+            let callbacks;
+            if (button === 0)
+                callbacks = this.clickCallbacks.get('left');
+            else if (button === 1)
+                callbacks = this.clickCallbacks.get('middle');
+            else if (button === 2)
+                callbacks = this.clickCallbacks.get('right');
+            callbacks.forEach((func) => func());
+        }, false);
+    }
+    click(type, callback) {
+        this.clickCallbacks.get(type).push(callback);
     }
     add(name, combo) {
         this.combos.set(name, combo);
@@ -4126,7 +4151,8 @@ class Network {
                     this.engine.emit('world-ready');
                     break;
                 }
-                case 'LOAD': {
+                case 'LOAD':
+                case 'UPDATE': {
                     const { chunks } = event;
                     const { engine: { world }, } = this;
                     for (const chunkData of chunks) {
@@ -4331,10 +4357,11 @@ class Player {
         // movement handling
         document.addEventListener('keydown', this.onKeyDown, false);
         document.addEventListener('keyup', this.onKeyUp, false);
+        const { config, rendering, inputs, world } = engine;
         // look block
         engine.on('ready', () => {
             // register camera as entity      // set up look block mesh
-            const { dimension } = engine.config.world;
+            const { dimension } = config.world;
             this.addCamEntity();
             this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
                 color: 'white',
@@ -4343,9 +4370,10 @@ class Player {
                 transparent: true,
             }));
             this.lookBlockMesh.renderOrder = 100000;
-            engine.rendering.scene.add(this.lookBlockMesh);
+            rendering.scene.add(this.lookBlockMesh);
         });
-        engine.inputs.bind('f', () => this.toggleGodMode());
+        inputs.bind('f', () => this.toggleGodMode());
+        inputs.click('left', () => world.breakVoxel());
     }
     godModeMovements() {
         const { delta } = this.engine.clock;
@@ -4430,6 +4458,7 @@ class Player {
         const cameraWorldWidth = bodyWidth * dimension;
         const cameraWorldHeight = (distToGround + distToTop) * dimension;
         this.camEntity = this.engine.entities.addEntity('camera', this.engine.camera.threeCamera, [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth], [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0]);
+        this.camEntity.body.applyImpulse([0, 4, 0]);
     }
     get lookBlockStr() {
         const { lookBlock } = this;
@@ -4533,6 +4562,7 @@ class Registry {
                 texture.needsUpdate = true;
                 this.atlasUniform.value = texture;
                 engine.emit('texture-loaded');
+                texture.anisotropy = engine.rendering.renderer.capabilities.getMaxAnisotropy();
             };
         });
     }
@@ -4732,11 +4762,17 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     setChunk(chunk) {
         return this.chunks.set(chunk.name, chunk);
     }
-    setVoxel(vCoords, type) {
+    setVoxel(voxel, type) {
         // TODO
+        const [vx, vy, vz] = voxel;
+        this.engine.network.server.sendEvent({
+            type: 'UPDATE',
+            json: { x: vx, y: vy, z: vz, type },
+        });
     }
     breakVoxel() {
         if (this.engine.player.lookBlock) {
+            // TODO: use type.air instead of 0
             this.setVoxel(this.engine.player.lookBlock, 0);
         }
     }

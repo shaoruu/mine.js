@@ -124,12 +124,18 @@ class World extends EventEmitter {
     return this.chunks.set(chunk.name, chunk);
   }
 
-  setVoxel(vCoords: Coords3, type: number) {
+  setVoxel(voxel: Coords3, type: number) {
     // TODO
+    const [vx, vy, vz] = voxel;
+    this.engine.network.server.sendEvent({
+      type: 'UPDATE',
+      json: { x: vx, y: vy, z: vz, type },
+    });
   }
 
   breakVoxel() {
     if (this.engine.player.lookBlock) {
+      // TODO: use type.air instead of 0
       this.setVoxel(this.engine.player.lookBlock, 0);
     }
   }

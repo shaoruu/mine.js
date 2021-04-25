@@ -364,6 +364,7 @@ class Chunk {
     const updatedType = world.getBlockTypeByType(type);
 
     // updating the new block
+    world.setVoxel(voxel, type);
 
     // update height map
     if (registry.isAir(type)) {
@@ -402,11 +403,14 @@ class Chunk {
       } else if (updatedType.isTransparent && !currentType.isTransparent) {
         // solid block removed
         [false, true].forEach((isSunlight) => {
-          const queue = [];
+          const queue: LightNode[] = [];
           if (isSunlight && vy === maxHeight - 1) {
             // propagate sunlight down
             world.setSunlight(voxel, maxLightLevel);
-            queue.push(voxel);
+            queue.push({
+              voxel,
+              level: maxLightLevel,
+            });
           } else {
             voxelNeighbors.forEach((offset) => {
               const nvy = vy + offset.y;
@@ -421,12 +425,12 @@ class Chunk {
               const { isLight, isTransparent } = world.getBlockTypeByVoxel([nvx, nvy, nvz]);
 
               // need propagation after solid block removed
-              if (
-                isSunlight
-                  ? world.getSunlight(nVoxel)
-                  : world.getTorchLight(nVoxel) !== 0 && (isTransparent || (isLight && !isSunlight))
-              ) {
-                queue.push(nVoxel);
+              const level = isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel);
+              if (level !== 0 && (isTransparent || (isLight && !isSunlight))) {
+                queue.push({
+                  voxel: nVoxel,
+                  level,
+                });
               }
             });
           }

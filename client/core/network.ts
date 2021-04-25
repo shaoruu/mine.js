@@ -55,7 +55,8 @@ class Network {
         this.engine.emit('world-ready');
         break;
       }
-      case 'LOAD': {
+      case 'LOAD':
+      case 'UPDATE': {
         const { chunks } = event;
         const {
           engine: { world },

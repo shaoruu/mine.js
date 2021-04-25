@@ -51,10 +51,12 @@ class Player {
     document.addEventListener('keydown', this.onKeyDown, false);
     document.addEventListener('keyup', this.onKeyUp, false);
 
+    const { config, rendering, inputs, world } = engine;
+
     // look block
     engine.on('ready', () => {
       // register camera as entity      // set up look block mesh
-      const { dimension } = engine.config.world;
+      const { dimension } = config.world;
       this.addCamEntity();
 
       this.lookBlockMesh = new Mesh(
@@ -68,10 +70,11 @@ class Player {
       );
       this.lookBlockMesh.renderOrder = 100000;
 
-      engine.rendering.scene.add(this.lookBlockMesh);
+      rendering.scene.add(this.lookBlockMesh);
     });
 
-    engine.inputs.bind('f', () => this.toggleGodMode());
+    inputs.bind('f', () => this.toggleGodMode());
+    inputs.click('left', () => world.breakVoxel());
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {
@@ -259,6 +262,8 @@ class Player {
       [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth],
       [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0],
     );
+
+    this.camEntity.body.applyImpulse([0, 4, 0]);
   }
 
   get lookBlockStr() {

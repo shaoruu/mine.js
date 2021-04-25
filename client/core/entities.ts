@@ -27,7 +27,11 @@ class Entities {
 
     const { physics } = this.engine;
 
-    const aabb = new AABB(object.position.toArray(), size);
+    const { x, y, z } = object.position;
+    const [sx, sy, sz] = size;
+    const [ox, oy, oz] = offsets;
+
+    const aabb = new AABB([x - sx / 2 - ox, y - sy / 2 - oy, z - sz / 2 - oz], size);
     const rigidBody = physics.core.addBody({ aabb, ...options });
     const brain = new Brain(rigidBody);
 

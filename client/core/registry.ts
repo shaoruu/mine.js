@@ -55,6 +55,7 @@ class Registry {
           texture.needsUpdate = true;
           this.atlasUniform.value = texture;
           engine.emit('texture-loaded');
+          texture.anisotropy = engine.rendering.renderer.capabilities.getMaxAnisotropy();
         };
       });
   }
