@@ -1,8 +1,5 @@
 import { CanvasTexture, ShaderMaterial, Color, ClampToEdgeWrapping, NearestFilter } from 'three';
 
-import { SmartDictionary } from '../../shared';
-import { BlockMaterialType, BlockMaterialUVType } from '../libs';
-
 import { Engine } from './engine';
 import ChunkFragmentShader from './shaders/chunk/fragment.glsl';
 import ChunkVertexShader from './shaders/chunk/vertex.glsl';
@@ -11,31 +8,15 @@ type RegistryOptionsType = {
   textureWidth: number;
 };
 
-type BlockOptionsType = {
-  // states
-  isFluid: boolean;
-  isEmpty: boolean;
-};
-
-type BlockType = {
-  name: string;
-  material: BlockMaterialType;
-  options: BlockOptionsType;
-};
-
 class Registry {
-  public material: ShaderMaterial;
-  public materials: SmartDictionary<BlockMaterialUVType>;
-  public blocks: SmartDictionary<BlockType>;
-  public cBlockDictionary: { [key: number]: BlockType }; // caches for block uv
-  public cMaterialUVDictionary: { [key: string]: BlockMaterialUVType }; // caches for material uv
+  public chunkMaterial: ShaderMaterial;
 
   constructor(public engine: Engine, public options: RegistryOptionsType) {
     const { chunkSize, dimension, renderRadius } = this.engine.config.world;
 
     const uTexture = { value: undefined };
 
-    this.material = new ShaderMaterial({
+    this.chunkMaterial = new ShaderMaterial({
       // wireframe: true,
       fog: true,
       transparent: true,
@@ -75,10 +56,6 @@ class Registry {
           uTexture.value = texture;
         };
       });
-
-    engine.on('ready', () => {
-      // texture bleeding?
-    });
   }
 }
 

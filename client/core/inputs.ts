@@ -1,11 +1,9 @@
 import Mousetrap from 'mousetrap';
 
-import { SmartDictionary } from '../../shared';
-
 import { Engine } from './engine';
 class Inputs {
-  public combos: SmartDictionary<string> = new SmartDictionary();
-  public callbacks: SmartDictionary<() => void> = new SmartDictionary();
+  public combos: Map<string, string> = new Map();
+  public callbacks: Map<string, () => void> = new Map();
 
   constructor(public engine: Engine) {
     this.add('forward', 'w');

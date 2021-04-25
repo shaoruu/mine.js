@@ -122,7 +122,7 @@ class Chunk {
     this.geometry.setAttribute('torchLight', new Float32BufferAttribute(torchLights, torchLightsNumComponents));
     this.geometry.setIndex(Array.from(indices));
 
-    this.altMesh = new Mesh(this.geometry, this.engine.registry.material);
+    this.altMesh = new Mesh(this.geometry, this.engine.registry.chunkMaterial);
     this.altMesh.name = this.name;
     this.altMesh.frustumCulled = false;
 

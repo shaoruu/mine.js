@@ -26,7 +26,7 @@ class Generator {
               voxelID = Generator.sincos([vx, vy, vz], chunk);
               break;
             case 'flat':
-              // voxelID = Generator.flat([vx, vy, vz]);
+              voxelID = Generator.flat([vx, vy, vz], chunk);
               break;
             case 'hilly':
               voxelID = Generator.hilly([vx, vy, vz], chunk);
@@ -97,8 +97,15 @@ class Generator {
 
   static heightMap = (chunk: Chunk) => {};
 
-  static flat = ([vx, vy, vz]: Coords3) => {
-    // TODO
+  static flat = ([, vy]: Coords3, chunk: Chunk) => {
+    const {
+      world: { registry },
+    } = chunk;
+    const types = registry.getTypeMap(['air', 'dirt', 'grass', 'stone']);
+    if (vy === 6) return types.grass;
+    if (vy < 6 && vy > 3) return types.dirt;
+    else if (vy <= 3) return types.stone;
+    return types.air;
   };
 
   static sincos = ([vx, vy, vz]: Coords3, chunk: Chunk) => {

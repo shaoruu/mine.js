@@ -1,5 +1,3 @@
-import { SmartDictionary } from '../../shared';
-
 type ClockOptions = {
   maxDelta: number;
 };
@@ -13,7 +11,7 @@ class Clock {
   public delta: number;
 
   public options: ClockOptions;
-  public intervals: SmartDictionary<number>;
+  public intervals: Map<string, number> = new Map();
 
   constructor(options: Partial<ClockOptions> = {}) {
     this.options = {
@@ -23,8 +21,6 @@ class Clock {
 
     this.lastFrameTime = Date.now();
     this.delta = 0;
-
-    this.intervals = new SmartDictionary();
   }
 
   tick() {

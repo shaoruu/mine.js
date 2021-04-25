@@ -130,8 +130,8 @@ class Debug {
     // WORLD
     const worldFolder = this.gui.addFolder('world');
     worldFolder.add(world.options, 'renderRadius', 1, 10, 1).onFinishChange((value) => {
-      registry.material.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
-      registry.material.uniforms.uFogFar.value = value * chunkSize * dimension;
+      registry.chunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
+      registry.chunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
     });
     this.registerDisplay('chunk', world, 'camChunkPosStr');
 

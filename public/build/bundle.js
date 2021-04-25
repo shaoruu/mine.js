@@ -3737,7 +3737,7 @@ class Chunk {
         this.geometry.setAttribute('sunlight', new three__WEBPACK_IMPORTED_MODULE_6__.Float32BufferAttribute(sunlights, sunlightsNumComponents));
         this.geometry.setAttribute('torchLight', new three__WEBPACK_IMPORTED_MODULE_6__.Float32BufferAttribute(torchLights, torchLightsNumComponents));
         this.geometry.setIndex(Array.from(indices));
-        this.altMesh = new three__WEBPACK_IMPORTED_MODULE_6__.Mesh(this.geometry, this.engine.registry.material);
+        this.altMesh = new three__WEBPACK_IMPORTED_MODULE_6__.Mesh(this.geometry, this.engine.registry.chunkMaterial);
         this.altMesh.name = this.name;
         this.altMesh.frustumCulled = false;
         // mark chunk as built mesh
@@ -3880,8 +3880,8 @@ class Debug {
             // WORLD
             const worldFolder = this.gui.addFolder('world');
             worldFolder.add(world.options, 'renderRadius', 1, 10, 1).onFinishChange((value) => {
-                registry.material.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
-                registry.material.uniforms.uFogFar.value = value * chunkSize * dimension;
+                registry.chunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
+                registry.chunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
             });
             this.registerDisplay('chunk', world, 'camChunkPosStr');
             // CAMERA
@@ -4251,16 +4251,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var mousetrap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mousetrap */ "./node_modules/mousetrap/mousetrap.js");
 /* harmony import */ var mousetrap__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(mousetrap__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 class Inputs {
     constructor(engine) {
         this.engine = engine;
-        this.combos = new _shared__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
-        this.callbacks = new _shared__WEBPACK_IMPORTED_MODULE_1__.SmartDictionary();
+        this.combos = new Map();
+        this.callbacks = new Map();
         this.add('forward', 'w');
         this.add('backward', 's');
         this.add('left', 'a');
@@ -4439,14 +4437,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Registry": () => (/* binding */ Registry)
 /* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-/* harmony import */ var _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./shaders/chunk/fragment.glsl */ "./client/core/shaders/chunk/fragment.glsl");
-/* harmony import */ var _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./shaders/chunk/vertex.glsl */ "./client/core/shaders/chunk/vertex.glsl");
-
-
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+/* harmony import */ var _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shaders/chunk/fragment.glsl */ "./client/core/shaders/chunk/fragment.glsl");
+/* harmony import */ var _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shaders/chunk/vertex.glsl */ "./client/core/shaders/chunk/vertex.glsl");
 
 
 
@@ -4457,16 +4451,16 @@ class Registry {
         this.options = options;
         const { chunkSize, dimension, renderRadius } = this.engine.config.world;
         const uTexture = { value: undefined };
-        this.material = new three__WEBPACK_IMPORTED_MODULE_5__.ShaderMaterial({
+        this.chunkMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
             // wireframe: true,
             fog: true,
             transparent: true,
-            vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_4__.default,
-            fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_3__.default,
+            vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
+            fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
             vertexColors: true,
             uniforms: {
                 uTexture,
-                uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_5__.Color(this.engine.config.rendering.fogColor) },
+                uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(this.engine.config.rendering.fogColor) },
                 uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
                 uFogFar: { value: renderRadius * chunkSize * dimension },
                 // uFogNear: { value: 100 },
@@ -4482,18 +4476,15 @@ class Registry {
             const image = new Image();
             image.src = url;
             image.onload = () => {
-                const texture = new three__WEBPACK_IMPORTED_MODULE_5__.CanvasTexture(image);
-                texture.wrapS = three__WEBPACK_IMPORTED_MODULE_5__.ClampToEdgeWrapping;
-                texture.wrapT = three__WEBPACK_IMPORTED_MODULE_5__.ClampToEdgeWrapping;
-                texture.minFilter = three__WEBPACK_IMPORTED_MODULE_5__.NearestFilter;
-                texture.magFilter = three__WEBPACK_IMPORTED_MODULE_5__.NearestFilter;
+                const texture = new three__WEBPACK_IMPORTED_MODULE_3__.CanvasTexture(image);
+                texture.wrapS = three__WEBPACK_IMPORTED_MODULE_3__.ClampToEdgeWrapping;
+                texture.wrapT = three__WEBPACK_IMPORTED_MODULE_3__.ClampToEdgeWrapping;
+                texture.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+                texture.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
                 texture.generateMipmaps = false;
                 texture.needsUpdate = true;
                 uTexture.value = texture;
             };
-        });
-        engine.on('ready', () => {
-            // texture bleeding?
         });
     }
 }
@@ -5058,17 +5049,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Clock": () => (/* binding */ Clock)
 /* harmony export */ });
-/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
-
 const defaultClockOptions = {
     maxDelta: 0.3,
 };
 class Clock {
     constructor(options = {}) {
+        this.intervals = new Map();
         this.options = Object.assign(Object.assign({}, defaultClockOptions), options);
         this.lastFrameTime = Date.now();
         this.delta = 0;
-        this.intervals = new _shared__WEBPACK_IMPORTED_MODULE_0__.SmartDictionary();
     }
     tick() {
         const now = Date.now();
@@ -5834,94 +5823,16 @@ Helper.approxEquals = (a, b) => {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "SHARED_CONFIG": () => (/* reexport safe */ _config__WEBPACK_IMPORTED_MODULE_0__.SHARED_CONFIG),
-/* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_1__.Helper),
-/* harmony export */   "SmartDictionary": () => (/* reexport safe */ _smart_dictionary__WEBPACK_IMPORTED_MODULE_2__.SmartDictionary)
+/* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_1__.Helper)
 /* harmony export */ });
+/* empty/unused harmony star reexport */
 /* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config */ "./shared/config.ts");
 /* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./helper */ "./shared/helper.ts");
-/* harmony import */ var _smart_dictionary__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./smart-dictionary */ "./shared/smart-dictionary.ts");
+Object(function webpackMissingModule() { var e = new Error("Cannot find module './smart-dictionary'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 /* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
 
 
 
-
-
-
-/***/ }),
-
-/***/ "./shared/smart-dictionary.ts":
-/*!************************************!*\
-  !*** ./shared/smart-dictionary.ts ***!
-  \************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SmartDictionary": () => (/* binding */ SmartDictionary)
-/* harmony export */ });
-class SmartDictionary {
-    constructor() {
-        this.data = [];
-        this.indices = new Map();
-    }
-    set(name, item) {
-        // TODO: must be better way of doing this
-        if (!isNaN(this.indices.get(name))) {
-            const index = this.indices.get(name);
-            this.data[index] = item;
-            return index;
-        }
-        const index = this.data.length;
-        this.data[index] = item;
-        this.indices.set(name, index);
-        return index;
-    }
-    setByIndex(index, item) {
-        this.data[index] = item;
-        return index;
-    }
-    getIndex(name) {
-        const index = this.indices.get(name);
-        return index === undefined ? -1 : index;
-    }
-    get(name) {
-        const index = this.getIndex(name);
-        return this.data[index] || null;
-    }
-    getByIndex(index) {
-        return this.data[index];
-    }
-    delete(name) {
-        // TODO: figure out a way to remove data too
-        const index = this.indices.get(name);
-        if (index) {
-            delete this.data[index];
-        }
-        return this.indices.delete(name);
-    }
-    has(name) {
-        return this.indices.has(name);
-    }
-    exists(item) {
-        return this.data.includes(item);
-    }
-    toIndexMap() {
-        const obj = {};
-        this.indices.forEach((value) => {
-            obj[value] = this.data[value];
-        });
-        return obj;
-    }
-    toObject() {
-        const obj = {};
-        this.indices.forEach((value, key) => {
-            const entry = this.data[value];
-            obj[key] = entry;
-        });
-        return obj;
-    }
-}
 
 
 
