@@ -129,6 +129,7 @@ class Chunk {
   };
 
   setMaxHeight = (column: Coords2, height: number) => {
+    if (height > this.topY) this.topY = height;
     return this.heightMap.set(...column, height);
   };
 
@@ -220,16 +221,18 @@ class Chunk {
           const voxel = [vx, vy, vz] as Coords3;
           const blockType = world.getBlockTypeByVoxel(voxel);
 
-          if (vy > h) {
+          if (vy > h && blockType.isTransparent) {
             world.setSunlight(voxel, maxLightLevel);
 
             voxelHorizontalNeighbors.forEach(({ x: ox, z: oz }) => {
+              if (!world.getTransparencyByVoxel([vx + ox, vy, vz + oz])) return;
               if (world.getMaxHeight([vx + ox, vz + oz]) > vy) {
                 // means sunlight should propagate here horizontally
-                sunlightQueue.push({
-                  voxel: voxel,
-                  level: maxLightLevel,
-                });
+                if (!sunlightQueue.find(({ voxel: v }) => v[0] === voxel[0] && v[1] === voxel[1] && v[2] === voxel[2]))
+                  sunlightQueue.push({
+                    voxel: voxel,
+                    level: maxLightLevel,
+                  });
               }
             });
           } else if (blockType.isLight) {
@@ -275,7 +278,7 @@ class Chunk {
 
         if (
           !blockType.isTransparent ||
-          (isSunlight && offset.y !== -1 && level === maxLightLevel && nvy > world.getMaxHeight([nvx, nvz])) ||
+          // (isSunlight && offset.y !== -1 && level === maxLightLevel && nvy > world.getMaxHeight([nvx, nvz])) ||
           (isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel)) >= nl
         ) {
           return;
@@ -325,26 +328,28 @@ class Chunk {
 
         const nvx = vx + offset.x;
         const nvz = vz + offset.z;
-
         const nVoxel = [nvx, nvy, nvz] as Coords3;
+
         const nl = isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel);
 
         if (nl === 0) {
           return;
         }
 
+        // if level is less, or if sunlight is propagating downwards without stopping
         if (nl < level || (isSunlight && offset.y === -1 && level === maxLightLevel && nl === maxLightLevel)) {
           queue.push({
-            voxel: [nvx, nvy, nvz],
+            voxel: nVoxel,
             level: nl,
           });
           if (isSunlight) world.setSunlight(nVoxel, 0);
           else world.setTorchLight(nVoxel, 0);
         } else if (nl >= level) {
-          fill.push({
-            voxel: [nvx, nvy, nvz],
-            level: nl,
-          });
+          if (!isSunlight || offset.y !== -1 || nl > level)
+            fill.push({
+              voxel: nVoxel,
+              level: nl,
+            });
         }
       });
     }

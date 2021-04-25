@@ -3787,7 +3787,7 @@ const defaultConfig = {
         dimension: 1,
         // radius of rendering centered by camera
         // maximum amount of chunks to process per frame tick
-        maxChunkRequestPerFrame: 3,
+        maxChunkRequestPerFrame: 8,
         maxChunkProcessPerFrame: 16,
         maxBlockPerFrame: 500,
     },
@@ -4156,7 +4156,7 @@ class Network {
                     const { chunks } = event;
                     const { engine: { world }, } = this;
                     for (const chunkData of chunks) {
-                        world.handleServerChunk(chunkData);
+                        world.handleServerChunk(chunkData, type === 'UPDATE');
                     }
                     break;
                 }
@@ -4374,6 +4374,7 @@ class Player {
         });
         inputs.bind('f', () => this.toggleGodMode());
         inputs.click('left', () => world.breakVoxel());
+        inputs.click('right', () => world.placeVoxel(3));
     }
     godModeMovements() {
         const { delta } = this.engine.clock;
@@ -4753,11 +4754,14 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         const vCoords = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
         return this.getFluidityByVoxel(vCoords);
     }
-    handleServerChunk(serverChunk) {
+    handleServerChunk(serverChunk, prioritized = false) {
         const { x: cx, z: cz } = serverChunk;
         const coords = [cx, cz];
         this.requestedChunks.delete(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getChunkName(coords));
-        this.receivedChunks.push(serverChunk);
+        if (prioritized)
+            this.receivedChunks.unshift(serverChunk);
+        else
+            this.receivedChunks.push(serverChunk);
     }
     setChunk(chunk) {
         return this.chunks.set(chunk.name, chunk);

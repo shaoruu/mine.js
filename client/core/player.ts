@@ -75,6 +75,7 @@ class Player {
 
     inputs.bind('f', () => this.toggleGodMode());
     inputs.click('left', () => world.breakVoxel());
+    inputs.click('right', () => world.placeVoxel(3));
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {

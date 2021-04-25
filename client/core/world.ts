@@ -113,11 +113,12 @@ class World extends EventEmitter {
     return this.getFluidityByVoxel(vCoords);
   }
 
-  handleServerChunk(serverChunk: ServerChunkType) {
+  handleServerChunk(serverChunk: ServerChunkType, prioritized = false) {
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
     this.requestedChunks.delete(Helper.getChunkName(coords));
-    this.receivedChunks.push(serverChunk);
+    if (prioritized) this.receivedChunks.unshift(serverChunk);
+    else this.receivedChunks.push(serverChunk);
   }
 
   setChunk(chunk: Chunk) {

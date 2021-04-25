@@ -12,7 +12,7 @@ const world = new World({
   maxLightLevel: 15,
   pingInterval: 50000,
   generation: 'hilly',
-  useSmoothLighting: true,
+  useSmoothLighting: false,
   port: process.env.PORT || 4000,
   storage: path.join(__dirname, '..', 'data'),
   isProduction: 'production' === process.env.NODE_ENV,

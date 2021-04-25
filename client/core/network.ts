@@ -62,7 +62,7 @@ class Network {
           engine: { world },
         } = this;
         for (const chunkData of chunks) {
-          world.handleServerChunk(chunkData);
+          world.handleServerChunk(chunkData, type === 'UPDATE');
         }
         break;
       }
