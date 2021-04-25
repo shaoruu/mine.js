@@ -20,7 +20,7 @@ class TextureAtlas {
       ...options,
     });
 
-    const countPerSide = Math.ceil(Math.sqrt(Object.keys(textureMap).length));
+    const countPerSide = 2 * Math.round(Math.ceil(Math.sqrt(Object.keys(textureMap).length)) / 2);
     const canvasWidth = countPerSide * textureDimension;
     const canvasHeight = countPerSide * textureDimension;
 
@@ -55,29 +55,22 @@ class TextureAtlas {
           startV,
           endV,
         };
-
-        this.makeCanvasPowerOfTwo(this.canvas);
       }
 
       col++;
     }
+
+    this.makeCanvasPowerOfTwo(this.canvas);
   }
 
-  makeCanvasPowerOfTwo(canvas?: Canvas | undefined) {
-    let setCanvas = false;
-    if (!canvas) {
-      canvas = this.canvas;
-      setCanvas = true;
-    }
+  makeCanvasPowerOfTwo(canvas: Canvas) {
     const oldWidth = canvas.width;
     const oldHeight = canvas.height;
     const newWidth = Math.pow(2, Math.round(Math.log(oldWidth) / Math.log(2)));
     const newHeight = Math.pow(2, Math.round(Math.log(oldHeight) / Math.log(2)));
     const newCanvas = createCanvas(newWidth, newHeight);
     newCanvas.getContext('2d')?.drawImage(canvas, 0, 0, newWidth, newHeight);
-    if (setCanvas) {
-      this.canvas = newCanvas;
-    }
+    this.canvas = newCanvas;
   }
 
   get dataURL() {
