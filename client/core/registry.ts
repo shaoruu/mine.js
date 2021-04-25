@@ -9,12 +9,11 @@ type RegistryOptionsType = {
 };
 
 class Registry {
+  public atlasUniform: { value: CanvasTexture | null } = { value: null };
   public chunkMaterial: ShaderMaterial;
 
   constructor(public engine: Engine, public options: RegistryOptionsType) {
     const { chunkSize, dimension, renderRadius } = this.engine.config.world;
-
-    const uTexture = { value: undefined };
 
     this.chunkMaterial = new ShaderMaterial({
       // wireframe: true,
@@ -24,7 +23,7 @@ class Registry {
       fragmentShader: ChunkFragmentShader,
       vertexColors: true,
       uniforms: {
-        uTexture,
+        uTexture: this.atlasUniform,
         uFogColor: { value: new Color(this.engine.config.rendering.fogColor) },
         uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
         uFogFar: { value: renderRadius * chunkSize * dimension },
@@ -53,7 +52,8 @@ class Registry {
           texture.magFilter = NearestFilter;
           texture.generateMipmaps = false;
           texture.needsUpdate = true;
-          uTexture.value = texture;
+          this.atlasUniform.value = texture;
+          engine.emit('texture-loaded');
         };
       });
   }

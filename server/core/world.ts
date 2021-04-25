@@ -158,6 +158,10 @@ class World extends Network {
     return this.getFluidityByVoxel(vCoords);
   };
 
+  getTransparencyByVoxel = (vCoords: Coords3) => {
+    return this.getBlockTypeByVoxel(vCoords).isTransparent;
+  };
+
   setChunk = (chunk: Chunk) => {
     return this.chunks.set(chunk.name, chunk);
   };

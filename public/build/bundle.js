@@ -3890,6 +3890,20 @@ class Debug {
             cameraFolder.add(camera.options, 'flyingInertia', 0, 5, 0.01);
             this.registerDisplay('position', camera, 'voxelPositionStr');
             this.registerDisplay('looking at', camera, 'lookBlockStr');
+            // REGISTRY
+            const registryFolder = this.gui.addFolder('registry');
+            registryFolder.add({
+                'toggle atlas': () => {
+                    this.atlasTest.visible = !this.atlasTest.visible;
+                },
+            }, 'toggle atlas');
+            // DEBUG
+            const debugFolder = this.gui.addFolder('debug');
+            debugFolder.add({
+                'toggle chunk highlight': () => {
+                    this.chunkHighlight.visible = !this.chunkHighlight.visible;
+                },
+            }, 'toggle chunk highlight');
         };
         this.tick = () => {
             for (const { ele, name, attribute, obj } of this.dataEntires) {
@@ -3919,25 +3933,17 @@ class Debug {
             this.makeDOM();
             this.setupAll();
             this.mount();
-            // engine.rendering.scene.add(this.chunkHighlight);
-            // const {
-            //   rendering: { scene },
-            //   world: {
-            //     options: { chunkSize, dimension },
-            //   },
-            // } = this.engine;
-            // const axesHelper = new AxesHelper(5);
-            // engine.rendering.scene.add(axesHelper);
-            // const gridHelper = new GridHelper(2 * chunkSize * dimension, 2 * chunkSize);
-            // scene.add(gridHelper);
+            engine.rendering.scene.add(this.chunkHighlight);
+            this.chunkHighlight.visible = false;
         });
-        engine.on('start', () => {
+        engine.on('texture-loaded', () => {
             // textureTest
-            // const testBlock = new PlaneBufferGeometry(4, 4);
-            // const testMat = new MeshBasicMaterial({ map: this.engine.registry.mergedTexture, side: DoubleSide });
-            // const testMesh = new Mesh(testBlock, testMat);
-            // testMesh.position.set(0, 20, 0);
-            // this.engine.rendering.scene.add(testMesh);
+            const testBlock = new three__WEBPACK_IMPORTED_MODULE_4__.PlaneBufferGeometry(4, 4);
+            const testMat = new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({ map: this.engine.registry.atlasUniform.value, side: three__WEBPACK_IMPORTED_MODULE_4__.DoubleSide });
+            this.atlasTest = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(testBlock, testMat);
+            this.atlasTest.position.set(0, 20, 0);
+            this.atlasTest.visible = false;
+            this.engine.rendering.scene.add(this.atlasTest);
         });
     }
     registerDisplay(name, object, attribute) {
@@ -4009,7 +4015,7 @@ const defaultConfig = {
         // radius of rendering centered by camera
         // maximum amount of chunks to process per frame tick
         maxChunkRequestPerFrame: 12,
-        maxChunkProcessPerFrame: 8,
+        maxChunkProcessPerFrame: 16,
         maxBlockPerFrame: 500,
     },
     entities: {
@@ -4449,8 +4455,8 @@ class Registry {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
+        this.atlasUniform = { value: null };
         const { chunkSize, dimension, renderRadius } = this.engine.config.world;
-        const uTexture = { value: undefined };
         this.chunkMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
             // wireframe: true,
             fog: true,
@@ -4459,7 +4465,7 @@ class Registry {
             fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
             vertexColors: true,
             uniforms: {
-                uTexture,
+                uTexture: this.atlasUniform,
                 uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(this.engine.config.rendering.fogColor) },
                 uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
                 uFogFar: { value: renderRadius * chunkSize * dimension },
@@ -4483,7 +4489,8 @@ class Registry {
                 texture.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
                 texture.generateMipmaps = false;
                 texture.needsUpdate = true;
-                uTexture.value = texture;
+                this.atlasUniform.value = texture;
+                engine.emit('texture-loaded');
             };
         });
     }
@@ -5825,12 +5832,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "SHARED_CONFIG": () => (/* reexport safe */ _config__WEBPACK_IMPORTED_MODULE_0__.SHARED_CONFIG),
 /* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_1__.Helper)
 /* harmony export */ });
-/* empty/unused harmony star reexport */
 /* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config */ "./shared/config.ts");
 /* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./helper */ "./shared/helper.ts");
-Object(function webpackMissingModule() { var e = new Error("Cannot find module './smart-dictionary'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
-
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
 
 
 

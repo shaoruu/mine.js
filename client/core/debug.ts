@@ -1,6 +1,6 @@
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
-import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial } from 'three';
+import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
 // import { AxesHelper, GridHelper } from 'three';
 
 import { Helper } from '../utils';
@@ -13,6 +13,7 @@ class Debug {
   public dataWrapper: HTMLDivElement;
   public dataEntires: { ele: HTMLParagraphElement; obj: any; attribute: string; name: string }[] = [];
   public chunkHighlight: Mesh;
+  public atlasTest: Mesh;
 
   constructor(public engine: Engine) {
     // dat.gui
@@ -43,29 +44,18 @@ class Debug {
       this.setupAll();
       this.mount();
 
-      // engine.rendering.scene.add(this.chunkHighlight);
-
-      // const {
-      //   rendering: { scene },
-      //   world: {
-      //     options: { chunkSize, dimension },
-      //   },
-      // } = this.engine;
-
-      // const axesHelper = new AxesHelper(5);
-      // engine.rendering.scene.add(axesHelper);
-
-      // const gridHelper = new GridHelper(2 * chunkSize * dimension, 2 * chunkSize);
-      // scene.add(gridHelper);
+      engine.rendering.scene.add(this.chunkHighlight);
+      this.chunkHighlight.visible = false;
     });
 
-    engine.on('start', () => {
+    engine.on('texture-loaded', () => {
       // textureTest
-      // const testBlock = new PlaneBufferGeometry(4, 4);
-      // const testMat = new MeshBasicMaterial({ map: this.engine.registry.mergedTexture, side: DoubleSide });
-      // const testMesh = new Mesh(testBlock, testMat);
-      // testMesh.position.set(0, 20, 0);
-      // this.engine.rendering.scene.add(testMesh);
+      const testBlock = new PlaneBufferGeometry(4, 4);
+      const testMat = new MeshBasicMaterial({ map: this.engine.registry.atlasUniform.value, side: DoubleSide });
+      this.atlasTest = new Mesh(testBlock, testMat);
+      this.atlasTest.position.set(0, 20, 0);
+      this.atlasTest.visible = false;
+      this.engine.rendering.scene.add(this.atlasTest);
     });
   }
 
@@ -141,6 +131,28 @@ class Debug {
     cameraFolder.add(camera.options, 'flyingInertia', 0, 5, 0.01);
     this.registerDisplay('position', camera, 'voxelPositionStr');
     this.registerDisplay('looking at', camera, 'lookBlockStr');
+
+    // REGISTRY
+    const registryFolder = this.gui.addFolder('registry');
+    registryFolder.add(
+      {
+        'toggle atlas': () => {
+          this.atlasTest.visible = !this.atlasTest.visible;
+        },
+      },
+      'toggle atlas',
+    );
+
+    // DEBUG
+    const debugFolder = this.gui.addFolder('debug');
+    debugFolder.add(
+      {
+        'toggle chunk highlight': () => {
+          this.chunkHighlight.visible = !this.chunkHighlight.visible;
+        },
+      },
+      'toggle chunk highlight',
+    );
   };
 
   tick = () => {

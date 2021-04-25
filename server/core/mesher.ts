@@ -139,7 +139,7 @@ class Mesher {
                     ];
 
                     test.forEach(([check, [a, b, c]]) => {
-                      if (check) {
+                      if (check && world.getTransparencyByVoxel([nvx + a, nvy + b, nvz + c])) {
                         const torchLightLevelN = world.getTorchLight([nvx + a, nvy + b, nvz + c]);
                         const sunlightLevelN = world.getSunlight([nvx + a, nvy + b, nvz + c]);
                         const { count, torchLight, sunlight } = vertexToLight.get(rep);
