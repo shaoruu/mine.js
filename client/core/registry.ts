@@ -1,4 +1,13 @@
-import { CanvasTexture, ShaderMaterial, Color, ClampToEdgeWrapping, NearestFilter } from 'three';
+import {
+  CanvasTexture,
+  ShaderMaterial,
+  Color,
+  ClampToEdgeWrapping,
+  NearestFilter,
+  UVMapping,
+  RepeatWrapping,
+  sRGBEncoding,
+} from 'three';
 
 import { Engine } from './engine';
 import ChunkFragmentShader from './shaders/chunk/fragment.glsl';
@@ -46,16 +55,15 @@ class Registry {
         const image = new Image();
         image.src = url;
         image.onload = () => {
-          const texture = new CanvasTexture(image);
-          texture.wrapS = ClampToEdgeWrapping;
-          texture.wrapT = ClampToEdgeWrapping;
-          texture.minFilter = NearestFilter;
-          texture.magFilter = NearestFilter;
-          texture.generateMipmaps = false;
-          texture.needsUpdate = true;
-          this.atlasUniform.value = texture;
+          const atlas = new CanvasTexture(image, UVMapping, RepeatWrapping, RepeatWrapping);
+          atlas.minFilter = NearestFilter;
+          atlas.magFilter = NearestFilter;
+          atlas.generateMipmaps = false;
+          atlas.needsUpdate = true;
+          atlas.anisotropy = engine.rendering.renderer.capabilities.getMaxAnisotropy();
+          atlas.encoding = sRGBEncoding;
+          this.atlasUniform.value = atlas;
           engine.emit('texture-loaded');
-          texture.anisotropy = engine.rendering.renderer.capabilities.getMaxAnisotropy();
         };
       });
   }

@@ -4554,16 +4554,15 @@ class Registry {
             const image = new Image();
             image.src = url;
             image.onload = () => {
-                const texture = new three__WEBPACK_IMPORTED_MODULE_3__.CanvasTexture(image);
-                texture.wrapS = three__WEBPACK_IMPORTED_MODULE_3__.ClampToEdgeWrapping;
-                texture.wrapT = three__WEBPACK_IMPORTED_MODULE_3__.ClampToEdgeWrapping;
-                texture.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-                texture.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-                texture.generateMipmaps = false;
-                texture.needsUpdate = true;
-                this.atlasUniform.value = texture;
+                const atlas = new three__WEBPACK_IMPORTED_MODULE_3__.CanvasTexture(image, three__WEBPACK_IMPORTED_MODULE_3__.UVMapping, three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping, three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping);
+                atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+                atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+                atlas.generateMipmaps = false;
+                atlas.needsUpdate = true;
+                atlas.anisotropy = engine.rendering.renderer.capabilities.getMaxAnisotropy();
+                atlas.encoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
+                this.atlasUniform.value = atlas;
                 engine.emit('texture-loaded');
-                texture.anisotropy = engine.rendering.renderer.capabilities.getMaxAnisotropy();
             };
         });
     }
