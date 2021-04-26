@@ -31,8 +31,10 @@ type WorldOptionsType = NetworkOptionsType & {
 class World extends Network {
   public registry: Registry;
 
+  public caching = false;
+
   public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
-  public changedBlocks: { voxel: Coords3; type: number }[] = [];
+  public chunkCache: Set<Chunk> = new Set();
   public chunks: Map<string, Chunk> = new Map();
 
   constructor(public options: WorldOptionsType) {
@@ -44,57 +46,15 @@ class World extends Network {
     this.setupRoutes();
     this.preloadChunks();
 
-    // setInterval(() => {
-    //   const spliced = this.requestedChunks.splice(0, 2);
-    //   spliced.forEach(({ coords, client }) => {
-    //     const [x, z] = coords;
-    //     const chunk = this.getChunkByCPos([x, z]);
-    //     if (chunk.hasMesh) chunk.remesh();
-    //     this.sendChunks(client, [chunk]);
-    //   });
-    // }, 20);
-
-    // setInterval(() => {
-    //   const spliced = this.changedBlocks.splice(0, 2);
-    //   spliced.forEach(({ voxel, type }) => {
-    //     const { maxHeight } = this.options;
-    //     const [x, y, z] = voxel;
-
-    //     // fool proof
-    //     if (
-    //       Number.isNaN(x) ||
-    //       Number.isNaN(y) ||
-    //       Number.isNaN(z) ||
-    //       Number.isNaN(type) ||
-    //       y <= 0 ||
-    //       y >= maxHeight ||
-    //       !this.registry.getBlockByID(type).name
-    //     ) {
-    //       return;
-    //     }
-
-    //     const chunk = this.getChunkByVoxel(voxel);
-    //     if (chunk.needsPropagation) return;
-
-    //     const currentType = this.getVoxelByVoxel(voxel);
-    //     if (
-    //       (this.registry.isAir(currentType) && this.registry.isAir(type)) ||
-    //       (!this.registry.isAir(currentType) && !this.registry.isAir(type))
-    //     ) {
-    //       return;
-    //     }
-
-    //     chunk.update(voxel, type);
-
-    //     this.broadcast({
-    //       type: 'UPDATE',
-    //       chunks: [chunk, ...this.getNeighborChunks(chunk.coords)].map((chunk) => {
-    //         chunk.remesh();
-    //         return chunk.protocol;
-    //       }),
-    //     });
-    //   });
-    // }, 5);
+    setInterval(async () => {
+      const spliced = this.requestedChunks.splice(0, 2);
+      spliced.forEach(({ coords, client }) => {
+        const [x, z] = coords;
+        const chunk = this.getChunkByCPos([x, z]);
+        if (chunk.hasMesh) chunk.remesh();
+        this.sendChunks(client, [chunk]);
+      });
+    }, 16);
   }
 
   initStorage = () => {
@@ -125,6 +85,18 @@ class World extends Network {
     console.log(`Preloaded ${(preload * 2 + 1) ** 2} chunks.`);
   };
 
+  startCaching = () => {
+    this.caching = true;
+  };
+
+  stopCaching = () => {
+    this.caching = false;
+  };
+
+  clearCache = () => {
+    this.chunkCache.clear();
+  };
+
   getChunkByCPos = (cCoords: Coords2) => {
     return this.getChunkByName(Helper.getChunkName(cCoords));
   };
@@ -141,6 +113,7 @@ class World extends Network {
       });
       this.chunks.set(chunkName, chunk);
     }
+    if (this.caching) this.chunkCache.add(chunk);
     return chunk;
   };
 
@@ -238,10 +211,7 @@ class World extends Network {
     switch (request.type) {
       case 'REQUEST': {
         const { x, z } = request.json;
-        // TODO: check x z validity
-        const chunk = this.getChunkByCPos([x, z]);
-        if (chunk.hasMesh) chunk.remesh();
-        this.sendChunks(client, [chunk]);
+        this.requestedChunks.push({ coords: [x, z], client });
         break;
       }
       case 'UPDATE': {
@@ -278,14 +248,22 @@ class World extends Network {
           return;
         }
 
+        this.startCaching();
         chunk.update(voxel, type);
+        this.stopCaching();
 
-        this.broadcast({
-          type: 'UPDATE',
-          chunks: [chunk, ...this.getNeighborChunks(chunk.coords)].map((chunk) => {
-            chunk.remesh();
-            return chunk.getProtocol(false);
-          }),
+        const chunkProtocols = Array.from(this.chunkCache).map((chunk) => {
+          chunk.remesh();
+          return chunk.getProtocol(false);
+        });
+
+        this.clearCache();
+
+        chunkProtocols.forEach((cp) => {
+          this.broadcast({
+            type: 'UPDATE',
+            chunks: [cp],
+          });
         });
 
         break;

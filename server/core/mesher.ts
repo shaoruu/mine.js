@@ -1,11 +1,11 @@
-import { Coords3, Helper } from '../../shared';
+import { Coords3, Helper, MeshType } from '../../shared';
 
 import { AO_TABLE, FACES } from './constants';
 
 import { Chunk, Registry } from '.';
 
 class Mesher {
-  static meshChunk = (chunk: Chunk, transparent = false) => {
+  static meshChunk = (chunk: Chunk, transparent = false): MeshType | null => {
     const {
       min,
       max,
