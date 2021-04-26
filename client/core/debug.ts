@@ -51,7 +51,12 @@ class Debug {
     engine.on('texture-loaded', () => {
       // textureTest
       const testBlock = new PlaneBufferGeometry(4, 4);
-      const testMat = new MeshBasicMaterial({ map: Registry.atlasUniform.value, side: DoubleSide });
+      const testMat = new MeshBasicMaterial({
+        map: Registry.atlasUniform.value,
+        side: DoubleSide,
+        transparent: true,
+        alphaTest: 0.5,
+      });
       this.atlasTest = new Mesh(testBlock, testMat);
       this.atlasTest.position.set(0, 20, 0);
       this.atlasTest.visible = false;

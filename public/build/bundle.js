@@ -3742,7 +3742,12 @@ class Debug {
         engine.on('texture-loaded', () => {
             // textureTest
             const testBlock = new three__WEBPACK_IMPORTED_MODULE_4__.PlaneBufferGeometry(4, 4);
-            const testMat = new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({ map: ___WEBPACK_IMPORTED_MODULE_3__.Registry.atlasUniform.value, side: three__WEBPACK_IMPORTED_MODULE_4__.DoubleSide });
+            const testMat = new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
+                map: ___WEBPACK_IMPORTED_MODULE_3__.Registry.atlasUniform.value,
+                side: three__WEBPACK_IMPORTED_MODULE_4__.DoubleSide,
+                transparent: true,
+                alphaTest: 0.5,
+            });
             this.atlasTest = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(testBlock, testMat);
             this.atlasTest.position.set(0, 20, 0);
             this.atlasTest.visible = false;
