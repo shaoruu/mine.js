@@ -31,6 +31,8 @@ type WorldOptionsType = NetworkOptionsType & {
 class World extends Network {
   public registry: Registry;
 
+  public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
+  public changedBlocks: { voxel: Coords3; type: number }[] = [];
   public chunks: Map<string, Chunk> = new Map();
 
   constructor(public options: WorldOptionsType) {
@@ -41,6 +43,58 @@ class World extends Network {
     this.initStorage();
     this.setupRoutes();
     this.preloadChunks();
+
+    // setInterval(() => {
+    //   const spliced = this.requestedChunks.splice(0, 2);
+    //   spliced.forEach(({ coords, client }) => {
+    //     const [x, z] = coords;
+    //     const chunk = this.getChunkByCPos([x, z]);
+    //     if (chunk.hasMesh) chunk.remesh();
+    //     this.sendChunks(client, [chunk]);
+    //   });
+    // }, 20);
+
+    // setInterval(() => {
+    //   const spliced = this.changedBlocks.splice(0, 2);
+    //   spliced.forEach(({ voxel, type }) => {
+    //     const { maxHeight } = this.options;
+    //     const [x, y, z] = voxel;
+
+    //     // fool proof
+    //     if (
+    //       Number.isNaN(x) ||
+    //       Number.isNaN(y) ||
+    //       Number.isNaN(z) ||
+    //       Number.isNaN(type) ||
+    //       y <= 0 ||
+    //       y >= maxHeight ||
+    //       !this.registry.getBlockByID(type).name
+    //     ) {
+    //       return;
+    //     }
+
+    //     const chunk = this.getChunkByVoxel(voxel);
+    //     if (chunk.needsPropagation) return;
+
+    //     const currentType = this.getVoxelByVoxel(voxel);
+    //     if (
+    //       (this.registry.isAir(currentType) && this.registry.isAir(type)) ||
+    //       (!this.registry.isAir(currentType) && !this.registry.isAir(type))
+    //     ) {
+    //       return;
+    //     }
+
+    //     chunk.update(voxel, type);
+
+    //     this.broadcast({
+    //       type: 'UPDATE',
+    //       chunks: [chunk, ...this.getNeighborChunks(chunk.coords)].map((chunk) => {
+    //         chunk.remesh();
+    //         return chunk.protocol;
+    //       }),
+    //     });
+    //   });
+    // }, 5);
   }
 
   initStorage = () => {
@@ -230,9 +284,10 @@ class World extends Network {
           type: 'UPDATE',
           chunks: [chunk, ...this.getNeighborChunks(chunk.coords)].map((chunk) => {
             chunk.remesh();
-            return chunk.protocol;
+            return chunk.getProtocol(false);
           }),
         });
+
         break;
       }
       default:
@@ -264,7 +319,7 @@ class World extends Network {
     client.send(
       Network.encode({
         type,
-        chunks: chunks.map((c) => c.protocol),
+        chunks: chunks.map((c) => c.getProtocol(true)),
       }),
     );
   };

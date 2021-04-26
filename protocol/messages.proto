@@ -2,11 +2,11 @@ syntax = "proto3";
 package protocol;
 
 message Geometry {
-  repeated float torchLights = 1;
-  repeated float sunlights = 2;
-  repeated float indices = 3;
+  repeated int32 torchLights = 1;
+  repeated int32 sunlights = 2;
+  repeated int32 indices = 3;
   repeated float positions = 4;
-  repeated float normals = 5;
+  repeated int32 normals = 5;
   repeated float uvs = 6;
   repeated float aos = 7;
 }

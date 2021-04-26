@@ -471,19 +471,19 @@ class Chunk {
     return vec3.sub([0, 0, 0], voxel, this.min) as Coords3;
   };
 
-  get hasMesh() {
-    return !!this.meshes.opaque || !!this.meshes.transparent;
-  }
-
-  get protocol() {
+  getProtocol(needsVoxels = false) {
     if (!this.hasMesh) this.remesh();
 
     return {
       x: this.coords[0],
       z: this.coords[1],
       meshes: [this.meshes],
-      voxels: this.voxels.data,
+      voxels: needsVoxels ? this.voxels.data : null,
     };
+  }
+
+  get hasMesh() {
+    return !!this.meshes.opaque || !!this.meshes.transparent;
   }
 }
 

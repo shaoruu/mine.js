@@ -127,6 +127,7 @@ class World extends EventEmitter {
   setVoxel(voxel: Coords3, type: number) {
     // TODO
     const [vx, vy, vz] = voxel;
+    this.getChunkByVoxel([vx, vy, vz])?.setVoxel(vx, vy, vz, type);
     this.engine.network.server.sendEvent({
       type: 'UPDATE',
       json: { x: vx, y: vy, z: vz, type },
@@ -278,8 +279,10 @@ class World extends EventEmitter {
       }
 
       chunk.removeFromScene();
-      chunk.setupMesh(serverChunk.meshes[0]);
-      chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+      chunk.setupMesh(serverChunk.meshes);
+      if (serverChunk.voxels.length) {
+        chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+      }
       chunk.addToScene();
     });
   }

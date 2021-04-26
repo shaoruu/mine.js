@@ -64,6 +64,12 @@ class Chunk {
     vec3.add(this.max, this.max, [0, maxHeight, 0]);
   }
 
+  setVoxel(vx: number, vy: number, vz: number, type: number) {
+    if (!this.contains(vx, vy, vz)) return;
+    const [lx, ly, lz] = this.toLocal(vx, vy, vz);
+    return this.voxels.set(lx, ly, lz, type);
+  }
+
   getVoxel(vx: number, vy: number, vz: number) {
     if (!this.contains(vx, vy, vz)) return;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
@@ -115,45 +121,47 @@ class Chunk {
     pool.free(this.voxels.data);
   }
 
-  setupMesh(meshData: ServerMeshType) {
+  setupMesh(meshDataList: ServerMeshType[]) {
     this.isMeshing = true;
 
-    MESH_TYPES.forEach((type) => {
-      if (!meshData[type]) {
-        this.altMeshes.set(type, undefined);
-        return;
-      }
+    meshDataList.forEach((meshData) => {
+      MESH_TYPES.forEach((type) => {
+        if (!meshData[type]) {
+          this.altMeshes.set(type, undefined);
+          return;
+        }
 
-      this.altMeshes.set(type, []);
+        this.altMeshes.set(type, []);
 
-      const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData[type];
+        const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData[type];
 
-      const positionNumComponents = 3;
-      const normalNumComponents = 3;
-      const uvNumComponents = 2;
-      const occlusionNumComponents = 1;
-      const sunlightsNumComponents = 1;
-      const torchLightsNumComponents = 1;
+        const positionNumComponents = 3;
+        const normalNumComponents = 3;
+        const uvNumComponents = 2;
+        const occlusionNumComponents = 1;
+        const sunlightsNumComponents = 1;
+        const torchLightsNumComponents = 1;
 
-      const geometry = this.geometries.get(type);
+        const geometry = this.geometries.get(type);
 
-      // geometry.dispose();
-      geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
-      geometry.setAttribute('normal', new Int8BufferAttribute(normals, normalNumComponents));
-      geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
-      geometry.setAttribute('ao', new Float32BufferAttribute(aos, occlusionNumComponents));
-      geometry.setAttribute('sunlight', new Float32BufferAttribute(sunlights, sunlightsNumComponents));
-      geometry.setAttribute('torchLight', new Float32BufferAttribute(torchLights, torchLightsNumComponents));
-      geometry.setIndex(Array.from(indices));
+        // geometry.dispose();
+        geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
+        geometry.setAttribute('normal', new Int8BufferAttribute(normals, normalNumComponents));
+        geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
+        geometry.setAttribute('ao', new Float32BufferAttribute(aos, occlusionNumComponents));
+        geometry.setAttribute('sunlight', new Float32BufferAttribute(sunlights, sunlightsNumComponents));
+        geometry.setAttribute('torchLight', new Float32BufferAttribute(torchLights, torchLightsNumComponents));
+        geometry.setIndex(Array.from(indices));
 
-      const materials = type === 'opaque' ? [Registry.opaqueChunkMaterial] : Registry.transparentChunkMaterials;
+        const materials = type === 'opaque' ? [Registry.opaqueChunkMaterial] : Registry.transparentChunkMaterials;
 
-      materials.forEach((material) => {
-        const altMesh = new Mesh(geometry, material);
-        altMesh.name = this.name;
-        altMesh.frustumCulled = false;
+        materials.forEach((material) => {
+          const altMesh = new Mesh(geometry, material);
+          altMesh.name = this.name;
+          altMesh.frustumCulled = false;
 
-        this.altMeshes.get(type).push(altMesh);
+          this.altMeshes.get(type).push(altMesh);
+        });
       });
     });
 

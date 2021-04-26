@@ -3463,6 +3463,12 @@ class Chunk {
         gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.max, this.max, size);
         gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.max, this.max, [0, maxHeight, 0]);
     }
+    setVoxel(vx, vy, vz, type) {
+        if (!this.contains(vx, vy, vz))
+            return;
+        const [lx, ly, lz] = this.toLocal(vx, vy, vz);
+        return this.voxels.set(lx, ly, lz, type);
+    }
     getVoxel(vx, vy, vz) {
         if (!this.contains(vx, vy, vz))
             return;
@@ -3509,36 +3515,38 @@ class Chunk {
         this.geometries.forEach((geo) => geo.dispose());
         typedarray_pool__WEBPACK_IMPORTED_MODULE_2__.free(this.voxels.data);
     }
-    setupMesh(meshData) {
+    setupMesh(meshDataList) {
         this.isMeshing = true;
-        MESH_TYPES.forEach((type) => {
-            if (!meshData[type]) {
-                this.altMeshes.set(type, undefined);
-                return;
-            }
-            this.altMeshes.set(type, []);
-            const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData[type];
-            const positionNumComponents = 3;
-            const normalNumComponents = 3;
-            const uvNumComponents = 2;
-            const occlusionNumComponents = 1;
-            const sunlightsNumComponents = 1;
-            const torchLightsNumComponents = 1;
-            const geometry = this.geometries.get(type);
-            // geometry.dispose();
-            geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(positions, positionNumComponents));
-            geometry.setAttribute('normal', new three__WEBPACK_IMPORTED_MODULE_7__.Int8BufferAttribute(normals, normalNumComponents));
-            geometry.setAttribute('uv', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(uvs, uvNumComponents));
-            geometry.setAttribute('ao', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(aos, occlusionNumComponents));
-            geometry.setAttribute('sunlight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(sunlights, sunlightsNumComponents));
-            geometry.setAttribute('torchLight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(torchLights, torchLightsNumComponents));
-            geometry.setIndex(Array.from(indices));
-            const materials = type === 'opaque' ? [___WEBPACK_IMPORTED_MODULE_6__.Registry.opaqueChunkMaterial] : ___WEBPACK_IMPORTED_MODULE_6__.Registry.transparentChunkMaterials;
-            materials.forEach((material) => {
-                const altMesh = new three__WEBPACK_IMPORTED_MODULE_7__.Mesh(geometry, material);
-                altMesh.name = this.name;
-                altMesh.frustumCulled = false;
-                this.altMeshes.get(type).push(altMesh);
+        meshDataList.forEach((meshData) => {
+            MESH_TYPES.forEach((type) => {
+                if (!meshData[type]) {
+                    this.altMeshes.set(type, undefined);
+                    return;
+                }
+                this.altMeshes.set(type, []);
+                const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData[type];
+                const positionNumComponents = 3;
+                const normalNumComponents = 3;
+                const uvNumComponents = 2;
+                const occlusionNumComponents = 1;
+                const sunlightsNumComponents = 1;
+                const torchLightsNumComponents = 1;
+                const geometry = this.geometries.get(type);
+                // geometry.dispose();
+                geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(positions, positionNumComponents));
+                geometry.setAttribute('normal', new three__WEBPACK_IMPORTED_MODULE_7__.Int8BufferAttribute(normals, normalNumComponents));
+                geometry.setAttribute('uv', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(uvs, uvNumComponents));
+                geometry.setAttribute('ao', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(aos, occlusionNumComponents));
+                geometry.setAttribute('sunlight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(sunlights, sunlightsNumComponents));
+                geometry.setAttribute('torchLight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(torchLights, torchLightsNumComponents));
+                geometry.setIndex(Array.from(indices));
+                const materials = type === 'opaque' ? [___WEBPACK_IMPORTED_MODULE_6__.Registry.opaqueChunkMaterial] : ___WEBPACK_IMPORTED_MODULE_6__.Registry.transparentChunkMaterials;
+                materials.forEach((material) => {
+                    const altMesh = new three__WEBPACK_IMPORTED_MODULE_7__.Mesh(geometry, material);
+                    altMesh.name = this.name;
+                    altMesh.frustumCulled = false;
+                    this.altMeshes.get(type).push(altMesh);
+                });
             });
         });
         // mark chunk as built mesh
@@ -4820,8 +4828,10 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         return this.chunks.set(chunk.name, chunk);
     }
     setVoxel(voxel, type) {
+        var _a;
         // TODO
         const [vx, vy, vz] = voxel;
+        (_a = this.getChunkByVoxel([vx, vy, vz])) === null || _a === void 0 ? void 0 : _a.setVoxel(vx, vy, vz, type);
         this.engine.network.server.sendEvent({
             type: 'UPDATE',
             json: { x: vx, y: vy, z: vz, type },
@@ -4943,8 +4953,10 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                 this.setChunk(chunk);
             }
             chunk.removeFromScene();
-            chunk.setupMesh(serverChunk.meshes[0]);
-            chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+            chunk.setupMesh(serverChunk.meshes);
+            if (serverChunk.voxels.length) {
+                chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+            }
             chunk.addToScene();
         });
     }
@@ -75563,19 +75575,19 @@ $root.protocol = (function() {
             if (message.torchLights != null && message.torchLights.length) {
                 writer.uint32(/* id 1, wireType 2 =*/10).fork();
                 for (var i = 0; i < message.torchLights.length; ++i)
-                    writer.float(message.torchLights[i]);
+                    writer.int32(message.torchLights[i]);
                 writer.ldelim();
             }
             if (message.sunlights != null && message.sunlights.length) {
                 writer.uint32(/* id 2, wireType 2 =*/18).fork();
                 for (var i = 0; i < message.sunlights.length; ++i)
-                    writer.float(message.sunlights[i]);
+                    writer.int32(message.sunlights[i]);
                 writer.ldelim();
             }
             if (message.indices != null && message.indices.length) {
                 writer.uint32(/* id 3, wireType 2 =*/26).fork();
                 for (var i = 0; i < message.indices.length; ++i)
-                    writer.float(message.indices[i]);
+                    writer.int32(message.indices[i]);
                 writer.ldelim();
             }
             if (message.positions != null && message.positions.length) {
@@ -75587,7 +75599,7 @@ $root.protocol = (function() {
             if (message.normals != null && message.normals.length) {
                 writer.uint32(/* id 5, wireType 2 =*/42).fork();
                 for (var i = 0; i < message.normals.length; ++i)
-                    writer.float(message.normals[i]);
+                    writer.int32(message.normals[i]);
                 writer.ldelim();
             }
             if (message.uvs != null && message.uvs.length) {
@@ -75642,9 +75654,9 @@ $root.protocol = (function() {
                     if ((tag & 7) === 2) {
                         var end2 = reader.uint32() + reader.pos;
                         while (reader.pos < end2)
-                            message.torchLights.push(reader.float());
+                            message.torchLights.push(reader.int32());
                     } else
-                        message.torchLights.push(reader.float());
+                        message.torchLights.push(reader.int32());
                     break;
                 case 2:
                     if (!(message.sunlights && message.sunlights.length))
@@ -75652,9 +75664,9 @@ $root.protocol = (function() {
                     if ((tag & 7) === 2) {
                         var end2 = reader.uint32() + reader.pos;
                         while (reader.pos < end2)
-                            message.sunlights.push(reader.float());
+                            message.sunlights.push(reader.int32());
                     } else
-                        message.sunlights.push(reader.float());
+                        message.sunlights.push(reader.int32());
                     break;
                 case 3:
                     if (!(message.indices && message.indices.length))
@@ -75662,9 +75674,9 @@ $root.protocol = (function() {
                     if ((tag & 7) === 2) {
                         var end2 = reader.uint32() + reader.pos;
                         while (reader.pos < end2)
-                            message.indices.push(reader.float());
+                            message.indices.push(reader.int32());
                     } else
-                        message.indices.push(reader.float());
+                        message.indices.push(reader.int32());
                     break;
                 case 4:
                     if (!(message.positions && message.positions.length))
@@ -75682,9 +75694,9 @@ $root.protocol = (function() {
                     if ((tag & 7) === 2) {
                         var end2 = reader.uint32() + reader.pos;
                         while (reader.pos < end2)
-                            message.normals.push(reader.float());
+                            message.normals.push(reader.int32());
                     } else
-                        message.normals.push(reader.float());
+                        message.normals.push(reader.int32());
                     break;
                 case 6:
                     if (!(message.uvs && message.uvs.length))
@@ -75745,22 +75757,22 @@ $root.protocol = (function() {
                 if (!Array.isArray(message.torchLights))
                     return "torchLights: array expected";
                 for (var i = 0; i < message.torchLights.length; ++i)
-                    if (typeof message.torchLights[i] !== "number")
-                        return "torchLights: number[] expected";
+                    if (!$util.isInteger(message.torchLights[i]))
+                        return "torchLights: integer[] expected";
             }
             if (message.sunlights != null && message.hasOwnProperty("sunlights")) {
                 if (!Array.isArray(message.sunlights))
                     return "sunlights: array expected";
                 for (var i = 0; i < message.sunlights.length; ++i)
-                    if (typeof message.sunlights[i] !== "number")
-                        return "sunlights: number[] expected";
+                    if (!$util.isInteger(message.sunlights[i]))
+                        return "sunlights: integer[] expected";
             }
             if (message.indices != null && message.hasOwnProperty("indices")) {
                 if (!Array.isArray(message.indices))
                     return "indices: array expected";
                 for (var i = 0; i < message.indices.length; ++i)
-                    if (typeof message.indices[i] !== "number")
-                        return "indices: number[] expected";
+                    if (!$util.isInteger(message.indices[i]))
+                        return "indices: integer[] expected";
             }
             if (message.positions != null && message.hasOwnProperty("positions")) {
                 if (!Array.isArray(message.positions))
@@ -75773,8 +75785,8 @@ $root.protocol = (function() {
                 if (!Array.isArray(message.normals))
                     return "normals: array expected";
                 for (var i = 0; i < message.normals.length; ++i)
-                    if (typeof message.normals[i] !== "number")
-                        return "normals: number[] expected";
+                    if (!$util.isInteger(message.normals[i]))
+                        return "normals: integer[] expected";
             }
             if (message.uvs != null && message.hasOwnProperty("uvs")) {
                 if (!Array.isArray(message.uvs))
@@ -75810,21 +75822,21 @@ $root.protocol = (function() {
                     throw TypeError(".protocol.Geometry.torchLights: array expected");
                 message.torchLights = [];
                 for (var i = 0; i < object.torchLights.length; ++i)
-                    message.torchLights[i] = Number(object.torchLights[i]);
+                    message.torchLights[i] = object.torchLights[i] | 0;
             }
             if (object.sunlights) {
                 if (!Array.isArray(object.sunlights))
                     throw TypeError(".protocol.Geometry.sunlights: array expected");
                 message.sunlights = [];
                 for (var i = 0; i < object.sunlights.length; ++i)
-                    message.sunlights[i] = Number(object.sunlights[i]);
+                    message.sunlights[i] = object.sunlights[i] | 0;
             }
             if (object.indices) {
                 if (!Array.isArray(object.indices))
                     throw TypeError(".protocol.Geometry.indices: array expected");
                 message.indices = [];
                 for (var i = 0; i < object.indices.length; ++i)
-                    message.indices[i] = Number(object.indices[i]);
+                    message.indices[i] = object.indices[i] | 0;
             }
             if (object.positions) {
                 if (!Array.isArray(object.positions))
@@ -75838,7 +75850,7 @@ $root.protocol = (function() {
                     throw TypeError(".protocol.Geometry.normals: array expected");
                 message.normals = [];
                 for (var i = 0; i < object.normals.length; ++i)
-                    message.normals[i] = Number(object.normals[i]);
+                    message.normals[i] = object.normals[i] | 0;
             }
             if (object.uvs) {
                 if (!Array.isArray(object.uvs))
@@ -75882,17 +75894,17 @@ $root.protocol = (function() {
             if (message.torchLights && message.torchLights.length) {
                 object.torchLights = [];
                 for (var j = 0; j < message.torchLights.length; ++j)
-                    object.torchLights[j] = options.json && !isFinite(message.torchLights[j]) ? String(message.torchLights[j]) : message.torchLights[j];
+                    object.torchLights[j] = message.torchLights[j];
             }
             if (message.sunlights && message.sunlights.length) {
                 object.sunlights = [];
                 for (var j = 0; j < message.sunlights.length; ++j)
-                    object.sunlights[j] = options.json && !isFinite(message.sunlights[j]) ? String(message.sunlights[j]) : message.sunlights[j];
+                    object.sunlights[j] = message.sunlights[j];
             }
             if (message.indices && message.indices.length) {
                 object.indices = [];
                 for (var j = 0; j < message.indices.length; ++j)
-                    object.indices[j] = options.json && !isFinite(message.indices[j]) ? String(message.indices[j]) : message.indices[j];
+                    object.indices[j] = message.indices[j];
             }
             if (message.positions && message.positions.length) {
                 object.positions = [];
@@ -75902,7 +75914,7 @@ $root.protocol = (function() {
             if (message.normals && message.normals.length) {
                 object.normals = [];
                 for (var j = 0; j < message.normals.length; ++j)
-                    object.normals[j] = options.json && !isFinite(message.normals[j]) ? String(message.normals[j]) : message.normals[j];
+                    object.normals[j] = message.normals[j];
             }
             if (message.uvs && message.uvs.length) {
                 object.uvs = [];
