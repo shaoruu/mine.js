@@ -277,8 +277,10 @@ class World extends EventEmitter {
         this.setChunk(chunk);
       }
 
+      chunk.removeFromScene();
       chunk.setupMesh(serverChunk.meshes[0]);
       chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+      chunk.addToScene();
     });
   }
 }

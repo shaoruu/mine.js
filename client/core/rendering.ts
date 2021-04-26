@@ -19,6 +19,7 @@ class Rendering extends EventEmitter {
   public renderer: WebGLRenderer;
   public composer: EffectComposer;
   public sky: Sky;
+  public noColorMateria;
 
   constructor(public engine: Engine, public options: RenderingOptionsType) {
     super();

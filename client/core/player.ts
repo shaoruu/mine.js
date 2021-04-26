@@ -18,6 +18,9 @@ type PlayerOptionsType = {
   bodyWidth: number;
 };
 
+const TEMP_BLOCK_MAP = [1, 2, 3, 4, 10, 11, 12, 13];
+let type = 1;
+
 class Player {
   public controls: PointerLockControls;
 
@@ -75,7 +78,11 @@ class Player {
 
     inputs.bind('f', () => this.toggleGodMode());
     inputs.click('left', () => world.breakVoxel());
-    inputs.click('right', () => world.placeVoxel(4));
+    inputs.click('right', () => world.placeVoxel(type));
+
+    for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
+      inputs.bind((i + 1).toString(), () => (type = TEMP_BLOCK_MAP[i]));
+    }
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {

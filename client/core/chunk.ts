@@ -1,6 +1,6 @@
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
-import { BufferGeometry, Float32BufferAttribute, Int8BufferAttribute, Mesh } from 'three';
+import { BufferGeometry, Float32BufferAttribute, FrontSide, Int8BufferAttribute, Mesh } from 'three';
 import pool from 'typedarray-pool';
 
 import { Coords2, Coords3 } from '../../shared';
@@ -30,8 +30,8 @@ class Chunk {
   public max: Coords3 = [0, 0, 0];
 
   public geometries: Map<string, BufferGeometry> = new Map();
-  public meshes: Map<string, Mesh> = new Map();
-  public altMeshes: Map<string, Mesh> = new Map();
+  public meshes: Map<string, Mesh[]> = new Map();
+  public altMeshes: Map<string, Mesh[]> = new Map();
 
   public isEmpty = true;
   public isDirty = true;
@@ -88,8 +88,8 @@ class Chunk {
     if (!this.isAdded) {
       MESH_TYPES.forEach((type) => {
         const altMesh = this.altMeshes.get(type);
-        if (altMesh) {
-          rendering.scene.add(altMesh);
+        if (altMesh && altMesh.length) {
+          rendering.scene.add(...altMesh);
           this.meshes.set(type, altMesh);
         }
       });
@@ -103,7 +103,7 @@ class Chunk {
     if (this.isAdded) {
       MESH_TYPES.forEach((type) => {
         const mesh = this.meshes.get(type);
-        if (mesh) rendering.scene.remove(mesh);
+        if (mesh && mesh.length) rendering.scene.remove(...mesh);
       });
       world.removeAsVisible(this);
       this.isAdded = false;
@@ -124,6 +124,8 @@ class Chunk {
         return;
       }
 
+      this.altMeshes.set(type, []);
+
       const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData[type];
 
       const positionNumComponents = 3;
@@ -135,7 +137,7 @@ class Chunk {
 
       const geometry = this.geometries.get(type);
 
-      geometry.dispose();
+      // geometry.dispose();
       geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
       geometry.setAttribute('normal', new Int8BufferAttribute(normals, normalNumComponents));
       geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
@@ -144,16 +146,15 @@ class Chunk {
       geometry.setAttribute('torchLight', new Float32BufferAttribute(torchLights, torchLightsNumComponents));
       geometry.setIndex(Array.from(indices));
 
-      const altMesh = new Mesh(
-        geometry,
-        type === 'opaque' ? Registry.opaqueChunkMaterial : Registry.transparentChunkMaterial,
-      );
-      altMesh.name = this.name;
-      altMesh.frustumCulled = false;
-      altMesh.matrixAutoUpdate = false;
-      altMesh.renderOrder = type === 'transparent' ? 1000 : 1;
+      const materials = type === 'opaque' ? [Registry.opaqueChunkMaterial] : Registry.transparentChunkMaterials;
 
-      this.altMeshes.set(type, altMesh);
+      materials.forEach((material) => {
+        const altMesh = new Mesh(geometry, material);
+        altMesh.name = this.name;
+        altMesh.frustumCulled = false;
+
+        this.altMeshes.get(type).push(altMesh);
+      });
     });
 
     // mark chunk as built mesh

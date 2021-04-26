@@ -6,12 +6,11 @@ import {
   UVMapping,
   RepeatWrapping,
   sRGBEncoding,
-  DoubleSide,
   FrontSide,
   BackSide,
-  NotEqualDepth,
-  GreaterDepth,
-  LessDepth,
+  LessEqualDepth,
+  NeverDepth,
+  EqualDepth,
 } from 'three';
 
 import { Engine } from './engine';
@@ -21,6 +20,8 @@ import ChunkVertexShader from './shaders/chunk/vertex.glsl';
 type RegistryOptionsType = {
   textureWidth: number;
 };
+
+const TRANSPARENT_SIDES = [FrontSide];
 
 class Registry {
   public static materialSetup = false;
@@ -44,13 +45,17 @@ class Registry {
     ...Registry.sharedMaterialOptions,
   });
 
-  public static transparentChunkMaterial = new ShaderMaterial({
-    // wireframe: true,
-    ...Registry.sharedMaterialOptions,
-    opacity: 0.25,
-    transparent: true,
-    side: DoubleSide,
-  });
+  public static transparentChunkMaterials = TRANSPARENT_SIDES.map(
+    (side) =>
+      new ShaderMaterial({
+        // wireframe: true,
+        ...Registry.sharedMaterialOptions,
+        transparent: true,
+        depthWrite: false,
+        alphaTest: 0.5,
+        side,
+      }),
+  );
 
   private static setupMaterial = (engine: Engine) => {
     const { materialUniform } = Registry;
