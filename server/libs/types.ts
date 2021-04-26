@@ -14,7 +14,6 @@ type SixTextureType = {
 export type TextureType = AllTextureType & ThreeTextureType & SixTextureType;
 
 export type BlockType = {
-  id: number;
   name: string;
   isEmpty: boolean;
   isSolid: boolean;

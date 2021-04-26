@@ -4,6 +4,7 @@ import path from 'path';
 import { Image } from 'canvas';
 
 import { TypeMap } from '../../shared';
+import { ID_TO_BLOCK } from '../blocks';
 import { BlockType, TextureAtlas, TextureType } from '../libs';
 
 type RegistryOptionsType = {
@@ -15,7 +16,7 @@ type TextureMapType = {
 };
 
 class Registry {
-  public blockTypes: { [key: string]: BlockType } = {};
+  public blockTypes: { [key: string]: BlockType & { id: number } } = {};
   public blockTypesArr: BlockType[] = [];
   public textureAtlas: TextureAtlas;
 
@@ -137,16 +138,14 @@ class Registry {
 
   loadBlockTypes = () => {
     // load blocks' files from `basePath`
-    const { basePath } = this.options;
     const textureMap: TextureMapType = {};
 
-    const modelFiles = fs.readdirSync(path.join(basePath, 'models'));
-    for (const modelFile of modelFiles) {
-      const block = require(path.join(basePath, 'models', modelFile)) as BlockType;
-      const { name, textures, id } = block;
+    Object.keys(ID_TO_BLOCK).forEach((key) => {
+      const block = ID_TO_BLOCK[key] as BlockType;
+      const { name, textures } = block;
 
-      this.blockTypes[name] = block;
-      this.blockTypesArr[id] = block;
+      this.blockTypes[name] = { ...block, id: parseInt(key, 10) };
+      this.blockTypesArr[key] = block;
 
       if (textures) {
         const length = Object.keys(textures).length;
@@ -169,7 +168,7 @@ class Registry {
           }
         }
       }
-    }
+    });
 
     this.textureAtlas = new TextureAtlas(textureMap);
   };

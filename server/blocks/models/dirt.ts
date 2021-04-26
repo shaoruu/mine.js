@@ -1,7 +1,6 @@
 import { BlockType } from '../../libs';
 
 const Dirt: BlockType = {
-  id: 1,
   name: 'dirt',
   isEmpty: false,
   isSolid: true,

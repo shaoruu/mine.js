@@ -1,17 +1,15 @@
 import { BlockType } from '../../libs';
 
-const Grass: BlockType = {
-  name: 'grass',
+const Wood: BlockType = {
+  name: 'wood',
   isEmpty: false,
   isSolid: true,
   isFluid: false,
   isTransparent: false,
   isLight: false,
   textures: {
-    top: 'grass_top.png',
-    side: 'grass_side.png',
-    bottom: 'dirt.png',
+    all: 'wood.png',
   },
 };
 
-module.exports = Grass;
+module.exports = Wood;

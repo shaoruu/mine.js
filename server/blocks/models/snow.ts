@@ -1,3 +1,3 @@
 import { makeColorBlock } from '../../utils';
 
-module.exports = makeColorBlock({ id: 12, name: 'snow' });
+module.exports = makeColorBlock({ name: 'snow' });

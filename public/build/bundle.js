@@ -4312,7 +4312,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const TEMP_BLOCK_MAP = [1, 2, 3, 4, 10, 11, 12, 13];
+const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 10, 11, 12, 13];
 let type = 1;
 class Player {
     constructor(engine, options) {
@@ -4422,7 +4422,7 @@ class Player {
         inputs.click('left', () => world.breakVoxel());
         inputs.click('right', () => world.placeVoxel(type));
         for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
-            inputs.bind((i + 1).toString(), () => (type = TEMP_BLOCK_MAP[i]));
+            inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]));
         }
     }
     godModeMovements() {

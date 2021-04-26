@@ -1,12 +1,11 @@
 import { BlockType } from '../libs';
 
 export const makeColorBlock = (data: Partial<BlockType>) => {
-  const { id, name } = data;
+  const { name } = data;
 
-  if (!id || !name) throw new Error('Color block needs an ID and a name');
+  if (!name) throw new Error('Color block needs a name');
 
   return {
-    id,
     name,
     isEmpty: false,
     isSolid: true,
@@ -14,7 +13,7 @@ export const makeColorBlock = (data: Partial<BlockType>) => {
     isTransparent: false,
     isLight: false,
     textures: {
-      all: `${name}.ts`,
+      all: `${name.toLowerCase()}.ts`,
     },
     ...data,
   } as BlockType;

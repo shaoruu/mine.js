@@ -1,2 +1,2 @@
-export * from './makeColorTexture';
-export * from './makeColorBlock';
+export * from './make-color-texture';
+export * from './make-color-block';

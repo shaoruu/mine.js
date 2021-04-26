@@ -1,7 +1,6 @@
 import { BlockType } from '../../libs';
 
 const Glass: BlockType = {
-  id: 4,
   name: 'glass',
   isEmpty: false,
   isSolid: true,
