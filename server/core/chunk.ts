@@ -50,7 +50,10 @@ class Chunk {
   public needsPropagation = false;
   public isEmpty = true;
 
-  public mesh: MeshType;
+  public meshes: {
+    opaque: MeshType | undefined;
+    transparent: MeshType | undefined;
+  } = { opaque: undefined, transparent: undefined };
   public topY: number = Number.MIN_SAFE_INTEGER;
 
   constructor(public coords: Coords2, public world: World, public options: ChunkOptionsType) {
@@ -460,24 +463,25 @@ class Chunk {
     // console.timeEnd(this.name);
 
     // mesh TODO: sub chunk meshes
-    this.mesh = Mesher.meshChunk(this);
+    this.meshes.opaque = Mesher.meshChunk(this);
+    this.meshes.transparent = Mesher.meshChunk(this, true);
   };
 
   toLocal = (voxel: Coords3) => {
     return vec3.sub([0, 0, 0], voxel, this.min) as Coords3;
   };
 
+  get hasMesh() {
+    return !!this.meshes.opaque || !!this.meshes.transparent;
+  }
+
   get protocol() {
-    if (!this.mesh) this.remesh();
+    if (!this.hasMesh) this.remesh();
 
     return {
       x: this.coords[0],
       z: this.coords[1],
-      meshes: [
-        {
-          opaque: this.mesh,
-        },
-      ],
+      meshes: [this.meshes],
       voxels: this.voxels.data,
     };
   }

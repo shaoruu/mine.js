@@ -27,7 +27,7 @@ export const TERRAIN_CONFIG = {
 };
 
 // meshing
-export const AO_TABLE = new Uint8Array([75, 153, 204, 255]);
+export const AO_TABLE = new Uint8Array([100, 170, 210, 255]);
 
 export const FACES = [
   {

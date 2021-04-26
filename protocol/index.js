@@ -513,6 +513,7 @@ $root.protocol = (function() {
          * @memberof protocol
          * @interface IMesh
          * @property {protocol.IGeometry|null} [opaque] Mesh opaque
+         * @property {protocol.IGeometry|null} [transparent] Mesh transparent
          */
 
         /**
@@ -537,6 +538,14 @@ $root.protocol = (function() {
          * @instance
          */
         Mesh.prototype.opaque = null;
+
+        /**
+         * Mesh transparent.
+         * @member {protocol.IGeometry|null|undefined} transparent
+         * @memberof protocol.Mesh
+         * @instance
+         */
+        Mesh.prototype.transparent = null;
 
         /**
          * Creates a new Mesh instance using the specified properties.
@@ -564,6 +573,8 @@ $root.protocol = (function() {
                 writer = $Writer.create();
             if (message.opaque != null && Object.hasOwnProperty.call(message, "opaque"))
                 $root.protocol.Geometry.encode(message.opaque, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.transparent != null && Object.hasOwnProperty.call(message, "transparent"))
+                $root.protocol.Geometry.encode(message.transparent, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
@@ -600,6 +611,9 @@ $root.protocol = (function() {
                 switch (tag >>> 3) {
                 case 1:
                     message.opaque = $root.protocol.Geometry.decode(reader, reader.uint32());
+                    break;
+                case 2:
+                    message.transparent = $root.protocol.Geometry.decode(reader, reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -641,6 +655,11 @@ $root.protocol = (function() {
                 if (error)
                     return "opaque." + error;
             }
+            if (message.transparent != null && message.hasOwnProperty("transparent")) {
+                var error = $root.protocol.Geometry.verify(message.transparent);
+                if (error)
+                    return "transparent." + error;
+            }
             return null;
         };
 
@@ -661,6 +680,11 @@ $root.protocol = (function() {
                     throw TypeError(".protocol.Mesh.opaque: object expected");
                 message.opaque = $root.protocol.Geometry.fromObject(object.opaque);
             }
+            if (object.transparent != null) {
+                if (typeof object.transparent !== "object")
+                    throw TypeError(".protocol.Mesh.transparent: object expected");
+                message.transparent = $root.protocol.Geometry.fromObject(object.transparent);
+            }
             return message;
         };
 
@@ -677,10 +701,14 @@ $root.protocol = (function() {
             if (!options)
                 options = {};
             var object = {};
-            if (options.defaults)
+            if (options.defaults) {
                 object.opaque = null;
+                object.transparent = null;
+            }
             if (message.opaque != null && message.hasOwnProperty("opaque"))
                 object.opaque = $root.protocol.Geometry.toObject(message.opaque, options);
+            if (message.transparent != null && message.hasOwnProperty("transparent"))
+                object.transparent = $root.protocol.Geometry.toObject(message.transparent, options);
             return object;
         };
 

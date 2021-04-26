@@ -2,11 +2,16 @@ import {
   CanvasTexture,
   ShaderMaterial,
   Color,
-  ClampToEdgeWrapping,
   NearestFilter,
   UVMapping,
   RepeatWrapping,
   sRGBEncoding,
+  DoubleSide,
+  FrontSide,
+  BackSide,
+  NotEqualDepth,
+  GreaterDepth,
+  LessDepth,
 } from 'three';
 
 import { Engine } from './engine';
@@ -18,29 +23,50 @@ type RegistryOptionsType = {
 };
 
 class Registry {
-  public atlasUniform: { value: CanvasTexture | null } = { value: null };
-  public chunkMaterial: ShaderMaterial;
+  public static materialSetup = false;
+  public static atlasUniform: { value: CanvasTexture | null } = { value: null };
+  public static materialUniform = {
+    uTexture: Registry.atlasUniform,
+    uFogColor: { value: new Color(0) },
+    uFogNearColor: { value: new Color(0) },
+    uFogNear: { value: 0 },
+    uFogFar: { value: 0 },
+  };
+
+  public static sharedMaterialOptions = {
+    vertexShader: ChunkVertexShader,
+    fragmentShader: ChunkFragmentShader,
+    vertexColors: true,
+    uniforms: Registry.materialUniform,
+  };
+
+  public static opaqueChunkMaterial = new ShaderMaterial({
+    ...Registry.sharedMaterialOptions,
+  });
+
+  public static transparentChunkMaterial = new ShaderMaterial({
+    // wireframe: true,
+    ...Registry.sharedMaterialOptions,
+    opacity: 0.25,
+    transparent: true,
+    side: DoubleSide,
+  });
+
+  private static setupMaterial = (engine: Engine) => {
+    const { materialUniform } = Registry;
+    const { chunkSize, dimension, renderRadius } = engine.config.world;
+
+    materialUniform.uFogColor.value = new Color(engine.config.rendering.fogColor);
+    materialUniform.uFogNearColor.value = new Color(engine.config.rendering.fogNearColor);
+    materialUniform.uFogNear.value = renderRadius * 0.5 * chunkSize * dimension;
+    materialUniform.uFogFar.value = renderRadius * chunkSize * dimension;
+  };
 
   constructor(public engine: Engine, public options: RegistryOptionsType) {
-    const { chunkSize, dimension, renderRadius } = this.engine.config.world;
-
-    this.chunkMaterial = new ShaderMaterial({
-      // wireframe: true,
-      fog: true,
-      transparent: true,
-      vertexShader: ChunkVertexShader,
-      fragmentShader: ChunkFragmentShader,
-      vertexColors: true,
-      uniforms: {
-        uTexture: this.atlasUniform,
-        uFogColor: { value: new Color(this.engine.config.rendering.fogColor) },
-        uFogNearColor: { value: new Color(this.engine.config.rendering.fogNearColor) },
-        uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
-        uFogFar: { value: renderRadius * chunkSize * dimension },
-        // uFogNear: { value: 100 },
-        // uFogFar: { value: 5000 },
-      },
-    });
+    if (!Registry.materialSetup) {
+      Registry.setupMaterial(engine);
+      Registry.materialSetup = true;
+    }
 
     fetch(
       `http://${window.location.hostname}${
@@ -62,7 +88,7 @@ class Registry {
           atlas.needsUpdate = true;
           atlas.anisotropy = engine.rendering.renderer.capabilities.getMaxAnisotropy();
           atlas.encoding = sRGBEncoding;
-          this.atlasUniform.value = atlas;
+          Registry.atlasUniform.value = atlas;
           engine.emit('texture-loaded');
         };
       });

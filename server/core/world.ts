@@ -186,7 +186,7 @@ class World extends Network {
         const { x, z } = request.json;
         // TODO: check x z validity
         const chunk = this.getChunkByCPos([x, z]);
-        if (chunk.mesh) chunk.remesh();
+        if (chunk.hasMesh) chunk.remesh();
         this.sendChunks(client, [chunk]);
         break;
       }

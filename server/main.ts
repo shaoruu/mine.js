@@ -11,7 +11,7 @@ const world = new World({
   renderRadius: 8,
   maxLightLevel: 15,
   pingInterval: 50000,
-  generation: 'hilly',
+  generation: 'flat',
   useSmoothLighting: true,
   port: process.env.PORT || 4000,
   storage: path.join(__dirname, '..', 'data'),

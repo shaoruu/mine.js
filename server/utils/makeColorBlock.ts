@@ -1,6 +1,10 @@
 import { BlockType } from '../libs';
 
-export const makeColorBlock = ({ id, name }: { id: number; name: string }) => {
+export const makeColorBlock = (data: Partial<BlockType>) => {
+  const { id, name } = data;
+
+  if (!id || !name) throw new Error('Color block needs an ID and a name');
+
   return {
     id,
     name,
@@ -12,5 +16,6 @@ export const makeColorBlock = ({ id, name }: { id: number; name: string }) => {
     textures: {
       all: `${name}.ts`,
     },
+    ...data,
   } as BlockType;
 };

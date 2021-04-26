@@ -13,6 +13,7 @@ message Geometry {
 
 message Mesh {
   Geometry opaque = 1;
+  Geometry transparent = 2;
 }
 
 message Chunk {

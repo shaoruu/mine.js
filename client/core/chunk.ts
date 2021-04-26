@@ -3,16 +3,18 @@ import ndarray from 'ndarray';
 import { BufferGeometry, Float32BufferAttribute, Int8BufferAttribute, Mesh } from 'three';
 import pool from 'typedarray-pool';
 
-import { Coords2, Coords3, MeshType } from '../../shared';
+import { Coords2, Coords3 } from '../../shared';
+import { ServerMeshType } from '../libs';
 import { Helper } from '../utils';
 
-import { Engine } from './engine';
+import { Engine, Registry } from '.';
 
 type ChunkOptions = {
   size: number;
   maxHeight: number;
   dimension: number;
 };
+const MESH_TYPES = ['opaque', 'transparent'];
 
 class Chunk {
   public voxels: ndarray;
@@ -27,9 +29,9 @@ class Chunk {
   public min: Coords3 = [0, 0, 0];
   public max: Coords3 = [0, 0, 0];
 
-  public geometry: BufferGeometry;
-  public mesh: Mesh;
-  public altMesh: Mesh | undefined; // this way, this.mesh is in existence until ready to change, avoiding empty chunk frames
+  public geometries: Map<string, BufferGeometry> = new Map();
+  public meshes: Map<string, Mesh> = new Map();
+  public altMeshes: Map<string, Mesh> = new Map();
 
   public isEmpty = true;
   public isDirty = true;
@@ -46,7 +48,9 @@ class Chunk {
 
     this.voxels = ndarray(pool.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
 
-    this.geometry = new BufferGeometry();
+    MESH_TYPES.forEach((type) => {
+      this.geometries.set(type, new BufferGeometry());
+    });
 
     const [cx, cz] = coords;
     const coords3 = [cx, 0, cz];
@@ -79,52 +83,78 @@ class Chunk {
   }
 
   addToScene() {
+    const { rendering, world } = this.engine;
     this.removeFromScene();
-    if (!this.isAdded && this.altMesh) {
-      this.engine.rendering.scene.add(this.altMesh);
-      this.engine.world.addAsVisible(this);
-      this.mesh = this.altMesh;
+    if (!this.isAdded) {
+      MESH_TYPES.forEach((type) => {
+        const altMesh = this.altMeshes.get(type);
+        if (altMesh) {
+          rendering.scene.add(altMesh);
+          this.meshes.set(type, altMesh);
+        }
+      });
+      world.addAsVisible(this);
       this.isAdded = true;
     }
   }
 
   removeFromScene() {
-    if (this.isAdded && this.mesh) {
-      this.engine.rendering.scene.remove(this.mesh);
-      this.engine.world.removeAsVisible(this);
+    const { rendering, world } = this.engine;
+    if (this.isAdded) {
+      MESH_TYPES.forEach((type) => {
+        const mesh = this.meshes.get(type);
+        if (mesh) rendering.scene.remove(mesh);
+      });
+      world.removeAsVisible(this);
       this.isAdded = false;
     }
   }
 
   dispose() {
-    this.geometry.dispose();
+    this.geometries.forEach((geo) => geo.dispose());
     pool.free(this.voxels.data);
   }
 
-  setupMesh(meshData: MeshType) {
-    const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData;
-
+  setupMesh(meshData: ServerMeshType) {
     this.isMeshing = true;
 
-    const positionNumComponents = 3;
-    const normalNumComponents = 3;
-    const uvNumComponents = 2;
-    const occlusionNumComponents = 1;
-    const sunlightsNumComponents = 1;
-    const torchLightsNumComponents = 1;
+    MESH_TYPES.forEach((type) => {
+      if (!meshData[type]) {
+        this.altMeshes.set(type, undefined);
+        return;
+      }
 
-    this.geometry.dispose();
-    this.geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
-    this.geometry.setAttribute('normal', new Int8BufferAttribute(normals, normalNumComponents));
-    this.geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
-    this.geometry.setAttribute('ao', new Float32BufferAttribute(aos, occlusionNumComponents));
-    this.geometry.setAttribute('sunlight', new Float32BufferAttribute(sunlights, sunlightsNumComponents));
-    this.geometry.setAttribute('torchLight', new Float32BufferAttribute(torchLights, torchLightsNumComponents));
-    this.geometry.setIndex(Array.from(indices));
+      const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData[type];
 
-    this.altMesh = new Mesh(this.geometry, this.engine.registry.chunkMaterial);
-    this.altMesh.name = this.name;
-    this.altMesh.frustumCulled = false;
+      const positionNumComponents = 3;
+      const normalNumComponents = 3;
+      const uvNumComponents = 2;
+      const occlusionNumComponents = 1;
+      const sunlightsNumComponents = 1;
+      const torchLightsNumComponents = 1;
+
+      const geometry = this.geometries.get(type);
+
+      geometry.dispose();
+      geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
+      geometry.setAttribute('normal', new Int8BufferAttribute(normals, normalNumComponents));
+      geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
+      geometry.setAttribute('ao', new Float32BufferAttribute(aos, occlusionNumComponents));
+      geometry.setAttribute('sunlight', new Float32BufferAttribute(sunlights, sunlightsNumComponents));
+      geometry.setAttribute('torchLight', new Float32BufferAttribute(torchLights, torchLightsNumComponents));
+      geometry.setIndex(Array.from(indices));
+
+      const altMesh = new Mesh(
+        geometry,
+        type === 'opaque' ? Registry.opaqueChunkMaterial : Registry.transparentChunkMaterial,
+      );
+      altMesh.name = this.name;
+      altMesh.frustumCulled = false;
+      altMesh.matrixAutoUpdate = false;
+      altMesh.renderOrder = type === 'transparent' ? 1000 : 1;
+
+      this.altMeshes.set(type, altMesh);
+    });
 
     // mark chunk as built mesh
     this.isMeshing = false;

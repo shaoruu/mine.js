@@ -133,6 +133,9 @@ export namespace protocol {
 
         /** Mesh opaque */
         opaque?: (protocol.IGeometry|null);
+
+        /** Mesh transparent */
+        transparent?: (protocol.IGeometry|null);
     }
 
     /** Represents a Mesh. */
@@ -146,6 +149,9 @@ export namespace protocol {
 
         /** Mesh opaque. */
         public opaque?: (protocol.IGeometry|null);
+
+        /** Mesh transparent. */
+        public transparent?: (protocol.IGeometry|null);
 
         /**
          * Creates a new Mesh instance using the specified properties.

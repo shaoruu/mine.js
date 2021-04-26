@@ -5,7 +5,7 @@ import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry }
 
 import { Helper } from '../utils';
 
-import { Engine } from './engine';
+import { Engine, Registry } from '.';
 
 class Debug {
   public gui: dat.GUI;
@@ -51,7 +51,7 @@ class Debug {
     engine.on('texture-loaded', () => {
       // textureTest
       const testBlock = new PlaneBufferGeometry(4, 4);
-      const testMat = new MeshBasicMaterial({ map: this.engine.registry.atlasUniform.value, side: DoubleSide });
+      const testMat = new MeshBasicMaterial({ map: Registry.atlasUniform.value, side: DoubleSide });
       this.atlasTest = new Mesh(testBlock, testMat);
       this.atlasTest.position.set(0, 20, 0);
       this.atlasTest.visible = false;
@@ -120,8 +120,8 @@ class Debug {
     // WORLD
     const worldFolder = this.gui.addFolder('world');
     worldFolder.add(world.options, 'renderRadius', 1, 10, 1).onFinishChange((value) => {
-      registry.chunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
-      registry.chunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
+      Registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
+      Registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
     });
     this.registerDisplay('chunk', world, 'camChunkPosStr');
 

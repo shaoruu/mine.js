@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 
-import { Coords2, Coords3, MeshType } from '../../shared';
+import { Coords2, Coords3 } from '../../shared';
+import { ServerChunkType } from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
@@ -16,8 +17,6 @@ type WorldOptionsType = {
   maxChunkProcessPerFrame: number;
   maxBlockPerFrame: number;
 };
-
-type ServerChunkType = { x: number; z: number; meshes: { opaque: MeshType }[]; voxels: Uint8Array };
 
 class World extends EventEmitter {
   public isReady = false;
@@ -278,7 +277,7 @@ class World extends EventEmitter {
         this.setChunk(chunk);
       }
 
-      chunk.setupMesh(serverChunk.meshes[0].opaque);
+      chunk.setupMesh(serverChunk.meshes[0]);
       chunk.voxels.data = new Uint8Array(serverChunk.voxels);
     });
   }
