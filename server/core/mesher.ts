@@ -211,16 +211,6 @@ class Mesher {
                   uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
                 }
 
-                const a = faceAOs[0] * (sunlightLevels[0] + torchLightLevels[0]);
-                const b = faceAOs[1] * (sunlightLevels[1] + torchLightLevels[1]);
-                const c = faceAOs[2] * (sunlightLevels[2] + torchLightLevels[2]);
-                const d = faceAOs[3] * (sunlightLevels[3] + torchLightLevels[3]);
-
-                const aS = sunlightLevels[i + 0];
-                const bS = sunlightLevels[i + 1];
-                const cS = sunlightLevels[i + 2];
-                const dS = sunlightLevels[i + 3];
-
                 const aT = torchLightLevels[i + 0];
                 const bT = torchLightLevels[i + 1];
                 const cT = torchLightLevels[i + 2];
@@ -228,19 +218,13 @@ class Mesher {
 
                 const threshold = 0;
 
-                const oneS0 = aS <= threshold || bS <= threshold || cS <= threshold || dS <= threshold;
                 const oneT0 = aT <= threshold || bT <= threshold || cT <= threshold || dT <= threshold;
 
                 if (torchLightLevels.filter((e) => !!e).length) console.log(torchLightLevels.filter((e) => !!e));
 
                 if (
-                  // a + d >
-                  // b + c
                   faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2] ||
-                  (aS + dS < bS + cS && oneS0) ||
-                  (aT + dT < bT + cT && oneT0)
-                  // sunlightLevels[i] + sunlightLevels[i + 3] < sunlightLevels[i + 1] + sunlightLevels[i + 2] ||
-                  // torchLightLevels[i] + torchLightLevels[i + 3] < torchLightLevels[i + 1] + torchLightLevels[i + 2]
+                  (useSmoothLighting && oneT0 ? aT + dT <= bT + cT : aT + dT <= bT + cT && aT === dT && bT === cT)
                 ) {
                   // generate flipped quad
                   indices.push(ndx, ndx + 1, ndx + 3, ndx + 3, ndx + 2, ndx);
