@@ -91,9 +91,12 @@ const defaultConfig: ConfigType = {
     textureWidth: 32,
   },
   rendering: {
-    fogColor: '#fff',
-    fogNearColor: '#eee',
-    clearColor: '#b6d2ff',
+    // fogColor: '#fff',
+    // fogNearColor: '#eee',
+    // clearColor: '#b6d2ff',
+    fogColor: '#222',
+    fogNearColor: '#333',
+    clearColor: '#123',
   },
   network: {
     url: `http://${window.location.hostname}${

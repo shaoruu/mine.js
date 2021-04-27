@@ -7,6 +7,7 @@ export const ID_TO_BLOCK = {
   4: require('./models/glass'),
   5: require('./models/wood'),
   6: require('./models/stone-brick'),
+  7: require('./models/ice'),
 
   // COLORS
   10: require('./models/blue'),

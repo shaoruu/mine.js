@@ -55,14 +55,7 @@ class Mesher {
           const isTransparent = registry.getTransparencyByID(voxel);
 
           if (isSolid && (transparent ? isTransparent : !isTransparent)) {
-            const texture = registry.getTextureByID(voxel);
-            const textureType = Registry.getTextureType(texture);
-            const uvMap = registry.getUVByID(voxel);
-
-            const isMat1 = textureType === 'mat1';
-            const isMat3 = textureType === 'mat3';
-
-            for (const { dir, mat3, mat6, corners, neighbors } of FACES) {
+            for (const { dir, corners } of FACES) {
               const nvx = vx + dir[0];
               const nvy = vy + dir[1];
               const nvz = vz + dir[2];
@@ -72,20 +65,10 @@ class Mesher {
               const isNeighborTransparent = registry.getTransparencyByID(neighbor);
 
               if (isNeighborTransparent && (!transparent || isNeighborEmpty)) {
-                const nearVoxels = neighbors.map(([a, b, c]) => world.getVoxelByVoxel([vx + a, vy + b, vz + c]));
                 const torchLightLevel = world.getTorchLight([nvx, nvy, nvz]);
                 const sunlightLevel = world.getSunlight([nvx, nvy, nvz]);
 
-                const { startU, endU, startV, endV } = isMat1
-                  ? uvMap[texture.all]
-                  : isMat3
-                  ? uvMap[texture[mat3]]
-                  : uvMap[texture[mat6]];
-
-                const ndx = positions.length / 3;
-                const faceAOs = [];
-
-                for (const { pos, uv, side1, side2, corner } of corners) {
+                for (const { pos } of corners) {
                   const posX = pos[0] + vx;
                   const posY = pos[1] + vy;
                   const posZ = pos[2] + vz;
@@ -156,22 +139,8 @@ class Mesher {
                     smoothSunlightLevels.push(rep);
                     smoothTorchlightLevels.push(rep);
                   }
-
-                  positions.push(posX * dimension, posY * dimension, posZ * dimension);
-                  faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
-                  normals.push(...dir);
-                  uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
                 }
 
-                if (faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2]) {
-                  // generate flipped quad
-                  indices.push(ndx, ndx + 1, ndx + 3, ndx + 3, ndx + 2, ndx + 0);
-                } else {
-                  // generate normal quad
-                  indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);
-                }
-
-                aos.push(...faceAOs);
                 if (!useSmoothLighting) {
                   torchLightLevels.push(torchLightLevel, torchLightLevel, torchLightLevel, torchLightLevel);
                   sunlightLevels.push(sunlightLevel, sunlightLevel, sunlightLevel, sunlightLevel);
@@ -192,6 +161,102 @@ class Mesher {
         const { torchLight, count } = vertexToLight.get(rep);
         return torchLight / count;
       });
+    }
+
+    let i = 0;
+    for (let vx = startX; vx < endX; vx++) {
+      for (let vy = startY; vy < topY + 1; vy++) {
+        for (let vz = startZ; vz < endZ; vz++) {
+          const voxel = world.getVoxelByVoxel([vx, vy, vz]);
+          const isSolid = registry.getSolidityByID(voxel);
+          const isTransparent = registry.getTransparencyByID(voxel);
+
+          if (isSolid && (transparent ? isTransparent : !isTransparent)) {
+            const texture = registry.getTextureByID(voxel);
+            const textureType = Registry.getTextureType(texture);
+            const uvMap = registry.getUVByID(voxel);
+
+            const isMat1 = textureType === 'mat1';
+            const isMat3 = textureType === 'mat3';
+
+            for (const { dir, mat3, mat6, corners, neighbors } of FACES) {
+              const nvx = vx + dir[0];
+              const nvy = vy + dir[1];
+              const nvz = vz + dir[2];
+
+              const neighbor = world.getVoxelByVoxel([nvx, nvy, nvz]);
+              const isNeighborEmpty = registry.getEmptinessByID(neighbor);
+              const isNeighborTransparent = registry.getTransparencyByID(neighbor);
+
+              if (isNeighborTransparent && (!transparent || isNeighborEmpty)) {
+                const nearVoxels = neighbors.map(([a, b, c]) => world.getVoxelByVoxel([vx + a, vy + b, vz + c]));
+
+                const { startU, endU, startV, endV } = isMat1
+                  ? uvMap[texture.all]
+                  : isMat3
+                  ? uvMap[texture[mat3]]
+                  : uvMap[texture[mat6]];
+
+                const ndx = positions.length / 3;
+                const faceAOs = [];
+
+                for (const { pos, uv, side1, side2, corner } of corners) {
+                  const posX = pos[0] + vx;
+                  const posY = pos[1] + vy;
+                  const posZ = pos[2] + vz;
+
+                  positions.push(posX * dimension, posY * dimension, posZ * dimension);
+                  faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
+                  normals.push(...dir);
+                  uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
+                }
+
+                const a = faceAOs[0] * (sunlightLevels[0] + torchLightLevels[0]);
+                const b = faceAOs[1] * (sunlightLevels[1] + torchLightLevels[1]);
+                const c = faceAOs[2] * (sunlightLevels[2] + torchLightLevels[2]);
+                const d = faceAOs[3] * (sunlightLevels[3] + torchLightLevels[3]);
+
+                const aS = sunlightLevels[i + 0];
+                const bS = sunlightLevels[i + 1];
+                const cS = sunlightLevels[i + 2];
+                const dS = sunlightLevels[i + 3];
+
+                const aT = torchLightLevels[i + 0];
+                const bT = torchLightLevels[i + 1];
+                const cT = torchLightLevels[i + 2];
+                const dT = torchLightLevels[i + 3];
+
+                const threshold = 0;
+
+                const oneS0 = aS <= threshold || bS <= threshold || cS <= threshold || dS <= threshold;
+                const oneT0 = aT <= threshold || bT <= threshold || cT <= threshold || dT <= threshold;
+
+                if (torchLightLevels.filter((e) => !!e).length) console.log(torchLightLevels.filter((e) => !!e));
+
+                if (
+                  // a + d >
+                  // b + c
+                  faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2] ||
+                  (aS + dS < bS + cS && oneS0) ||
+                  (aT + dT < bT + cT && oneT0)
+                  // sunlightLevels[i] + sunlightLevels[i + 3] < sunlightLevels[i + 1] + sunlightLevels[i + 2] ||
+                  // torchLightLevels[i] + torchLightLevels[i + 3] < torchLightLevels[i + 1] + torchLightLevels[i + 2]
+                ) {
+                  // generate flipped quad
+                  indices.push(ndx, ndx + 1, ndx + 3, ndx + 3, ndx + 2, ndx);
+                } else {
+                  // generate normal quad
+                  indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);
+                }
+
+                i += 4;
+
+                aos.push(...faceAOs);
+              }
+            }
+          }
+        }
+      }
     }
 
     if (transparent && indices.length === 0) return null;

@@ -1,16 +1,12 @@
 import {
-  CanvasTexture,
   ShaderMaterial,
   Color,
   NearestFilter,
-  UVMapping,
-  RepeatWrapping,
   sRGBEncoding,
   FrontSide,
-  BackSide,
-  LessEqualDepth,
-  NeverDepth,
-  EqualDepth,
+  TextureLoader,
+  Texture,
+  RepeatWrapping,
 } from 'three';
 
 import { Engine } from './engine';
@@ -25,7 +21,13 @@ const TRANSPARENT_SIDES = [FrontSide];
 
 class Registry {
   public static materialSetup = false;
-  public static atlasUniform: { value: CanvasTexture | null } = { value: null };
+  public static atlasUniform: { value: Texture | null } = {
+    value: new TextureLoader().load(
+      `http://${window.location.hostname}${
+        window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''
+      }/atlas`,
+    ),
+  };
   public static materialUniform = {
     uTexture: Registry.atlasUniform,
     uFogColor: { value: new Color(0) },
@@ -35,6 +37,7 @@ class Registry {
   };
 
   public static sharedMaterialOptions = {
+    // wireframe: true,
     vertexShader: ChunkVertexShader,
     fragmentShader: ChunkFragmentShader,
     vertexColors: true,
@@ -48,7 +51,6 @@ class Registry {
   public static transparentChunkMaterials = TRANSPARENT_SIDES.map(
     (side) =>
       new ShaderMaterial({
-        // wireframe: true,
         ...Registry.sharedMaterialOptions,
         transparent: true,
         depthWrite: false,
@@ -58,13 +60,22 @@ class Registry {
   );
 
   private static setupMaterial = (engine: Engine) => {
-    const { materialUniform } = Registry;
+    const {
+      materialUniform,
+      atlasUniform: { value: atlas },
+    } = Registry;
     const { chunkSize, dimension, renderRadius } = engine.config.world;
 
     materialUniform.uFogColor.value = new Color(engine.config.rendering.fogColor);
     materialUniform.uFogNearColor.value = new Color(engine.config.rendering.fogNearColor);
     materialUniform.uFogNear.value = renderRadius * 0.5 * chunkSize * dimension;
     materialUniform.uFogFar.value = renderRadius * chunkSize * dimension;
+
+    atlas.minFilter = NearestFilter;
+    atlas.magFilter = NearestFilter;
+    atlas.generateMipmaps = false;
+    atlas.needsUpdate = true;
+    atlas.encoding = sRGBEncoding;
   };
 
   constructor(public engine: Engine, public options: RegistryOptionsType) {
@@ -72,31 +83,6 @@ class Registry {
       Registry.setupMaterial(engine);
       Registry.materialSetup = true;
     }
-
-    fetch(
-      `http://${window.location.hostname}${
-        window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''
-      }/atlas`,
-    )
-      .then((response) => {
-        return response.blob();
-      })
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const image = new Image();
-        image.src = url;
-        image.onload = () => {
-          const atlas = new CanvasTexture(image, UVMapping, RepeatWrapping, RepeatWrapping);
-          atlas.minFilter = NearestFilter;
-          atlas.magFilter = NearestFilter;
-          atlas.generateMipmaps = false;
-          atlas.needsUpdate = true;
-          atlas.anisotropy = engine.rendering.renderer.capabilities.getMaxAnisotropy();
-          atlas.encoding = sRGBEncoding;
-          Registry.atlasUniform.value = atlas;
-          engine.emit('texture-loaded');
-        };
-      });
   }
 }
 

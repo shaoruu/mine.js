@@ -74,12 +74,11 @@ class Chunk {
     vec3.scale(this.max, this.max, size);
     vec3.add(this.max, this.max, [0, maxHeight, 0]);
 
-    this.generate();
-    // try {
-    //   this.load();
-    // } catch (e) {
-    //   this.generate();
-    // }
+    try {
+      this.load();
+    } catch (e) {
+      this.generate();
+    }
   }
 
   getVoxel = (voxel: Coords3) => {
@@ -151,8 +150,9 @@ class Chunk {
     } = this.world;
 
     const fileBuffer = fs.readFileSync(path.join(storage, `${Helper.getChunkName(this.coords)}.json`), 'utf8');
-    const { voxels, lights } = JSON.parse(fileBuffer);
+    const { voxels, lights, needsPropagation } = JSON.parse(fileBuffer);
     this.needsSaving = false;
+    this.needsPropagation = needsPropagation;
     this.voxels.data = zlib.inflateSync(Buffer.from(voxels, 'base64'));
     this.lights.data = zlib.inflateSync(Buffer.from(lights, 'base64'));
     this.generateHeightMap();
@@ -163,10 +163,12 @@ class Chunk {
     const {
       options: { storage },
     } = this.world;
+    const { needsPropagation } = this;
 
     fs.writeFileSync(
       path.join(storage, `${Helper.getChunkName(this.coords)}.json`),
       JSON.stringify({
+        needsPropagation,
         voxels: zlib.deflateSync(this.voxels.data as Uint8Array).toString('base64'),
         lights: zlib.deflateSync(this.lights.data as Uint8Array).toString('base64'),
       }),
@@ -178,6 +180,7 @@ class Chunk {
   generate = () => {
     // generate terrain, height map, and mesh
     this.needsPropagation = true;
+    this.needsSaving = true;
     const { generation } = this.world.options;
     Generator.generate(this, generation);
     // TODO: lighting
@@ -252,7 +255,7 @@ class Chunk {
     this.floodLight(lightQueue);
     this.floodLight(sunlightQueue, true);
 
-    // todo: save
+    this.needsSaving = true;
   };
 
   floodLight = (queue: LightNode[], isSunlight = false) => {
@@ -293,6 +296,8 @@ class Chunk {
           world.setTorchLight(nVoxel, nl);
         }
 
+        world.markForSavingFromVoxel(nVoxel);
+
         queue.push({
           voxel: nVoxel,
           level: nl,
@@ -317,6 +322,8 @@ class Chunk {
     } else {
       world.setTorchLight(voxel, 0);
     }
+
+    world.markForSavingFromVoxel(voxel);
 
     while (queue.length) {
       const { voxel, level } = queue.shift();
@@ -347,6 +354,7 @@ class Chunk {
           });
           if (isSunlight) world.setSunlight(nVoxel, 0);
           else world.setTorchLight(nVoxel, 0);
+          world.markForSavingFromVoxel(nVoxel);
         } else if (nl >= level) {
           if (!isSunlight || offset.y !== -1 || nl > level)
             fill.push({
@@ -446,6 +454,8 @@ class Chunk {
         });
       }
     }
+
+    this.needsSaving = true;
   };
 
   remesh = () => {

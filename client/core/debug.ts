@@ -48,7 +48,7 @@ class Debug {
       this.chunkHighlight.visible = false;
     });
 
-    engine.on('texture-loaded', () => {
+    engine.on('world-ready', () => {
       // textureTest
       const testBlock = new PlaneBufferGeometry(4, 4);
       const testMat = new MeshBasicMaterial({
@@ -149,6 +149,15 @@ class Debug {
         },
       },
       'toggle atlas',
+    );
+    registryFolder.add(
+      {
+        'toggle wireframe': () => {
+          Registry.opaqueChunkMaterial.wireframe = !Registry.opaqueChunkMaterial.wireframe;
+          Registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
+        },
+      },
+      'toggle wireframe',
     );
 
     // DEBUG

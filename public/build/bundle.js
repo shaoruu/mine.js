@@ -3708,6 +3708,12 @@ class Debug {
                     this.atlasTest.visible = !this.atlasTest.visible;
                 },
             }, 'toggle atlas');
+            registryFolder.add({
+                'toggle wireframe': () => {
+                    ___WEBPACK_IMPORTED_MODULE_3__.Registry.opaqueChunkMaterial.wireframe = !___WEBPACK_IMPORTED_MODULE_3__.Registry.opaqueChunkMaterial.wireframe;
+                    ___WEBPACK_IMPORTED_MODULE_3__.Registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
+                },
+            }, 'toggle wireframe');
             // DEBUG
             const debugFolder = this.gui.addFolder('debug');
             debugFolder.add({
@@ -3747,7 +3753,7 @@ class Debug {
             engine.rendering.scene.add(this.chunkHighlight);
             this.chunkHighlight.visible = false;
         });
-        engine.on('texture-loaded', () => {
+        engine.on('world-ready', () => {
             // textureTest
             const testBlock = new three__WEBPACK_IMPORTED_MODULE_4__.PlaneBufferGeometry(4, 4);
             const testMat = new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
@@ -3851,9 +3857,12 @@ const defaultConfig = {
         textureWidth: 32,
     },
     rendering: {
-        fogColor: '#fff',
-        fogNearColor: '#eee',
-        clearColor: '#b6d2ff',
+        // fogColor: '#fff',
+        // fogNearColor: '#eee',
+        // clearColor: '#b6d2ff',
+        fogColor: '#222',
+        fogNearColor: '#333',
+        clearColor: '#123',
     },
     network: {
         url: `http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}`,
@@ -4192,7 +4201,6 @@ class Network {
                 case 'INIT': {
                     const { json: { spawn }, } = event;
                     this.engine.player.teleport(spawn);
-                    this.engine.emit('world-ready');
                     break;
                 }
                 case 'LOAD':
@@ -4312,7 +4320,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 10, 11, 12, 13];
+const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 11, 13];
 let type = 1;
 class Player {
     constructor(engine, options) {
@@ -4580,30 +4588,12 @@ class Registry {
             Registry.setupMaterial(engine);
             Registry.materialSetup = true;
         }
-        fetch(`http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}/atlas`)
-            .then((response) => {
-            return response.blob();
-        })
-            .then((blob) => {
-            const url = URL.createObjectURL(blob);
-            const image = new Image();
-            image.src = url;
-            image.onload = () => {
-                const atlas = new three__WEBPACK_IMPORTED_MODULE_3__.CanvasTexture(image, three__WEBPACK_IMPORTED_MODULE_3__.UVMapping, three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping, three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping);
-                atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-                atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-                atlas.generateMipmaps = false;
-                atlas.needsUpdate = true;
-                atlas.anisotropy = engine.rendering.renderer.capabilities.getMaxAnisotropy();
-                atlas.encoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
-                Registry.atlasUniform.value = atlas;
-                engine.emit('texture-loaded');
-            };
-        });
     }
 }
 Registry.materialSetup = false;
-Registry.atlasUniform = { value: null };
+Registry.atlasUniform = {
+    value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}/atlas`),
+};
 Registry.materialUniform = {
     uTexture: Registry.atlasUniform,
     uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(0) },
@@ -4612,6 +4602,7 @@ Registry.materialUniform = {
     uFogFar: { value: 0 },
 };
 Registry.sharedMaterialOptions = {
+    // wireframe: true,
     vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
     fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
     vertexColors: true,
@@ -4620,12 +4611,17 @@ Registry.sharedMaterialOptions = {
 Registry.opaqueChunkMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign({}, Registry.sharedMaterialOptions));
 Registry.transparentChunkMaterials = TRANSPARENT_SIDES.map((side) => new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign(Object.assign({}, Registry.sharedMaterialOptions), { transparent: true, depthWrite: false, alphaTest: 0.5, side })));
 Registry.setupMaterial = (engine) => {
-    const { materialUniform } = Registry;
+    const { materialUniform, atlasUniform: { value: atlas }, } = Registry;
     const { chunkSize, dimension, renderRadius } = engine.config.world;
     materialUniform.uFogColor.value = new three__WEBPACK_IMPORTED_MODULE_3__.Color(engine.config.rendering.fogColor);
     materialUniform.uFogNearColor.value = new three__WEBPACK_IMPORTED_MODULE_3__.Color(engine.config.rendering.fogNearColor);
     materialUniform.uFogNear.value = renderRadius * 0.5 * chunkSize * dimension;
     materialUniform.uFogFar.value = renderRadius * chunkSize * dimension;
+    atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+    atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+    atlas.generateMipmaps = false;
+    atlas.needsUpdate = true;
+    atlas.encoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
 };
 
 
@@ -5672,8 +5668,10 @@ __webpack_require__.r(__webpack_exports__);
 const defaultSkyOptions = {
     domeOffset: 600,
     dimension: 4000,
-    topColor: '#74B3FF',
-    bottomColor: '#ffffff',
+    // topColor: '#74B3FF',
+    // bottomColor: '#ffffff',
+    topColor: '#000',
+    bottomColor: '#000',
 };
 class Sky {
     constructor(options = {}) {
@@ -20890,7 +20888,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform sampler2D uTexture;\nuniform vec3 uFogColor;\nuniform vec3 uFogNearColor;\nuniform float uFogNear;\nuniform float uFogFar;\n\nvarying vec2 vUv; // u, v \nvarying float vAO;\nvarying float vSunlight;\nvarying float vTorchLight;\n\nvoid main() {\n  vec4 textureColor = texture2D(uTexture, vUv);\n\n  gl_FragColor = vec4(textureColor.rgb, textureColor.w);\n  gl_FragColor.rgb *= min((vSunlight + vTorchLight) / 16.0 + 0.2, 1.0) * vAO;\n\n  // fog\n  float depth = gl_FragCoord.z / gl_FragCoord.w;\n  float fogFactor = smoothstep(uFogNear, uFogFar, depth);\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);\n} ");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform sampler2D uTexture;\nuniform vec3 uFogColor;\nuniform vec3 uFogNearColor;\nuniform float uFogNear;\nuniform float uFogFar;\n\nvarying vec2 vUv; // u, v \nvarying float vAO;\nvarying float vSunlight;\nvarying float vTorchLight;\n\nvoid main() {\n  vec4 textureColor = texture2D(uTexture, vUv);\n\n  gl_FragColor = vec4(textureColor.rgb, textureColor.w);\n  gl_FragColor.rgb *= (vTorchLight / 16.0 + vSunlight / 16.0 * 0.2) * vAO;\n\n  // fog\n  float depth = gl_FragCoord.z / gl_FragCoord.w;\n  float fogFactor = smoothstep(uFogNear, uFogFar, depth);\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);\n} ");
 
 /***/ }),
 
@@ -22100,8 +22098,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var svelte_internal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! svelte/internal */ "./node_modules/svelte/internal/index.mjs");
 /* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
-/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
-/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
+/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
+/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* client/App.svelte generated by Svelte v3.37.0 */
 
@@ -22234,7 +22232,7 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-1dqxao5-style", nonCssHash: "pnh723", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-1dqxao5-style", nonCssHash: "pnh723", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
 if (typeof add_css !== 'undefined' && !document.getElementById("svelte-1dqxao5-style")) add_css();

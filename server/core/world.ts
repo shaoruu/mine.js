@@ -24,6 +24,7 @@ type WorldOptionsType = NetworkOptionsType & {
   maxHeight: number;
   renderRadius: number;
   maxLightLevel: number;
+  maxLoadedChunks: number;
   useSmoothLighting: boolean;
   generation: GeneratorTypes;
 };
@@ -53,6 +54,7 @@ class World extends Network {
         const chunk = this.getChunkByCPos([x, z]);
         if (chunk.hasMesh) chunk.remesh();
         this.sendChunks(client, [chunk]);
+        this.unloadChunks();
       });
     }, 16);
   }
@@ -64,6 +66,9 @@ class World extends Network {
     if (!fs.existsSync(storage)) {
       fs.mkdirSync(storage);
     }
+
+    // save every minute
+    setInterval(() => this.save(), 60000);
   };
 
   setupRoutes = () => {
@@ -95,6 +100,19 @@ class World extends Network {
 
   clearCache = () => {
     this.chunkCache.clear();
+  };
+
+  save = () => {
+    this.chunks.forEach((chunk) => {
+      if (chunk.needsSaving) {
+        chunk.save();
+      }
+    });
+  };
+
+  markForSavingFromVoxel = (vCoords: Coords3) => {
+    const chunk = this.getChunkByVoxel(vCoords);
+    chunk.needsSaving = true;
   };
 
   getChunkByCPos = (cCoords: Coords2) => {
@@ -301,6 +319,17 @@ class World extends Network {
       }),
     );
   };
+
+  unloadChunks() {
+    const { maxLoadedChunks } = this.options;
+    while (this.chunks.size > maxLoadedChunks) {
+      const [oldestKey, oldestChunk] = this.chunks.entries().next().value;
+      if (oldestChunk.needsSaving) {
+        oldestChunk.save();
+      }
+      this.chunks.delete(oldestKey);
+    }
+  }
 }
 
 export { World };

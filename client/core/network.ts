@@ -52,7 +52,6 @@ class Network {
           json: { spawn },
         } = event;
         this.engine.player.teleport(spawn);
-        this.engine.emit('world-ready');
         break;
       }
       case 'LOAD':

@@ -13,8 +13,10 @@ type SkyOptionsType = {
 const defaultSkyOptions: SkyOptionsType = {
   domeOffset: 600,
   dimension: 4000,
-  topColor: '#74B3FF',
-  bottomColor: '#ffffff',
+  // topColor: '#74B3FF',
+  // bottomColor: '#ffffff',
+  topColor: '#000',
+  bottomColor: '#000',
 };
 
 class Sky {

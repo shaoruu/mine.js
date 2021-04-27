@@ -13,7 +13,7 @@ void main() {
   vec4 textureColor = texture2D(uTexture, vUv);
 
   gl_FragColor = vec4(textureColor.rgb, textureColor.w);
-  gl_FragColor.rgb *= min((vSunlight + vTorchLight) / 16.0 + 0.2, 1.0) * vAO;
+  gl_FragColor.rgb *= (vTorchLight / 16.0 + vSunlight / 16.0 * 0.2) * vAO;
 
   // fog
   float depth = gl_FragCoord.z / gl_FragCoord.w;
