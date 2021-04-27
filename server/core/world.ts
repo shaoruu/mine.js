@@ -281,6 +281,10 @@ class World extends Network {
           this.broadcast({
             type: 'UPDATE',
             chunks: [cp],
+            json: {
+              voxel,
+              type,
+            },
           });
         });
 

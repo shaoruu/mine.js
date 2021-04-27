@@ -222,7 +222,7 @@ class Mesher {
 
                 if (
                   faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2] ||
-                  (useSmoothLighting && oneT0 ? aT + dT <= bT + cT : aT + dT <= bT + cT && aT === dT && bT === cT)
+                  (useSmoothLighting && aT + dT < bT + cT && (oneT0 || (aT === dT && bT === cT)))
                 ) {
                   // generate flipped quad
                   indices.push(ndx, ndx + 1, ndx + 3, ndx + 3, ndx + 2, ndx);

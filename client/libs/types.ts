@@ -1,6 +1,6 @@
 import { Object3D } from 'three';
 
-import { MeshType } from '../../shared';
+import { Coords3, MeshType } from '../../shared';
 
 import { AABB } from './aabb';
 import { Brain } from './brain';
@@ -55,4 +55,10 @@ export type MeshResultType = {
 
 export type ServerMeshType = { opaque: MeshType; transparent: MeshType };
 
-export type ServerChunkType = { x: number; z: number; meshes: ServerMeshType[]; voxels: Uint8Array };
+export type ServerChunkType = {
+  x: number;
+  z: number;
+  meshes: ServerMeshType[];
+  voxels: Uint8Array;
+  json: { voxel: Coords3; type: number };
+};

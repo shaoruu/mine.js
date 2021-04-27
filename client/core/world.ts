@@ -289,10 +289,14 @@ class World extends EventEmitter {
         this.setChunk(chunk);
       }
 
+      const { meshes, voxels, json } = serverChunk;
+
       chunk.removeFromScene();
-      chunk.setupMesh(serverChunk.meshes);
-      if (serverChunk.voxels.length) {
+      chunk.setupMesh(meshes);
+      if (voxels.length) {
         chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+      } else if (json) {
+        console.log(json);
       }
       chunk.addToScene();
     });
