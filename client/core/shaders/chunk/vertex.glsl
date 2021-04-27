@@ -12,6 +12,6 @@ void main() {
 
   vUv = uv;
   vAO = ao;
-  vSunlight = sunlight;
-  vTorchLight = torchLight;
+  vSunlight = sunlight / 15.0;
+  vTorchLight = torchLight / 15.0;
 } 

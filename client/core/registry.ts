@@ -1,13 +1,4 @@
-import {
-  ShaderMaterial,
-  Color,
-  NearestFilter,
-  sRGBEncoding,
-  FrontSide,
-  TextureLoader,
-  Texture,
-  RepeatWrapping,
-} from 'three';
+import { ShaderMaterial, Color, NearestFilter, sRGBEncoding, FrontSide, TextureLoader, Texture } from 'three';
 
 import { Engine } from './engine';
 import ChunkFragmentShader from './shaders/chunk/fragment.glsl';
@@ -30,6 +21,7 @@ class Registry {
   };
   public static materialUniform = {
     uTexture: Registry.atlasUniform,
+    uSunlightIntensity: { value: 0.2 },
     uFogColor: { value: new Color(0) },
     uFogNearColor: { value: new Color(0) },
     uFogNear: { value: 0 },

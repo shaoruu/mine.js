@@ -3,6 +3,7 @@ uniform vec3 uFogColor;
 uniform vec3 uFogNearColor;
 uniform float uFogNear;
 uniform float uFogFar;
+uniform float uSunlightIntensity;
 
 varying vec2 vUv; // u, v 
 varying float vAO;
@@ -12,8 +13,8 @@ varying float vTorchLight;
 void main() {
   vec4 textureColor = texture2D(uTexture, vUv);
 
-  gl_FragColor = vec4(textureColor.rgb, textureColor.w);
-  gl_FragColor.rgb *= (vTorchLight / 16.0 + vSunlight / 16.0 * 0.2) * vAO;
+  gl_FragColor = vec4(textureColor.rgb * vAO, textureColor.w);
+  gl_FragColor.rgb *= min(vTorchLight + vSunlight * uSunlightIntensity, 1.0);
 
   // fog
   float depth = gl_FragCoord.z / gl_FragCoord.w;

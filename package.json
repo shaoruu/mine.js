@@ -89,6 +89,7 @@
     "ndarray": "^1.0.19",
     "noisejs": "^2.1.0",
     "pako": "^2.0.3",
+    "postprocessing": "^6.21.4",
     "raw-loader": "^4.0.2",
     "stats.js": "^0.17.0",
     "three": "^0.127.0",
