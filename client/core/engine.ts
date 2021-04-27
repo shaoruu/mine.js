@@ -61,7 +61,7 @@ const defaultConfig: ConfigType = {
     lookBlockLerp: 0.7,
     distToGround: 1.6,
     distToTop: 0.2,
-    bodyWidth: 0.8,
+    bodyWidth: 0.6,
   },
   world: {
     maxHeight: 128,

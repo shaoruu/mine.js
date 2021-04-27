@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 
 import { Coords2, Coords3 } from '../../shared';
-import { ServerChunkType } from '../libs';
+import { AABB, ServerChunkType } from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
@@ -142,8 +142,19 @@ class World extends EventEmitter {
   }
 
   placeVoxel(type: number) {
-    if (this.engine.player.targetBlock) {
-      this.setVoxel(this.engine.player.targetBlock, type);
+    const { dimension } = this.options;
+    const {
+      targetBlock,
+      camEntity: {
+        body: { aabb },
+      },
+    } = this.engine.player;
+    const blockSize = dimension - 0.05;
+    if (targetBlock) {
+      const [tx, ty, tz] = targetBlock;
+      const offset = (dimension - blockSize) / 2;
+      const blockAABB = new AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
+      if (!aabb.intersects(blockAABB)) this.setVoxel(targetBlock, type);
     }
   }
 

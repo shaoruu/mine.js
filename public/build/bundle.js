@@ -3827,7 +3827,7 @@ const defaultConfig = {
         lookBlockLerp: 0.7,
         distToGround: 1.6,
         distToTop: 0.2,
-        bodyWidth: 0.8,
+        bodyWidth: 0.6,
     },
     world: {
         maxHeight: 128,
@@ -4867,8 +4867,15 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         }
     }
     placeVoxel(type) {
-        if (this.engine.player.targetBlock) {
-            this.setVoxel(this.engine.player.targetBlock, type);
+        const { dimension } = this.options;
+        const { targetBlock, camEntity: { body: { aabb }, }, } = this.engine.player;
+        const blockSize = dimension - 0.05;
+        if (targetBlock) {
+            const [tx, ty, tz] = targetBlock;
+            const offset = (dimension - blockSize) / 2;
+            const blockAABB = new _libs__WEBPACK_IMPORTED_MODULE_2__.AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
+            if (!aabb.intersects(blockAABB))
+                this.setVoxel(targetBlock, type);
         }
     }
     addAsVisible(chunk) {
