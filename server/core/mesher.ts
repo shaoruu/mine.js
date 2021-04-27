@@ -220,8 +220,6 @@ class Mesher {
 
                 const oneT0 = aT <= threshold || bT <= threshold || cT <= threshold || dT <= threshold;
 
-                if (torchLightLevels.filter((e) => !!e).length) console.log(torchLightLevels.filter((e) => !!e));
-
                 if (
                   faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2] ||
                   (useSmoothLighting && oneT0 ? aT + dT <= bT + cT : aT + dT <= bT + cT && aT === dT && bT === cT)
