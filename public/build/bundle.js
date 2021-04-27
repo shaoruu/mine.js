@@ -4197,16 +4197,19 @@ class Network {
         };
         this.onEvent = (event) => {
             const { type } = event;
+            const { engine: { world, player }, } = this;
             switch (type) {
                 case 'INIT': {
                     const { json: { spawn }, } = event;
-                    this.engine.player.teleport(spawn);
+                    player.teleport(spawn);
                     break;
                 }
-                case 'LOAD':
                 case 'UPDATE': {
+                    const { json: { voxel, type }, } = event;
+                    world.setVoxel(voxel, type);
+                }
+                case 'LOAD': {
                     const { chunks } = event;
-                    const { engine: { world }, } = this;
                     for (const chunkData of chunks) {
                         world.handleServerChunk(chunkData, type === 'UPDATE');
                     }

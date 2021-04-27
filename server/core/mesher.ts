@@ -218,11 +218,27 @@ class Mesher {
 
                 const threshold = 0;
 
+                // at least one is zero
                 const oneT0 = aT <= threshold || bT <= threshold || cT <= threshold || dT <= threshold;
+                // one is zero, and ao rule
+                const ozao = aT + dT < bT + cT;
+                // all not zero, 4 parts
+
+                //  b        d
+                //     -
+                //        -
+                //  a        c
+
+                const anzp1 = (bT > (aT + dT) / 2 && (aT + dT) / 2 > cT) || (cT > (aT + dT) / 2 && (aT + dT) / 2 > bT);
+                // || (aT === dT && bT === cT);
+                const anz = !oneT0 && anzp1;
 
                 if (
                   faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2] ||
-                  (useSmoothLighting && aT + dT < bT + cT && (oneT0 || (aT === dT && bT === cT)))
+                  (useSmoothLighting && (ozao || anz))
+                  // || (aT === dT && bT === cT)
+                  // &&
+                  // (oneT0 || ())
                 ) {
                   // generate flipped quad
                   indices.push(ndx, ndx + 1, ndx + 3, ndx + 3, ndx + 2, ndx);
