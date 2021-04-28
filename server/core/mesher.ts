@@ -229,17 +229,10 @@ class Mesher {
                 //        -
                 //  a        c
 
-                const anzp1 = (bT > (aT + dT) / 2 && (aT + dT) / 2 > cT) || (cT > (aT + dT) / 2 && (aT + dT) / 2 > bT);
-                // || (aT === dT && bT === cT);
-                const anz = !oneT0 && anzp1;
+                const anzp1 = (bT > (aT + dT) / 2 && (aT + dT) / 2 > cT) || (cT > (aT + dT) / 2 && (aT + dT) / 2 > bT); // fixed two light sources colliding
+                const anz = oneT0 && anzp1;
 
-                if (
-                  faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2] ||
-                  (useSmoothLighting && (ozao || anz))
-                  // || (aT === dT && bT === cT)
-                  // &&
-                  // (oneT0 || ())
-                ) {
+                if (faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2] || (useSmoothLighting && (ozao || anz))) {
                   // generate flipped quad
                   indices.push(ndx, ndx + 1, ndx + 3, ndx + 3, ndx + 2, ndx);
                 } else {
