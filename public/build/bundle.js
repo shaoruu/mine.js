@@ -5316,18 +5316,18 @@ __webpack_require__.r(__webpack_exports__);
 
 const defaultCloudsOptions = {
     seed: 1024,
-    scale: 0.01,
-    width: 16,
-    height: 3,
+    scale: 0.03,
+    width: 6,
+    height: 1,
     count: 32,
-    worldHeight: 500,
-    dimension: 10,
-    threshold: 0.3,
-    speed: 4,
+    worldHeight: 800,
+    dimension: 60,
+    threshold: 0.25,
+    speed: 16,
     lerpFactor: 0.7,
     fogFarFactor: 5,
     color: '#fff',
-    alpha: 0.85,
+    alpha: 0.75,
 };
 class Clouds {
     constructor(rendering, options = {}) {
