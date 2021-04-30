@@ -18,7 +18,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
 
-import { Sky } from '../libs';
+import { Sky, Clouds } from '../libs';
 
 import { Engine } from './engine';
 
@@ -33,13 +33,15 @@ class Rendering extends EventEmitter {
   public renderer: WebGLRenderer;
   public composer: EffectComposer;
   public sky: Sky;
+  public clouds: Clouds;
   public fxaa: ShaderPass;
   public noColorMateria;
+  public fogUniforms: { [key: string]: { value: number | Color } };
 
   constructor(public engine: Engine, public options: RenderingOptionsType) {
     super();
 
-    const { clearColor } = options;
+    const { fogColor, fogNearColor, clearColor } = options;
 
     // three.js scene
     this.scene = new Scene();
@@ -71,9 +73,21 @@ class Rendering extends EventEmitter {
 
     this.composer = new EffectComposer(this.renderer, renderTarget);
 
+    // fog
+    const { renderRadius, chunkSize, dimension } = this.engine.config.world;
+    this.fogUniforms = {
+      uFogColor: { value: new Color(fogColor) },
+      uFogNearColor: { value: new Color(fogNearColor) },
+      uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
+      uFogFar: { value: renderRadius * chunkSize * dimension },
+    };
+
     // sky
     this.sky = new Sky();
     this.scene.add(this.sky.mesh);
+
+    // clouds
+    this.clouds = new Clouds(this);
 
     engine.on('ready', () => {
       // add postprocessing
@@ -103,6 +117,7 @@ class Rendering extends EventEmitter {
   };
 
   tick = () => {
+    this.clouds.tick(this.engine.clock.delta);
     // this.sky.position.copy(this.engine.camera.controls.getObject().position);
   };
 

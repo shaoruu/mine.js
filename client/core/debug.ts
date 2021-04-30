@@ -52,7 +52,7 @@ class Debug {
       // textureTest
       const testBlock = new PlaneBufferGeometry(4, 4);
       const testMat = new MeshBasicMaterial({
-        map: Registry.atlasUniform.value,
+        map: this.engine.registry.atlasUniform.value,
         side: DoubleSide,
         transparent: true,
         alphaTest: 0.5,
@@ -125,8 +125,8 @@ class Debug {
     // WORLD
     const worldFolder = this.gui.addFolder('world');
     worldFolder.add(world.options, 'renderRadius', 1, 10, 1).onFinishChange((value) => {
-      Registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
-      Registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
+      registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
+      registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
     });
     this.registerDisplay('chunk', world, 'camChunkPosStr');
 
@@ -153,8 +153,8 @@ class Debug {
     registryFolder.add(
       {
         'toggle wireframe': () => {
-          Registry.opaqueChunkMaterial.wireframe = !Registry.opaqueChunkMaterial.wireframe;
-          Registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
+          registry.opaqueChunkMaterial.wireframe = !registry.opaqueChunkMaterial.wireframe;
+          registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
         },
       },
       'toggle wireframe',

@@ -7,7 +7,7 @@ import { Coords2, Coords3 } from '../../shared';
 import { ServerMeshType } from '../libs';
 import { Helper } from '../utils';
 
-import { Engine, Registry } from '.';
+import { Engine } from '.';
 
 type ChunkOptions = {
   size: number;
@@ -153,7 +153,10 @@ class Chunk {
         geometry.setAttribute('torchLight', new Float32BufferAttribute(torchLights, torchLightsNumComponents));
         geometry.setIndex(Array.from(indices));
 
-        const materials = type === 'opaque' ? [Registry.opaqueChunkMaterial] : Registry.transparentChunkMaterials;
+        const materials =
+          type === 'opaque'
+            ? [this.engine.registry.opaqueChunkMaterial]
+            : this.engine.registry.transparentChunkMaterials;
 
         materials.forEach((material) => {
           const altMesh = new Mesh(geometry, material);

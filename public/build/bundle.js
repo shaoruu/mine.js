@@ -3540,7 +3540,9 @@ class Chunk {
                 geometry.setAttribute('sunlight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(sunlights, sunlightsNumComponents));
                 geometry.setAttribute('torchLight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(torchLights, torchLightsNumComponents));
                 geometry.setIndex(Array.from(indices));
-                const materials = type === 'opaque' ? [___WEBPACK_IMPORTED_MODULE_6__.Registry.opaqueChunkMaterial] : ___WEBPACK_IMPORTED_MODULE_6__.Registry.transparentChunkMaterials;
+                const materials = type === 'opaque'
+                    ? [this.engine.registry.opaqueChunkMaterial]
+                    : this.engine.registry.transparentChunkMaterials;
                 materials.forEach((material) => {
                     const altMesh = new three__WEBPACK_IMPORTED_MODULE_7__.Mesh(geometry, material);
                     altMesh.name = this.name;
@@ -3689,8 +3691,8 @@ class Debug {
             // WORLD
             const worldFolder = this.gui.addFolder('world');
             worldFolder.add(world.options, 'renderRadius', 1, 10, 1).onFinishChange((value) => {
-                ___WEBPACK_IMPORTED_MODULE_3__.Registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
-                ___WEBPACK_IMPORTED_MODULE_3__.Registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
+                registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
+                registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
             });
             this.registerDisplay('chunk', world, 'camChunkPosStr');
             // PLAYER
@@ -3710,8 +3712,8 @@ class Debug {
             }, 'toggle atlas');
             registryFolder.add({
                 'toggle wireframe': () => {
-                    ___WEBPACK_IMPORTED_MODULE_3__.Registry.opaqueChunkMaterial.wireframe = !___WEBPACK_IMPORTED_MODULE_3__.Registry.opaqueChunkMaterial.wireframe;
-                    ___WEBPACK_IMPORTED_MODULE_3__.Registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
+                    registry.opaqueChunkMaterial.wireframe = !registry.opaqueChunkMaterial.wireframe;
+                    registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
                 },
             }, 'toggle wireframe');
             // DEBUG
@@ -3757,7 +3759,7 @@ class Debug {
             // textureTest
             const testBlock = new three__WEBPACK_IMPORTED_MODULE_4__.PlaneBufferGeometry(4, 4);
             const testMat = new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
-                map: ___WEBPACK_IMPORTED_MODULE_3__.Registry.atlasUniform.value,
+                map: this.engine.registry.atlasUniform.value,
                 side: three__WEBPACK_IMPORTED_MODULE_4__.DoubleSide,
                 transparent: true,
                 alphaTest: 0.5,
@@ -3800,12 +3802,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! deepmerge */ "./node_modules/deepmerge/dist/cjs.js");
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(deepmerge__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
 /* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
 
 
 
 
+
+three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_pars_vertex = three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_pars_vertex.replace('varying float fogDepth;', 'varying vec3 vViewPosition;');
+three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_vertex = three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_vertex.replace('fogDepth = - mvPosition.z;', 'vViewPosition = - mvPosition.xyz;');
+three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_pars_fragment = three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_pars_fragment.replace('varying float fogDepth;', 'varying vec3 vViewPosition;');
+three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_fragment = three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_fragment.replace('#ifdef USE_FOG', ['#ifdef USE_FOG', '  float fogDepth = length(vViewPosition);'].join('\n'))
+    .replace('float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );', [
+    '#ifdef FOG_DENSITY',
+    '  float fogFactor = 1.0 - exp( - FOG_DENSITY * FOG_DENSITY * fogDepth * fogDepth );',
+    '#else',
+    '  float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );',
+    '#endif',
+].join('\n'));
 const defaultConfig = {
     debug: true,
     container: {
@@ -3923,10 +3938,10 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.network = new ___WEBPACK_IMPORTED_MODULE_3__.Network(this, network);
         // container
         this.container = new ___WEBPACK_IMPORTED_MODULE_3__.Container(this, container);
-        // registry
-        this.registry = new ___WEBPACK_IMPORTED_MODULE_3__.Registry(this, registry);
         // rendering
         this.rendering = new ___WEBPACK_IMPORTED_MODULE_3__.Rendering(this, rendering);
+        // registry
+        this.registry = new ___WEBPACK_IMPORTED_MODULE_3__.Registry(this, registry);
         // inputs
         this.inputs = new ___WEBPACK_IMPORTED_MODULE_3__.Inputs(this);
         // camera
@@ -4587,46 +4602,28 @@ class Registry {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
-        if (!Registry.materialSetup) {
-            Registry.setupMaterial(engine);
-            Registry.materialSetup = true;
-        }
+        this.atlasUniform = {
+            value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}/atlas`),
+        };
+        const atlas = this.atlasUniform.value;
+        atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+        atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+        atlas.generateMipmaps = false;
+        atlas.needsUpdate = true;
+        atlas.encoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
+        this.materialUniform = Object.assign({ uTexture: this.atlasUniform, uSunlightIntensity: { value: 0.2 } }, engine.rendering.fogUniforms);
+        const sharedMaterialOptions = {
+            // wireframe: true,
+            vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
+            fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
+            vertexColors: true,
+            uniforms: this.materialUniform,
+        };
+        this.opaqueChunkMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign({}, sharedMaterialOptions));
+        this.transparentChunkMaterials = TRANSPARENT_SIDES.map((side) => new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign(Object.assign({}, sharedMaterialOptions), { transparent: true, depthWrite: false, alphaTest: 0.5, side })));
     }
 }
 Registry.materialSetup = false;
-Registry.atlasUniform = {
-    value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}/atlas`),
-};
-Registry.materialUniform = {
-    uTexture: Registry.atlasUniform,
-    uSunlightIntensity: { value: 0.2 },
-    uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(0) },
-    uFogNearColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(0) },
-    uFogNear: { value: 0 },
-    uFogFar: { value: 0 },
-};
-Registry.sharedMaterialOptions = {
-    // wireframe: true,
-    vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
-    fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
-    vertexColors: true,
-    uniforms: Registry.materialUniform,
-};
-Registry.opaqueChunkMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign({}, Registry.sharedMaterialOptions));
-Registry.transparentChunkMaterials = TRANSPARENT_SIDES.map((side) => new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign(Object.assign({}, Registry.sharedMaterialOptions), { transparent: true, depthWrite: false, alphaTest: 0.5, side })));
-Registry.setupMaterial = (engine) => {
-    const { materialUniform, atlasUniform: { value: atlas }, } = Registry;
-    const { chunkSize, dimension, renderRadius } = engine.config.world;
-    materialUniform.uFogColor.value = new three__WEBPACK_IMPORTED_MODULE_3__.Color(engine.config.rendering.fogColor);
-    materialUniform.uFogNearColor.value = new three__WEBPACK_IMPORTED_MODULE_3__.Color(engine.config.rendering.fogNearColor);
-    materialUniform.uFogNear.value = renderRadius * 0.5 * chunkSize * dimension;
-    materialUniform.uFogFar.value = renderRadius * chunkSize * dimension;
-    atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-    atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-    atlas.generateMipmaps = false;
-    atlas.needsUpdate = true;
-    atlas.encoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
-};
 
 
 
@@ -4676,12 +4673,13 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.fxaa.material.uniforms['resolution'].value.y = 1 / (height * pixelRatio);
         };
         this.tick = () => {
+            this.clouds.tick(this.engine.clock.delta);
             // this.sky.position.copy(this.engine.camera.controls.getObject().position);
         };
         this.render = () => {
             this.composer.render();
         };
-        const { clearColor } = options;
+        const { fogColor, fogNearColor, clearColor } = options;
         // three.js scene
         this.scene = new three__WEBPACK_IMPORTED_MODULE_3__.Scene();
         // renderer
@@ -4708,9 +4706,19 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         renderTarget.depthTexture.format = three__WEBPACK_IMPORTED_MODULE_3__.DepthFormat;
         renderTarget.depthTexture.type = three__WEBPACK_IMPORTED_MODULE_3__.UnsignedIntType;
         this.composer = new three_examples_jsm_postprocessing_EffectComposer__WEBPACK_IMPORTED_MODULE_4__.EffectComposer(this.renderer, renderTarget);
+        // fog
+        const { renderRadius, chunkSize, dimension } = this.engine.config.world;
+        this.fogUniforms = {
+            uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(fogColor) },
+            uFogNearColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(fogNearColor) },
+            uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
+            uFogFar: { value: renderRadius * chunkSize * dimension },
+        };
         // sky
         this.sky = new _libs__WEBPACK_IMPORTED_MODULE_1__.Sky();
         this.scene.add(this.sky.mesh);
+        // clouds
+        this.clouds = new _libs__WEBPACK_IMPORTED_MODULE_1__.Clouds(this);
         engine.on('ready', () => {
             // add postprocessing
             this.fxaa = new three_examples_jsm_postprocessing_ShaderPass__WEBPACK_IMPORTED_MODULE_5__.ShaderPass(three_examples_jsm_shaders_FXAAShader__WEBPACK_IMPORTED_MODULE_6__.FXAAShader);
@@ -5276,6 +5284,161 @@ class Clock {
 
 /***/ }),
 
+/***/ "./client/libs/clouds.ts":
+/*!*******************************!*\
+  !*** ./client/libs/clouds.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Clouds": () => (/* binding */ Clouds)
+/* harmony export */ });
+/* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ndarray */ "./node_modules/ndarray/ndarray.js");
+/* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(ndarray__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var typedarray_pool__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! typedarray-pool */ "./node_modules/typedarray-pool/pool.js");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core */ "./client/core/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _shaders_clouds_fragment_glsl__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./shaders/clouds/fragment.glsl */ "./client/libs/shaders/clouds/fragment.glsl");
+/* harmony import */ var _shaders_clouds_vertex_glsl__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./shaders/clouds/vertex.glsl */ "./client/libs/shaders/clouds/vertex.glsl");
+/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
+/* harmony import */ var _raw_loader_workers_generate_clouds_worker__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! !raw-loader!./workers/generate-clouds.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/workers/generate-clouds.worker.js");
+
+
+
+
+
+
+
+
+
+const defaultCloudsOptions = {
+    seed: 1024,
+    scale: 0.01,
+    width: 16,
+    height: 3,
+    count: 32,
+    worldHeight: 500,
+    dimension: 10,
+    threshold: 0.3,
+    speed: 4,
+    lerpFactor: 0.7,
+    fogFarFactor: 5,
+    color: '#fff',
+    alpha: 0.85,
+};
+class Clouds {
+    constructor(rendering, options = {}) {
+        this.rendering = rendering;
+        this.options = options;
+        this.meshes = [];
+        this.cloudOffsetCount = 0;
+        this.initialized = false;
+        this.cloudGroup = new three__WEBPACK_IMPORTED_MODULE_8__.Group();
+        this.initialize = async () => {
+            const { count } = this.options;
+            for (let i = 0; i < count; i++) {
+                await this.makeRow(i);
+            }
+            this.rendering.scene.add(this.cloudGroup);
+            this.initialized = true;
+        };
+        this.tick = (delta) => {
+            if (!this.initialized)
+                return;
+            const { speed, lerpFactor, width, count, dimension } = this.options;
+            this.meshes.forEach((mesh) => {
+                const newPosition = mesh.position.clone();
+                newPosition.z -= speed * delta;
+                mesh.position.lerp(newPosition, lerpFactor);
+                if (mesh.position.z <= -(width * count * dimension) / 2) {
+                    this.meshes.shift();
+                    this.cloudGroup.remove(mesh);
+                    this.makeRow(this.cloudOffsetCount);
+                }
+            });
+            const { threeCamera } = this.rendering.engine.camera;
+            this.cloudGroup.position.x = threeCamera.position.x;
+            this.cloudGroup.position.z = threeCamera.position.z;
+        };
+        this.makeRow = async (zOffset) => {
+            const { width, height, scale, threshold, worldHeight, count, seed, dimension } = this.options;
+            const totalWidth = count * width;
+            const paddedTotalWidth = count * width + 2;
+            const array = ndarray__WEBPACK_IMPORTED_MODULE_0___default()(typedarray_pool__WEBPACK_IMPORTED_MODULE_1__.mallocUint8(paddedTotalWidth * height * (width + 2)), [
+                paddedTotalWidth,
+                height,
+                width + 2,
+            ]);
+            const buffer = array.data.buffer.slice(0);
+            const generator = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.loadWorker(_raw_loader_workers_generate_clouds_worker__WEBPACK_IMPORTED_MODULE_7__.default);
+            generator.postMessage({
+                data: buffer,
+                configs: {
+                    seed,
+                    scale,
+                    threshold,
+                    min: [0, 0, zOffset * width],
+                    max: [paddedTotalWidth, height, (zOffset + 1) * width + 2],
+                    stride: array.stride,
+                },
+            }, [buffer]);
+            await new Promise((resolve) => {
+                generator.onmessage = async (e) => {
+                    const newBuffer = new Uint8Array(e.data);
+                    array.data = newBuffer;
+                    const { positions, indices, normals } = await (0,_simple_cull__WEBPACK_IMPORTED_MODULE_6__.simpleCull)(array, {
+                        dimension,
+                        min: [1, 0, 1],
+                        max: [paddedTotalWidth - 1, height, width + 1],
+                        realMin: [0, 0, 0],
+                        realMax: [paddedTotalWidth, height, width + 2],
+                    });
+                    const geometry = new three__WEBPACK_IMPORTED_MODULE_8__.BufferGeometry();
+                    geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_8__.Float32BufferAttribute(positions, 3));
+                    geometry.setAttribute('normal', new three__WEBPACK_IMPORTED_MODULE_8__.Int8BufferAttribute(normals, 3));
+                    geometry.setIndex(Array.from(indices));
+                    const mesh = new three__WEBPACK_IMPORTED_MODULE_8__.Mesh(geometry, this.material);
+                    const previousMesh = this.meshes[this.meshes.length - 1];
+                    const x = (-totalWidth / 2) * dimension;
+                    const z = previousMesh
+                        ? previousMesh.position.z + width * dimension
+                        : (zOffset * width - totalWidth / 2) * dimension;
+                    mesh.position.set(x, worldHeight, z);
+                    this.meshes.push(mesh);
+                    this.cloudGroup.add(mesh);
+                    resolve();
+                };
+            });
+            this.cloudOffsetCount++;
+        };
+        const { worldHeight, fogFarFactor, color, alpha } = (this.options = Object.assign(Object.assign({}, defaultCloudsOptions), options));
+        this.material = new three__WEBPACK_IMPORTED_MODULE_8__.ShaderMaterial({
+            opacity: 0.2,
+            alphaTest: 0.3,
+            transparent: true,
+            vertexShader: _shaders_clouds_vertex_glsl__WEBPACK_IMPORTED_MODULE_5__.default,
+            fragmentShader: _shaders_clouds_fragment_glsl__WEBPACK_IMPORTED_MODULE_4__.default,
+            uniforms: Object.assign(Object.assign({}, rendering.fogUniforms), { uFogNear: {
+                    value: worldHeight,
+                }, uFogFar: {
+                    value: worldHeight * fogFarFactor,
+                }, uCloudColor: {
+                    value: new three__WEBPACK_IMPORTED_MODULE_8__.Color(color),
+                }, uCloudAlpha: {
+                    value: alpha,
+                } }),
+        });
+        this.initialize();
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./client/libs/index.ts":
 /*!******************************!*\
   !*** ./client/libs/index.ts ***!
@@ -5288,19 +5451,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "AABB": () => (/* reexport safe */ _aabb__WEBPACK_IMPORTED_MODULE_0__.AABB),
 /* harmony export */   "Brain": () => (/* reexport safe */ _brain__WEBPACK_IMPORTED_MODULE_1__.Brain),
 /* harmony export */   "Clock": () => (/* reexport safe */ _clock__WEBPACK_IMPORTED_MODULE_2__.Clock),
-/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_3__.Physics),
-/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_4__.RigidBody),
-/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_5__.Sky),
-/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_7__.VoxelOctree)
+/* harmony export */   "Clouds": () => (/* reexport safe */ _clouds__WEBPACK_IMPORTED_MODULE_3__.Clouds),
+/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_4__.Physics),
+/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_5__.RigidBody),
+/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_6__.simpleCull),
+/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_7__.Sky),
+/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_9__.VoxelOctree)
 /* harmony export */ });
 /* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 /* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
 /* harmony import */ var _clock__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./clock */ "./client/libs/clock.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
-/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
-/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
+/* harmony import */ var _clouds__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./clouds */ "./client/libs/clouds.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
+/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
+/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
+
+
 
 
 
@@ -5683,6 +5852,67 @@ class RigidBody {
     get atRestZ() {
         return this.resting[2];
     }
+}
+
+
+
+/***/ }),
+
+/***/ "./client/libs/simple-cull.ts":
+/*!************************************!*\
+  !*** ./client/libs/simple-cull.ts ***!
+  \************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "simpleCull": () => (/* binding */ simpleCull)
+/* harmony export */ });
+/* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ndarray */ "./node_modules/ndarray/ndarray.js");
+/* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(ndarray__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _raw_loader_workers_simple_cull_worker__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! !raw-loader!./workers/simple-cull.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/workers/simple-cull.worker.js");
+
+
+
+
+
+const DEFAULT_WORKER_COUNT = 20;
+const workers = [];
+async function simpleCull(array, options) {
+    const { stride, data } = array;
+    const { dimension, min, max, realMin, realMax } = options;
+    const voxelsBuffer = data.buffer.slice(0);
+    const worker = workers.pop() || _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.loadWorker(_raw_loader_workers_simple_cull_worker__WEBPACK_IMPORTED_MODULE_4__.default);
+    const result = await new Promise((resolve) => {
+        worker.postMessage({
+            data: voxelsBuffer,
+            configs: {
+                min,
+                max,
+                realMin,
+                realMax,
+                dimension,
+                stride,
+            },
+        }, [voxelsBuffer]);
+        worker.onmessage = ({ data }) => {
+            const { positions, normals, indices } = data;
+            resolve({
+                positions: new Float32Array(positions),
+                normals: new Float32Array(normals),
+                indices: new Float32Array(indices),
+            });
+        };
+    });
+    //? DEBATABLE
+    if (workers.length < DEFAULT_WORKER_COUNT) {
+        workers.push(worker);
+    }
+    return result;
 }
 
 
@@ -20948,6 +21178,36 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./client/libs/shaders/clouds/fragment.glsl":
+/*!**************************************************!*\
+  !*** ./client/libs/shaders/clouds/fragment.glsl ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform vec3 uFogColor;\nuniform vec3 uFogNearColor;\nuniform vec3 uCloudColor;\nuniform float uFogNear;\nuniform float uFogFar;\nuniform float uCloudAlpha;\n\nvoid main() {\n  gl_FragColor = vec4(uCloudColor, uCloudAlpha);\n\n  // fog\n  float depth = gl_FragCoord.z / gl_FragCoord.w;\n  float fogFactor = smoothstep(uFogNear, uFogFar, depth);\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);\n}");
+
+/***/ }),
+
+/***/ "./client/libs/shaders/clouds/vertex.glsl":
+/*!************************************************!*\
+  !*** ./client/libs/shaders/clouds/vertex.glsl ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform float uTime;\n\nvarying vec3 vWorldPosition;\n\nvoid main() {\n  vec4 worldPosition = modelMatrix * vec4(position, 1.0);\n\tvWorldPosition = worldPosition.xyz;\n\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, position.z + uTime / 300.0, 1.0);\n}");
+
+/***/ }),
+
 /***/ "./client/libs/shaders/sky/fragment.glsl":
 /*!***********************************************!*\
   !*** ./client/libs/shaders/sky/fragment.glsl ***!
@@ -20975,6 +21235,36 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("varying vec3 vWorldPosition;\n\nvoid main() {\n  vec4 worldPosition = modelMatrix * vec4( position, 1.0 );\n\tvWorldPosition = worldPosition.xyz;\n\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}");
+
+/***/ }),
+
+/***/ "./node_modules/raw-loader/dist/cjs.js!./client/libs/workers/generate-clouds.worker.js":
+/*!*********************************************************************************************!*\
+  !*** ./node_modules/raw-loader/dist/cjs.js!./client/libs/workers/generate-clouds.worker.js ***!
+  \*********************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("importScripts('https://cdn.jsdelivr.net/npm/noisejs@2.1.0/index.min.js');\n\nfunction set(arr, x, y, z, stride, value) {\n  arr[x * stride[0] + y * stride[1] + z * stride[2]] = value;\n}\n\nconst noise = new Noise();\n\nonmessage = function (e) {\n  const {\n    data: dataBuffer,\n    configs: { min, max, seed, scale, threshold, stride },\n  } = e.data;\n\n  noise.seed(seed);\n\n  const data = new Uint8Array(dataBuffer);\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {\n    for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {\n      for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {\n        const value = Math.abs(noise.simplex3(vx * scale, vy * scale, vz * scale)) > threshold ? 1 : 0;\n        set(data, lx, ly, lz, stride, value);\n      }\n    }\n  }\n\n  postMessage(data.buffer, [data.buffer]);\n};\n");
+
+/***/ }),
+
+/***/ "./node_modules/raw-loader/dist/cjs.js!./client/libs/workers/simple-cull.worker.js":
+/*!*****************************************************************************************!*\
+  !*** ./node_modules/raw-loader/dist/cjs.js!./client/libs/workers/simple-cull.worker.js ***!
+  \*****************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("const FACES = [\n  {\n    // left\n    dir: [-1, 0, 0],\n    corners: [\n      [0, 1, 0],\n      [0, 0, 0],\n      [0, 1, 1],\n      [0, 0, 1],\n    ],\n  },\n  {\n    // right\n    dir: [1, 0, 0],\n    corners: [\n      [1, 1, 1],\n      [1, 0, 1],\n      [1, 1, 0],\n      [1, 0, 0],\n    ],\n  },\n  {\n    // bottom\n    dir: [0, -1, 0],\n    corners: [\n      [1, 0, 1],\n      [0, 0, 1],\n      [1, 0, 0],\n      [0, 0, 0],\n    ],\n  },\n  {\n    // top\n    dir: [0, 1, 0],\n    corners: [\n      [0, 1, 1],\n      [1, 1, 1],\n      [0, 1, 0],\n      [1, 1, 0],\n    ],\n  },\n  {\n    // back\n    dir: [0, 0, -1],\n    corners: [\n      [1, 0, 0],\n      [0, 0, 0],\n      [1, 1, 0],\n      [0, 1, 0],\n    ],\n  },\n  {\n    // front\n    dir: [0, 0, 1],\n    corners: [\n      [0, 0, 1],\n      [1, 0, 1],\n      [0, 1, 1],\n      [1, 1, 1],\n    ],\n  },\n];\n\nfunction get(arr, x, y, z, stride) {\n  return arr[x * stride[0] + y * stride[1] + z * stride[2]];\n}\n\nfunction contains(voxel, min, max) {\n  const [sx, sy, sz] = min;\n  const [ex, ey, ez] = max;\n  const [vx, vy, vz] = voxel;\n  return vx < ex && vx >= sx && vy < ey && vy >= sy && vz < ez && vz >= sz;\n}\n\nonmessage = function (e) {\n  const {\n    data: dataBuffer,\n    configs: { dimension, min, max, realMin, realMax, stride },\n  } = e.data;\n\n  const data = new Uint8Array(dataBuffer);\n\n  const positions = [];\n  const normals = [];\n  const indices = [];\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  for (let vx = startX; vx < endX; ++vx) {\n    for (let vz = startZ; vz < endZ; ++vz) {\n      for (let vy = startY; vy < endY; ++vy) {\n        const voxel = get(data, vx, vy, vz, stride);\n\n        if (voxel) {\n          // There is a voxel here but do we need faces for it?\n          for (const { dir, corners } of FACES) {\n            const nvx = vx + dir[0];\n            const nvy = vy + dir[1];\n            const nvz = vz + dir[2];\n\n            const nVoxel = [vx + dir[0], vy + dir[1], vz + dir[2]];\n\n            const neighbor = get(data, nvx, nvy, nvz, stride);\n\n            if (!neighbor || !contains(nVoxel, realMin, realMax)) {\n              // this voxel has no neighbor in this direction so we need a face.\n              const ndx = positions.length / 3;\n\n              for (const pos of corners) {\n                const posX = pos[0] + vx;\n                const posY = pos[1] + vy;\n                const posZ = pos[2] + vz;\n\n                positions.push(posX * dimension, posY * dimension, posZ * dimension);\n                normals.push(...dir);\n              }\n\n              indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);\n            }\n          }\n        }\n      }\n    }\n  }\n\n  const positionsArrayBuffer = new Float32Array(positions).buffer;\n  const normalsArrayBuffer = new Float32Array(normals).buffer;\n  const indicesArrayBuffer = new Float32Array(indices).buffer;\n\n  postMessage(\n    {\n      positions: positionsArrayBuffer,\n      normals: normalsArrayBuffer,\n      indices: indicesArrayBuffer,\n    },\n    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer],\n  );\n};\n");
 
 /***/ }),
 

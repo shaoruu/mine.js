@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 
 import merge from 'deepmerge';
+import { ShaderChunk } from 'three';
 
 import { Clock, DeepPartial } from '../libs';
 
@@ -26,6 +27,34 @@ import {
   World,
   WorldOptionsType,
 } from '.';
+
+ShaderChunk.fog_pars_vertex = ShaderChunk.fog_pars_vertex.replace(
+  'varying float fogDepth;',
+  'varying vec3 vViewPosition;',
+);
+
+ShaderChunk.fog_vertex = ShaderChunk.fog_vertex.replace(
+  'fogDepth = - mvPosition.z;',
+  'vViewPosition = - mvPosition.xyz;',
+);
+
+ShaderChunk.fog_pars_fragment = ShaderChunk.fog_pars_fragment.replace(
+  'varying float fogDepth;',
+  'varying vec3 vViewPosition;',
+);
+
+ShaderChunk.fog_fragment = ShaderChunk.fog_fragment
+  .replace('#ifdef USE_FOG', ['#ifdef USE_FOG', '  float fogDepth = length(vViewPosition);'].join('\n'))
+  .replace(
+    'float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );',
+    [
+      '#ifdef FOG_DENSITY',
+      '  float fogFactor = 1.0 - exp( - FOG_DENSITY * FOG_DENSITY * fogDepth * fogDepth );',
+      '#else',
+      '  float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );',
+      '#endif',
+    ].join('\n'),
+  );
 
 type ConfigType = {
   debug: boolean;
@@ -149,11 +178,11 @@ class Engine extends EventEmitter {
     // container
     this.container = new Container(this, container);
 
-    // registry
-    this.registry = new Registry(this, registry);
-
     // rendering
     this.rendering = new Rendering(this, rendering);
+
+    // registry
+    this.registry = new Registry(this, registry);
 
     // inputs
     this.inputs = new Inputs(this);

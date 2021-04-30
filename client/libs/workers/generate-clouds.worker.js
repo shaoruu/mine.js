@@ -1,0 +1,32 @@
+importScripts('https://cdn.jsdelivr.net/npm/noisejs@2.1.0/index.min.js');
+
+function set(arr, x, y, z, stride, value) {
+  arr[x * stride[0] + y * stride[1] + z * stride[2]] = value;
+}
+
+const noise = new Noise();
+
+onmessage = function (e) {
+  const {
+    data: dataBuffer,
+    configs: { min, max, seed, scale, threshold, stride },
+  } = e.data;
+
+  noise.seed(seed);
+
+  const data = new Uint8Array(dataBuffer);
+
+  const [startX, startY, startZ] = min;
+  const [endX, endY, endZ] = max;
+
+  for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {
+    for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {
+      for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {
+        const value = Math.abs(noise.simplex3(vx * scale, vy * scale, vz * scale)) > threshold ? 1 : 0;
+        set(data, lx, ly, lz, stride, value);
+      }
+    }
+  }
+
+  postMessage(data.buffer, [data.buffer]);
+};
