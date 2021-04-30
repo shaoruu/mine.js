@@ -5,7 +5,7 @@ import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry }
 
 import { Helper } from '../utils';
 
-import { Engine, Registry } from '.';
+import { Engine } from '.';
 
 class Debug {
   public gui: dat.GUI;
@@ -104,19 +104,6 @@ class Debug {
 
     const renderingFolder = this.gui.addFolder('rendering');
     renderingFolder
-      .add(rendering.sky.options, 'domeOffset', 200, 2000, 10)
-      // @ts-ignore
-      .onChange((value) => (rendering.sky.material.uniforms.offset.value = value));
-
-    renderingFolder
-      .addColor(rendering.sky.options, 'topColor')
-      // @ts-ignore
-      .onFinishChange((value) => rendering.sky.material.uniforms.topColor.value.set(value));
-    renderingFolder
-      .addColor(rendering.sky.options, 'bottomColor')
-      // @ts-ignore
-      .onFinishChange((value) => rendering.sky.material.uniforms.bottomColor.value.set(value));
-    renderingFolder
       .addColor(rendering.options, 'clearColor')
       .onFinishChange((value) => rendering.renderer.setClearColor(value));
 
@@ -128,6 +115,20 @@ class Debug {
       registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
       registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
     });
+
+    worldFolder
+      .add(world.sky.options, 'domeOffset', 200, 2000, 10)
+      // @ts-ignore
+      .onChange((value) => (world.sky.material.uniforms.offset.value = value));
+    worldFolder
+      .addColor(world.sky.options, 'topColor')
+      // @ts-ignore
+      .onFinishChange((value) => world.sky.material.uniforms.topColor.value.set(value));
+    worldFolder
+      .addColor(world.sky.options, 'bottomColor')
+      // @ts-ignore
+      .onFinishChange((value) => world.sky.material.uniforms.bottomColor.value.set(value));
+
     this.registerDisplay('chunk', world, 'camChunkPosStr');
 
     // PLAYER

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 
 import { Coords2, Coords3 } from '../../shared';
-import { AABB, ServerChunkType } from '../libs';
+import { AABB, Clouds, ServerChunkType, Sky } from '../libs';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
@@ -21,6 +21,9 @@ type WorldOptionsType = {
 class World extends EventEmitter {
   public isReady = false;
 
+  public sky: Sky;
+  public clouds: Clouds;
+
   private camChunkName: string;
   private camChunkPos: Coords2;
 
@@ -32,12 +35,16 @@ class World extends EventEmitter {
 
   constructor(public engine: Engine, public options: WorldOptionsType) {
     super();
+
+    this.sky = new Sky(engine.rendering);
+    this.clouds = new Clouds(engine.rendering);
   }
 
   tick() {
     this.checkCamChunk();
     this.requestChunks();
     this.meshChunks();
+    this.animateSky();
   }
 
   getChunkByCPos(cCoords: Coords2) {
@@ -300,6 +307,11 @@ class World extends EventEmitter {
       }
       chunk.addToScene();
     });
+  }
+
+  private animateSky() {
+    const { delta } = this.engine.clock;
+    this.clouds.tick(delta);
   }
 }
 

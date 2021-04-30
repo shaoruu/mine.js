@@ -3673,18 +3673,6 @@ class Debug {
             const { options: { chunkSize, dimension }, } = world;
             const renderingFolder = this.gui.addFolder('rendering');
             renderingFolder
-                .add(rendering.sky.options, 'domeOffset', 200, 2000, 10)
-                // @ts-ignore
-                .onChange((value) => (rendering.sky.material.uniforms.offset.value = value));
-            renderingFolder
-                .addColor(rendering.sky.options, 'topColor')
-                // @ts-ignore
-                .onFinishChange((value) => rendering.sky.material.uniforms.topColor.value.set(value));
-            renderingFolder
-                .addColor(rendering.sky.options, 'bottomColor')
-                // @ts-ignore
-                .onFinishChange((value) => rendering.sky.material.uniforms.bottomColor.value.set(value));
-            renderingFolder
                 .addColor(rendering.options, 'clearColor')
                 .onFinishChange((value) => rendering.renderer.setClearColor(value));
             renderingFolder.open();
@@ -3694,6 +3682,18 @@ class Debug {
                 registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
                 registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
             });
+            worldFolder
+                .add(world.sky.options, 'domeOffset', 200, 2000, 10)
+                // @ts-ignore
+                .onChange((value) => (world.sky.material.uniforms.offset.value = value));
+            worldFolder
+                .addColor(world.sky.options, 'topColor')
+                // @ts-ignore
+                .onFinishChange((value) => world.sky.material.uniforms.topColor.value.set(value));
+            worldFolder
+                .addColor(world.sky.options, 'bottomColor')
+                // @ts-ignore
+                .onFinishChange((value) => world.sky.material.uniforms.bottomColor.value.set(value));
             this.registerDisplay('chunk', world, 'camChunkPosStr');
             // PLAYER
             const playerFolder = this.gui.addFolder('player');
@@ -4642,14 +4642,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! events */ "./node_modules/events/events.js");
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var three_examples_jsm_postprocessing_EffectComposer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three/examples/jsm/postprocessing/EffectComposer */ "./node_modules/three/examples/jsm/postprocessing/EffectComposer.js");
-/* harmony import */ var three_examples_jsm_postprocessing_RenderPass__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! three/examples/jsm/postprocessing/RenderPass */ "./node_modules/three/examples/jsm/postprocessing/RenderPass.js");
-/* harmony import */ var three_examples_jsm_postprocessing_ShaderPass__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three/examples/jsm/postprocessing/ShaderPass */ "./node_modules/three/examples/jsm/postprocessing/ShaderPass.js");
-/* harmony import */ var three_examples_jsm_shaders_FXAAShader__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! three/examples/jsm/shaders/FXAAShader */ "./node_modules/three/examples/jsm/shaders/FXAAShader.js");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three_examples_jsm_postprocessing_EffectComposer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three/examples/jsm/postprocessing/EffectComposer */ "./node_modules/three/examples/jsm/postprocessing/EffectComposer.js");
+/* harmony import */ var three_examples_jsm_postprocessing_RenderPass__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! three/examples/jsm/postprocessing/RenderPass */ "./node_modules/three/examples/jsm/postprocessing/RenderPass.js");
+/* harmony import */ var three_examples_jsm_postprocessing_ShaderPass__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three/examples/jsm/postprocessing/ShaderPass */ "./node_modules/three/examples/jsm/postprocessing/ShaderPass.js");
+/* harmony import */ var three_examples_jsm_shaders_FXAAShader__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three/examples/jsm/shaders/FXAAShader */ "./node_modules/three/examples/jsm/shaders/FXAAShader.js");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
@@ -4673,7 +4671,6 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.fxaa.material.uniforms['resolution'].value.y = 1 / (height * pixelRatio);
         };
         this.tick = () => {
-            this.clouds.tick(this.engine.clock.delta);
             // this.sky.position.copy(this.engine.camera.controls.getObject().position);
         };
         this.render = () => {
@@ -4681,48 +4678,43 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         };
         const { fogColor, fogNearColor, clearColor } = options;
         // three.js scene
-        this.scene = new three__WEBPACK_IMPORTED_MODULE_3__.Scene();
+        this.scene = new three__WEBPACK_IMPORTED_MODULE_2__.Scene();
         // renderer
-        this.renderer = new three__WEBPACK_IMPORTED_MODULE_3__.WebGLRenderer({
+        this.renderer = new three__WEBPACK_IMPORTED_MODULE_2__.WebGLRenderer({
             powerPreference: 'high-performance',
             stencil: false,
             depth: false,
             canvas: this.engine.container.canvas,
         });
-        this.renderer.setClearColor(new three__WEBPACK_IMPORTED_MODULE_3__.Color(clearColor));
-        this.renderer.outputEncoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
+        this.renderer.setClearColor(new three__WEBPACK_IMPORTED_MODULE_2__.Color(clearColor));
+        this.renderer.outputEncoding = three__WEBPACK_IMPORTED_MODULE_2__.sRGBEncoding;
         // composer
         const { width, height } = this.renderSize;
-        const renderTarget = new three__WEBPACK_IMPORTED_MODULE_3__.WebGLRenderTarget(width, height, {
-            minFilter: three__WEBPACK_IMPORTED_MODULE_3__.LinearFilter,
-            magFilter: three__WEBPACK_IMPORTED_MODULE_3__.LinearFilter,
-            format: three__WEBPACK_IMPORTED_MODULE_3__.RGBAFormat,
-            type: three__WEBPACK_IMPORTED_MODULE_3__.FloatType,
+        const renderTarget = new three__WEBPACK_IMPORTED_MODULE_2__.WebGLRenderTarget(width, height, {
+            minFilter: three__WEBPACK_IMPORTED_MODULE_2__.LinearFilter,
+            magFilter: three__WEBPACK_IMPORTED_MODULE_2__.LinearFilter,
+            format: three__WEBPACK_IMPORTED_MODULE_2__.RGBAFormat,
+            type: three__WEBPACK_IMPORTED_MODULE_2__.FloatType,
         });
         renderTarget.stencilBuffer = false;
         renderTarget.depthBuffer = true;
         // @ts-ignore
-        renderTarget.depthTexture = new three__WEBPACK_IMPORTED_MODULE_3__.DepthTexture();
-        renderTarget.depthTexture.format = three__WEBPACK_IMPORTED_MODULE_3__.DepthFormat;
-        renderTarget.depthTexture.type = three__WEBPACK_IMPORTED_MODULE_3__.UnsignedIntType;
-        this.composer = new three_examples_jsm_postprocessing_EffectComposer__WEBPACK_IMPORTED_MODULE_4__.EffectComposer(this.renderer, renderTarget);
+        renderTarget.depthTexture = new three__WEBPACK_IMPORTED_MODULE_2__.DepthTexture();
+        renderTarget.depthTexture.format = three__WEBPACK_IMPORTED_MODULE_2__.DepthFormat;
+        renderTarget.depthTexture.type = three__WEBPACK_IMPORTED_MODULE_2__.UnsignedIntType;
+        this.composer = new three_examples_jsm_postprocessing_EffectComposer__WEBPACK_IMPORTED_MODULE_3__.EffectComposer(this.renderer, renderTarget);
         // fog
         const { renderRadius, chunkSize, dimension } = this.engine.config.world;
         this.fogUniforms = {
-            uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(fogColor) },
-            uFogNearColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(fogNearColor) },
+            uFogColor: { value: new three__WEBPACK_IMPORTED_MODULE_2__.Color(fogColor) },
+            uFogNearColor: { value: new three__WEBPACK_IMPORTED_MODULE_2__.Color(fogNearColor) },
             uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
             uFogFar: { value: renderRadius * chunkSize * dimension },
         };
-        // sky
-        this.sky = new _libs__WEBPACK_IMPORTED_MODULE_1__.Sky();
-        this.scene.add(this.sky.mesh);
-        // clouds
-        this.clouds = new _libs__WEBPACK_IMPORTED_MODULE_1__.Clouds(this);
         engine.on('ready', () => {
             // add postprocessing
-            this.fxaa = new three_examples_jsm_postprocessing_ShaderPass__WEBPACK_IMPORTED_MODULE_5__.ShaderPass(three_examples_jsm_shaders_FXAAShader__WEBPACK_IMPORTED_MODULE_6__.FXAAShader);
-            this.composer.addPass(new three_examples_jsm_postprocessing_RenderPass__WEBPACK_IMPORTED_MODULE_7__.RenderPass(this.scene, engine.camera.threeCamera));
+            this.fxaa = new three_examples_jsm_postprocessing_ShaderPass__WEBPACK_IMPORTED_MODULE_4__.ShaderPass(three_examples_jsm_shaders_FXAAShader__WEBPACK_IMPORTED_MODULE_5__.FXAAShader);
+            this.composer.addPass(new three_examples_jsm_postprocessing_RenderPass__WEBPACK_IMPORTED_MODULE_6__.RenderPass(this.scene, engine.camera.threeCamera));
             this.composer.addPass(this.fxaa);
             // this.composer.addPass(new ShaderPass());
             this.adjustRenderer();
@@ -4777,11 +4769,14 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.receivedChunks = [];
         this.chunks = new Map();
         this.visibleChunks = [];
+        this.sky = new _libs__WEBPACK_IMPORTED_MODULE_2__.Sky(engine.rendering);
+        this.clouds = new _libs__WEBPACK_IMPORTED_MODULE_2__.Clouds(engine.rendering);
     }
     tick() {
         this.checkCamChunk();
         this.requestChunks();
         this.meshChunks();
+        this.animateSky();
     }
     getChunkByCPos(cCoords) {
         return this.getChunkByName(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(cCoords));
@@ -5004,6 +4999,10 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             }
             chunk.addToScene();
         });
+    }
+    animateSky() {
+        const { delta } = this.engine.clock;
+        this.clouds.tick(delta);
     }
 }
 
@@ -5930,9 +5929,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Sky": () => (/* binding */ Sky)
 /* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./shaders/sky/fragment.glsl */ "./client/libs/shaders/sky/fragment.glsl");
-/* harmony import */ var _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shaders/sky/vertex.glsl */ "./client/libs/shaders/sky/vertex.glsl");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core */ "./client/core/index.ts");
+/* harmony import */ var _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shaders/sky/fragment.glsl */ "./client/libs/shaders/sky/fragment.glsl");
+/* harmony import */ var _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shaders/sky/vertex.glsl */ "./client/libs/shaders/sky/vertex.glsl");
+
 
 
 
@@ -5945,22 +5946,24 @@ const defaultSkyOptions = {
     bottomColor: '#000',
 };
 class Sky {
-    constructor(options = {}) {
+    constructor(rendering, options = {}) {
+        this.rendering = rendering;
         const { dimension, topColor, bottomColor, domeOffset } = (this.options = Object.assign(Object.assign({}, defaultSkyOptions), options));
         const uniforms = {
-            topColor: { value: new three__WEBPACK_IMPORTED_MODULE_2__.Color(topColor) },
-            bottomColor: { value: new three__WEBPACK_IMPORTED_MODULE_2__.Color(bottomColor) },
+            topColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor) },
+            bottomColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(bottomColor) },
             offset: { value: domeOffset },
             exponent: { value: 0.6 },
         };
-        this.geometry = new three__WEBPACK_IMPORTED_MODULE_2__.SphereGeometry(dimension);
-        this.material = new three__WEBPACK_IMPORTED_MODULE_2__.ShaderMaterial({
+        this.geometry = new three__WEBPACK_IMPORTED_MODULE_3__.SphereGeometry(dimension);
+        this.material = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
             uniforms,
-            vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
-            fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_0__.default,
-            side: three__WEBPACK_IMPORTED_MODULE_2__.BackSide,
+            vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
+            fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
+            side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
         });
-        this.mesh = new three__WEBPACK_IMPORTED_MODULE_2__.Mesh(this.geometry, this.material);
+        this.mesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.geometry, this.material);
+        rendering.scene.add(this.mesh);
     }
 }
 

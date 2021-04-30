@@ -18,8 +18,6 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
 
-import { Sky, Clouds } from '../libs';
-
 import { Engine } from './engine';
 
 type RenderingOptionsType = {
@@ -32,8 +30,6 @@ class Rendering extends EventEmitter {
   public scene: Scene;
   public renderer: WebGLRenderer;
   public composer: EffectComposer;
-  public sky: Sky;
-  public clouds: Clouds;
   public fxaa: ShaderPass;
   public noColorMateria;
   public fogUniforms: { [key: string]: { value: number | Color } };
@@ -82,13 +78,6 @@ class Rendering extends EventEmitter {
       uFogFar: { value: renderRadius * chunkSize * dimension },
     };
 
-    // sky
-    this.sky = new Sky();
-    this.scene.add(this.sky.mesh);
-
-    // clouds
-    this.clouds = new Clouds(this);
-
     engine.on('ready', () => {
       // add postprocessing
 
@@ -117,7 +106,6 @@ class Rendering extends EventEmitter {
   };
 
   tick = () => {
-    this.clouds.tick(this.engine.clock.delta);
     // this.sky.position.copy(this.engine.camera.controls.getObject().position);
   };
 

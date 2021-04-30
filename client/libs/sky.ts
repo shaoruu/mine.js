@@ -1,5 +1,7 @@
 import { BackSide, Color, Mesh, ShaderMaterial, SphereGeometry } from 'three';
 
+import { Rendering } from '../core';
+
 import SkyFragmentShader from './shaders/sky/fragment.glsl';
 import SkyVertexShader from './shaders/sky/vertex.glsl';
 
@@ -27,7 +29,7 @@ class Sky {
 
   public mesh: Mesh;
 
-  constructor(options: Partial<SkyOptionsType> = {}) {
+  constructor(public rendering: Rendering, options: Partial<SkyOptionsType> = {}) {
     const { dimension, topColor, bottomColor, domeOffset } = (this.options = {
       ...defaultSkyOptions,
       ...options,
@@ -49,6 +51,8 @@ class Sky {
     });
 
     this.mesh = new Mesh(this.geometry, this.material);
+
+    rendering.scene.add(this.mesh);
   }
 }
 
