@@ -34,7 +34,7 @@ class World extends EventEmitter {
   private requestedChunks: Set<string> = new Set();
   private receivedChunks: ServerChunkType[] = [];
   private chunks: Map<string, Chunk> = new Map();
-  private visibleChunks: Chunk[] = [];
+  private visibleChunks: Set<Chunk> = new Set();
 
   constructor(public engine: Engine, public options: WorldOptionsType) {
     super();
@@ -131,6 +131,7 @@ class World extends EventEmitter {
   }
 
   setChunk(chunk: Chunk) {
+    // TODO: remove chunks that are too far away
     return this.chunks.set(chunk.name, chunk);
   }
 
@@ -169,11 +170,22 @@ class World extends EventEmitter {
   }
 
   addAsVisible(chunk: Chunk) {
-    this.visibleChunks.push(chunk);
+    this.visibleChunks.add(chunk);
   }
 
   removeAsVisible(chunk: Chunk) {
-    this.visibleChunks.splice(this.visibleChunks.indexOf(chunk), 1);
+    this.visibleChunks.delete(chunk);
+  }
+
+  setRenderRadius(renderRadiuus: number) {
+    const { registry } = this.engine;
+    const { chunkSize, dimension } = this.options;
+
+    registry.opaqueChunkMaterial.uniforms.uFogNear.value = renderRadiuus * 0.6 * chunkSize * dimension;
+    registry.opaqueChunkMaterial.uniforms.uFogFar.value = renderRadiuus * chunkSize * dimension;
+
+    this.checkCamChunk();
+    this.surroundCamChunks();
   }
 
   get camChunkPosStr() {
@@ -253,8 +265,6 @@ class World extends EventEmitter {
     for (const chunk of this.visibleChunks) {
       if (chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
         chunk.removeFromScene();
-        chunk.dispose();
-        this.chunks.delete(chunk.name);
       }
     }
   }
@@ -299,16 +309,12 @@ class World extends EventEmitter {
         this.setChunk(chunk);
       }
 
-      const { meshes, voxels, json } = serverChunk;
+      const { meshes, voxels } = serverChunk;
 
-      chunk.removeFromScene();
       chunk.setupMesh(meshes);
       if (voxels.length) {
         chunk.voxels.data = new Uint8Array(serverChunk.voxels);
-      } else if (json) {
-        console.log(json);
       }
-      chunk.addToScene();
     });
   }
 

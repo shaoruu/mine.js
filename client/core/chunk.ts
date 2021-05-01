@@ -85,7 +85,7 @@ class Chunk {
 
   distTo(vx: number, _: number, vz: number) {
     const [mx, , mz] = this.min;
-    return Math.sqrt((mx + this.size / 2 - vx) * (mx + this.size / 2 - vx) + (mz + this.size / 2 - vz) * (mz - vz));
+    return Math.sqrt((mx + this.size / 2 - vx) ** 2 + (mz + this.size / 2 - vz) ** 2);
   }
 
   addToScene() {

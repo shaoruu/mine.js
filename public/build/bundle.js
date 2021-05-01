@@ -3482,7 +3482,7 @@ class Chunk {
     }
     distTo(vx, _, vz) {
         const [mx, , mz] = this.min;
-        return Math.sqrt((mx + this.size / 2 - vx) * (mx + this.size / 2 - vx) + (mz + this.size / 2 - vz) * (mz - vz));
+        return Math.sqrt((mx + this.size / 2 - vx) ** 2 + (mz + this.size / 2 - vz) ** 2);
     }
     addToScene() {
         const { rendering, world } = this.engine;
@@ -3670,7 +3670,6 @@ class Debug {
         this.setupAll = () => {
             // RENDERING
             const { rendering, registry, player, camera, world } = this.engine;
-            const { options: { chunkSize, dimension }, } = world;
             const renderingFolder = this.gui.addFolder('Rendering');
             renderingFolder
                 .addColor(rendering.options, 'clearColor')
@@ -3687,10 +3686,9 @@ class Debug {
             // WORLD
             const worldFolder = this.gui.addFolder('World');
             worldFolder
-                .add(world.options, 'renderRadius', 1, 10, 1)
+                .add(world.options, 'renderRadius', 1, 20, 1)
                 .onFinishChange((value) => {
-                registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
-                registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
+                world.setRenderRadius(value);
             })
                 .name('Render radius');
             worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01).name('Sunlight intensity');
@@ -3854,8 +3852,8 @@ const defaultConfig = {
         flyingInertia: 3,
         reachDistance: 32,
         lookBlockScale: 1.002,
-        lookBlockLerp: 0.9,
-        lookBlockColor: '#333',
+        lookBlockLerp: 0.7,
+        lookBlockColor: '#bbb',
         distToGround: 1.6,
         distToTop: 0.2,
         bodyWidth: 0.6,
@@ -4451,11 +4449,11 @@ class Player {
             // register camera as entity      // set up look block mesh
             const { dimension } = config.world;
             this.addCamEntity();
-            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.LineSegments(new three__WEBPACK_IMPORTED_MODULE_4__.EdgesGeometry(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale)), new three__WEBPACK_IMPORTED_MODULE_4__.LineBasicMaterial({
-                opacity: 0.3,
-                transparent: true,
+            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
                 color: lookBlockColor,
-                linewidth: 4,
+                alphaTest: 0.2,
+                opacity: 0.2,
+                transparent: true,
             }));
             this.lookBlockMesh.renderOrder = 100000;
             rendering.scene.add(this.lookBlockMesh);
@@ -4788,7 +4786,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.requestedChunks = new Set();
         this.receivedChunks = [];
         this.chunks = new Map();
-        this.visibleChunks = [];
+        this.visibleChunks = new Set();
         this.sky = new _libs__WEBPACK_IMPORTED_MODULE_2__.Sky(engine.rendering);
         this.clouds = new _libs__WEBPACK_IMPORTED_MODULE_2__.Clouds(engine.rendering);
     }
@@ -4874,6 +4872,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.receivedChunks.push(serverChunk);
     }
     setChunk(chunk) {
+        // TODO: remove chunks that are too far away
         return this.chunks.set(chunk.name, chunk);
     }
     setVoxel(voxel, type) {
@@ -4905,10 +4904,18 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         }
     }
     addAsVisible(chunk) {
-        this.visibleChunks.push(chunk);
+        this.visibleChunks.add(chunk);
     }
     removeAsVisible(chunk) {
-        this.visibleChunks.splice(this.visibleChunks.indexOf(chunk), 1);
+        this.visibleChunks.delete(chunk);
+    }
+    setRenderRadius(renderRadiuus) {
+        const { registry } = this.engine;
+        const { chunkSize, dimension } = this.options;
+        registry.opaqueChunkMaterial.uniforms.uFogNear.value = renderRadiuus * 0.6 * chunkSize * dimension;
+        registry.opaqueChunkMaterial.uniforms.uFogFar.value = renderRadiuus * chunkSize * dimension;
+        this.checkCamChunk();
+        this.surroundCamChunks();
     }
     get camChunkPosStr() {
         return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
@@ -4968,8 +4975,6 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         for (const chunk of this.visibleChunks) {
             if (chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
                 chunk.removeFromScene();
-                chunk.dispose();
-                this.chunks.delete(chunk.name);
             }
         }
     }
@@ -5008,16 +5013,11 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                 chunk = new _chunk__WEBPACK_IMPORTED_MODULE_4__.Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
                 this.setChunk(chunk);
             }
-            const { meshes, voxels, json } = serverChunk;
-            chunk.removeFromScene();
+            const { meshes, voxels } = serverChunk;
             chunk.setupMesh(meshes);
             if (voxels.length) {
                 chunk.voxels.data = new Uint8Array(serverChunk.voxels);
             }
-            else if (json) {
-                console.log(json);
-            }
-            chunk.addToScene();
         });
     }
     animateSky() {

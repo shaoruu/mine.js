@@ -1,5 +1,5 @@
 import raycast from 'fast-voxel-raycast';
-import { BoxBufferGeometry, EdgesGeometry, Vector3, LineBasicMaterial, LineSegments } from 'three';
+import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Vector3 } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
 import { Coords3, Helper } from '../../shared';
@@ -40,7 +40,7 @@ class Player {
     front: false,
     back: false,
   };
-  private lookBlockMesh: LineSegments;
+  private lookBlockMesh: Mesh;
   private godMode = false;
 
   constructor(public engine: Engine, public options: PlayerOptionsType) {
@@ -63,15 +63,13 @@ class Player {
       const { dimension } = config.world;
       this.addCamEntity();
 
-      this.lookBlockMesh = new LineSegments(
-        new EdgesGeometry(
-          new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
-        ),
-        new LineBasicMaterial({
-          opacity: 0.3,
-          transparent: true,
+      this.lookBlockMesh = new Mesh(
+        new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
+        new MeshBasicMaterial({
           color: lookBlockColor,
-          linewidth: 4,
+          alphaTest: 0.2,
+          opacity: 0.2,
+          transparent: true,
         }),
       );
       this.lookBlockMesh.renderOrder = 100000;

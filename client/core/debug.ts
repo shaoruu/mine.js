@@ -100,9 +100,6 @@ class Debug {
   setupAll = () => {
     // RENDERING
     const { rendering, registry, player, camera, world } = this.engine;
-    const {
-      options: { chunkSize, dimension },
-    } = world;
 
     const renderingFolder = this.gui.addFolder('Rendering');
     renderingFolder
@@ -121,10 +118,9 @@ class Debug {
     // WORLD
     const worldFolder = this.gui.addFolder('World');
     worldFolder
-      .add(world.options, 'renderRadius', 1, 10, 1)
+      .add(world.options, 'renderRadius', 1, 20, 1)
       .onFinishChange((value) => {
-        registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
-        registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
+        world.setRenderRadius(value);
       })
       .name('Render radius');
     worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01).name('Sunlight intensity');
