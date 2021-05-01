@@ -3675,26 +3675,30 @@ class Debug {
             renderingFolder
                 .addColor(rendering.options, 'clearColor')
                 .onFinishChange((value) => rendering.renderer.setClearColor(value));
-            renderingFolder.open();
+            renderingFolder
+                .addColor(rendering.options, 'fogColor')
+                .onFinishChange((value) => (rendering.fogUniforms.uFogColor.value = new three__WEBPACK_IMPORTED_MODULE_4__.Color(value)));
+            renderingFolder
+                .addColor(rendering.options, 'fogNearColor')
+                .onFinishChange((value) => (rendering.fogUniforms.uFogNearColor.value = new three__WEBPACK_IMPORTED_MODULE_4__.Color(value)));
             // WORLD
             const worldFolder = this.gui.addFolder('world');
             worldFolder.add(world.options, 'renderRadius', 1, 10, 1).onFinishChange((value) => {
                 registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
                 registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
             });
+            worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01);
             worldFolder
                 .add(world.sky.options, 'domeOffset', 200, 2000, 10)
-                // @ts-ignore
                 .onChange((value) => (world.sky.material.uniforms.offset.value = value));
             worldFolder
                 .addColor(world.sky.options, 'topColor')
-                // @ts-ignore
                 .onFinishChange((value) => world.sky.material.uniforms.topColor.value.set(value));
             worldFolder
                 .addColor(world.sky.options, 'bottomColor')
-                // @ts-ignore
                 .onFinishChange((value) => world.sky.material.uniforms.bottomColor.value.set(value));
             this.registerDisplay('chunk', world, 'camChunkPosStr');
+            worldFolder.open();
             // PLAYER
             const playerFolder = this.gui.addFolder('player');
             playerFolder.add(player.options, 'acceleration', 0, 5, 0.01);
@@ -4602,25 +4606,27 @@ class Registry {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
-        this.atlasUniform = {
-            value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}/atlas`),
-        };
-        const atlas = this.atlasUniform.value;
-        atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-        atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-        atlas.generateMipmaps = false;
-        atlas.needsUpdate = true;
-        atlas.encoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
-        this.materialUniform = Object.assign({ uTexture: this.atlasUniform, uSunlightIntensity: { value: 0.2 } }, engine.rendering.fogUniforms);
-        const sharedMaterialOptions = {
-            // wireframe: true,
-            vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
-            fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
-            vertexColors: true,
-            uniforms: this.materialUniform,
-        };
-        this.opaqueChunkMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign({}, sharedMaterialOptions));
-        this.transparentChunkMaterials = TRANSPARENT_SIDES.map((side) => new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign(Object.assign({}, sharedMaterialOptions), { transparent: true, depthWrite: false, alphaTest: 0.5, side })));
+        engine.on('ready', () => {
+            this.atlasUniform = {
+                value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}/atlas`),
+            };
+            const atlas = this.atlasUniform.value;
+            atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+            atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+            atlas.generateMipmaps = false;
+            atlas.needsUpdate = true;
+            atlas.encoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
+            this.materialUniform = Object.assign({ uTexture: this.atlasUniform, uSunlightIntensity: engine.world.uSunlightIntensity }, engine.rendering.fogUniforms);
+            const sharedMaterialOptions = {
+                // wireframe: true,
+                vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
+                fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
+                vertexColors: true,
+                uniforms: this.materialUniform,
+            };
+            this.opaqueChunkMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign({}, sharedMaterialOptions));
+            this.transparentChunkMaterials = TRANSPARENT_SIDES.map((side) => new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign(Object.assign({}, sharedMaterialOptions), { transparent: true, depthWrite: false, alphaTest: 0.5, side })));
+        });
     }
 }
 Registry.materialSetup = false;
@@ -4764,6 +4770,8 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.engine = engine;
         this.options = options;
         this.isReady = false;
+        // uniforms
+        this.uSunlightIntensity = { value: 0.2 };
         this.pendingChunks = [];
         this.requestedChunks = new Set();
         this.receivedChunks = [];
@@ -5948,6 +5956,7 @@ const defaultSkyOptions = {
 class Sky {
     constructor(rendering, options = {}) {
         this.rendering = rendering;
+        this.tick = () => { };
         const { dimension, topColor, bottomColor, domeOffset } = (this.options = Object.assign(Object.assign({}, defaultSkyOptions), options));
         const uniforms = {
             topColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor) },

@@ -1,6 +1,6 @@
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
-import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
+import { BoxGeometry, Color, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
 // import { AxesHelper, GridHelper } from 'three';
 
 import { Helper } from '../utils';
@@ -106,8 +106,12 @@ class Debug {
     renderingFolder
       .addColor(rendering.options, 'clearColor')
       .onFinishChange((value) => rendering.renderer.setClearColor(value));
-
-    renderingFolder.open();
+    renderingFolder
+      .addColor(rendering.options, 'fogColor')
+      .onFinishChange((value) => (rendering.fogUniforms.uFogColor.value = new Color(value)));
+    renderingFolder
+      .addColor(rendering.options, 'fogNearColor')
+      .onFinishChange((value) => (rendering.fogUniforms.uFogNearColor.value = new Color(value)));
 
     // WORLD
     const worldFolder = this.gui.addFolder('world');
@@ -115,21 +119,21 @@ class Debug {
       registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
       registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
     });
+    worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01);
 
     worldFolder
       .add(world.sky.options, 'domeOffset', 200, 2000, 10)
-      // @ts-ignore
       .onChange((value) => (world.sky.material.uniforms.offset.value = value));
     worldFolder
       .addColor(world.sky.options, 'topColor')
-      // @ts-ignore
       .onFinishChange((value) => world.sky.material.uniforms.topColor.value.set(value));
     worldFolder
       .addColor(world.sky.options, 'bottomColor')
-      // @ts-ignore
       .onFinishChange((value) => world.sky.material.uniforms.bottomColor.value.set(value));
 
     this.registerDisplay('chunk', world, 'camChunkPosStr');
+
+    worldFolder.open();
 
     // PLAYER
     const playerFolder = this.gui.addFolder('player');

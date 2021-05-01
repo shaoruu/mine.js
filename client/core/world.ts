@@ -24,6 +24,9 @@ class World extends EventEmitter {
   public sky: Sky;
   public clouds: Clouds;
 
+  // uniforms
+  public uSunlightIntensity = { value: 0.2 };
+
   private camChunkName: string;
   private camChunkPos: Coords2;
 

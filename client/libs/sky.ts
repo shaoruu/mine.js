@@ -54,6 +54,8 @@ class Sky {
 
     rendering.scene.add(this.mesh);
   }
+
+  tick = () => {};
 }
 
 export { Sky };

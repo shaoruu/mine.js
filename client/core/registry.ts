@@ -20,50 +20,52 @@ class Registry {
   public transparentChunkMaterials: ShaderMaterial[];
 
   constructor(public engine: Engine, public options: RegistryOptionsType) {
-    this.atlasUniform = {
-      value: new TextureLoader().load(
-        `http://${window.location.hostname}${
-          window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''
-        }/atlas`,
-      ),
-    };
+    engine.on('ready', () => {
+      this.atlasUniform = {
+        value: new TextureLoader().load(
+          `http://${window.location.hostname}${
+            window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''
+          }/atlas`,
+        ),
+      };
 
-    const atlas = this.atlasUniform.value;
+      const atlas = this.atlasUniform.value;
 
-    atlas.minFilter = NearestFilter;
-    atlas.magFilter = NearestFilter;
-    atlas.generateMipmaps = false;
-    atlas.needsUpdate = true;
-    atlas.encoding = sRGBEncoding;
+      atlas.minFilter = NearestFilter;
+      atlas.magFilter = NearestFilter;
+      atlas.generateMipmaps = false;
+      atlas.needsUpdate = true;
+      atlas.encoding = sRGBEncoding;
 
-    this.materialUniform = {
-      uTexture: this.atlasUniform,
-      uSunlightIntensity: { value: 0.2 },
-      ...engine.rendering.fogUniforms,
-    };
+      this.materialUniform = {
+        uTexture: this.atlasUniform,
+        uSunlightIntensity: engine.world.uSunlightIntensity,
+        ...engine.rendering.fogUniforms,
+      };
 
-    const sharedMaterialOptions = {
-      // wireframe: true,
-      vertexShader: ChunkVertexShader,
-      fragmentShader: ChunkFragmentShader,
-      vertexColors: true,
-      uniforms: this.materialUniform,
-    };
+      const sharedMaterialOptions = {
+        // wireframe: true,
+        vertexShader: ChunkVertexShader,
+        fragmentShader: ChunkFragmentShader,
+        vertexColors: true,
+        uniforms: this.materialUniform,
+      };
 
-    this.opaqueChunkMaterial = new ShaderMaterial({
-      ...sharedMaterialOptions,
+      this.opaqueChunkMaterial = new ShaderMaterial({
+        ...sharedMaterialOptions,
+      });
+
+      this.transparentChunkMaterials = TRANSPARENT_SIDES.map(
+        (side) =>
+          new ShaderMaterial({
+            ...sharedMaterialOptions,
+            transparent: true,
+            depthWrite: false,
+            alphaTest: 0.5,
+            side,
+          }),
+      );
     });
-
-    this.transparentChunkMaterials = TRANSPARENT_SIDES.map(
-      (side) =>
-        new ShaderMaterial({
-          ...sharedMaterialOptions,
-          transparent: true,
-          depthWrite: false,
-          alphaTest: 0.5,
-          side,
-        }),
-    );
   }
 }
 
