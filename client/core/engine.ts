@@ -86,7 +86,7 @@ const defaultConfig: ConfigType = {
     acceleration: 1,
     flyingInertia: 3,
     reachDistance: 32,
-    lookBlockScale: 1.005,
+    lookBlockScale: 1,
     lookBlockLerp: 0.9,
     lookBlockColor: '#333',
     distToGround: 1.6,
