@@ -1,5 +1,5 @@
 import raycast from 'fast-voxel-raycast';
-import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Vector3 } from 'three';
+import { BoxBufferGeometry, EdgesGeometry, Vector3, LineBasicMaterial, LineSegments } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
 import { Coords3, Helper } from '../../shared';
@@ -13,6 +13,7 @@ type PlayerOptionsType = {
   reachDistance: number;
   lookBlockScale: number;
   lookBlockLerp: number;
+  lookBlockColor: string;
   distToGround: number;
   distToTop: number;
   bodyWidth: number;
@@ -39,11 +40,11 @@ class Player {
     front: false,
     back: false,
   };
-  private lookBlockMesh: Mesh;
+  private lookBlockMesh: LineSegments;
   private godMode = false;
 
   constructor(public engine: Engine, public options: PlayerOptionsType) {
-    const { lookBlockScale } = options;
+    const { lookBlockScale, lookBlockColor } = options;
 
     // three.js pointerlock controls
     this.controls = new PointerLockControls(engine.camera.threeCamera, engine.container.canvas);
@@ -62,13 +63,15 @@ class Player {
       const { dimension } = config.world;
       this.addCamEntity();
 
-      this.lookBlockMesh = new Mesh(
-        new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
-        new MeshBasicMaterial({
-          color: 'white',
-          alphaTest: 0.2,
+      this.lookBlockMesh = new LineSegments(
+        new EdgesGeometry(
+          new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
+        ),
+        new LineBasicMaterial({
           opacity: 0.3,
           transparent: true,
+          color: lookBlockColor,
+          linewidth: 4,
         }),
       );
       this.lookBlockMesh.renderOrder = 100000;

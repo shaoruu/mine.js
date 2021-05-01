@@ -3853,8 +3853,9 @@ const defaultConfig = {
         acceleration: 1,
         flyingInertia: 3,
         reachDistance: 32,
-        lookBlockScale: 1.02,
-        lookBlockLerp: 0.7,
+        lookBlockScale: 1.005,
+        lookBlockLerp: 0.9,
+        lookBlockColor: '#333',
         distToGround: 1.6,
         distToTop: 0.2,
         bodyWidth: 0.6,
@@ -4436,7 +4437,7 @@ class Player {
             }
             this.updateLookBlock();
         };
-        const { lookBlockScale } = options;
+        const { lookBlockScale, lookBlockColor } = options;
         // three.js pointerlock controls
         this.controls = new three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_5__.PointerLockControls(engine.camera.threeCamera, engine.container.canvas);
         engine.rendering.scene.add(this.controls.getObject());
@@ -4450,11 +4451,11 @@ class Player {
             // register camera as entity      // set up look block mesh
             const { dimension } = config.world;
             this.addCamEntity();
-            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
-                color: 'white',
-                alphaTest: 0.2,
+            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.LineSegments(new three__WEBPACK_IMPORTED_MODULE_4__.EdgesGeometry(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale)), new three__WEBPACK_IMPORTED_MODULE_4__.LineBasicMaterial({
                 opacity: 0.3,
                 transparent: true,
+                color: lookBlockColor,
+                linewidth: 4,
             }));
             this.lookBlockMesh.renderOrder = 100000;
             rendering.scene.add(this.lookBlockMesh);
