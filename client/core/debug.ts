@@ -123,6 +123,7 @@ class Debug {
         world.setRenderRadius(value);
       })
       .name('Render radius');
+    worldFolder.add(world.options, 'requestRadius', 1, 20, 1).name('Request radius');
     worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01).name('Sunlight intensity');
 
     worldFolder
