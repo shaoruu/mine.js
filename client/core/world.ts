@@ -314,6 +314,7 @@ class World extends EventEmitter {
 
   private animateSky() {
     const { delta } = this.engine.clock;
+    this.sky.tick(delta);
     this.clouds.tick(delta);
   }
 }

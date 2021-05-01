@@ -3671,62 +3671,71 @@ class Debug {
             // RENDERING
             const { rendering, registry, player, camera, world } = this.engine;
             const { options: { chunkSize, dimension }, } = world;
-            const renderingFolder = this.gui.addFolder('rendering');
+            const renderingFolder = this.gui.addFolder('Rendering');
             renderingFolder
                 .addColor(rendering.options, 'clearColor')
-                .onFinishChange((value) => rendering.renderer.setClearColor(value));
+                .onFinishChange((value) => rendering.renderer.setClearColor(value))
+                .name('Clear color');
             renderingFolder
                 .addColor(rendering.options, 'fogColor')
-                .onFinishChange((value) => (rendering.fogUniforms.uFogColor.value = new three__WEBPACK_IMPORTED_MODULE_4__.Color(value)));
+                .onFinishChange((value) => (rendering.fogUniforms.uFogColor.value = new three__WEBPACK_IMPORTED_MODULE_4__.Color(value)))
+                .name('Fog color');
             renderingFolder
                 .addColor(rendering.options, 'fogNearColor')
-                .onFinishChange((value) => (rendering.fogUniforms.uFogNearColor.value = new three__WEBPACK_IMPORTED_MODULE_4__.Color(value)));
+                .onFinishChange((value) => (rendering.fogUniforms.uFogNearColor.value = new three__WEBPACK_IMPORTED_MODULE_4__.Color(value)))
+                .name('Fog near color');
             // WORLD
-            const worldFolder = this.gui.addFolder('world');
-            worldFolder.add(world.options, 'renderRadius', 1, 10, 1).onFinishChange((value) => {
+            const worldFolder = this.gui.addFolder('World');
+            worldFolder
+                .add(world.options, 'renderRadius', 1, 10, 1)
+                .onFinishChange((value) => {
                 registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
                 registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
-            });
-            worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01);
+            })
+                .name('Render radius');
+            worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01).name('Sunlight intensity');
             worldFolder
                 .add(world.sky.options, 'domeOffset', 200, 2000, 10)
-                .onChange((value) => (world.sky.material.uniforms.offset.value = value));
+                .onChange((value) => (world.sky.material.uniforms.offset.value = value))
+                .name('Done offset');
             worldFolder
                 .addColor(world.sky.options, 'topColor')
-                .onFinishChange((value) => world.sky.material.uniforms.topColor.value.set(value));
+                .onChange((value) => world.sky.setTopColor(value))
+                .name('Top color');
             worldFolder
                 .addColor(world.sky.options, 'bottomColor')
-                .onFinishChange((value) => world.sky.material.uniforms.bottomColor.value.set(value));
+                .onChange((value) => world.sky.setBottomColor(value))
+                .name('Bottom color');
             this.registerDisplay('chunk', world, 'camChunkPosStr');
             worldFolder.open();
             // PLAYER
-            const playerFolder = this.gui.addFolder('player');
-            playerFolder.add(player.options, 'acceleration', 0, 5, 0.01);
-            playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01);
+            const playerFolder = this.gui.addFolder('Player');
+            playerFolder.add(player.options, 'acceleration', 0, 5, 0.01).name('Acceleration');
+            playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01).name('Flying inertia');
             this.registerDisplay('looking at', player, 'lookBlockStr');
             // CAMERA
             // const cameraFolder = this.gui.addFolder('camera');
             this.registerDisplay('position', camera, 'voxelPositionStr');
             // REGISTRY
-            const registryFolder = this.gui.addFolder('registry');
+            const registryFolder = this.gui.addFolder('Registry');
             registryFolder.add({
-                'toggle atlas': () => {
+                'Toggle atlas': () => {
                     this.atlasTest.visible = !this.atlasTest.visible;
                 },
-            }, 'toggle atlas');
+            }, 'Toggle atlas');
             registryFolder.add({
-                'toggle wireframe': () => {
+                'Toggle wireframe': () => {
                     registry.opaqueChunkMaterial.wireframe = !registry.opaqueChunkMaterial.wireframe;
                     registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
                 },
-            }, 'toggle wireframe');
+            }, 'Toggle wireframe');
             // DEBUG
-            const debugFolder = this.gui.addFolder('debug');
+            const debugFolder = this.gui.addFolder('Debug');
             debugFolder.add({
-                'toggle chunk highlight': () => {
+                'Toggle chunk highlight': () => {
                     this.chunkHighlight.visible = !this.chunkHighlight.visible;
                 },
-            }, 'toggle chunk highlight');
+            }, 'Toggle chunk highlight');
         };
         this.tick = () => {
             for (const { ele, name, attribute, obj } of this.dataEntires) {
@@ -3739,7 +3748,9 @@ class Debug {
             this.chunkHighlight.position.set((cx + 0.5) * chunkSize * dimension, 0.5 * maxHeight * dimension, (cz + 0.5) * chunkSize * dimension);
         };
         // dat.gui
-        this.gui = new dat_gui__WEBPACK_IMPORTED_MODULE_0__.GUI();
+        this.gui = new dat_gui__WEBPACK_IMPORTED_MODULE_0__.GUI({
+            width: 300,
+        });
         // FPS indicator
         this.stats = new (stats_js__WEBPACK_IMPORTED_MODULE_1___default())();
         const { world: { chunkSize, dimension, maxHeight }, } = engine.config;
@@ -5010,6 +5021,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     }
     animateSky() {
         const { delta } = this.engine.clock;
+        this.sky.tick(delta);
         this.clouds.tick(delta);
     }
 }
@@ -5952,11 +5964,26 @@ const defaultSkyOptions = {
     // bottomColor: '#ffffff',
     topColor: '#000',
     bottomColor: '#000',
+    lerpFactor: 0.2,
 };
 class Sky {
     constructor(rendering, options = {}) {
         this.rendering = rendering;
-        this.tick = () => { };
+        this.setTopColor = (color) => {
+            this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
+        };
+        this.setBottomColor = (color) => {
+            this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
+        };
+        this.tick = (delta) => {
+            const { lerpFactor } = this.options;
+            if (this.newTopColor) {
+                this.material.uniforms.topColor.value.lerpHSL(this.newTopColor, lerpFactor);
+            }
+            if (this.newBottomColor) {
+                this.material.uniforms.bottomColor.value.lerpHSL(this.newBottomColor, lerpFactor);
+            }
+        };
         const { dimension, topColor, bottomColor, domeOffset } = (this.options = Object.assign(Object.assign({}, defaultSkyOptions), options));
         const uniforms = {
             topColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor) },

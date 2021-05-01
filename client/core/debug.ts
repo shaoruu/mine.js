@@ -17,7 +17,9 @@ class Debug {
 
   constructor(public engine: Engine) {
     // dat.gui
-    this.gui = new GUI();
+    this.gui = new GUI({
+      width: 300,
+    });
 
     // FPS indicator
     this.stats = new Stats();
@@ -102,43 +104,52 @@ class Debug {
       options: { chunkSize, dimension },
     } = world;
 
-    const renderingFolder = this.gui.addFolder('rendering');
+    const renderingFolder = this.gui.addFolder('Rendering');
     renderingFolder
       .addColor(rendering.options, 'clearColor')
-      .onFinishChange((value) => rendering.renderer.setClearColor(value));
+      .onFinishChange((value) => rendering.renderer.setClearColor(value))
+      .name('Clear color');
     renderingFolder
       .addColor(rendering.options, 'fogColor')
-      .onFinishChange((value) => (rendering.fogUniforms.uFogColor.value = new Color(value)));
+      .onFinishChange((value) => (rendering.fogUniforms.uFogColor.value = new Color(value)))
+      .name('Fog color');
     renderingFolder
       .addColor(rendering.options, 'fogNearColor')
-      .onFinishChange((value) => (rendering.fogUniforms.uFogNearColor.value = new Color(value)));
+      .onFinishChange((value) => (rendering.fogUniforms.uFogNearColor.value = new Color(value)))
+      .name('Fog near color');
 
     // WORLD
-    const worldFolder = this.gui.addFolder('world');
-    worldFolder.add(world.options, 'renderRadius', 1, 10, 1).onFinishChange((value) => {
-      registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
-      registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
-    });
-    worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01);
+    const worldFolder = this.gui.addFolder('World');
+    worldFolder
+      .add(world.options, 'renderRadius', 1, 10, 1)
+      .onFinishChange((value) => {
+        registry.opaqueChunkMaterial.uniforms.uFogNear.value = value * 0.6 * chunkSize * dimension;
+        registry.opaqueChunkMaterial.uniforms.uFogFar.value = value * chunkSize * dimension;
+      })
+      .name('Render radius');
+    worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01).name('Sunlight intensity');
 
     worldFolder
       .add(world.sky.options, 'domeOffset', 200, 2000, 10)
-      .onChange((value) => (world.sky.material.uniforms.offset.value = value));
+      .onChange((value) => (world.sky.material.uniforms.offset.value = value))
+      .name('Done offset');
     worldFolder
       .addColor(world.sky.options, 'topColor')
-      .onFinishChange((value) => world.sky.material.uniforms.topColor.value.set(value));
+      .onChange((value) => world.sky.setTopColor(value))
+      .name('Top color');
     worldFolder
       .addColor(world.sky.options, 'bottomColor')
-      .onFinishChange((value) => world.sky.material.uniforms.bottomColor.value.set(value));
+      .onChange((value) => world.sky.setBottomColor(value))
+      .name('Bottom color');
 
     this.registerDisplay('chunk', world, 'camChunkPosStr');
 
     worldFolder.open();
 
     // PLAYER
-    const playerFolder = this.gui.addFolder('player');
-    playerFolder.add(player.options, 'acceleration', 0, 5, 0.01);
-    playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01);
+    const playerFolder = this.gui.addFolder('Player');
+    playerFolder.add(player.options, 'acceleration', 0, 5, 0.01).name('Acceleration');
+    playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01).name('Flying inertia');
     this.registerDisplay('looking at', player, 'lookBlockStr');
 
     // CAMERA
@@ -146,34 +157,34 @@ class Debug {
     this.registerDisplay('position', camera, 'voxelPositionStr');
 
     // REGISTRY
-    const registryFolder = this.gui.addFolder('registry');
+    const registryFolder = this.gui.addFolder('Registry');
     registryFolder.add(
       {
-        'toggle atlas': () => {
+        'Toggle atlas': () => {
           this.atlasTest.visible = !this.atlasTest.visible;
         },
       },
-      'toggle atlas',
+      'Toggle atlas',
     );
     registryFolder.add(
       {
-        'toggle wireframe': () => {
+        'Toggle wireframe': () => {
           registry.opaqueChunkMaterial.wireframe = !registry.opaqueChunkMaterial.wireframe;
           registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
         },
       },
-      'toggle wireframe',
+      'Toggle wireframe',
     );
 
     // DEBUG
-    const debugFolder = this.gui.addFolder('debug');
+    const debugFolder = this.gui.addFolder('Debug');
     debugFolder.add(
       {
-        'toggle chunk highlight': () => {
+        'Toggle chunk highlight': () => {
           this.chunkHighlight.visible = !this.chunkHighlight.visible;
         },
       },
-      'toggle chunk highlight',
+      'Toggle chunk highlight',
     );
   };
 

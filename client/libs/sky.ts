@@ -10,6 +10,7 @@ type SkyOptionsType = {
   dimension: number;
   topColor: string;
   bottomColor: string;
+  lerpFactor: number;
 };
 
 const defaultSkyOptions: SkyOptionsType = {
@@ -19,6 +20,7 @@ const defaultSkyOptions: SkyOptionsType = {
   // bottomColor: '#ffffff',
   topColor: '#000',
   bottomColor: '#000',
+  lerpFactor: 0.2,
 };
 
 class Sky {
@@ -28,6 +30,9 @@ class Sky {
   public material: ShaderMaterial;
 
   public mesh: Mesh;
+
+  private newTopColor: Color;
+  private newBottomColor: Color;
 
   constructor(public rendering: Rendering, options: Partial<SkyOptionsType> = {}) {
     const { dimension, topColor, bottomColor, domeOffset } = (this.options = {
@@ -55,7 +60,25 @@ class Sky {
     rendering.scene.add(this.mesh);
   }
 
-  tick = () => {};
+  setTopColor = (color: Color | string) => {
+    this.newTopColor = new Color(color);
+  };
+
+  setBottomColor = (color: Color | string) => {
+    this.newBottomColor = new Color(color);
+  };
+
+  tick = (delta: number) => {
+    const { lerpFactor } = this.options;
+
+    if (this.newTopColor) {
+      this.material.uniforms.topColor.value.lerpHSL(this.newTopColor, lerpFactor);
+    }
+
+    if (this.newBottomColor) {
+      this.material.uniforms.bottomColor.value.lerpHSL(this.newBottomColor, lerpFactor);
+    }
+  };
 }
 
 export { Sky };
