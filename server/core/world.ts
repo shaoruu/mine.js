@@ -240,7 +240,7 @@ class World extends Network {
         const vy = parseInt(y, 10);
         const vz = parseInt(z, 10);
         const type = parseInt(typeStr, 10);
-        const voxel = [vx, vy, vz] as Coords3;
+        const voxel = <Coords3>[vx, vy, vz];
 
         // fool proof
         if (

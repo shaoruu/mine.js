@@ -22,7 +22,7 @@ async function simpleCull(array: ndarray, options: SimpleCullOptionsType): Promi
   const { stride, data } = array;
   const { dimension, min, max, realMin, realMax } = options;
 
-  const voxelsBuffer = (data as Uint8Array).buffer.slice(0);
+  const voxelsBuffer = (<Uint8Array>data).buffer.slice(0);
   const worker = workers.pop() || Helper.loadWorker(workerSrc);
 
   const result = await new Promise<MeshResultType>((resolve) => {

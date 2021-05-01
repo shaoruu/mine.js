@@ -173,7 +173,7 @@ class Chunk {
   }
 
   private toLocal = (vx: number, vy: number, vz: number) => {
-    return vec3.sub([0, 0, 0], [vx, vy, vz], this.min) as Coords3;
+    return <Coords3>vec3.sub([0, 0, 0], [vx, vy, vz], this.min);
   };
 }
 

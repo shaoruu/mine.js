@@ -18,7 +18,7 @@ class Helper {
   public static scaleCoordsF = (coords: Coords3, factor: number): Coords3 => {
     const result = [0, 0, 0];
     const scaled = vec3.scale(result, coords, factor);
-    return vec3.floor(scaled, scaled) as Coords3;
+    return <Coords3>vec3.floor(scaled, scaled);
   };
 
   public static mapVoxelPosToChunkLocalPos = (voxelPos: Coords3, chunkSize: number): Coords3 => {
@@ -34,7 +34,7 @@ class Helper {
   };
 
   public static mapChunkPosToVoxelPos = (chunkPos: Coords3, chunkSize: number): Coords3 => {
-    const result = [0, 0, 0] as Coords3;
+    const result = <Coords3>[0, 0, 0];
 
     vec3.copy(result, chunkPos);
     vec3.scale(result, result, chunkSize);

@@ -313,7 +313,7 @@ class Player {
     const flooredPoint = point.map((n, i) => Math.floor(parseFloat(n.toFixed(3))) - Number(normal[i] > 0));
 
     const [nx, ny, nz] = normal;
-    const newLookBlock = Helper.mapWorldPosToVoxelPos(flooredPoint as Coords3, world.options.dimension);
+    const newLookBlock = Helper.mapWorldPosToVoxelPos(<Coords3>flooredPoint, world.options.dimension);
 
     if (!world.getVoxelByVoxel(newLookBlock)) {
       // this means the look block isn't actually a block

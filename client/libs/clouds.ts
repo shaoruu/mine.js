@@ -130,7 +130,7 @@ class Clouds {
       width + 2,
     ]);
 
-    const buffer = (array.data as Uint8Array).buffer.slice(0);
+    const buffer = (<Uint8Array>array.data).buffer.slice(0);
 
     const generator = Helper.loadWorker(workerSrc);
     generator.postMessage(

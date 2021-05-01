@@ -169,8 +169,8 @@ class Chunk {
       path.join(storage, `${Helper.getChunkName(this.coords)}.json`),
       JSON.stringify({
         needsPropagation,
-        voxels: zlib.deflateSync(this.voxels.data as Uint8Array).toString('base64'),
-        lights: zlib.deflateSync(this.lights.data as Uint8Array).toString('base64'),
+        voxels: zlib.deflateSync(<Uint8Array>this.voxels.data).toString('base64'),
+        lights: zlib.deflateSync(<Uint8Array>this.lights.data).toString('base64'),
       }),
     );
 
@@ -224,7 +224,7 @@ class Chunk {
       for (let vx = startX; vx < endX; vx++) {
         const h = world.getMaxHeight([vx, vz]);
         for (let vy = endY - 1; vy >= startY; vy--) {
-          const voxel = [vx, vy, vz] as Coords3;
+          const voxel = <Coords3>[vx, vy, vz];
           const blockType = world.getBlockTypeByVoxel(voxel);
 
           if (vy > h && blockType.isTransparent) {
@@ -279,7 +279,7 @@ class Chunk {
         const nvz = vz + offset.z;
         const sd = isSunlight && offset.y === -1 && level === maxLightLevel;
         const nl = level - (sd ? 0 : 1);
-        const nVoxel = [nvx, nvy, nvz] as Coords3;
+        const nVoxel = <Coords3>[nvx, nvy, nvz];
         const blockType = world.getBlockTypeByVoxel(nVoxel);
 
         if (
@@ -338,7 +338,7 @@ class Chunk {
 
         const nvx = vx + offset.x;
         const nvz = vz + offset.z;
-        const nVoxel = [nvx, nvy, nvz] as Coords3;
+        const nVoxel = <Coords3>[nvx, nvy, nvz];
 
         const nl = isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel);
 
@@ -437,7 +437,7 @@ class Chunk {
 
               const nvx = vx + offset.x;
               const nvz = vz + offset.z;
-              const nVoxel = [nvx, nvy, nvz] as Coords3;
+              const nVoxel = <Coords3>[nvx, nvy, nvz];
               const { isLight, isTransparent } = world.getBlockTypeByVoxel([nvx, nvy, nvz]);
 
               // need propagation after solid block removed
@@ -478,7 +478,7 @@ class Chunk {
   };
 
   toLocal = (voxel: Coords3) => {
-    return vec3.sub([0, 0, 0], voxel, this.min) as Coords3;
+    return <Coords3>vec3.sub([0, 0, 0], voxel, this.min);
   };
 
   getProtocol(needsVoxels = false) {
