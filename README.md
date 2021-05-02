@@ -1,6 +1,6 @@
 :heavy_exclamation_mark: `mine.js` was previously [`mc.js`](https://github.com/ian13456/mc.js), which has been taken down by a [DMCA notice](https://github.com/github/dmca/blob/master/2019/08/2019-08-22-minecraft.md).
 
-❗Also, if you want to see the latest updates to this project, check out the /develop branch where I actively work on this project!
+❗Also, if you want to see the latest updates to this project, check out the [`develop`](https://github.com/ian13456/mine.js/pull/18) branch where I actively work on this project!
 
 ![](https://i.imgur.com/B3GoQ4p.png)
 
