@@ -1,7 +1,17 @@
 import ndarray from 'ndarray';
-import { BufferGeometry, Color, Float32BufferAttribute, Group, Int8BufferAttribute, Mesh, ShaderMaterial } from 'three';
+import {
+  BufferGeometry,
+  Color,
+  Float32BufferAttribute,
+  FrontSide,
+  Group,
+  Int8BufferAttribute,
+  Mesh,
+  ShaderMaterial,
+} from 'three';
 import pool from 'typedarray-pool';
 
+import { Coords3 } from '../../shared';
 import { Rendering } from '../core';
 import { Helper } from '../utils';
 
@@ -18,7 +28,7 @@ type CloudsOptionsType = {
   height: number;
   count: number;
   worldHeight: number;
-  dimension: number;
+  dimensions: Coords3;
   threshold: number;
   speed: number;
   lerpFactor: number;
@@ -28,19 +38,19 @@ type CloudsOptionsType = {
 };
 
 const defaultCloudsOptions: CloudsOptionsType = {
-  seed: 1024,
+  seed: -1,
   scale: 0.03, // the lower value, the fatter the clouds
-  width: 6,
+  width: 16,
   height: 1,
-  count: 32, // grid size
-  worldHeight: 800,
-  dimension: 60,
+  count: 24, // grid size
+  worldHeight: 2000,
+  dimensions: [60, 30, 60],
   threshold: 0.25,
   speed: 16,
   lerpFactor: 0.7,
-  fogFarFactor: 5,
-  color: '#fff',
-  alpha: 0.75,
+  fogFarFactor: 3,
+  color: '#eee',
+  alpha: 0.6,
 };
 
 class Clouds {
@@ -53,18 +63,18 @@ class Clouds {
   private cloudGroup = new Group();
 
   constructor(public rendering: Rendering, public options: Partial<CloudsOptionsType> = {}) {
-    const { worldHeight, fogFarFactor, color, alpha } = (this.options = {
+    const { worldHeight, fogFarFactor, color, alpha, seed } = (this.options = {
       ...defaultCloudsOptions,
       ...options,
     });
 
+    if (seed === -1) this.options.seed = Math.random() * 10000;
+
     this.material = new ShaderMaterial({
-      opacity: 0.2,
-      alphaTest: 0.3,
       transparent: true,
       vertexShader: CloudsVertexShader,
       fragmentShader: CloudsFragmentShader,
-      depthWrite: false,
+      side: FrontSide,
       uniforms: {
         ...rendering.fogUniforms,
         uFogNear: {
@@ -100,7 +110,7 @@ class Clouds {
   tick = (delta: number) => {
     if (!this.initialized) return;
 
-    const { speed, lerpFactor, width, count, dimension } = this.options;
+    const { speed, lerpFactor, width, count, dimensions } = this.options;
 
     this.meshes.forEach((mesh) => {
       const newPosition = mesh.position.clone();
@@ -108,7 +118,7 @@ class Clouds {
       newPosition.z -= speed * delta;
       mesh.position.lerp(newPosition, lerpFactor);
 
-      if (mesh.position.z <= -(width * count * dimension) / 2) {
+      if (mesh.position.z <= -(width * count * dimensions[2]) / 2) {
         this.meshes.shift();
         this.cloudGroup.remove(mesh);
         this.makeRow(this.cloudOffsetCount);
@@ -121,7 +131,7 @@ class Clouds {
   };
 
   makeRow = async (zOffset: number) => {
-    const { width, height, scale, threshold, worldHeight, count, seed, dimension } = this.options;
+    const { width, height, scale, threshold, worldHeight, count, seed, dimensions } = this.options;
 
     const totalWidth = count * width;
     const paddedTotalWidth = count * width + 2;
@@ -155,7 +165,7 @@ class Clouds {
         array.data = newBuffer;
 
         const { positions, indices, normals } = await simpleCull(array, {
-          dimension,
+          dimensions,
           min: [1, 0, 1],
           max: [paddedTotalWidth - 1, height, width + 1],
           realMin: [0, 0, 0],
@@ -166,14 +176,15 @@ class Clouds {
         geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
         geometry.setAttribute('normal', new Int8BufferAttribute(normals, 3));
         geometry.setIndex(Array.from(indices));
+        geometry.computeVertexNormals();
 
         const mesh = new Mesh(geometry, this.material);
 
         const previousMesh = this.meshes[this.meshes.length - 1];
-        const x = (-totalWidth / 2) * dimension;
+        const x = (-totalWidth / 2) * dimensions[0];
         const z = previousMesh
-          ? previousMesh.position.z + width * dimension
-          : (zOffset * width - totalWidth / 2) * dimension;
+          ? previousMesh.position.z + width * dimensions[2]
+          : (zOffset * width - totalWidth / 2) * dimensions[2];
         mesh.position.set(x, worldHeight, z);
 
         this.meshes.push(mesh);

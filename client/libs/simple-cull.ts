@@ -15,12 +15,12 @@ type SimpleCullOptionsType = {
   max: Coords3;
   realMin: Coords3;
   realMax: Coords3;
-  dimension: number;
+  dimensions: Coords3;
 };
 
 async function simpleCull(array: ndarray, options: SimpleCullOptionsType): Promise<MeshResultType> {
   const { stride, data } = array;
-  const { dimension, min, max, realMin, realMax } = options;
+  const { dimensions, min, max, realMin, realMax } = options;
 
   const voxelsBuffer = (<Uint8Array>data).buffer.slice(0);
   const worker = workers.pop() || Helper.loadWorker(workerSrc);
@@ -34,7 +34,7 @@ async function simpleCull(array: ndarray, options: SimpleCullOptionsType): Promi
           max,
           realMin,
           realMax,
-          dimension,
+          dimensions,
           stride,
         },
       },

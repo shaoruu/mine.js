@@ -75,7 +75,7 @@ function contains(voxel, min, max) {
 onmessage = function (e) {
   const {
     data: dataBuffer,
-    configs: { dimension, min, max, realMin, realMax, stride },
+    configs: { dimensions, min, max, realMin, realMax, stride },
   } = e.data;
 
   const data = new Uint8Array(dataBuffer);
@@ -86,6 +86,8 @@ onmessage = function (e) {
 
   const [startX, startY, startZ] = min;
   const [endX, endY, endZ] = max;
+
+  const [dx, dy, dz] = dimensions;
 
   for (let vx = startX; vx < endX; ++vx) {
     for (let vz = startZ; vz < endZ; ++vz) {
@@ -112,7 +114,7 @@ onmessage = function (e) {
                 const posY = pos[1] + vy;
                 const posZ = pos[2] + vz;
 
-                positions.push(posX * dimension, posY * dimension, posZ * dimension);
+                positions.push(posX * dx, posY * dy, posZ * dz);
                 normals.push(...dir);
               }
 

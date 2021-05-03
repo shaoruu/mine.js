@@ -2,6 +2,7 @@ import {
   BackSide,
   BoxBufferGeometry,
   Color,
+  Group,
   LinearMipMapLinearFilter,
   Mesh,
   MeshBasicMaterial,
@@ -31,7 +32,7 @@ type SkyOptionsType = {
 
 const defaultSkyOptions: SkyOptionsType = {
   domeOffset: 600,
-  dimension: 4000,
+  dimension: 6000,
   // topColor: '#74B3FF',
   // bottomColor: '#ffffff',
   topColor: '#000',
@@ -76,6 +77,8 @@ class Sky {
   private newTopColor: Color;
   private newBottomColor: Color;
 
+  private meshGroup = new Group();
+
   constructor(public rendering: Rendering, options: Partial<SkyOptionsType> = {}) {
     this.options = {
       ...defaultSkyOptions,
@@ -84,6 +87,8 @@ class Sky {
 
     this.createSkyShading();
     this.createSkyBox();
+
+    rendering.scene.add(this.meshGroup);
 
     this.paint('sides', 'stars');
     this.paint('top', 'stars');
@@ -106,12 +111,13 @@ class Sky {
       uniforms,
       vertexShader: SkyVertexShader,
       fragmentShader: SkyFragmentShader,
+      depthWrite: false,
       side: BackSide,
     });
 
     this.shadingMesh = new Mesh(this.shadingGeometry, this.shadingMaterial);
 
-    this.rendering.scene.add(this.shadingMesh);
+    this.meshGroup.add(this.shadingMesh);
   };
 
   createSkyBox = () => {
@@ -128,7 +134,7 @@ class Sky {
 
     this.boxMesh = new Mesh(this.boxGeometry, materials);
 
-    this.rendering.scene.add(this.boxMesh);
+    this.meshGroup.add(this.boxMesh);
   };
 
   createCanvasMaterial = () => {
@@ -341,6 +347,10 @@ class Sky {
     if (this.newBottomColor) {
       this.shadingMaterial.uniforms.bottomColor.value.lerpHSL(this.newBottomColor, lerpFactor);
     }
+
+    const { threeCamera } = this.rendering.engine.camera;
+    this.meshGroup.position.x = threeCamera.position.x;
+    this.meshGroup.position.z = threeCamera.position.z;
   };
 }
 

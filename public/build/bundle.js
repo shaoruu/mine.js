@@ -5319,14 +5319,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ndarray */ "./node_modules/ndarray/ndarray.js");
 /* harmony import */ var ndarray__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(ndarray__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var typedarray_pool__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! typedarray-pool */ "./node_modules/typedarray-pool/pool.js");
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core */ "./client/core/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
-/* harmony import */ var _shaders_clouds_fragment_glsl__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./shaders/clouds/fragment.glsl */ "./client/libs/shaders/clouds/fragment.glsl");
-/* harmony import */ var _shaders_clouds_vertex_glsl__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./shaders/clouds/vertex.glsl */ "./client/libs/shaders/clouds/vertex.glsl");
-/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
-/* harmony import */ var _raw_loader_workers_generate_clouds_worker__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! !raw-loader!./workers/generate-clouds.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/workers/generate-clouds.worker.js");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core */ "./client/core/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _shaders_clouds_fragment_glsl__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./shaders/clouds/fragment.glsl */ "./client/libs/shaders/clouds/fragment.glsl");
+/* harmony import */ var _shaders_clouds_vertex_glsl__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./shaders/clouds/vertex.glsl */ "./client/libs/shaders/clouds/vertex.glsl");
+/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
+/* harmony import */ var _raw_loader_workers_generate_clouds_worker__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! !raw-loader!./workers/generate-clouds.worker */ "./node_modules/raw-loader/dist/cjs.js!./client/libs/workers/generate-clouds.worker.js");
+
 
 
 
@@ -5337,19 +5339,19 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const defaultCloudsOptions = {
-    seed: 1024,
+    seed: -1,
     scale: 0.03,
-    width: 6,
+    width: 16,
     height: 1,
-    count: 32,
-    worldHeight: 800,
-    dimension: 60,
+    count: 24,
+    worldHeight: 2000,
+    dimensions: [60, 30, 60],
     threshold: 0.25,
     speed: 16,
     lerpFactor: 0.7,
-    fogFarFactor: 5,
-    color: '#fff',
-    alpha: 0.75,
+    fogFarFactor: 3,
+    color: '#eee',
+    alpha: 0.6,
 };
 class Clouds {
     constructor(rendering, options = {}) {
@@ -5358,7 +5360,7 @@ class Clouds {
         this.meshes = [];
         this.cloudOffsetCount = 0;
         this.initialized = false;
-        this.cloudGroup = new three__WEBPACK_IMPORTED_MODULE_8__.Group();
+        this.cloudGroup = new three__WEBPACK_IMPORTED_MODULE_9__.Group();
         this.initialize = async () => {
             const { count } = this.options;
             for (let i = 0; i < count; i++) {
@@ -5370,12 +5372,12 @@ class Clouds {
         this.tick = (delta) => {
             if (!this.initialized)
                 return;
-            const { speed, lerpFactor, width, count, dimension } = this.options;
+            const { speed, lerpFactor, width, count, dimensions } = this.options;
             this.meshes.forEach((mesh) => {
                 const newPosition = mesh.position.clone();
                 newPosition.z -= speed * delta;
                 mesh.position.lerp(newPosition, lerpFactor);
-                if (mesh.position.z <= -(width * count * dimension) / 2) {
+                if (mesh.position.z <= -(width * count * dimensions[2]) / 2) {
                     this.meshes.shift();
                     this.cloudGroup.remove(mesh);
                     this.makeRow(this.cloudOffsetCount);
@@ -5386,7 +5388,7 @@ class Clouds {
             this.cloudGroup.position.z = threeCamera.position.z;
         };
         this.makeRow = async (zOffset) => {
-            const { width, height, scale, threshold, worldHeight, count, seed, dimension } = this.options;
+            const { width, height, scale, threshold, worldHeight, count, seed, dimensions } = this.options;
             const totalWidth = count * width;
             const paddedTotalWidth = count * width + 2;
             const array = ndarray__WEBPACK_IMPORTED_MODULE_0___default()(typedarray_pool__WEBPACK_IMPORTED_MODULE_1__.mallocUint8(paddedTotalWidth * height * (width + 2)), [
@@ -5395,7 +5397,7 @@ class Clouds {
                 width + 2,
             ]);
             const buffer = array.data.buffer.slice(0);
-            const generator = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.loadWorker(_raw_loader_workers_generate_clouds_worker__WEBPACK_IMPORTED_MODULE_7__.default);
+            const generator = _utils__WEBPACK_IMPORTED_MODULE_4__.Helper.loadWorker(_raw_loader_workers_generate_clouds_worker__WEBPACK_IMPORTED_MODULE_8__.default);
             generator.postMessage({
                 data: buffer,
                 configs: {
@@ -5411,23 +5413,24 @@ class Clouds {
                 generator.onmessage = async (e) => {
                     const newBuffer = new Uint8Array(e.data);
                     array.data = newBuffer;
-                    const { positions, indices, normals } = await (0,_simple_cull__WEBPACK_IMPORTED_MODULE_6__.simpleCull)(array, {
-                        dimension,
+                    const { positions, indices, normals } = await (0,_simple_cull__WEBPACK_IMPORTED_MODULE_7__.simpleCull)(array, {
+                        dimensions,
                         min: [1, 0, 1],
                         max: [paddedTotalWidth - 1, height, width + 1],
                         realMin: [0, 0, 0],
                         realMax: [paddedTotalWidth, height, width + 2],
                     });
-                    const geometry = new three__WEBPACK_IMPORTED_MODULE_8__.BufferGeometry();
-                    geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_8__.Float32BufferAttribute(positions, 3));
-                    geometry.setAttribute('normal', new three__WEBPACK_IMPORTED_MODULE_8__.Int8BufferAttribute(normals, 3));
+                    const geometry = new three__WEBPACK_IMPORTED_MODULE_9__.BufferGeometry();
+                    geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_9__.Float32BufferAttribute(positions, 3));
+                    geometry.setAttribute('normal', new three__WEBPACK_IMPORTED_MODULE_9__.Int8BufferAttribute(normals, 3));
                     geometry.setIndex(Array.from(indices));
-                    const mesh = new three__WEBPACK_IMPORTED_MODULE_8__.Mesh(geometry, this.material);
+                    geometry.computeVertexNormals();
+                    const mesh = new three__WEBPACK_IMPORTED_MODULE_9__.Mesh(geometry, this.material);
                     const previousMesh = this.meshes[this.meshes.length - 1];
-                    const x = (-totalWidth / 2) * dimension;
+                    const x = (-totalWidth / 2) * dimensions[0];
                     const z = previousMesh
-                        ? previousMesh.position.z + width * dimension
-                        : (zOffset * width - totalWidth / 2) * dimension;
+                        ? previousMesh.position.z + width * dimensions[2]
+                        : (zOffset * width - totalWidth / 2) * dimensions[2];
                     mesh.position.set(x, worldHeight, z);
                     this.meshes.push(mesh);
                     this.cloudGroup.add(mesh);
@@ -5436,20 +5439,20 @@ class Clouds {
             });
             this.cloudOffsetCount++;
         };
-        const { worldHeight, fogFarFactor, color, alpha } = (this.options = Object.assign(Object.assign({}, defaultCloudsOptions), options));
-        this.material = new three__WEBPACK_IMPORTED_MODULE_8__.ShaderMaterial({
-            opacity: 0.2,
-            alphaTest: 0.3,
+        const { worldHeight, fogFarFactor, color, alpha, seed } = (this.options = Object.assign(Object.assign({}, defaultCloudsOptions), options));
+        if (seed === -1)
+            this.options.seed = Math.random() * 10000;
+        this.material = new three__WEBPACK_IMPORTED_MODULE_9__.ShaderMaterial({
             transparent: true,
-            vertexShader: _shaders_clouds_vertex_glsl__WEBPACK_IMPORTED_MODULE_5__.default,
-            fragmentShader: _shaders_clouds_fragment_glsl__WEBPACK_IMPORTED_MODULE_4__.default,
-            depthWrite: false,
+            vertexShader: _shaders_clouds_vertex_glsl__WEBPACK_IMPORTED_MODULE_6__.default,
+            fragmentShader: _shaders_clouds_fragment_glsl__WEBPACK_IMPORTED_MODULE_5__.default,
+            side: three__WEBPACK_IMPORTED_MODULE_9__.FrontSide,
             uniforms: Object.assign(Object.assign({}, rendering.fogUniforms), { uFogNear: {
                     value: worldHeight,
                 }, uFogFar: {
                     value: worldHeight * fogFarFactor,
                 }, uCloudColor: {
-                    value: new three__WEBPACK_IMPORTED_MODULE_8__.Color(color),
+                    value: new three__WEBPACK_IMPORTED_MODULE_9__.Color(color),
                 }, uCloudAlpha: {
                     value: alpha,
                 } }),
@@ -5907,7 +5910,7 @@ const DEFAULT_WORKER_COUNT = 20;
 const workers = [];
 async function simpleCull(array, options) {
     const { stride, data } = array;
-    const { dimension, min, max, realMin, realMax } = options;
+    const { dimensions, min, max, realMin, realMax } = options;
     const voxelsBuffer = data.buffer.slice(0);
     const worker = workers.pop() || _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.loadWorker(_raw_loader_workers_simple_cull_worker__WEBPACK_IMPORTED_MODULE_4__.default);
     const result = await new Promise((resolve) => {
@@ -5918,7 +5921,7 @@ async function simpleCull(array, options) {
                 max,
                 realMin,
                 realMax,
-                dimension,
+                dimensions,
                 stride,
             },
         }, [voxelsBuffer]);
@@ -5963,7 +5966,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const defaultSkyOptions = {
     domeOffset: 600,
-    dimension: 4000,
+    dimension: 6000,
     // topColor: '#74B3FF',
     // bottomColor: '#ffffff',
     topColor: '#000',
@@ -5993,6 +5996,7 @@ class Sky {
     constructor(rendering, options = {}) {
         this.rendering = rendering;
         this.boxMaterials = new Map();
+        this.meshGroup = new three__WEBPACK_IMPORTED_MODULE_3__.Group();
         this.createSkyShading = () => {
             const { dimension, topColor, bottomColor, domeOffset } = this.options;
             const uniforms = {
@@ -6006,10 +6010,11 @@ class Sky {
                 uniforms,
                 vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
                 fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
+                depthWrite: false,
                 side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
             });
             this.shadingMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.shadingGeometry, this.shadingMaterial);
-            this.rendering.scene.add(this.shadingMesh);
+            this.meshGroup.add(this.shadingMesh);
         };
         this.createSkyBox = () => {
             const { dimension } = this.options;
@@ -6021,7 +6026,7 @@ class Sky {
                 materials.push(canvasMaterial);
             }
             this.boxMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.boxGeometry, materials);
-            this.rendering.scene.add(this.boxMesh);
+            this.meshGroup.add(this.boxMesh);
         };
         this.createCanvasMaterial = () => {
             const canvas = document.createElement('canvas');
@@ -6188,10 +6193,14 @@ class Sky {
             if (this.newBottomColor) {
                 this.shadingMaterial.uniforms.bottomColor.value.lerpHSL(this.newBottomColor, lerpFactor);
             }
+            const { threeCamera } = this.rendering.engine.camera;
+            this.meshGroup.position.x = threeCamera.position.x;
+            this.meshGroup.position.z = threeCamera.position.z;
         };
         this.options = Object.assign(Object.assign({}, defaultSkyOptions), options);
         this.createSkyShading();
         this.createSkyBox();
+        rendering.scene.add(this.meshGroup);
         this.paint('sides', 'stars');
         this.paint('top', 'stars');
         this.paint('top', 'moon');
@@ -21424,7 +21433,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform vec3 uFogColor;\nuniform vec3 uFogNearColor;\nuniform vec3 uCloudColor;\nuniform float uFogNear;\nuniform float uFogFar;\nuniform float uCloudAlpha;\n\nvoid main() {\n  gl_FragColor = vec4(uCloudColor, uCloudAlpha);\n\n  // fog\n  float depth = gl_FragCoord.z / gl_FragCoord.w;\n  float fogFactor = smoothstep(uFogNear, uFogFar, depth);\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);\n}");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform vec3 uFogColor;\nuniform vec3 uFogNearColor;\nuniform vec3 uCloudColor;\nuniform float uFogNear;\nuniform float uFogFar;\nuniform float uCloudAlpha;\n\nvarying vec3 eyenorm;\n\nvoid main() {\n  gl_FragColor = vec4(uCloudColor, uCloudAlpha);\n\n  vec3 dirLight = vec3(0, 1.0, 0);\n  float ndotl = dot(normalize(eyenorm), normalize(dirLight));\n  \n  if (ndotl > 0.8) {\n    ndotl = 1.0;\n  } else if (ndotl > 0.6) {\n    ndotl = 0.9;\n  } else {\n    ndotl = 0.8;\n  }\n\n  gl_FragColor.rgb *= ndotl;\n\n  // fog\n  float depth = gl_FragCoord.z / gl_FragCoord.w;\n  float fogFactor = smoothstep(uFogNear, uFogFar, depth);\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);\n\n}");
 
 /***/ }),
 
@@ -21439,7 +21448,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform float uTime;\n\nvarying vec3 vWorldPosition;\n\nvoid main() {\n  vec4 worldPosition = modelMatrix * vec4(position, 1.0);\n\tvWorldPosition = worldPosition.xyz;\n\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, position.z + uTime / 300.0, 1.0);\n}");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("varying vec3 eyenorm;\n\nvoid main() {\n\teyenorm = -normal;\n\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}");
 
 /***/ }),
 
@@ -21499,7 +21508,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("const FACES = [\n  {\n    // left\n    dir: [-1, 0, 0],\n    corners: [\n      [0, 1, 0],\n      [0, 0, 0],\n      [0, 1, 1],\n      [0, 0, 1],\n    ],\n  },\n  {\n    // right\n    dir: [1, 0, 0],\n    corners: [\n      [1, 1, 1],\n      [1, 0, 1],\n      [1, 1, 0],\n      [1, 0, 0],\n    ],\n  },\n  {\n    // bottom\n    dir: [0, -1, 0],\n    corners: [\n      [1, 0, 1],\n      [0, 0, 1],\n      [1, 0, 0],\n      [0, 0, 0],\n    ],\n  },\n  {\n    // top\n    dir: [0, 1, 0],\n    corners: [\n      [0, 1, 1],\n      [1, 1, 1],\n      [0, 1, 0],\n      [1, 1, 0],\n    ],\n  },\n  {\n    // back\n    dir: [0, 0, -1],\n    corners: [\n      [1, 0, 0],\n      [0, 0, 0],\n      [1, 1, 0],\n      [0, 1, 0],\n    ],\n  },\n  {\n    // front\n    dir: [0, 0, 1],\n    corners: [\n      [0, 0, 1],\n      [1, 0, 1],\n      [0, 1, 1],\n      [1, 1, 1],\n    ],\n  },\n];\n\nfunction get(arr, x, y, z, stride) {\n  return arr[x * stride[0] + y * stride[1] + z * stride[2]];\n}\n\nfunction contains(voxel, min, max) {\n  const [sx, sy, sz] = min;\n  const [ex, ey, ez] = max;\n  const [vx, vy, vz] = voxel;\n  return vx < ex && vx >= sx && vy < ey && vy >= sy && vz < ez && vz >= sz;\n}\n\nonmessage = function (e) {\n  const {\n    data: dataBuffer,\n    configs: { dimension, min, max, realMin, realMax, stride },\n  } = e.data;\n\n  const data = new Uint8Array(dataBuffer);\n\n  const positions = [];\n  const normals = [];\n  const indices = [];\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  for (let vx = startX; vx < endX; ++vx) {\n    for (let vz = startZ; vz < endZ; ++vz) {\n      for (let vy = startY; vy < endY; ++vy) {\n        const voxel = get(data, vx, vy, vz, stride);\n\n        if (voxel) {\n          // There is a voxel here but do we need faces for it?\n          for (const { dir, corners } of FACES) {\n            const nvx = vx + dir[0];\n            const nvy = vy + dir[1];\n            const nvz = vz + dir[2];\n\n            const nVoxel = [vx + dir[0], vy + dir[1], vz + dir[2]];\n\n            const neighbor = get(data, nvx, nvy, nvz, stride);\n\n            if (!neighbor || !contains(nVoxel, realMin, realMax)) {\n              // this voxel has no neighbor in this direction so we need a face.\n              const ndx = positions.length / 3;\n\n              for (const pos of corners) {\n                const posX = pos[0] + vx;\n                const posY = pos[1] + vy;\n                const posZ = pos[2] + vz;\n\n                positions.push(posX * dimension, posY * dimension, posZ * dimension);\n                normals.push(...dir);\n              }\n\n              indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);\n            }\n          }\n        }\n      }\n    }\n  }\n\n  const positionsArrayBuffer = new Float32Array(positions).buffer;\n  const normalsArrayBuffer = new Float32Array(normals).buffer;\n  const indicesArrayBuffer = new Float32Array(indices).buffer;\n\n  postMessage(\n    {\n      positions: positionsArrayBuffer,\n      normals: normalsArrayBuffer,\n      indices: indicesArrayBuffer,\n    },\n    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer],\n  );\n};\n");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("const FACES = [\n  {\n    // left\n    dir: [-1, 0, 0],\n    corners: [\n      [0, 1, 0],\n      [0, 0, 0],\n      [0, 1, 1],\n      [0, 0, 1],\n    ],\n  },\n  {\n    // right\n    dir: [1, 0, 0],\n    corners: [\n      [1, 1, 1],\n      [1, 0, 1],\n      [1, 1, 0],\n      [1, 0, 0],\n    ],\n  },\n  {\n    // bottom\n    dir: [0, -1, 0],\n    corners: [\n      [1, 0, 1],\n      [0, 0, 1],\n      [1, 0, 0],\n      [0, 0, 0],\n    ],\n  },\n  {\n    // top\n    dir: [0, 1, 0],\n    corners: [\n      [0, 1, 1],\n      [1, 1, 1],\n      [0, 1, 0],\n      [1, 1, 0],\n    ],\n  },\n  {\n    // back\n    dir: [0, 0, -1],\n    corners: [\n      [1, 0, 0],\n      [0, 0, 0],\n      [1, 1, 0],\n      [0, 1, 0],\n    ],\n  },\n  {\n    // front\n    dir: [0, 0, 1],\n    corners: [\n      [0, 0, 1],\n      [1, 0, 1],\n      [0, 1, 1],\n      [1, 1, 1],\n    ],\n  },\n];\n\nfunction get(arr, x, y, z, stride) {\n  return arr[x * stride[0] + y * stride[1] + z * stride[2]];\n}\n\nfunction contains(voxel, min, max) {\n  const [sx, sy, sz] = min;\n  const [ex, ey, ez] = max;\n  const [vx, vy, vz] = voxel;\n  return vx < ex && vx >= sx && vy < ey && vy >= sy && vz < ez && vz >= sz;\n}\n\nonmessage = function (e) {\n  const {\n    data: dataBuffer,\n    configs: { dimensions, min, max, realMin, realMax, stride },\n  } = e.data;\n\n  const data = new Uint8Array(dataBuffer);\n\n  const positions = [];\n  const normals = [];\n  const indices = [];\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  const [dx, dy, dz] = dimensions;\n\n  for (let vx = startX; vx < endX; ++vx) {\n    for (let vz = startZ; vz < endZ; ++vz) {\n      for (let vy = startY; vy < endY; ++vy) {\n        const voxel = get(data, vx, vy, vz, stride);\n\n        if (voxel) {\n          // There is a voxel here but do we need faces for it?\n          for (const { dir, corners } of FACES) {\n            const nvx = vx + dir[0];\n            const nvy = vy + dir[1];\n            const nvz = vz + dir[2];\n\n            const nVoxel = [vx + dir[0], vy + dir[1], vz + dir[2]];\n\n            const neighbor = get(data, nvx, nvy, nvz, stride);\n\n            if (!neighbor || !contains(nVoxel, realMin, realMax)) {\n              // this voxel has no neighbor in this direction so we need a face.\n              const ndx = positions.length / 3;\n\n              for (const pos of corners) {\n                const posX = pos[0] + vx;\n                const posY = pos[1] + vy;\n                const posZ = pos[2] + vz;\n\n                positions.push(posX * dx, posY * dy, posZ * dz);\n                normals.push(...dir);\n              }\n\n              indices.push(ndx, ndx + 1, ndx + 2, ndx + 2, ndx + 1, ndx + 3);\n            }\n          }\n        }\n      }\n    }\n  }\n\n  const positionsArrayBuffer = new Float32Array(positions).buffer;\n  const normalsArrayBuffer = new Float32Array(normals).buffer;\n  const indicesArrayBuffer = new Float32Array(indices).buffer;\n\n  postMessage(\n    {\n      positions: positionsArrayBuffer,\n      normals: normalsArrayBuffer,\n      indices: indicesArrayBuffer,\n    },\n    [positionsArrayBuffer, normalsArrayBuffer, indicesArrayBuffer],\n  );\n};\n");
 
 /***/ }),
 
