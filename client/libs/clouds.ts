@@ -64,6 +64,7 @@ class Clouds {
       transparent: true,
       vertexShader: CloudsVertexShader,
       fragmentShader: CloudsFragmentShader,
+      depthWrite: false,
       uniforms: {
         ...rendering.fogUniforms,
         uFogNear: {

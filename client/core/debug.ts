@@ -128,8 +128,9 @@ class Debug {
 
     worldFolder
       .add(world.sky.options, 'domeOffset', 200, 2000, 10)
-      .onChange((value) => (world.sky.material.uniforms.offset.value = value))
+      .onChange((value) => (world.sky.shadingMaterial.uniforms.offset.value = value))
       .name('Done offset');
+    worldFolder.add(world.sky.boxMesh.rotation, 'x', 0, Math.PI * 2, 0.01).name('Sky box rotation');
     worldFolder
       .addColor(world.sky.options, 'topColor')
       .onChange((value) => world.sky.setTopColor(value))

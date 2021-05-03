@@ -3695,8 +3695,9 @@ class Debug {
             worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01).name('Sunlight intensity');
             worldFolder
                 .add(world.sky.options, 'domeOffset', 200, 2000, 10)
-                .onChange((value) => (world.sky.material.uniforms.offset.value = value))
+                .onChange((value) => (world.sky.shadingMaterial.uniforms.offset.value = value))
                 .name('Done offset');
+            worldFolder.add(world.sky.boxMesh.rotation, 'x', 0, Math.PI * 2, 0.01).name('Sky box rotation');
             worldFolder
                 .addColor(world.sky.options, 'topColor')
                 .onChange((value) => world.sky.setTopColor(value))
@@ -5442,6 +5443,7 @@ class Clouds {
             transparent: true,
             vertexShader: _shaders_clouds_vertex_glsl__WEBPACK_IMPORTED_MODULE_5__.default,
             fragmentShader: _shaders_clouds_fragment_glsl__WEBPACK_IMPORTED_MODULE_4__.default,
+            depthWrite: false,
             uniforms: Object.assign(Object.assign({}, rendering.fogUniforms), { uFogNear: {
                     value: worldHeight,
                 }, uFogFar: {
@@ -5967,41 +5969,233 @@ const defaultSkyOptions = {
     topColor: '#000',
     bottomColor: '#000',
     lerpFactor: 0.2,
+    starsCount: 300,
+    moonRadius: 20,
+    moonColor: '#e6e2d1',
+    sunColor: '#f8ffb5',
 };
+const SKY_BOX_SIDES = ['back', 'front', 'top', 'bottom', 'left', 'right'];
+const STAR_COLORS = [
+    '#FFFFFF',
+    '#FFFFFF',
+    '#FFFFFF',
+    '#FFFFFF',
+    '#FFFFFF',
+    '#FFFFFF',
+    '#FFFFFF',
+    '#FFFFFF',
+    '#FFFFFF',
+    '#FFFFFF',
+    '#8589FF',
+    '#FF8585',
+];
 class Sky {
     constructor(rendering, options = {}) {
         this.rendering = rendering;
+        this.boxMaterials = new Map();
+        this.createSkyShading = () => {
+            const { dimension, topColor, bottomColor, domeOffset } = this.options;
+            const uniforms = {
+                topColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor) },
+                bottomColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(bottomColor) },
+                offset: { value: domeOffset },
+                exponent: { value: 0.6 },
+            };
+            this.shadingGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.SphereGeometry(dimension);
+            this.shadingMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
+                uniforms,
+                vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
+                fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
+                side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
+            });
+            this.shadingMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.shadingGeometry, this.shadingMaterial);
+            this.rendering.scene.add(this.shadingMesh);
+        };
+        this.createSkyBox = () => {
+            const { dimension } = this.options;
+            const materials = [];
+            this.boxGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.BoxBufferGeometry(dimension * 0.9, dimension * 0.9, dimension * 0.9);
+            for (const face of SKY_BOX_SIDES) {
+                const canvasMaterial = this.createCanvasMaterial();
+                this.boxMaterials.set(face, canvasMaterial);
+                materials.push(canvasMaterial);
+            }
+            this.boxMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.boxGeometry, materials);
+            this.rendering.scene.add(this.boxMesh);
+        };
+        this.createCanvasMaterial = () => {
+            const canvas = document.createElement('canvas');
+            canvas.height = 512;
+            canvas.width = 512;
+            const material = new three__WEBPACK_IMPORTED_MODULE_3__.MeshBasicMaterial({
+                side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
+                map: new three__WEBPACK_IMPORTED_MODULE_3__.Texture(canvas),
+                transparent: true,
+                depthWrite: false,
+                fog: false,
+            });
+            material.map.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+            material.map.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.LinearMipMapLinearFilter;
+            material.map.wrapS = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
+            material.map.wrapT = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
+            material.map.needsUpdate = true;
+            material.polygonOffset = true;
+            material.polygonOffsetFactor = -0.5;
+            return material;
+        };
         this.setTopColor = (color) => {
             this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
         };
         this.setBottomColor = (color) => {
             this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
         };
+        this.paint = (side, art) => {
+            const actualSides = Array.isArray(side)
+                ? side
+                : side === 'all'
+                    ? SKY_BOX_SIDES
+                    : side === 'sides'
+                        ? ['front', 'back', 'left', 'right']
+                        : [side];
+            for (const face of actualSides) {
+                const material = this.boxMaterials.get(face);
+                if (!material)
+                    continue;
+                switch (art) {
+                    case 'sun':
+                        this.drawSun(material);
+                        break;
+                    case 'moon':
+                        this.drawMoon(material);
+                        break;
+                    case 'stars':
+                        this.drawStars(material);
+                        break;
+                    case 'clear':
+                        break;
+                }
+                material.needsUpdate = true;
+            }
+        };
+        this.drawMoon = (material, phase = 1) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const { moonRadius: radius, moonColor } = this.options;
+            const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(moonColor);
+            const context = canvas.getContext('2d');
+            const x = canvas.width / 2;
+            const y = canvas.height / 2;
+            // bg glow
+            context.beginPath();
+            const grd = context.createRadialGradient(x + radius / 2, y + radius / 2, 1, x + radius / 2, y + radius / 2, radius * 2);
+            grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
+            grd.addColorStop(1, this.rgba(1, 1, 1, 0));
+            context.arc(x + radius / 2, y + radius / 2, radius * 2, 0, 2 * Math.PI, false);
+            context.fillStyle = grd;
+            context.fill();
+            context.closePath();
+            // clipping region
+            context.save();
+            context.beginPath();
+            context.rect(x, y, radius, radius);
+            context.clip();
+            // moon bg
+            context.beginPath();
+            context.rect(x, y, radius, radius);
+            context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
+            context.fill();
+            context.translate(x, y);
+            // lighter inside
+            context.beginPath();
+            context.rect(4, 4, radius - 8, radius - 8);
+            context.fillStyle = this.rgba(1, 1, 1, 0.8);
+            context.fill();
+            // moon phase
+            const px = phase * radius * 2 - radius;
+            context.beginPath();
+            context.rect(px, 0, radius, radius);
+            context.fillStyle = this.rgba(0, 0, 0, 0.8);
+            context.fill();
+            context.beginPath();
+            context.rect(2 + px, 2, radius - 4, radius - 4);
+            context.fillStyle = this.rgba(0, 0, 0, 0.9);
+            context.fill();
+            context.restore();
+        };
+        this.drawStars = (material) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const { starsCount } = this.options;
+            const context = canvas.getContext('2d');
+            const alpha = context.globalAlpha;
+            for (let i = 0; i < starsCount; i++) {
+                context.globalAlpha = Math.random() * 1 + 0.5;
+                context.beginPath();
+                context.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 0.5, 0, 2 * Math.PI, false);
+                context.fillStyle = STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)];
+                context.fill();
+            }
+            context.globalAlpha = alpha;
+        };
+        this.drawSun = (material, radius = 50) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const { sunColor } = this.options;
+            const context = canvas.getContext('2d');
+            const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(sunColor);
+            context.save();
+            // bg glow
+            context.beginPath();
+            let x = canvas.width / 2;
+            let y = canvas.height / 2;
+            const grd = context.createRadialGradient(x, y, 1, x, y, radius * 2);
+            grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
+            grd.addColorStop(1, this.rgba(1, 1, 1, 0));
+            context.arc(x, y, radius * 2, 0, 2 * Math.PI, false);
+            context.fillStyle = grd;
+            context.fill();
+            context.closePath();
+            // outer sun
+            context.beginPath();
+            x = canvas.width / 2 - radius / 2;
+            y = canvas.height / 2 - radius / 2;
+            context.rect(x, y, radius, radius);
+            context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
+            context.fill();
+            context.closePath();
+            // inner sun
+            context.beginPath();
+            const r = radius / 1.6;
+            x = canvas.width / 2 - r / 2;
+            y = canvas.height / 2 - r / 2;
+            context.rect(x, y, r, r);
+            context.fillStyle = this.rgba(1, 1, 1, 0.5);
+            context.fill();
+            context.closePath();
+            context.restore();
+        };
+        this.rgba = (r, g, b, a) => {
+            return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`;
+        };
         this.tick = (delta) => {
             const { lerpFactor } = this.options;
             if (this.newTopColor) {
-                this.material.uniforms.topColor.value.lerpHSL(this.newTopColor, lerpFactor);
+                this.shadingMaterial.uniforms.topColor.value.lerpHSL(this.newTopColor, lerpFactor);
             }
             if (this.newBottomColor) {
-                this.material.uniforms.bottomColor.value.lerpHSL(this.newBottomColor, lerpFactor);
+                this.shadingMaterial.uniforms.bottomColor.value.lerpHSL(this.newBottomColor, lerpFactor);
             }
         };
-        const { dimension, topColor, bottomColor, domeOffset } = (this.options = Object.assign(Object.assign({}, defaultSkyOptions), options));
-        const uniforms = {
-            topColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor) },
-            bottomColor: { value: new three__WEBPACK_IMPORTED_MODULE_3__.Color(bottomColor) },
-            offset: { value: domeOffset },
-            exponent: { value: 0.6 },
-        };
-        this.geometry = new three__WEBPACK_IMPORTED_MODULE_3__.SphereGeometry(dimension);
-        this.material = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
-            uniforms,
-            vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
-            fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
-            side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
-        });
-        this.mesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.geometry, this.material);
-        rendering.scene.add(this.mesh);
+        this.options = Object.assign(Object.assign({}, defaultSkyOptions), options);
+        this.createSkyShading();
+        this.createSkyBox();
+        this.paint('sides', 'stars');
+        this.paint('top', 'stars');
+        this.paint('top', 'moon');
+        this.paint('bottom', 'sun');
     }
 }
 
@@ -22470,8 +22664,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var svelte_internal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! svelte/internal */ "./node_modules/svelte/internal/index.mjs");
 /* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
-/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
-/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
+/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
+/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* client/App.svelte generated by Svelte v3.37.0 */
 
@@ -22604,7 +22798,7 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-1dqxao5-style", nonCssHash: "pnh723", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-1dqxao5-style", nonCssHash: "pnh723", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
 if (typeof add_css !== 'undefined' && !document.getElementById("svelte-1dqxao5-style")) add_css();
