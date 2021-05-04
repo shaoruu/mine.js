@@ -5340,15 +5340,15 @@ __webpack_require__.r(__webpack_exports__);
 
 const defaultCloudsOptions = {
     seed: -1,
-    scale: 0.03,
+    scale: 0.06,
     width: 16,
     height: 1,
-    count: 24,
+    count: 10,
     worldHeight: 2000,
-    dimensions: [60, 30, 60],
-    threshold: 0.25,
-    speed: 16,
-    lerpFactor: 0.7,
+    dimensions: [120, 60, 120],
+    threshold: 0.5,
+    speed: 20,
+    lerpFactor: 0.6,
     fogFarFactor: 3,
     color: '#eee',
     alpha: 0.6,
@@ -21493,7 +21493,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("importScripts('https://cdn.jsdelivr.net/npm/noisejs@2.1.0/index.min.js');\n\nfunction set(arr, x, y, z, stride, value) {\n  arr[x * stride[0] + y * stride[1] + z * stride[2]] = value;\n}\n\nconst noise = new Noise();\n\nonmessage = function (e) {\n  const {\n    data: dataBuffer,\n    configs: { min, max, seed, scale, threshold, stride },\n  } = e.data;\n\n  noise.seed(seed);\n\n  const data = new Uint8Array(dataBuffer);\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {\n    for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {\n      for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {\n        const value = Math.abs(noise.simplex3(vx * scale, vy * scale, vz * scale)) > threshold ? 1 : 0;\n        set(data, lx, ly, lz, stride, value);\n      }\n    }\n  }\n\n  postMessage(data.buffer, [data.buffer]);\n};\n");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("importScripts('https://cdn.jsdelivr.net/npm/noisejs@2.1.0/index.min.js');\n\nfunction set(arr, x, y, z, stride, value) {\n  arr[x * stride[0] + y * stride[1] + z * stride[2]] = value;\n}\n\nconst noise = new Noise();\n\nonmessage = function (e) {\n  const {\n    data: dataBuffer,\n    configs: { min, max, seed, scale, threshold, stride },\n  } = e.data;\n\n  noise.seed(seed);\n\n  const data = new Uint8Array(dataBuffer);\n\n  const [startX, startY, startZ] = min;\n  const [endX, endY, endZ] = max;\n\n  const factor1 = 0.4;\n  const factor2 = 0.7;\n\n  for (let vx = startX, lx = 0; vx < endX; ++vx, ++lx) {\n    for (let vz = startZ, lz = 0; vz < endZ; ++vz, ++lz) {\n      for (let vy = startY, ly = 0; vy < endY; ++vy, ++ly) {\n        const value =\n          Math.abs(\n            noise.simplex3(vx * scale * factor1, vy * scale * factor1, vz * scale * factor1) +\n              noise.simplex3(vx * scale * factor2, vy * scale * factor2, vz * scale * factor2) +\n              noise.simplex3(vx * scale, vy * scale, vz * scale),\n          ) > threshold\n            ? 1\n            : 0;\n        set(data, lx, ly, lz, stride, value);\n      }\n    }\n  }\n\n  postMessage(data.buffer, [data.buffer]);\n};\n");
 
 /***/ }),
 

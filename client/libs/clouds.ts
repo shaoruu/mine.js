@@ -39,15 +39,15 @@ type CloudsOptionsType = {
 
 const defaultCloudsOptions: CloudsOptionsType = {
   seed: -1,
-  scale: 0.03, // the lower value, the fatter the clouds
+  scale: 0.06, // the lower value, the fatter the clouds
   width: 16,
   height: 1,
-  count: 24, // grid size
+  count: 10, // grid size
   worldHeight: 2000,
-  dimensions: [60, 30, 60],
-  threshold: 0.25,
-  speed: 16,
-  lerpFactor: 0.7,
+  dimensions: [120, 60, 120],
+  threshold: 0.5,
+  speed: 20,
+  lerpFactor: 0.6,
   fogFarFactor: 3,
   color: '#eee',
   alpha: 0.6,
