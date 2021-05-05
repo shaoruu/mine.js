@@ -1,3 +1,1 @@
 # MineJS
-
-## Texture Maps
