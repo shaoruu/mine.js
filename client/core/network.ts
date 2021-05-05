@@ -1,3 +1,4 @@
+import Url from 'domurl';
 import Pako from 'pako';
 
 import { protocol } from '../../protocol';
@@ -11,17 +12,16 @@ type CustomWebSocket = WebSocket & {
   serverURL: string;
 };
 
-type NetworkOptionsType = {
-  url: string;
-};
-
 class Network {
   public server: CustomWebSocket;
 
+  public url = new Url();
   public connected = false;
 
-  constructor(public engine: Engine, public options: NetworkOptionsType) {
-    this.connect(options.url);
+  constructor(public engine: Engine) {
+    if (this.url.host === 'localhost') this.url.port = '4000';
+
+    this.connect(this.url.toString());
   }
 
   connect = (url: string) => {
@@ -106,4 +106,4 @@ class Network {
   }
 }
 
-export { Network, NetworkOptionsType };
+export { Network };

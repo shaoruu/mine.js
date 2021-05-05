@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 
 import merge from 'deepmerge';
-import { ShaderChunk } from 'three';
 
 import { Clock, DeepPartial } from '../libs';
 
@@ -15,7 +14,6 @@ import {
   EntitiesOptionsType,
   Inputs,
   Network,
-  NetworkOptionsType,
   Physics,
   PhysicsOptionsType,
   Player,
@@ -28,34 +26,6 @@ import {
   WorldOptionsType,
 } from '.';
 
-ShaderChunk.fog_pars_vertex = ShaderChunk.fog_pars_vertex.replace(
-  'varying float fogDepth;',
-  'varying vec3 vViewPosition;',
-);
-
-ShaderChunk.fog_vertex = ShaderChunk.fog_vertex.replace(
-  'fogDepth = - mvPosition.z;',
-  'vViewPosition = - mvPosition.xyz;',
-);
-
-ShaderChunk.fog_pars_fragment = ShaderChunk.fog_pars_fragment.replace(
-  'varying float fogDepth;',
-  'varying vec3 vViewPosition;',
-);
-
-ShaderChunk.fog_fragment = ShaderChunk.fog_fragment
-  .replace('#ifdef USE_FOG', ['#ifdef USE_FOG', '  float fogDepth = length(vViewPosition);'].join('\n'))
-  .replace(
-    'float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );',
-    [
-      '#ifdef FOG_DENSITY',
-      '  float fogFactor = 1.0 - exp( - FOG_DENSITY * FOG_DENSITY * fogDepth * fogDepth );',
-      '#else',
-      '  float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );',
-      '#endif',
-    ].join('\n'),
-  );
-
 type ConfigType = {
   debug: boolean;
   container: ContainerOptionsType;
@@ -66,7 +36,6 @@ type ConfigType = {
   physics: PhysicsOptionsType;
   registry: RegistryOptionsType;
   rendering: RenderingOptionsType;
-  network: NetworkOptionsType;
 };
 
 const defaultConfig: ConfigType = {
@@ -128,11 +97,6 @@ const defaultConfig: ConfigType = {
     fogNearColor: '#333',
     clearColor: '#123',
   },
-  network: {
-    url: `http://${window.location.hostname}${
-      window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''
-    }`,
-  },
 };
 
 class Engine extends EventEmitter {
@@ -155,18 +119,10 @@ class Engine extends EventEmitter {
   constructor(params: DeepPartial<ConfigType> = {}) {
     super();
 
-    const {
-      camera,
-      container,
-      debug,
-      entities,
-      network,
-      physics,
-      player,
-      registry,
-      rendering,
-      world,
-    } = (this.config = merge(defaultConfig, params));
+    const { camera, container, debug, entities, physics, player, registry, rendering, world } = (this.config = merge(
+      defaultConfig,
+      params,
+    ));
 
     // debug
     if (debug) {
@@ -174,7 +130,7 @@ class Engine extends EventEmitter {
     }
 
     // network
-    this.network = new Network(this, network);
+    this.network = new Network(this);
 
     // container
     this.container = new Container(this, container);

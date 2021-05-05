@@ -3817,25 +3817,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var events__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! deepmerge */ "./node_modules/deepmerge/dist/cjs.js");
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(deepmerge__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
 /* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
 
 
 
 
-
-three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_pars_vertex = three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_pars_vertex.replace('varying float fogDepth;', 'varying vec3 vViewPosition;');
-three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_vertex = three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_vertex.replace('fogDepth = - mvPosition.z;', 'vViewPosition = - mvPosition.xyz;');
-three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_pars_fragment = three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_pars_fragment.replace('varying float fogDepth;', 'varying vec3 vViewPosition;');
-three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_fragment = three__WEBPACK_IMPORTED_MODULE_4__.ShaderChunk.fog_fragment.replace('#ifdef USE_FOG', ['#ifdef USE_FOG', '  float fogDepth = length(vViewPosition);'].join('\n'))
-    .replace('float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );', [
-    '#ifdef FOG_DENSITY',
-    '  float fogFactor = 1.0 - exp( - FOG_DENSITY * FOG_DENSITY * fogDepth * fogDepth );',
-    '#else',
-    '  float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );',
-    '#endif',
-].join('\n'));
 const defaultConfig = {
     debug: true,
     container: {
@@ -3895,9 +3882,6 @@ const defaultConfig = {
         fogNearColor: '#333',
         clearColor: '#123',
     },
-    network: {
-        url: `http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}`,
-    },
 };
 class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     constructor(params = {}) {
@@ -3945,13 +3929,13 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.paused = true;
             this.emit('pause');
         };
-        const { camera, container, debug, entities, network, physics, player, registry, rendering, world, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
+        const { camera, container, debug, entities, physics, player, registry, rendering, world } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
         // debug
         if (debug) {
             this.debug = new ___WEBPACK_IMPORTED_MODULE_3__.Debug(this);
         }
         // network
-        this.network = new ___WEBPACK_IMPORTED_MODULE_3__.Network(this, network);
+        this.network = new ___WEBPACK_IMPORTED_MODULE_3__.Network(this);
         // container
         this.container = new ___WEBPACK_IMPORTED_MODULE_3__.Container(this, container);
         // rendering
@@ -4197,18 +4181,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Network": () => (/* binding */ Network)
 /* harmony export */ });
-/* harmony import */ var pako__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pako */ "./node_modules/pako/dist/pako.esm.mjs");
-/* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../protocol */ "./protocol/index.js");
-/* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_protocol__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+/* harmony import */ var domurl__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! domurl */ "./node_modules/domurl/url.min.js");
+/* harmony import */ var domurl__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(domurl__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var pako__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! pako */ "./node_modules/pako/dist/pako.esm.mjs");
+/* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../protocol */ "./protocol/index.js");
+/* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_protocol__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
-const { Message } = _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol;
+
+const { Message } = _protocol__WEBPACK_IMPORTED_MODULE_2__.protocol;
 class Network {
-    constructor(engine, options) {
+    constructor(engine) {
         this.engine = engine;
-        this.options = options;
+        this.url = new (domurl__WEBPACK_IMPORTED_MODULE_0___default())();
         this.connected = false;
         this.connect = (url) => {
             const socket = new URL(url);
@@ -4258,11 +4245,13 @@ class Network {
             }
             this.onEvent(event);
         };
-        this.connect(options.url);
+        if (this.url.host === 'localhost')
+            this.url.port = '4000';
+        this.connect(this.url.toString());
     }
     static decode(buffer) {
         if (buffer[0] === 0x78 && buffer[1] === 0x9c) {
-            buffer = pako__WEBPACK_IMPORTED_MODULE_0__.default.inflate(buffer);
+            buffer = pako__WEBPACK_IMPORTED_MODULE_1__.default.inflate(buffer);
         }
         const message = Message.decode(buffer);
         // @ts-ignore
@@ -4277,7 +4266,7 @@ class Network {
             message.json = JSON.stringify(message.json);
         }
         message.type = Message.Type[message.type];
-        return _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.encode(_protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.create(message)).finish();
+        return _protocol__WEBPACK_IMPORTED_MODULE_2__.protocol.Message.encode(_protocol__WEBPACK_IMPORTED_MODULE_2__.protocol.Message.create(message)).finish();
     }
 }
 
@@ -4620,7 +4609,7 @@ class Registry {
         this.options = options;
         engine.on('ready', () => {
             this.atlasUniform = {
-                value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`http://${window.location.hostname}${window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''}/atlas`),
+                value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`${engine.network.url.toString()}atlas`),
             };
             const atlas = this.atlasUniform.value;
             atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
@@ -9204,6 +9193,17 @@ var deepmerge_1 = deepmerge;
 
 module.exports = deepmerge_1;
 
+
+/***/ }),
+
+/***/ "./node_modules/domurl/url.min.js":
+/*!****************************************!*\
+  !*** ./node_modules/domurl/url.min.js ***!
+  \****************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/* module decorator */ module = __webpack_require__.nmd(module);
+!function(t){"use strict";var y=/^[a-z]+:/,d=/[-a-z0-9]+(\.[-a-z0-9])*:\d+/i,v=/\/\/(.*?)(?::(.*?))?@/,r=/^win/i,g=/:$/,m=/^\?/,q=/^#/,w=/(.*\/)/,A=/^\/{2,}/,I=/(^\/?)/,e=/'/g,o=/%([ef][0-9a-f])%([89ab][0-9a-f])%([89ab][0-9a-f])/gi,n=/%([cd][0-9a-f])%([89ab][0-9a-f])/gi,i=/%([0-7][0-9a-f])/gi,s=/\+/g,a=/^\w:$/,C=/[^/#?]/;var p,S="undefined"==typeof window&&"undefined"!=typeof __webpack_require__.g&&"function"=="function",b=!S&&t.navigator&&t.navigator.userAgent&&~t.navigator.userAgent.indexOf("MSIE"),x=S?t.require:null,j={protocol:"protocol",host:"hostname",port:"port",path:"pathname",query:"search",hash:"hash"},z={ftp:21,gopher:70,http:80,https:443,ws:80,wss:443};function E(){return S?p=p||"file://"+(process.platform.match(r)?"/":"")+x("fs").realpathSync("."):"about:srcdoc"===document.location.href?self.parent.document.location.href:document.location.href}function h(t,r,e){var o,n,i;r=r||E(),S?o=x("url").parse(r):(o=document.createElement("a")).href=r;var a,s,p=(s={path:!0,query:!0,hash:!0},(a=r)&&y.test(a)&&(s.protocol=!0,s.host=!0,d.test(a)&&(s.port=!0),v.test(a)&&(s.user=!0,s.pass=!0)),s);for(n in i=r.match(v)||[],j)p[n]?t[n]=o[j[n]]||"":t[n]="";if(t.protocol=t.protocol.replace(g,""),t.query=t.query.replace(m,""),t.hash=F(t.hash.replace(q,"")),t.user=F(i[1]||""),t.pass=F(i[2]||""),t.port=z[t.protocol]==t.port||0==t.port?"":t.port,!p.protocol&&C.test(r.charAt(0))&&(t.path=r.split("?")[0].split("#")[0]),!p.protocol&&e){var h=new L(E().match(w)[0]),u=h.path.split("/"),c=t.path.split("/"),f=["protocol","user","pass","host","port"],l=f.length;for(u.pop(),n=0;n<l;n++)t[f[n]]=h[f[n]];for(;".."===c[0];)u.pop(),c.shift();t.path=("/"!==r.charAt(0)?u.join("/"):"")+"/"+c.join("/")}t.path=t.path.replace(A,"/"),b&&(t.path=t.path.replace(I,"/")),t.paths(t.paths()),t.query=new U(t.query)}function u(t){return encodeURIComponent(t).replace(e,"%27")}function F(t){return(t=(t=(t=t.replace(s," ")).replace(o,function(t,r,e,o){var n=parseInt(r,16)-224,i=parseInt(e,16)-128;if(0==n&&i<32)return t;var a=(n<<12)+(i<<6)+(parseInt(o,16)-128);return 65535<a?t:String.fromCharCode(a)})).replace(n,function(t,r,e){var o=parseInt(r,16)-192;if(o<2)return t;var n=parseInt(e,16)-128;return String.fromCharCode((o<<6)+n)})).replace(i,function(t,r){return String.fromCharCode(parseInt(r,16))})}function U(t){for(var r=t.split("&"),e=0,o=r.length;e<o;e++){var n=r[e].split("="),i=decodeURIComponent(n[0].replace(s," "));if(i){var a=void 0!==n[1]?F(n[1]):null;void 0===this[i]?this[i]=a:(this[i]instanceof Array||(this[i]=[this[i]]),this[i].push(a))}}}function L(t,r){h(this,t,!r)}U.prototype.toString=function(){var t,r,e="",o=u;for(t in this){var n=this[t];if(!(n instanceof Function||void 0===n))if(n instanceof Array){var i=n.length;if(!i){e+=(e?"&":"")+o(t)+"=";continue}for(r=0;r<i;r++){var a=n[r];void 0!==a&&(e+=e?"&":"",e+=o(t)+(null===a?"":"="+o(a)))}}else e+=e?"&":"",e+=o(t)+(null===n?"":"="+o(n))}return e},L.prototype.clearQuery=function(){for(var t in this.query)this.query[t]instanceof Function||delete this.query[t];return this},L.prototype.queryLength=function(){var t=0;for(var r in this.query)this.query[r]instanceof Function||t++;return t},L.prototype.isEmptyQuery=function(){return 0===this.queryLength()},L.prototype.paths=function(t){var r,e="",o=0;if(t&&t.length&&t+""!==t){for(this.isAbsolute()&&(e="/"),r=t.length;o<r;o++)t[o]=!o&&a.test(t[o])?t[o]:u(t[o]);this.path=e+t.join("/")}for(o=0,r=(t=("/"===this.path.charAt(0)?this.path.slice(1):this.path).split("/")).length;o<r;o++)t[o]=F(t[o]);return t},L.prototype.encode=u,L.prototype.decode=F,L.prototype.isAbsolute=function(){return this.protocol||"/"===this.path.charAt(0)},L.prototype.toString=function(){return(this.protocol&&this.protocol+"://")+(this.user&&u(this.user)+(this.pass&&":"+u(this.pass))+"@")+(this.host&&this.host)+(this.port&&":"+this.port)+(this.path&&this.path)+(this.query.toString()&&"?"+this.query)+(this.hash&&"#"+u(this.hash))},t[t.exports?"exports":"Url"]=L}( true&&module.exports?module:window);
 
 /***/ }),
 
@@ -78623,6 +78623,15 @@ module.exports = $root;
 /******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
 /******/ 			}
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/node module decorator */
+/******/ 	(() => {
+/******/ 		__webpack_require__.nmd = (module) => {
+/******/ 			module.paths = [];
+/******/ 			if (!module.children) module.children = [];
+/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	

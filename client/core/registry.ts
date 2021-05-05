@@ -22,11 +22,7 @@ class Registry {
   constructor(public engine: Engine, public options: RegistryOptionsType) {
     engine.on('ready', () => {
       this.atlasUniform = {
-        value: new TextureLoader().load(
-          `http://${window.location.hostname}${
-            window.location.hostname === 'localhost' ? ':4000' : window.location.port ? `:${window.location.port}` : ''
-          }/atlas`,
-        ),
+        value: new TextureLoader().load(`${engine.network.url.toString()}atlas`),
       };
 
       const atlas = this.atlasUniform.value;

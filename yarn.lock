@@ -196,6 +196,11 @@
   resolved "https://registry.npmjs.org/@types/dat.gui/-/dat.gui-0.7.6.tgz"
   integrity sha512-Dx9f9CkXJkDAxt9M05vc7DItSqsiEhWN7Rx3vgO/maltv/nX9TaMX2sd/iAMENnL1D5FivetktJEyCBLFu50CQ==
 
+"@types/domurl@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@types/domurl/-/domurl-0.0.6.tgz#74d4f65d96613c2c73a5ff21b6742392d6ad0629"
+  integrity sha512-kdpdwGmzac5kbphgRQdoHbMMyyKaPmU4GsLkKG5R9SGxRl6IcovWZLk8IJ40cjovE+jK/atokXDBTWSLXd4d3A==
+
 "@types/eslint-scope@^3.7.0":
   version "3.7.0"
   resolved "https://registry.npmjs.org/@types/eslint-scope/-/eslint-scope-3.7.0.tgz"
@@ -2145,6 +2150,11 @@ doctrine@^3.0.0:
   integrity sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==
   dependencies:
     esutils "^2.0.2"
+
+domurl@^2.3.4:
+  version "2.3.4"
+  resolved "https://registry.yarnpkg.com/domurl/-/domurl-2.3.4.tgz#fc0de7f9185b197ca7afe8a989e30d462c082489"
+  integrity sha512-/pmFKQbQqjsCB5qppxfGexcaVykxcawJi2S9aRq3iF9fcIUrkUd9ceXxehP2ARbCbmhh4O21YBRC1pn86rpujg==
 
 dot-prop@^5.2.0:
   version "5.3.0"
