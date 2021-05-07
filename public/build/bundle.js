@@ -22694,18 +22694,16 @@ function create_fragment(ctx) {
 	let div;
 	let img;
 	let img_src_value;
-	let t0;
+	let t;
 	let canvas_1;
-	let t1;
 
 	const block = {
 		c: function create() {
 			main = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("main");
 			div = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
 			img = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("img");
-			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			t = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			canvas_1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("canvas");
-			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			if (img.src !== (img_src_value = "https://i.imgur.com/ro6oLCL.png")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "src", img_src_value);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "id", "crosshair");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "alt", "+");
@@ -22715,7 +22713,6 @@ function create_fragment(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 10, 2, 194);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-1dqxao5");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 9, 0, 185);
-			document.title = "MineJS - Game";
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -22724,11 +22721,10 @@ function create_fragment(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, main, anchor);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(main, div);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, img);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t0);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, canvas_1);
 			/*canvas_1_binding*/ ctx[2](canvas_1);
 			/*div_binding*/ ctx[3](div);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, t1, anchor);
 		},
 		p: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
 		i: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
@@ -22737,7 +22733,6 @@ function create_fragment(ctx) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(main);
 			/*canvas_1_binding*/ ctx[2](null);
 			/*div_binding*/ ctx[3](null);
-			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(t1);
 		}
 	};
 
@@ -22807,7 +22802,7 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-1dqxao5-style", nonCssHash: "pnh723", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_2__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_3__.default, acceptable: true, cssId: "svelte-1dqxao5-style", nonCssHash: "1n6ju9a", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
 if (typeof add_css !== 'undefined' && !document.getElementById("svelte-1dqxao5-style")) add_css();

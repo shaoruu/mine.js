@@ -18,10 +18,6 @@
   </div>
 </main>
 
-<svelte:head>
-  <title>MineJS - Game</title>
-</svelte:head>
-
 <style>
   main {
     width: 100%;
