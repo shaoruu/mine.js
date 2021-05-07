@@ -135,14 +135,17 @@ class World extends EventEmitter {
     return this.chunks.set(chunk.name, chunk);
   }
 
-  setVoxel(voxel: Coords3, type: number) {
+  setVoxel(voxel: Coords3, type: number, sideEffects = true) {
     // TODO
     const [vx, vy, vz] = voxel;
     this.getChunkByVoxel([vx, vy, vz])?.setVoxel(vx, vy, vz, type);
-    this.engine.network.server.sendEvent({
-      type: 'UPDATE',
-      json: { x: vx, y: vy, z: vz, type },
-    });
+
+    if (sideEffects) {
+      this.engine.network.server.sendEvent({
+        type: 'UPDATE',
+        json: { x: vx, y: vy, z: vz, type },
+      });
+    }
   }
 
   breakVoxel() {

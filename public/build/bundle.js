@@ -4224,7 +4224,7 @@ class Network {
                 }
                 case 'UPDATE': {
                     const { json: { voxel, type }, } = event;
-                    world.setVoxel(voxel, type);
+                    world.setVoxel(voxel, type, false);
                 }
                 case 'LOAD': {
                     const { chunks } = event;
@@ -4866,15 +4866,17 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         // TODO: remove chunks that are too far away
         return this.chunks.set(chunk.name, chunk);
     }
-    setVoxel(voxel, type) {
+    setVoxel(voxel, type, sideEffects = true) {
         var _a;
         // TODO
         const [vx, vy, vz] = voxel;
         (_a = this.getChunkByVoxel([vx, vy, vz])) === null || _a === void 0 ? void 0 : _a.setVoxel(vx, vy, vz, type);
-        this.engine.network.server.sendEvent({
-            type: 'UPDATE',
-            json: { x: vx, y: vy, z: vz, type },
-        });
+        if (sideEffects) {
+            this.engine.network.server.sendEvent({
+                type: 'UPDATE',
+                json: { x: vx, y: vy, z: vz, type },
+            });
+        }
     }
     breakVoxel() {
         if (this.engine.player.lookBlock) {

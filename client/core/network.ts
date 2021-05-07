@@ -62,7 +62,7 @@ class Network {
         const {
           json: { voxel, type },
         } = event;
-        world.setVoxel(voxel, type);
+        world.setVoxel(voxel, type, false);
       }
       case 'LOAD': {
         const { chunks } = event;
