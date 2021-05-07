@@ -269,23 +269,19 @@ class World extends Network {
         chunk.update(voxel, type);
         this.stopCaching();
 
-        const chunkProtocols = Array.from(this.chunkCache).map((chunk) => {
+        this.chunkCache.forEach((chunk) => {
           chunk.remesh();
-          return chunk.getProtocol(false);
-        });
-
-        this.clearCache();
-
-        chunkProtocols.forEach((cp) => {
           this.broadcast({
             type: 'UPDATE',
-            chunks: [cp],
+            chunks: [chunk.getProtocol(false)],
             json: {
               voxel,
               type,
             },
           });
         });
+
+        this.clearCache();
 
         break;
       }
