@@ -1,11 +1,9 @@
 import { EventEmitter } from 'events';
-import http from 'http';
 import path from 'path';
 import zlib from 'zlib';
 
 import chalk from 'chalk';
-import cors from 'cors';
-import express, { Express } from 'express';
+import fastify, { FastifyInstance } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 
@@ -26,8 +24,7 @@ type ClientType = WebSocket & {
 };
 
 class Network extends EventEmitter {
-  public app: Express;
-  public server: http.Server;
+  public app: FastifyInstance;
   public wss: WebSocket.Server;
   public pingInterval: NodeJS.Timeout;
 
@@ -38,23 +35,23 @@ class Network extends EventEmitter {
 
     const { isProduction } = options;
 
-    this.app = express();
-    this.app.use(cors());
+    this.app = fastify();
+    this.app.register(require('fastify-cors'));
 
     if (isProduction) {
-      this.app.use(express.static(path.join(__dirname, '../..', 'public')));
+      this.app.register(require('fastify-static'), {
+        root: path.join(__dirname, '../..', 'public'),
+      });
     }
 
-    this.server = http.createServer(this.app);
-
-    this.wss = new WebSocket.Server({ server: this.server });
+    this.wss = new WebSocket.Server({ server: this.app.server });
     this.wss.on('connection', this.onConnect);
   }
 
   listen = () => {
     const { port } = this.options;
 
-    this.server.listen(port || 4000, this.onListen);
+    this.app.listen(port || 4000, this.onListen);
   };
 
   onListen = () => {

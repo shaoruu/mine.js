@@ -1,5 +1,5 @@
 Arguments: 
-  /usr/local/bin/node /usr/share/yarn/bin/yarn.js add -D @types/postprocessing
+  /usr/local/bin/node /usr/share/yarn/bin/yarn.js add -D fastify @types/fastify
 
 PATH: 
   /home/owner/anaconda3/bin:/home/owner/anaconda3/condabin:/home/owner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/owner/.yarn/bin
@@ -14,7 +14,7 @@ Platform:
   linux x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2fpostprocessing: Not found
+  Error: https://registry.yarnpkg.com/@types%2ffastify: Not found
       at Request.params.callback [as _callback] (/usr/share/yarn/lib/cli.js:66988:18)
       at Request.self.callback (/usr/share/yarn/lib/cli.js:140749:22)
       at Request.emit (node:events:369:20)
@@ -37,6 +37,7 @@ npm manifest:
       "@types/chalk": "^2.2.0",
       "@types/cors": "^2.8.10",
       "@types/dat.gui": "^0.7.6",
+      "@types/domurl": "^0.0.6",
       "@types/events": "^3.0.0",
       "@types/express": "^4.17.11",
       "@types/gl-vec3": "^1.1.0",
@@ -112,6 +113,7 @@ npm manifest:
       "buffer": "^6.0.3",
       "dat.gui": "^0.7.7",
       "deepmerge": "^4.2.2",
+      "domurl": "^2.3.4",
       "fast-voxel-raycast": "^0.1.1",
       "gl-vec3": "^1.1.3",
       "mousetrap": "^1.6.5",
@@ -328,6 +330,11 @@ Lockfile:
     version "0.7.6"
     resolved "https://registry.npmjs.org/@types/dat.gui/-/dat.gui-0.7.6.tgz"
     integrity sha512-Dx9f9CkXJkDAxt9M05vc7DItSqsiEhWN7Rx3vgO/maltv/nX9TaMX2sd/iAMENnL1D5FivetktJEyCBLFu50CQ==
+  
+  "@types/domurl@^0.0.6":
+    version "0.0.6"
+    resolved "https://registry.yarnpkg.com/@types/domurl/-/domurl-0.0.6.tgz#74d4f65d96613c2c73a5ff21b6742392d6ad0629"
+    integrity sha512-kdpdwGmzac5kbphgRQdoHbMMyyKaPmU4GsLkKG5R9SGxRl6IcovWZLk8IJ40cjovE+jK/atokXDBTWSLXd4d3A==
   
   "@types/eslint-scope@^3.7.0":
     version "3.7.0"
@@ -2278,6 +2285,11 @@ Lockfile:
     integrity sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==
     dependencies:
       esutils "^2.0.2"
+  
+  domurl@^2.3.4:
+    version "2.3.4"
+    resolved "https://registry.yarnpkg.com/domurl/-/domurl-2.3.4.tgz#fc0de7f9185b197ca7afe8a989e30d462c082489"
+    integrity sha512-/pmFKQbQqjsCB5qppxfGexcaVykxcawJi2S9aRq3iF9fcIUrkUd9ceXxehP2ARbCbmhh4O21YBRC1pn86rpujg==
   
   dot-prop@^5.2.0:
     version "5.3.0"

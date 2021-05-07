@@ -73,9 +73,8 @@ class World extends Network {
 
   setupRoutes = () => {
     // texture atlas
-    this.app.get('/atlas', (_, res) => {
-      res.setHeader('Content-Type', 'image/png');
-      this.registry.textureAtlas.canvas.createPNGStream().pipe(res);
+    this.app.get('/atlas', (_, reply) => {
+      reply.header('Content-Type', 'image/png').send(this.registry.textureAtlas.canvas.createPNGStream());
     });
   };
 
