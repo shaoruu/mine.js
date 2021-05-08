@@ -51,8 +51,8 @@ class Mesher {
       for (let vy = startY; vy < topY + 1; vy++) {
         for (let vz = startZ; vz < endZ; vz++) {
           const voxel = world.getVoxelByVoxel([vx, vy, vz]);
-          const isSolid = registry.getSolidityByID(voxel);
-          const isTransparent = registry.getTransparencyByID(voxel);
+          const vBlockType = world.getBlockTypeByType(voxel);
+          const { isSolid, isTransparent } = vBlockType;
 
           if (isSolid && (transparent ? isTransparent : !isTransparent)) {
             for (const { dir, corners } of FACES) {
@@ -61,8 +61,8 @@ class Mesher {
               const nvz = vz + dir[2];
 
               const neighbor = world.getVoxelByVoxel([nvx, nvy, nvz]);
-              const isNeighborEmpty = registry.getEmptinessByID(neighbor);
-              const isNeighborTransparent = registry.getTransparencyByID(neighbor);
+              const nBlockType = world.getBlockTypeByType(neighbor);
+              const { isEmpty: isNeighborEmpty, isTransparent: isNeighborTransparent } = nBlockType;
 
               if (isNeighborTransparent && (!transparent || isNeighborEmpty)) {
                 const torchLightLevel = world.getTorchLight([nvx, nvy, nvz]);

@@ -1,12 +1,10 @@
 import { BlockType } from '../../libs';
 
+import { BaseBlock } from './base-block';
+
 const Dirt: BlockType = {
   name: 'dirt',
-  isEmpty: false,
-  isSolid: true,
-  isFluid: false,
-  isTransparent: false,
-  isLight: false,
+  ...BaseBlock,
   textures: {
     all: 'dirt.png',
   },

@@ -20,6 +20,8 @@ export type BlockType = {
   isFluid: boolean;
   isTransparent: boolean;
   isLight: boolean;
+  isBlock: boolean;
   lightLevel?: number;
   textures?: TextureType;
+  scale: number[];
 };

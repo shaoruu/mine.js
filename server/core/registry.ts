@@ -60,11 +60,11 @@ class Registry {
   };
 
   getBlockByID = (id: number) => {
-    return this.blockTypesArr[id] || ({} as BlockType);
+    return this.blockTypesArr[id] || ({ isTransparent: true, isEmpty: true } as BlockType);
   };
 
   getBlockByName = (name: string) => {
-    return this.blockTypes[name] || ({} as BlockType);
+    return this.blockTypes[name] || ({ isTransparent: true, isEmpty: true } as BlockType);
   };
 
   getTextureByID = (id: number) => {

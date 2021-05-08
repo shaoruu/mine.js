@@ -1,3 +1,5 @@
+export * from './models/base-block';
+
 export const ID_TO_BLOCK = {
   // SOLIDS
   0: require('./models/air'),

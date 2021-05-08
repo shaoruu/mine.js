@@ -1,12 +1,11 @@
 import { BlockType } from '../../libs';
 
+import { BaseBlock } from './base-block';
+
 const Glass: BlockType = {
   name: 'glass',
-  isEmpty: false,
-  isSolid: true,
-  isFluid: false,
+  ...BaseBlock,
   isTransparent: true,
-  isLight: false,
   textures: {
     all: 'glass.png',
   },
