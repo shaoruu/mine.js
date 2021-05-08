@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import chalk from 'chalk';
+
 import { Coords2, Coords3, Helper } from '../../shared';
 
 import { ClientType, Network, NetworkOptionsType, Chunk, GeneratorTypes, Registry } from '.';
@@ -17,7 +19,8 @@ const chunkNeighbors = [
 ];
 
 type WorldOptionsType = NetworkOptionsType & {
-  storage: string;
+  name: string;
+  chunkRoot: string;
   preload: number;
   chunkSize: number;
   dimension: number;
@@ -33,6 +36,7 @@ class World extends Network {
   public registry: Registry;
 
   public caching = false;
+  public storage: string;
 
   public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
   public chunkCache: Set<Chunk> = new Set();
@@ -61,11 +65,19 @@ class World extends Network {
 
   initStorage = () => {
     // if storage doesn't exist, make directory
-    const { storage } = this.options;
+    const { chunkRoot, name } = this.options;
 
-    if (!fs.existsSync(storage)) {
-      fs.mkdirSync(storage);
+    this.storage = path.join(chunkRoot, name);
+
+    if (!fs.existsSync(chunkRoot)) {
+      fs.mkdirSync(chunkRoot);
     }
+
+    if (!fs.existsSync(this.storage)) {
+      fs.mkdirSync(this.storage);
+    }
+
+    console.log(`\n🗄️️  Chunks storage: ${chalk.yellow(this.storage)}`);
 
     // save every minute
     setInterval(() => this.save(), 60000);
@@ -80,13 +92,13 @@ class World extends Network {
 
   preloadChunks = () => {
     const { preload } = this.options;
-    console.log(`Preloading ${(preload * 2 + 1) ** 2} chunks...`);
+    console.log(`\n🖨️  Preloading ${chalk.cyan((preload * 2 + 1) ** 2)} chunks...`);
     for (let x = -preload; x <= preload; x++) {
       for (let z = -preload; z <= preload; z++) {
         this.getChunkByCPos([x, z]).remesh();
       }
     }
-    console.log(`Preloaded ${(preload * 2 + 1) ** 2} chunks.`);
+    console.log(`🖨️  Preloaded ${chalk.cyan((preload * 2 + 1) ** 2)} chunks.\n`);
   };
 
   startCaching = () => {

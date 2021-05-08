@@ -145,11 +145,10 @@ class Chunk {
   load = () => {
     // load from existing files
 
-    const {
-      options: { storage },
-    } = this.world;
-
-    const fileBuffer = fs.readFileSync(path.join(storage, `${Helper.getChunkName(this.coords)}.json`), 'utf8');
+    const fileBuffer = fs.readFileSync(
+      path.join(this.world.storage, `${Helper.getChunkName(this.coords)}.json`),
+      'utf8',
+    );
     const { voxels, lights, needsPropagation } = JSON.parse(fileBuffer);
     this.needsSaving = false;
     this.needsPropagation = needsPropagation;
@@ -160,13 +159,10 @@ class Chunk {
 
   save = () => {
     // save to file system
-    const {
-      options: { storage },
-    } = this.world;
     const { needsPropagation } = this;
 
     fs.writeFileSync(
-      path.join(storage, `${Helper.getChunkName(this.coords)}.json`),
+      path.join(this.world.storage, `${Helper.getChunkName(this.coords)}.json`),
       JSON.stringify({
         needsPropagation,
         voxels: zlib.deflateSync(<Uint8Array>this.voxels.data).toString('base64'),

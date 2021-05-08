@@ -117,7 +117,6 @@ class Network extends EventEmitter {
         text: client.id,
       });
     }
-    console.log(`client ${client.id} left.`);
   };
 
   broadcast = (
