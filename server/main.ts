@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { IncomingMessage } from 'http';
 import path from 'path';
 import querystring from 'querystring';
@@ -5,6 +6,8 @@ import querystring from 'querystring';
 import chalk from 'chalk';
 import fastify from 'fastify';
 import WebSocket from 'ws';
+
+import { WORLD_LIST } from '../shared/saves';
 
 import { ClientType, Mine } from './core';
 
@@ -25,10 +28,19 @@ app.get('/atlas', (_, reply) => {
 });
 
 // WORLD SETUPS
-Mine.registerWorld(app, 'testbed');
-Mine.registerWorld(app, 'mine', {
-  generation: 'hilly',
-});
+if (process.env.WORLDS) {
+  const worldNames = process.env.WORLDS.split(',');
+  worldNames.forEach((name) => {
+    const data = WORLD_LIST[name];
+    if (!data) {
+      console.log(chalk.red(`World ${name} not found.`));
+      return;
+    }
+    Mine.registerWorld(app, name, data);
+  });
+} else {
+  console.log(chalk.red('No worlds loaded!'));
+}
 
 // MAIN SOCKET HANDLING TRAFFIC
 const wss = new WebSocket.Server({ server: app.server });

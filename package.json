@@ -69,14 +69,14 @@
   },
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack",
-    "server": "cross-env NODE_ENV=development nodemon",
+    "server": "cross-env NODE_ENV=development WORLDS=testbed,mine nodemon",
     "client": "webpack",
     "watch": "gulp dev -L",
     "compile:ts": "pbts -o protocol/index.d.ts protocol/index.js",
     "compile:js": "pbjs -t static-module -w commonjs -o protocol/index.js protocol/messages.proto",
     "compile": "yarn run compile:js && yarn run compile:ts",
     "dev": "npm-run-all --parallel server client watch",
-    "start": "cross-env NODE_ENV=production nodemon",
+    "start": "cross-env NODE_ENV=production WORLDS=testbed nodemon",
     "validate": "svelte-check"
   },
   "dependencies": {

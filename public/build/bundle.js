@@ -6492,14 +6492,40 @@ Helper.approxEquals = (a, b) => {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "SHARED_CONFIG": () => (/* reexport safe */ _config__WEBPACK_IMPORTED_MODULE_0__.SHARED_CONFIG),
-/* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_1__.Helper)
+/* harmony export */   "Helper": () => (/* reexport safe */ _helper__WEBPACK_IMPORTED_MODULE_1__.Helper),
+/* harmony export */   "WORLD_LIST": () => (/* reexport safe */ _saves__WEBPACK_IMPORTED_MODULE_2__.WORLD_LIST)
 /* harmony export */ });
 /* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config */ "./shared/config.ts");
 /* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./helper */ "./shared/helper.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
+/* harmony import */ var _saves__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./saves */ "./shared/saves.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./types */ "./shared/types.ts");
 
 
 
+
+
+
+/***/ }),
+
+/***/ "./shared/saves.ts":
+/*!*************************!*\
+  !*** ./shared/saves.ts ***!
+  \*************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "WORLD_LIST": () => (/* binding */ WORLD_LIST)
+/* harmony export */ });
+const WORLD_LIST = {
+    testbed: {
+        generation: 'flat',
+    },
+    mine: {
+        generation: 'hilly',
+    },
+};
 
 
 /***/ }),
