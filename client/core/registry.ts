@@ -22,7 +22,7 @@ class Registry {
   constructor(public engine: Engine, public options: RegistryOptionsType) {
     engine.on('ready', () => {
       this.atlasUniform = {
-        value: new TextureLoader().load(`${engine.network.url.toString()}atlas`),
+        value: new TextureLoader().load(`${engine.network.url.clearQuery().toString()}atlas`),
       };
 
       const atlas = this.atlasUniform.value;

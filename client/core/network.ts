@@ -1,5 +1,6 @@
 import Url from 'domurl';
 import Pako from 'pako';
+import QS from 'query-string';
 
 import { protocol } from '../../protocol';
 
@@ -19,15 +20,23 @@ class Network {
   public connected = false;
 
   constructor(public engine: Engine) {
-    if (this.url.host === 'localhost') this.url.port = '4000';
+    if (this.url.host === 'localhost') {
+      this.url.port = '4000';
+    }
 
     this.connect(this.url.toString());
   }
 
   connect = (url: string) => {
+    const { world } = QS.parse(window.location.search);
+
     const socket = new URL(url);
     socket.protocol = socket.protocol.replace(/http/, 'ws');
     socket.hash = '';
+
+    if (world) {
+      socket.searchParams.set('world', typeof world === 'string' ? world : world.join(''));
+    }
 
     const server = new WebSocket(socket.toString()) as CustomWebSocket;
     server.binaryType = 'arraybuffer';

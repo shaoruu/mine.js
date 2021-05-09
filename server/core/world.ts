@@ -2,10 +2,11 @@ import fs from 'fs';
 import path from 'path';
 
 import chalk from 'chalk';
+import { FastifyInstance } from 'fastify';
 
 import { Coords2, Coords3, Helper } from '../../shared';
 
-import { ClientType, Network, NetworkOptionsType, Chunk, GeneratorTypes, Registry } from '.';
+import { ClientType, Network, NetworkOptionsType, Chunk, GeneratorTypes, Mine } from '.';
 
 const chunkNeighbors = [
   { x: -1, z: -1 },
@@ -33,22 +34,18 @@ type WorldOptionsType = NetworkOptionsType & {
 };
 
 class World extends Network {
-  public registry: Registry;
-
   public caching = false;
   public storage: string;
 
-  public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
-  public chunkCache: Set<Chunk> = new Set();
   public chunks: Map<string, Chunk> = new Map();
+  public chunkCache: Set<Chunk> = new Set();
+  public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
 
-  constructor(public options: WorldOptionsType) {
+  constructor(public app: FastifyInstance, public options: WorldOptionsType) {
     super(options);
 
-    this.registry = new Registry({ basePath: path.join(__dirname, '..', 'blocks') });
-
+    console.log(`\nWorld: ${chalk.bgCyan.gray(options.name)}`);
     this.initStorage();
-    this.setupRoutes();
     this.preloadChunks();
 
     setInterval(async () => {
@@ -77,28 +74,21 @@ class World extends Network {
       fs.mkdirSync(this.storage);
     }
 
-    console.log(`\n🗄️️  Chunks storage: ${chalk.yellow(this.storage)}`);
+    console.log(`Storage at ${chalk.yellow(this.storage)}`);
 
     // save every minute
     setInterval(() => this.save(), 60000);
   };
 
-  setupRoutes = () => {
-    // texture atlas
-    this.app.get('/atlas', (_, reply) => {
-      reply.header('Content-Type', 'image/png').send(this.registry.textureAtlas.canvas.createPNGStream());
-    });
-  };
-
   preloadChunks = () => {
     const { preload } = this.options;
-    console.log(`\n🖨️  Preloading ${chalk.cyan((preload * 2 + 1) ** 2)} chunks...`);
+    console.log(`Preloading ${chalk.cyan((preload * 2 + 1) ** 2)} chunks...`);
     for (let x = -preload; x <= preload; x++) {
       for (let z = -preload; z <= preload; z++) {
         this.getChunkByCPos([x, z]).remesh();
       }
     }
-    console.log(`🖨️  Preloaded ${chalk.cyan((preload * 2 + 1) ** 2)} chunks.\n`);
+    console.log(`Preloaded ${chalk.cyan((preload * 2 + 1) ** 2)} chunks.\n`);
   };
 
   startCaching = () => {
@@ -193,11 +183,11 @@ class World extends Network {
 
   getBlockTypeByVoxel = (vCoords: Coords3) => {
     const typeID = this.getVoxelByVoxel(vCoords);
-    return this.registry.getBlockByID(typeID);
+    return Mine.registry.getBlockByID(typeID);
   };
 
   getBlockTypeByType = (type: number) => {
-    return this.registry.getBlockByID(type);
+    return Mine.registry.getBlockByID(type);
   };
 
   getMaxHeight = (column: Coords2) => {
@@ -208,19 +198,6 @@ class World extends Network {
   setMaxHeight = (column: Coords2, height: number) => {
     const chunk = this.getChunkByVoxel([column[0], 0, column[1]]);
     return chunk.setMaxHeight(column, height);
-  };
-
-  getSolidityByVoxel = (vCoords: Coords3) => {};
-
-  getFluidityByVoxel = (vCoords: Coords3) => {
-    return false;
-  };
-
-  getSolidityByWorld = () => {};
-
-  getFluidityByWorld = (wCoords: Coords3) => {
-    const vCoords = Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
-    return this.getFluidityByVoxel(vCoords);
   };
 
   getTransparencyByVoxel = (vCoords: Coords3) => {
@@ -261,7 +238,7 @@ class World extends Network {
           Number.isNaN(type) ||
           y <= 0 ||
           y >= maxHeight ||
-          !this.registry.getBlockByID(type).name
+          !Mine.registry.getBlockByID(type).name
         ) {
           return;
         }
@@ -271,8 +248,8 @@ class World extends Network {
 
         const currentType = this.getVoxelByVoxel(voxel);
         if (
-          (this.registry.isAir(currentType) && this.registry.isAir(type)) ||
-          (!this.registry.isAir(currentType) && !this.registry.isAir(type))
+          (Mine.registry.isAir(currentType) && Mine.registry.isAir(type)) ||
+          (!Mine.registry.isAir(currentType) && !Mine.registry.isAir(type))
         ) {
           return;
         }
@@ -343,4 +320,4 @@ class World extends Network {
   }
 }
 
-export { World };
+export { World, WorldOptionsType };

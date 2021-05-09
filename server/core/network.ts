@@ -1,9 +1,6 @@
 import { EventEmitter } from 'events';
-import path from 'path';
 import zlib from 'zlib';
 
-import chalk from 'chalk';
-import fastify, { FastifyInstance } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 
@@ -12,9 +9,8 @@ import { protocol } from '../../protocol';
 const { Message } = protocol;
 
 type NetworkOptionsType = {
-  port: string | number;
+  name: string;
   maxClients: number;
-  isProduction: boolean;
   pingInterval: number; // ms
 };
 
@@ -24,39 +20,13 @@ type ClientType = WebSocket & {
 };
 
 class Network extends EventEmitter {
-  public app: FastifyInstance;
-  public wss: WebSocket.Server;
   public pingInterval: NodeJS.Timeout;
 
   public clients: ClientType[] = [];
 
   constructor(public options: NetworkOptionsType) {
     super();
-
-    const { isProduction } = options;
-
-    this.app = fastify();
-    this.app.register(require('fastify-cors'));
-
-    if (isProduction) {
-      this.app.register(require('fastify-static'), {
-        root: path.join(__dirname, '../..', 'public'),
-      });
-    }
-
-    this.wss = new WebSocket.Server({ server: this.app.server });
-    this.wss.on('connection', this.onConnect);
   }
-
-  listen = () => {
-    const { port } = this.options;
-
-    this.app.listen(port || 4000, this.onListen);
-  };
-
-  onListen = () => {
-    console.log(`🚀  Server listening on ${chalk.green(`http://localhost:${this.options.port}`)}`);
-  };
 
   onConnect = (client: ClientType) => {
     const { maxClients, pingInterval } = this.options;
@@ -88,7 +58,9 @@ class Network extends EventEmitter {
     this.clients.push(client);
   };
 
-  onInit = (client: ClientType) => {};
+  onInit = (client: ClientType) => {
+    console.log(`Client with ID ${client.id}joined.`);
+  };
 
   onMessage = (client: ClientType, data: WebSocket.Data) => {
     let request: protocol.Message;

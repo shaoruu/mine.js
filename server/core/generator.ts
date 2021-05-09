@@ -2,7 +2,7 @@ import Noise from 'noisejs';
 
 import { Coords3 } from '../../shared';
 
-import { Chunk, TERRAIN_CONFIG } from '.';
+import { Chunk, TERRAIN_CONFIG, Mine } from '.';
 
 type GeneratorTypes = 'sin-cos' | 'flat' | 'hilly';
 
@@ -26,10 +26,10 @@ class Generator {
               voxelID = Generator.sincos([vx, vy, vz], chunk);
               break;
             case 'flat':
-              voxelID = Generator.flat([vx, vy, vz], chunk);
+              voxelID = Generator.flat([vx, vy, vz]);
               break;
             case 'hilly':
-              voxelID = Generator.hilly([vx, vy, vz], chunk);
+              voxelID = Generator.hilly([vx, vy, vz]);
           }
 
           voxels.set(lx, ly, lz, voxelID);
@@ -40,14 +40,12 @@ class Generator {
     chunk.isEmpty = isEmpty;
   };
 
-  static hilly = ([vx, vy, vz]: Coords3, chunk: Chunk) => {
-    const {
-      world: { registry },
-    } = chunk;
+  static hilly = ([vx, vy, vz]: Coords3) => {
+    const { registry } = Mine;
 
     if (!noise) {
       // @ts-ignore
-      noise = new Noise.Noise(1000);
+      noise = new Noise.Noise(13412);
     }
 
     const {
@@ -95,12 +93,10 @@ class Generator {
     return blockID;
   };
 
-  static heightMap = (chunk: Chunk) => {};
+  static heightMap = () => {};
 
-  static flat = ([, vy]: Coords3, chunk: Chunk) => {
-    const {
-      world: { registry },
-    } = chunk;
+  static flat = ([, vy]: Coords3) => {
+    const { registry } = Mine;
     const types = registry.getTypeMap(['air', 'dirt', 'grass', 'stone']);
     if (vy === 6) return types.grass;
     if (vy < 6 && vy > 3) return types.dirt;
@@ -109,8 +105,8 @@ class Generator {
   };
 
   static sincos = ([vx, vy, vz]: Coords3, chunk: Chunk) => {
+    const { registry } = Mine;
     const {
-      world: { registry },
       options: { maxHeight },
     } = chunk;
 

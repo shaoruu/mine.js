@@ -2,7 +2,7 @@ import { Coords3, Helper, MeshType } from '../../shared';
 
 import { AO_TABLE, FACES } from './constants';
 
-import { Chunk, Registry } from '.';
+import { Chunk, Registry, Mine } from '.';
 
 class Mesher {
   static meshChunk = (chunk: Chunk, transparent = false): MeshType | null => {
@@ -15,9 +15,10 @@ class Mesher {
     } = chunk;
 
     const {
-      registry,
       options: { useSmoothLighting },
     } = world;
+
+    const { registry } = Mine;
 
     const positions = [];
     const normals = [];

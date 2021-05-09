@@ -7,7 +7,7 @@ import ndarray from 'ndarray';
 
 import { Coords2, Coords3, Helper, MeshType } from '../../shared';
 
-import { World, Mesher, Generator } from '.';
+import { World, Mesher, Generator, Mine } from '.';
 
 type ChunkOptionsType = {
   size: number;
@@ -369,7 +369,7 @@ class Chunk {
     const { world, needsPropagation } = this;
     const { maxHeight } = this.options;
     const { maxLightLevel } = world.options;
-    const { registry } = world;
+    const { registry } = Mine;
     const [vx, vy, vz] = voxel;
     const height = world.getMaxHeight([vx, vz]);
     const currentType = world.getBlockTypeByVoxel(voxel);
