@@ -28,8 +28,12 @@ app.get('/atlas', (_, reply) => {
 });
 
 // WORLD SETUPS
-if (process.env.WORLDS) {
-  const worldNames = process.env.WORLDS.split(',');
+const { WORLDS } = process.env;
+if (WORLDS) {
+  let worldNames: string[];
+  if (WORLDS === '*') worldNames = Object.keys(WORLD_LIST);
+  else worldNames = WORLDS.split(',');
+
   worldNames.forEach((name) => {
     const data = WORLD_LIST[name];
     if (!data) {
@@ -47,8 +51,9 @@ const wss = new WebSocket.Server({ server: app.server });
 wss.on('connection', (client: ClientType, request: IncomingMessage) => {
   let { world: worldName } = querystring.parse(request.url.split('?')[1]);
   worldName = worldName ? (typeof worldName === 'string' ? worldName : worldName.join('')) : 'testbed';
-  if (!Mine.hasWorld(worldName)) worldName = 'testbed';
-  Mine.getWorld(worldName)?.onConnect(client);
+
+  const world = Mine.hasWorld(worldName) ? Mine.getWorld(worldName) : Mine.randomWorld();
+  world?.onConnect(client);
 });
 
 const port = process.env.PORT || 4000;
