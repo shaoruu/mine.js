@@ -53,6 +53,7 @@ wss.on('connection', (client: ClientType, request: IncomingMessage) => {
   worldName = worldName ? (typeof worldName === 'string' ? worldName : worldName.join('')) : 'testbed';
 
   const world = Mine.hasWorld(worldName) ? Mine.getWorld(worldName) : Mine.randomWorld();
+  console.log(worldName);
   world?.onConnect(client);
 });
 

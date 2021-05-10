@@ -116,7 +116,7 @@ class Engine extends EventEmitter {
 
   public paused = true;
 
-  constructor(params: DeepPartial<ConfigType> = {}) {
+  constructor(worldName: string, params: DeepPartial<ConfigType> = {}) {
     super();
 
     const { camera, container, debug, entities, physics, player, registry, rendering, world } = (this.config = merge(
@@ -130,7 +130,7 @@ class Engine extends EventEmitter {
     }
 
     // network
-    this.network = new Network(this);
+    this.network = new Network(this, worldName);
 
     // container
     this.container = new Container(this, container);
