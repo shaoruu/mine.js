@@ -84,6 +84,9 @@ class Player {
     for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
       inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]));
     }
+
+    this.controls.addEventListener('lock', () => engine.emit('lock'));
+    this.controls.addEventListener('unlock', () => engine.emit('unlock'));
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {

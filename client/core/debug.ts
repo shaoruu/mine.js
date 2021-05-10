@@ -19,6 +19,7 @@ class Debug {
     // dat.gui
     this.gui = new GUI({
       width: 300,
+      closed: true,
     });
 
     // FPS indicator
@@ -36,8 +37,14 @@ class Debug {
     // move dat.gui panel to the top
     const { parentElement } = this.gui.domElement;
     if (parentElement) {
+      const zIndex = '1000000000';
+
       Helper.applyStyle(parentElement, {
-        zIndex: '1000000000',
+        zIndex,
+      });
+
+      Helper.applyStyle(this.stats.dom, {
+        zIndex,
       });
     }
 
@@ -141,8 +148,6 @@ class Debug {
       .name('Bottom color');
 
     this.registerDisplay('chunk', world, 'camChunkPosStr');
-
-    worldFolder.open();
 
     // PLAYER
     const playerFolder = this.gui.addFolder('Player');

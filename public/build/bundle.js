@@ -3707,7 +3707,6 @@ class Debug {
                 .onChange((value) => world.sky.setBottomColor(value))
                 .name('Bottom color');
             this.registerDisplay('chunk', world, 'camChunkPosStr');
-            worldFolder.open();
             // PLAYER
             const playerFolder = this.gui.addFolder('Player');
             playerFolder.add(player.options, 'acceleration', 0, 5, 0.01).name('Acceleration');
@@ -3750,6 +3749,7 @@ class Debug {
         // dat.gui
         this.gui = new dat_gui__WEBPACK_IMPORTED_MODULE_0__.GUI({
             width: 300,
+            closed: true,
         });
         // FPS indicator
         this.stats = new (stats_js__WEBPACK_IMPORTED_MODULE_1___default())();
@@ -3759,8 +3759,12 @@ class Debug {
         // move dat.gui panel to the top
         const { parentElement } = this.gui.domElement;
         if (parentElement) {
+            const zIndex = '1000000000';
             _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(parentElement, {
-                zIndex: '1000000000',
+                zIndex,
+            });
+            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.stats.dom, {
+                zIndex,
             });
         }
         engine.on('ready', () => {
@@ -3929,6 +3933,12 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.paused = true;
             this.emit('pause');
         };
+        this.lock = () => {
+            this.player.controls.lock();
+        };
+        this.unlock = () => {
+            this.player.controls.unlock();
+        };
         const { camera, container, debug, entities, physics, player, registry, rendering, world } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
         // debug
         if (debug) {
@@ -3960,7 +3970,7 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.emit('ready');
     }
     // if pointerlock is locked
-    get isLocked() {
+    get locked() {
         return this.player.controls.isLocked;
     }
 }
@@ -4127,7 +4137,7 @@ class Inputs {
     initClickListener() {
         ['left', 'middle', 'right'].forEach((type) => this.clickCallbacks.set(type, []));
         document.addEventListener('mousedown', ({ button }) => {
-            if (!this.engine.isLocked)
+            if (!this.engine.locked)
                 return;
             let callbacks;
             if (button === 0)
@@ -4458,6 +4468,8 @@ class Player {
         for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
             inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]));
         }
+        this.controls.addEventListener('lock', () => engine.emit('lock'));
+        this.controls.addEventListener('unlock', () => engine.emit('unlock'));
     }
     godModeMovements() {
         const { delta } = this.engine.clock;
@@ -23338,11 +23350,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var svelte_internal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! svelte/internal */ "./node_modules/svelte/internal/index.mjs");
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
-/* harmony import */ var query_string__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! query-string */ "./node_modules/query-string/index.js");
-/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../shared */ "./shared/index.ts");
-/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
-/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
+/* harmony import */ var _components_button_svelte__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/button.svelte */ "./client/components/button.svelte");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
+/* harmony import */ var query_string__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! query-string */ "./node_modules/query-string/index.js");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../shared */ "./shared/index.ts");
+/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
+/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* client/App.svelte generated by Svelte v3.37.0 */
 
@@ -23351,30 +23364,31 @@ const { Object: Object_1 } = svelte_internal__WEBPACK_IMPORTED_MODULE_0__.global
 
 
 
+
 const file = "client/App.svelte";
 
 function add_css() {
 	var style = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("style");
-	style.id = "svelte-zapuws-style";
-	style.textContent = "main.svelte-zapuws.svelte-zapuws{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-zapuws.svelte-zapuws{position:fixed;top:50%;left:50%;width:10px;height:10px;line-height:20px;margin:-10px 0 0 -10px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#world-list-wrapper.svelte-zapuws.svelte-zapuws{width:100%;height:100%;background:#02475e;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-zapuws.svelte-zapuws{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-zapuws.svelte-zapuws{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;width:40%;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 0;border-radius:5px}#world-list-item.svelte-zapuws.svelte-zapuws{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-zapuws.svelte-zapuws::selection{background:transparent}#world-list-item.svelte-zapuws>h1.svelte-zapuws{color:white;font-size:20px;font-weight:100;width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-zapuws>p.svelte-zapuws{color:gray;font-size:20px}.selected.svelte-zapuws.svelte-zapuws{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiQXBwLnN2ZWx0ZSIsIm1hcHBpbmdzIjoiQUFDRSxJQUFBLDRCQUFBLENBQUEsQUFDRSxLQUFBLENBQUEsSUFBVyxDQUNYLE1BQUEsQ0FBQSxJQUFZLENBQ1osT0FBQSxDQUFBLElBQWEsQ0FDYixXQUFBLENBQUEsTUFBbUIsQ0FDbkIsZUFBQSxDQUFBLE1BQXVCLEFBQ3pCLENBQUEsQUFFQSxVQUFBLDRCQUFBLENBQUEsQUFDRSxRQUFBLENBQUEsS0FBZSxDQUNmLEdBQUEsQ0FBQSxHQUFRLENBQ1IsSUFBQSxDQUFBLEdBQVMsQ0FDVCxLQUFBLENBQUEsSUFBVyxDQUNYLE1BQUEsQ0FBQSxJQUFZLENBQ1osV0FBQSxDQUFBLElBQWlCLENBQ2pCLE1BQUEsQ0FBQSxLQUFBLENBQUEsQ0FBQSxDQUFBLENBQUEsQ0FBQSxLQUF1QixDQUN2QixPQUFBLENBQUEsRUFBVyxDQUNYLEtBQUEsQ0FBQSxLQUFZLENBQ1osTUFBQSxDQUFBLFVBQUEsR0FBQSxDQUFzQixDQUN0QixXQUFBLENBQUEsR0FBQSxDQUFBLEdBQUEsQ0FBQSxHQUFBLENBQUEsS0FBOEIsQ0FDOUIsVUFBQSxDQUFBLE1BQWtCLEFBQ3BCLENBQUEsQUFFQSxtQkFBQSw0QkFBQSxDQUFBLEFBQ0UsS0FBQSxDQUFBLElBQVcsQ0FDWCxNQUFBLENBQUEsSUFBWSxDQUNaLFVBQUEsQ0FBQSxPQUFtQixDQUNuQixlQUFBLENBQUEsSUFBQSxDQUFBLElBQTBCLENBQzFCLE9BQUEsQ0FBQSxJQUFhLENBQ2IsY0FBQSxDQUFBLE1BQXNCLENBQ3RCLFdBQUEsQ0FBQSxNQUFtQixDQUNuQixlQUFBLENBQUEsTUFBdUIsQUFDekIsQ0FBQSxBQUVBLGlCQUFBLDRCQUFBLENBQUEsQUFDRSxXQUFBLENBQUEsR0FBZ0IsQ0FDaEIsU0FBQSxDQUFBLElBQWUsQ0FDZixVQUFBLENBQUEsTUFBa0IsQ0FDbEIsS0FBQSxDQUFBLEtBQVksQ0FDWixhQUFBLENBQUEsSUFBbUIsQUFDckIsQ0FBQSxBQUVBLFdBQUEsNEJBQUEsQ0FBQSxBQUNFLGdCQUFBLENBQUEsS0FBQSxDQUFBLENBQUEsQ0FBQSxDQUFBLENBQUEsQ0FBQSxDQUFBLENBQUEsQ0FBQSxLQUFBLENBQXNDLENBQ3RDLFVBQUEsQ0FBQSxJQUFnQixDQUNoQixLQUFBLENBQUEsR0FBVSxDQUNWLE9BQUEsQ0FBQSxJQUFhLENBQ2IsY0FBQSxDQUFBLE1BQXNCLENBQ3RCLGVBQUEsQ0FBQSxNQUF1QixDQUN2QixXQUFBLENBQUEsTUFBbUIsQ0FDbkIsVUFBQSxDQUFBLEtBQUEsQ0FBQSxHQUFBLENBQUEsR0FBQSxDQUFBLElBQUEsQ0FBQSxHQUFBLENBQUEsU0FBNEMsQ0FDNUMsVUFBQSxDQUFBLElBQWdCLENBQ2hCLFVBQUEsQ0FBQSxNQUFrQixDQUNsQixVQUFBLENBQUEsSUFBZ0IsQ0FDaEIsT0FBQSxDQUFBLEdBQUEsQ0FBQSxDQUFjLENBQ2QsYUFBQSxDQUFBLEdBQWtCLEFBQ3BCLENBQUEsQUFFQSxnQkFBQSw0QkFBQSxDQUFBLEFBQ0UsTUFBQSxDQUFBLE9BQWUsQ0FDZixLQUFBLENBQUEsS0FBWSxDQUNaLE1BQUEsQ0FBQSxJQUFZLENBQ1osTUFBQSxDQUFBLEdBQUEsQ0FBQSxLQUFBLENBQUEsV0FBNkIsQ0FDN0IsYUFBQSxDQUFBLEdBQWtCLENBQ2xCLE9BQUEsQ0FBQSxJQUFhLENBQ2IsY0FBQSxDQUFBLE1BQXNCLENBQ3RCLE9BQUEsQ0FBQSxHQUFZLENBQ1osVUFBQSxDQUFBLFlBQUEsQ0FBQSxJQUE2QixBQUMvQixDQUFBLEFBRUEsNENBQUEsV0FBQSxBQUFBLENBQUEsQUFDRSxVQUFBLENBQUEsV0FBdUIsQUFDekIsQ0FBQSxBQUVBLDhCQUFBLENBQUEsRUFBQSxjQUFBLENBQUEsQUFDRSxLQUFBLENBQUEsS0FBWSxDQUNaLFNBQUEsQ0FBQSxJQUFlLENBQ2YsV0FBQSxDQUFBLEdBQWdCLENBQ2hCLEtBQUEsQ0FBQSxLQUFZLENBQ1osUUFBQSxDQUFBLE1BQWdCLENBQ2hCLGFBQUEsQ0FBQSxRQUF1QixDQUN2QixXQUFBLENBQUEsTUFBbUIsQUFDckIsQ0FBQSxBQUVBLDhCQUFBLENBQUEsQ0FBQSxjQUFBLENBQUEsQUFDRSxLQUFBLENBQUEsSUFBVyxDQUNYLFNBQUEsQ0FBQSxJQUFlLEFBQ2pCLENBQUEsQUFFQSxTQUFBLDRCQUFBLENBQUEsQUFDRSxZQUFBLENBQUEsS0FBQSxHQUFBLENBQUEsQ0FBQSxHQUFBLENBQUEsQ0FBQSxHQUFBLENBQUEsQ0FBQSxJQUFBLENBQUEsQ0FBQSxVQUFrRCxBQUNwRCxDQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbImNsaWVudC9BcHAuc3ZlbHRlIl19 */";
+	style.id = "svelte-15xkx5e-style";
+	style.textContent = "main.svelte-15xkx5e.svelte-15xkx5e{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-15xkx5e.svelte-15xkx5e{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:10px;height:10px;line-height:20px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#pause-menu.svelte-15xkx5e.svelte-15xkx5e{z-index:10000000;display:flex;flex-direction:column;align-items:center;justify-content:center}#pause-menu.svelte-15xkx5e.svelte-15xkx5e,#pause-menu.svelte-15xkx5e>div.svelte-15xkx5e{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%}#pause-menu.svelte-15xkx5e>div.svelte-15xkx5e{background:rgba(1, 1, 1, 0.222);z-index:-1}#pause-menu.svelte-15xkx5e>h2.svelte-15xkx5e{color:#ccc;margin-bottom:1.6em}#world-list-wrapper.svelte-15xkx5e.svelte-15xkx5e{width:100%;height:100%;background:#02475e;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-15xkx5e.svelte-15xkx5e{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-15xkx5e.svelte-15xkx5e{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 5rem;border-radius:5px}#world-list-item.svelte-15xkx5e.svelte-15xkx5e{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-15xkx5e.svelte-15xkx5e::selection{background:transparent}#world-list-item.svelte-15xkx5e>h1.svelte-15xkx5e{color:white;font-size:20px;font-weight:100;width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-15xkx5e>p.svelte-15xkx5e{color:gray;font-size:20px}.selected.svelte-15xkx5e.svelte-15xkx5e{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,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 */";
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(document.head, style);
 }
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[10] = list[i][0];
-	child_ctx[11] = list[i][1].generation;
-	child_ctx[12] = list[i][1].description;
+	child_ctx[15] = list[i][0];
+	child_ctx[16] = list[i][1].generation;
+	child_ctx[17] = list[i][1].description;
 	return child_ctx;
 }
 
-// (27:2) {:else}
+// (40:2) {:else}
 function create_else_block(ctx) {
 	let div;
 	let h1;
 	let t1;
 	let ul;
-	let each_value = /*worldNames*/ ctx[2];
+	let each_value = /*worldNames*/ ctx[5];
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
 	let each_blocks = [];
 
@@ -23395,14 +23409,14 @@ function create_else_block(ctx) {
 			}
 
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "id", "world-list-title");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-zapuws");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 28, 6, 722);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 41, 6, 1228);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "id", "world-list");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-zapuws");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 29, 6, 774);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 42, 6, 1280);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "id", "world-list-wrapper");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-zapuws");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 27, 4, 686);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 40, 4, 1192);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
@@ -23414,11 +23428,11 @@ function create_else_block(ctx) {
 				each_blocks[i].m(ul, null);
 			}
 
-			/*ul_binding*/ ctx[8](ul);
+			/*ul_binding*/ ctx[13](ul);
 		},
 		p: function update(ctx, dirty) {
-			if (dirty & /*selected, worldNames, window*/ 12) {
-				each_value = /*worldNames*/ ctx[2];
+			if (dirty & /*selected, worldNames, window*/ 48) {
+				each_value = /*worldNames*/ ctx[5];
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
 				let i;
 
@@ -23441,10 +23455,12 @@ function create_else_block(ctx) {
 				each_blocks.length = each_value.length;
 			}
 		},
+		i: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
+		o: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(div);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.destroy_each)(each_blocks, detaching);
-			/*ul_binding*/ ctx[8](null);
+			/*ul_binding*/ ctx[13](null);
 		}
 	};
 
@@ -23452,39 +23468,80 @@ function create_else_block(ctx) {
 		block,
 		id: create_else_block.name,
 		type: "else",
-		source: "(27:2) {:else}",
+		source: "(40:2) {:else}",
 		ctx
 	});
 
 	return block;
 }
 
-// (23:2) {#if !!world}
+// (28:2) {#if !!world}
 function create_if_block(ctx) {
 	let div;
 	let img;
 	let img_src_value;
+	let t;
+	let current;
+	let if_block = !/*locked*/ ctx[2] && create_if_block_1(ctx);
 
 	const block = {
 		c: function create() {
 			div = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
 			img = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("img");
+			t = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			if (if_block) if_block.c();
 			if (img.src !== (img_src_value = "https://i.imgur.com/ro6oLCL.png")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "src", img_src_value);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "id", "crosshair");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "alt", "+");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-zapuws");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 24, 6, 592);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 23, 4, 557);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 29, 6, 754);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 28, 4, 719);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, img);
-			/*div_binding*/ ctx[5](div);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t);
+			if (if_block) if_block.m(div, null);
+			/*div_binding*/ ctx[10](div);
+			current = true;
 		},
-		p: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
+		p: function update(ctx, dirty) {
+			if (!/*locked*/ ctx[2]) {
+				if (if_block) {
+					if_block.p(ctx, dirty);
+
+					if (dirty & /*locked*/ 4) {
+						(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block, 1);
+					}
+				} else {
+					if_block = create_if_block_1(ctx);
+					if_block.c();
+					(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block, 1);
+					if_block.m(div, null);
+				}
+			} else if (if_block) {
+				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.group_outros)();
+
+				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block, 1, 1, () => {
+					if_block = null;
+				});
+
+				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.check_outros)();
+			}
+		},
+		i: function intro(local) {
+			if (current) return;
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block);
+			current = true;
+		},
+		o: function outro(local) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block);
+			current = false;
+		},
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(div);
-			/*div_binding*/ ctx[5](null);
+			if (if_block) if_block.d();
+			/*div_binding*/ ctx[10](null);
 		}
 	};
 
@@ -23492,37 +23549,37 @@ function create_if_block(ctx) {
 		block,
 		id: create_if_block.name,
 		type: "if",
-		source: "(23:2) {#if !!world}",
+		source: "(28:2) {#if !!world}",
 		ctx
 	});
 
 	return block;
 }
 
-// (31:8) {#each worldNames as [name, { generation, description }
+// (44:8) {#each worldNames as [name, { generation, description }
 function create_each_block(ctx) {
 	let li;
 	let h1;
-	let t0_value = /*name*/ ctx[10] + "";
+	let t0_value = /*name*/ ctx[15] + "";
 	let t0;
 	let t1;
 	let p;
-	let t2_value = /*generation*/ ctx[11] + "";
+	let t2_value = /*generation*/ ctx[16] + "";
 	let t2;
 	let t3;
-	let t4_value = /*description*/ ctx[12] + "";
+	let t4_value = /*description*/ ctx[17] + "";
 	let t4;
 	let t5;
 	let li_class_value;
 	let mounted;
 	let dispose;
 
-	function click_handler() {
-		return /*click_handler*/ ctx[6](/*name*/ ctx[10]);
+	function click_handler_3() {
+		return /*click_handler_3*/ ctx[11](/*name*/ ctx[15]);
 	}
 
 	function dblclick_handler() {
-		return /*dblclick_handler*/ ctx[7](/*name*/ ctx[10]);
+		return /*dblclick_handler*/ ctx[12](/*name*/ ctx[15]);
 	}
 
 	const block = {
@@ -23536,17 +23593,17 @@ function create_each_block(ctx) {
 			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(" . ");
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t4_value);
 			t5 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-zapuws");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 38, 12, 1209);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-zapuws");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 39, 12, 1237);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 51, 12, 1714);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 52, 12, 1742);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "id", "world-list-item");
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[3] === /*name*/ ctx[10]
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[15]
 			? "selected"
-			: "") + " svelte-zapuws"));
+			: "") + " svelte-15xkx5e"));
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 31, 10, 900);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 44, 10, 1406);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, li, anchor);
@@ -23561,7 +23618,7 @@ function create_each_block(ctx) {
 
 			if (!mounted) {
 				dispose = [
-					(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.listen_dev)(li, "click", click_handler, false, false, false),
+					(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.listen_dev)(li, "click", click_handler_3, false, false, false),
 					(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.listen_dev)(li, "dblclick", dblclick_handler, false, false, false)
 				];
 
@@ -23570,13 +23627,13 @@ function create_each_block(ctx) {
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
-			if (dirty & /*worldNames*/ 4 && t0_value !== (t0_value = /*name*/ ctx[10] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t0, t0_value);
-			if (dirty & /*worldNames*/ 4 && t2_value !== (t2_value = /*generation*/ ctx[11] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t2, t2_value);
-			if (dirty & /*worldNames*/ 4 && t4_value !== (t4_value = /*description*/ ctx[12] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t4, t4_value);
+			if (dirty & /*worldNames*/ 32 && t0_value !== (t0_value = /*name*/ ctx[15] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t0, t0_value);
+			if (dirty & /*worldNames*/ 32 && t2_value !== (t2_value = /*generation*/ ctx[16] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t2, t2_value);
+			if (dirty & /*worldNames*/ 32 && t4_value !== (t4_value = /*description*/ ctx[17] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t4, t4_value);
 
-			if (dirty & /*selected, worldNames*/ 12 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[3] === /*name*/ ctx[10]
+			if (dirty & /*selected, worldNames*/ 48 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[15]
 			? "selected"
-			: "") + " svelte-zapuws"))) {
+			: "") + " svelte-15xkx5e"))) {
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value);
 			}
 		},
@@ -23591,7 +23648,177 @@ function create_each_block(ctx) {
 		block,
 		id: create_each_block.name,
 		type: "each",
-		source: "(31:8) {#each worldNames as [name, { generation, description }",
+		source: "(44:8) {#each worldNames as [name, { generation, description }",
+		ctx
+	});
+
+	return block;
+}
+
+// (31:6) {#if !locked}
+function create_if_block_1(ctx) {
+	let div1;
+	let div0;
+	let t0;
+	let h2;
+	let t2;
+	let button0;
+	let t3;
+	let button1;
+	let current;
+	let mounted;
+	let dispose;
+
+	button0 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_1__.default({
+			props: {
+				$$slots: { default: [create_default_slot_1] },
+				$$scope: { ctx }
+			},
+			$$inline: true
+		});
+
+	button0.$on("click", /*click_handler_1*/ ctx[8]);
+
+	button1 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_1__.default({
+			props: {
+				$$slots: { default: [create_default_slot] },
+				$$scope: { ctx }
+			},
+			$$inline: true
+		});
+
+	button1.$on("click", /*click_handler_2*/ ctx[9]);
+
+	const block = {
+		c: function create() {
+			div1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
+			div0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
+			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			h2 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("h2");
+			h2.textContent = "Game menu";
+			t2 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button0.$$.fragment);
+			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button1.$$.fragment);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 32, 10, 883);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 33, 10, 932);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "pause-menu");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 31, 8, 851);
+		},
+		m: function mount(target, anchor) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div1, anchor);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, div0);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, t0);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, h2);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, t2);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.mount_component)(button0, div1, null);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, t3);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.mount_component)(button1, div1, null);
+			current = true;
+
+			if (!mounted) {
+				dispose = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.listen_dev)(div0, "click", /*click_handler*/ ctx[7], false, false, false);
+				mounted = true;
+			}
+		},
+		p: function update(ctx, dirty) {
+			const button0_changes = {};
+
+			if (dirty & /*$$scope*/ 1048576) {
+				button0_changes.$$scope = { dirty, ctx };
+			}
+
+			button0.$set(button0_changes);
+			const button1_changes = {};
+
+			if (dirty & /*$$scope*/ 1048576) {
+				button1_changes.$$scope = { dirty, ctx };
+			}
+
+			button1.$set(button1_changes);
+		},
+		i: function intro(local) {
+			if (current) return;
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(button0.$$.fragment, local);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(button1.$$.fragment, local);
+			current = true;
+		},
+		o: function outro(local) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(button0.$$.fragment, local);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(button1.$$.fragment, local);
+			current = false;
+		},
+		d: function destroy(detaching) {
+			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(div1);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.destroy_component)(button0);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.destroy_component)(button1);
+			mounted = false;
+			dispose();
+		}
+	};
+
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
+		block,
+		id: create_if_block_1.name,
+		type: "if",
+		source: "(31:6) {#if !locked}",
+		ctx
+	});
+
+	return block;
+}
+
+// (35:10) <Button on:click={() => engine.lock()}>
+function create_default_slot_1(ctx) {
+	let t;
+
+	const block = {
+		c: function create() {
+			t = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)("Back to Game");
+		},
+		m: function mount(target, anchor) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, t, anchor);
+		},
+		d: function destroy(detaching) {
+			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(t);
+		}
+	};
+
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
+		block,
+		id: create_default_slot_1.name,
+		type: "slot",
+		source: "(35:10) <Button on:click={() => engine.lock()}>",
+		ctx
+	});
+
+	return block;
+}
+
+// (36:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
+function create_default_slot(ctx) {
+	let t;
+
+	const block = {
+		c: function create() {
+			t = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)("Quit to Title");
+		},
+		m: function mount(target, anchor) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, t, anchor);
+		},
+		d: function destroy(detaching) {
+			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(t);
+		}
+	};
+
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
+		block,
+		id: create_default_slot.name,
+		type: "slot",
+		source: "(36:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
 		ctx
 	});
 
@@ -23600,37 +23827,50 @@ function create_each_block(ctx) {
 
 function create_fragment(ctx) {
 	let main;
+	let current_block_type_index;
+	let if_block;
+	let current;
+	const if_block_creators = [create_if_block, create_else_block];
+	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (!!/*world*/ ctx[4]) return create_if_block;
-		return create_else_block;
+		if (!!/*world*/ ctx[6]) return 0;
+		return 1;
 	}
 
-	let current_block_type = select_block_type(ctx, -1);
-	let if_block = current_block_type(ctx);
+	current_block_type_index = select_block_type(ctx, -1);
+	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
 	const block = {
 		c: function create() {
 			main = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("main");
 			if_block.c();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-zapuws");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 21, 0, 530);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-15xkx5e");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 26, 0, 692);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, main, anchor);
-			if_block.m(main, null);
+			if_blocks[current_block_type_index].m(main, null);
+			current = true;
 		},
 		p: function update(ctx, [dirty]) {
 			if_block.p(ctx, dirty);
 		},
-		i: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
-		o: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
+		i: function intro(local) {
+			if (current) return;
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block);
+			current = true;
+		},
+		o: function outro(local) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block);
+			current = false;
+		},
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(main);
-			if_block.d();
+			if_blocks[current_block_type_index].d();
 		}
 	};
 
@@ -23651,16 +23891,20 @@ function instance($$self, $$props, $$invalidate) {
 	let domElement;
 	let canvas;
 	let worldListWrapper;
-	let worldNames;
+	let locked;
+	let engine;
 	let selected;
-	const { world } = query_string__WEBPACK_IMPORTED_MODULE_2__.parse(window.location.search);
+	let worldNames;
+	const { world } = query_string__WEBPACK_IMPORTED_MODULE_3__.parse(window.location.search);
 
 	if (world) {
 		const worldName = typeof world === "string" ? world : world.join("");
-		const engine = new _core__WEBPACK_IMPORTED_MODULE_1__.Engine(worldName, { container: { canvas, domElement } });
+		engine = new _core__WEBPACK_IMPORTED_MODULE_2__.Engine(worldName, { container: { canvas, domElement } });
 		engine.start();
+		engine.on("lock", () => $$invalidate(2, locked = true));
+		engine.on("unlock", () => $$invalidate(2, locked = false));
 	} else {
-		worldNames = Object.entries(_shared__WEBPACK_IMPORTED_MODULE_3__.WORLD_LIST);
+		worldNames = Object.entries(_shared__WEBPACK_IMPORTED_MODULE_4__.WORLD_LIST);
 	}
 
 	const writable_props = [];
@@ -23669,6 +23913,10 @@ function instance($$self, $$props, $$invalidate) {
 		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<App> was created with unknown prop '${key}'`);
 	});
 
+	const click_handler = () => engine.lock();
+	const click_handler_1 = () => engine.lock();
+	const click_handler_2 = () => window.location.href = window.location.href.split("?")[0];
+
 	function div_binding($$value) {
 		svelte_internal__WEBPACK_IMPORTED_MODULE_0__.binding_callbacks[$$value ? "unshift" : "push"](() => {
 			domElement = $$value;
@@ -23676,8 +23924,8 @@ function instance($$self, $$props, $$invalidate) {
 		});
 	}
 
-	const click_handler = name => $$invalidate(3, selected = name);
-	const dblclick_handler = name => window.location.href = window.location.href + "/?world=" + name;
+	const click_handler_3 = name => $$invalidate(4, selected = name);
+	const dblclick_handler = name => window.location.href = window.location.href + "?world=" + name;
 
 	function ul_binding($$value) {
 		svelte_internal__WEBPACK_IMPORTED_MODULE_0__.binding_callbacks[$$value ? "unshift" : "push"](() => {
@@ -23687,14 +23935,17 @@ function instance($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$capture_state = () => ({
-		Engine: _core__WEBPACK_IMPORTED_MODULE_1__.Engine,
-		QS: query_string__WEBPACK_IMPORTED_MODULE_2__,
-		WORLD_LIST: _shared__WEBPACK_IMPORTED_MODULE_3__.WORLD_LIST,
+		Button: _components_button_svelte__WEBPACK_IMPORTED_MODULE_1__.default,
+		Engine: _core__WEBPACK_IMPORTED_MODULE_2__.Engine,
+		QS: query_string__WEBPACK_IMPORTED_MODULE_3__,
+		WORLD_LIST: _shared__WEBPACK_IMPORTED_MODULE_4__.WORLD_LIST,
 		domElement,
 		canvas,
 		worldListWrapper,
-		worldNames,
+		locked,
+		engine,
 		selected,
+		worldNames,
 		world
 	});
 
@@ -23702,8 +23953,10 @@ function instance($$self, $$props, $$invalidate) {
 		if ("domElement" in $$props) $$invalidate(0, domElement = $$props.domElement);
 		if ("canvas" in $$props) canvas = $$props.canvas;
 		if ("worldListWrapper" in $$props) $$invalidate(1, worldListWrapper = $$props.worldListWrapper);
-		if ("worldNames" in $$props) $$invalidate(2, worldNames = $$props.worldNames);
-		if ("selected" in $$props) $$invalidate(3, selected = $$props.selected);
+		if ("locked" in $$props) $$invalidate(2, locked = $$props.locked);
+		if ("engine" in $$props) $$invalidate(3, engine = $$props.engine);
+		if ("selected" in $$props) $$invalidate(4, selected = $$props.selected);
+		if ("worldNames" in $$props) $$invalidate(5, worldNames = $$props.worldNames);
 	};
 
 	if ($$props && "$$inject" in $$props) {
@@ -23713,11 +23966,16 @@ function instance($$self, $$props, $$invalidate) {
 	return [
 		domElement,
 		worldListWrapper,
-		worldNames,
+		locked,
+		engine,
 		selected,
+		worldNames,
 		world,
-		div_binding,
 		click_handler,
+		click_handler_1,
+		click_handler_2,
+		div_binding,
+		click_handler_3,
 		dblclick_handler,
 		ul_binding
 	];
@@ -23726,7 +23984,7 @@ function instance($$self, $$props, $$invalidate) {
 class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		if (!document.getElementById("svelte-zapuws-style")) add_css();
+		if (!document.getElementById("svelte-15xkx5e-style")) add_css();
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.init)(this, options, instance, create_fragment, svelte_internal__WEBPACK_IMPORTED_MODULE_0__.safe_not_equal, {});
 
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterComponent", {
@@ -23737,10 +23995,146 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_4__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_5__.default, acceptable: true, cssId: "svelte-zapuws-style", nonCssHash: "n8e6s1", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_5__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_6__.default, acceptable: true, cssId: "svelte-15xkx5e-style", nonCssHash: "zglbfs", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
-if (typeof add_css !== 'undefined' && !document.getElementById("svelte-zapuws-style")) add_css();
+if (typeof add_css !== 'undefined' && !document.getElementById("svelte-15xkx5e-style")) add_css();
+
+
+/***/ }),
+
+/***/ "./client/components/button.svelte":
+/*!*****************************************!*\
+  !*** ./client/components/button.svelte ***!
+  \*****************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var svelte_internal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! svelte/internal */ "./node_modules/svelte/internal/index.mjs");
+/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
+/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
+/* module decorator */ module = __webpack_require__.hmd(module);
+/* client/components/button.svelte generated by Svelte v3.37.0 */
+
+
+const file = "client/components/button.svelte";
+
+function add_css() {
+	var style = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("style");
+	style.id = "svelte-c6qnxf-style";
+	style.textContent = ".button.svelte-c6qnxf{font-family:'Alata', sans-serif;border:none;border-bottom:3px solid #35425f;border-right:2px solid #35425f;border-left:2px solid #728ecf;border-top:2px solid #728ecf;box-shadow:0 0 2px 2px black;color:white;height:35px;font-size:15px;background:#465881;border-radius:3px;text-shadow:2px 2px #4c4c4c;cursor:pointer;padding:3px 5px;margin:10px;width:200px}.button.svelte-c6qnxf:not([disabled]):hover{background:#7c8bbc;border-bottom:3px solid #59639a;border-right:2px solid #59639a;border-left:2px solid #bdc6ff;border-top:2px solid #bdc6ff;color:#f8f6a4}.button.svelte-c6qnxf:disabled{cursor:not-allowed;color:#898989;background:#181818;text-shadow:2px 2px #363636;border:none;border:black solid 1px}.button.svelte-c6qnxf:focus,.button.svelte-c6qnxf:active{outline:none}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYnV0dG9uLnN2ZWx0ZSIsIm1hcHBpbmdzIjoiQUFDRSxPQUFBLGNBQUEsQ0FBQSxBQUNFLFdBQUEsQ0FBQSxPQUFBLENBQUEsQ0FBQSxVQUFnQyxDQUNoQyxNQUFBLENBQUEsSUFBWSxDQUNaLGFBQUEsQ0FBQSxHQUFBLENBQUEsS0FBQSxDQUFBLE9BQWdDLENBQ2hDLFlBQUEsQ0FBQSxHQUFBLENBQUEsS0FBQSxDQUFBLE9BQStCLENBQy9CLFdBQUEsQ0FBQSxHQUFBLENBQUEsS0FBQSxDQUFBLE9BQThCLENBQzlCLFVBQUEsQ0FBQSxHQUFBLENBQUEsS0FBQSxDQUFBLE9BQTZCLENBQzdCLFVBQUEsQ0FBQSxDQUFBLENBQUEsQ0FBQSxDQUFBLEdBQUEsQ0FBQSxHQUFBLENBQUEsS0FBNkIsQ0FDN0IsS0FBQSxDQUFBLEtBQVksQ0FDWixNQUFBLENBQUEsSUFBWSxDQUNaLFNBQUEsQ0FBQSxJQUFlLENBQ2YsVUFBQSxDQUFBLE9BQW1CLENBQ25CLGFBQUEsQ0FBQSxHQUFrQixDQUNsQixXQUFBLENBQUEsR0FBQSxDQUFBLEdBQUEsQ0FBQSxPQUE0QixDQUM1QixNQUFBLENBQUEsT0FBZSxDQUNmLE9BQUEsQ0FBQSxHQUFBLENBQUEsR0FBZ0IsQ0FDaEIsTUFBQSxDQUFBLElBQVksQ0FDWixLQUFBLENBQUEsS0FBWSxBQUNkLENBQUEsQUFFQSxxQkFBQSxLQUFBLENBQUEsUUFBQSxDQUFBLENBQUEsTUFBQSxBQUFBLENBQUEsQUFDRSxVQUFBLENBQUEsT0FBbUIsQ0FDbkIsYUFBQSxDQUFBLEdBQUEsQ0FBQSxLQUFBLENBQUEsT0FBZ0MsQ0FDaEMsWUFBQSxDQUFBLEdBQUEsQ0FBQSxLQUFBLENBQUEsT0FBK0IsQ0FDL0IsV0FBQSxDQUFBLEdBQUEsQ0FBQSxLQUFBLENBQUEsT0FBOEIsQ0FDOUIsVUFBQSxDQUFBLEdBQUEsQ0FBQSxLQUFBLENBQUEsT0FBNkIsQ0FDN0IsS0FBQSxDQUFBLE9BQWMsQUFDaEIsQ0FBQSxBQUVBLHFCQUFBLFNBQUEsQUFBQSxDQUFBLEFBQ0UsTUFBQSxDQUFBLFdBQW1CLENBQ25CLEtBQUEsQ0FBQSxPQUFjLENBQ2QsVUFBQSxDQUFBLE9BQW1CLENBQ25CLFdBQUEsQ0FBQSxHQUFBLENBQUEsR0FBQSxDQUFBLE9BQTRCLENBQzVCLE1BQUEsQ0FBQSxJQUFZLENBQ1osTUFBQSxDQUFBLEtBQUEsQ0FBQSxLQUFBLENBQUEsR0FBdUIsQUFDekIsQ0FBQSxBQUVBLHFCQUFBLE1BQUEsOEJBRUUsT0FBQSxDQUFBLElBQWEsQUFDZixDQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbImNsaWVudC9jb21wb25lbnRzL2J1dHRvbi5zdmVsdGUiXX0= */";
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(document.head, style);
+}
+
+function create_fragment(ctx) {
+	let button;
+	let current;
+	let mounted;
+	let dispose;
+	const default_slot_template = /*#slots*/ ctx[1].default;
+	const default_slot = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_slot)(default_slot_template, ctx, /*$$scope*/ ctx[0], null);
+
+	const block = {
+		c: function create() {
+			button = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("button");
+			if (default_slot) default_slot.c();
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(button, "class", "button svelte-c6qnxf");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(button, file, 0, 0, 0);
+		},
+		l: function claim(nodes) {
+			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+		},
+		m: function mount(target, anchor) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, button, anchor);
+
+			if (default_slot) {
+				default_slot.m(button, null);
+			}
+
+			current = true;
+
+			if (!mounted) {
+				dispose = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.listen_dev)(button, "click", /*click_handler*/ ctx[2], false, false, false);
+				mounted = true;
+			}
+		},
+		p: function update(ctx, [dirty]) {
+			if (default_slot) {
+				if (default_slot.p && dirty & /*$$scope*/ 1) {
+					(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.update_slot)(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[0], dirty, null, null);
+				}
+			}
+		},
+		i: function intro(local) {
+			if (current) return;
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(default_slot, local);
+			current = true;
+		},
+		o: function outro(local) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(default_slot, local);
+			current = false;
+		},
+		d: function destroy(detaching) {
+			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(button);
+			if (default_slot) default_slot.d(detaching);
+			mounted = false;
+			dispose();
+		}
+	};
+
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
+		block,
+		id: create_fragment.name,
+		type: "component",
+		source: "",
+		ctx
+	});
+
+	return block;
+}
+
+function instance($$self, $$props, $$invalidate) {
+	let { $$slots: slots = {}, $$scope } = $$props;
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_slots)("Button", slots, ['default']);
+	const writable_props = [];
+
+	Object.keys($$props).forEach(key => {
+		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Button> was created with unknown prop '${key}'`);
+	});
+
+	function click_handler(event) {
+		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.bubble)($$self, event);
+	}
+
+	$$self.$$set = $$props => {
+		if ("$$scope" in $$props) $$invalidate(0, $$scope = $$props.$$scope);
+	};
+
+	return [$$scope, slots, click_handler];
+}
+
+class Button extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDev {
+	constructor(options) {
+		super(options);
+		if (!document.getElementById("svelte-c6qnxf-style")) add_css();
+		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.init)(this, options, instance, create_fragment, svelte_internal__WEBPACK_IMPORTED_MODULE_0__.safe_not_equal, {});
+
+		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterComponent", {
+			component: this,
+			tagName: "Button",
+			options,
+			id: create_fragment.name
+		});
+	}
+}
+if (module && module.hot) { if (false) {} Button = _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_1__.applyHmr({ m: module, id: "\"client/components/button.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: Button, ProxyAdapter: _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_2__.default, acceptable: true, cssId: "svelte-c6qnxf-style", nonCssHash: "135vnf7", ignoreCss: false, }); }
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Button);
+
+if (typeof add_css !== 'undefined' && !document.getElementById("svelte-c6qnxf-style")) add_css();
 
 
 /***/ }),

@@ -26,7 +26,7 @@ class Inputs {
     document.addEventListener(
       'mousedown',
       ({ button }) => {
-        if (!this.engine.isLocked) return;
+        if (!this.engine.locked) return;
 
         let callbacks: (() => void)[];
 

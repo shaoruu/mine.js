@@ -222,8 +222,16 @@ class Engine extends EventEmitter {
     this.emit('pause');
   };
 
+  lock = () => {
+    this.player.controls.lock();
+  };
+
+  unlock = () => {
+    this.player.controls.unlock();
+  };
+
   // if pointerlock is locked
-  get isLocked() {
+  get locked() {
     return this.player.controls.isLocked;
   }
 }
