@@ -4191,22 +4191,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Network": () => (/* binding */ Network)
 /* harmony export */ });
-/* harmony import */ var domurl__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! domurl */ "./node_modules/domurl/url.min.js");
-/* harmony import */ var domurl__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(domurl__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var pako__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! pako */ "./node_modules/pako/dist/pako.esm.mjs");
-/* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../protocol */ "./protocol/index.js");
-/* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_protocol__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var pako__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pako */ "./node_modules/pako/dist/pako.esm.mjs");
+/* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../protocol */ "./protocol/index.js");
+/* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_protocol__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
 /* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
 
 
 
 
-const { Message } = _protocol__WEBPACK_IMPORTED_MODULE_2__.protocol;
+const { Message } = _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol;
 class Network {
     constructor(engine, worldName) {
         this.engine = engine;
         this.worldName = worldName;
-        this.url = new (domurl__WEBPACK_IMPORTED_MODULE_0___default())();
+        this.url = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getServerURL();
         this.connected = false;
         this.connect = (url) => {
             const socket = new URL(url);
@@ -4257,14 +4256,11 @@ class Network {
             }
             this.onEvent(event);
         };
-        if (this.url.host === 'localhost') {
-            this.url.port = '4000';
-        }
         this.connect(this.url.toString());
     }
     static decode(buffer) {
         if (buffer[0] === 0x78 && buffer[1] === 0x9c) {
-            buffer = pako__WEBPACK_IMPORTED_MODULE_1__.default.inflate(buffer);
+            buffer = pako__WEBPACK_IMPORTED_MODULE_0__.default.inflate(buffer);
         }
         const message = Message.decode(buffer);
         // @ts-ignore
@@ -4279,7 +4275,7 @@ class Network {
             message.json = JSON.stringify(message.json);
         }
         message.type = Message.Type[message.type];
-        return _protocol__WEBPACK_IMPORTED_MODULE_2__.protocol.Message.encode(_protocol__WEBPACK_IMPORTED_MODULE_2__.protocol.Message.create(message)).finish();
+        return _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.encode(_protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.create(message)).finish();
     }
 }
 
@@ -6268,10 +6264,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Helper": () => (/* binding */ Helper)
 /* harmony export */ });
-/* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! gl-vec3 */ "./node_modules/gl-vec3/index.js");
-/* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(gl_vec3__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
-/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var domurl__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! domurl */ "./node_modules/domurl/url.min.js");
+/* harmony import */ var domurl__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(domurl__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! gl-vec3 */ "./node_modules/gl-vec3/index.js");
+/* harmony import */ var gl_vec3__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(gl_vec3__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+
 
 
 
@@ -6306,8 +6305,8 @@ Helper.parseChunkName = (name, concat = '|') => {
  */
 Helper.scaleCoordsF = (coords, factor) => {
     const result = [0, 0, 0];
-    const scaled = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(result, coords, factor);
-    return gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().floor(scaled, scaled);
+    const scaled = gl_vec3__WEBPACK_IMPORTED_MODULE_1___default().scale(result, coords, factor);
+    return gl_vec3__WEBPACK_IMPORTED_MODULE_1___default().floor(scaled, scaled);
 };
 /**
  * Map voxel position to local position in current chunk.
@@ -6342,8 +6341,8 @@ Helper.mapVoxelPosToChunkPos = (voxelPos, chunkSize) => {
  */
 Helper.mapChunkPosToVoxelPos = (chunkPos, chunkSize) => {
     const result = [0, 0, 0];
-    gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(result, chunkPos);
-    gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(result, result, chunkSize);
+    gl_vec3__WEBPACK_IMPORTED_MODULE_1___default().copy(result, chunkPos);
+    gl_vec3__WEBPACK_IMPORTED_MODULE_1___default().scale(result, result, chunkSize);
     return result;
 };
 /**
@@ -6386,6 +6385,13 @@ Helper.cloneAABB = (tgt, src) => {
         tgt.max[i] = src.max[i];
         tgt.vec[i] = src.vec[i];
     }
+};
+Helper.getServerURL = () => {
+    const url = new (domurl__WEBPACK_IMPORTED_MODULE_0___default())();
+    if (url.host === 'localhost') {
+        url.port = '4000';
+    }
+    return url;
 };
 
 
@@ -23350,17 +23356,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var svelte_internal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! svelte/internal */ "./node_modules/svelte/internal/index.mjs");
-/* harmony import */ var _components_button_svelte__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/button.svelte */ "./client/components/button.svelte");
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
-/* harmony import */ var query_string__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! query-string */ "./node_modules/query-string/index.js");
-/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../shared */ "./shared/index.ts");
-/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
-/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
+/* harmony import */ var query_string__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! query-string */ "./node_modules/query-string/index.js");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../shared */ "./shared/index.ts");
+/* harmony import */ var _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/button.svelte */ "./client/components/button.svelte");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./utils */ "./client/utils/index.ts");
+/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
+/* harmony import */ var _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* client/App.svelte generated by Svelte v3.37.0 */
 
 
-const { Object: Object_1 } = svelte_internal__WEBPACK_IMPORTED_MODULE_0__.globals;
+
 
 
 
@@ -23376,25 +23383,33 @@ function add_css() {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[15] = list[i][0];
-	child_ctx[16] = list[i][1].generation;
-	child_ctx[17] = list[i][1].description;
+	child_ctx[17] = list[i].name;
+	child_ctx[18] = list[i].generation;
+	child_ctx[19] = list[i].description;
 	return child_ctx;
 }
 
-// (40:2) {:else}
+// (53:2) {:else}
 function create_else_block(ctx) {
 	let div;
 	let h1;
 	let t1;
 	let ul;
-	let each_value = /*worldNames*/ ctx[5];
-	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
-	let each_blocks = [];
+	let promise;
 
-	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
-	}
+	let info = {
+		ctx,
+		current: null,
+		token: null,
+		hasCatch: true,
+		pending: create_pending_block,
+		then: create_then_block,
+		catch: create_catch_block,
+		value: 16,
+		error: 22
+	};
+
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise = /*fetchWorlds*/ ctx[5], info);
 
 	const block = {
 		c: function create() {
@@ -23403,63 +23418,46 @@ function create_else_block(ctx) {
 			h1.textContent = "Select a world";
 			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			ul = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("ul");
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
+			info.block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "id", "world-list-title");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 41, 6, 1228);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 54, 6, 2105);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "id", "world-list");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 42, 6, 1280);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 55, 6, 2157);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "id", "world-list-wrapper");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 40, 4, 1192);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 53, 4, 2069);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, h1);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t1);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, ul);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(ul, null);
-			}
-
+			info.block.m(ul, info.anchor = null);
+			info.mount = () => ul;
+			info.anchor = null;
 			/*ul_binding*/ ctx[13](ul);
 		},
-		p: function update(ctx, dirty) {
-			if (dirty & /*selected, worldNames, window*/ 48) {
-				each_value = /*worldNames*/ ctx[5];
-				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
-				let i;
+		p: function update(new_ctx, dirty) {
+			ctx = new_ctx;
+			info.ctx = ctx;
 
-				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context(ctx, each_value, i);
-
-					if (each_blocks[i]) {
-						each_blocks[i].p(child_ctx, dirty);
-					} else {
-						each_blocks[i] = create_each_block(child_ctx);
-						each_blocks[i].c();
-						each_blocks[i].m(ul, null);
-					}
-				}
-
-				for (; i < each_blocks.length; i += 1) {
-					each_blocks[i].d(1);
-				}
-
-				each_blocks.length = each_value.length;
+			if (dirty & /*fetchWorlds*/ 32 && promise !== (promise = /*fetchWorlds*/ ctx[5]) && (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise, info)) {
+				
+			} else {
+				const child_ctx = ctx.slice();
+				child_ctx[16] = child_ctx[22] = info.resolved;
+				info.block.p(child_ctx, dirty);
 			}
 		},
 		i: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
 		o: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(div);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.destroy_each)(each_blocks, detaching);
+			info.block.d();
+			info.token = null;
+			info = null;
 			/*ul_binding*/ ctx[13](null);
 		}
 	};
@@ -23468,14 +23466,14 @@ function create_else_block(ctx) {
 		block,
 		id: create_else_block.name,
 		type: "else",
-		source: "(40:2) {:else}",
+		source: "(53:2) {:else}",
 		ctx
 	});
 
 	return block;
 }
 
-// (28:2) {#if !!world}
+// (41:2) {#if !!world}
 function create_if_block(ctx) {
 	let div;
 	let img;
@@ -23494,8 +23492,8 @@ function create_if_block(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "id", "crosshair");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "alt", "+");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 29, 6, 754);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 28, 4, 719);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 42, 6, 1631);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 41, 4, 1596);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
@@ -23549,25 +23547,131 @@ function create_if_block(ctx) {
 		block,
 		id: create_if_block.name,
 		type: "if",
-		source: "(28:2) {#if !!world}",
+		source: "(41:2) {#if !!world}",
 		ctx
 	});
 
 	return block;
 }
 
-// (44:8) {#each worldNames as [name, { generation, description }
+// (71:8) {:catch error}
+function create_catch_block(ctx) {
+	let p;
+	let t0;
+	let t1_value = /*error*/ ctx[22] + "";
+	let t1;
+
+	const block = {
+		c: function create() {
+			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
+			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)("An error occurred! ");
+			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t1_value);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 71, 10, 2772);
+		},
+		m: function mount(target, anchor) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t0);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t1);
+		},
+		p: function update(ctx, dirty) {
+			if (dirty & /*fetchWorlds*/ 32 && t1_value !== (t1_value = /*error*/ ctx[22] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t1, t1_value);
+		},
+		d: function destroy(detaching) {
+			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(p);
+		}
+	};
+
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
+		block,
+		id: create_catch_block.name,
+		type: "catch",
+		source: "(71:8) {:catch error}",
+		ctx
+	});
+
+	return block;
+}
+
+// (59:8) {:then data}
+function create_then_block(ctx) {
+	let each_1_anchor;
+	let each_value = /*data*/ ctx[16].worlds;
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
+	let each_blocks = [];
+
+	for (let i = 0; i < each_value.length; i += 1) {
+		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+	}
+
+	const block = {
+		c: function create() {
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].c();
+			}
+
+			each_1_anchor = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.empty)();
+		},
+		m: function mount(target, anchor) {
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].m(target, anchor);
+			}
+
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, each_1_anchor, anchor);
+		},
+		p: function update(ctx, dirty) {
+			if (dirty & /*selected, fetchWorlds, window*/ 48) {
+				each_value = /*data*/ ctx[16].worlds;
+				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
+				let i;
+
+				for (i = 0; i < each_value.length; i += 1) {
+					const child_ctx = get_each_context(ctx, each_value, i);
+
+					if (each_blocks[i]) {
+						each_blocks[i].p(child_ctx, dirty);
+					} else {
+						each_blocks[i] = create_each_block(child_ctx);
+						each_blocks[i].c();
+						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+					}
+				}
+
+				for (; i < each_blocks.length; i += 1) {
+					each_blocks[i].d(1);
+				}
+
+				each_blocks.length = each_value.length;
+			}
+		},
+		d: function destroy(detaching) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.destroy_each)(each_blocks, detaching);
+			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(each_1_anchor);
+		}
+	};
+
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
+		block,
+		id: create_then_block.name,
+		type: "then",
+		source: "(59:8) {:then data}",
+		ctx
+	});
+
+	return block;
+}
+
+// (60:10) {#each data.worlds as { name, generation, description }}
 function create_each_block(ctx) {
 	let li;
 	let h1;
-	let t0_value = /*name*/ ctx[15] + "";
+	let t0_value = /*name*/ ctx[17] + "";
 	let t0;
 	let t1;
 	let p;
-	let t2_value = /*generation*/ ctx[16] + "";
+	let t2_value = /*generation*/ ctx[18] + "";
 	let t2;
 	let t3;
-	let t4_value = /*description*/ ctx[17] + "";
+	let t4_value = /*description*/ ctx[19] + "";
 	let t4;
 	let t5;
 	let li_class_value;
@@ -23575,11 +23679,11 @@ function create_each_block(ctx) {
 	let dispose;
 
 	function click_handler_3() {
-		return /*click_handler_3*/ ctx[11](/*name*/ ctx[15]);
+		return /*click_handler_3*/ ctx[11](/*name*/ ctx[17]);
 	}
 
 	function dblclick_handler() {
-		return /*dblclick_handler*/ ctx[12](/*name*/ ctx[15]);
+		return /*dblclick_handler*/ ctx[12](/*name*/ ctx[17]);
 	}
 
 	const block = {
@@ -23590,20 +23694,20 @@ function create_each_block(ctx) {
 			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			t2 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t2_value);
-			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(" . ");
+			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(" · ");
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t4_value);
 			t5 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 51, 12, 1714);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 66, 14, 2637);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 52, 12, 1742);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 67, 14, 2667);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "id", "world-list-item");
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[15]
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[17]
 			? "selected"
 			: "") + " svelte-15xkx5e"));
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 44, 10, 1406);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 60, 12, 2364);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, li, anchor);
@@ -23627,11 +23731,11 @@ function create_each_block(ctx) {
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
-			if (dirty & /*worldNames*/ 32 && t0_value !== (t0_value = /*name*/ ctx[15] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t0, t0_value);
-			if (dirty & /*worldNames*/ 32 && t2_value !== (t2_value = /*generation*/ ctx[16] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t2, t2_value);
-			if (dirty & /*worldNames*/ 32 && t4_value !== (t4_value = /*description*/ ctx[17] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t4, t4_value);
+			if (dirty & /*fetchWorlds*/ 32 && t0_value !== (t0_value = /*name*/ ctx[17] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t0, t0_value);
+			if (dirty & /*fetchWorlds*/ 32 && t2_value !== (t2_value = /*generation*/ ctx[18] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t2, t2_value);
+			if (dirty & /*fetchWorlds*/ 32 && t4_value !== (t4_value = /*description*/ ctx[19] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t4, t4_value);
 
-			if (dirty & /*selected, worldNames*/ 48 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[15]
+			if (dirty & /*selected, fetchWorlds*/ 48 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[17]
 			? "selected"
 			: "") + " svelte-15xkx5e"))) {
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value);
@@ -23648,14 +23752,44 @@ function create_each_block(ctx) {
 		block,
 		id: create_each_block.name,
 		type: "each",
-		source: "(44:8) {#each worldNames as [name, { generation, description }",
+		source: "(60:10) {#each data.worlds as { name, generation, description }}",
 		ctx
 	});
 
 	return block;
 }
 
-// (31:6) {#if !locked}
+// (57:28)            <p>...waiting</p>         {:then data}
+function create_pending_block(ctx) {
+	let p;
+
+	const block = {
+		c: function create() {
+			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
+			p.textContent = "...waiting";
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 57, 10, 2246);
+		},
+		m: function mount(target, anchor) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
+		},
+		p: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
+		d: function destroy(detaching) {
+			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(p);
+		}
+	};
+
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
+		block,
+		id: create_pending_block.name,
+		type: "pending",
+		source: "(57:28)            <p>...waiting</p>         {:then data}",
+		ctx
+	});
+
+	return block;
+}
+
+// (44:6) {#if !locked}
 function create_if_block_1(ctx) {
 	let div1;
 	let div0;
@@ -23669,7 +23803,7 @@ function create_if_block_1(ctx) {
 	let mounted;
 	let dispose;
 
-	button0 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_1__.default({
+	button0 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
 				$$slots: { default: [create_default_slot_1] },
 				$$scope: { ctx }
@@ -23679,7 +23813,7 @@ function create_if_block_1(ctx) {
 
 	button0.$on("click", /*click_handler_1*/ ctx[8]);
 
-	button1 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_1__.default({
+	button1 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
 				$$slots: { default: [create_default_slot] },
 				$$scope: { ctx }
@@ -23701,12 +23835,12 @@ function create_if_block_1(ctx) {
 			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button1.$$.fragment);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 32, 10, 883);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 45, 10, 1760);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 33, 10, 932);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 46, 10, 1809);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "pause-menu");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 31, 8, 851);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 44, 8, 1728);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div1, anchor);
@@ -23727,14 +23861,14 @@ function create_if_block_1(ctx) {
 		p: function update(ctx, dirty) {
 			const button0_changes = {};
 
-			if (dirty & /*$$scope*/ 1048576) {
+			if (dirty & /*$$scope*/ 8388608) {
 				button0_changes.$$scope = { dirty, ctx };
 			}
 
 			button0.$set(button0_changes);
 			const button1_changes = {};
 
-			if (dirty & /*$$scope*/ 1048576) {
+			if (dirty & /*$$scope*/ 8388608) {
 				button1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -23764,14 +23898,14 @@ function create_if_block_1(ctx) {
 		block,
 		id: create_if_block_1.name,
 		type: "if",
-		source: "(31:6) {#if !locked}",
+		source: "(44:6) {#if !locked}",
 		ctx
 	});
 
 	return block;
 }
 
-// (35:10) <Button on:click={() => engine.lock()}>
+// (48:10) <Button on:click={() => engine.lock()}>
 function create_default_slot_1(ctx) {
 	let t;
 
@@ -23791,14 +23925,14 @@ function create_default_slot_1(ctx) {
 		block,
 		id: create_default_slot_1.name,
 		type: "slot",
-		source: "(35:10) <Button on:click={() => engine.lock()}>",
+		source: "(48:10) <Button on:click={() => engine.lock()}>",
 		ctx
 	});
 
 	return block;
 }
 
-// (36:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
+// (49:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
 function create_default_slot(ctx) {
 	let t;
 
@@ -23818,7 +23952,7 @@ function create_default_slot(ctx) {
 		block,
 		id: create_default_slot.name,
 		type: "slot",
-		source: "(36:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
+		source: "(49:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
 		ctx
 	});
 
@@ -23846,7 +23980,7 @@ function create_fragment(ctx) {
 			main = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("main");
 			if_block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-15xkx5e");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 26, 0, 692);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 39, 0, 1569);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -23888,28 +24022,68 @@ function create_fragment(ctx) {
 function instance($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_slots)("App", slots, []);
+
+	var __awaiter = this && this.__awaiter || function (thisArg, _arguments, P, generator) {
+		function adopt(value) {
+			return value instanceof P
+			? value
+			: new P(function (resolve) {
+						resolve(value);
+					});
+		}
+
+		return new (P || (P = Promise))(function (resolve, reject) {
+				function fulfilled(value) {
+					try {
+						step(generator.next(value));
+					} catch(e) {
+						reject(e);
+					}
+				}
+
+				function rejected(value) {
+					try {
+						step(generator["throw"](value));
+					} catch(e) {
+						reject(e);
+					}
+				}
+
+				function step(result) {
+					result.done
+					? resolve(result.value)
+					: adopt(result.value).then(fulfilled, rejected);
+				}
+
+				step((generator = generator.apply(thisArg, _arguments || [])).next());
+			});
+	};
+
 	let domElement;
 	let canvas;
 	let worldListWrapper;
 	let locked;
 	let engine;
 	let selected;
-	let worldNames;
-	const { world } = query_string__WEBPACK_IMPORTED_MODULE_3__.parse(window.location.search);
+	let fetchWorlds;
+	const { world } = query_string__WEBPACK_IMPORTED_MODULE_1__.parse(window.location.search);
 
 	if (world) {
 		const worldName = typeof world === "string" ? world : world.join("");
-		engine = new _core__WEBPACK_IMPORTED_MODULE_2__.Engine(worldName, { container: { canvas, domElement } });
+		engine = new _core__WEBPACK_IMPORTED_MODULE_4__.Engine(worldName, { container: { canvas, domElement } });
 		engine.start();
 		engine.on("lock", () => $$invalidate(2, locked = true));
 		engine.on("unlock", () => $$invalidate(2, locked = false));
 	} else {
-		worldNames = Object.entries(_shared__WEBPACK_IMPORTED_MODULE_4__.WORLD_LIST);
+		fetchWorlds = (() => __awaiter(void 0, void 0, void 0, function* () {
+			const response = yield fetch(_utils__WEBPACK_IMPORTED_MODULE_5__.Helper.getServerURL().toString() + "worlds");
+			return yield response.json();
+		}))();
 	}
 
 	const writable_props = [];
 
-	Object_1.keys($$props).forEach(key => {
+	Object.keys($$props).forEach(key => {
 		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<App> was created with unknown prop '${key}'`);
 	});
 
@@ -23935,28 +24109,31 @@ function instance($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$capture_state = () => ({
-		Button: _components_button_svelte__WEBPACK_IMPORTED_MODULE_1__.default,
-		Engine: _core__WEBPACK_IMPORTED_MODULE_2__.Engine,
-		QS: query_string__WEBPACK_IMPORTED_MODULE_3__,
-		WORLD_LIST: _shared__WEBPACK_IMPORTED_MODULE_4__.WORLD_LIST,
+		__awaiter,
+		QS: query_string__WEBPACK_IMPORTED_MODULE_1__,
+		WORLD_LIST: _shared__WEBPACK_IMPORTED_MODULE_2__.WORLD_LIST,
+		Button: _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default,
+		Engine: _core__WEBPACK_IMPORTED_MODULE_4__.Engine,
+		Helper: _utils__WEBPACK_IMPORTED_MODULE_5__.Helper,
 		domElement,
 		canvas,
 		worldListWrapper,
 		locked,
 		engine,
 		selected,
-		worldNames,
+		fetchWorlds,
 		world
 	});
 
 	$$self.$inject_state = $$props => {
+		if ("__awaiter" in $$props) __awaiter = $$props.__awaiter;
 		if ("domElement" in $$props) $$invalidate(0, domElement = $$props.domElement);
 		if ("canvas" in $$props) canvas = $$props.canvas;
 		if ("worldListWrapper" in $$props) $$invalidate(1, worldListWrapper = $$props.worldListWrapper);
 		if ("locked" in $$props) $$invalidate(2, locked = $$props.locked);
 		if ("engine" in $$props) $$invalidate(3, engine = $$props.engine);
 		if ("selected" in $$props) $$invalidate(4, selected = $$props.selected);
-		if ("worldNames" in $$props) $$invalidate(5, worldNames = $$props.worldNames);
+		if ("fetchWorlds" in $$props) $$invalidate(5, fetchWorlds = $$props.fetchWorlds);
 	};
 
 	if ($$props && "$$inject" in $$props) {
@@ -23969,7 +24146,7 @@ function instance($$self, $$props, $$invalidate) {
 		locked,
 		engine,
 		selected,
-		worldNames,
+		fetchWorlds,
 		world,
 		click_handler,
 		click_handler_1,
@@ -23995,7 +24172,7 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_5__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_6__.default, acceptable: true, cssId: "svelte-15xkx5e-style", nonCssHash: "zglbfs", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_6__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _Users_ianhuang_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_7__.default, acceptable: true, cssId: "svelte-15xkx5e-style", nonCssHash: "3rqyqx", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
 if (typeof add_css !== 'undefined' && !document.getElementById("svelte-15xkx5e-style")) add_css();

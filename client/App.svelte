@@ -1,8 +1,11 @@
 <script lang="ts">
+  import QS from 'query-string';
+
+  import { WORLD_LIST } from '../shared';
+
   import Button from './components/button.svelte';
   import { Engine } from './core';
-  import QS from 'query-string';
-  import { WORLD_LIST } from '../shared';
+  import { Helper } from './utils';
 
   let domElement: HTMLDivElement;
   let canvas: HTMLCanvasElement;
@@ -11,7 +14,7 @@
   let locked: boolean;
   let engine: Engine;
   let selected: string;
-  let worldNames: [string, { generation: string; description: string }][];
+  let fetchWorlds: Promise<any>;
 
   const { world } = QS.parse(window.location.search);
 
@@ -26,7 +29,10 @@
     engine.on('lock', () => (locked = true));
     engine.on('unlock', () => (locked = false));
   } else {
-    worldNames = Object.entries(WORLD_LIST);
+    fetchWorlds = (async () => {
+      const response = await fetch(Helper.getServerURL().toString() + 'worlds');
+      return await response.json();
+    })();
   }
 </script>
 
@@ -47,19 +53,23 @@
     <div id="world-list-wrapper">
       <h1 id="world-list-title">Select a world</h1>
       <ul id="world-list" bind:this={worldListWrapper}>
-        {#each worldNames as [name, { generation, description }]}
-          <li
-            id="world-list-item"
-            on:click={() => (selected = name)}
-            on:dblclick={() => (window.location.href = window.location.href + '?world=' + name)}
-            class={selected === name ? 'selected' : ''}
-          >
-            <!-- <a href="/?world={name}"> -->
-            <h1>{name}</h1>
-            <p>{generation} . {description}</p>
-            <!-- </a> -->
-          </li>
-        {/each}
+        {#await fetchWorlds}
+          <p>...waiting</p>
+        {:then data}
+          {#each data.worlds as { name, generation, description }}
+            <li
+              id="world-list-item"
+              on:click={() => (selected = name)}
+              on:dblclick={() => (window.location.href = window.location.href + '?world=' + name)}
+              class={selected === name ? 'selected' : ''}
+            >
+              <h1>{name}</h1>
+              <p>{generation} · {description}</p>
+            </li>
+          {/each}
+        {:catch error}
+          <p>An error occurred! {error}</p>
+        {/await}
       </ul>
     </div>
   {/if}

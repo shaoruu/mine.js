@@ -1,3 +1,4 @@
+import Url from 'domurl';
 import vec3 from 'gl-vec3';
 
 import { Coords2, Coords3 } from '../../shared';
@@ -128,6 +129,14 @@ class Helper {
       tgt.max[i] = src.max[i];
       tgt.vec[i] = src.vec[i];
     }
+  };
+
+  public static getServerURL = () => {
+    const url = new Url();
+    if (url.host === 'localhost') {
+      url.port = '4000';
+    }
+    return url;
   };
 }
 

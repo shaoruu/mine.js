@@ -1,7 +1,7 @@
-import Url from 'domurl';
 import Pako from 'pako';
 
 import { protocol } from '../../protocol';
+import { Helper } from '../utils';
 
 import { Engine } from './engine';
 
@@ -15,14 +15,10 @@ type CustomWebSocket = WebSocket & {
 class Network {
   public server: CustomWebSocket;
 
-  public url = new Url();
+  public url = Helper.getServerURL();
   public connected = false;
 
   constructor(public engine: Engine, public worldName: string) {
-    if (this.url.host === 'localhost') {
-      this.url.port = '4000';
-    }
-
     this.connect(this.url.toString());
   }
 

@@ -42,6 +42,13 @@ if (WORLDS) {
     }
     Mine.registerWorld(app, name, data);
   });
+
+  app.get('/worlds', (_, reply) => {
+    reply
+      .code(200)
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .send({ worlds: worldNames.map((key) => ({ name: key, ...WORLD_LIST[key] })) });
+  });
 } else {
   console.log(chalk.red('No worlds loaded!'));
 }
