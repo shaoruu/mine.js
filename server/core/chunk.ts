@@ -106,6 +106,7 @@ class Chunk {
   }
 
   getTorchLight(vCoords: Coords3) {
+    if (!this.contains(vCoords)) return 0;
     const lCoords = this.toLocal(vCoords);
     return this.getLocalTorchLight(lCoords);
   }
@@ -116,6 +117,7 @@ class Chunk {
   }
 
   getSunlight(vCoords: Coords3) {
+    if (!this.contains(vCoords)) return 0;
     const lCoords = this.toLocal(vCoords);
     return this.getLocalSunlight(lCoords);
   }

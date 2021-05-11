@@ -236,7 +236,7 @@ class World extends Network {
           Number.isNaN(y) ||
           Number.isNaN(z) ||
           Number.isNaN(type) ||
-          y <= 0 ||
+          y < 0 ||
           y >= maxHeight ||
           !Mine.registry.getBlockByID(type).name
         ) {

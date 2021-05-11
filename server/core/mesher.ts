@@ -206,10 +206,10 @@ class Mesher {
                   const posY = pos[1] + vy;
                   const posZ = pos[2] + vz;
 
-                  positions.push(posX * dimension, posY * dimension, posZ * dimension);
-                  faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
                   normals.push(...dir);
+                  positions.push(posX * dimension, posY * dimension, posZ * dimension);
                   uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
+                  faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
                 }
 
                 const aT = torchLightLevels[i + 0];
