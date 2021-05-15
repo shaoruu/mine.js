@@ -43,7 +43,7 @@ class World extends EventEmitter {
     this.clouds = new Clouds(engine.rendering);
 
     engine.on('ready', () => {
-      this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency, 6));
+      this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency + 3, 6));
     });
   }
 

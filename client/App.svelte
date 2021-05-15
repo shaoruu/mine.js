@@ -117,7 +117,7 @@
   }
 
   #pause-menu > div {
-    background: rgba(1, 1, 1, 0.222);
+    background: rgba(1, 1, 1, 0.1);
     z-index: -1;
   }
 

@@ -1,6 +1,7 @@
 import Pako from 'pako';
 
 import { protocol } from '../../protocol';
+import { Helper as SharedHelper } from '../../shared';
 import { Helper } from '../utils';
 
 import { Engine } from './engine';
@@ -52,9 +53,20 @@ class Network {
     switch (type) {
       case 'INIT': {
         const {
-          json: { spawn },
+          json: { time, speed, spawn },
         } = event;
+        world.sky.setTime(time, false);
+        world.sky.setSpeed(speed, false);
         player.teleport(spawn);
+        break;
+      }
+      case 'CONFIG': {
+        const {
+          json: { time, speed },
+        } = event;
+        console.log(time, speed);
+        if (SharedHelper.isNumber(time)) world.sky.setTime(time, false);
+        if (SharedHelper.isNumber(speed)) world.sky.setSpeed(speed, false);
         break;
       }
       case 'UPDATE': {

@@ -3675,14 +3675,6 @@ class Debug {
                 .addColor(rendering.options, 'clearColor')
                 .onFinishChange((value) => rendering.renderer.setClearColor(value))
                 .name('Clear color');
-            renderingFolder
-                .addColor(rendering.options, 'fogColor')
-                .onFinishChange((value) => (rendering.fogUniforms.uFogColor.value = new three__WEBPACK_IMPORTED_MODULE_4__.Color(value)))
-                .name('Fog color');
-            renderingFolder
-                .addColor(rendering.options, 'fogNearColor')
-                .onFinishChange((value) => (rendering.fogUniforms.uFogNearColor.value = new three__WEBPACK_IMPORTED_MODULE_4__.Color(value)))
-                .name('Fog near color');
             // WORLD
             const worldFolder = this.gui.addFolder('World');
             worldFolder
@@ -3696,7 +3688,10 @@ class Debug {
                 .add(world.sky.tracker, 'time', 0, 2400, 10)
                 .onChange((value) => world.sky.setTime(value))
                 .name('Time value');
-            worldFolder.add(world.sky.tracker, 'speed', 0, 20, 0.01).name('Time speed');
+            worldFolder
+                .add(world.sky.tracker, 'speed', 0, 20, 0.01)
+                .onChange((value) => world.sky.setSpeed(value))
+                .name('Time speed');
             this.registerDisplay('chunk', world, 'camChunkPosStr');
             this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
             // PLAYER
@@ -4187,8 +4182,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var pako__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pako */ "./node_modules/pako/dist/pako.esm.mjs");
 /* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../protocol */ "./protocol/index.js");
 /* harmony import */ var _protocol__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_protocol__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+
 
 
 
@@ -4198,7 +4195,7 @@ class Network {
     constructor(engine, worldName) {
         this.engine = engine;
         this.worldName = worldName;
-        this.url = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getServerURL();
+        this.url = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getServerURL();
         this.connected = false;
         this.connect = (url) => {
             const socket = new URL(url);
@@ -4222,8 +4219,19 @@ class Network {
             const { engine: { world, player }, } = this;
             switch (type) {
                 case 'INIT': {
-                    const { json: { spawn }, } = event;
+                    const { json: { time, speed, spawn }, } = event;
+                    world.sky.setTime(time, false);
+                    world.sky.setSpeed(speed, false);
                     player.teleport(spawn);
+                    break;
+                }
+                case 'CONFIG': {
+                    const { json: { time, speed }, } = event;
+                    console.log(time, speed);
+                    if (_shared__WEBPACK_IMPORTED_MODULE_2__.Helper.isNumber(time))
+                        world.sky.setTime(time, false);
+                    if (_shared__WEBPACK_IMPORTED_MODULE_2__.Helper.isNumber(speed))
+                        world.sky.setSpeed(speed, false);
                     break;
                 }
                 case 'UPDATE': {
@@ -4787,7 +4795,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.sky = new _libs__WEBPACK_IMPORTED_MODULE_2__.Sky(engine.rendering);
         this.clouds = new _libs__WEBPACK_IMPORTED_MODULE_2__.Clouds(engine.rendering);
         engine.on('ready', () => {
-            this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency, 6));
+            this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency + 3, 6));
         });
     }
     tick() {
@@ -6257,13 +6265,27 @@ class Sky {
         this.spin = (rotation) => {
             this.boxMesh.rotation.z = rotation;
         };
-        this.speed = (speed) => {
+        this.setSpeed = (speed, sideEffect = true) => {
             this.tracker.speed = Math.max(0, speed);
+            if (sideEffect)
+                this.rendering.engine.network.server.sendEvent({
+                    type: 'CONFIG',
+                    json: {
+                        speed: this.tracker.speed,
+                    },
+                });
         };
-        this.setTime = (time) => {
+        this.setTime = (time, sideEffect = true) => {
             this.tracker.time = time % 2400;
             for (let i = 0; i <= 2400; i += this.tracker.speed)
                 this.tick();
+            if (sideEffect)
+                this.rendering.engine.network.server.sendEvent({
+                    type: 'CONFIG',
+                    json: {
+                        time: this.tracker.time,
+                    },
+                });
         };
         this.tick = () => {
             const { tracker } = this;
@@ -6300,8 +6322,7 @@ class Sky {
             if (tracker.time >= -sunlightChangeSpan / 2 + sunlightEndTime &&
                 tracker.time <= sunlightChangeSpan / 2 + sunlightEndTime)
                 tracker.sunlight = Math.max(0.2, 1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan);
-            if (tracker.time > 2400)
-                tracker.time = 0;
+            tracker.time = tracker.time % 2400;
             // lerp sunlight
             const sunlightLerpFactor = 0.008 * tracker.speed;
             const { uSunlightIntensity } = this.rendering.engine.world;
@@ -6335,9 +6356,8 @@ class Sky {
         rendering.scene.add(this.meshGroup);
         this.tracker.speed = speed;
         rendering.engine.on('ready', () => {
-            this.setTime(1200);
-            rendering.engine.inputs.bind('i', () => this.speed(this.tracker.speed + 1));
-            rendering.engine.inputs.bind('k', () => this.speed(this.tracker.speed - 1));
+            rendering.engine.inputs.bind('i', () => this.setSpeed(this.tracker.speed + 1));
+            rendering.engine.inputs.bind('k', () => this.setSpeed(this.tracker.speed - 1));
         });
     }
 }
@@ -6622,6 +6642,9 @@ Helper.applyStyle = (ele, style) => {
 };
 Helper.approxEquals = (a, b) => {
     return Math.abs(a - b) < 1e-5;
+};
+Helper.isNumber = (value) => {
+    return typeof value === 'number' && isFinite(value);
 };
 
 
@@ -23506,8 +23529,8 @@ const file = "client/App.svelte";
 
 function add_css() {
 	var style = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("style");
-	style.id = "svelte-1l0ycly-style";
-	style.textContent = "main.svelte-1l0ycly.svelte-1l0ycly{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-1l0ycly.svelte-1l0ycly{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:10px;height:10px;line-height:20px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#pause-menu.svelte-1l0ycly.svelte-1l0ycly{z-index:10000000;display:flex;flex-direction:column;align-items:center;justify-content:center}#pause-menu.svelte-1l0ycly.svelte-1l0ycly,#pause-menu.svelte-1l0ycly>div.svelte-1l0ycly{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%}#pause-menu.svelte-1l0ycly>div.svelte-1l0ycly{background:rgba(1, 1, 1, 0.222);z-index:-1}#pause-menu.svelte-1l0ycly>h2.svelte-1l0ycly{color:#ccc;margin-bottom:1.6em}#world-list-wrapper.svelte-1l0ycly.svelte-1l0ycly{width:100%;height:100%;background:#02475e;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-1l0ycly.svelte-1l0ycly{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-1l0ycly.svelte-1l0ycly{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 5rem;border-radius:5px}#world-list-item.svelte-1l0ycly.svelte-1l0ycly{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-1l0ycly.svelte-1l0ycly::selection{background:transparent}#world-list-item.svelte-1l0ycly>h1.svelte-1l0ycly{color:white;font-size:20px;font-weight:100;width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-1l0ycly>p.svelte-1l0ycly{color:gray;font-size:20px}.selected.svelte-1l0ycly.svelte-1l0ycly{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,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 */";
+	style.id = "svelte-n9vnk9-style";
+	style.textContent = "main.svelte-n9vnk9.svelte-n9vnk9{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-n9vnk9.svelte-n9vnk9{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:10px;height:10px;line-height:20px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#pause-menu.svelte-n9vnk9.svelte-n9vnk9{z-index:10000000;display:flex;flex-direction:column;align-items:center;justify-content:center}#pause-menu.svelte-n9vnk9.svelte-n9vnk9,#pause-menu.svelte-n9vnk9>div.svelte-n9vnk9{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%}#pause-menu.svelte-n9vnk9>div.svelte-n9vnk9{background:rgba(1, 1, 1, 0.1);z-index:-1}#pause-menu.svelte-n9vnk9>h2.svelte-n9vnk9{color:#ccc;margin-bottom:1.6em}#world-list-wrapper.svelte-n9vnk9.svelte-n9vnk9{width:100%;height:100%;background:#02475e;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-n9vnk9.svelte-n9vnk9{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-n9vnk9.svelte-n9vnk9{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 5rem;border-radius:5px}#world-list-item.svelte-n9vnk9.svelte-n9vnk9{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-n9vnk9.svelte-n9vnk9::selection{background:transparent}#world-list-item.svelte-n9vnk9>h1.svelte-n9vnk9{color:white;font-size:20px;font-weight:100;width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-n9vnk9>p.svelte-n9vnk9{color:gray;font-size:20px}.selected.svelte-n9vnk9.svelte-n9vnk9{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,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 */";
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(document.head, style);
 }
 
@@ -23550,13 +23573,13 @@ function create_else_block(ctx) {
 			ul = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("ul");
 			info.block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "id", "world-list-title");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 53, 6, 2034);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "id", "world-list");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 54, 6, 2086);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "id", "world-list-wrapper");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 52, 4, 1998);
 		},
 		m: function mount(target, anchor) {
@@ -23621,7 +23644,7 @@ function create_if_block(ctx) {
 			if (img.src !== (img_src_value = "https://i.imgur.com/ro6oLCL.png")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "src", img_src_value);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "id", "crosshair");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "alt", "+");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 41, 6, 1591);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 40, 4, 1556);
 		},
@@ -23827,15 +23850,15 @@ function create_each_block(ctx) {
 			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(" · ");
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t4_value);
 			t5 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 65, 14, 2566);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 66, 14, 2596);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "id", "world-list-item");
 
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[16]
 			? "selected"
-			: "") + " svelte-1l0ycly"));
+			: "") + " svelte-n9vnk9"));
 
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 59, 12, 2293);
 		},
@@ -23867,7 +23890,7 @@ function create_each_block(ctx) {
 
 			if (dirty & /*selected, fetchWorlds*/ 48 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[16]
 			? "selected"
-			: "") + " svelte-1l0ycly"))) {
+			: "") + " svelte-n9vnk9"))) {
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value);
 			}
 		},
@@ -23962,12 +23985,12 @@ function create_if_block_1(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button0.$$.fragment);
 			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button1.$$.fragment);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 44, 10, 1720);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 45, 10, 1738);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "pause-menu");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 43, 8, 1688);
 		},
 		m: function mount(target, anchor) {
@@ -24100,7 +24123,7 @@ function create_fragment(ctx) {
 		c: function create() {
 			main = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("main");
 			if_block.c();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-1l0ycly");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-n9vnk9");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 38, 0, 1529);
 		},
 		l: function claim(nodes) {
@@ -24279,7 +24302,7 @@ function instance($$self, $$props, $$invalidate) {
 class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		if (!document.getElementById("svelte-1l0ycly-style")) add_css();
+		if (!document.getElementById("svelte-n9vnk9-style")) add_css();
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.init)(this, options, instance, create_fragment, svelte_internal__WEBPACK_IMPORTED_MODULE_0__.safe_not_equal, {});
 
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterComponent", {
@@ -24290,10 +24313,10 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_5__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_6__.default, acceptable: true, cssId: "svelte-1l0ycly-style", nonCssHash: "aueee", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_5__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_6__.default, acceptable: true, cssId: "svelte-n9vnk9-style", nonCssHash: "aueee", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
-if (typeof add_css !== 'undefined' && !document.getElementById("svelte-1l0ycly-style")) add_css();
+if (typeof add_css !== 'undefined' && !document.getElementById("svelte-n9vnk9-style")) add_css();
 
 
 /***/ }),
@@ -79977,6 +80000,7 @@ $root.protocol = (function() {
                 case 7:
                 case 8:
                 case 9:
+                case 10:
                     break;
                 }
             if (message.json != null && message.hasOwnProperty("json"))
@@ -80045,6 +80069,10 @@ $root.protocol = (function() {
             case "REQUEST":
             case 9:
                 message.type = 9;
+                break;
+            case "CONFIG":
+            case 10:
+                message.type = 10;
                 break;
             }
             if (object.json != null)
@@ -80122,6 +80150,7 @@ $root.protocol = (function() {
          * @property {number} TELEPORT=7 TELEPORT value
          * @property {number} UPDATE=8 UPDATE value
          * @property {number} REQUEST=9 REQUEST value
+         * @property {number} CONFIG=10 CONFIG value
          */
         Message.Type = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -80134,6 +80163,7 @@ $root.protocol = (function() {
             values[valuesById[7] = "TELEPORT"] = 7;
             values[valuesById[8] = "UPDATE"] = 8;
             values[valuesById[9] = "REQUEST"] = 9;
+            values[valuesById[10] = "CONFIG"] = 10;
             return values;
         })();
 

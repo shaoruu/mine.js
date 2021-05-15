@@ -452,7 +452,8 @@ export namespace protocol {
             PICK = 6,
             TELEPORT = 7,
             UPDATE = 8,
-            REQUEST = 9
+            REQUEST = 9,
+            CONFIG = 10
         }
     }
 }

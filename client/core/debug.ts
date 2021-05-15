@@ -121,14 +121,6 @@ class Debug {
       .addColor(rendering.options, 'clearColor')
       .onFinishChange((value) => rendering.renderer.setClearColor(value))
       .name('Clear color');
-    renderingFolder
-      .addColor(rendering.options, 'fogColor')
-      .onFinishChange((value) => (rendering.fogUniforms.uFogColor.value = new Color(value)))
-      .name('Fog color');
-    renderingFolder
-      .addColor(rendering.options, 'fogNearColor')
-      .onFinishChange((value) => (rendering.fogUniforms.uFogNearColor.value = new Color(value)))
-      .name('Fog near color');
 
     // WORLD
     const worldFolder = this.gui.addFolder('World');
@@ -143,7 +135,10 @@ class Debug {
       .add(world.sky.tracker, 'time', 0, 2400, 10)
       .onChange((value) => world.sky.setTime(value))
       .name('Time value');
-    worldFolder.add(world.sky.tracker, 'speed', 0, 20, 0.01).name('Time speed');
+    worldFolder
+      .add(world.sky.tracker, 'speed', 0, 20, 0.01)
+      .onChange((value) => world.sky.setSpeed(value))
+      .name('Time speed');
 
     this.registerDisplay('chunk', world, 'camChunkPosStr');
     this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));

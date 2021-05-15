@@ -41,6 +41,10 @@ class World extends Network {
   public chunkCache: Set<Chunk> = new Set();
   public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
 
+  private time = 0;
+  private timeSpeed = 1;
+  private tickSpeed = 16; // 16ms per frame, 60fps
+
   constructor(public app: FastifyInstance, public options: WorldOptionsType) {
     super(options);
 
@@ -49,6 +53,7 @@ class World extends Network {
     this.preloadChunks();
 
     setInterval(async () => {
+      // mesh chunks per frame
       const spliced = this.requestedChunks.splice(0, 2);
       spliced.forEach(({ coords, client }) => {
         const [x, z] = coords;
@@ -57,7 +62,10 @@ class World extends Network {
         this.sendChunks(client, [chunk]);
         this.unloadChunks();
       });
-    }, 16);
+
+      // update time
+      this.time = (this.time + this.timeSpeed) % 2400;
+    }, this.tickSpeed);
   }
 
   initStorage = () => {
@@ -220,6 +228,19 @@ class World extends Network {
         this.requestedChunks.push({ coords: [x, z], client });
         break;
       }
+      case 'CONFIG': {
+        const { time, speed } = request.json;
+        if (Helper.isNumber(time)) this.time = time;
+        if (Helper.isNumber(speed)) this.timeSpeed = speed;
+        this.broadcast(
+          {
+            type: 'CONFIG',
+            json: request.json,
+          },
+          { exclude: [client.id] },
+        );
+        break;
+      }
       case 'UPDATE': {
         const { maxHeight } = this.options;
         const { x, y, z, type: typeStr } = request.json || {};
@@ -293,6 +314,8 @@ class World extends Network {
       Network.encode({
         type: 'INIT',
         json: {
+          time: this.time,
+          speed: this.timeSpeed,
           spawn: [0, this.getMaxHeight([0, 0]), 0],
         },
       }),

@@ -34,6 +34,7 @@ message Message {
     TELEPORT = 7;
     UPDATE = 8;
     REQUEST = 9;
+    CONFIG = 10;
   }
 
   Type type = 1;

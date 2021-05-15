@@ -58,6 +58,10 @@ class Helper {
   public static approxEquals = (a: number, b: number) => {
     return Math.abs(a - b) < 1e-5;
   };
+
+  public static isNumber = (value: unknown) => {
+    return typeof value === 'number' && isFinite(value);
+  };
 }
 
 export { Helper };

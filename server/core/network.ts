@@ -101,7 +101,7 @@ class Network extends EventEmitter {
     const encoded = Network.encode(event);
 
     this.clients.forEach((client) => {
-      if ((!include.length || ~include.indexOf(client.id)) && (!exclude || exclude.indexOf(client.id) === -1)) {
+      if ((!include.length || ~include.indexOf(client.id)) && (!exclude.length || exclude.indexOf(client.id) === -1)) {
         client.send(encoded);
       }
     });

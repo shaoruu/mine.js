@@ -153,9 +153,8 @@ class Sky {
     this.tracker.speed = speed;
 
     rendering.engine.on('ready', () => {
-      this.setTime(1200);
-      rendering.engine.inputs.bind('i', () => this.speed(this.tracker.speed + 1));
-      rendering.engine.inputs.bind('k', () => this.speed(this.tracker.speed - 1));
+      rendering.engine.inputs.bind('i', () => this.setSpeed(this.tracker.speed + 1));
+      rendering.engine.inputs.bind('k', () => this.setSpeed(this.tracker.speed - 1));
     });
   }
 
@@ -420,13 +419,29 @@ class Sky {
     this.boxMesh.rotation.z = rotation;
   };
 
-  speed = (speed: number) => {
+  setSpeed = (speed: number, sideEffect = true) => {
     this.tracker.speed = Math.max(0, speed);
+
+    if (sideEffect)
+      this.rendering.engine.network.server.sendEvent({
+        type: 'CONFIG',
+        json: {
+          speed: this.tracker.speed,
+        },
+      });
   };
 
-  setTime = (time: number) => {
+  setTime = (time: number, sideEffect = true) => {
     this.tracker.time = time % 2400;
     for (let i = 0; i <= 2400; i += this.tracker.speed) this.tick();
+
+    if (sideEffect)
+      this.rendering.engine.network.server.sendEvent({
+        type: 'CONFIG',
+        json: {
+          time: this.tracker.time,
+        },
+      });
   };
 
   tick = () => {
@@ -480,7 +495,7 @@ class Sky {
         1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan,
       );
 
-    if (tracker.time > 2400) tracker.time = 0;
+    tracker.time = tracker.time % 2400;
 
     // lerp sunlight
     const sunlightLerpFactor = 0.008 * tracker.speed;
