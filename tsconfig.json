@@ -2,6 +2,7 @@
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "isolatedModules": false,
+    "types": ["svelte", "node"],
     "importsNotUsedAsValues": "preserve",
     "typeRoots": ["./node_modules/@types"]
   },

@@ -7,11 +7,19 @@ import { Helper } from '../utils';
 
 import { Engine } from '.';
 
+type FormatterType = (input: any) => string;
+
 class Debug {
   public gui: dat.GUI;
   public stats: Stats;
   public dataWrapper: HTMLDivElement;
-  public dataEntires: { ele: HTMLParagraphElement; obj: any; attribute: string; name: string }[] = [];
+  public dataEntries: {
+    ele: HTMLParagraphElement;
+    obj: any;
+    attribute: string;
+    name: string;
+    formatter: FormatterType;
+  }[] = [];
   public chunkHighlight: Mesh;
   public atlasTest: Mesh;
 
@@ -131,23 +139,14 @@ class Debug {
       })
       .name('Render radius');
     worldFolder.add(world.options, 'requestRadius', 1, 20, 1).name('Request radius');
-    worldFolder.add(world.uSunlightIntensity, 'value', 0, 1, 0.01).name('Sunlight intensity');
-
     worldFolder
-      .add(world.sky.options, 'domeOffset', 200, 2000, 10)
-      .onChange((value) => (world.sky.shadingMaterial.uniforms.offset.value = value))
-      .name('Done offset');
-    worldFolder.add(world.sky.boxMesh.rotation, 'x', 0, Math.PI * 2, 0.01).name('Sky box rotation');
-    worldFolder
-      .addColor(world.sky.options, 'topColor')
-      .onChange((value) => world.sky.setTopColor(value))
-      .name('Top color');
-    worldFolder
-      .addColor(world.sky.options, 'bottomColor')
-      .onChange((value) => world.sky.setBottomColor(value))
-      .name('Bottom color');
+      .add(world.sky.tracker, 'time', 0, 2400, 10)
+      .onChange((value) => world.sky.setTime(value))
+      .name('Time value');
+    worldFolder.add(world.sky.tracker, 'speed', 0, 20, 0.01).name('Time speed');
 
     this.registerDisplay('chunk', world, 'camChunkPosStr');
+    this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
 
     // PLAYER
     const playerFolder = this.gui.addFolder('Player');
@@ -192,9 +191,9 @@ class Debug {
   };
 
   tick = () => {
-    for (const { ele, name, attribute, obj } of this.dataEntires) {
+    for (const { ele, name, attribute, obj, formatter } of this.dataEntries) {
       const newValue = obj[attribute];
-      ele.innerHTML = `${name}: ${newValue}`;
+      ele.innerHTML = `${name}: ${formatter(newValue)}`;
     }
 
     const { camChunkPosStr } = this.engine.world;
@@ -207,15 +206,16 @@ class Debug {
     );
   };
 
-  registerDisplay(name: string, object: any, attribute: string) {
+  registerDisplay(name: string, object: any, attribute: string, formatter: FormatterType = (str) => str) {
     const wrapper = this.makeDataEntry();
     const newEntry = {
       ele: wrapper,
       obj: object,
       name,
+      formatter,
       attribute,
     };
-    this.dataEntires.push(newEntry);
+    this.dataEntries.push(newEntry);
     this.dataWrapper.appendChild(wrapper);
   }
 }

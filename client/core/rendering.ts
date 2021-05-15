@@ -32,6 +32,8 @@ class Rendering extends EventEmitter {
   public composer: EffectComposer;
   public fxaa: ShaderPass;
   public noColorMateria;
+  public fogNearColor: Color;
+  public fogFarColor: Color;
   public fogUniforms: { [key: string]: { value: number | Color } };
 
   constructor(public engine: Engine, public options: RenderingOptionsType) {
@@ -71,9 +73,11 @@ class Rendering extends EventEmitter {
 
     // fog
     const { renderRadius, chunkSize, dimension } = this.engine.config.world;
+    this.fogNearColor = new Color(fogNearColor);
+    this.fogFarColor = new Color(fogColor);
     this.fogUniforms = {
-      uFogColor: { value: new Color(fogColor) },
-      uFogNearColor: { value: new Color(fogNearColor) },
+      uFogColor: { value: this.fogNearColor },
+      uFogNearColor: { value: this.fogFarColor },
       uFogNear: { value: renderRadius * 0.5 * chunkSize * dimension },
       uFogFar: { value: renderRadius * chunkSize * dimension },
     };

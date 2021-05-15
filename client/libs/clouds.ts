@@ -50,7 +50,7 @@ const defaultCloudsOptions: CloudsOptionsType = {
   lerpFactor: 0.6,
   fogFarFactor: 3,
   color: '#eee',
-  alpha: 0.6,
+  alpha: 0.8,
 };
 
 class Clouds {
@@ -110,12 +110,13 @@ class Clouds {
   tick = (delta: number) => {
     if (!this.initialized) return;
 
-    const { speed, lerpFactor, width, count, dimensions } = this.options;
+    const { speed } = this.rendering.engine.world.sky.tracker;
+    const { lerpFactor, width, count, dimensions } = this.options;
 
     this.meshes.forEach((mesh) => {
       const newPosition = mesh.position.clone();
 
-      newPosition.z -= speed * delta;
+      newPosition.z -= speed * delta * 400;
       mesh.position.lerp(newPosition, lerpFactor);
 
       if (mesh.position.z <= -(width * count * dimensions[2]) / 2) {

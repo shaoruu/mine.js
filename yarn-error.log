@@ -1,5 +1,5 @@
 Arguments: 
-  /usr/local/bin/node /usr/share/yarn/bin/yarn.js add -D @types/querystring
+  /usr/local/bin/node /usr/share/yarn/bin/yarn.js add @types/tic
 
 PATH: 
   /home/owner/anaconda3/bin:/home/owner/anaconda3/condabin:/home/owner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/owner/.yarn/bin
@@ -14,7 +14,7 @@ Platform:
   linux x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2fquerystring: Not found
+  Error: https://registry.yarnpkg.com/@types%2ftic: Not found
       at Request.params.callback [as _callback] (/usr/share/yarn/lib/cli.js:66988:18)
       at Request.self.callback (/usr/share/yarn/lib/cli.js:140749:22)
       at Request.emit (node:events:369:20)
@@ -97,15 +97,18 @@ npm manifest:
       "zlib": "^1.0.5"
     },
     "scripts": {
-      "build": "cross-env NODE_ENV=production webpack",
-      "server": "cross-env NODE_ENV=development nodemon",
       "client": "webpack",
       "watch": "gulp dev -L",
+      "server": "yarn run testbed",
+      "build": "cross-env NODE_ENV=production webpack",
       "compile:ts": "pbts -o protocol/index.d.ts protocol/index.js",
       "compile:js": "pbjs -t static-module -w commonjs -o protocol/index.js protocol/messages.proto",
       "compile": "yarn run compile:js && yarn run compile:ts",
       "dev": "npm-run-all --parallel server client watch",
-      "start": "cross-env NODE_ENV=production nodemon",
+      "all": "cross-env WORLDS=* nodemon",
+      "mine": "cross-env WORLDS=mine nodemon",
+      "testbed": "cross-env WORLDS=testbed nodemon",
+      "start": "cross-env NODE_ENV=production WORLDS=testbed nodemon",
       "validate": "svelte-check"
     },
     "dependencies": {
@@ -127,6 +130,7 @@ npm manifest:
       "raw-loader": "^4.0.2",
       "stats.js": "^0.17.0",
       "three": "^0.127.0",
+      "tic": "^1.0.0",
       "typedarray-pool": "^1.2.0",
       "voxel-aabb-sweep": "^0.5.0"
     }
@@ -7477,6 +7481,11 @@ Lockfile:
     version "1.1.0"
     resolved "https://registry.npmjs.org/thunky/-/thunky-1.1.0.tgz"
     integrity sha512-eHY7nBftgThBqOyHGVN+l8gF0BucP09fMo0oO/Lb0w1OF80dJv+lDVpXG60WMQvkcxAkNybKsrEIE3ZtKGmPrA==
+  
+  tic@^1.0.0:
+    version "1.0.0"
+    resolved "https://registry.yarnpkg.com/tic/-/tic-1.0.0.tgz#f481fed7e1838dca8a79d439d70170b961d96717"
+    integrity sha1-9IH+1+GDjcqKedQ51wFwuWHZZxc=
   
   time-stamp@^1.0.0:
     version "1.1.0"

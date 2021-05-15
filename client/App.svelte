@@ -1,8 +1,6 @@
 <script lang="ts">
   import QS from 'query-string';
 
-  import { WORLD_LIST } from '../shared';
-
   import Button from './components/button.svelte';
   import { Engine } from './core';
   import { Helper } from './utils';
@@ -34,6 +32,7 @@
       return await response.json();
     })();
   }
+
 </script>
 
 <main>
@@ -42,7 +41,7 @@
       <img src="https://i.imgur.com/ro6oLCL.png" id="crosshair" alt="+" />
       {#if !locked}
         <div id="pause-menu">
-          <div on:click={() => engine.lock()} />
+          <div />
           <h2>Game menu</h2>
           <Button on:click={() => engine.lock()}>Back to Game</Button>
           <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>Quit to Title</Button>
@@ -195,4 +194,5 @@
   .selected {
     border-color: rgba(173, 173, 173, 0.74) !important;
   }
+
 </style>

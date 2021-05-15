@@ -4,6 +4,7 @@ import {
   Color,
   Group,
   LinearMipMapLinearFilter,
+  MathUtils,
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
@@ -28,10 +29,11 @@ type SkyOptionsType = {
   moonRadius: number;
   moonColor: string;
   sunColor: string;
+  speed: number;
 };
 
 const defaultSkyOptions: SkyOptionsType = {
-  domeOffset: 600,
+  domeOffset: 0,
   dimension: 6000,
   // topColor: '#74B3FF',
   // bottomColor: '#ffffff',
@@ -42,6 +44,7 @@ const defaultSkyOptions: SkyOptionsType = {
   moonRadius: 20,
   moonColor: '#e6e2d1',
   sunColor: '#f8ffb5',
+  speed: 0.08,
 };
 
 type SkyBoxSidesType = 'top' | 'front' | 'back' | 'left' | 'right' | 'bottom';
@@ -63,6 +66,50 @@ const STAR_COLORS = [
   '#FF8585',
 ];
 
+const SKY_CONFIGS = {
+  hours: {
+    0: {
+      color: {
+        top: new Color('#000'),
+        bottom: new Color('#000'),
+      },
+      offset: 200,
+    },
+    // start of sunrise
+    500: {
+      color: {
+        top: new Color('#7694CF'),
+        bottom: new Color('#B0483A'),
+      },
+      offset: 100,
+    },
+    // end of sunrise, start of day
+    700: {
+      color: {
+        top: new Color('#73A3FB'),
+        bottom: new Color('#B1CCFD'),
+      },
+      offset: 0,
+    },
+    // start of sunset
+    1700: {
+      color: {
+        top: new Color('#A57A59'),
+        bottom: new Color('#FC5935'),
+      },
+      offset: 100,
+    },
+    // end of sunset, back to night
+    1900: {
+      color: {
+        top: new Color('#000'),
+        bottom: new Color('#000'),
+      },
+      offset: 200,
+    },
+  },
+};
+
 class Sky {
   public options: SkyOptionsType;
 
@@ -74,34 +121,60 @@ class Sky {
   public boxMaterials: Map<string, MeshBasicMaterial> = new Map();
   public boxMesh: Mesh;
 
+  public tracker = {
+    day: 0,
+    time: 0,
+    last: 0,
+    speed: 0,
+    until: 0,
+    initialized: false,
+    sunlight: 0.2,
+    offset: 0,
+  };
+
+  private topColor: Color;
+  private bottomColor: Color;
   private newTopColor: Color;
   private newBottomColor: Color;
 
   private meshGroup = new Group();
 
   constructor(public rendering: Rendering, options: Partial<SkyOptionsType> = {}) {
-    this.options = {
+    const { speed } = (this.options = {
       ...defaultSkyOptions,
       ...options,
-    };
+    });
 
     this.createSkyShading();
     this.createSkyBox();
 
     rendering.scene.add(this.meshGroup);
 
+    this.tracker.speed = speed;
+
+    rendering.engine.on('ready', () => {
+      this.setTime(1200);
+      rendering.engine.inputs.bind('i', () => this.speed(this.tracker.speed + 1));
+      rendering.engine.inputs.bind('k', () => this.speed(this.tracker.speed - 1));
+    });
+  }
+
+  init = () => {
     this.paint('sides', 'stars');
     this.paint('top', 'stars');
     this.paint('top', 'moon');
     this.paint('bottom', 'sun');
-  }
+  };
 
   createSkyShading = () => {
     const { dimension, topColor, bottomColor, domeOffset } = this.options;
 
+    this.topColor = new Color(topColor);
+    this.bottomColor = new Color(bottomColor);
+
     const uniforms = {
-      topColor: { value: new Color(topColor) },
-      bottomColor: { value: new Color(bottomColor) },
+      topColor: { value: this.topColor },
+      bottomColor: { value: this.bottomColor },
       offset: { value: domeOffset },
       exponent: { value: 0.6 },
     };
@@ -123,16 +196,13 @@ class Sky {
   createSkyBox = () => {
     const { dimension } = this.options;
 
-    const materials: MeshBasicMaterial[] = [];
-
     this.boxGeometry = new BoxBufferGeometry(dimension * 0.9, dimension * 0.9, dimension * 0.9);
     for (const face of SKY_BOX_SIDES) {
       const canvasMaterial = this.createCanvasMaterial();
       this.boxMaterials.set(face, canvasMaterial);
-      materials.push(canvasMaterial);
     }
 
-    this.boxMesh = new Mesh(this.boxGeometry, materials);
+    this.boxMesh = new Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
 
     this.meshGroup.add(this.boxMesh);
   };
@@ -193,10 +263,11 @@ class Sky {
           this.drawStars(material);
           break;
         case 'clear':
+          this.clear(material);
           break;
       }
 
-      material.needsUpdate = true;
+      material.map.needsUpdate = true;
     }
   };
 
@@ -333,21 +404,113 @@ class Sky {
     context.restore();
   };
 
+  clear = (material: MeshBasicMaterial) => {
+    const canvas = <HTMLCanvasElement>material.map.image;
+    if (!canvas) return;
+
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
   rgba = (r: number, g: number, b: number, a: number) => {
     return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`;
   };
 
-  tick = (delta: number) => {
-    const { lerpFactor } = this.options;
+  spin = (rotation: number) => {
+    this.boxMesh.rotation.z = rotation;
+  };
+
+  speed = (speed: number) => {
+    this.tracker.speed = Math.max(0, speed);
+  };
+
+  setTime = (time: number) => {
+    this.tracker.time = time % 2400;
+    for (let i = 0; i <= 2400; i += this.tracker.speed) this.tick();
+  };
+
+  tick = () => {
+    const { tracker } = this;
+
+    if (!tracker.initialized) {
+      this.init();
+      tracker.initialized = true;
+    }
+
+    // add speed to time, and spin box meshes
+    tracker.time += tracker.speed;
+    this.spin(Math.PI * 2 * (tracker.time / 2400));
+
+    const hour = Math.round(tracker.time / 100) * 100;
+    tracker.last = tracker.time;
+
+    if (SKY_CONFIGS.hours[hour]) {
+      if (!tracker.until) {
+        const { color, offset } = SKY_CONFIGS.hours[hour];
+        this.newTopColor = new Color();
+        this.newBottomColor = new Color();
+
+        this.newTopColor.copy(color.top);
+        this.newBottomColor.copy(color.bottom);
+
+        tracker.offset = offset;
+        tracker.until = hour + 100;
+      }
+    }
+    if (tracker.until === hour) tracker.until = 0;
+
+    const sunlightStartTime = 600;
+    const sunlightEndTime = 1800;
+    const sunlightChangeSpan = 200;
+
+    // turn on sunlight
+    if (
+      tracker.time >= -sunlightChangeSpan / 2 + sunlightStartTime &&
+      tracker.time <= sunlightChangeSpan / 2 + sunlightStartTime
+    )
+      tracker.sunlight = (tracker.time - (sunlightStartTime - sunlightChangeSpan / 2)) / sunlightChangeSpan;
+
+    // turn off sunlight
+    if (
+      tracker.time >= -sunlightChangeSpan / 2 + sunlightEndTime &&
+      tracker.time <= sunlightChangeSpan / 2 + sunlightEndTime
+    )
+      tracker.sunlight = Math.max(
+        0.2,
+        1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan,
+      );
+
+    if (tracker.time > 2400) tracker.time = 0;
+
+    // lerp sunlight
+    const sunlightLerpFactor = 0.008 * tracker.speed;
+    const { uSunlightIntensity } = this.rendering.engine.world;
+    uSunlightIntensity.value = MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, 0.008 * tracker.speed);
+
+    const { offset } = this.shadingMaterial.uniforms;
+    offset.value = MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
+
+    // lerp sky colors
+    ['top', 'right', 'left', 'front', 'back'].forEach((face) => {
+      const mat = this.boxMaterials.get(face);
+      if (mat) {
+        mat.opacity = MathUtils.lerp(mat.opacity, 1.2 - tracker.sunlight, sunlightLerpFactor);
+      }
+    });
+
+    const colorLerpFactor = 0.006 * tracker.speed;
 
     if (this.newTopColor) {
-      this.shadingMaterial.uniforms.topColor.value.lerpHSL(this.newTopColor, lerpFactor);
+      this.topColor.lerp(this.newTopColor, colorLerpFactor);
     }
 
     if (this.newBottomColor) {
-      this.shadingMaterial.uniforms.bottomColor.value.lerpHSL(this.newBottomColor, lerpFactor);
+      this.bottomColor.lerp(this.newBottomColor, colorLerpFactor);
+      this.rendering.fogNearColor.lerp(this.newBottomColor, colorLerpFactor);
+      this.rendering.fogFarColor.lerp(this.newBottomColor, colorLerpFactor);
     }
 
+    // reposition sky box to player position
     const { threeCamera } = this.rendering.engine.camera;
     this.meshGroup.position.x = threeCamera.position.x;
     this.meshGroup.position.z = threeCamera.position.z;

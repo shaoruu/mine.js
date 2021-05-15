@@ -41,6 +41,10 @@ class World extends EventEmitter {
 
     this.sky = new Sky(engine.rendering);
     this.clouds = new Clouds(engine.rendering);
+
+    engine.on('ready', () => {
+      this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency, 6));
+    });
   }
 
   tick() {
@@ -323,7 +327,7 @@ class World extends EventEmitter {
 
   private animateSky() {
     const { delta } = this.engine.clock;
-    this.sky.tick(delta);
+    this.sky.tick();
     this.clouds.tick(delta);
   }
 }
