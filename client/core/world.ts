@@ -45,6 +45,10 @@ class World extends EventEmitter {
     engine.on('ready', () => {
       this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency + 3, 6));
     });
+
+    engine.on('focus', async () => {
+      this.setTime(await engine.network.fetchData('/time'), false);
+    });
   }
 
   tick() {
@@ -193,6 +197,24 @@ class World extends EventEmitter {
 
     this.checkCamChunk();
     this.surroundCamChunks();
+  }
+
+  setTime(time: number, sideEffect = true) {
+    this.sky.tracker.time = time % 2400;
+
+    // full cycle to sync up the colors
+    for (let i = 0; i < 2400; i++) {
+      this.sky.tick(1 / this.engine.tickSpeed);
+    }
+
+    if (sideEffect) {
+      this.engine.network.server.sendEvent({
+        type: 'CONFIG',
+        json: {
+          time: this.sky.tracker.time,
+        },
+      });
+    }
   }
 
   get camChunkPosStr() {

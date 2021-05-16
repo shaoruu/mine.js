@@ -4262,7 +4262,7 @@ class Network {
             switch (type) {
                 case 'INIT': {
                     const { json: { time, tickSpeed, spawn }, } = event;
-                    world.sky.setTime(time, false);
+                    world.setTime(time, false);
                     engine.setTick(tickSpeed, false);
                     player.teleport(spawn);
                     break;
@@ -4270,7 +4270,7 @@ class Network {
                 case 'CONFIG': {
                     const { json: { time, tickSpeed }, } = event;
                     if (_shared__WEBPACK_IMPORTED_MODULE_2__.Helper.isNumber(time))
-                        world.sky.setTime(time, false);
+                        world.setTime(time, false);
                     if (_shared__WEBPACK_IMPORTED_MODULE_2__.Helper.isNumber(tickSpeed))
                         engine.setTick(tickSpeed, false);
                     break;
@@ -4918,6 +4918,9 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         engine.on('ready', () => {
             this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency + 3, 6));
         });
+        engine.on('focus', async () => {
+            this.setTime(await engine.network.fetchData('/time'), false);
+        });
     }
     tick() {
         this.checkCamChunk();
@@ -5047,6 +5050,21 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         registry.opaqueChunkMaterial.uniforms.uFogFar.value = renderRadiuus * chunkSize * dimension;
         this.checkCamChunk();
         this.surroundCamChunks();
+    }
+    setTime(time, sideEffect = true) {
+        this.sky.tracker.time = time % 2400;
+        // full cycle to sync up the colors
+        for (let i = 0; i < 2400; i++) {
+            this.sky.tick(1 / this.engine.tickSpeed);
+        }
+        if (sideEffect) {
+            this.engine.network.server.sendEvent({
+                type: 'CONFIG',
+                json: {
+                    time: this.sky.tracker.time,
+                },
+            });
+        }
     }
     get camChunkPosStr() {
         return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
@@ -6386,19 +6404,6 @@ class Sky {
         this.spin = (rotation) => {
             this.boxMesh.rotation.z = rotation;
         };
-        this.setTime = (time, sideEffect = true) => {
-            this.tracker.time = time % 2400;
-            for (let i = 0; i < 2400; i++) {
-                this.tick(1 / this.rendering.engine.tickSpeed);
-            }
-            if (sideEffect)
-                this.rendering.engine.network.server.sendEvent({
-                    type: 'CONFIG',
-                    json: {
-                        time: this.tracker.time,
-                    },
-                });
-        };
         this.tick = (delta = 0) => {
             const { tracker } = this;
             if (!tracker.initialized) {
@@ -6474,11 +6479,7 @@ class Sky {
         rendering.scene.add(this.meshGroup);
         setInterval(async () => {
             this.newTime = await rendering.engine.network.fetchData('/time');
-            console.log(this.newTime, this.tracker.time);
         }, checkInterval);
-        rendering.engine.on('focus', async () => {
-            this.setTime(await rendering.engine.network.fetchData('/time'));
-        });
     }
 }
 

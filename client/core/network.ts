@@ -59,7 +59,7 @@ class Network {
         const {
           json: { time, tickSpeed, spawn },
         } = event;
-        world.sky.setTime(time, false);
+        world.setTime(time, false);
         engine.setTick(tickSpeed, false);
         player.teleport(spawn);
         break;
@@ -68,7 +68,7 @@ class Network {
         const {
           json: { time, tickSpeed },
         } = event;
-        if (SharedHelper.isNumber(time)) world.sky.setTime(time, false);
+        if (SharedHelper.isNumber(time)) world.setTime(time, false);
         if (SharedHelper.isNumber(tickSpeed)) engine.setTick(tickSpeed, false);
         break;
       }

@@ -154,12 +154,7 @@ class Sky {
 
     setInterval(async () => {
       this.newTime = await rendering.engine.network.fetchData('/time');
-      console.log(this.newTime, this.tracker.time);
     }, checkInterval);
-
-    rendering.engine.on('focus', async () => {
-      this.setTime(await rendering.engine.network.fetchData('/time'));
-    });
   }
 
   init = () => {
@@ -421,21 +416,6 @@ class Sky {
 
   spin = (rotation: number) => {
     this.boxMesh.rotation.z = rotation;
-  };
-
-  setTime = (time: number, sideEffect = true) => {
-    this.tracker.time = time % 2400;
-    for (let i = 0; i < 2400; i++) {
-      this.tick(1 / this.rendering.engine.tickSpeed);
-    }
-
-    if (sideEffect)
-      this.rendering.engine.network.server.sendEvent({
-        type: 'CONFIG',
-        json: {
-          time: this.tracker.time,
-        },
-      });
   };
 
   tick = (delta = 0) => {
