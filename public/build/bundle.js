@@ -3600,11 +3600,20 @@ class Container extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.domElement.append(this.canvas);
             this.domElement.id = 'mine.js-container';
         };
+        this.setupListeners = () => {
+            window.addEventListener('blur', () => {
+                this.engine.emit('blur');
+            });
+            window.addEventListener('focus', () => {
+                this.engine.emit('focus');
+            });
+        };
         this.fitCanvas = () => {
             this.canvas.style.width = `${this.domElement.clientWidth}px`;
             this.canvas.style.height = `${this.domElement.clientHeight}px`;
         };
         this.setupCanvas(options);
+        this.setupListeners();
     }
 }
 
@@ -6463,9 +6472,13 @@ class Sky {
         this.createSkyShading();
         this.createSkyBox();
         rendering.scene.add(this.meshGroup);
-        // setInterval(async () => {
-        //   this.newTime = await rendering.engine.network.fetchData('/time');
-        // }, checkInterval);
+        setInterval(async () => {
+            this.newTime = await rendering.engine.network.fetchData('/time');
+            console.log(this.newTime, this.tracker.time);
+        }, checkInterval);
+        rendering.engine.on('focus', async () => {
+            this.setTime(await rendering.engine.network.fetchData('/time'));
+        });
     }
 }
 

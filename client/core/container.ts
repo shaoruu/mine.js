@@ -17,6 +17,7 @@ class Container extends EventEmitter {
     super();
 
     this.setupCanvas(options);
+    this.setupListeners();
   }
 
   setupCanvas = (options: Partial<ContainerOptionsType>) => {
@@ -37,6 +38,15 @@ class Container extends EventEmitter {
     this.domElement = domElement;
     this.domElement.append(this.canvas);
     this.domElement.id = 'mine.js-container';
+  };
+
+  setupListeners = () => {
+    window.addEventListener('blur', () => {
+      this.engine.emit('blur');
+    });
+    window.addEventListener('focus', () => {
+      this.engine.emit('focus');
+    });
   };
 
   fitCanvas = () => {

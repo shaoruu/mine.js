@@ -152,9 +152,14 @@ class Sky {
 
     rendering.scene.add(this.meshGroup);
 
-    // setInterval(async () => {
-    //   this.newTime = await rendering.engine.network.fetchData('/time');
-    // }, checkInterval);
+    setInterval(async () => {
+      this.newTime = await rendering.engine.network.fetchData('/time');
+      console.log(this.newTime, this.tracker.time);
+    }, checkInterval);
+
+    rendering.engine.on('focus', async () => {
+      this.setTime(await rendering.engine.network.fetchData('/time'));
+    });
   }
 
   init = () => {
