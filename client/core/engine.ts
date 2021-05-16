@@ -4,6 +4,8 @@ import merge from 'deepmerge';
 
 import { Clock, DeepPartial } from '../libs';
 
+import { Particles, ParticlesOptionsType } from './particles';
+
 import {
   Camera,
   CameraOptionsType,
@@ -36,6 +38,7 @@ type ConfigType = {
   physics: PhysicsOptionsType;
   registry: RegistryOptionsType;
   rendering: RenderingOptionsType;
+  particles: ParticlesOptionsType;
 };
 
 const defaultConfig: ConfigType = {
@@ -97,6 +100,9 @@ const defaultConfig: ConfigType = {
     fogNearColor: '#333',
     clearColor: '#123',
   },
+  particles: {
+    count: 10,
+  },
 };
 
 class Engine extends EventEmitter {
@@ -113,16 +119,26 @@ class Engine extends EventEmitter {
   public player: Player;
   public physics: Physics;
   public entities: Entities;
+  public particles: Particles;
 
   public paused = true;
+  public tickSpeed = 0.1;
 
-  constructor(worldName: string, params: DeepPartial<ConfigType> = {}) {
+  constructor(params: DeepPartial<ConfigType> = {}) {
     super();
 
-    const { camera, container, debug, entities, physics, player, registry, rendering, world } = (this.config = merge(
-      defaultConfig,
-      params,
-    ));
+    const {
+      camera,
+      container,
+      debug,
+      entities,
+      physics,
+      player,
+      registry,
+      rendering,
+      world,
+      particles,
+    } = (this.config = merge(defaultConfig, params));
 
     // debug
     if (debug) {
@@ -130,7 +146,7 @@ class Engine extends EventEmitter {
     }
 
     // network
-    this.network = new Network(this, worldName);
+    this.network = new Network(this);
 
     // container
     this.container = new Container(this, container);
@@ -159,6 +175,9 @@ class Engine extends EventEmitter {
     // entities
     this.entities = new Entities(this, entities);
 
+    // particles
+    this.particles = new Particles(this, particles);
+
     // time
     this.clock = new Clock();
 
@@ -166,6 +185,11 @@ class Engine extends EventEmitter {
 
     this.emit('ready');
   }
+
+  join = (worldName: string) => {
+    this.network.join(worldName);
+    this.start();
+  };
 
   boot = () => {
     const cycle = () => {
@@ -228,6 +252,18 @@ class Engine extends EventEmitter {
 
   unlock = () => {
     this.player.controls.unlock();
+  };
+
+  setTick = (speed: number, sideEffect = true) => {
+    this.tickSpeed = speed;
+
+    if (sideEffect)
+      this.rendering.engine.network.server.sendEvent({
+        type: 'CONFIG',
+        json: {
+          tickSpeed: this.tickSpeed,
+        },
+      });
   };
 
   // if pointerlock is locked

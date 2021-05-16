@@ -30,7 +30,6 @@ type CloudsOptionsType = {
   worldHeight: number;
   dimensions: Coords3;
   threshold: number;
-  speed: number;
   lerpFactor: number;
   fogFarFactor: number;
   color: string;
@@ -46,7 +45,6 @@ const defaultCloudsOptions: CloudsOptionsType = {
   worldHeight: 2000,
   dimensions: [120, 60, 120],
   threshold: 0.5,
-  speed: 20,
   lerpFactor: 0.6,
   fogFarFactor: 3,
   color: '#eee',
@@ -110,13 +108,13 @@ class Clouds {
   tick = (delta: number) => {
     if (!this.initialized) return;
 
-    const { speed } = this.rendering.engine.world.sky.tracker;
+    const { tickSpeed } = this.rendering.engine;
     const { lerpFactor, width, count, dimensions } = this.options;
 
     this.meshes.forEach((mesh) => {
       const newPosition = mesh.position.clone();
 
-      newPosition.z -= speed * delta * 400;
+      newPosition.z -= tickSpeed * 8 * delta;
       mesh.position.lerp(newPosition, lerpFactor);
 
       if (mesh.position.z <= -(width * count * dimensions[2]) / 2) {

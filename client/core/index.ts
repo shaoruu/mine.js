@@ -6,6 +6,7 @@ export * from './engine';
 export * from './entities';
 export * from './inputs';
 export * from './network';
+export * from './particles';
 export * from './physics';
 export * from './player';
 export * from './registry';

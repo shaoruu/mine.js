@@ -30,6 +30,7 @@ type SkyOptionsType = {
   moonColor: string;
   sunColor: string;
   speed: number;
+  checkInterval: number;
 };
 
 const defaultSkyOptions: SkyOptionsType = {
@@ -45,6 +46,7 @@ const defaultSkyOptions: SkyOptionsType = {
   moonColor: '#e6e2d1',
   sunColor: '#f8ffb5',
   speed: 0.08,
+  checkInterval: 4000,
 };
 
 type SkyBoxSidesType = 'top' | 'front' | 'back' | 'left' | 'right' | 'bottom';
@@ -125,7 +127,6 @@ class Sky {
     day: 0,
     time: 0,
     last: 0,
-    speed: 0,
     until: 0,
     initialized: false,
     sunlight: 0.2,
@@ -136,11 +137,12 @@ class Sky {
   private bottomColor: Color;
   private newTopColor: Color;
   private newBottomColor: Color;
+  private newTime = -1;
 
   private meshGroup = new Group();
 
   constructor(public rendering: Rendering, options: Partial<SkyOptionsType> = {}) {
-    const { speed } = (this.options = {
+    const { checkInterval } = (this.options = {
       ...defaultSkyOptions,
       ...options,
     });
@@ -150,12 +152,9 @@ class Sky {
 
     rendering.scene.add(this.meshGroup);
 
-    this.tracker.speed = speed;
-
-    rendering.engine.on('ready', () => {
-      rendering.engine.inputs.bind('i', () => this.setSpeed(this.tracker.speed + 1));
-      rendering.engine.inputs.bind('k', () => this.setSpeed(this.tracker.speed - 1));
-    });
+    // setInterval(async () => {
+    //   this.newTime = await rendering.engine.network.fetchData('/time');
+    // }, checkInterval);
   }
 
   init = () => {
@@ -419,21 +418,11 @@ class Sky {
     this.boxMesh.rotation.z = rotation;
   };
 
-  setSpeed = (speed: number, sideEffect = true) => {
-    this.tracker.speed = Math.max(0, speed);
-
-    if (sideEffect)
-      this.rendering.engine.network.server.sendEvent({
-        type: 'CONFIG',
-        json: {
-          speed: this.tracker.speed,
-        },
-      });
-  };
-
   setTime = (time: number, sideEffect = true) => {
     this.tracker.time = time % 2400;
-    for (let i = 0; i <= 2400; i += this.tracker.speed) this.tick();
+    for (let i = 0; i < 2400; i++) {
+      this.tick(1 / this.rendering.engine.tickSpeed);
+    }
 
     if (sideEffect)
       this.rendering.engine.network.server.sendEvent({
@@ -444,7 +433,7 @@ class Sky {
       });
   };
 
-  tick = () => {
+  tick = (delta = 0) => {
     const { tracker } = this;
 
     if (!tracker.initialized) {
@@ -453,7 +442,17 @@ class Sky {
     }
 
     // add speed to time, and spin box meshes
-    tracker.time += tracker.speed;
+    const speed = this.rendering.engine.tickSpeed;
+    tracker.time += speed * delta;
+
+    // sync with server
+    if (this.newTime > 0) {
+      tracker.time = (tracker.time + this.newTime) / 2;
+      this.newTime = -1;
+    }
+
+    tracker.time = tracker.time % 2400;
+
     this.spin(Math.PI * 2 * (tracker.time / 2400));
 
     const hour = Math.round(tracker.time / 100) * 100;
@@ -495,12 +494,10 @@ class Sky {
         1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan,
       );
 
-    tracker.time = tracker.time % 2400;
-
     // lerp sunlight
-    const sunlightLerpFactor = 0.008 * tracker.speed;
+    const sunlightLerpFactor = 0.008 * speed * delta;
     const { uSunlightIntensity } = this.rendering.engine.world;
-    uSunlightIntensity.value = MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, 0.008 * tracker.speed);
+    uSunlightIntensity.value = MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
 
     const { offset } = this.shadingMaterial.uniforms;
     offset.value = MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
@@ -513,7 +510,7 @@ class Sky {
       }
     });
 
-    const colorLerpFactor = 0.006 * tracker.speed;
+    const colorLerpFactor = 0.006 * speed * delta;
 
     if (this.newTopColor) {
       this.topColor.lerp(this.newTopColor, colorLerpFactor);

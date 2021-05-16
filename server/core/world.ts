@@ -41,9 +41,8 @@ class World extends Network {
   public chunkCache: Set<Chunk> = new Set();
   public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
 
-  private time = 0;
-  private timeSpeed = 1;
-  private tickSpeed = 16; // 16ms per frame, 60fps
+  public time = 0;
+  public tickSpeed = 0.08;
 
   constructor(public app: FastifyInstance, public options: WorldOptionsType) {
     super(options);
@@ -52,6 +51,7 @@ class World extends Network {
     this.initStorage();
     this.preloadChunks();
 
+    let prevTime = Date.now();
     setInterval(async () => {
       // mesh chunks per frame
       const spliced = this.requestedChunks.splice(0, 2);
@@ -64,8 +64,11 @@ class World extends Network {
       });
 
       // update time
-      this.time = (this.time + this.timeSpeed) % 2400;
-    }, this.tickSpeed);
+      this.time = (this.time + (this.tickSpeed * (Date.now() - prevTime)) / 1000) % 2400;
+      prevTime = Date.now();
+    }, 16);
+
+    this.setupRoutes();
   }
 
   initStorage = () => {
@@ -97,6 +100,10 @@ class World extends Network {
       }
     }
     console.log(`Preloaded ${chalk.cyan((preload * 2 + 1) ** 2)} chunks.\n`);
+  };
+
+  setupRoutes = () => {
+    // this.app.get()
   };
 
   startCaching = () => {
@@ -229,16 +236,13 @@ class World extends Network {
         break;
       }
       case 'CONFIG': {
-        const { time, speed } = request.json;
+        const { time, tickSpeed } = request.json;
         if (Helper.isNumber(time)) this.time = time;
-        if (Helper.isNumber(speed)) this.timeSpeed = speed;
-        this.broadcast(
-          {
-            type: 'CONFIG',
-            json: request.json,
-          },
-          { exclude: [client.id] },
-        );
+        if (Helper.isNumber(tickSpeed)) this.tickSpeed = tickSpeed;
+        this.broadcast({
+          type: 'CONFIG',
+          json: request.json,
+        });
         break;
       }
       case 'UPDATE': {
@@ -315,7 +319,7 @@ class World extends Network {
         type: 'INIT',
         json: {
           time: this.time,
-          speed: this.timeSpeed,
+          tickSpeed: this.tickSpeed,
           spawn: [0, this.getMaxHeight([0, 0]), 0],
         },
       }),

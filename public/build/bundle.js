@@ -3670,6 +3670,13 @@ class Debug {
         this.setupAll = () => {
             // RENDERING
             const { rendering, registry, player, camera, world } = this.engine;
+            // ENGINE
+            const engineFolder = this.gui.addFolder('Engine');
+            engineFolder
+                .add(this.engine, 'tickSpeed', 0, 100, 0.01)
+                .onChange((value) => this.engine.setTick(value))
+                .name('Tick speed');
+            // RENDERING
             const renderingFolder = this.gui.addFolder('Rendering');
             renderingFolder
                 .addColor(rendering.options, 'clearColor')
@@ -3677,6 +3684,7 @@ class Debug {
                 .name('Clear color');
             // WORLD
             const worldFolder = this.gui.addFolder('World');
+            const worldDebugConfigs = { time: world.sky.tracker.time };
             worldFolder
                 .add(world.options, 'renderRadius', 1, 20, 1)
                 .onFinishChange((value) => {
@@ -3685,13 +3693,9 @@ class Debug {
                 .name('Render radius');
             worldFolder.add(world.options, 'requestRadius', 1, 20, 1).name('Request radius');
             worldFolder
-                .add(world.sky.tracker, 'time', 0, 2400, 10)
-                .onChange((value) => world.sky.setTime(value))
+                .add(worldDebugConfigs, 'time', 0, 2400, 10)
+                .onFinishChange((value) => world.sky.setTime(value))
                 .name('Time value');
-            worldFolder
-                .add(world.sky.tracker, 'speed', 0, 20, 0.01)
-                .onChange((value) => world.sky.setSpeed(value))
-                .name('Time speed');
             this.registerDisplay('chunk', world, 'camChunkPosStr');
             this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
             // PLAYER
@@ -3810,7 +3814,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! deepmerge */ "./node_modules/deepmerge/dist/cjs.js");
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(deepmerge__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+/* harmony import */ var _particles__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./particles */ "./client/core/particles.ts");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+
 
 
 
@@ -3874,11 +3880,19 @@ const defaultConfig = {
         fogNearColor: '#333',
         clearColor: '#123',
     },
+    particles: {
+        count: 10,
+    },
 };
 class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
-    constructor(worldName, params = {}) {
+    constructor(params = {}) {
         super();
         this.paused = true;
+        this.tickSpeed = 0.1;
+        this.join = (worldName) => {
+            this.network.join(worldName);
+            this.start();
+        };
         this.boot = () => {
             const cycle = () => {
                 if (this.debug) {
@@ -3927,31 +3941,43 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.unlock = () => {
             this.player.controls.unlock();
         };
-        const { camera, container, debug, entities, physics, player, registry, rendering, world } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
+        this.setTick = (speed, sideEffect = true) => {
+            this.tickSpeed = speed;
+            if (sideEffect)
+                this.rendering.engine.network.server.sendEvent({
+                    type: 'CONFIG',
+                    json: {
+                        tickSpeed: this.tickSpeed,
+                    },
+                });
+        };
+        const { camera, container, debug, entities, physics, player, registry, rendering, world, particles, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
         // debug
         if (debug) {
-            this.debug = new ___WEBPACK_IMPORTED_MODULE_3__.Debug(this);
+            this.debug = new ___WEBPACK_IMPORTED_MODULE_4__.Debug(this);
         }
         // network
-        this.network = new ___WEBPACK_IMPORTED_MODULE_3__.Network(this, worldName);
+        this.network = new ___WEBPACK_IMPORTED_MODULE_4__.Network(this);
         // container
-        this.container = new ___WEBPACK_IMPORTED_MODULE_3__.Container(this, container);
+        this.container = new ___WEBPACK_IMPORTED_MODULE_4__.Container(this, container);
         // rendering
-        this.rendering = new ___WEBPACK_IMPORTED_MODULE_3__.Rendering(this, rendering);
+        this.rendering = new ___WEBPACK_IMPORTED_MODULE_4__.Rendering(this, rendering);
         // registry
-        this.registry = new ___WEBPACK_IMPORTED_MODULE_3__.Registry(this, registry);
+        this.registry = new ___WEBPACK_IMPORTED_MODULE_4__.Registry(this, registry);
         // inputs
-        this.inputs = new ___WEBPACK_IMPORTED_MODULE_3__.Inputs(this);
+        this.inputs = new ___WEBPACK_IMPORTED_MODULE_4__.Inputs(this);
         // camera
-        this.camera = new ___WEBPACK_IMPORTED_MODULE_3__.Camera(this, camera);
+        this.camera = new ___WEBPACK_IMPORTED_MODULE_4__.Camera(this, camera);
         // world
-        this.world = new ___WEBPACK_IMPORTED_MODULE_3__.World(this, world);
+        this.world = new ___WEBPACK_IMPORTED_MODULE_4__.World(this, world);
         // player
-        this.player = new ___WEBPACK_IMPORTED_MODULE_3__.Player(this, player);
+        this.player = new ___WEBPACK_IMPORTED_MODULE_4__.Player(this, player);
         // physics
-        this.physics = new ___WEBPACK_IMPORTED_MODULE_3__.Physics(this, physics);
+        this.physics = new ___WEBPACK_IMPORTED_MODULE_4__.Physics(this, physics);
         // entities
-        this.entities = new ___WEBPACK_IMPORTED_MODULE_3__.Entities(this, entities);
+        this.entities = new ___WEBPACK_IMPORTED_MODULE_4__.Entities(this, entities);
+        // particles
+        this.particles = new _particles__WEBPACK_IMPORTED_MODULE_3__.Particles(this, particles);
         // time
         this.clock = new _libs__WEBPACK_IMPORTED_MODULE_2__.Clock();
         this.boot();
@@ -4056,11 +4082,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Entities": () => (/* reexport safe */ _entities__WEBPACK_IMPORTED_MODULE_5__.Entities),
 /* harmony export */   "Inputs": () => (/* reexport safe */ _inputs__WEBPACK_IMPORTED_MODULE_6__.Inputs),
 /* harmony export */   "Network": () => (/* reexport safe */ _network__WEBPACK_IMPORTED_MODULE_7__.Network),
-/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_8__.Physics),
-/* harmony export */   "Player": () => (/* reexport safe */ _player__WEBPACK_IMPORTED_MODULE_9__.Player),
-/* harmony export */   "Registry": () => (/* reexport safe */ _registry__WEBPACK_IMPORTED_MODULE_10__.Registry),
-/* harmony export */   "Rendering": () => (/* reexport safe */ _rendering__WEBPACK_IMPORTED_MODULE_11__.Rendering),
-/* harmony export */   "World": () => (/* reexport safe */ _world__WEBPACK_IMPORTED_MODULE_12__.World)
+/* harmony export */   "Particles": () => (/* reexport safe */ _particles__WEBPACK_IMPORTED_MODULE_8__.Particles),
+/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_9__.Physics),
+/* harmony export */   "Player": () => (/* reexport safe */ _player__WEBPACK_IMPORTED_MODULE_10__.Player),
+/* harmony export */   "Registry": () => (/* reexport safe */ _registry__WEBPACK_IMPORTED_MODULE_11__.Registry),
+/* harmony export */   "Rendering": () => (/* reexport safe */ _rendering__WEBPACK_IMPORTED_MODULE_12__.Rendering),
+/* harmony export */   "World": () => (/* reexport safe */ _world__WEBPACK_IMPORTED_MODULE_13__.World)
 /* harmony export */ });
 /* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./camera */ "./client/core/camera.ts");
 /* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./chunk */ "./client/core/chunk.ts");
@@ -4070,11 +4097,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities */ "./client/core/entities.ts");
 /* harmony import */ var _inputs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./inputs */ "./client/core/inputs.ts");
 /* harmony import */ var _network__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./network */ "./client/core/network.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./physics */ "./client/core/physics.ts");
-/* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./player */ "./client/core/player.ts");
-/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./registry */ "./client/core/registry.ts");
-/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./rendering */ "./client/core/rendering.ts");
-/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./world */ "./client/core/world.ts");
+/* harmony import */ var _particles__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./particles */ "./client/core/particles.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./physics */ "./client/core/physics.ts");
+/* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./player */ "./client/core/player.ts");
+/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./registry */ "./client/core/registry.ts");
+/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./rendering */ "./client/core/rendering.ts");
+/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./world */ "./client/core/world.ts");
+
 
 
 
@@ -4192,11 +4221,14 @@ __webpack_require__.r(__webpack_exports__);
 
 const { Message } = _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol;
 class Network {
-    constructor(engine, worldName) {
+    constructor(engine) {
         this.engine = engine;
-        this.worldName = worldName;
         this.url = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getServerURL();
         this.connected = false;
+        this.join = (worldName) => {
+            this.worldName = worldName;
+            this.connect(this.url.toString());
+        };
         this.connect = (url) => {
             const socket = new URL(url);
             socket.protocol = socket.protocol.replace(/http/, 'ws');
@@ -4216,22 +4248,22 @@ class Network {
         };
         this.onEvent = (event) => {
             const { type } = event;
-            const { engine: { world, player }, } = this;
+            const { engine } = this;
+            const { world, player } = engine;
             switch (type) {
                 case 'INIT': {
-                    const { json: { time, speed, spawn }, } = event;
+                    const { json: { time, tickSpeed, spawn }, } = event;
                     world.sky.setTime(time, false);
-                    world.sky.setSpeed(speed, false);
+                    engine.setTick(tickSpeed, false);
                     player.teleport(spawn);
                     break;
                 }
                 case 'CONFIG': {
-                    const { json: { time, speed }, } = event;
-                    console.log(time, speed);
+                    const { json: { time, tickSpeed }, } = event;
                     if (_shared__WEBPACK_IMPORTED_MODULE_2__.Helper.isNumber(time))
                         world.sky.setTime(time, false);
-                    if (_shared__WEBPACK_IMPORTED_MODULE_2__.Helper.isNumber(speed))
-                        world.sky.setSpeed(speed, false);
+                    if (_shared__WEBPACK_IMPORTED_MODULE_2__.Helper.isNumber(tickSpeed))
+                        engine.setTick(tickSpeed, false);
                     break;
                 }
                 case 'UPDATE': {
@@ -4257,7 +4289,17 @@ class Network {
             }
             this.onEvent(event);
         };
-        this.connect(this.url.toString());
+        this.fetchData = async (path, args = {}) => {
+            const url = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getServerURL();
+            url.path = `/${path.replace('/', '')}`;
+            for (const key in args)
+                url.query[key] = args[key];
+            const response = await fetch(url.toString());
+            return response.json();
+        };
+    }
+    get cleanURL() {
+        return this.url.clearQuery().toString();
     }
     static decode(buffer) {
         if (buffer[0] === 0x78 && buffer[1] === 0x9c) {
@@ -4277,6 +4319,77 @@ class Network {
         }
         message.type = Message.Type[message.type];
         return _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.encode(_protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.create(message)).finish();
+    }
+}
+
+
+
+/***/ }),
+
+/***/ "./client/core/particles.ts":
+/*!**********************************!*\
+  !*** ./client/core/particles.ts ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Particles": () => (/* binding */ Particles)
+/* harmony export */ });
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+
+
+const VS = `
+uniform float pointMultiplier;
+
+void main() {
+  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mvPosition;
+  gl_PointSize = 0.2 * pointMultiplier / gl_Position.w;
+}`;
+const FS = `
+uniform sampler2D diffuseTexture;
+
+void main() {
+  gl_FragColor = texture2D(diffuseTexture, gl_PointCoord);
+}
+`;
+class Particles {
+    constructor(engine, options) {
+        this.engine = engine;
+        this.options = options;
+        engine.on('ready', () => {
+            const geometry = new three__WEBPACK_IMPORTED_MODULE_1__.BufferGeometry();
+            const particles = [];
+            const positions = [];
+            const t = 1;
+            for (let i = 0; i <= 10; i++) {
+                particles.push({ x: Math.random() * t, y: Math.random() * t, z: Math.random() * t });
+            }
+            for (const particle of particles) {
+                positions.push(particle.x, particle.y, particle.z);
+            }
+            geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_1__.Float32BufferAttribute(positions, 3));
+            const material = new three__WEBPACK_IMPORTED_MODULE_1__.ShaderMaterial({
+                uniforms: {
+                    diffuseTexture: { value: engine.registry.atlasUniform.value },
+                    pointMultiplier: {
+                        value: window.innerHeight / (2.0 * Math.tan((0.5 * 60.0 * Math.PI) / 180.0)),
+                    },
+                },
+                vertexShader: VS,
+                fragmentShader: FS,
+                blending: three__WEBPACK_IMPORTED_MODULE_1__.AdditiveBlending,
+                depthTest: true,
+                depthWrite: false,
+                transparent: true,
+                vertexColors: true,
+            });
+            const points = new three__WEBPACK_IMPORTED_MODULE_1__.Points(geometry, material);
+            engine.rendering.scene.add(points);
+        });
     }
 }
 
@@ -4621,7 +4734,7 @@ class Registry {
         this.options = options;
         engine.on('ready', () => {
             this.atlasUniform = {
-                value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`${engine.network.url.clearQuery().toString()}atlas`),
+                value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`${engine.network.cleanURL}atlas`),
             };
             const atlas = this.atlasUniform.value;
             atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
@@ -4642,7 +4755,6 @@ class Registry {
         });
     }
 }
-Registry.materialSetup = false;
 
 
 
@@ -5032,7 +5144,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     }
     animateSky() {
         const { delta } = this.engine.clock;
-        this.sky.tick();
+        this.sky.tick(delta);
         this.clouds.tick(delta);
     }
 }
@@ -5355,7 +5467,6 @@ const defaultCloudsOptions = {
     worldHeight: 2000,
     dimensions: [120, 60, 120],
     threshold: 0.5,
-    speed: 20,
     lerpFactor: 0.6,
     fogFarFactor: 3,
     color: '#eee',
@@ -5380,11 +5491,11 @@ class Clouds {
         this.tick = (delta) => {
             if (!this.initialized)
                 return;
-            const { speed } = this.rendering.engine.world.sky.tracker;
+            const { tickSpeed } = this.rendering.engine;
             const { lerpFactor, width, count, dimensions } = this.options;
             this.meshes.forEach((mesh) => {
                 const newPosition = mesh.position.clone();
-                newPosition.z -= speed * delta * 400;
+                newPosition.z -= tickSpeed * 8 * delta;
                 mesh.position.lerp(newPosition, lerpFactor);
                 if (mesh.position.z <= -(width * count * dimensions[2]) / 2) {
                     this.meshes.shift();
@@ -5986,6 +6097,7 @@ const defaultSkyOptions = {
     moonColor: '#e6e2d1',
     sunColor: '#f8ffb5',
     speed: 0.08,
+    checkInterval: 4000,
 };
 const SKY_BOX_SIDES = ['back', 'front', 'top', 'bottom', 'left', 'right'];
 const STAR_COLORS = [
@@ -6053,12 +6165,12 @@ class Sky {
             day: 0,
             time: 0,
             last: 0,
-            speed: 0,
             until: 0,
             initialized: false,
             sunlight: 0.2,
             offset: 0,
         };
+        this.newTime = -1;
         this.meshGroup = new three__WEBPACK_IMPORTED_MODULE_3__.Group();
         this.init = () => {
             this.paint('sides', 'stars');
@@ -6265,20 +6377,11 @@ class Sky {
         this.spin = (rotation) => {
             this.boxMesh.rotation.z = rotation;
         };
-        this.setSpeed = (speed, sideEffect = true) => {
-            this.tracker.speed = Math.max(0, speed);
-            if (sideEffect)
-                this.rendering.engine.network.server.sendEvent({
-                    type: 'CONFIG',
-                    json: {
-                        speed: this.tracker.speed,
-                    },
-                });
-        };
         this.setTime = (time, sideEffect = true) => {
             this.tracker.time = time % 2400;
-            for (let i = 0; i <= 2400; i += this.tracker.speed)
-                this.tick();
+            for (let i = 0; i < 2400; i++) {
+                this.tick(1 / this.rendering.engine.tickSpeed);
+            }
             if (sideEffect)
                 this.rendering.engine.network.server.sendEvent({
                     type: 'CONFIG',
@@ -6287,14 +6390,21 @@ class Sky {
                     },
                 });
         };
-        this.tick = () => {
+        this.tick = (delta = 0) => {
             const { tracker } = this;
             if (!tracker.initialized) {
                 this.init();
                 tracker.initialized = true;
             }
             // add speed to time, and spin box meshes
-            tracker.time += tracker.speed;
+            const speed = this.rendering.engine.tickSpeed;
+            tracker.time += speed * delta;
+            // sync with server
+            if (this.newTime > 0) {
+                tracker.time = (tracker.time + this.newTime) / 2;
+                this.newTime = -1;
+            }
+            tracker.time = tracker.time % 2400;
             this.spin(Math.PI * 2 * (tracker.time / 2400));
             const hour = Math.round(tracker.time / 100) * 100;
             tracker.last = tracker.time;
@@ -6322,11 +6432,10 @@ class Sky {
             if (tracker.time >= -sunlightChangeSpan / 2 + sunlightEndTime &&
                 tracker.time <= sunlightChangeSpan / 2 + sunlightEndTime)
                 tracker.sunlight = Math.max(0.2, 1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan);
-            tracker.time = tracker.time % 2400;
             // lerp sunlight
-            const sunlightLerpFactor = 0.008 * tracker.speed;
+            const sunlightLerpFactor = 0.008 * speed * delta;
             const { uSunlightIntensity } = this.rendering.engine.world;
-            uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, 0.008 * tracker.speed);
+            uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
             const { offset } = this.shadingMaterial.uniforms;
             offset.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
             // lerp sky colors
@@ -6336,7 +6445,7 @@ class Sky {
                     mat.opacity = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(mat.opacity, 1.2 - tracker.sunlight, sunlightLerpFactor);
                 }
             });
-            const colorLerpFactor = 0.006 * tracker.speed;
+            const colorLerpFactor = 0.006 * speed * delta;
             if (this.newTopColor) {
                 this.topColor.lerp(this.newTopColor, colorLerpFactor);
             }
@@ -6350,15 +6459,13 @@ class Sky {
             this.meshGroup.position.x = threeCamera.position.x;
             this.meshGroup.position.z = threeCamera.position.z;
         };
-        const { speed } = (this.options = Object.assign(Object.assign({}, defaultSkyOptions), options));
+        const { checkInterval } = (this.options = Object.assign(Object.assign({}, defaultSkyOptions), options));
         this.createSkyShading();
         this.createSkyBox();
         rendering.scene.add(this.meshGroup);
-        this.tracker.speed = speed;
-        rendering.engine.on('ready', () => {
-            rendering.engine.inputs.bind('i', () => this.setSpeed(this.tracker.speed + 1));
-            rendering.engine.inputs.bind('k', () => this.setSpeed(this.tracker.speed - 1));
-        });
+        // setInterval(async () => {
+        //   this.newTime = await rendering.engine.network.fetchData('/time');
+        // }, checkInterval);
     }
 }
 
@@ -23512,9 +23619,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var svelte_internal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! svelte/internal */ "./node_modules/svelte/internal/index.mjs");
 /* harmony import */ var query_string__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! query-string */ "./node_modules/query-string/index.js");
-/* harmony import */ var _components_button_svelte__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/button.svelte */ "./client/components/button.svelte");
-/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils */ "./client/utils/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils */ "./client/utils/index.ts");
+/* harmony import */ var _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/button.svelte */ "./client/components/button.svelte");
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
 /* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
 /* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
@@ -23542,7 +23649,7 @@ function get_each_context(ctx, list, i) {
 	return child_ctx;
 }
 
-// (52:2) {:else}
+// (53:2) {:else}
 function create_else_block(ctx) {
 	let div;
 	let h1;
@@ -23574,13 +23681,13 @@ function create_else_block(ctx) {
 			info.block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "id", "world-list-title");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 53, 6, 2034);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 54, 6, 2051);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "id", "world-list");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 54, 6, 2086);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 55, 6, 2103);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "id", "world-list-wrapper");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 52, 4, 1998);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 53, 4, 2015);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
@@ -23619,14 +23726,14 @@ function create_else_block(ctx) {
 		block,
 		id: create_else_block.name,
 		type: "else",
-		source: "(52:2) {:else}",
+		source: "(53:2) {:else}",
 		ctx
 	});
 
 	return block;
 }
 
-// (40:2) {#if !!world}
+// (41:2) {#if !!world}
 function create_if_block(ctx) {
 	let div;
 	let img;
@@ -23645,8 +23752,8 @@ function create_if_block(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "id", "crosshair");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "alt", "+");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 41, 6, 1591);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 40, 4, 1556);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 42, 6, 1608);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 41, 4, 1573);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
@@ -23700,14 +23807,14 @@ function create_if_block(ctx) {
 		block,
 		id: create_if_block.name,
 		type: "if",
-		source: "(40:2) {#if !!world}",
+		source: "(41:2) {#if !!world}",
 		ctx
 	});
 
 	return block;
 }
 
-// (70:8) {:catch error}
+// (71:8) {:catch error}
 function create_catch_block(ctx) {
 	let p;
 	let t0;
@@ -23719,7 +23826,7 @@ function create_catch_block(ctx) {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)("An error occurred! ");
 			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t1_value);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 70, 10, 2701);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 71, 10, 2718);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
@@ -23738,14 +23845,14 @@ function create_catch_block(ctx) {
 		block,
 		id: create_catch_block.name,
 		type: "catch",
-		source: "(70:8) {:catch error}",
+		source: "(71:8) {:catch error}",
 		ctx
 	});
 
 	return block;
 }
 
-// (58:8) {:then data}
+// (59:8) {:then data}
 function create_then_block(ctx) {
 	let each_1_anchor;
 	let each_value = /*data*/ ctx[15].worlds;
@@ -23806,14 +23913,14 @@ function create_then_block(ctx) {
 		block,
 		id: create_then_block.name,
 		type: "then",
-		source: "(58:8) {:then data}",
+		source: "(59:8) {:then data}",
 		ctx
 	});
 
 	return block;
 }
 
-// (59:10) {#each data.worlds as { name, generation, description }}
+// (60:10) {#each data.worlds as { name, generation, description }}
 function create_each_block(ctx) {
 	let li;
 	let h1;
@@ -23851,16 +23958,16 @@ function create_each_block(ctx) {
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t4_value);
 			t5 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 65, 14, 2566);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 66, 14, 2583);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 66, 14, 2596);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 67, 14, 2613);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "id", "world-list-item");
 
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[16]
 			? "selected"
 			: "") + " svelte-n9vnk9"));
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 59, 12, 2293);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 60, 12, 2310);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, li, anchor);
@@ -23905,14 +24012,14 @@ function create_each_block(ctx) {
 		block,
 		id: create_each_block.name,
 		type: "each",
-		source: "(59:10) {#each data.worlds as { name, generation, description }}",
+		source: "(60:10) {#each data.worlds as { name, generation, description }}",
 		ctx
 	});
 
 	return block;
 }
 
-// (56:28)            <p>...waiting</p>         {:then data}
+// (57:28)            <p>...waiting</p>         {:then data}
 function create_pending_block(ctx) {
 	let p;
 
@@ -23920,7 +24027,7 @@ function create_pending_block(ctx) {
 		c: function create() {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			p.textContent = "...waiting";
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 56, 10, 2175);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 57, 10, 2192);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
@@ -23935,14 +24042,14 @@ function create_pending_block(ctx) {
 		block,
 		id: create_pending_block.name,
 		type: "pending",
-		source: "(56:28)            <p>...waiting</p>         {:then data}",
+		source: "(57:28)            <p>...waiting</p>         {:then data}",
 		ctx
 	});
 
 	return block;
 }
 
-// (43:6) {#if !locked}
+// (44:6) {#if !locked}
 function create_if_block_1(ctx) {
 	let div1;
 	let div0;
@@ -23954,7 +24061,7 @@ function create_if_block_1(ctx) {
 	let button1;
 	let current;
 
-	button0 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_2__.default({
+	button0 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
 				$$slots: { default: [create_default_slot_1] },
 				$$scope: { ctx }
@@ -23964,7 +24071,7 @@ function create_if_block_1(ctx) {
 
 	button0.$on("click", /*click_handler*/ ctx[7]);
 
-	button1 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_2__.default({
+	button1 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
 				$$slots: { default: [create_default_slot] },
 				$$scope: { ctx }
@@ -23986,12 +24093,12 @@ function create_if_block_1(ctx) {
 			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button1.$$.fragment);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 44, 10, 1720);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 45, 10, 1737);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 45, 10, 1738);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 46, 10, 1755);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "pause-menu");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 43, 8, 1688);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 44, 8, 1705);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div1, anchor);
@@ -24042,14 +24149,14 @@ function create_if_block_1(ctx) {
 		block,
 		id: create_if_block_1.name,
 		type: "if",
-		source: "(43:6) {#if !locked}",
+		source: "(44:6) {#if !locked}",
 		ctx
 	});
 
 	return block;
 }
 
-// (47:10) <Button on:click={() => engine.lock()}>
+// (48:10) <Button on:click={() => engine.lock()}>
 function create_default_slot_1(ctx) {
 	let t;
 
@@ -24069,14 +24176,14 @@ function create_default_slot_1(ctx) {
 		block,
 		id: create_default_slot_1.name,
 		type: "slot",
-		source: "(47:10) <Button on:click={() => engine.lock()}>",
+		source: "(48:10) <Button on:click={() => engine.lock()}>",
 		ctx
 	});
 
 	return block;
 }
 
-// (48:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
+// (49:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
 function create_default_slot(ctx) {
 	let t;
 
@@ -24096,7 +24203,7 @@ function create_default_slot(ctx) {
 		block,
 		id: create_default_slot.name,
 		type: "slot",
-		source: "(48:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
+		source: "(49:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
 		ctx
 	});
 
@@ -24124,7 +24231,7 @@ function create_fragment(ctx) {
 			main = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("main");
 			if_block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-n9vnk9");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 38, 0, 1529);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 39, 0, 1546);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -24214,13 +24321,14 @@ function instance($$self, $$props, $$invalidate) {
 
 	if (world) {
 		const worldName = typeof world === "string" ? world : world.join("");
-		engine = new _core__WEBPACK_IMPORTED_MODULE_3__.Engine(worldName, { container: { canvas, domElement } });
+		engine = new _core__WEBPACK_IMPORTED_MODULE_4__.Engine({ container: { canvas, domElement } });
+		engine.join(worldName);
 		engine.start();
 		engine.on("lock", () => $$invalidate(2, locked = true));
 		engine.on("unlock", () => $$invalidate(2, locked = false));
 	} else {
 		fetchWorlds = (() => __awaiter(void 0, void 0, void 0, function* () {
-			const response = yield fetch(_utils__WEBPACK_IMPORTED_MODULE_4__.Helper.getServerURL().toString() + "worlds");
+			const response = yield fetch(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getServerURL().toString() + "worlds");
 			return yield response.json();
 		}))();
 	}
@@ -24254,9 +24362,9 @@ function instance($$self, $$props, $$invalidate) {
 	$$self.$capture_state = () => ({
 		__awaiter,
 		QS: query_string__WEBPACK_IMPORTED_MODULE_1__,
-		Button: _components_button_svelte__WEBPACK_IMPORTED_MODULE_2__.default,
-		Engine: _core__WEBPACK_IMPORTED_MODULE_3__.Engine,
-		Helper: _utils__WEBPACK_IMPORTED_MODULE_4__.Helper,
+		Helper: _utils__WEBPACK_IMPORTED_MODULE_2__.Helper,
+		Button: _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default,
+		Engine: _core__WEBPACK_IMPORTED_MODULE_4__.Engine,
 		domElement,
 		canvas,
 		worldListWrapper,
@@ -24313,7 +24421,7 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_5__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_6__.default, acceptable: true, cssId: "svelte-n9vnk9-style", nonCssHash: "aueee", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_5__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_6__.default, acceptable: true, cssId: "svelte-n9vnk9-style", nonCssHash: "1sqk8e", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
 if (typeof add_css !== 'undefined' && !document.getElementById("svelte-n9vnk9-style")) add_css();

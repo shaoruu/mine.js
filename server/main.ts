@@ -1,7 +1,5 @@
-import fs from 'fs';
 import { IncomingMessage } from 'http';
 import path from 'path';
-import querystring from 'querystring';
 
 import chalk from 'chalk';
 import fastify from 'fastify';
@@ -10,6 +8,7 @@ import WebSocket from 'ws';
 import { WORLD_LIST } from '../shared/saves';
 
 import { ClientType, Mine } from './core';
+import { getQueryWorld } from './utils';
 
 const isProduction = 'production' === process.env.NODE_ENV;
 
@@ -53,14 +52,15 @@ if (WORLDS) {
   console.log(chalk.red('No worlds loaded!'));
 }
 
+app.get('/time', (request, reply) => {
+  const world = getQueryWorld(request.raw);
+  reply.send(world.time);
+});
+
 // MAIN SOCKET HANDLING TRAFFIC
 const wss = new WebSocket.Server({ server: app.server });
 wss.on('connection', (client: ClientType, request: IncomingMessage) => {
-  let { world: worldName } = querystring.parse(request.url.split('?')[1]);
-  worldName = worldName ? (typeof worldName === 'string' ? worldName : worldName.join('')) : 'testbed';
-
-  const world = Mine.hasWorld(worldName) ? Mine.getWorld(worldName) : Mine.randomWorld();
-  world?.onConnect(client);
+  getQueryWorld(request)?.onConnect(client);
 });
 
 const port = process.env.PORT || 4000;

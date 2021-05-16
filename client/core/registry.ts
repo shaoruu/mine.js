@@ -12,7 +12,6 @@ const TRANSPARENT_SIDES = [FrontSide];
 
 class Registry {
   public atlasUniform: { value: Texture | null };
-  public static materialSetup = false;
   public materialUniform: { [key: string]: { value: any } };
 
   public opaqueChunkMaterial: ShaderMaterial;
@@ -22,7 +21,7 @@ class Registry {
   constructor(public engine: Engine, public options: RegistryOptionsType) {
     engine.on('ready', () => {
       this.atlasUniform = {
-        value: new TextureLoader().load(`${engine.network.url.clearQuery().toString()}atlas`),
+        value: new TextureLoader().load(`${engine.network.cleanURL}atlas`),
       };
 
       const atlas = this.atlasUniform.value;

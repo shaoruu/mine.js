@@ -19,9 +19,14 @@ class Network {
   public url = Helper.getServerURL();
   public connected = false;
 
-  constructor(public engine: Engine, public worldName: string) {
+  public worldName: string;
+
+  constructor(public engine: Engine) {}
+
+  join = (worldName: string) => {
+    this.worldName = worldName;
     this.connect(this.url.toString());
-  }
+  };
 
   connect = (url: string) => {
     const socket = new URL(url);
@@ -46,27 +51,25 @@ class Network {
   onEvent = (event) => {
     const { type } = event;
 
-    const {
-      engine: { world, player },
-    } = this;
+    const { engine } = this;
+    const { world, player } = engine;
 
     switch (type) {
       case 'INIT': {
         const {
-          json: { time, speed, spawn },
+          json: { time, tickSpeed, spawn },
         } = event;
         world.sky.setTime(time, false);
-        world.sky.setSpeed(speed, false);
+        engine.setTick(tickSpeed, false);
         player.teleport(spawn);
         break;
       }
       case 'CONFIG': {
         const {
-          json: { time, speed },
+          json: { time, tickSpeed },
         } = event;
-        console.log(time, speed);
         if (SharedHelper.isNumber(time)) world.sky.setTime(time, false);
-        if (SharedHelper.isNumber(speed)) world.sky.setSpeed(speed, false);
+        if (SharedHelper.isNumber(tickSpeed)) engine.setTick(tickSpeed, false);
         break;
       }
       case 'UPDATE': {
@@ -94,6 +97,18 @@ class Network {
     }
     this.onEvent(event);
   };
+
+  fetchData = async (path: string, args: { [key: string]: any } = {}) => {
+    const url = Helper.getServerURL();
+    url.path = `/${path.replace('/', '')}`;
+    for (const key in args) url.query[key] = args[key];
+    const response = await fetch(url.toString());
+    return response.json();
+  };
+
+  get cleanURL() {
+    return this.url.clearQuery().toString();
+  }
 
   static decode(buffer) {
     if (buffer[0] === 0x78 && buffer[1] === 0x9c) {

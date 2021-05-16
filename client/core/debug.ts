@@ -116,6 +116,14 @@ class Debug {
     // RENDERING
     const { rendering, registry, player, camera, world } = this.engine;
 
+    // ENGINE
+    const engineFolder = this.gui.addFolder('Engine');
+    engineFolder
+      .add(this.engine, 'tickSpeed', 0, 100, 0.01)
+      .onChange((value) => this.engine.setTick(value))
+      .name('Tick speed');
+
+    // RENDERING
     const renderingFolder = this.gui.addFolder('Rendering');
     renderingFolder
       .addColor(rendering.options, 'clearColor')
@@ -124,6 +132,7 @@ class Debug {
 
     // WORLD
     const worldFolder = this.gui.addFolder('World');
+    const worldDebugConfigs = { time: world.sky.tracker.time };
     worldFolder
       .add(world.options, 'renderRadius', 1, 20, 1)
       .onFinishChange((value) => {
@@ -132,13 +141,9 @@ class Debug {
       .name('Render radius');
     worldFolder.add(world.options, 'requestRadius', 1, 20, 1).name('Request radius');
     worldFolder
-      .add(world.sky.tracker, 'time', 0, 2400, 10)
-      .onChange((value) => world.sky.setTime(value))
+      .add(worldDebugConfigs, 'time', 0, 2400, 10)
+      .onFinishChange((value) => world.sky.setTime(value))
       .name('Time value');
-    worldFolder
-      .add(world.sky.tracker, 'speed', 0, 20, 0.01)
-      .onChange((value) => world.sky.setSpeed(value))
-      .name('Time speed');
 
     this.registerDisplay('chunk', world, 'camChunkPosStr');
     this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));

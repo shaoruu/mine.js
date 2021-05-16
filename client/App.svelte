@@ -1,9 +1,9 @@
 <script lang="ts">
   import QS from 'query-string';
+  import { Helper } from './utils';
 
   import Button from './components/button.svelte';
   import { Engine } from './core';
-  import { Helper } from './utils';
 
   let domElement: HTMLDivElement;
   let canvas: HTMLCanvasElement;
@@ -18,10 +18,11 @@
 
   if (world) {
     const worldName = typeof world === 'string' ? world : world.join('');
-    engine = new Engine(worldName, {
+    engine = new Engine({
       container: { canvas: canvas, domElement },
     });
 
+    engine.join(worldName);
     engine.start();
 
     engine.on('lock', () => (locked = true));
