@@ -5787,7 +5787,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 
 const defaultPeerOptions = {
-    lerpFactor: 0.8,
+    lerpFactor: 0.6,
     headColor: '#94d0cc',
     headDimension: 0.4,
 };

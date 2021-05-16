@@ -7,7 +7,7 @@ type PeerOptionsType = {
 };
 
 const defaultPeerOptions: PeerOptionsType = {
-  lerpFactor: 0.8,
+  lerpFactor: 0.6,
   headColor: '#94d0cc',
   headDimension: 0.4,
 };
