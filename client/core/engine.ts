@@ -5,6 +5,7 @@ import merge from 'deepmerge';
 import { Clock, DeepPartial } from '../libs';
 
 import { Particles, ParticlesOptionsType } from './particles';
+import { Peers, PeersOptionsType } from './peers';
 
 import {
   Camera,
@@ -38,6 +39,7 @@ type ConfigType = {
   physics: PhysicsOptionsType;
   registry: RegistryOptionsType;
   rendering: RenderingOptionsType;
+  peers: PeersOptionsType;
   particles: ParticlesOptionsType;
 };
 
@@ -72,9 +74,9 @@ const defaultConfig: ConfigType = {
     chunkSize: 8,
     dimension: 1,
     // radius of rendering centered by camera
-    // maximum amount of chunks to process per frame tick
     maxChunkRequestPerFrame: 8,
-    maxChunkProcessPerFrame: 16,
+    // maximum amount of chunks to process per frame tick
+    maxChunkProcessPerFrame: 8,
     maxBlockPerFrame: 500,
   },
   entities: {
@@ -100,6 +102,9 @@ const defaultConfig: ConfigType = {
     fogNearColor: '#333',
     clearColor: '#123',
   },
+  peers: {
+    updateInterval: 40, // ms
+  },
   particles: {
     count: 10,
   },
@@ -117,6 +122,7 @@ class Engine extends EventEmitter {
   public registry: Registry;
   public world: World;
   public player: Player;
+  public peers: Peers;
   public physics: Physics;
   public entities: Entities;
   public particles: Particles;
@@ -137,6 +143,7 @@ class Engine extends EventEmitter {
       registry,
       rendering,
       world,
+      peers,
       particles,
     } = (this.config = merge(defaultConfig, params));
 
@@ -174,6 +181,9 @@ class Engine extends EventEmitter {
 
     // entities
     this.entities = new Entities(this, entities);
+
+    // peers
+    this.peers = new Peers(this, peers);
 
     // particles
     this.particles = new Particles(this, particles);
@@ -222,6 +232,7 @@ class Engine extends EventEmitter {
     this.player.tick();
     this.physics.tick();
     this.entities.tick();
+    this.peers.tick();
     this.world.tick();
     this.rendering.tick();
 

@@ -29,7 +29,6 @@ class Registry {
       atlas.minFilter = NearestFilter;
       atlas.magFilter = NearestFilter;
       atlas.generateMipmaps = false;
-      atlas.needsUpdate = true;
       atlas.encoding = sRGBEncoding;
 
       this.materialUniform = {

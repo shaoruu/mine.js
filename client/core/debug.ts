@@ -1,6 +1,6 @@
 import { GUI } from 'dat.gui';
 import Stats from 'stats.js';
-import { BoxGeometry, Color, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
+import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
 // import { AxesHelper, GridHelper } from 'three';
 
 import { Helper } from '../utils';
@@ -142,7 +142,7 @@ class Debug {
     worldFolder.add(world.options, 'requestRadius', 1, 20, 1).name('Request radius');
     worldFolder
       .add(worldDebugConfigs, 'time', 0, 2400, 10)
-      .onFinishChange((value) => world.sky.setTime(value))
+      .onFinishChange((value) => world.setTime(value))
       .name('Time value');
 
     this.registerDisplay('chunk', world, 'camChunkPosStr');

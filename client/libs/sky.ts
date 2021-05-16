@@ -157,14 +157,14 @@ class Sky {
     }, checkInterval);
   }
 
-  init = () => {
+  init() {
     this.paint('sides', 'stars');
     this.paint('top', 'stars');
     this.paint('top', 'moon');
     this.paint('bottom', 'sun');
-  };
+  }
 
-  createSkyShading = () => {
+  createSkyShading() {
     const { dimension, topColor, bottomColor, domeOffset } = this.options;
 
     this.topColor = new Color(topColor);
@@ -189,9 +189,9 @@ class Sky {
     this.shadingMesh = new Mesh(this.shadingGeometry, this.shadingMaterial);
 
     this.meshGroup.add(this.shadingMesh);
-  };
+  }
 
-  createSkyBox = () => {
+  createSkyBox() {
     const { dimension } = this.options;
 
     this.boxGeometry = new BoxBufferGeometry(dimension * 0.9, dimension * 0.9, dimension * 0.9);
@@ -203,9 +203,9 @@ class Sky {
     this.boxMesh = new Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
 
     this.meshGroup.add(this.boxMesh);
-  };
+  }
 
-  createCanvasMaterial = () => {
+  createCanvasMaterial() {
     const canvas = document.createElement('canvas');
     canvas.height = 512;
     canvas.width = 512;
@@ -227,17 +227,17 @@ class Sky {
     material.polygonOffsetFactor = -0.5;
 
     return material;
-  };
+  }
 
-  setTopColor = (color: Color | string) => {
+  setTopColor(color: Color | string) {
     this.newTopColor = new Color(color);
-  };
+  }
 
-  setBottomColor = (color: Color | string) => {
+  setBottomColor(color: Color | string) {
     this.newBottomColor = new Color(color);
-  };
+  }
 
-  paint = (side: SkyBoxSidesType[] | 'all' | 'sides' | string, art: 'sun' | 'moon' | 'stars' | 'clear') => {
+  paint(side: SkyBoxSidesType[] | 'all' | 'sides' | string, art: 'sun' | 'moon' | 'stars' | 'clear') {
     const actualSides = Array.isArray(side)
       ? side
       : side === 'all'
@@ -267,9 +267,9 @@ class Sky {
 
       material.map.needsUpdate = true;
     }
-  };
+  }
 
-  drawMoon = (material: MeshBasicMaterial, phase = 1) => {
+  drawMoon(material: MeshBasicMaterial, phase = 1) {
     const canvas = <HTMLCanvasElement>material.map.image;
     if (!canvas) return;
 
@@ -329,9 +329,9 @@ class Sky {
     context.fill();
 
     context.restore();
-  };
+  }
 
-  drawStars = (material: MeshBasicMaterial) => {
+  drawStars(material: MeshBasicMaterial) {
     const canvas = <HTMLCanvasElement>material.map.image;
     if (!canvas) return;
 
@@ -355,9 +355,9 @@ class Sky {
     }
 
     context.globalAlpha = alpha;
-  };
+  }
 
-  drawSun = (material: MeshBasicMaterial, radius = 50) => {
+  drawSun(material: MeshBasicMaterial, radius = 50) {
     const canvas = <HTMLCanvasElement>material.map.image;
     if (!canvas) return;
 
@@ -400,25 +400,25 @@ class Sky {
     context.closePath();
 
     context.restore();
-  };
+  }
 
-  clear = (material: MeshBasicMaterial) => {
+  clear(material: MeshBasicMaterial) {
     const canvas = <HTMLCanvasElement>material.map.image;
     if (!canvas) return;
 
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
-  };
+  }
 
-  rgba = (r: number, g: number, b: number, a: number) => {
+  rgba(r: number, g: number, b: number, a: number) {
     return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`;
-  };
+  }
 
-  spin = (rotation: number) => {
+  spin(rotation: number) {
     this.boxMesh.rotation.z = rotation;
-  };
+  }
 
-  tick = (delta = 0) => {
+  tick(delta = 0) {
     const { tracker } = this;
 
     if (!tracker.initialized) {
@@ -511,7 +511,7 @@ class Sky {
     const { threeCamera } = this.rendering.engine.camera;
     this.meshGroup.position.x = threeCamera.position.x;
     this.meshGroup.position.z = threeCamera.position.z;
-  };
+  }
 }
 
 export { Sky };

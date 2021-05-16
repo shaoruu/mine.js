@@ -1027,6 +1027,348 @@ $root.protocol = (function() {
         return Chunk;
     })();
 
+    protocol.Peer = (function() {
+
+        /**
+         * Properties of a Peer.
+         * @memberof protocol
+         * @interface IPeer
+         * @property {string|null} [id] Peer id
+         * @property {number|null} [px] Peer px
+         * @property {number|null} [py] Peer py
+         * @property {number|null} [pz] Peer pz
+         * @property {number|null} [qx] Peer qx
+         * @property {number|null} [qy] Peer qy
+         * @property {number|null} [qz] Peer qz
+         * @property {number|null} [qw] Peer qw
+         */
+
+        /**
+         * Constructs a new Peer.
+         * @memberof protocol
+         * @classdesc Represents a Peer.
+         * @implements IPeer
+         * @constructor
+         * @param {protocol.IPeer=} [properties] Properties to set
+         */
+        function Peer(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Peer id.
+         * @member {string} id
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.id = "";
+
+        /**
+         * Peer px.
+         * @member {number} px
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.px = 0;
+
+        /**
+         * Peer py.
+         * @member {number} py
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.py = 0;
+
+        /**
+         * Peer pz.
+         * @member {number} pz
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.pz = 0;
+
+        /**
+         * Peer qx.
+         * @member {number} qx
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.qx = 0;
+
+        /**
+         * Peer qy.
+         * @member {number} qy
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.qy = 0;
+
+        /**
+         * Peer qz.
+         * @member {number} qz
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.qz = 0;
+
+        /**
+         * Peer qw.
+         * @member {number} qw
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.qw = 0;
+
+        /**
+         * Creates a new Peer instance using the specified properties.
+         * @function create
+         * @memberof protocol.Peer
+         * @static
+         * @param {protocol.IPeer=} [properties] Properties to set
+         * @returns {protocol.Peer} Peer instance
+         */
+        Peer.create = function create(properties) {
+            return new Peer(properties);
+        };
+
+        /**
+         * Encodes the specified Peer message. Does not implicitly {@link protocol.Peer.verify|verify} messages.
+         * @function encode
+         * @memberof protocol.Peer
+         * @static
+         * @param {protocol.IPeer} message Peer message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Peer.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            if (message.px != null && Object.hasOwnProperty.call(message, "px"))
+                writer.uint32(/* id 2, wireType 5 =*/21).float(message.px);
+            if (message.py != null && Object.hasOwnProperty.call(message, "py"))
+                writer.uint32(/* id 3, wireType 5 =*/29).float(message.py);
+            if (message.pz != null && Object.hasOwnProperty.call(message, "pz"))
+                writer.uint32(/* id 4, wireType 5 =*/37).float(message.pz);
+            if (message.qx != null && Object.hasOwnProperty.call(message, "qx"))
+                writer.uint32(/* id 5, wireType 5 =*/45).float(message.qx);
+            if (message.qy != null && Object.hasOwnProperty.call(message, "qy"))
+                writer.uint32(/* id 6, wireType 5 =*/53).float(message.qy);
+            if (message.qz != null && Object.hasOwnProperty.call(message, "qz"))
+                writer.uint32(/* id 7, wireType 5 =*/61).float(message.qz);
+            if (message.qw != null && Object.hasOwnProperty.call(message, "qw"))
+                writer.uint32(/* id 8, wireType 5 =*/69).float(message.qw);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Peer message, length delimited. Does not implicitly {@link protocol.Peer.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protocol.Peer
+         * @static
+         * @param {protocol.IPeer} message Peer message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Peer.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Peer message from the specified reader or buffer.
+         * @function decode
+         * @memberof protocol.Peer
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protocol.Peer} Peer
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Peer.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protocol.Peer();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.id = reader.string();
+                    break;
+                case 2:
+                    message.px = reader.float();
+                    break;
+                case 3:
+                    message.py = reader.float();
+                    break;
+                case 4:
+                    message.pz = reader.float();
+                    break;
+                case 5:
+                    message.qx = reader.float();
+                    break;
+                case 6:
+                    message.qy = reader.float();
+                    break;
+                case 7:
+                    message.qz = reader.float();
+                    break;
+                case 8:
+                    message.qw = reader.float();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Peer message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protocol.Peer
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protocol.Peer} Peer
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Peer.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Peer message.
+         * @function verify
+         * @memberof protocol.Peer
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Peer.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isString(message.id))
+                    return "id: string expected";
+            if (message.px != null && message.hasOwnProperty("px"))
+                if (typeof message.px !== "number")
+                    return "px: number expected";
+            if (message.py != null && message.hasOwnProperty("py"))
+                if (typeof message.py !== "number")
+                    return "py: number expected";
+            if (message.pz != null && message.hasOwnProperty("pz"))
+                if (typeof message.pz !== "number")
+                    return "pz: number expected";
+            if (message.qx != null && message.hasOwnProperty("qx"))
+                if (typeof message.qx !== "number")
+                    return "qx: number expected";
+            if (message.qy != null && message.hasOwnProperty("qy"))
+                if (typeof message.qy !== "number")
+                    return "qy: number expected";
+            if (message.qz != null && message.hasOwnProperty("qz"))
+                if (typeof message.qz !== "number")
+                    return "qz: number expected";
+            if (message.qw != null && message.hasOwnProperty("qw"))
+                if (typeof message.qw !== "number")
+                    return "qw: number expected";
+            return null;
+        };
+
+        /**
+         * Creates a Peer message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protocol.Peer
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protocol.Peer} Peer
+         */
+        Peer.fromObject = function fromObject(object) {
+            if (object instanceof $root.protocol.Peer)
+                return object;
+            var message = new $root.protocol.Peer();
+            if (object.id != null)
+                message.id = String(object.id);
+            if (object.px != null)
+                message.px = Number(object.px);
+            if (object.py != null)
+                message.py = Number(object.py);
+            if (object.pz != null)
+                message.pz = Number(object.pz);
+            if (object.qx != null)
+                message.qx = Number(object.qx);
+            if (object.qy != null)
+                message.qy = Number(object.qy);
+            if (object.qz != null)
+                message.qz = Number(object.qz);
+            if (object.qw != null)
+                message.qw = Number(object.qw);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Peer message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protocol.Peer
+         * @static
+         * @param {protocol.Peer} message Peer
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Peer.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.id = "";
+                object.px = 0;
+                object.py = 0;
+                object.pz = 0;
+                object.qx = 0;
+                object.qy = 0;
+                object.qz = 0;
+                object.qw = 0;
+            }
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            if (message.px != null && message.hasOwnProperty("px"))
+                object.px = options.json && !isFinite(message.px) ? String(message.px) : message.px;
+            if (message.py != null && message.hasOwnProperty("py"))
+                object.py = options.json && !isFinite(message.py) ? String(message.py) : message.py;
+            if (message.pz != null && message.hasOwnProperty("pz"))
+                object.pz = options.json && !isFinite(message.pz) ? String(message.pz) : message.pz;
+            if (message.qx != null && message.hasOwnProperty("qx"))
+                object.qx = options.json && !isFinite(message.qx) ? String(message.qx) : message.qx;
+            if (message.qy != null && message.hasOwnProperty("qy"))
+                object.qy = options.json && !isFinite(message.qy) ? String(message.qy) : message.qy;
+            if (message.qz != null && message.hasOwnProperty("qz"))
+                object.qz = options.json && !isFinite(message.qz) ? String(message.qz) : message.qz;
+            if (message.qw != null && message.hasOwnProperty("qw"))
+                object.qw = options.json && !isFinite(message.qw) ? String(message.qw) : message.qw;
+            return object;
+        };
+
+        /**
+         * Converts this Peer to JSON.
+         * @function toJSON
+         * @memberof protocol.Peer
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Peer.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Peer;
+    })();
+
     protocol.Message = (function() {
 
         /**
@@ -1036,6 +1378,7 @@ $root.protocol = (function() {
          * @property {protocol.Message.Type|null} [type] Message type
          * @property {string|null} [json] Message json
          * @property {string|null} [text] Message text
+         * @property {protocol.IPeer|null} [peer] Message peer
          * @property {Array.<protocol.IChunk>|null} [chunks] Message chunks
          */
 
@@ -1080,6 +1423,14 @@ $root.protocol = (function() {
         Message.prototype.text = "";
 
         /**
+         * Message peer.
+         * @member {protocol.IPeer|null|undefined} peer
+         * @memberof protocol.Message
+         * @instance
+         */
+        Message.prototype.peer = null;
+
+        /**
          * Message chunks.
          * @member {Array.<protocol.IChunk>} chunks
          * @memberof protocol.Message
@@ -1117,9 +1468,11 @@ $root.protocol = (function() {
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.json);
             if (message.text != null && Object.hasOwnProperty.call(message, "text"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.text);
+            if (message.peer != null && Object.hasOwnProperty.call(message, "peer"))
+                $root.protocol.Peer.encode(message.peer, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.chunks != null && message.chunks.length)
                 for (var i = 0; i < message.chunks.length; ++i)
-                    $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                    $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             return writer;
         };
 
@@ -1164,6 +1517,9 @@ $root.protocol = (function() {
                     message.text = reader.string();
                     break;
                 case 4:
+                    message.peer = $root.protocol.Peer.decode(reader, reader.uint32());
+                    break;
+                case 5:
                     if (!(message.chunks && message.chunks.length))
                         message.chunks = [];
                     message.chunks.push($root.protocol.Chunk.decode(reader, reader.uint32()));
@@ -1217,6 +1573,8 @@ $root.protocol = (function() {
                 case 8:
                 case 9:
                 case 10:
+                case 11:
+                case 12:
                     break;
                 }
             if (message.json != null && message.hasOwnProperty("json"))
@@ -1225,6 +1583,11 @@ $root.protocol = (function() {
             if (message.text != null && message.hasOwnProperty("text"))
                 if (!$util.isString(message.text))
                     return "text: string expected";
+            if (message.peer != null && message.hasOwnProperty("peer")) {
+                var error = $root.protocol.Peer.verify(message.peer);
+                if (error)
+                    return "peer." + error;
+            }
             if (message.chunks != null && message.hasOwnProperty("chunks")) {
                 if (!Array.isArray(message.chunks))
                     return "chunks: array expected";
@@ -1290,11 +1653,24 @@ $root.protocol = (function() {
             case 10:
                 message.type = 10;
                 break;
+            case "PEER":
+            case 11:
+                message.type = 11;
+                break;
+            case "ENTITY":
+            case 12:
+                message.type = 12;
+                break;
             }
             if (object.json != null)
                 message.json = String(object.json);
             if (object.text != null)
                 message.text = String(object.text);
+            if (object.peer != null) {
+                if (typeof object.peer !== "object")
+                    throw TypeError(".protocol.Message.peer: object expected");
+                message.peer = $root.protocol.Peer.fromObject(object.peer);
+            }
             if (object.chunks) {
                 if (!Array.isArray(object.chunks))
                     throw TypeError(".protocol.Message.chunks: array expected");
@@ -1327,6 +1703,7 @@ $root.protocol = (function() {
                 object.type = options.enums === String ? "ERROR" : 1;
                 object.json = "";
                 object.text = "";
+                object.peer = null;
             }
             if (message.type != null && message.hasOwnProperty("type"))
                 object.type = options.enums === String ? $root.protocol.Message.Type[message.type] : message.type;
@@ -1334,6 +1711,8 @@ $root.protocol = (function() {
                 object.json = message.json;
             if (message.text != null && message.hasOwnProperty("text"))
                 object.text = message.text;
+            if (message.peer != null && message.hasOwnProperty("peer"))
+                object.peer = $root.protocol.Peer.toObject(message.peer, options);
             if (message.chunks && message.chunks.length) {
                 object.chunks = [];
                 for (var j = 0; j < message.chunks.length; ++j)
@@ -1367,6 +1746,8 @@ $root.protocol = (function() {
          * @property {number} UPDATE=8 UPDATE value
          * @property {number} REQUEST=9 REQUEST value
          * @property {number} CONFIG=10 CONFIG value
+         * @property {number} PEER=11 PEER value
+         * @property {number} ENTITY=12 ENTITY value
          */
         Message.Type = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -1380,6 +1761,8 @@ $root.protocol = (function() {
             values[valuesById[8] = "UPDATE"] = 8;
             values[valuesById[9] = "REQUEST"] = 9;
             values[valuesById[10] = "CONFIG"] = 10;
+            values[valuesById[11] = "PEER"] = 11;
+            values[valuesById[12] = "ENTITY"] = 12;
             return values;
         })();
 

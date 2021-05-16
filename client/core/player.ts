@@ -23,6 +23,8 @@ const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 11, 13];
 let type = 1;
 
 class Player {
+  public id: string;
+
   public controls: PointerLockControls;
 
   public lookBlock: Coords3 | null = [0, 0, 0];

@@ -3703,7 +3703,7 @@ class Debug {
             worldFolder.add(world.options, 'requestRadius', 1, 20, 1).name('Request radius');
             worldFolder
                 .add(worldDebugConfigs, 'time', 0, 2400, 10)
-                .onFinishChange((value) => world.sky.setTime(value))
+                .onFinishChange((value) => world.setTime(value))
                 .name('Time value');
             this.registerDisplay('chunk', world, 'camChunkPosStr');
             this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
@@ -3824,7 +3824,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(deepmerge__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
 /* harmony import */ var _particles__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./particles */ "./client/core/particles.ts");
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+/* harmony import */ var _peers__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./peers */ "./client/core/peers.ts");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+
 
 
 
@@ -3861,9 +3863,9 @@ const defaultConfig = {
         chunkSize: 8,
         dimension: 1,
         // radius of rendering centered by camera
-        // maximum amount of chunks to process per frame tick
         maxChunkRequestPerFrame: 8,
-        maxChunkProcessPerFrame: 16,
+        // maximum amount of chunks to process per frame tick
+        maxChunkProcessPerFrame: 8,
         maxBlockPerFrame: 500,
     },
     entities: {
@@ -3888,6 +3890,9 @@ const defaultConfig = {
         fogColor: '#222',
         fogNearColor: '#333',
         clearColor: '#123',
+    },
+    peers: {
+        updateInterval: 40, // ms
     },
     particles: {
         count: 10,
@@ -3926,6 +3931,7 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.player.tick();
             this.physics.tick();
             this.entities.tick();
+            this.peers.tick();
             this.world.tick();
             this.rendering.tick();
             if (this.debug) {
@@ -3960,31 +3966,33 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                     },
                 });
         };
-        const { camera, container, debug, entities, physics, player, registry, rendering, world, particles, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
+        const { camera, container, debug, entities, physics, player, registry, rendering, world, peers, particles, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
         // debug
         if (debug) {
-            this.debug = new ___WEBPACK_IMPORTED_MODULE_4__.Debug(this);
+            this.debug = new ___WEBPACK_IMPORTED_MODULE_5__.Debug(this);
         }
         // network
-        this.network = new ___WEBPACK_IMPORTED_MODULE_4__.Network(this);
+        this.network = new ___WEBPACK_IMPORTED_MODULE_5__.Network(this);
         // container
-        this.container = new ___WEBPACK_IMPORTED_MODULE_4__.Container(this, container);
+        this.container = new ___WEBPACK_IMPORTED_MODULE_5__.Container(this, container);
         // rendering
-        this.rendering = new ___WEBPACK_IMPORTED_MODULE_4__.Rendering(this, rendering);
+        this.rendering = new ___WEBPACK_IMPORTED_MODULE_5__.Rendering(this, rendering);
         // registry
-        this.registry = new ___WEBPACK_IMPORTED_MODULE_4__.Registry(this, registry);
+        this.registry = new ___WEBPACK_IMPORTED_MODULE_5__.Registry(this, registry);
         // inputs
-        this.inputs = new ___WEBPACK_IMPORTED_MODULE_4__.Inputs(this);
+        this.inputs = new ___WEBPACK_IMPORTED_MODULE_5__.Inputs(this);
         // camera
-        this.camera = new ___WEBPACK_IMPORTED_MODULE_4__.Camera(this, camera);
+        this.camera = new ___WEBPACK_IMPORTED_MODULE_5__.Camera(this, camera);
         // world
-        this.world = new ___WEBPACK_IMPORTED_MODULE_4__.World(this, world);
+        this.world = new ___WEBPACK_IMPORTED_MODULE_5__.World(this, world);
         // player
-        this.player = new ___WEBPACK_IMPORTED_MODULE_4__.Player(this, player);
+        this.player = new ___WEBPACK_IMPORTED_MODULE_5__.Player(this, player);
         // physics
-        this.physics = new ___WEBPACK_IMPORTED_MODULE_4__.Physics(this, physics);
+        this.physics = new ___WEBPACK_IMPORTED_MODULE_5__.Physics(this, physics);
         // entities
-        this.entities = new ___WEBPACK_IMPORTED_MODULE_4__.Entities(this, entities);
+        this.entities = new ___WEBPACK_IMPORTED_MODULE_5__.Entities(this, entities);
+        // peers
+        this.peers = new _peers__WEBPACK_IMPORTED_MODULE_4__.Peers(this, peers);
         // particles
         this.particles = new _particles__WEBPACK_IMPORTED_MODULE_3__.Particles(this, particles);
         // time
@@ -4092,11 +4100,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Inputs": () => (/* reexport safe */ _inputs__WEBPACK_IMPORTED_MODULE_6__.Inputs),
 /* harmony export */   "Network": () => (/* reexport safe */ _network__WEBPACK_IMPORTED_MODULE_7__.Network),
 /* harmony export */   "Particles": () => (/* reexport safe */ _particles__WEBPACK_IMPORTED_MODULE_8__.Particles),
-/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_9__.Physics),
-/* harmony export */   "Player": () => (/* reexport safe */ _player__WEBPACK_IMPORTED_MODULE_10__.Player),
-/* harmony export */   "Registry": () => (/* reexport safe */ _registry__WEBPACK_IMPORTED_MODULE_11__.Registry),
-/* harmony export */   "Rendering": () => (/* reexport safe */ _rendering__WEBPACK_IMPORTED_MODULE_12__.Rendering),
-/* harmony export */   "World": () => (/* reexport safe */ _world__WEBPACK_IMPORTED_MODULE_13__.World)
+/* harmony export */   "Peers": () => (/* reexport safe */ _peers__WEBPACK_IMPORTED_MODULE_9__.Peers),
+/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_10__.Physics),
+/* harmony export */   "Player": () => (/* reexport safe */ _player__WEBPACK_IMPORTED_MODULE_11__.Player),
+/* harmony export */   "Registry": () => (/* reexport safe */ _registry__WEBPACK_IMPORTED_MODULE_12__.Registry),
+/* harmony export */   "Rendering": () => (/* reexport safe */ _rendering__WEBPACK_IMPORTED_MODULE_13__.Rendering),
+/* harmony export */   "World": () => (/* reexport safe */ _world__WEBPACK_IMPORTED_MODULE_14__.World)
 /* harmony export */ });
 /* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./camera */ "./client/core/camera.ts");
 /* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./chunk */ "./client/core/chunk.ts");
@@ -4107,11 +4116,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _inputs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./inputs */ "./client/core/inputs.ts");
 /* harmony import */ var _network__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./network */ "./client/core/network.ts");
 /* harmony import */ var _particles__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./particles */ "./client/core/particles.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./physics */ "./client/core/physics.ts");
-/* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./player */ "./client/core/player.ts");
-/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./registry */ "./client/core/registry.ts");
-/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./rendering */ "./client/core/rendering.ts");
-/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./world */ "./client/core/world.ts");
+/* harmony import */ var _peers__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./peers */ "./client/core/peers.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./physics */ "./client/core/physics.ts");
+/* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./player */ "./client/core/player.ts");
+/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./registry */ "./client/core/registry.ts");
+/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./rendering */ "./client/core/rendering.ts");
+/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./world */ "./client/core/world.ts");
+
 
 
 
@@ -4248,20 +4259,27 @@ class Network {
             server.sendEvent = (event) => {
                 server.send(Network.encode(event));
             };
-            server.onopen = () => (this.connected = true);
-            server.onerror = (e) => console.error(e);
+            server.onopen = () => {
+                this.engine.emit('connected');
+                this.connected = true;
+            };
+            server.onerror = () => { };
             server.onmessage = this.onMessage;
-            server.onclose = () => (this.connected = false);
+            server.onclose = () => {
+                this.engine.emit('disconnected');
+                this.connected = false;
+            };
             server.serverURL = url;
             this.server = server;
         };
         this.onEvent = (event) => {
             const { type } = event;
             const { engine } = this;
-            const { world, player } = engine;
+            const { world, player, peers } = engine;
             switch (type) {
                 case 'INIT': {
-                    const { json: { time, tickSpeed, spawn }, } = event;
+                    const { json: { id, time, tickSpeed, spawn }, } = event;
+                    player.id = id;
                     world.setTime(time, false);
                     engine.setTick(tickSpeed, false);
                     player.teleport(spawn);
@@ -4278,12 +4296,29 @@ class Network {
                 case 'UPDATE': {
                     const { json: { voxel, type }, } = event;
                     world.setVoxel(voxel, type, false);
+                    // purposely did not break, so i can load afterwards
                 }
                 case 'LOAD': {
                     const { chunks } = event;
                     for (const chunkData of chunks) {
                         world.handleServerChunk(chunkData, type === 'UPDATE');
                     }
+                    break;
+                }
+                case 'JOIN': {
+                    const { text: id } = event;
+                    peers.join(id);
+                    break;
+                }
+                case 'LEAVE': {
+                    const { text: id } = event;
+                    peers.leave(id);
+                    break;
+                }
+                case 'PEER': {
+                    const { peer } = event;
+                    const { id, px, py, pz, qx, qy, qz, qw } = peer;
+                    peers.update(id, { position: [px, py, pz], rotation: [qx, qy, qz, qw] });
                     break;
                 }
             }
@@ -4399,6 +4434,87 @@ class Particles {
             const points = new three__WEBPACK_IMPORTED_MODULE_1__.Points(geometry, material);
             engine.rendering.scene.add(points);
         });
+    }
+}
+
+
+
+/***/ }),
+
+/***/ "./client/core/peers.ts":
+/*!******************************!*\
+  !*** ./client/core/peers.ts ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Peers": () => (/* binding */ Peers)
+/* harmony export */ });
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _shared_types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared/types */ "./shared/types.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+
+
+
+
+class Peers {
+    constructor(engine, options) {
+        this.engine = engine;
+        this.options = options;
+        this.players = new Map();
+        const { updateInterval } = this.options;
+        let interval;
+        engine.on('connected', () => {
+            interval = setInterval(() => {
+                const { position, quaternion } = engine.camera.threeCamera;
+                const { x: px, y: py, z: pz } = position;
+                const { x: qx, y: qy, z: qz, w: qw } = quaternion;
+                engine.network.server.sendEvent({
+                    type: 'PEER',
+                    peer: {
+                        id: engine.player.id,
+                        px,
+                        py,
+                        pz,
+                        qx,
+                        qy,
+                        qz,
+                        qw,
+                    },
+                });
+            }, updateInterval);
+        });
+        engine.on('disconnected', () => {
+            clearInterval(interval);
+        });
+    }
+    join(id) {
+        const newPlayer = new _libs__WEBPACK_IMPORTED_MODULE_1__.Peer(id);
+        _libs__WEBPACK_IMPORTED_MODULE_1__.Peer.material.map = this.engine.registry.atlasUniform.value;
+        this.engine.rendering.scene.add(newPlayer.mesh);
+        this.players.set(id, newPlayer);
+    }
+    update(id, packet) {
+        if (!this.players.has(id)) {
+            // might have missed the player's join event
+            this.join(id);
+        }
+        const player = this.players.get(id);
+        const { position, rotation } = packet;
+        player.update(new three__WEBPACK_IMPORTED_MODULE_3__.Vector3(...position), new three__WEBPACK_IMPORTED_MODULE_3__.Quaternion(...rotation));
+    }
+    leave(id) {
+        const player = this.players.get(id);
+        if (!player)
+            return;
+        this.engine.rendering.scene.remove(player.mesh);
+        this.players.delete(id);
+    }
+    tick() {
+        this.players.forEach((peer) => peer.tick());
     }
 }
 
@@ -4749,7 +4865,6 @@ class Registry {
             atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
             atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
             atlas.generateMipmaps = false;
-            atlas.needsUpdate = true;
             atlas.encoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
             this.materialUniform = Object.assign({ uTexture: this.atlasUniform, uSunlightIntensity: engine.world.uSunlightIntensity }, engine.rendering.fogUniforms);
             const sharedMaterialOptions = {
@@ -5625,22 +5740,24 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Brain": () => (/* reexport safe */ _brain__WEBPACK_IMPORTED_MODULE_1__.Brain),
 /* harmony export */   "Clock": () => (/* reexport safe */ _clock__WEBPACK_IMPORTED_MODULE_2__.Clock),
 /* harmony export */   "Clouds": () => (/* reexport safe */ _clouds__WEBPACK_IMPORTED_MODULE_3__.Clouds),
-/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_4__.Physics),
-/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_5__.RigidBody),
-/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_6__.simpleCull),
-/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_7__.Sky),
-/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_9__.VoxelOctree)
+/* harmony export */   "Peer": () => (/* reexport safe */ _peer__WEBPACK_IMPORTED_MODULE_4__.Peer),
+/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_5__.Physics),
+/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_6__.RigidBody),
+/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_7__.simpleCull),
+/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_8__.Sky),
+/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_10__.VoxelOctree)
 /* harmony export */ });
 /* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 /* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
 /* harmony import */ var _clock__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./clock */ "./client/libs/clock.ts");
 /* harmony import */ var _clouds__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./clouds */ "./client/libs/clouds.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
-/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
-/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
-/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
+/* harmony import */ var _peer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./peer */ "./client/libs/peer.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
+/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
+/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
 
 
 
@@ -5650,6 +5767,55 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+
+/***/ }),
+
+/***/ "./client/libs/peer.ts":
+/*!*****************************!*\
+  !*** ./client/libs/peer.ts ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Peer": () => (/* binding */ Peer)
+/* harmony export */ });
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+
+const defaultPeerOptions = {
+    lerpFactor: 0.8,
+    headColor: '#94d0cc',
+    headDimension: 0.4,
+};
+class Peer {
+    constructor(id, options = defaultPeerOptions) {
+        this.id = id;
+        this.options = options;
+        Peer.setupBasics(this.options);
+        this.mesh = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(Peer.geometry, Peer.material);
+        this.newPosition = this.mesh.position;
+        this.newQuaternion = this.mesh.quaternion;
+    }
+    update(position, quaternion) {
+        this.newPosition = position;
+        this.newQuaternion = quaternion;
+    }
+    tick() {
+        const { lerpFactor } = this.options;
+        this.mesh.position.lerp(this.newPosition, lerpFactor);
+        this.mesh.quaternion.slerp(this.newQuaternion, lerpFactor);
+    }
+}
+Peer.setupBasics = ({ headColor, headDimension }) => {
+    if (Peer.geometry && Peer.material)
+        return;
+    Peer.geometry = new three__WEBPACK_IMPORTED_MODULE_0__.BoxBufferGeometry(headDimension, headDimension, headDimension);
+    Peer.material = new three__WEBPACK_IMPORTED_MODULE_0__.MeshBasicMaterial({ color: headColor, side: three__WEBPACK_IMPORTED_MODULE_0__.DoubleSide });
+};
 
 
 
@@ -6199,280 +6365,6 @@ class Sky {
         };
         this.newTime = -1;
         this.meshGroup = new three__WEBPACK_IMPORTED_MODULE_3__.Group();
-        this.init = () => {
-            this.paint('sides', 'stars');
-            this.paint('top', 'stars');
-            this.paint('top', 'moon');
-            this.paint('bottom', 'sun');
-        };
-        this.createSkyShading = () => {
-            const { dimension, topColor, bottomColor, domeOffset } = this.options;
-            this.topColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor);
-            this.bottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(bottomColor);
-            const uniforms = {
-                topColor: { value: this.topColor },
-                bottomColor: { value: this.bottomColor },
-                offset: { value: domeOffset },
-                exponent: { value: 0.6 },
-            };
-            this.shadingGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.SphereGeometry(dimension);
-            this.shadingMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
-                uniforms,
-                vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
-                fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
-                depthWrite: false,
-                side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
-            });
-            this.shadingMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.shadingGeometry, this.shadingMaterial);
-            this.meshGroup.add(this.shadingMesh);
-        };
-        this.createSkyBox = () => {
-            const { dimension } = this.options;
-            this.boxGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.BoxBufferGeometry(dimension * 0.9, dimension * 0.9, dimension * 0.9);
-            for (const face of SKY_BOX_SIDES) {
-                const canvasMaterial = this.createCanvasMaterial();
-                this.boxMaterials.set(face, canvasMaterial);
-            }
-            this.boxMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
-            this.meshGroup.add(this.boxMesh);
-        };
-        this.createCanvasMaterial = () => {
-            const canvas = document.createElement('canvas');
-            canvas.height = 512;
-            canvas.width = 512;
-            const material = new three__WEBPACK_IMPORTED_MODULE_3__.MeshBasicMaterial({
-                side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
-                map: new three__WEBPACK_IMPORTED_MODULE_3__.Texture(canvas),
-                transparent: true,
-                depthWrite: false,
-                fog: false,
-            });
-            material.map.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-            material.map.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.LinearMipMapLinearFilter;
-            material.map.wrapS = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
-            material.map.wrapT = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
-            material.map.needsUpdate = true;
-            material.polygonOffset = true;
-            material.polygonOffsetFactor = -0.5;
-            return material;
-        };
-        this.setTopColor = (color) => {
-            this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
-        };
-        this.setBottomColor = (color) => {
-            this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
-        };
-        this.paint = (side, art) => {
-            const actualSides = Array.isArray(side)
-                ? side
-                : side === 'all'
-                    ? SKY_BOX_SIDES
-                    : side === 'sides'
-                        ? ['front', 'back', 'left', 'right']
-                        : [side];
-            for (const face of actualSides) {
-                const material = this.boxMaterials.get(face);
-                if (!material)
-                    continue;
-                switch (art) {
-                    case 'sun':
-                        this.drawSun(material);
-                        break;
-                    case 'moon':
-                        this.drawMoon(material);
-                        break;
-                    case 'stars':
-                        this.drawStars(material);
-                        break;
-                    case 'clear':
-                        this.clear(material);
-                        break;
-                }
-                material.map.needsUpdate = true;
-            }
-        };
-        this.drawMoon = (material, phase = 1) => {
-            const canvas = material.map.image;
-            if (!canvas)
-                return;
-            const { moonRadius: radius, moonColor } = this.options;
-            const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(moonColor);
-            const context = canvas.getContext('2d');
-            const x = canvas.width / 2;
-            const y = canvas.height / 2;
-            // bg glow
-            context.beginPath();
-            const grd = context.createRadialGradient(x + radius / 2, y + radius / 2, 1, x + radius / 2, y + radius / 2, radius * 2);
-            grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
-            grd.addColorStop(1, this.rgba(1, 1, 1, 0));
-            context.arc(x + radius / 2, y + radius / 2, radius * 2, 0, 2 * Math.PI, false);
-            context.fillStyle = grd;
-            context.fill();
-            context.closePath();
-            // clipping region
-            context.save();
-            context.beginPath();
-            context.rect(x, y, radius, radius);
-            context.clip();
-            // moon bg
-            context.beginPath();
-            context.rect(x, y, radius, radius);
-            context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
-            context.fill();
-            context.translate(x, y);
-            // lighter inside
-            context.beginPath();
-            context.rect(4, 4, radius - 8, radius - 8);
-            context.fillStyle = this.rgba(1, 1, 1, 0.8);
-            context.fill();
-            // moon phase
-            const px = phase * radius * 2 - radius;
-            context.beginPath();
-            context.rect(px, 0, radius, radius);
-            context.fillStyle = this.rgba(0, 0, 0, 0.8);
-            context.fill();
-            context.beginPath();
-            context.rect(2 + px, 2, radius - 4, radius - 4);
-            context.fillStyle = this.rgba(0, 0, 0, 0.9);
-            context.fill();
-            context.restore();
-        };
-        this.drawStars = (material) => {
-            const canvas = material.map.image;
-            if (!canvas)
-                return;
-            const { starsCount } = this.options;
-            const context = canvas.getContext('2d');
-            const alpha = context.globalAlpha;
-            for (let i = 0; i < starsCount; i++) {
-                context.globalAlpha = Math.random() * 1 + 0.5;
-                context.beginPath();
-                context.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 0.5, 0, 2 * Math.PI, false);
-                context.fillStyle = STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)];
-                context.fill();
-            }
-            context.globalAlpha = alpha;
-        };
-        this.drawSun = (material, radius = 50) => {
-            const canvas = material.map.image;
-            if (!canvas)
-                return;
-            const { sunColor } = this.options;
-            const context = canvas.getContext('2d');
-            const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(sunColor);
-            context.save();
-            // bg glow
-            context.beginPath();
-            let x = canvas.width / 2;
-            let y = canvas.height / 2;
-            const grd = context.createRadialGradient(x, y, 1, x, y, radius * 2);
-            grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
-            grd.addColorStop(1, this.rgba(1, 1, 1, 0));
-            context.arc(x, y, radius * 2, 0, 2 * Math.PI, false);
-            context.fillStyle = grd;
-            context.fill();
-            context.closePath();
-            // outer sun
-            context.beginPath();
-            x = canvas.width / 2 - radius / 2;
-            y = canvas.height / 2 - radius / 2;
-            context.rect(x, y, radius, radius);
-            context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
-            context.fill();
-            context.closePath();
-            // inner sun
-            context.beginPath();
-            const r = radius / 1.6;
-            x = canvas.width / 2 - r / 2;
-            y = canvas.height / 2 - r / 2;
-            context.rect(x, y, r, r);
-            context.fillStyle = this.rgba(1, 1, 1, 0.5);
-            context.fill();
-            context.closePath();
-            context.restore();
-        };
-        this.clear = (material) => {
-            const canvas = material.map.image;
-            if (!canvas)
-                return;
-            const context = canvas.getContext('2d');
-            context.clearRect(0, 0, canvas.width, canvas.height);
-        };
-        this.rgba = (r, g, b, a) => {
-            return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`;
-        };
-        this.spin = (rotation) => {
-            this.boxMesh.rotation.z = rotation;
-        };
-        this.tick = (delta = 0) => {
-            const { tracker } = this;
-            if (!tracker.initialized) {
-                this.init();
-                tracker.initialized = true;
-            }
-            // add speed to time, and spin box meshes
-            const speed = this.rendering.engine.tickSpeed;
-            tracker.time += speed * delta;
-            // sync with server
-            if (this.newTime > 0) {
-                tracker.time = (tracker.time + this.newTime) / 2;
-                this.newTime = -1;
-            }
-            tracker.time = tracker.time % 2400;
-            this.spin(Math.PI * 2 * (tracker.time / 2400));
-            const hour = Math.round(tracker.time / 100) * 100;
-            tracker.last = tracker.time;
-            if (SKY_CONFIGS.hours[hour]) {
-                if (!tracker.until) {
-                    const { color, offset } = SKY_CONFIGS.hours[hour];
-                    this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
-                    this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
-                    this.newTopColor.copy(color.top);
-                    this.newBottomColor.copy(color.bottom);
-                    tracker.offset = offset;
-                    tracker.until = hour + 100;
-                }
-            }
-            if (tracker.until === hour)
-                tracker.until = 0;
-            const sunlightStartTime = 600;
-            const sunlightEndTime = 1800;
-            const sunlightChangeSpan = 200;
-            // turn on sunlight
-            if (tracker.time >= -sunlightChangeSpan / 2 + sunlightStartTime &&
-                tracker.time <= sunlightChangeSpan / 2 + sunlightStartTime)
-                tracker.sunlight = (tracker.time - (sunlightStartTime - sunlightChangeSpan / 2)) / sunlightChangeSpan;
-            // turn off sunlight
-            if (tracker.time >= -sunlightChangeSpan / 2 + sunlightEndTime &&
-                tracker.time <= sunlightChangeSpan / 2 + sunlightEndTime)
-                tracker.sunlight = Math.max(0.2, 1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan);
-            // lerp sunlight
-            const sunlightLerpFactor = 0.008 * speed * delta;
-            const { uSunlightIntensity } = this.rendering.engine.world;
-            uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
-            const { offset } = this.shadingMaterial.uniforms;
-            offset.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
-            // lerp sky colors
-            ['top', 'right', 'left', 'front', 'back'].forEach((face) => {
-                const mat = this.boxMaterials.get(face);
-                if (mat) {
-                    mat.opacity = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(mat.opacity, 1.2 - tracker.sunlight, sunlightLerpFactor);
-                }
-            });
-            const colorLerpFactor = 0.006 * speed * delta;
-            if (this.newTopColor) {
-                this.topColor.lerp(this.newTopColor, colorLerpFactor);
-            }
-            if (this.newBottomColor) {
-                this.bottomColor.lerp(this.newBottomColor, colorLerpFactor);
-                this.rendering.fogNearColor.lerp(this.newBottomColor, colorLerpFactor);
-                this.rendering.fogFarColor.lerp(this.newBottomColor, colorLerpFactor);
-            }
-            // reposition sky box to player position
-            const { threeCamera } = this.rendering.engine.camera;
-            this.meshGroup.position.x = threeCamera.position.x;
-            this.meshGroup.position.z = threeCamera.position.z;
-        };
         const { checkInterval } = (this.options = Object.assign(Object.assign({}, defaultSkyOptions), options));
         this.createSkyShading();
         this.createSkyBox();
@@ -6480,6 +6372,280 @@ class Sky {
         setInterval(async () => {
             this.newTime = await rendering.engine.network.fetchData('/time');
         }, checkInterval);
+    }
+    init() {
+        this.paint('sides', 'stars');
+        this.paint('top', 'stars');
+        this.paint('top', 'moon');
+        this.paint('bottom', 'sun');
+    }
+    createSkyShading() {
+        const { dimension, topColor, bottomColor, domeOffset } = this.options;
+        this.topColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor);
+        this.bottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(bottomColor);
+        const uniforms = {
+            topColor: { value: this.topColor },
+            bottomColor: { value: this.bottomColor },
+            offset: { value: domeOffset },
+            exponent: { value: 0.6 },
+        };
+        this.shadingGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.SphereGeometry(dimension);
+        this.shadingMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
+            uniforms,
+            vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
+            fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
+            depthWrite: false,
+            side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
+        });
+        this.shadingMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.shadingGeometry, this.shadingMaterial);
+        this.meshGroup.add(this.shadingMesh);
+    }
+    createSkyBox() {
+        const { dimension } = this.options;
+        this.boxGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.BoxBufferGeometry(dimension * 0.9, dimension * 0.9, dimension * 0.9);
+        for (const face of SKY_BOX_SIDES) {
+            const canvasMaterial = this.createCanvasMaterial();
+            this.boxMaterials.set(face, canvasMaterial);
+        }
+        this.boxMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
+        this.meshGroup.add(this.boxMesh);
+    }
+    createCanvasMaterial() {
+        const canvas = document.createElement('canvas');
+        canvas.height = 512;
+        canvas.width = 512;
+        const material = new three__WEBPACK_IMPORTED_MODULE_3__.MeshBasicMaterial({
+            side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
+            map: new three__WEBPACK_IMPORTED_MODULE_3__.Texture(canvas),
+            transparent: true,
+            depthWrite: false,
+            fog: false,
+        });
+        material.map.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+        material.map.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.LinearMipMapLinearFilter;
+        material.map.wrapS = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
+        material.map.wrapT = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
+        material.map.needsUpdate = true;
+        material.polygonOffset = true;
+        material.polygonOffsetFactor = -0.5;
+        return material;
+    }
+    setTopColor(color) {
+        this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
+    }
+    setBottomColor(color) {
+        this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
+    }
+    paint(side, art) {
+        const actualSides = Array.isArray(side)
+            ? side
+            : side === 'all'
+                ? SKY_BOX_SIDES
+                : side === 'sides'
+                    ? ['front', 'back', 'left', 'right']
+                    : [side];
+        for (const face of actualSides) {
+            const material = this.boxMaterials.get(face);
+            if (!material)
+                continue;
+            switch (art) {
+                case 'sun':
+                    this.drawSun(material);
+                    break;
+                case 'moon':
+                    this.drawMoon(material);
+                    break;
+                case 'stars':
+                    this.drawStars(material);
+                    break;
+                case 'clear':
+                    this.clear(material);
+                    break;
+            }
+            material.map.needsUpdate = true;
+        }
+    }
+    drawMoon(material, phase = 1) {
+        const canvas = material.map.image;
+        if (!canvas)
+            return;
+        const { moonRadius: radius, moonColor } = this.options;
+        const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(moonColor);
+        const context = canvas.getContext('2d');
+        const x = canvas.width / 2;
+        const y = canvas.height / 2;
+        // bg glow
+        context.beginPath();
+        const grd = context.createRadialGradient(x + radius / 2, y + radius / 2, 1, x + radius / 2, y + radius / 2, radius * 2);
+        grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
+        grd.addColorStop(1, this.rgba(1, 1, 1, 0));
+        context.arc(x + radius / 2, y + radius / 2, radius * 2, 0, 2 * Math.PI, false);
+        context.fillStyle = grd;
+        context.fill();
+        context.closePath();
+        // clipping region
+        context.save();
+        context.beginPath();
+        context.rect(x, y, radius, radius);
+        context.clip();
+        // moon bg
+        context.beginPath();
+        context.rect(x, y, radius, radius);
+        context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
+        context.fill();
+        context.translate(x, y);
+        // lighter inside
+        context.beginPath();
+        context.rect(4, 4, radius - 8, radius - 8);
+        context.fillStyle = this.rgba(1, 1, 1, 0.8);
+        context.fill();
+        // moon phase
+        const px = phase * radius * 2 - radius;
+        context.beginPath();
+        context.rect(px, 0, radius, radius);
+        context.fillStyle = this.rgba(0, 0, 0, 0.8);
+        context.fill();
+        context.beginPath();
+        context.rect(2 + px, 2, radius - 4, radius - 4);
+        context.fillStyle = this.rgba(0, 0, 0, 0.9);
+        context.fill();
+        context.restore();
+    }
+    drawStars(material) {
+        const canvas = material.map.image;
+        if (!canvas)
+            return;
+        const { starsCount } = this.options;
+        const context = canvas.getContext('2d');
+        const alpha = context.globalAlpha;
+        for (let i = 0; i < starsCount; i++) {
+            context.globalAlpha = Math.random() * 1 + 0.5;
+            context.beginPath();
+            context.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 0.5, 0, 2 * Math.PI, false);
+            context.fillStyle = STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)];
+            context.fill();
+        }
+        context.globalAlpha = alpha;
+    }
+    drawSun(material, radius = 50) {
+        const canvas = material.map.image;
+        if (!canvas)
+            return;
+        const { sunColor } = this.options;
+        const context = canvas.getContext('2d');
+        const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(sunColor);
+        context.save();
+        // bg glow
+        context.beginPath();
+        let x = canvas.width / 2;
+        let y = canvas.height / 2;
+        const grd = context.createRadialGradient(x, y, 1, x, y, radius * 2);
+        grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
+        grd.addColorStop(1, this.rgba(1, 1, 1, 0));
+        context.arc(x, y, radius * 2, 0, 2 * Math.PI, false);
+        context.fillStyle = grd;
+        context.fill();
+        context.closePath();
+        // outer sun
+        context.beginPath();
+        x = canvas.width / 2 - radius / 2;
+        y = canvas.height / 2 - radius / 2;
+        context.rect(x, y, radius, radius);
+        context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
+        context.fill();
+        context.closePath();
+        // inner sun
+        context.beginPath();
+        const r = radius / 1.6;
+        x = canvas.width / 2 - r / 2;
+        y = canvas.height / 2 - r / 2;
+        context.rect(x, y, r, r);
+        context.fillStyle = this.rgba(1, 1, 1, 0.5);
+        context.fill();
+        context.closePath();
+        context.restore();
+    }
+    clear(material) {
+        const canvas = material.map.image;
+        if (!canvas)
+            return;
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    rgba(r, g, b, a) {
+        return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`;
+    }
+    spin(rotation) {
+        this.boxMesh.rotation.z = rotation;
+    }
+    tick(delta = 0) {
+        const { tracker } = this;
+        if (!tracker.initialized) {
+            this.init();
+            tracker.initialized = true;
+        }
+        // add speed to time, and spin box meshes
+        const speed = this.rendering.engine.tickSpeed;
+        tracker.time += speed * delta;
+        // sync with server
+        if (this.newTime > 0) {
+            tracker.time = (tracker.time + this.newTime) / 2;
+            this.newTime = -1;
+        }
+        tracker.time = tracker.time % 2400;
+        this.spin(Math.PI * 2 * (tracker.time / 2400));
+        const hour = Math.round(tracker.time / 100) * 100;
+        tracker.last = tracker.time;
+        if (SKY_CONFIGS.hours[hour]) {
+            if (!tracker.until) {
+                const { color, offset } = SKY_CONFIGS.hours[hour];
+                this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
+                this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
+                this.newTopColor.copy(color.top);
+                this.newBottomColor.copy(color.bottom);
+                tracker.offset = offset;
+                tracker.until = hour + 100;
+            }
+        }
+        if (tracker.until === hour)
+            tracker.until = 0;
+        const sunlightStartTime = 600;
+        const sunlightEndTime = 1800;
+        const sunlightChangeSpan = 200;
+        // turn on sunlight
+        if (tracker.time >= -sunlightChangeSpan / 2 + sunlightStartTime &&
+            tracker.time <= sunlightChangeSpan / 2 + sunlightStartTime)
+            tracker.sunlight = (tracker.time - (sunlightStartTime - sunlightChangeSpan / 2)) / sunlightChangeSpan;
+        // turn off sunlight
+        if (tracker.time >= -sunlightChangeSpan / 2 + sunlightEndTime &&
+            tracker.time <= sunlightChangeSpan / 2 + sunlightEndTime)
+            tracker.sunlight = Math.max(0.2, 1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan);
+        // lerp sunlight
+        const sunlightLerpFactor = 0.008 * speed * delta;
+        const { uSunlightIntensity } = this.rendering.engine.world;
+        uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
+        const { offset } = this.shadingMaterial.uniforms;
+        offset.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
+        // lerp sky colors
+        ['top', 'right', 'left', 'front', 'back'].forEach((face) => {
+            const mat = this.boxMaterials.get(face);
+            if (mat) {
+                mat.opacity = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(mat.opacity, 1.2 - tracker.sunlight, sunlightLerpFactor);
+            }
+        });
+        const colorLerpFactor = 0.006 * speed * delta;
+        if (this.newTopColor) {
+            this.topColor.lerp(this.newTopColor, colorLerpFactor);
+        }
+        if (this.newBottomColor) {
+            this.bottomColor.lerp(this.newBottomColor, colorLerpFactor);
+            this.rendering.fogNearColor.lerp(this.newBottomColor, colorLerpFactor);
+            this.rendering.fogFarColor.lerp(this.newBottomColor, colorLerpFactor);
+        }
+        // reposition sky box to player position
+        const { threeCamera } = this.rendering.engine.camera;
+        this.meshGroup.position.x = threeCamera.position.x;
+        this.meshGroup.position.z = threeCamera.position.z;
     }
 }
 
@@ -79933,6 +80099,348 @@ $root.protocol = (function() {
         return Chunk;
     })();
 
+    protocol.Peer = (function() {
+
+        /**
+         * Properties of a Peer.
+         * @memberof protocol
+         * @interface IPeer
+         * @property {string|null} [id] Peer id
+         * @property {number|null} [px] Peer px
+         * @property {number|null} [py] Peer py
+         * @property {number|null} [pz] Peer pz
+         * @property {number|null} [qx] Peer qx
+         * @property {number|null} [qy] Peer qy
+         * @property {number|null} [qz] Peer qz
+         * @property {number|null} [qw] Peer qw
+         */
+
+        /**
+         * Constructs a new Peer.
+         * @memberof protocol
+         * @classdesc Represents a Peer.
+         * @implements IPeer
+         * @constructor
+         * @param {protocol.IPeer=} [properties] Properties to set
+         */
+        function Peer(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Peer id.
+         * @member {string} id
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.id = "";
+
+        /**
+         * Peer px.
+         * @member {number} px
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.px = 0;
+
+        /**
+         * Peer py.
+         * @member {number} py
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.py = 0;
+
+        /**
+         * Peer pz.
+         * @member {number} pz
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.pz = 0;
+
+        /**
+         * Peer qx.
+         * @member {number} qx
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.qx = 0;
+
+        /**
+         * Peer qy.
+         * @member {number} qy
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.qy = 0;
+
+        /**
+         * Peer qz.
+         * @member {number} qz
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.qz = 0;
+
+        /**
+         * Peer qw.
+         * @member {number} qw
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.qw = 0;
+
+        /**
+         * Creates a new Peer instance using the specified properties.
+         * @function create
+         * @memberof protocol.Peer
+         * @static
+         * @param {protocol.IPeer=} [properties] Properties to set
+         * @returns {protocol.Peer} Peer instance
+         */
+        Peer.create = function create(properties) {
+            return new Peer(properties);
+        };
+
+        /**
+         * Encodes the specified Peer message. Does not implicitly {@link protocol.Peer.verify|verify} messages.
+         * @function encode
+         * @memberof protocol.Peer
+         * @static
+         * @param {protocol.IPeer} message Peer message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Peer.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            if (message.px != null && Object.hasOwnProperty.call(message, "px"))
+                writer.uint32(/* id 2, wireType 5 =*/21).float(message.px);
+            if (message.py != null && Object.hasOwnProperty.call(message, "py"))
+                writer.uint32(/* id 3, wireType 5 =*/29).float(message.py);
+            if (message.pz != null && Object.hasOwnProperty.call(message, "pz"))
+                writer.uint32(/* id 4, wireType 5 =*/37).float(message.pz);
+            if (message.qx != null && Object.hasOwnProperty.call(message, "qx"))
+                writer.uint32(/* id 5, wireType 5 =*/45).float(message.qx);
+            if (message.qy != null && Object.hasOwnProperty.call(message, "qy"))
+                writer.uint32(/* id 6, wireType 5 =*/53).float(message.qy);
+            if (message.qz != null && Object.hasOwnProperty.call(message, "qz"))
+                writer.uint32(/* id 7, wireType 5 =*/61).float(message.qz);
+            if (message.qw != null && Object.hasOwnProperty.call(message, "qw"))
+                writer.uint32(/* id 8, wireType 5 =*/69).float(message.qw);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Peer message, length delimited. Does not implicitly {@link protocol.Peer.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protocol.Peer
+         * @static
+         * @param {protocol.IPeer} message Peer message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Peer.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Peer message from the specified reader or buffer.
+         * @function decode
+         * @memberof protocol.Peer
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protocol.Peer} Peer
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Peer.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protocol.Peer();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.id = reader.string();
+                    break;
+                case 2:
+                    message.px = reader.float();
+                    break;
+                case 3:
+                    message.py = reader.float();
+                    break;
+                case 4:
+                    message.pz = reader.float();
+                    break;
+                case 5:
+                    message.qx = reader.float();
+                    break;
+                case 6:
+                    message.qy = reader.float();
+                    break;
+                case 7:
+                    message.qz = reader.float();
+                    break;
+                case 8:
+                    message.qw = reader.float();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Peer message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protocol.Peer
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protocol.Peer} Peer
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Peer.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Peer message.
+         * @function verify
+         * @memberof protocol.Peer
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Peer.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isString(message.id))
+                    return "id: string expected";
+            if (message.px != null && message.hasOwnProperty("px"))
+                if (typeof message.px !== "number")
+                    return "px: number expected";
+            if (message.py != null && message.hasOwnProperty("py"))
+                if (typeof message.py !== "number")
+                    return "py: number expected";
+            if (message.pz != null && message.hasOwnProperty("pz"))
+                if (typeof message.pz !== "number")
+                    return "pz: number expected";
+            if (message.qx != null && message.hasOwnProperty("qx"))
+                if (typeof message.qx !== "number")
+                    return "qx: number expected";
+            if (message.qy != null && message.hasOwnProperty("qy"))
+                if (typeof message.qy !== "number")
+                    return "qy: number expected";
+            if (message.qz != null && message.hasOwnProperty("qz"))
+                if (typeof message.qz !== "number")
+                    return "qz: number expected";
+            if (message.qw != null && message.hasOwnProperty("qw"))
+                if (typeof message.qw !== "number")
+                    return "qw: number expected";
+            return null;
+        };
+
+        /**
+         * Creates a Peer message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protocol.Peer
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protocol.Peer} Peer
+         */
+        Peer.fromObject = function fromObject(object) {
+            if (object instanceof $root.protocol.Peer)
+                return object;
+            var message = new $root.protocol.Peer();
+            if (object.id != null)
+                message.id = String(object.id);
+            if (object.px != null)
+                message.px = Number(object.px);
+            if (object.py != null)
+                message.py = Number(object.py);
+            if (object.pz != null)
+                message.pz = Number(object.pz);
+            if (object.qx != null)
+                message.qx = Number(object.qx);
+            if (object.qy != null)
+                message.qy = Number(object.qy);
+            if (object.qz != null)
+                message.qz = Number(object.qz);
+            if (object.qw != null)
+                message.qw = Number(object.qw);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Peer message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protocol.Peer
+         * @static
+         * @param {protocol.Peer} message Peer
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Peer.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.id = "";
+                object.px = 0;
+                object.py = 0;
+                object.pz = 0;
+                object.qx = 0;
+                object.qy = 0;
+                object.qz = 0;
+                object.qw = 0;
+            }
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            if (message.px != null && message.hasOwnProperty("px"))
+                object.px = options.json && !isFinite(message.px) ? String(message.px) : message.px;
+            if (message.py != null && message.hasOwnProperty("py"))
+                object.py = options.json && !isFinite(message.py) ? String(message.py) : message.py;
+            if (message.pz != null && message.hasOwnProperty("pz"))
+                object.pz = options.json && !isFinite(message.pz) ? String(message.pz) : message.pz;
+            if (message.qx != null && message.hasOwnProperty("qx"))
+                object.qx = options.json && !isFinite(message.qx) ? String(message.qx) : message.qx;
+            if (message.qy != null && message.hasOwnProperty("qy"))
+                object.qy = options.json && !isFinite(message.qy) ? String(message.qy) : message.qy;
+            if (message.qz != null && message.hasOwnProperty("qz"))
+                object.qz = options.json && !isFinite(message.qz) ? String(message.qz) : message.qz;
+            if (message.qw != null && message.hasOwnProperty("qw"))
+                object.qw = options.json && !isFinite(message.qw) ? String(message.qw) : message.qw;
+            return object;
+        };
+
+        /**
+         * Converts this Peer to JSON.
+         * @function toJSON
+         * @memberof protocol.Peer
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Peer.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Peer;
+    })();
+
     protocol.Message = (function() {
 
         /**
@@ -79942,6 +80450,7 @@ $root.protocol = (function() {
          * @property {protocol.Message.Type|null} [type] Message type
          * @property {string|null} [json] Message json
          * @property {string|null} [text] Message text
+         * @property {protocol.IPeer|null} [peer] Message peer
          * @property {Array.<protocol.IChunk>|null} [chunks] Message chunks
          */
 
@@ -79986,6 +80495,14 @@ $root.protocol = (function() {
         Message.prototype.text = "";
 
         /**
+         * Message peer.
+         * @member {protocol.IPeer|null|undefined} peer
+         * @memberof protocol.Message
+         * @instance
+         */
+        Message.prototype.peer = null;
+
+        /**
          * Message chunks.
          * @member {Array.<protocol.IChunk>} chunks
          * @memberof protocol.Message
@@ -80023,9 +80540,11 @@ $root.protocol = (function() {
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.json);
             if (message.text != null && Object.hasOwnProperty.call(message, "text"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.text);
+            if (message.peer != null && Object.hasOwnProperty.call(message, "peer"))
+                $root.protocol.Peer.encode(message.peer, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.chunks != null && message.chunks.length)
                 for (var i = 0; i < message.chunks.length; ++i)
-                    $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                    $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             return writer;
         };
 
@@ -80070,6 +80589,9 @@ $root.protocol = (function() {
                     message.text = reader.string();
                     break;
                 case 4:
+                    message.peer = $root.protocol.Peer.decode(reader, reader.uint32());
+                    break;
+                case 5:
                     if (!(message.chunks && message.chunks.length))
                         message.chunks = [];
                     message.chunks.push($root.protocol.Chunk.decode(reader, reader.uint32()));
@@ -80123,6 +80645,8 @@ $root.protocol = (function() {
                 case 8:
                 case 9:
                 case 10:
+                case 11:
+                case 12:
                     break;
                 }
             if (message.json != null && message.hasOwnProperty("json"))
@@ -80131,6 +80655,11 @@ $root.protocol = (function() {
             if (message.text != null && message.hasOwnProperty("text"))
                 if (!$util.isString(message.text))
                     return "text: string expected";
+            if (message.peer != null && message.hasOwnProperty("peer")) {
+                var error = $root.protocol.Peer.verify(message.peer);
+                if (error)
+                    return "peer." + error;
+            }
             if (message.chunks != null && message.hasOwnProperty("chunks")) {
                 if (!Array.isArray(message.chunks))
                     return "chunks: array expected";
@@ -80196,11 +80725,24 @@ $root.protocol = (function() {
             case 10:
                 message.type = 10;
                 break;
+            case "PEER":
+            case 11:
+                message.type = 11;
+                break;
+            case "ENTITY":
+            case 12:
+                message.type = 12;
+                break;
             }
             if (object.json != null)
                 message.json = String(object.json);
             if (object.text != null)
                 message.text = String(object.text);
+            if (object.peer != null) {
+                if (typeof object.peer !== "object")
+                    throw TypeError(".protocol.Message.peer: object expected");
+                message.peer = $root.protocol.Peer.fromObject(object.peer);
+            }
             if (object.chunks) {
                 if (!Array.isArray(object.chunks))
                     throw TypeError(".protocol.Message.chunks: array expected");
@@ -80233,6 +80775,7 @@ $root.protocol = (function() {
                 object.type = options.enums === String ? "ERROR" : 1;
                 object.json = "";
                 object.text = "";
+                object.peer = null;
             }
             if (message.type != null && message.hasOwnProperty("type"))
                 object.type = options.enums === String ? $root.protocol.Message.Type[message.type] : message.type;
@@ -80240,6 +80783,8 @@ $root.protocol = (function() {
                 object.json = message.json;
             if (message.text != null && message.hasOwnProperty("text"))
                 object.text = message.text;
+            if (message.peer != null && message.hasOwnProperty("peer"))
+                object.peer = $root.protocol.Peer.toObject(message.peer, options);
             if (message.chunks && message.chunks.length) {
                 object.chunks = [];
                 for (var j = 0; j < message.chunks.length; ++j)
@@ -80273,6 +80818,8 @@ $root.protocol = (function() {
          * @property {number} UPDATE=8 UPDATE value
          * @property {number} REQUEST=9 REQUEST value
          * @property {number} CONFIG=10 CONFIG value
+         * @property {number} PEER=11 PEER value
+         * @property {number} ENTITY=12 ENTITY value
          */
         Message.Type = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -80286,6 +80833,8 @@ $root.protocol = (function() {
             values[valuesById[8] = "UPDATE"] = 8;
             values[valuesById[9] = "REQUEST"] = 9;
             values[valuesById[10] = "CONFIG"] = 10;
+            values[valuesById[11] = "PEER"] = 11;
+            values[valuesById[12] = "ENTITY"] = 12;
             return values;
         })();
 

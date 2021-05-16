@@ -42,7 +42,7 @@ class World extends Network {
   public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
 
   public time = 0;
-  public tickSpeed = 0.08;
+  public tickSpeed = 2;
 
   constructor(public app: FastifyInstance, public options: WorldOptionsType) {
     super(options);
@@ -228,6 +228,83 @@ class World extends Network {
     return chunk.setVoxel(voxel, type);
   };
 
+  onConfig = (request) => {
+    const { time, tickSpeed } = request.json;
+
+    if (Helper.isNumber(time)) this.time = time;
+    if (Helper.isNumber(tickSpeed)) this.tickSpeed = tickSpeed;
+
+    this.broadcast({
+      type: 'CONFIG',
+      json: request.json,
+    });
+  };
+
+  onUpdate = (request) => {
+    const { maxHeight } = this.options;
+    const { x, y, z, type: typeStr } = request.json || {};
+
+    const vx = parseInt(x, 10);
+    const vy = parseInt(y, 10);
+    const vz = parseInt(z, 10);
+    const type = parseInt(typeStr, 10);
+    const voxel = <Coords3>[vx, vy, vz];
+
+    // fool proof
+    if (
+      Number.isNaN(x) ||
+      Number.isNaN(y) ||
+      Number.isNaN(z) ||
+      Number.isNaN(type) ||
+      y < 0 ||
+      y >= maxHeight ||
+      !Mine.registry.getBlockByID(type).name
+    ) {
+      return;
+    }
+
+    const chunk = this.getChunkByVoxel(voxel);
+    if (chunk.needsPropagation) return;
+
+    const currentType = this.getVoxelByVoxel(voxel);
+    if (
+      (Mine.registry.isAir(currentType) && Mine.registry.isAir(type)) ||
+      (!Mine.registry.isAir(currentType) && !Mine.registry.isAir(type))
+    ) {
+      return;
+    }
+
+    this.startCaching();
+    chunk.update(voxel, type);
+    this.stopCaching();
+
+    this.chunkCache.forEach((chunk) => {
+      chunk.remesh();
+      this.broadcast({
+        type: 'UPDATE',
+        chunks: [chunk.getProtocol(false)],
+        json: {
+          voxel,
+          type,
+        },
+      });
+    });
+
+    this.clearCache();
+  };
+
+  onPeer = (client: ClientType, request) => {
+    this.broadcast(
+      {
+        type: 'PEER',
+        peer: request.peer,
+      },
+      {
+        exclude: [client.id],
+      },
+    );
+  };
+
   onRequest = (client: ClientType, request) => {
     switch (request.type) {
       case 'REQUEST': {
@@ -236,67 +313,15 @@ class World extends Network {
         break;
       }
       case 'CONFIG': {
-        const { time, tickSpeed } = request.json;
-        if (Helper.isNumber(time)) this.time = time;
-        if (Helper.isNumber(tickSpeed)) this.tickSpeed = tickSpeed;
-        this.broadcast({
-          type: 'CONFIG',
-          json: request.json,
-        });
+        this.onConfig(request);
         break;
       }
       case 'UPDATE': {
-        const { maxHeight } = this.options;
-        const { x, y, z, type: typeStr } = request.json || {};
-
-        const vx = parseInt(x, 10);
-        const vy = parseInt(y, 10);
-        const vz = parseInt(z, 10);
-        const type = parseInt(typeStr, 10);
-        const voxel = <Coords3>[vx, vy, vz];
-
-        // fool proof
-        if (
-          Number.isNaN(x) ||
-          Number.isNaN(y) ||
-          Number.isNaN(z) ||
-          Number.isNaN(type) ||
-          y < 0 ||
-          y >= maxHeight ||
-          !Mine.registry.getBlockByID(type).name
-        ) {
-          return;
-        }
-
-        const chunk = this.getChunkByVoxel(voxel);
-        if (chunk.needsPropagation) return;
-
-        const currentType = this.getVoxelByVoxel(voxel);
-        if (
-          (Mine.registry.isAir(currentType) && Mine.registry.isAir(type)) ||
-          (!Mine.registry.isAir(currentType) && !Mine.registry.isAir(type))
-        ) {
-          return;
-        }
-
-        this.startCaching();
-        chunk.update(voxel, type);
-        this.stopCaching();
-
-        this.chunkCache.forEach((chunk) => {
-          chunk.remesh();
-          this.broadcast({
-            type: 'UPDATE',
-            chunks: [chunk.getProtocol(false)],
-            json: {
-              voxel,
-              type,
-            },
-          });
-        });
-
-        this.clearCache();
-
+        this.onUpdate(request);
+        break;
+      }
+      case 'PEER': {
+        this.onPeer(client, request);
         break;
       }
       default:
@@ -318,6 +343,7 @@ class World extends Network {
       Network.encode({
         type: 'INIT',
         json: {
+          id: client.id,
           time: this.time,
           tickSpeed: this.tickSpeed,
           spawn: [0, this.getMaxHeight([0, 0]), 0],

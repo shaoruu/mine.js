@@ -39,10 +39,16 @@ class Network {
     server.sendEvent = (event) => {
       server.send(Network.encode(event));
     };
-    server.onopen = () => (this.connected = true);
-    server.onerror = (e) => console.error(e);
+    server.onopen = () => {
+      this.engine.emit('connected');
+      this.connected = true;
+    };
+    server.onerror = () => {};
     server.onmessage = this.onMessage;
-    server.onclose = () => (this.connected = false);
+    server.onclose = () => {
+      this.engine.emit('disconnected');
+      this.connected = false;
+    };
     server.serverURL = url;
 
     this.server = server;
@@ -52,18 +58,20 @@ class Network {
     const { type } = event;
 
     const { engine } = this;
-    const { world, player } = engine;
+    const { world, player, peers } = engine;
 
     switch (type) {
       case 'INIT': {
         const {
-          json: { time, tickSpeed, spawn },
+          json: { id, time, tickSpeed, spawn },
         } = event;
+        player.id = id;
         world.setTime(time, false);
         engine.setTick(tickSpeed, false);
         player.teleport(spawn);
         break;
       }
+
       case 'CONFIG': {
         const {
           json: { time, tickSpeed },
@@ -72,17 +80,39 @@ class Network {
         if (SharedHelper.isNumber(tickSpeed)) engine.setTick(tickSpeed, false);
         break;
       }
+
       case 'UPDATE': {
         const {
           json: { voxel, type },
         } = event;
         world.setVoxel(voxel, type, false);
+        // purposely did not break, so i can load afterwards
       }
+
       case 'LOAD': {
         const { chunks } = event;
         for (const chunkData of chunks) {
           world.handleServerChunk(chunkData, type === 'UPDATE');
         }
+        break;
+      }
+
+      case 'JOIN': {
+        const { text: id } = event;
+        peers.join(id);
+        break;
+      }
+
+      case 'LEAVE': {
+        const { text: id } = event;
+        peers.leave(id);
+        break;
+      }
+
+      case 'PEER': {
+        const { peer } = event;
+        const { id, px, py, pz, qx, qy, qz, qw } = peer;
+        peers.update(id, { position: [px, py, pz], rotation: [qx, qy, qz, qw] });
         break;
       }
     }

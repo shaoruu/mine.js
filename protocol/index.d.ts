@@ -332,6 +332,138 @@ export namespace protocol {
         public toJSON(): { [k: string]: any };
     }
 
+    /** Properties of a Peer. */
+    interface IPeer {
+
+        /** Peer id */
+        id?: (string|null);
+
+        /** Peer px */
+        px?: (number|null);
+
+        /** Peer py */
+        py?: (number|null);
+
+        /** Peer pz */
+        pz?: (number|null);
+
+        /** Peer qx */
+        qx?: (number|null);
+
+        /** Peer qy */
+        qy?: (number|null);
+
+        /** Peer qz */
+        qz?: (number|null);
+
+        /** Peer qw */
+        qw?: (number|null);
+    }
+
+    /** Represents a Peer. */
+    class Peer implements IPeer {
+
+        /**
+         * Constructs a new Peer.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protocol.IPeer);
+
+        /** Peer id. */
+        public id: string;
+
+        /** Peer px. */
+        public px: number;
+
+        /** Peer py. */
+        public py: number;
+
+        /** Peer pz. */
+        public pz: number;
+
+        /** Peer qx. */
+        public qx: number;
+
+        /** Peer qy. */
+        public qy: number;
+
+        /** Peer qz. */
+        public qz: number;
+
+        /** Peer qw. */
+        public qw: number;
+
+        /**
+         * Creates a new Peer instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Peer instance
+         */
+        public static create(properties?: protocol.IPeer): protocol.Peer;
+
+        /**
+         * Encodes the specified Peer message. Does not implicitly {@link protocol.Peer.verify|verify} messages.
+         * @param message Peer message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protocol.IPeer, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Peer message, length delimited. Does not implicitly {@link protocol.Peer.verify|verify} messages.
+         * @param message Peer message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protocol.IPeer, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Peer message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Peer
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protocol.Peer;
+
+        /**
+         * Decodes a Peer message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Peer
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protocol.Peer;
+
+        /**
+         * Verifies a Peer message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Peer message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Peer
+         */
+        public static fromObject(object: { [k: string]: any }): protocol.Peer;
+
+        /**
+         * Creates a plain object from a Peer message. Also converts values to other types if specified.
+         * @param message Peer
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protocol.Peer, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Peer to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
     /** Properties of a Message. */
     interface IMessage {
 
@@ -343,6 +475,9 @@ export namespace protocol {
 
         /** Message text */
         text?: (string|null);
+
+        /** Message peer */
+        peer?: (protocol.IPeer|null);
 
         /** Message chunks */
         chunks?: (protocol.IChunk[]|null);
@@ -365,6 +500,9 @@ export namespace protocol {
 
         /** Message text. */
         public text: string;
+
+        /** Message peer. */
+        public peer?: (protocol.IPeer|null);
 
         /** Message chunks. */
         public chunks: protocol.IChunk[];
@@ -453,7 +591,9 @@ export namespace protocol {
             TELEPORT = 7,
             UPDATE = 8,
             REQUEST = 9,
-            CONFIG = 10
+            CONFIG = 10,
+            PEER = 11,
+            ENTITY = 12
         }
     }
 }

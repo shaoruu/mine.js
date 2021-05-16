@@ -2,13 +2,13 @@ syntax = "proto3";
 package protocol;
 
 message Geometry {
-  repeated int32 torchLights = 1;
-  repeated int32 sunlights = 2;
-  repeated int32 indices = 3;
-  repeated float positions = 4;
-  repeated int32 normals = 5;
-  repeated float uvs = 6;
-  repeated float aos = 7;
+  repeated int32 torchLights = 1 [packed=true];
+  repeated int32 sunlights = 2 [packed=true];
+  repeated int32 indices = 3 [packed=true];
+  repeated float positions = 4 [packed=true];
+  repeated int32 normals = 5 [packed=true];
+  repeated float uvs = 6 [packed=true];
+  repeated float aos = 7 [packed=true];
 }
 
 message Mesh {
@@ -23,6 +23,17 @@ message Chunk {
   repeated int32 voxels = 4;
 }
 
+message Peer {
+  string id = 1;
+  float px = 2;
+  float py = 3;
+  float pz = 4;
+  float qx = 5;
+  float qy = 6;
+  float qz = 7;
+  float qw = 8;
+}
+
 message Message {
   enum Type {
     ERROR = 1;
@@ -35,11 +46,15 @@ message Message {
     UPDATE = 8;
     REQUEST = 9;
     CONFIG = 10;
+    PEER = 11;
+    ENTITY = 12;
   }
 
   Type type = 1;
   string json = 2;
   string text = 3;
 
-  repeated Chunk chunks = 4;
+  Peer peer = 4;
+
+  repeated Chunk chunks = 5;
 }
