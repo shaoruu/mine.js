@@ -1,0 +1,45 @@
+syntax = "proto3";
+package protocol;
+
+message Geometry {
+  repeated int32 torchLights = 1;
+  repeated int32 sunlights = 2;
+  repeated int32 indices = 3;
+  repeated float positions = 4;
+  repeated int32 normals = 5;
+  repeated float uvs = 6;
+  repeated float aos = 7;
+}
+
+message Mesh {
+  Geometry opaque = 1;
+  Geometry transparent = 2;
+}
+
+message Chunk {
+  int32 x = 1;
+  int32 z = 2;
+  repeated Mesh meshes = 3;
+  repeated int32 voxels = 4;
+}
+
+message Message {
+  enum Type {
+    ERROR = 1;
+    INIT = 2;
+    JOIN = 3;
+    LEAVE = 4;
+    LOAD = 5;
+    PICK = 6;
+    TELEPORT = 7;
+    UPDATE = 8;
+    REQUEST = 9;
+    CONFIG = 10;
+  }
+
+  Type type = 1;
+  string json = 2;
+  string text = 3;
+
+  repeated Chunk chunks = 4;
+}
