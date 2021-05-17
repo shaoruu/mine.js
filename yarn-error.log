@@ -1,5 +1,5 @@
 Arguments: 
-  /usr/local/bin/node /usr/share/yarn/bin/yarn.js add @types/three-nebula
+  /usr/local/bin/node /usr/share/yarn/bin/yarn.js add -D @types/threads
 
 PATH: 
   /home/owner/anaconda3/bin:/home/owner/anaconda3/condabin:/home/owner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/owner/.yarn/bin
@@ -14,7 +14,7 @@ Platform:
   linux x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2fthree-nebula: Not found
+  Error: https://registry.yarnpkg.com/@types%2fthreads: Not found
       at Request.params.callback [as _callback] (/usr/share/yarn/lib/cli.js:66988:18)
       at Request.self.callback (/usr/share/yarn/lib/cli.js:140749:22)
       at Request.emit (node:events:369:20)
@@ -82,6 +82,7 @@ npm manifest:
       "svelte-loader": "^3.0.0",
       "svelte-preprocess": "^4.3.0",
       "thread-loader": "^3.0.3",
+      "threads": "^1.6.4",
       "tmp": "^0.2.1",
       "ts-loader": "^8.0.4",
       "ts-node": "^9.1.1",
@@ -130,7 +131,6 @@ npm manifest:
       "raw-loader": "^4.0.2",
       "stats.js": "^0.17.0",
       "three": "^0.127.0",
-      "three-nebula": "^10.0.1",
       "typedarray-pool": "^1.2.0",
       "voxel-aabb-sweep": "^0.5.0"
     }
@@ -1498,7 +1498,7 @@ Lockfile:
       function-bind "^1.1.1"
       get-intrinsic "^1.0.2"
   
-  callsites@^3.0.0:
+  callsites@^3.0.0, callsites@^3.1.0:
     version "3.1.0"
     resolved "https://registry.npmjs.org/callsites/-/callsites-3.1.0.tgz"
     integrity sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==
@@ -2043,7 +2043,7 @@ Lockfile:
     dependencies:
       ms "2.0.0"
   
-  debug@4, debug@4.3.1, debug@^4.0.0, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1:
+  debug@4, debug@4.3.1, debug@^4.0.0, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.2.0:
     version "4.3.1"
     resolved "https://registry.npmjs.org/debug/-/debug-4.3.1.tgz"
     integrity sha512-doEwdvm4PCeK4K3RQN2ZC2BYUBaxwLARCqZmMjtF8a51J2Rb0xpVloFRnCODwqjpwnAoao4pelN8l3RJdv3gRQ==
@@ -2706,6 +2706,11 @@ Lockfile:
       table "^6.0.4"
       text-table "^0.2.0"
       v8-compile-cache "^2.0.3"
+  
+  esm@^3.2.25:
+    version "3.2.25"
+    resolved "https://registry.yarnpkg.com/esm/-/esm-3.2.25.tgz#342c18c29d56157688ba5ce31f8431fbb795cc10"
+    integrity sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==
   
   espree@^7.3.0, espree@^7.3.1:
     version "7.3.1"
@@ -4227,6 +4232,11 @@ Lockfile:
     resolved "https://registry.npmjs.org/is-obj/-/is-obj-2.0.0.tgz"
     integrity sha512-drqDG3cbczxxEJRoOXcOjtdp1J/lyp1mNn0xaznRs8+muBhgQcrnbspox5X5fOw0HnMnbfDzvnEMEtqDEJEo8w==
   
+  is-observable@^2.1.0:
+    version "2.1.0"
+    resolved "https://registry.yarnpkg.com/is-observable/-/is-observable-2.1.0.tgz#5c8d733a0b201c80dff7bb7c0df58c6a255c7c69"
+    integrity sha512-DailKdLb0WU+xX8K5w7VsJhapwHLZ9jjmazqCJq4X12CTgqq73TKnbRcnSLuXYPOoLQgV5IrD7ePiX/h1vnkBw==
+  
   is-path-cwd@^2.0.0:
     version "2.2.0"
     resolved "https://registry.npmjs.org/is-path-cwd/-/is-path-cwd-2.2.0.tgz"
@@ -4734,7 +4744,7 @@ Lockfile:
     resolved "https://registry.npmjs.org/lodash.truncate/-/lodash.truncate-4.4.2.tgz"
     integrity sha1-WjUNoLERO4N+z//VgSy+WNbq4ZM=
   
-  lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.21:
+  lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.21:
     version "4.17.21"
     resolved "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
     integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -5450,6 +5460,11 @@ Lockfile:
       es-abstract "^1.18.0-next.2"
       has "^1.0.3"
   
+  observable-fns@^0.5.1:
+    version "0.5.1"
+    resolved "https://registry.yarnpkg.com/observable-fns/-/observable-fns-0.5.1.tgz#9b56478690dd0fa8603e3a7e7d2975d88bca0904"
+    integrity sha512-wf7g4Jpo1Wt2KIqZKLGeiuLOEMqpaOZ5gJn7DmSdqXgTdxRwSdBhWegQQpPteQ2gZvzCKqNNpwb853wcpA0j7A==
+  
   obuf@^1.0.0, obuf@^1.1.2:
     version "1.1.2"
     resolved "https://registry.npmjs.org/obuf/-/obuf-1.1.2.tgz"
@@ -5958,11 +5973,6 @@ Lockfile:
     version "6.21.4"
     resolved "https://registry.yarnpkg.com/postprocessing/-/postprocessing-6.21.4.tgz#7ec90a90998d4b3a5fd0e9c107a338d1bfa3555f"
     integrity sha512-3/qtKbWBe0zswrXak0eInivnSJJyrJTM97XHuSHwBLr3Xmu+nCE9z3+7wfDQtMw9jzYmZtjIrliMhDmjDkf7DQ==
-  
-  potpack@^1.0.1:
-    version "1.0.1"
-    resolved "https://registry.yarnpkg.com/potpack/-/potpack-1.0.1.tgz#d1b1afd89e4c8f7762865ec30bd112ab767e2ebf"
-    integrity sha512-15vItUAbViaYrmaB/Pbw7z6qX2xENbFSTA7Ii4tgbPtasxm5v6ryKhKtL91tpWovDJzTiZqdwzhcFBCwiMVdVw==
   
   prelude-ls@^1.2.1:
     version "1.2.1"
@@ -7461,14 +7471,17 @@ Lockfile:
       neo-async "^2.6.2"
       schema-utils "^3.0.0"
   
-  three-nebula@^10.0.1:
-    version "10.0.1"
-    resolved "https://registry.yarnpkg.com/three-nebula/-/three-nebula-10.0.1.tgz#b637a63fe7ae9de06ea45ae2d111c979feff519e"
-    integrity sha512-nYqDjbCaby2vLcdgsc8drFWDIdna0O4xYNGDtrAs04O7A/bjcY2dZQEEZdaVFPss6XxK6e9VSlwgM0iTHMbsIg==
+  threads@^1.6.4:
+    version "1.6.4"
+    resolved "https://registry.yarnpkg.com/threads/-/threads-1.6.4.tgz#cf8ad992d6014b492f20cf3566048475a3045192"
+    integrity sha512-A+9MQFAUha9W8MjIPmrvETy98qVmZFr5Unox9D95y7kvz3fBpGiFS7JOZs07B2KvTHoRNI5MrGudRVeCmv4Alw==
     dependencies:
-      lodash "^4.17.19"
-      potpack "^1.0.1"
-      uuid "^3.3.2"
+      callsites "^3.1.0"
+      debug "^4.2.0"
+      is-observable "^2.1.0"
+      observable-fns "^0.5.1"
+    optionalDependencies:
+      tiny-worker ">= 2"
   
   three@^0.127.0:
     version "0.127.0"
@@ -7505,6 +7518,13 @@ Lockfile:
     version "7.0.6"
     resolved "https://registry.yarnpkg.com/tiny-lru/-/tiny-lru-7.0.6.tgz#b0c3cdede1e5882aa2d1ae21cb2ceccf2a331f24"
     integrity sha512-zNYO0Kvgn5rXzWpL0y3RS09sMK67eGaQj9805jlK9G6pSadfriTczzLHFXa/xcW4mIRfmlB9HyQ/+SgL0V1uow==
+  
+  "tiny-worker@>= 2":
+    version "2.3.0"
+    resolved "https://registry.yarnpkg.com/tiny-worker/-/tiny-worker-2.3.0.tgz#715ae34304c757a9af573ae9a8e3967177e6011e"
+    integrity sha512-pJ70wq5EAqTAEl9IkGzA+fN0836rycEuz2Cn6yeZ6FRzlVS5IDOkFHpIoEsksPRQV34GDqXm65+OlnZqUSyK2g==
+    dependencies:
+      esm "^3.2.25"
   
   tmp@^0.2.1:
     version "0.2.1"

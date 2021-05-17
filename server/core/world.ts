@@ -5,8 +5,9 @@ import chalk from 'chalk';
 import { FastifyInstance } from 'fastify';
 
 import { Coords2, Coords3, Helper } from '../../shared';
+import { GeneratorTypes } from '../libs';
 
-import { ClientType, Network, NetworkOptionsType, Chunk, GeneratorTypes, Mine } from '.';
+import { ClientType, Network, NetworkOptionsType, Chunk, Mine } from '.';
 
 const chunkNeighbors = [
   { x: -1, z: -1 },

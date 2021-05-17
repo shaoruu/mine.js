@@ -25,3 +25,5 @@ export type BlockType = {
   textures?: TextureType;
   scale: number[];
 };
+
+export type GeneratorTypes = 'sin-cos' | 'flat' | 'hilly';

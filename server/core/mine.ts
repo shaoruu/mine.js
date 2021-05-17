@@ -2,7 +2,9 @@ import path from 'path';
 
 import { FastifyInstance } from 'fastify';
 
-import { GeneratorTypes, World, WorldOptionsType, Registry } from '.';
+import { GeneratorTypes } from '../libs';
+
+import { World, WorldOptionsType, Registry } from '.';
 
 const defaultWorldOptions = {
   name: 'testbed',

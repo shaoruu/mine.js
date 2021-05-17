@@ -486,7 +486,7 @@ class Sky {
 
     const cloudColor = this.rendering.engine.world.clouds.material.uniforms.uCloudColor.value;
     const cloudColorHSL = cloudColor.getHSL({});
-    cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, uSunlightIntensity.value);
+    cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, MathUtils.clamp(uSunlightIntensity.value, 0, 1));
 
     const { offset } = this.shadingMaterial.uniforms;
     offset.value = MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);

@@ -175,12 +175,12 @@ class Chunk {
     this.needsSaving = false;
   };
 
-  generate = () => {
+  generate = async () => {
     // generate terrain, height map, and mesh
     this.needsPropagation = true;
     this.needsSaving = true;
     const { generation } = this.world.options;
-    Generator.generate(this, generation);
+    await Generator.generate(this, generation);
     // TODO: lighting
     this.generateHeightMap();
     this.save();

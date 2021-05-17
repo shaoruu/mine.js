@@ -5175,9 +5175,10 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     setTime(time, sideEffect = true) {
         this.sky.tracker.time = time % 2400;
         // full cycle to sync up the colors
-        for (let i = 0; i < 2400; i++) {
-            this.sky.tick(1 / this.engine.tickSpeed);
-        }
+        if (this.engine.tickSpeed !== 0)
+            for (let i = 0; i < 2400; i++) {
+                this.sky.tick(1 / this.engine.tickSpeed);
+            }
         if (sideEffect) {
             this.engine.network.server.sendEvent({
                 type: 'CONFIG',
@@ -6632,7 +6633,7 @@ class Sky {
         uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
         const cloudColor = this.rendering.engine.world.clouds.material.uniforms.uCloudColor.value;
         const cloudColorHSL = cloudColor.getHSL({});
-        cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, uSunlightIntensity.value);
+        cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.clamp(uSunlightIntensity.value, 0, 1));
         const { offset } = this.shadingMaterial.uniforms;
         offset.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
         // lerp sky colors
@@ -6984,6 +6985,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "WORLD_LIST": () => (/* binding */ WORLD_LIST)
 /* harmony export */ });
 const WORLD_LIST = {
+    idk: {
+        generation: 'hilly',
+        description: 'idek bro',
+    },
     testbed: {
         generation: 'flat',
         description: 'A testbed, go crazy',

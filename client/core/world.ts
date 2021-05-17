@@ -203,9 +203,10 @@ class World extends EventEmitter {
     this.sky.tracker.time = time % 2400;
 
     // full cycle to sync up the colors
-    for (let i = 0; i < 2400; i++) {
-      this.sky.tick(1 / this.engine.tickSpeed);
-    }
+    if (this.engine.tickSpeed !== 0)
+      for (let i = 0; i < 2400; i++) {
+        this.sky.tick(1 / this.engine.tickSpeed);
+      }
 
     if (sideEffect) {
       this.engine.network.server.sendEvent({

@@ -24,7 +24,7 @@
     "@typescript-eslint/parser": "^4.22.0",
     "browser-sync": "^2.26.14",
     "cache-loader": "^4.1.0",
-    "canvas": "^2.7.0",
+    "canvas": "^2.8.0",
     "chalk": "^4.1.0",
     "cross-env": "^7.0.3",
     "css-loader": "^5.0.1",
@@ -53,6 +53,7 @@
     "svelte-loader": "^3.0.0",
     "svelte-preprocess": "^4.3.0",
     "thread-loader": "^3.0.3",
+    "threads": "^1.6.4",
     "tmp": "^0.2.1",
     "ts-loader": "^8.0.4",
     "ts-node": "^9.1.1",
@@ -79,7 +80,7 @@
     "all": "cross-env WORLDS=* nodemon",
     "mine": "cross-env WORLDS=mine nodemon",
     "testbed": "cross-env WORLDS=testbed nodemon",
-    "start": "cross-env NODE_ENV=production WORLDS=testbed nodemon",
+    "start": "cross-env NODE_ENV=production WORLDS=testbed,idk nodemon",
     "validate": "svelte-check"
   },
   "dependencies": {
