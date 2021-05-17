@@ -6630,6 +6630,9 @@ class Sky {
         const sunlightLerpFactor = 0.008 * speed * delta;
         const { uSunlightIntensity } = this.rendering.engine.world;
         uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
+        const cloudColor = this.rendering.engine.world.clouds.material.uniforms.uCloudColor.value;
+        const cloudColorHSL = cloudColor.getHSL({});
+        cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, uSunlightIntensity.value);
         const { offset } = this.shadingMaterial.uniforms;
         offset.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
         // lerp sky colors
