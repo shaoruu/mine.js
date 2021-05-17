@@ -52,7 +52,32 @@ class World extends Network {
     this.preloadChunks();
 
     let prevTime = Date.now();
+
     setInterval(async () => {
+      // broadcast player locations
+      this.clients.forEach((client) => {
+        const encoded = Network.encode({
+          type: 'PEER',
+          peers: this.clients
+            .filter((c) => c !== client && c.position && c.rotation)
+            .map(({ position, rotation, id }) => {
+              const [px, py, pz] = position;
+              const [qx, qy, qz, qw] = rotation;
+              return {
+                id,
+                px,
+                py,
+                pz,
+                qx,
+                qy,
+                qz,
+                qw,
+              };
+            }),
+        });
+        client.send(encoded);
+      });
+
       // mesh chunks per frame
       const spliced = this.requestedChunks.splice(0, 2);
       spliced.forEach(({ coords, client }) => {
@@ -293,16 +318,13 @@ class World extends Network {
     this.clearCache();
   };
 
-  onPeer = (client: ClientType, request) => {
-    this.broadcast(
-      {
-        type: 'PEER',
-        peer: request.peer,
-      },
-      {
-        exclude: [client.id],
-      },
-    );
+  onPeer = (request) => {
+    const { id, px, py, pz, qx, qy, qz, qw } = request.peers[0];
+    const client = this.clients.find((c) => c.id === id);
+    if (client) {
+      client.position = [px, py, pz];
+      client.rotation = [qx, qy, qz, qw];
+    }
   };
 
   onRequest = (client: ClientType, request) => {
@@ -321,7 +343,7 @@ class World extends Network {
         break;
       }
       case 'PEER': {
-        this.onPeer(client, request);
+        this.onPeer(request);
         break;
       }
       default:

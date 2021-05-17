@@ -103,7 +103,7 @@ const defaultConfig: ConfigType = {
     clearColor: '#123',
   },
   peers: {
-    updateInterval: 40, // ms
+    updateInterval: 16, // ms
   },
   particles: {
     count: 10,

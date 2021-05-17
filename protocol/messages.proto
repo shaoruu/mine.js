@@ -54,7 +54,6 @@ message Message {
   string json = 2;
   string text = 3;
 
-  Peer peer = 4;
-
+  repeated Peer peers = 4;
   repeated Chunk chunks = 5;
 }

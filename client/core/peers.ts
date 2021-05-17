@@ -20,26 +20,33 @@ class Peers {
   constructor(public engine: Engine, public options: PeersOptionsType) {
     const { updateInterval } = this.options;
 
+    const {
+      camera: { threeCamera },
+    } = engine;
+
     let interval: NodeJS.Timeout;
 
-    engine.on('connected', () => {
+    engine.on('init', () => {
       interval = setInterval(() => {
-        const { position, quaternion } = engine.camera.threeCamera;
+        const { position, quaternion } = threeCamera;
+
         const { x: px, y: py, z: pz } = position;
         const { x: qx, y: qy, z: qz, w: qw } = quaternion;
 
         engine.network.server.sendEvent({
           type: 'PEER',
-          peer: {
-            id: engine.player.id,
-            px,
-            py,
-            pz,
-            qx,
-            qy,
-            qz,
-            qw,
-          },
+          peers: [
+            {
+              id: engine.player.id,
+              px,
+              py,
+              pz,
+              qx,
+              qy,
+              qz,
+              qw,
+            },
+          ],
         });
       }, updateInterval);
     });

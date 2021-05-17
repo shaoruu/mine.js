@@ -476,8 +476,8 @@ export namespace protocol {
         /** Message text */
         text?: (string|null);
 
-        /** Message peer */
-        peer?: (protocol.IPeer|null);
+        /** Message peers */
+        peers?: (protocol.IPeer[]|null);
 
         /** Message chunks */
         chunks?: (protocol.IChunk[]|null);
@@ -501,8 +501,8 @@ export namespace protocol {
         /** Message text. */
         public text: string;
 
-        /** Message peer. */
-        public peer?: (protocol.IPeer|null);
+        /** Message peers. */
+        public peers: protocol.IPeer[];
 
         /** Message chunks. */
         public chunks: protocol.IChunk[];

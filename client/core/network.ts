@@ -69,6 +69,7 @@ class Network {
         world.setTime(time, false);
         engine.setTick(tickSpeed, false);
         player.teleport(spawn);
+        engine.emit('init');
         break;
       }
 
@@ -110,9 +111,12 @@ class Network {
       }
 
       case 'PEER': {
-        const { peer } = event;
-        const { id, px, py, pz, qx, qy, qz, qw } = peer;
-        peers.update(id, { position: [px, py, pz], rotation: [qx, qy, qz, qw] });
+        const { peers: peersData } = event;
+
+        for (const peer of peersData) {
+          const { id, px, py, pz, qx, qy, qz, qw } = peer;
+          peers.update(id, { position: [px, py, pz], rotation: [qx, qy, qz, qw] });
+        }
         break;
       }
     }

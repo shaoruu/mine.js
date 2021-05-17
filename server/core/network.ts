@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 
 import { protocol } from '../../protocol';
+import { Coords3 } from '../../shared/types';
 
 const { Message } = protocol;
 
@@ -17,6 +18,8 @@ type NetworkOptionsType = {
 type ClientType = WebSocket & {
   id: string;
   isAlive: boolean;
+  position: Coords3;
+  rotation: [...Coords3, number];
 };
 
 class Network extends EventEmitter {

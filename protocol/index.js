@@ -1378,7 +1378,7 @@ $root.protocol = (function() {
          * @property {protocol.Message.Type|null} [type] Message type
          * @property {string|null} [json] Message json
          * @property {string|null} [text] Message text
-         * @property {protocol.IPeer|null} [peer] Message peer
+         * @property {Array.<protocol.IPeer>|null} [peers] Message peers
          * @property {Array.<protocol.IChunk>|null} [chunks] Message chunks
          */
 
@@ -1391,6 +1391,7 @@ $root.protocol = (function() {
          * @param {protocol.IMessage=} [properties] Properties to set
          */
         function Message(properties) {
+            this.peers = [];
             this.chunks = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
@@ -1423,12 +1424,12 @@ $root.protocol = (function() {
         Message.prototype.text = "";
 
         /**
-         * Message peer.
-         * @member {protocol.IPeer|null|undefined} peer
+         * Message peers.
+         * @member {Array.<protocol.IPeer>} peers
          * @memberof protocol.Message
          * @instance
          */
-        Message.prototype.peer = null;
+        Message.prototype.peers = $util.emptyArray;
 
         /**
          * Message chunks.
@@ -1468,8 +1469,9 @@ $root.protocol = (function() {
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.json);
             if (message.text != null && Object.hasOwnProperty.call(message, "text"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.text);
-            if (message.peer != null && Object.hasOwnProperty.call(message, "peer"))
-                $root.protocol.Peer.encode(message.peer, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.peers != null && message.peers.length)
+                for (var i = 0; i < message.peers.length; ++i)
+                    $root.protocol.Peer.encode(message.peers[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.chunks != null && message.chunks.length)
                 for (var i = 0; i < message.chunks.length; ++i)
                     $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
@@ -1517,7 +1519,9 @@ $root.protocol = (function() {
                     message.text = reader.string();
                     break;
                 case 4:
-                    message.peer = $root.protocol.Peer.decode(reader, reader.uint32());
+                    if (!(message.peers && message.peers.length))
+                        message.peers = [];
+                    message.peers.push($root.protocol.Peer.decode(reader, reader.uint32()));
                     break;
                 case 5:
                     if (!(message.chunks && message.chunks.length))
@@ -1583,10 +1587,14 @@ $root.protocol = (function() {
             if (message.text != null && message.hasOwnProperty("text"))
                 if (!$util.isString(message.text))
                     return "text: string expected";
-            if (message.peer != null && message.hasOwnProperty("peer")) {
-                var error = $root.protocol.Peer.verify(message.peer);
-                if (error)
-                    return "peer." + error;
+            if (message.peers != null && message.hasOwnProperty("peers")) {
+                if (!Array.isArray(message.peers))
+                    return "peers: array expected";
+                for (var i = 0; i < message.peers.length; ++i) {
+                    var error = $root.protocol.Peer.verify(message.peers[i]);
+                    if (error)
+                        return "peers." + error;
+                }
             }
             if (message.chunks != null && message.hasOwnProperty("chunks")) {
                 if (!Array.isArray(message.chunks))
@@ -1666,10 +1674,15 @@ $root.protocol = (function() {
                 message.json = String(object.json);
             if (object.text != null)
                 message.text = String(object.text);
-            if (object.peer != null) {
-                if (typeof object.peer !== "object")
-                    throw TypeError(".protocol.Message.peer: object expected");
-                message.peer = $root.protocol.Peer.fromObject(object.peer);
+            if (object.peers) {
+                if (!Array.isArray(object.peers))
+                    throw TypeError(".protocol.Message.peers: array expected");
+                message.peers = [];
+                for (var i = 0; i < object.peers.length; ++i) {
+                    if (typeof object.peers[i] !== "object")
+                        throw TypeError(".protocol.Message.peers: object expected");
+                    message.peers[i] = $root.protocol.Peer.fromObject(object.peers[i]);
+                }
             }
             if (object.chunks) {
                 if (!Array.isArray(object.chunks))
@@ -1697,13 +1710,14 @@ $root.protocol = (function() {
             if (!options)
                 options = {};
             var object = {};
-            if (options.arrays || options.defaults)
+            if (options.arrays || options.defaults) {
+                object.peers = [];
                 object.chunks = [];
+            }
             if (options.defaults) {
                 object.type = options.enums === String ? "ERROR" : 1;
                 object.json = "";
                 object.text = "";
-                object.peer = null;
             }
             if (message.type != null && message.hasOwnProperty("type"))
                 object.type = options.enums === String ? $root.protocol.Message.Type[message.type] : message.type;
@@ -1711,8 +1725,11 @@ $root.protocol = (function() {
                 object.json = message.json;
             if (message.text != null && message.hasOwnProperty("text"))
                 object.text = message.text;
-            if (message.peer != null && message.hasOwnProperty("peer"))
-                object.peer = $root.protocol.Peer.toObject(message.peer, options);
+            if (message.peers && message.peers.length) {
+                object.peers = [];
+                for (var j = 0; j < message.peers.length; ++j)
+                    object.peers[j] = $root.protocol.Peer.toObject(message.peers[j], options);
+            }
             if (message.chunks && message.chunks.length) {
                 object.chunks = [];
                 for (var j = 0; j < message.chunks.length; ++j)
