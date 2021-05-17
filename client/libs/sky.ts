@@ -78,7 +78,7 @@ const SKY_CONFIGS = {
       offset: 200,
     },
     // start of sunrise
-    500: {
+    600: {
       color: {
         top: new Color('#7694CF'),
         bottom: new Color('#B0483A'),
@@ -102,7 +102,7 @@ const SKY_CONFIGS = {
       offset: 100,
     },
     // end of sunset, back to night
-    1900: {
+    1800: {
       color: {
         top: new Color('#000'),
         bottom: new Color('#000'),
@@ -375,7 +375,7 @@ class Sky {
     const grd = context.createRadialGradient(x, y, 1, x, y, radius * 2);
     grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
     grd.addColorStop(1, this.rgba(1, 1, 1, 0));
-    context.arc(x, y, radius * 2, 0, 2 * Math.PI, false);
+    context.arc(x, y, radius * 3, 0, 2 * Math.PI, false);
     context.fillStyle = grd;
     context.fill();
     context.closePath();
