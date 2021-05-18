@@ -15,6 +15,10 @@ class Helper {
     return name.split(concat).map((s: string) => parseInt(s, 10));
   };
 
+  public static parseVoxelName = (name: string, concat = '_') => {
+    return name.split(concat).map((s: string) => parseInt(s, 10));
+  };
+
   public static scaleCoordsF = (coords: Coords3, factor: number): Coords3 => {
     const result = [0, 0, 0];
     const scaled = vec3.scale(result, coords, factor);

@@ -20,17 +20,53 @@ class Generators {
     }
 
     const {
-      HILLY: { OCTAVES, SCALE, PERSISTANCE, LACUNARITY, AMPLIFIER, HEIGHT_OFFSET },
+      HILLY: { OCTAVES, SCALE, PERSISTANCE, LACUNARITY, AMPLIFIER, HEIGHT_OFFSET, HEIGHT_SCALE, TREE_SCALE },
     } = TERRAIN_CONFIG;
 
-    function getOctaveSimplex3(x: number, y: number, z: number) {
+    vy = vy - HEIGHT_OFFSET;
+
+    // function shouldPlantTree(x: number, z: number) {
+    //   const noise3x3 = [];
+
+    //   for (let i = -1; i <= 1; i++) {
+    //     for (let j = -1; j <= 1; j++) {
+    //       noise3x3.push(noise.perlin2((x + i) * TREE_SCALE, (z + j) * TREE_SCALE));
+    //     }
+    //   }
+
+    //   let max = noise3x3[0];
+    //   let maxi = 0;
+
+    //   for (let i = 1; i < noise3x3.length; i++) {
+    //     if (max < noise3x3[i]) {
+    //       max = noise3x3[i];
+    //       maxi = i;
+    //     }
+    //   }
+
+    //   return maxi === 4;
+    // }
+
+    function fractalOctavePerlin3(x: number, y: number, z: number) {
+      let t = 0,
+        f = 1,
+        n = 0;
+      for (let i = 0; i < 9; i++) {
+        n += noise.perlin3(x * f * SCALE, y * f * SCALE, z * f * SCALE) / f;
+        t += 1 / f;
+        f *= 2;
+      }
+      return n / t;
+    }
+
+    function getOctavePerlin3(x: number, y: number, z: number) {
       let total = 0;
       let frequency = 1;
       let amplitude = 1;
       let maxVal = 0;
 
       for (let i = 0; i < OCTAVES; i++) {
-        total += noise.simplex3(x * frequency * SCALE, y * frequency * SCALE, z * frequency * SCALE) * amplitude;
+        total += noise.perlin3(x * frequency * SCALE, y * frequency * SCALE, z * frequency * SCALE) * amplitude;
 
         maxVal += amplitude;
 
@@ -38,11 +74,11 @@ class Generators {
         frequency *= LACUNARITY;
       }
 
-      return (total / maxVal) * AMPLIFIER + HEIGHT_OFFSET - y * SCALE;
+      return (total / maxVal) * AMPLIFIER - y * HEIGHT_SCALE;
     }
 
     function isSolidAt(vx: number, vy: number, vz: number) {
-      return getOctaveSimplex3(vx, vy, vz) > -0.2;
+      return getOctavePerlin3(vx, vy, vz) > -0.2;
     }
 
     const isSolid = isSolidAt(vx, vy, vz);
@@ -53,7 +89,18 @@ class Generators {
 
     if (isSolid) {
       if (!isSolidTop && !isSolidTop2) {
-        blockID = types.grass;
+        blockID = types.stone;
+        if (noise.simplex3(vx * SCALE, vy * SCALE, vz * SCALE) > 0.01) {
+          blockID = types.dirt;
+        } else if (noise.simplex2(vx * SCALE, vz * SCALE) > 0.05) blockID = types.grass;
+
+        if (noise.simplex2(vx * SCALE, vz * SCALE) < 0.03 && noise.perlin2(vz * SCALE, vx * SCALE) > 0.06) {
+          blockID = types.snow;
+        }
+
+        if (fractalOctavePerlin3(vx, vy, vz) > 0.25) {
+          blockID = types.green;
+        }
       } else {
         blockID = types.stone;
       }

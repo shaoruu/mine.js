@@ -7,18 +7,22 @@ import { GeneratorTypes } from '../libs';
 import { World, WorldOptionsType, Registry } from '.';
 
 const defaultWorldOptions = {
-  name: 'testbed',
+  time: 0,
+  port: 4000,
+  save: true,
+  tickSpeed: 2,
   dimension: 1,
   chunkSize: 8,
   maxClients: 10,
   maxHeight: 128,
   renderRadius: 8,
+  name: 'testbed',
   maxLightLevel: 15,
-  generation: 'flat' as GeneratorTypes,
   pingInterval: 50000,
   maxLoadedChunks: 2000,
   useSmoothLighting: true,
-  port: 4000,
+  description: 'a testbed world',
+  generation: 'flat' as GeneratorTypes,
   chunkRoot: path.join(__dirname, '../..', 'data'),
 };
 

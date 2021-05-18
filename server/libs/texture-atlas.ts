@@ -5,7 +5,7 @@ type TextureAtlasOptionsType = {
 };
 
 const defaultTextureAtlasOptions = {
-  textureDimension: 16,
+  textureDimension: 8,
 };
 
 class TextureAtlas {

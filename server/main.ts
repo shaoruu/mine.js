@@ -10,16 +10,12 @@ import { WORLD_LIST } from '../shared/saves';
 import { ClientType, Mine } from './core';
 import { getQueryWorld } from './utils';
 
-const isProduction = 'production' === process.env.NODE_ENV;
-
 // BASE APP
 const app = fastify();
 app.register(require('fastify-cors'));
-if (isProduction) {
-  app.register(require('fastify-static'), {
-    root: path.join(__dirname, '..', 'public'),
-  });
-}
+app.register(require('fastify-static'), {
+  root: path.join(__dirname, '..', 'public'),
+});
 
 // ATLAS
 app.get('/atlas', (_, reply) => {

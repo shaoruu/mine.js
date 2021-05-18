@@ -10,7 +10,7 @@ import { Chunk, Mine } from '.';
 class Generator {
   static pool = Pool(
     () => spawn<GeneratorType>(new Worker('./workers/generators'), { timeout: 30000 }),
-    { concurrency: 4, size: 32 },
+    { concurrency: 2, size: 16 },
   );
 
   static generate = async (chunk: Chunk, type: GeneratorTypes) => {
@@ -21,7 +21,17 @@ class Generator {
         types = Mine.registry.getTypeMap(['air', 'dirt', 'grass', 'stone']);
         break;
       case 'hilly':
-        types = Mine.registry.getTypeMap(['dirt', 'grass', 'stone']);
+        types = Mine.registry.getTypeMap([
+          'dirt',
+          'grass',
+          'stone',
+          'yellow',
+          'snow',
+          'green',
+          'blue',
+          'trunk',
+          'leaves',
+        ]);
         break;
       case 'sin-cos':
         types = Mine.registry.getTypeMap(['air', 'dirt', 'stone', 'grass']);

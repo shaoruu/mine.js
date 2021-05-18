@@ -5422,14 +5422,14 @@ __webpack_require__.r(__webpack_exports__);
 const defaultBrainOptions = {
     maxSpeed: 10,
     moveForce: 20,
-    responsiveness: 160,
-    runningFriction: 0,
+    responsiveness: 240,
+    runningFriction: 0.1,
     standingFriction: 2,
     airMoveMult: 0.7,
     jumpImpulse: 8,
     jumpForce: 1,
     jumpTime: 50,
-    airJumps: 1,
+    airJumps: 0,
 };
 const defaultBrainState = {
     heading: 0,
@@ -6907,6 +6907,9 @@ Helper.getVoxelName = (coords, concat = '_') => {
 Helper.parseChunkName = (name, concat = '_') => {
     return name.split(concat).map((s) => parseInt(s, 10));
 };
+Helper.parseVoxelName = (name, concat = '_') => {
+    return name.split(concat).map((s) => parseInt(s, 10));
+};
 Helper.scaleCoordsF = (coords, factor) => {
     const result = [0, 0, 0];
     const scaled = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(result, coords, factor);
@@ -6985,7 +6988,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "WORLD_LIST": () => (/* binding */ WORLD_LIST)
 /* harmony export */ });
 const WORLD_LIST = {
-    idk: {
+    terrains: {
+        time: 670,
+        tickSpeed: 0,
+        save: false,
         generation: 'hilly',
         description: 'idek bro',
     },

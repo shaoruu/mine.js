@@ -1,5 +1,8 @@
 export const WORLD_LIST = {
-  idk: {
+  terrains: {
+    time: 670,
+    tickSpeed: 0,
+    save: false,
     generation: 'hilly',
     description: 'idek bro',
   },

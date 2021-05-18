@@ -30,15 +30,15 @@ type BrainStateType = {
 const defaultBrainOptions: BrainOptionsType = {
   maxSpeed: 10,
   moveForce: 20,
-  responsiveness: 160,
-  runningFriction: 0,
+  responsiveness: 240,
+  runningFriction: 0.1,
   standingFriction: 2,
 
   airMoveMult: 0.7,
   jumpImpulse: 8,
   jumpForce: 1,
   jumpTime: 50,
-  airJumps: 1,
+  airJumps: 0,
 };
 
 const defaultBrainState: BrainStateType = {

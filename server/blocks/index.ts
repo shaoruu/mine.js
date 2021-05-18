@@ -10,6 +10,8 @@ export const ID_TO_BLOCK = {
   5: require('./models/wood'),
   6: require('./models/stone-brick'),
   7: require('./models/ice'),
+  8: require('./models/trunk'),
+  9: require('./models/leaves'),
 
   // COLORS
   10: require('./models/blue'),

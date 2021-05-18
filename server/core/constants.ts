@@ -1,21 +1,24 @@
 // terrain generation
 export const TERRAIN_CONFIG = {
-  // HILLY: { // this was pretty hilly, but decently smooth like MC
+  HILLY: {
+    // this was pretty hilly, but decently smooth like MC
+    SCALE: 0.03,
+    OCTAVES: 3,
+    PERSISTANCE: 0.6,
+    LACUNARITY: 0.8,
+    HEIGHT_OFFSET: 18,
+    HEIGHT_SCALE: 0.05,
+    TREE_SCALE: 0.1,
+    AMPLIFIER: 0.4,
+  },
+  // HILLY: {
   //   SCALE: 0.009,
   //   OCTAVES: 3,
-  //   PERSISTANCE: 0.9,
-  //   LACUNARITY: 0.3,
+  //   PERSISTANCE: 0.4,
+  //   LACUNARITY: 0.6,
   //   HEIGHT_OFFSET: 0.3,
   //   AMPLIFIER: 1.4,
   // },
-  HILLY: {
-    SCALE: 0.009,
-    OCTAVES: 3,
-    PERSISTANCE: 0.4,
-    LACUNARITY: 0.6,
-    HEIGHT_OFFSET: 0.3,
-    AMPLIFIER: 1.4,
-  },
   // HILLY: {
   //   SCALE: 0.008,
   //   OCTAVES: 8,

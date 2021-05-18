@@ -80,6 +80,7 @@
     "all": "cross-env WORLDS=* nodemon",
     "mine": "cross-env WORLDS=mine nodemon",
     "testbed": "cross-env WORLDS=testbed nodemon",
+    "terrains": "cross-env WORLDS=terrains nodemon",
     "start": "cross-env NODE_ENV=production WORLDS=testbed,idk nodemon",
     "validate": "svelte-check"
   },

@@ -74,9 +74,13 @@ class Chunk {
     vec3.scale(this.max, this.max, size);
     vec3.add(this.max, this.max, [0, maxHeight, 0]);
 
-    try {
-      this.load();
-    } catch (e) {
+    if (this.world.options.save) {
+      try {
+        this.load();
+      } catch (e) {
+        this.generate();
+      }
+    } else {
       this.generate();
     }
   }
@@ -160,6 +164,8 @@ class Chunk {
   };
 
   save = () => {
+    if (!this.world.options.save) return;
+
     // save to file system
     const { needsPropagation } = this;
 
@@ -179,11 +185,11 @@ class Chunk {
     // generate terrain, height map, and mesh
     this.needsPropagation = true;
     this.needsSaving = true;
-    const { generation } = this.world.options;
+    const { generation, save } = this.world.options;
     await Generator.generate(this, generation);
     // TODO: lighting
     this.generateHeightMap();
-    this.save();
+    if (save) this.save();
   };
 
   generateHeightMap = () => {

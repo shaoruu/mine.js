@@ -48,6 +48,7 @@ message Message {
     CONFIG = 10;
     PEER = 11;
     ENTITY = 12;
+    MESSAGE = 13;
   }
 
   Type type = 1;

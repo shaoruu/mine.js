@@ -22,6 +22,9 @@ const chunkNeighbors = [
 
 type WorldOptionsType = NetworkOptionsType & {
   name: string;
+  save: boolean;
+  time: number;
+  tickSpeed: number;
   chunkRoot: string;
   preload: number;
   chunkSize: number;
@@ -32,6 +35,7 @@ type WorldOptionsType = NetworkOptionsType & {
   maxLoadedChunks: number;
   useSmoothLighting: boolean;
   generation: GeneratorTypes;
+  description: string;
 };
 
 class World extends Network {
@@ -48,8 +52,13 @@ class World extends Network {
   constructor(public app: FastifyInstance, public options: WorldOptionsType) {
     super(options);
 
+    const { save, time, tickSpeed } = options;
+
+    this.time = time;
+    this.tickSpeed = tickSpeed;
+
     console.log(`\nWorld: ${chalk.bgCyan.gray(options.name)}`);
-    this.initStorage();
+    if (save) this.initStorage();
     this.preloadChunks();
 
     let prevTime = Date.now();
@@ -145,6 +154,8 @@ class World extends Network {
   };
 
   save = () => {
+    if (!this.options.save) return;
+
     this.chunks.forEach((chunk) => {
       if (chunk.needsSaving) {
         chunk.save();
@@ -353,15 +364,6 @@ class World extends Network {
   };
 
   onInit = (client: ClientType) => {
-    const test = 2;
-    const chunks: Chunk[] = [];
-
-    for (let x = -test; x <= test; x++) {
-      for (let z = -test; z <= test; z++) {
-        chunks.push(this.getChunkByCPos([x, z]));
-      }
-    }
-
     client.send(
       Network.encode({
         type: 'INIT',
