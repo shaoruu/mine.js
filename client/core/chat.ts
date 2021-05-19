@@ -4,10 +4,6 @@ import { Helper } from '../utils';
 
 import { Engine } from '.';
 
-const HELP_COMMAND = `
-Commands coming soon!
-`;
-
 type ChatOptionsType = {
   margin: number;
   disappearTimeout: number;
@@ -135,18 +131,13 @@ class Chat {
 
     if (value.split(' ').filter((ele) => ele).length === 0) return;
 
-    if (value === '/help') {
-      this.add({ type: 'SERVER', body: HELP_COMMAND });
-      return;
-    }
-
     const {
       network: { server },
       player,
     } = this.engine;
 
     if (value.startsWith('/')) {
-      this.add({ type: 'INFO', body: 'Commands not yet implemented.' });
+      this.add({ type: 'INFO', body: 'Commands has not yet been implemented. Help me out!!' });
       return;
     }
 

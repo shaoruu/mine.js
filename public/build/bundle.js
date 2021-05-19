@@ -3415,9 +3415,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const HELP_COMMAND = `
-Commands coming soon!
-`;
 class Chat {
     constructor(engine, options) {
         this.engine = engine;
@@ -3506,13 +3503,9 @@ class Chat {
             const value = this.inputValue;
             if (value.split(' ').filter((ele) => ele).length === 0)
                 return;
-            if (value === '/help') {
-                this.add({ type: 'SERVER', body: HELP_COMMAND });
-                return;
-            }
             const { network: { server }, player, } = this.engine;
             if (value.startsWith('/')) {
-                this.add({ type: 'INFO', body: 'Commands not yet implemented.' });
+                this.add({ type: 'INFO', body: 'Commands has not yet been implemented. Help me out!!' });
                 return;
             }
             server.sendEvent({
@@ -5367,6 +5360,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.clouds = new _libs__WEBPACK_IMPORTED_MODULE_2__.Clouds(engine.rendering);
         engine.on('ready', () => {
             this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency + 3, 6));
+            engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
         });
         engine.on('focus', async () => {
             this.setTime(await engine.network.fetchData('/time'), false);

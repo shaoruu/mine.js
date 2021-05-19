@@ -44,6 +44,8 @@ class World extends EventEmitter {
 
     engine.on('ready', () => {
       this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency + 3, 6));
+
+      engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
     });
 
     engine.on('focus', async () => {
