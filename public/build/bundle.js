@@ -3659,7 +3659,7 @@ class Debug {
             this.dataWrapper = document.createElement('div');
             _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.dataWrapper, {
                 position: 'absolute',
-                top: '0',
+                bottom: '0',
                 left: '0',
                 background: '#00000022',
                 color: 'white',
@@ -3669,12 +3669,6 @@ class Debug {
                 flexDirection: 'column-reverse',
                 alignItems: 'flex-start',
                 justifyContent: 'flex-start',
-            });
-            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.stats.dom, {
-                top: 'unset',
-                left: 'unset',
-                bottom: '0',
-                right: '0',
             });
         };
         this.mount = () => {
