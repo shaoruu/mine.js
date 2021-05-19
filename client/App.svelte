@@ -3,7 +3,8 @@
   import { Helper } from './utils';
 
   import Button from './components/button.svelte';
-  import { Engine } from './core';
+  import Input from './components/input.svelte';
+  import { Engine, Player } from './core';
 
   let domElement: HTMLDivElement;
   let canvas: HTMLCanvasElement;
@@ -34,6 +35,11 @@
     })();
   }
 
+  const onNameChange = (e: InputEvent) => {
+    // @ts-ignore
+    engine.player.setName(e.target.value);
+  };
+
 </script>
 
 <main>
@@ -44,6 +50,7 @@
         <div id="pause-menu">
           <div />
           <h2>Game menu</h2>
+          <Input placeholder="Username" value={engine.player.name} on:input={onNameChange} maxLength="16" />
           <Button on:click={() => engine.lock()}>Back to Game</Button>
           <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>Quit to Title</Button>
         </div>
@@ -124,7 +131,7 @@
 
   #pause-menu > h2 {
     color: #ccc;
-    margin-bottom: 1.6em;
+    margin-bottom: 1em;
   }
 
   #world-list-wrapper {

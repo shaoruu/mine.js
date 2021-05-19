@@ -22,8 +22,11 @@ type PlayerOptionsType = {
 const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 11, 13];
 let type = 1;
 
+const LOCAL_STORAGE_PLAYER_NAME = 'mine.js-player';
+
 class Player {
   public id: string;
+  public name: string;
 
   public controls: PointerLockControls;
 
@@ -89,6 +92,8 @@ class Player {
 
     this.controls.addEventListener('lock', () => engine.emit('lock'));
     this.controls.addEventListener('unlock', () => engine.emit('unlock'));
+
+    this.name = localStorage.getItem(LOCAL_STORAGE_PLAYER_NAME) || '';
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {
@@ -278,6 +283,11 @@ class Player {
     );
 
     this.camEntity.body.applyImpulse([0, 4, 0]);
+  }
+
+  setName(name: string) {
+    this.name = name || '';
+    localStorage.setItem(LOCAL_STORAGE_PLAYER_NAME, this.name);
   }
 
   get lookBlockStr() {
