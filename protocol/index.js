@@ -1034,6 +1034,7 @@ $root.protocol = (function() {
          * @memberof protocol
          * @interface IPeer
          * @property {string|null} [id] Peer id
+         * @property {string|null} [name] Peer name
          * @property {number|null} [px] Peer px
          * @property {number|null} [py] Peer py
          * @property {number|null} [pz] Peer pz
@@ -1065,6 +1066,14 @@ $root.protocol = (function() {
          * @instance
          */
         Peer.prototype.id = "";
+
+        /**
+         * Peer name.
+         * @member {string} name
+         * @memberof protocol.Peer
+         * @instance
+         */
+        Peer.prototype.name = "";
 
         /**
          * Peer px.
@@ -1148,20 +1157,22 @@ $root.protocol = (function() {
                 writer = $Writer.create();
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
             if (message.px != null && Object.hasOwnProperty.call(message, "px"))
-                writer.uint32(/* id 2, wireType 5 =*/21).float(message.px);
+                writer.uint32(/* id 3, wireType 5 =*/29).float(message.px);
             if (message.py != null && Object.hasOwnProperty.call(message, "py"))
-                writer.uint32(/* id 3, wireType 5 =*/29).float(message.py);
+                writer.uint32(/* id 4, wireType 5 =*/37).float(message.py);
             if (message.pz != null && Object.hasOwnProperty.call(message, "pz"))
-                writer.uint32(/* id 4, wireType 5 =*/37).float(message.pz);
+                writer.uint32(/* id 5, wireType 5 =*/45).float(message.pz);
             if (message.qx != null && Object.hasOwnProperty.call(message, "qx"))
-                writer.uint32(/* id 5, wireType 5 =*/45).float(message.qx);
+                writer.uint32(/* id 6, wireType 5 =*/53).float(message.qx);
             if (message.qy != null && Object.hasOwnProperty.call(message, "qy"))
-                writer.uint32(/* id 6, wireType 5 =*/53).float(message.qy);
+                writer.uint32(/* id 7, wireType 5 =*/61).float(message.qy);
             if (message.qz != null && Object.hasOwnProperty.call(message, "qz"))
-                writer.uint32(/* id 7, wireType 5 =*/61).float(message.qz);
+                writer.uint32(/* id 8, wireType 5 =*/69).float(message.qz);
             if (message.qw != null && Object.hasOwnProperty.call(message, "qw"))
-                writer.uint32(/* id 8, wireType 5 =*/69).float(message.qw);
+                writer.uint32(/* id 9, wireType 5 =*/77).float(message.qw);
             return writer;
         };
 
@@ -1200,24 +1211,27 @@ $root.protocol = (function() {
                     message.id = reader.string();
                     break;
                 case 2:
-                    message.px = reader.float();
+                    message.name = reader.string();
                     break;
                 case 3:
-                    message.py = reader.float();
+                    message.px = reader.float();
                     break;
                 case 4:
-                    message.pz = reader.float();
+                    message.py = reader.float();
                     break;
                 case 5:
-                    message.qx = reader.float();
+                    message.pz = reader.float();
                     break;
                 case 6:
-                    message.qy = reader.float();
+                    message.qx = reader.float();
                     break;
                 case 7:
-                    message.qz = reader.float();
+                    message.qy = reader.float();
                     break;
                 case 8:
+                    message.qz = reader.float();
+                    break;
+                case 9:
                     message.qw = reader.float();
                     break;
                 default:
@@ -1258,6 +1272,9 @@ $root.protocol = (function() {
             if (message.id != null && message.hasOwnProperty("id"))
                 if (!$util.isString(message.id))
                     return "id: string expected";
+            if (message.name != null && message.hasOwnProperty("name"))
+                if (!$util.isString(message.name))
+                    return "name: string expected";
             if (message.px != null && message.hasOwnProperty("px"))
                 if (typeof message.px !== "number")
                     return "px: number expected";
@@ -1296,6 +1313,8 @@ $root.protocol = (function() {
             var message = new $root.protocol.Peer();
             if (object.id != null)
                 message.id = String(object.id);
+            if (object.name != null)
+                message.name = String(object.name);
             if (object.px != null)
                 message.px = Number(object.px);
             if (object.py != null)
@@ -1328,6 +1347,7 @@ $root.protocol = (function() {
             var object = {};
             if (options.defaults) {
                 object.id = "";
+                object.name = "";
                 object.px = 0;
                 object.py = 0;
                 object.pz = 0;
@@ -1338,6 +1358,8 @@ $root.protocol = (function() {
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
+            if (message.name != null && message.hasOwnProperty("name"))
+                object.name = message.name;
             if (message.px != null && message.hasOwnProperty("px"))
                 object.px = options.json && !isFinite(message.px) ? String(message.px) : message.px;
             if (message.py != null && message.hasOwnProperty("py"))
@@ -1579,6 +1601,7 @@ $root.protocol = (function() {
                 case 10:
                 case 11:
                 case 12:
+                case 13:
                     break;
                 }
             if (message.json != null && message.hasOwnProperty("json"))
@@ -1668,6 +1691,10 @@ $root.protocol = (function() {
             case "ENTITY":
             case 12:
                 message.type = 12;
+                break;
+            case "MESSAGE":
+            case 13:
+                message.type = 13;
                 break;
             }
             if (object.json != null)
@@ -1765,6 +1792,7 @@ $root.protocol = (function() {
          * @property {number} CONFIG=10 CONFIG value
          * @property {number} PEER=11 PEER value
          * @property {number} ENTITY=12 ENTITY value
+         * @property {number} MESSAGE=13 MESSAGE value
          */
         Message.Type = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -1780,6 +1808,7 @@ $root.protocol = (function() {
             values[valuesById[10] = "CONFIG"] = 10;
             values[valuesById[11] = "PEER"] = 11;
             values[valuesById[12] = "ENTITY"] = 12;
+            values[valuesById[13] = "MESSAGE"] = 13;
             return values;
         })();
 

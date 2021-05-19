@@ -17,6 +17,7 @@ type NetworkOptionsType = {
 
 type ClientType = WebSocket & {
   id: string;
+  name: string;
   isAlive: boolean;
   position: Coords3;
   rotation: [...Coords3, number];

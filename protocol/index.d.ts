@@ -338,6 +338,9 @@ export namespace protocol {
         /** Peer id */
         id?: (string|null);
 
+        /** Peer name */
+        name?: (string|null);
+
         /** Peer px */
         px?: (number|null);
 
@@ -371,6 +374,9 @@ export namespace protocol {
 
         /** Peer id. */
         public id: string;
+
+        /** Peer name. */
+        public name: string;
 
         /** Peer px. */
         public px: number;
@@ -593,7 +599,8 @@ export namespace protocol {
             REQUEST = 9,
             CONFIG = 10,
             PEER = 11,
-            ENTITY = 12
+            ENTITY = 12,
+            MESSAGE = 13
         }
     }
 }

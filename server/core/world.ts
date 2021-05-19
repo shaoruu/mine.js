@@ -70,11 +70,12 @@ class World extends Network {
           type: 'PEER',
           peers: this.clients
             .filter((c) => c !== client && c.position && c.rotation)
-            .map(({ position, rotation, id }) => {
+            .map(({ position, rotation, id, name }) => {
               const [px, py, pz] = position;
               const [qx, qy, qz, qw] = rotation;
               return {
                 id,
+                name,
                 px,
                 py,
                 pz,
@@ -331,9 +332,10 @@ class World extends Network {
   };
 
   onPeer = (request) => {
-    const { id, px, py, pz, qx, qy, qz, qw } = request.peers[0];
+    const { id, name, px, py, pz, qx, qy, qz, qw } = request.peers[0];
     const client = this.clients.find((c) => c.id === id);
     if (client) {
+      client.name = name;
       client.position = [px, py, pz];
       client.rotation = [qx, qy, qz, qw];
     }

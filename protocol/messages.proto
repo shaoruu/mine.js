@@ -25,13 +25,14 @@ message Chunk {
 
 message Peer {
   string id = 1;
-  float px = 2;
-  float py = 3;
-  float pz = 4;
-  float qx = 5;
-  float qy = 6;
-  float qz = 7;
-  float qw = 8;
+  string name = 2;
+  float px = 3;
+  float py = 4;
+  float pz = 5;
+  float qx = 6;
+  float qy = 7;
+  float qz = 8;
+  float qw = 9;
 }
 
 message Message {

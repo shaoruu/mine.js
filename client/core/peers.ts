@@ -6,6 +6,7 @@ import { Peer } from '../libs';
 import { Engine } from '.';
 
 type PacketType = {
+  name: string;
   position: Coords3;
   rotation: [...Coords3, number];
 };
@@ -38,6 +39,7 @@ class Peers {
           peers: [
             {
               id: engine.player.id,
+              name: engine.player.name,
               px,
               py,
               pz,
@@ -72,8 +74,8 @@ class Peers {
 
     const player = this.players.get(id);
 
-    const { position, rotation } = packet;
-    player.update(new Vector3(...position), new Quaternion(...rotation));
+    const { name, position, rotation } = packet;
+    player.update(name, new Vector3(...position), new Quaternion(...rotation));
   }
 
   leave(id: string) {
@@ -86,7 +88,7 @@ class Peers {
   }
 
   tick() {
-    this.players.forEach((peer) => peer.tick());
+    this.players.forEach((peer) => peer.tick(this.engine.camera.threeCamera.position));
   }
 }
 

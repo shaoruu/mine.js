@@ -1,5 +1,5 @@
 <script lang="typescript">
-  export let title: string | undefined;
+  export let title: string = '';
   export let value: string;
 
 </script>

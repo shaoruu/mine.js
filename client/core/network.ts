@@ -114,8 +114,8 @@ class Network {
         const { peers: peersData } = event;
 
         for (const peer of peersData) {
-          const { id, px, py, pz, qx, qy, qz, qw } = peer;
-          peers.update(id, { position: [px, py, pz], rotation: [qx, qy, qz, qw] });
+          const { id, name, px, py, pz, qx, qy, qz, qw } = peer;
+          peers.update(id, { name, position: [px, py, pz], rotation: [qx, qy, qz, qw] });
         }
         break;
       }

@@ -1,22 +1,27 @@
 import { Mesh, BoxBufferGeometry, MeshBasicMaterial, DoubleSide, Vector3, Quaternion } from 'three';
+import SpriteText from 'three-spritetext';
 
 type PeerOptionsType = {
   lerpFactor: number;
   headColor: string;
   headDimension: number;
+  maxNameDistance: number;
 };
 
 const defaultPeerOptions: PeerOptionsType = {
   lerpFactor: 0.6,
   headColor: '#94d0cc',
   headDimension: 0.4,
+  maxNameDistance: 50,
 };
 
 class Peer {
   public mesh: Mesh;
 
+  public name = 'testtesttest';
   public newPosition: Vector3;
   public newQuaternion: Quaternion;
+  public nameMesh: SpriteText;
 
   public static geometry: BoxBufferGeometry;
   public static material: MeshBasicMaterial;
@@ -34,18 +39,28 @@ class Peer {
     this.mesh = new Mesh(Peer.geometry, Peer.material);
     this.newPosition = this.mesh.position;
     this.newQuaternion = this.mesh.quaternion;
+
+    this.nameMesh = new SpriteText(this.name, options.headDimension / 3);
+    this.nameMesh.position.y += options.headDimension * 1;
+    this.nameMesh.backgroundColor = '#00000077';
+    this.nameMesh.material.depthTest = false;
+
+    this.mesh.add(this.nameMesh);
   }
 
-  update(position: Vector3, quaternion: Quaternion) {
+  update(name: string, position: Vector3, quaternion: Quaternion) {
+    this.nameMesh.text = name;
     this.newPosition = position;
     this.newQuaternion = quaternion;
   }
 
-  tick() {
-    const { lerpFactor } = this.options;
+  tick(camPos: Vector3) {
+    const { lerpFactor, maxNameDistance } = this.options;
 
     this.mesh.position.lerp(this.newPosition, lerpFactor);
     this.mesh.quaternion.slerp(this.newQuaternion, lerpFactor);
+
+    this.nameMesh.visible = this.mesh.position.distanceTo(camPos) < maxNameDistance;
   }
 }
 
