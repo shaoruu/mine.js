@@ -89,7 +89,14 @@
                 <h1>{name}</h1>
                 <h3>{players} / 10</h3>
               </div>
-              <p>{generation} · {description}</p>
+              <div>
+                <p>{generation} · {description}</p>
+                <ul>
+                  <li />
+                  <li />
+                  <li />
+                </ul>
+              </div>
             </li>
           {/each}
         {:catch error}
@@ -208,6 +215,7 @@
     justify-content: space-between;
     align-items: center;
     overflow: hidden;
+    margin: 4px 0;
   }
 
   #world-list-item > div > h1,
@@ -222,9 +230,36 @@
     font-size: 16px;
   }
 
-  #world-list-item > p {
+  #world-list-item > div > p {
     color: gray;
     font-size: 20px;
+  }
+
+  #world-list-item > div > ul {
+    list-style: none;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  #world-list-item > div > ul > li {
+    content: '';
+    height: 16px;
+    width: 3px;
+    margin: 2px;
+    background: green;
+  }
+
+  #world-list-item > div > ul > li:nth-child(1) {
+    height: 8px;
+  }
+
+  #world-list-item > div > ul > li:nth-child(2) {
+    height: 12px;
+  }
+
+  #world-list-item > div > ul > li:nth-child(3) {
+    /* background: linear-gradient(0deg, green 0%, green 80%, gray 81%, gray 100%); */
+    background: green;
   }
 
   .selected {
