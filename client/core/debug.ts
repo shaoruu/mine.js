@@ -91,9 +91,10 @@ class Debug {
 
   makeDOM = () => {
     this.dataWrapper = document.createElement('div');
+
     Helper.applyStyle(this.dataWrapper, {
       position: 'absolute',
-      bottom: '0',
+      top: '0',
       left: '0',
       background: '#00000022',
       color: 'white',
@@ -103,6 +104,13 @@ class Debug {
       flexDirection: 'column-reverse',
       alignItems: 'flex-start',
       justifyContent: 'flex-start',
+    });
+
+    Helper.applyStyle(this.stats.dom, {
+      top: 'unset',
+      left: 'unset',
+      bottom: '0',
+      right: '0',
     });
   };
 
