@@ -3396,6 +3396,41 @@ class Camera {
 
 /***/ }),
 
+/***/ "./client/core/chat.ts":
+/*!*****************************!*\
+  !*** ./client/core/chat.ts ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Chat": () => (/* binding */ Chat)
+/* harmony export */ });
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+
+class Chat {
+    constructor(engine) {
+        this.engine = engine;
+        this.enabled = false;
+        this.enable = (isCommand = false) => {
+            this.enabled = true;
+            this.engine.unlock();
+            this.engine.emit('chat-enabled');
+        };
+        this.disable = () => {
+            this.enabled = false;
+            this.engine.lock();
+            this.engine.emit('chat-disabled');
+        };
+        engine.inputs.bind('t', this.enable, 'in-game');
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./client/core/chunk.ts":
 /*!******************************!*\
   !*** ./client/core/chunk.ts ***!
@@ -3823,9 +3858,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! deepmerge */ "./node_modules/deepmerge/dist/cjs.js");
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(deepmerge__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var _particles__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./particles */ "./client/core/particles.ts");
-/* harmony import */ var _peers__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./peers */ "./client/core/peers.ts");
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+/* harmony import */ var _chat__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./chat */ "./client/core/chat.ts");
+/* harmony import */ var _particles__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./particles */ "./client/core/particles.ts");
+/* harmony import */ var _peers__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./peers */ "./client/core/peers.ts");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+
 
 
 
@@ -3969,32 +4006,34 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         const { camera, container, debug, entities, physics, player, registry, rendering, world, peers, particles, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
         // debug
         if (debug) {
-            this.debug = new ___WEBPACK_IMPORTED_MODULE_5__.Debug(this);
+            this.debug = new ___WEBPACK_IMPORTED_MODULE_6__.Debug(this);
         }
         // network
-        this.network = new ___WEBPACK_IMPORTED_MODULE_5__.Network(this);
+        this.network = new ___WEBPACK_IMPORTED_MODULE_6__.Network(this);
         // container
-        this.container = new ___WEBPACK_IMPORTED_MODULE_5__.Container(this, container);
+        this.container = new ___WEBPACK_IMPORTED_MODULE_6__.Container(this, container);
         // rendering
-        this.rendering = new ___WEBPACK_IMPORTED_MODULE_5__.Rendering(this, rendering);
+        this.rendering = new ___WEBPACK_IMPORTED_MODULE_6__.Rendering(this, rendering);
         // registry
-        this.registry = new ___WEBPACK_IMPORTED_MODULE_5__.Registry(this, registry);
+        this.registry = new ___WEBPACK_IMPORTED_MODULE_6__.Registry(this, registry);
         // inputs
-        this.inputs = new ___WEBPACK_IMPORTED_MODULE_5__.Inputs(this);
+        this.inputs = new ___WEBPACK_IMPORTED_MODULE_6__.Inputs(this);
+        // chat
+        this.chat = new _chat__WEBPACK_IMPORTED_MODULE_3__.Chat(this);
         // camera
-        this.camera = new ___WEBPACK_IMPORTED_MODULE_5__.Camera(this, camera);
+        this.camera = new ___WEBPACK_IMPORTED_MODULE_6__.Camera(this, camera);
         // world
-        this.world = new ___WEBPACK_IMPORTED_MODULE_5__.World(this, world);
+        this.world = new ___WEBPACK_IMPORTED_MODULE_6__.World(this, world);
         // player
-        this.player = new ___WEBPACK_IMPORTED_MODULE_5__.Player(this, player);
+        this.player = new ___WEBPACK_IMPORTED_MODULE_6__.Player(this, player);
         // physics
-        this.physics = new ___WEBPACK_IMPORTED_MODULE_5__.Physics(this, physics);
+        this.physics = new ___WEBPACK_IMPORTED_MODULE_6__.Physics(this, physics);
         // entities
-        this.entities = new ___WEBPACK_IMPORTED_MODULE_5__.Entities(this, entities);
+        this.entities = new ___WEBPACK_IMPORTED_MODULE_6__.Entities(this, entities);
         // peers
-        this.peers = new _peers__WEBPACK_IMPORTED_MODULE_4__.Peers(this, peers);
+        this.peers = new _peers__WEBPACK_IMPORTED_MODULE_5__.Peers(this, peers);
         // particles
-        this.particles = new _particles__WEBPACK_IMPORTED_MODULE_3__.Particles(this, particles);
+        this.particles = new _particles__WEBPACK_IMPORTED_MODULE_4__.Particles(this, particles);
         // time
         this.clock = new _libs__WEBPACK_IMPORTED_MODULE_2__.Clock();
         this.boot();
@@ -4092,36 +4131,39 @@ class Entities {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Camera": () => (/* reexport safe */ _camera__WEBPACK_IMPORTED_MODULE_0__.Camera),
-/* harmony export */   "Chunk": () => (/* reexport safe */ _chunk__WEBPACK_IMPORTED_MODULE_1__.Chunk),
-/* harmony export */   "Container": () => (/* reexport safe */ _container__WEBPACK_IMPORTED_MODULE_2__.Container),
-/* harmony export */   "Debug": () => (/* reexport safe */ _debug__WEBPACK_IMPORTED_MODULE_3__.Debug),
-/* harmony export */   "Engine": () => (/* reexport safe */ _engine__WEBPACK_IMPORTED_MODULE_4__.Engine),
-/* harmony export */   "Entities": () => (/* reexport safe */ _entities__WEBPACK_IMPORTED_MODULE_5__.Entities),
-/* harmony export */   "Inputs": () => (/* reexport safe */ _inputs__WEBPACK_IMPORTED_MODULE_6__.Inputs),
-/* harmony export */   "Network": () => (/* reexport safe */ _network__WEBPACK_IMPORTED_MODULE_7__.Network),
-/* harmony export */   "Particles": () => (/* reexport safe */ _particles__WEBPACK_IMPORTED_MODULE_8__.Particles),
-/* harmony export */   "Peers": () => (/* reexport safe */ _peers__WEBPACK_IMPORTED_MODULE_9__.Peers),
-/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_10__.Physics),
-/* harmony export */   "Player": () => (/* reexport safe */ _player__WEBPACK_IMPORTED_MODULE_11__.Player),
-/* harmony export */   "Registry": () => (/* reexport safe */ _registry__WEBPACK_IMPORTED_MODULE_12__.Registry),
-/* harmony export */   "Rendering": () => (/* reexport safe */ _rendering__WEBPACK_IMPORTED_MODULE_13__.Rendering),
-/* harmony export */   "World": () => (/* reexport safe */ _world__WEBPACK_IMPORTED_MODULE_14__.World)
+/* harmony export */   "Chat": () => (/* reexport safe */ _chat__WEBPACK_IMPORTED_MODULE_1__.Chat),
+/* harmony export */   "Chunk": () => (/* reexport safe */ _chunk__WEBPACK_IMPORTED_MODULE_2__.Chunk),
+/* harmony export */   "Container": () => (/* reexport safe */ _container__WEBPACK_IMPORTED_MODULE_3__.Container),
+/* harmony export */   "Debug": () => (/* reexport safe */ _debug__WEBPACK_IMPORTED_MODULE_4__.Debug),
+/* harmony export */   "Engine": () => (/* reexport safe */ _engine__WEBPACK_IMPORTED_MODULE_5__.Engine),
+/* harmony export */   "Entities": () => (/* reexport safe */ _entities__WEBPACK_IMPORTED_MODULE_6__.Entities),
+/* harmony export */   "Inputs": () => (/* reexport safe */ _inputs__WEBPACK_IMPORTED_MODULE_7__.Inputs),
+/* harmony export */   "Network": () => (/* reexport safe */ _network__WEBPACK_IMPORTED_MODULE_8__.Network),
+/* harmony export */   "Particles": () => (/* reexport safe */ _particles__WEBPACK_IMPORTED_MODULE_9__.Particles),
+/* harmony export */   "Peers": () => (/* reexport safe */ _peers__WEBPACK_IMPORTED_MODULE_10__.Peers),
+/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_11__.Physics),
+/* harmony export */   "Player": () => (/* reexport safe */ _player__WEBPACK_IMPORTED_MODULE_12__.Player),
+/* harmony export */   "Registry": () => (/* reexport safe */ _registry__WEBPACK_IMPORTED_MODULE_13__.Registry),
+/* harmony export */   "Rendering": () => (/* reexport safe */ _rendering__WEBPACK_IMPORTED_MODULE_14__.Rendering),
+/* harmony export */   "World": () => (/* reexport safe */ _world__WEBPACK_IMPORTED_MODULE_15__.World)
 /* harmony export */ });
 /* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./camera */ "./client/core/camera.ts");
-/* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./chunk */ "./client/core/chunk.ts");
-/* harmony import */ var _container__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./container */ "./client/core/container.ts");
-/* harmony import */ var _debug__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./debug */ "./client/core/debug.ts");
-/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities */ "./client/core/entities.ts");
-/* harmony import */ var _inputs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./inputs */ "./client/core/inputs.ts");
-/* harmony import */ var _network__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./network */ "./client/core/network.ts");
-/* harmony import */ var _particles__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./particles */ "./client/core/particles.ts");
-/* harmony import */ var _peers__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./peers */ "./client/core/peers.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./physics */ "./client/core/physics.ts");
-/* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./player */ "./client/core/player.ts");
-/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./registry */ "./client/core/registry.ts");
-/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./rendering */ "./client/core/rendering.ts");
-/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./world */ "./client/core/world.ts");
+/* harmony import */ var _chat__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./chat */ "./client/core/chat.ts");
+/* harmony import */ var _chunk__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./chunk */ "./client/core/chunk.ts");
+/* harmony import */ var _container__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./container */ "./client/core/container.ts");
+/* harmony import */ var _debug__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./debug */ "./client/core/debug.ts");
+/* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./entities */ "./client/core/entities.ts");
+/* harmony import */ var _inputs__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./inputs */ "./client/core/inputs.ts");
+/* harmony import */ var _network__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./network */ "./client/core/network.ts");
+/* harmony import */ var _particles__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./particles */ "./client/core/particles.ts");
+/* harmony import */ var _peers__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./peers */ "./client/core/peers.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./physics */ "./client/core/physics.ts");
+/* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./player */ "./client/core/player.ts");
+/* harmony import */ var _registry__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./registry */ "./client/core/registry.ts");
+/* harmony import */ var _rendering__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./rendering */ "./client/core/rendering.ts");
+/* harmony import */ var _world__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./world */ "./client/core/world.ts");
+
 
 
 
@@ -4160,6 +4202,7 @@ __webpack_require__.r(__webpack_exports__);
 class Inputs {
     constructor(engine) {
         this.engine = engine;
+        this.namespace = 'menu';
         this.combos = new Map();
         this.callbacks = new Map();
         this.clickCallbacks = new Map();
@@ -4176,23 +4219,26 @@ class Inputs {
         document.addEventListener('mousedown', ({ button }) => {
             if (!this.engine.locked)
                 return;
-            let callbacks;
+            let callbacks = [];
             if (button === 0)
                 callbacks = this.clickCallbacks.get('left');
             else if (button === 1)
                 callbacks = this.clickCallbacks.get('middle');
             else if (button === 2)
                 callbacks = this.clickCallbacks.get('right');
-            callbacks.forEach((func) => func());
+            callbacks.forEach(({ namespace, callback }) => {
+                if (this.namespace === namespace)
+                    callback();
+            });
         }, false);
     }
-    click(type, callback) {
-        this.clickCallbacks.get(type).push(callback);
+    click(type, callback, namespace) {
+        this.clickCallbacks.get(type).push({ namespace, callback });
     }
     add(name, combo) {
         this.combos.set(name, combo);
     }
-    bind(name, callback) {
+    bind(name, callback, namespace) {
         let combo = this.combos.get(name);
         if (!combo) {
             if (name.length === 1) {
@@ -4201,15 +4247,22 @@ class Inputs {
                 combo = name;
             }
             else {
-                throw new Error(`Error registering input, ${name}: not found.`);
+                throw new Error(`Error registering input, combo ${name}: not found.`);
             }
         }
-        mousetrap__WEBPACK_IMPORTED_MODULE_0___default().bind(combo, callback);
+        mousetrap__WEBPACK_IMPORTED_MODULE_0___default().bind(combo, () => {
+            if (this.namespace === namespace) {
+                callback();
+            }
+        });
     }
     unbind(name) {
         const combo = this.combos.get(name);
         if (combo)
             mousetrap__WEBPACK_IMPORTED_MODULE_0___default().unbind(combo);
+    }
+    setNamespace(namespace) {
+        this.namespace = namespace;
     }
 }
 
@@ -4621,7 +4674,9 @@ class Player {
         };
         this.godMode = false;
         this.onKeyDown = ({ code }) => {
-            if (!this.controls.isLocked)
+            if (!this.controls.isLocked || this.engine.chat.enabled)
+                return;
+            if (this.engine.inputs.namespace !== 'in-game')
                 return;
             switch (code) {
                 case 'ArrowUp':
@@ -4649,6 +4704,10 @@ class Player {
             }
         };
         this.onKeyUp = ({ code }) => {
+            if (!this.controls.isLocked || this.engine.chat.enabled)
+                return;
+            if (this.engine.inputs.namespace !== 'in-game')
+                return;
             switch (code) {
                 case 'ArrowUp':
                 case 'KeyW':
@@ -4706,14 +4765,21 @@ class Player {
             this.lookBlockMesh.renderOrder = 100000;
             rendering.scene.add(this.lookBlockMesh);
         });
-        inputs.bind('f', () => this.toggleGodMode());
-        inputs.click('left', () => world.breakVoxel());
-        inputs.click('right', () => world.placeVoxel(type));
+        inputs.bind('f', () => this.toggleGodMode(), 'in-game');
+        inputs.click('left', () => world.breakVoxel(), 'in-game');
+        inputs.click('right', () => world.placeVoxel(type), 'in-game');
         for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
-            inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]));
+            inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]), 'in-game');
         }
-        this.controls.addEventListener('lock', () => engine.emit('lock'));
-        this.controls.addEventListener('unlock', () => engine.emit('unlock'));
+        this.controls.addEventListener('lock', () => {
+            engine.chat.disable();
+            engine.inputs.setNamespace('in-game');
+            engine.emit('lock');
+        });
+        this.controls.addEventListener('unlock', () => {
+            engine.inputs.setNamespace(engine.chat.enabled ? 'chat' : 'menu');
+            engine.emit('unlock');
+        });
         this.name = localStorage.getItem(LOCAL_STORAGE_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     }
     godModeMovements() {
@@ -5759,8 +5825,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_5__.Physics),
 /* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_6__.RigidBody),
 /* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_7__.simpleCull),
-/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_8__.Sky),
-/* harmony export */   "VoxelOctree": () => (/* reexport safe */ _voxel_octree__WEBPACK_IMPORTED_MODULE_10__.VoxelOctree)
+/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_8__.Sky)
 /* harmony export */ });
 /* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 /* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
@@ -5772,8 +5837,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
 /* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
 /* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
-/* harmony import */ var _voxel_octree__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./voxel-octree */ "./client/libs/voxel-octree.ts");
-
 
 
 
@@ -6698,24 +6761,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-
-/***/ }),
-
-/***/ "./client/libs/voxel-octree.ts":
-/*!*************************************!*\
-  !*** ./client/libs/voxel-octree.ts ***!
-  \*************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "VoxelOctree": () => (/* binding */ VoxelOctree)
-/* harmony export */ });
-class VoxelOctree {
-}
 
 
 
@@ -23864,13 +23909,13 @@ function add_css() {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[17] = list[i].name;
-	child_ctx[18] = list[i].generation;
-	child_ctx[19] = list[i].description;
+	child_ctx[18] = list[i].name;
+	child_ctx[19] = list[i].generation;
+	child_ctx[20] = list[i].description;
 	return child_ctx;
 }
 
-// (59:2) {:else}
+// (62:2) {:else}
 function create_else_block(ctx) {
 	let div;
 	let h1;
@@ -23886,11 +23931,11 @@ function create_else_block(ctx) {
 		pending: create_pending_block,
 		then: create_then_block,
 		catch: create_catch_block,
-		value: 16,
-		error: 22
+		value: 17,
+		error: 23
 	};
 
-	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise = /*fetchWorlds*/ ctx[5], info);
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise = /*fetchWorlds*/ ctx[6], info);
 
 	const block = {
 		c: function create() {
@@ -23902,13 +23947,13 @@ function create_else_block(ctx) {
 			info.block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "id", "world-list-title");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 60, 6, 2309);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 63, 6, 2460);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "id", "world-list");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 61, 6, 2361);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 64, 6, 2512);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "id", "world-list-wrapper");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 59, 4, 2273);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 62, 4, 2424);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
@@ -23918,17 +23963,17 @@ function create_else_block(ctx) {
 			info.block.m(ul, info.anchor = null);
 			info.mount = () => ul;
 			info.anchor = null;
-			/*ul_binding*/ ctx[13](ul);
+			/*ul_binding*/ ctx[14](ul);
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
 			info.ctx = ctx;
 
-			if (dirty & /*fetchWorlds*/ 32 && promise !== (promise = /*fetchWorlds*/ ctx[5]) && (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise, info)) {
+			if (dirty & /*fetchWorlds*/ 64 && promise !== (promise = /*fetchWorlds*/ ctx[6]) && (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise, info)) {
 				
 			} else {
 				const child_ctx = ctx.slice();
-				child_ctx[16] = child_ctx[22] = info.resolved;
+				child_ctx[17] = child_ctx[23] = info.resolved;
 				info.block.p(child_ctx, dirty);
 			}
 		},
@@ -23939,7 +23984,7 @@ function create_else_block(ctx) {
 			info.block.d();
 			info.token = null;
 			info = null;
-			/*ul_binding*/ ctx[13](null);
+			/*ul_binding*/ ctx[14](null);
 		}
 	};
 
@@ -23947,21 +23992,21 @@ function create_else_block(ctx) {
 		block,
 		id: create_else_block.name,
 		type: "else",
-		source: "(59:2) {:else}",
+		source: "(62:2) {:else}",
 		ctx
 	});
 
 	return block;
 }
 
-// (46:2) {#if !!world}
+// (49:2) {#if world}
 function create_if_block(ctx) {
 	let div;
 	let img;
 	let img_src_value;
 	let t;
 	let current;
-	let if_block = !/*locked*/ ctx[2] && create_if_block_1(ctx);
+	let if_block = !/*locked*/ ctx[3] && !/*chatEnabled*/ ctx[5] && create_if_block_1(ctx);
 
 	const block = {
 		c: function create() {
@@ -23973,23 +24018,23 @@ function create_if_block(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "id", "crosshair");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "alt", "+");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 47, 6, 1757);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 46, 4, 1722);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 50, 6, 1892);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 49, 4, 1857);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, img);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t);
 			if (if_block) if_block.m(div, null);
-			/*div_binding*/ ctx[10](div);
+			/*div_binding*/ ctx[11](div);
 			current = true;
 		},
 		p: function update(ctx, dirty) {
-			if (!/*locked*/ ctx[2]) {
+			if (!/*locked*/ ctx[3] && !/*chatEnabled*/ ctx[5]) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 
-					if (dirty & /*locked*/ 4) {
+					if (dirty & /*locked, chatEnabled*/ 40) {
 						(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block, 1);
 					}
 				} else {
@@ -24020,7 +24065,7 @@ function create_if_block(ctx) {
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(div);
 			if (if_block) if_block.d();
-			/*div_binding*/ ctx[10](null);
+			/*div_binding*/ ctx[11](null);
 		}
 	};
 
@@ -24028,18 +24073,18 @@ function create_if_block(ctx) {
 		block,
 		id: create_if_block.name,
 		type: "if",
-		source: "(46:2) {#if !!world}",
+		source: "(49:2) {#if world}",
 		ctx
 	});
 
 	return block;
 }
 
-// (77:8) {:catch error}
+// (80:8) {:catch error}
 function create_catch_block(ctx) {
 	let p;
 	let t0;
-	let t1_value = /*error*/ ctx[22] + "";
+	let t1_value = /*error*/ ctx[23] + "";
 	let t1;
 
 	const block = {
@@ -24047,7 +24092,7 @@ function create_catch_block(ctx) {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)("An error occurred! ");
 			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t1_value);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 77, 10, 2976);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 80, 10, 3127);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
@@ -24055,7 +24100,7 @@ function create_catch_block(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t1);
 		},
 		p: function update(ctx, dirty) {
-			if (dirty & /*fetchWorlds*/ 32 && t1_value !== (t1_value = /*error*/ ctx[22] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t1, t1_value);
+			if (dirty & /*fetchWorlds*/ 64 && t1_value !== (t1_value = /*error*/ ctx[23] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t1, t1_value);
 		},
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(p);
@@ -24066,17 +24111,17 @@ function create_catch_block(ctx) {
 		block,
 		id: create_catch_block.name,
 		type: "catch",
-		source: "(77:8) {:catch error}",
+		source: "(80:8) {:catch error}",
 		ctx
 	});
 
 	return block;
 }
 
-// (65:8) {:then data}
+// (68:8) {:then data}
 function create_then_block(ctx) {
 	let each_1_anchor;
-	let each_value = /*data*/ ctx[16].worlds;
+	let each_value = /*data*/ ctx[17].worlds;
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
 	let each_blocks = [];
 
@@ -24100,8 +24145,8 @@ function create_then_block(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, each_1_anchor, anchor);
 		},
 		p: function update(ctx, dirty) {
-			if (dirty & /*selected, fetchWorlds, window*/ 48) {
-				each_value = /*data*/ ctx[16].worlds;
+			if (dirty & /*selected, fetchWorlds, window*/ 80) {
+				each_value = /*data*/ ctx[17].worlds;
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
 				let i;
 
@@ -24134,25 +24179,25 @@ function create_then_block(ctx) {
 		block,
 		id: create_then_block.name,
 		type: "then",
-		source: "(65:8) {:then data}",
+		source: "(68:8) {:then data}",
 		ctx
 	});
 
 	return block;
 }
 
-// (66:10) {#each data.worlds as { name, generation, description }}
+// (69:10) {#each data.worlds as { name, generation, description }}
 function create_each_block(ctx) {
 	let li;
 	let h1;
-	let t0_value = /*name*/ ctx[17] + "";
+	let t0_value = /*name*/ ctx[18] + "";
 	let t0;
 	let t1;
 	let p;
-	let t2_value = /*generation*/ ctx[18] + "";
+	let t2_value = /*generation*/ ctx[19] + "";
 	let t2;
 	let t3;
-	let t4_value = /*description*/ ctx[19] + "";
+	let t4_value = /*description*/ ctx[20] + "";
 	let t4;
 	let t5;
 	let li_class_value;
@@ -24160,11 +24205,11 @@ function create_each_block(ctx) {
 	let dispose;
 
 	function click_handler_2() {
-		return /*click_handler_2*/ ctx[11](/*name*/ ctx[17]);
+		return /*click_handler_2*/ ctx[12](/*name*/ ctx[18]);
 	}
 
 	function dblclick_handler() {
-		return /*dblclick_handler*/ ctx[12](/*name*/ ctx[17]);
+		return /*dblclick_handler*/ ctx[13](/*name*/ ctx[18]);
 	}
 
 	const block = {
@@ -24179,16 +24224,16 @@ function create_each_block(ctx) {
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t4_value);
 			t5 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 72, 14, 2841);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 75, 14, 2992);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 73, 14, 2871);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 76, 14, 3022);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "id", "world-list-item");
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[17]
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[18]
 			? "selected"
 			: "") + " svelte-ux860h"));
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 66, 12, 2568);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 69, 12, 2719);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, li, anchor);
@@ -24212,11 +24257,11 @@ function create_each_block(ctx) {
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
-			if (dirty & /*fetchWorlds*/ 32 && t0_value !== (t0_value = /*name*/ ctx[17] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t0, t0_value);
-			if (dirty & /*fetchWorlds*/ 32 && t2_value !== (t2_value = /*generation*/ ctx[18] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t2, t2_value);
-			if (dirty & /*fetchWorlds*/ 32 && t4_value !== (t4_value = /*description*/ ctx[19] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t4, t4_value);
+			if (dirty & /*fetchWorlds*/ 64 && t0_value !== (t0_value = /*name*/ ctx[18] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t0, t0_value);
+			if (dirty & /*fetchWorlds*/ 64 && t2_value !== (t2_value = /*generation*/ ctx[19] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t2, t2_value);
+			if (dirty & /*fetchWorlds*/ 64 && t4_value !== (t4_value = /*description*/ ctx[20] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t4, t4_value);
 
-			if (dirty & /*selected, fetchWorlds*/ 48 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[17]
+			if (dirty & /*selected, fetchWorlds*/ 80 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[18]
 			? "selected"
 			: "") + " svelte-ux860h"))) {
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value);
@@ -24233,14 +24278,14 @@ function create_each_block(ctx) {
 		block,
 		id: create_each_block.name,
 		type: "each",
-		source: "(66:10) {#each data.worlds as { name, generation, description }}",
+		source: "(69:10) {#each data.worlds as { name, generation, description }}",
 		ctx
 	});
 
 	return block;
 }
 
-// (63:28)            <p>...waiting</p>         {:then data}
+// (66:28)            <p>...waiting</p>         {:then data}
 function create_pending_block(ctx) {
 	let p;
 
@@ -24248,7 +24293,7 @@ function create_pending_block(ctx) {
 		c: function create() {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			p.textContent = "...waiting";
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 63, 10, 2450);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 66, 10, 2601);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
@@ -24263,14 +24308,14 @@ function create_pending_block(ctx) {
 		block,
 		id: create_pending_block.name,
 		type: "pending",
-		source: "(63:28)            <p>...waiting</p>         {:then data}",
+		source: "(66:28)            <p>...waiting</p>         {:then data}",
 		ctx
 	});
 
 	return block;
 }
 
-// (49:6) {#if !locked}
+// (52:6) {#if !locked && !chatEnabled}
 function create_if_block_1(ctx) {
 	let div1;
 	let div0;
@@ -24287,13 +24332,13 @@ function create_if_block_1(ctx) {
 	input = new _components_input_svelte__WEBPACK_IMPORTED_MODULE_4__.default({
 			props: {
 				placeholder: "Username",
-				value: /*engine*/ ctx[3].player.name,
+				value: /*engine*/ ctx[2].player.name,
 				maxLength: "16"
 			},
 			$$inline: true
 		});
 
-	input.$on("input", /*onNameChange*/ ctx[7]);
+	input.$on("input", /*onNameChange*/ ctx[8]);
 
 	button0 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
@@ -24303,7 +24348,7 @@ function create_if_block_1(ctx) {
 			$$inline: true
 		});
 
-	button0.$on("click", /*click_handler*/ ctx[8]);
+	button0.$on("click", /*click_handler*/ ctx[9]);
 
 	button1 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
@@ -24313,7 +24358,7 @@ function create_if_block_1(ctx) {
 			$$inline: true
 		});
 
-	button1.$on("click", /*click_handler_1*/ ctx[9]);
+	button1.$on("click", /*click_handler_1*/ ctx[10]);
 
 	const block = {
 		c: function create() {
@@ -24329,12 +24374,12 @@ function create_if_block_1(ctx) {
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button1.$$.fragment);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 50, 10, 1886);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 53, 10, 2037);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 51, 10, 1904);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 54, 10, 2055);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "pause-menu");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 49, 8, 1854);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 52, 8, 2005);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div1, anchor);
@@ -24351,18 +24396,18 @@ function create_if_block_1(ctx) {
 		},
 		p: function update(ctx, dirty) {
 			const input_changes = {};
-			if (dirty & /*engine*/ 8) input_changes.value = /*engine*/ ctx[3].player.name;
+			if (dirty & /*engine*/ 4) input_changes.value = /*engine*/ ctx[2].player.name;
 			input.$set(input_changes);
 			const button0_changes = {};
 
-			if (dirty & /*$$scope*/ 8388608) {
+			if (dirty & /*$$scope*/ 16777216) {
 				button0_changes.$$scope = { dirty, ctx };
 			}
 
 			button0.$set(button0_changes);
 			const button1_changes = {};
 
-			if (dirty & /*$$scope*/ 8388608) {
+			if (dirty & /*$$scope*/ 16777216) {
 				button1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -24393,14 +24438,14 @@ function create_if_block_1(ctx) {
 		block,
 		id: create_if_block_1.name,
 		type: "if",
-		source: "(49:6) {#if !locked}",
+		source: "(52:6) {#if !locked && !chatEnabled}",
 		ctx
 	});
 
 	return block;
 }
 
-// (54:10) <Button on:click={() => engine.lock()}>
+// (57:10) <Button on:click={() => engine.lock()}>
 function create_default_slot_1(ctx) {
 	let t;
 
@@ -24420,14 +24465,14 @@ function create_default_slot_1(ctx) {
 		block,
 		id: create_default_slot_1.name,
 		type: "slot",
-		source: "(54:10) <Button on:click={() => engine.lock()}>",
+		source: "(57:10) <Button on:click={() => engine.lock()}>",
 		ctx
 	});
 
 	return block;
 }
 
-// (55:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
+// (58:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
 function create_default_slot(ctx) {
 	let t;
 
@@ -24447,7 +24492,7 @@ function create_default_slot(ctx) {
 		block,
 		id: create_default_slot.name,
 		type: "slot",
-		source: "(55:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
+		source: "(58:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
 		ctx
 	});
 
@@ -24463,7 +24508,7 @@ function create_fragment(ctx) {
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (!!/*world*/ ctx[6]) return 0;
+		if (/*world*/ ctx[7]) return 0;
 		return 1;
 	}
 
@@ -24475,7 +24520,7 @@ function create_fragment(ctx) {
 			main = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("main");
 			if_block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 44, 0, 1695);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 47, 0, 1832);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -24557,9 +24602,10 @@ function instance($$self, $$props, $$invalidate) {
 	let domElement;
 	let canvas;
 	let worldListWrapper;
-	let locked;
 	let engine;
+	let locked;
 	let selected;
+	let chatEnabled;
 	let fetchWorlds;
 	const { world } = query_string__WEBPACK_IMPORTED_MODULE_1__.parse(window.location.search);
 
@@ -24568,8 +24614,10 @@ function instance($$self, $$props, $$invalidate) {
 		engine = new _core__WEBPACK_IMPORTED_MODULE_5__.Engine({ container: { canvas, domElement } });
 		engine.join(worldName);
 		engine.start();
-		engine.on("lock", () => $$invalidate(2, locked = true));
-		engine.on("unlock", () => $$invalidate(2, locked = false));
+		engine.on("lock", () => $$invalidate(3, locked = true));
+		engine.on("unlock", () => $$invalidate(3, locked = false));
+		engine.on("chat-enabled", () => $$invalidate(5, chatEnabled = true));
+		engine.on("chat-disabled", () => $$invalidate(5, chatEnabled = false));
 	} else {
 		fetchWorlds = (() => __awaiter(void 0, void 0, void 0, function* () {
 			const response = yield fetch(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getServerURL().toString() + "worlds");
@@ -24619,9 +24667,10 @@ function instance($$self, $$props, $$invalidate) {
 		domElement,
 		canvas,
 		worldListWrapper,
-		locked,
 		engine,
+		locked,
 		selected,
+		chatEnabled,
 		fetchWorlds,
 		world,
 		onNameChange
@@ -24632,10 +24681,11 @@ function instance($$self, $$props, $$invalidate) {
 		if ("domElement" in $$props) $$invalidate(0, domElement = $$props.domElement);
 		if ("canvas" in $$props) canvas = $$props.canvas;
 		if ("worldListWrapper" in $$props) $$invalidate(1, worldListWrapper = $$props.worldListWrapper);
-		if ("locked" in $$props) $$invalidate(2, locked = $$props.locked);
-		if ("engine" in $$props) $$invalidate(3, engine = $$props.engine);
+		if ("engine" in $$props) $$invalidate(2, engine = $$props.engine);
+		if ("locked" in $$props) $$invalidate(3, locked = $$props.locked);
 		if ("selected" in $$props) $$invalidate(4, selected = $$props.selected);
-		if ("fetchWorlds" in $$props) $$invalidate(5, fetchWorlds = $$props.fetchWorlds);
+		if ("chatEnabled" in $$props) $$invalidate(5, chatEnabled = $$props.chatEnabled);
+		if ("fetchWorlds" in $$props) $$invalidate(6, fetchWorlds = $$props.fetchWorlds);
 	};
 
 	if ($$props && "$$inject" in $$props) {
@@ -24645,9 +24695,10 @@ function instance($$self, $$props, $$invalidate) {
 	return [
 		domElement,
 		worldListWrapper,
-		locked,
 		engine,
+		locked,
 		selected,
+		chatEnabled,
 		fetchWorlds,
 		world,
 		onNameChange,
@@ -24674,7 +24725,7 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_6__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_7__.default, acceptable: true, cssId: "svelte-ux860h-style", nonCssHash: "1v2skkh", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_6__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_7__.default, acceptable: true, cssId: "svelte-ux860h-style", nonCssHash: "1lxorag", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
 if (typeof add_css !== 'undefined' && !document.getElementById("svelte-ux860h-style")) add_css();

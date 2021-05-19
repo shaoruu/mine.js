@@ -1,4 +1,5 @@
 export * from './camera';
+export * from './chat';
 export * from './chunk';
 export * from './container';
 export * from './debug';

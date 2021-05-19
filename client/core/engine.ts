@@ -4,6 +4,7 @@ import merge from 'deepmerge';
 
 import { Clock, DeepPartial } from '../libs';
 
+import { Chat } from './chat';
 import { Particles, ParticlesOptionsType } from './particles';
 import { Peers, PeersOptionsType } from './peers';
 
@@ -114,6 +115,7 @@ class Engine extends EventEmitter {
   public config: ConfigType;
   public debug: Debug;
   public clock: Clock;
+  public chat: Chat;
   public network: Network;
   public container: Container;
   public rendering: Rendering;
@@ -166,6 +168,9 @@ class Engine extends EventEmitter {
 
     // inputs
     this.inputs = new Inputs(this);
+
+    // chat
+    this.chat = new Chat(this);
 
     // camera
     this.camera = new Camera(this, camera);

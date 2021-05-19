@@ -10,9 +10,10 @@
   let canvas: HTMLCanvasElement;
   let worldListWrapper: HTMLUListElement;
 
-  let locked: boolean;
   let engine: Engine;
+  let locked: boolean;
   let selected: string;
+  let chatEnabled: boolean;
   let fetchWorlds: Promise<any>;
 
   const { world } = QS.parse(window.location.search);
@@ -28,6 +29,8 @@
 
     engine.on('lock', () => (locked = true));
     engine.on('unlock', () => (locked = false));
+    engine.on('chat-enabled', () => (chatEnabled = true));
+    engine.on('chat-disabled', () => (chatEnabled = false));
   } else {
     fetchWorlds = (async () => {
       const response = await fetch(Helper.getServerURL().toString() + 'worlds');
@@ -43,10 +46,10 @@
 </script>
 
 <main>
-  {#if !!world}
+  {#if world}
     <div bind:this={domElement}>
       <img src="https://i.imgur.com/ro6oLCL.png" id="crosshair" alt="+" />
-      {#if !locked}
+      {#if !locked && !chatEnabled}
         <div id="pause-menu">
           <div />
           <h2>Game menu</h2>

@@ -83,22 +83,30 @@ class Player {
       rendering.scene.add(this.lookBlockMesh);
     });
 
-    inputs.bind('f', () => this.toggleGodMode());
-    inputs.click('left', () => world.breakVoxel());
-    inputs.click('right', () => world.placeVoxel(type));
+    inputs.bind('f', () => this.toggleGodMode(), 'in-game');
+    inputs.click('left', () => world.breakVoxel(), 'in-game');
+    inputs.click('right', () => world.placeVoxel(type), 'in-game');
 
     for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
-      inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]));
+      inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]), 'in-game');
     }
 
-    this.controls.addEventListener('lock', () => engine.emit('lock'));
-    this.controls.addEventListener('unlock', () => engine.emit('unlock'));
+    this.controls.addEventListener('lock', () => {
+      engine.chat.disable();
+      engine.inputs.setNamespace('in-game');
+      engine.emit('lock');
+    });
+    this.controls.addEventListener('unlock', () => {
+      engine.inputs.setNamespace(engine.chat.enabled ? 'chat' : 'menu');
+      engine.emit('unlock');
+    });
 
     this.name = localStorage.getItem(LOCAL_STORAGE_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {
-    if (!this.controls.isLocked) return;
+    if (!this.controls.isLocked || this.engine.chat.enabled) return;
+    if (this.engine.inputs.namespace !== 'in-game') return;
 
     switch (code) {
       case 'ArrowUp':
@@ -132,6 +140,9 @@ class Player {
   };
 
   onKeyUp = ({ code }: KeyboardEvent) => {
+    if (!this.controls.isLocked || this.engine.chat.enabled) return;
+    if (this.engine.inputs.namespace !== 'in-game') return;
+
     switch (code) {
       case 'ArrowUp':
       case 'KeyW':

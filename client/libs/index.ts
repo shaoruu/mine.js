@@ -8,4 +8,3 @@ export * from './rigid-body';
 export * from './simple-cull';
 export * from './sky';
 export * from './types';
-export * from './voxel-octree';

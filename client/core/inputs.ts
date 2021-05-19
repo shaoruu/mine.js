@@ -3,11 +3,14 @@ import Mousetrap from 'mousetrap';
 import { Engine } from './engine';
 
 type ClickType = 'left' | 'middle' | 'right';
+type InputNamespace = 'in-game' | 'chat' | 'menu';
+type ClickCallbacksType = { callback: () => void; namespace: InputNamespace }[];
 
 class Inputs {
+  public namespace: InputNamespace = 'menu';
   public combos: Map<string, string> = new Map();
   public callbacks: Map<string, () => void> = new Map();
-  public clickCallbacks: Map<ClickType, (() => void)[]> = new Map();
+  public clickCallbacks: Map<ClickType, ClickCallbacksType> = new Map();
 
   constructor(public engine: Engine) {
     this.add('forward', 'w');
@@ -28,27 +31,29 @@ class Inputs {
       ({ button }) => {
         if (!this.engine.locked) return;
 
-        let callbacks: (() => void)[];
+        let callbacks: ClickCallbacksType = [];
 
         if (button === 0) callbacks = this.clickCallbacks.get('left');
         else if (button === 1) callbacks = this.clickCallbacks.get('middle');
         else if (button === 2) callbacks = this.clickCallbacks.get('right');
 
-        callbacks.forEach((func) => func());
+        callbacks.forEach(({ namespace, callback }) => {
+          if (this.namespace === namespace) callback();
+        });
       },
       false,
     );
   }
 
-  click(type: ClickType, callback: () => void) {
-    this.clickCallbacks.get(type).push(callback);
+  click(type: ClickType, callback: () => void, namespace: InputNamespace) {
+    this.clickCallbacks.get(type).push({ namespace, callback });
   }
 
   add(name: string, combo: string) {
     this.combos.set(name, combo);
   }
 
-  bind(name: string, callback: () => void) {
+  bind(name: string, callback: () => void, namespace: InputNamespace) {
     let combo = this.combos.get(name);
 
     if (!combo) {
@@ -57,16 +62,24 @@ class Inputs {
         this.add(name, name);
         combo = name;
       } else {
-        throw new Error(`Error registering input, ${name}: not found.`);
+        throw new Error(`Error registering input, combo ${name}: not found.`);
       }
     }
 
-    Mousetrap.bind(combo, callback);
+    Mousetrap.bind(combo, () => {
+      if (this.namespace === namespace) {
+        callback();
+      }
+    });
   }
 
   unbind(name: string) {
     const combo = this.combos.get(name);
     if (combo) Mousetrap.unbind(combo);
+  }
+
+  setNamespace(namespace: InputNamespace) {
+    this.namespace = namespace;
   }
 }
 
