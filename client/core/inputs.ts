@@ -3,7 +3,8 @@ import Mousetrap from 'mousetrap';
 import { Engine } from './engine';
 
 type ClickType = 'left' | 'middle' | 'right';
-type InputNamespace = 'in-game' | 'chat' | 'menu';
+type InputNamespace = 'in-game' | 'chat' | 'menu' | '*';
+type InputOccasion = 'keydown' | 'keypress' | 'keyup';
 type ClickCallbacksType = { callback: () => void; namespace: InputNamespace }[];
 
 class Inputs {
@@ -19,6 +20,7 @@ class Inputs {
     this.add('right', 'd');
     this.add('space', 'space');
     this.add('dbl-space', 'space space');
+    this.add('esc', 'esc');
 
     this.initClickListener();
   }
@@ -53,7 +55,7 @@ class Inputs {
     this.combos.set(name, combo);
   }
 
-  bind(name: string, callback: () => void, namespace: InputNamespace) {
+  bind(name: string, callback: () => void, namespace: InputNamespace, occasion: InputOccasion = 'keydown') {
     let combo = this.combos.get(name);
 
     if (!combo) {
@@ -66,11 +68,15 @@ class Inputs {
       }
     }
 
-    Mousetrap.bind(combo, () => {
-      if (this.namespace === namespace) {
-        callback();
-      }
-    });
+    Mousetrap.bind(
+      combo,
+      () => {
+        if (this.namespace === namespace || namespace === '*') {
+          callback();
+        }
+      },
+      occasion,
+    );
   }
 
   unbind(name: string) {

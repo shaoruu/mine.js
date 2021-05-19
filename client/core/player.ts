@@ -1,9 +1,8 @@
 import raycast from 'fast-voxel-raycast';
 import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Vector3 } from 'three';
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
 import { Coords3, Helper } from '../../shared';
-import { EntityType } from '../libs';
+import { EntityType, PointerLockControls } from '../libs';
 
 import { Engine } from '.';
 
@@ -92,15 +91,16 @@ class Player {
     }
 
     this.controls.addEventListener('lock', () => {
-      engine.chat.disable();
-      engine.inputs.setNamespace('in-game');
       engine.emit('lock');
-    });
-    this.controls.addEventListener('unlock', () => {
-      engine.inputs.setNamespace(engine.chat.enabled ? 'chat' : 'menu');
-      engine.emit('unlock');
+      engine.inputs.setNamespace('in-game');
     });
 
+    this.controls.addEventListener('unlock', () => {
+      engine.emit('unlock');
+      engine.inputs.setNamespace(engine.chat.enabled ? 'chat' : 'menu');
+    });
+
+    // retrieve name from localStorage
     this.name = localStorage.getItem(LOCAL_STORAGE_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
   }
 

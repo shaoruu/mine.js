@@ -1,5 +1,4 @@
 import { GUI } from 'dat.gui';
-import Stats from 'stats.js';
 import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
 // import { AxesHelper, GridHelper } from 'three';
 
@@ -11,7 +10,6 @@ type FormatterType = (input: any) => string;
 
 class Debug {
   public gui: dat.GUI;
-  public stats: Stats;
   public dataWrapper: HTMLDivElement;
   public dataEntries: {
     ele: HTMLParagraphElement;
@@ -30,9 +28,6 @@ class Debug {
       closed: true,
     });
 
-    // FPS indicator
-    this.stats = new Stats();
-
     const {
       world: { chunkSize, dimension, maxHeight },
     } = engine.config;
@@ -48,10 +43,6 @@ class Debug {
       const zIndex = '1000000000';
 
       Helper.applyStyle(parentElement, {
-        zIndex,
-      });
-
-      Helper.applyStyle(this.stats.dom, {
         zIndex,
       });
     }
@@ -93,7 +84,8 @@ class Debug {
     this.dataWrapper = document.createElement('div');
     Helper.applyStyle(this.dataWrapper, {
       position: 'absolute',
-      bottom: '0',
+      width: '180px',
+      top: '0',
       left: '0',
       background: '#00000022',
       color: 'white',
@@ -108,7 +100,6 @@ class Debug {
 
   mount = () => {
     const { domElement } = this.engine.container;
-    domElement.appendChild(this.stats.dom);
     domElement.appendChild(this.dataWrapper);
   };
 
@@ -145,18 +136,17 @@ class Debug {
       .onFinishChange((value) => world.setTime(value))
       .name('Time value');
 
-    this.registerDisplay('chunk', world, 'camChunkPosStr');
-    this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
-
     // PLAYER
     const playerFolder = this.gui.addFolder('Player');
     playerFolder.add(player.options, 'acceleration', 0, 5, 0.01).name('Acceleration');
     playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01).name('Flying inertia');
-    this.registerDisplay('looking at', player, 'lookBlockStr');
 
-    // CAMERA
     // const cameraFolder = this.gui.addFolder('camera');
+    this.registerDisplay('FPS', this, 'fps');
     this.registerDisplay('position', camera, 'voxelPositionStr');
+    this.registerDisplay('chunk', world, 'camChunkPosStr');
+    this.registerDisplay('looking at', player, 'lookBlockStr');
+    this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
 
     // REGISTRY
     const registryFolder = this.gui.addFolder('Registry');
@@ -216,7 +206,56 @@ class Debug {
       attribute,
     };
     this.dataEntries.push(newEntry);
-    this.dataWrapper.appendChild(wrapper);
+    this.dataWrapper.insertBefore(wrapper, this.dataWrapper.firstChild);
+  }
+
+  calculateFPS = (function () {
+    const sampleSize = 60;
+    let value = 0;
+    const sample = [];
+    let index = 0;
+    let lastTick = 0;
+    let min;
+    let max;
+
+    return function () {
+      // if is first tick, just set tick timestamp and return
+      if (!lastTick) {
+        lastTick = performance.now();
+        return 0;
+      }
+      // calculate necessary values to obtain current tick FPS
+      const now = performance.now();
+      const delta = (now - lastTick) / 1000;
+      const fps = 1 / delta;
+      // add to fps samples, current tick fps value
+      sample[index] = Math.round(fps);
+
+      // iterate samples to obtain the average
+      let average = 0;
+      for (let i = 0; i < sample.length; i++) average += sample[i];
+
+      average = Math.round(average / sample.length);
+
+      // set new FPS
+      value = average;
+      // store current timestamp
+      lastTick = now;
+      // increase sample index counter, and reset it
+      // to 0 if exceded maximum sampleSize limit
+      index++;
+
+      if (index === sampleSize) index = 0;
+
+      if (!min || min > value) min = value;
+      if (!max || max < value) max = value;
+
+      return `${value} (${min}, ${max})`;
+    };
+  })();
+
+  get fps() {
+    return this.calculateFPS();
   }
 }
 

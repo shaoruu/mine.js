@@ -3410,20 +3410,35 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var ___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! . */ "./client/core/index.ts");
 
 class Chat {
-    constructor(engine) {
+    constructor(engine, options) {
         this.engine = engine;
+        this.options = options;
         this.enabled = false;
         this.enable = (isCommand = false) => {
-            this.enabled = true;
             this.engine.unlock();
             this.engine.emit('chat-enabled');
+            this.enabled = true;
+            const interval = setInterval(() => {
+                const input = document.getElementById('chat');
+                if (!input)
+                    return;
+                input.focus();
+                input.addEventListener('keyup', (e) => {
+                    if (e.key === 'Escape') {
+                        this.disable();
+                    }
+                }, false);
+                clearInterval(interval);
+            }, 1);
         };
         this.disable = () => {
             this.enabled = false;
-            this.engine.lock();
-            this.engine.emit('chat-disabled');
+            this.engine.lock(() => {
+                this.engine.emit('chat-disabled');
+            });
         };
         engine.inputs.bind('t', this.enable, 'in-game');
+        engine.inputs.bind('esc', this.disable, 'chat', 'keyup');
     }
 }
 
@@ -3668,12 +3683,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Debug": () => (/* binding */ Debug)
 /* harmony export */ });
 /* harmony import */ var dat_gui__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! dat.gui */ "./node_modules/dat.gui/build/dat.gui.module.js");
-/* harmony import */ var stats_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! stats.js */ "./node_modules/stats.js/build/stats.min.js");
-/* harmony import */ var stats_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(stats_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
-
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! . */ "./client/core/index.ts");
 
 
 // import { AxesHelper, GridHelper } from 'three';
@@ -3685,16 +3697,17 @@ class Debug {
         this.dataEntries = [];
         this.makeDataEntry = () => {
             const dataEntry = document.createElement('p');
-            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(dataEntry, {
+            _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(dataEntry, {
                 margin: '0',
             });
             return dataEntry;
         };
         this.makeDOM = () => {
             this.dataWrapper = document.createElement('div');
-            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.dataWrapper, {
+            _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.dataWrapper, {
                 position: 'absolute',
-                bottom: '0',
+                width: '180px',
+                top: '0',
                 left: '0',
                 background: '#00000022',
                 color: 'white',
@@ -3708,7 +3721,6 @@ class Debug {
         };
         this.mount = () => {
             const { domElement } = this.engine.container;
-            domElement.appendChild(this.stats.dom);
             domElement.appendChild(this.dataWrapper);
         };
         this.setupAll = () => {
@@ -3740,16 +3752,16 @@ class Debug {
                 .add(worldDebugConfigs, 'time', 0, 2400, 10)
                 .onFinishChange((value) => world.setTime(value))
                 .name('Time value');
-            this.registerDisplay('chunk', world, 'camChunkPosStr');
-            this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
             // PLAYER
             const playerFolder = this.gui.addFolder('Player');
             playerFolder.add(player.options, 'acceleration', 0, 5, 0.01).name('Acceleration');
             playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01).name('Flying inertia');
-            this.registerDisplay('looking at', player, 'lookBlockStr');
-            // CAMERA
             // const cameraFolder = this.gui.addFolder('camera');
+            this.registerDisplay('FPS', this, 'fps');
             this.registerDisplay('position', camera, 'voxelPositionStr');
+            this.registerDisplay('chunk', world, 'camChunkPosStr');
+            this.registerDisplay('looking at', player, 'lookBlockStr');
+            this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
             // REGISTRY
             const registryFolder = this.gui.addFolder('Registry');
             registryFolder.add({
@@ -3777,28 +3789,64 @@ class Debug {
                 ele.innerHTML = `${name}: ${formatter(newValue)}`;
             }
             const { camChunkPosStr } = this.engine.world;
-            const [cx, cz] = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.parseChunkName(camChunkPosStr, ' ');
+            const [cx, cz] = _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.parseChunkName(camChunkPosStr, ' ');
             const { chunkSize, maxHeight, dimension } = this.engine.world.options;
             this.chunkHighlight.position.set((cx + 0.5) * chunkSize * dimension, 0.5 * maxHeight * dimension, (cz + 0.5) * chunkSize * dimension);
         };
+        this.calculateFPS = (function () {
+            const sampleSize = 60;
+            let value = 0;
+            const sample = [];
+            let index = 0;
+            let lastTick = 0;
+            let min;
+            let max;
+            return function () {
+                // if is first tick, just set tick timestamp and return
+                if (!lastTick) {
+                    lastTick = performance.now();
+                    return 0;
+                }
+                // calculate necessary values to obtain current tick FPS
+                const now = performance.now();
+                const delta = (now - lastTick) / 1000;
+                const fps = 1 / delta;
+                // add to fps samples, current tick fps value
+                sample[index] = Math.round(fps);
+                // iterate samples to obtain the average
+                let average = 0;
+                for (let i = 0; i < sample.length; i++)
+                    average += sample[i];
+                average = Math.round(average / sample.length);
+                // set new FPS
+                value = average;
+                // store current timestamp
+                lastTick = now;
+                // increase sample index counter, and reset it
+                // to 0 if exceded maximum sampleSize limit
+                index++;
+                if (index === sampleSize)
+                    index = 0;
+                if (!min || min > value)
+                    min = value;
+                if (!max || max < value)
+                    max = value;
+                return `${value} (${min}, ${max})`;
+            };
+        })();
         // dat.gui
         this.gui = new dat_gui__WEBPACK_IMPORTED_MODULE_0__.GUI({
             width: 300,
             closed: true,
         });
-        // FPS indicator
-        this.stats = new (stats_js__WEBPACK_IMPORTED_MODULE_1___default())();
         const { world: { chunkSize, dimension, maxHeight }, } = engine.config;
         const width = chunkSize * dimension;
-        this.chunkHighlight = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxGeometry(width, maxHeight * dimension, width), new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({ wireframe: true, side: three__WEBPACK_IMPORTED_MODULE_4__.DoubleSide }));
+        this.chunkHighlight = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(new three__WEBPACK_IMPORTED_MODULE_3__.BoxGeometry(width, maxHeight * dimension, width), new three__WEBPACK_IMPORTED_MODULE_3__.MeshBasicMaterial({ wireframe: true, side: three__WEBPACK_IMPORTED_MODULE_3__.DoubleSide }));
         // move dat.gui panel to the top
         const { parentElement } = this.gui.domElement;
         if (parentElement) {
             const zIndex = '1000000000';
-            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(parentElement, {
-                zIndex,
-            });
-            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.stats.dom, {
+            _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(parentElement, {
                 zIndex,
             });
         }
@@ -3811,14 +3859,14 @@ class Debug {
         });
         engine.on('world-ready', () => {
             // textureTest
-            const testBlock = new three__WEBPACK_IMPORTED_MODULE_4__.PlaneBufferGeometry(4, 4);
-            const testMat = new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
+            const testBlock = new three__WEBPACK_IMPORTED_MODULE_3__.PlaneBufferGeometry(4, 4);
+            const testMat = new three__WEBPACK_IMPORTED_MODULE_3__.MeshBasicMaterial({
                 map: this.engine.registry.atlasUniform.value,
-                side: three__WEBPACK_IMPORTED_MODULE_4__.DoubleSide,
+                side: three__WEBPACK_IMPORTED_MODULE_3__.DoubleSide,
                 transparent: true,
                 alphaTest: 0.5,
             });
-            this.atlasTest = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(testBlock, testMat);
+            this.atlasTest = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(testBlock, testMat);
             this.atlasTest.position.set(0, 20, 0);
             this.atlasTest.visible = false;
             this.engine.rendering.scene.add(this.atlasTest);
@@ -3834,7 +3882,10 @@ class Debug {
             attribute,
         };
         this.dataEntries.push(newEntry);
-        this.dataWrapper.appendChild(wrapper);
+        this.dataWrapper.insertBefore(wrapper, this.dataWrapper.firstChild);
+    }
+    get fps() {
+        return this.calculateFPS();
     }
 }
 
@@ -3881,6 +3932,9 @@ const defaultConfig = {
         far: 8000,
         minPolarAngle: 0,
         maxPolarAngle: Math.PI,
+    },
+    chat: {
+        input: null,
     },
     player: {
         acceleration: 1,
@@ -3946,14 +4000,8 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         };
         this.boot = () => {
             const cycle = () => {
-                if (this.debug) {
-                    this.debug.stats.begin();
-                }
                 this.tick();
                 this.render();
-                if (this.debug) {
-                    this.debug.stats.end();
-                }
                 requestAnimationFrame(cycle);
             };
             cycle();
@@ -3987,11 +4035,11 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.paused = true;
             this.emit('pause');
         };
-        this.lock = () => {
-            this.player.controls.lock();
+        this.lock = (cb) => {
+            this.player.controls.lock(cb);
         };
-        this.unlock = () => {
-            this.player.controls.unlock();
+        this.unlock = (cb) => {
+            this.player.controls.unlock(cb);
         };
         this.setTick = (speed, sideEffect = true) => {
             this.tickSpeed = speed;
@@ -4003,7 +4051,7 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                     },
                 });
         };
-        const { camera, container, debug, entities, physics, player, registry, rendering, world, peers, particles, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
+        const { camera, container, chat, debug, entities, physics, player, registry, rendering, world, peers, particles, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
         // debug
         if (debug) {
             this.debug = new ___WEBPACK_IMPORTED_MODULE_6__.Debug(this);
@@ -4019,7 +4067,7 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         // inputs
         this.inputs = new ___WEBPACK_IMPORTED_MODULE_6__.Inputs(this);
         // chat
-        this.chat = new _chat__WEBPACK_IMPORTED_MODULE_3__.Chat(this);
+        this.chat = new _chat__WEBPACK_IMPORTED_MODULE_3__.Chat(this, chat);
         // camera
         this.camera = new ___WEBPACK_IMPORTED_MODULE_6__.Camera(this, camera);
         // world
@@ -4212,6 +4260,7 @@ class Inputs {
         this.add('right', 'd');
         this.add('space', 'space');
         this.add('dbl-space', 'space space');
+        this.add('esc', 'esc');
         this.initClickListener();
     }
     initClickListener() {
@@ -4238,7 +4287,7 @@ class Inputs {
     add(name, combo) {
         this.combos.set(name, combo);
     }
-    bind(name, callback, namespace) {
+    bind(name, callback, namespace, occasion = 'keydown') {
         let combo = this.combos.get(name);
         if (!combo) {
             if (name.length === 1) {
@@ -4251,10 +4300,10 @@ class Inputs {
             }
         }
         mousetrap__WEBPACK_IMPORTED_MODULE_0___default().bind(combo, () => {
-            if (this.namespace === namespace) {
+            if (this.namespace === namespace || namespace === '*') {
                 callback();
             }
-        });
+        }, occasion);
     }
     unbind(name) {
         const combo = this.combos.get(name);
@@ -4641,11 +4690,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! fast-voxel-raycast */ "./node_modules/fast-voxel-raycast/index.js");
 /* harmony import */ var fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three/examples/jsm/controls/PointerLockControls */ "./node_modules/three/examples/jsm/controls/PointerLockControls.js");
 /* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
 /* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
 /* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
-
 
 
 
@@ -4744,7 +4791,7 @@ class Player {
         };
         const { lookBlockScale, lookBlockColor } = options;
         // three.js pointerlock controls
-        this.controls = new three_examples_jsm_controls_PointerLockControls__WEBPACK_IMPORTED_MODULE_5__.PointerLockControls(engine.camera.threeCamera, engine.container.canvas);
+        this.controls = new _libs__WEBPACK_IMPORTED_MODULE_2__.PointerLockControls(engine.camera.threeCamera, engine.container.canvas);
         engine.rendering.scene.add(this.controls.getObject());
         engine.container.canvas.onclick = () => this.controls.lock();
         // movement handling
@@ -4772,14 +4819,14 @@ class Player {
             inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]), 'in-game');
         }
         this.controls.addEventListener('lock', () => {
-            engine.chat.disable();
-            engine.inputs.setNamespace('in-game');
             engine.emit('lock');
+            engine.inputs.setNamespace('in-game');
         });
         this.controls.addEventListener('unlock', () => {
-            engine.inputs.setNamespace(engine.chat.enabled ? 'chat' : 'menu');
             engine.emit('unlock');
+            engine.inputs.setNamespace(engine.chat.enabled ? 'chat' : 'menu');
         });
+        // retrieve name from localStorage
         this.name = localStorage.getItem(LOCAL_STORAGE_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     }
     godModeMovements() {
@@ -5823,9 +5870,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Clouds": () => (/* reexport safe */ _clouds__WEBPACK_IMPORTED_MODULE_3__.Clouds),
 /* harmony export */   "Peer": () => (/* reexport safe */ _peer__WEBPACK_IMPORTED_MODULE_4__.Peer),
 /* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_5__.Physics),
-/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_6__.RigidBody),
-/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_7__.simpleCull),
-/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_8__.Sky)
+/* harmony export */   "PointerLockControls": () => (/* reexport safe */ _pointerlock_controls__WEBPACK_IMPORTED_MODULE_6__.PointerLockControls),
+/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_7__.RigidBody),
+/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_8__.simpleCull),
+/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_9__.Sky)
 /* harmony export */ });
 /* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 /* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
@@ -5833,10 +5881,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _clouds__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./clouds */ "./client/libs/clouds.ts");
 /* harmony import */ var _peer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./peer */ "./client/libs/peer.ts");
 /* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
-/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
-/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _pointerlock_controls__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./pointerlock-controls */ "./client/libs/pointerlock-controls.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
+/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
+/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+
 
 
 
@@ -6208,6 +6258,117 @@ class Physics {
             return true;
         }, true);
         return isResting;
+    }
+}
+
+
+
+/***/ }),
+
+/***/ "./client/libs/pointerlock-controls.ts":
+/*!*********************************************!*\
+  !*** ./client/libs/pointerlock-controls.ts ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "PointerLockControls": () => (/* binding */ PointerLockControls)
+/* harmony export */ });
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+
+const _euler = new three__WEBPACK_IMPORTED_MODULE_0__.Euler(0, 0, 0, 'YXZ');
+const _vector = new three__WEBPACK_IMPORTED_MODULE_0__.Vector3();
+const _changeEvent = { type: 'change' };
+const _lockEvent = { type: 'lock' };
+const _unlockEvent = { type: 'unlock' };
+const _PI_2 = Math.PI / 2;
+class PointerLockControls extends three__WEBPACK_IMPORTED_MODULE_0__.EventDispatcher {
+    constructor(camera, domElement) {
+        super();
+        this.camera = camera;
+        this.domElement = domElement;
+        this.isLocked = false;
+        this.minPolarAngle = 0;
+        this.maxPolarAngle = Math.PI;
+        this.onMouseMove = (event) => {
+            if (this.isLocked === false)
+                return;
+            const movementX = event.movementX || 0;
+            const movementY = event.movementY || 0;
+            _euler.setFromQuaternion(this.camera.quaternion);
+            _euler.y -= movementX * 0.002;
+            _euler.x -= movementY * 0.002;
+            _euler.x = Math.max(_PI_2 - this.maxPolarAngle, Math.min(_PI_2 - this.minPolarAngle, _euler.x));
+            this.camera.quaternion.setFromEuler(_euler);
+            this.dispatchEvent(_changeEvent);
+        };
+        this.onPointerlockChange = () => {
+            if (this.domElement.ownerDocument.pointerLockElement === this.domElement) {
+                this.dispatchEvent(_lockEvent);
+                if (this.lockCallback) {
+                    this.lockCallback();
+                }
+                this.isLocked = true;
+            }
+            else {
+                this.dispatchEvent(_unlockEvent);
+                if (this.unlockCallback) {
+                    this.unlockCallback();
+                }
+                this.isLocked = false;
+            }
+        };
+        this.onPointerlockError = () => {
+            console.error('THREE.PointerLockControls: Unable to use Pointer Lock API');
+        };
+        this.connect = () => {
+            this.domElement.ownerDocument.addEventListener('mousemove', this.onMouseMove);
+            this.domElement.ownerDocument.addEventListener('pointerlockchange', this.onPointerlockChange);
+            this.domElement.ownerDocument.addEventListener('pointerlockerror', this.onPointerlockError);
+        };
+        this.disconnect = () => {
+            this.domElement.ownerDocument.removeEventListener('mousemove', this.onMouseMove);
+            this.domElement.ownerDocument.removeEventListener('pointerlockchange', this.onPointerlockChange);
+            this.domElement.ownerDocument.removeEventListener('pointerlockerror', this.onPointerlockError);
+        };
+        this.dispose = () => {
+            this.disconnect();
+        };
+        this.getObject = () => {
+            return this.camera;
+        };
+        this.getDirection = (() => {
+            const direction = new three__WEBPACK_IMPORTED_MODULE_0__.Vector3(0, 0, -1);
+            return function (v) {
+                return v.copy(direction).applyQuaternion(this.camera.quaternion);
+            };
+        })();
+        this.moveForward = (distance) => {
+            // move forward parallel to the xz-plane
+            // assumes camera.up is y-up
+            _vector.setFromMatrixColumn(this.camera.matrix, 0);
+            _vector.crossVectors(this.camera.up, _vector);
+            this.camera.position.addScaledVector(_vector, distance);
+        };
+        this.moveRight = (distance) => {
+            _vector.setFromMatrixColumn(this.camera.matrix, 0);
+            this.camera.position.addScaledVector(_vector, distance);
+        };
+        this.lock = (callback) => {
+            this.domElement.requestPointerLock();
+            if (callback) {
+                this.lockCallback = callback;
+            }
+        };
+        this.unlock = (callback) => {
+            this.domElement.ownerDocument.exitPointerLock();
+            if (callback) {
+                this.unlockCallback = callback;
+            }
+        };
+        this.connect();
     }
 }
 
@@ -22709,21 +22870,6 @@ module.exports = (string, separator) => {
 
 /***/ }),
 
-/***/ "./node_modules/stats.js/build/stats.min.js":
-/*!**************************************************!*\
-  !*** ./node_modules/stats.js/build/stats.min.js ***!
-  \**************************************************/
-/***/ (function(module) {
-
-// stats.js - http://github.com/mrdoob/stats.js
-(function(f,e){ true?module.exports=e():0})(this,function(){var f=function(){function e(a){c.appendChild(a.dom);return a}function u(a){for(var d=0;d<c.children.length;d++)c.children[d].style.display=d===a?"block":"none";l=a}var l=0,c=document.createElement("div");c.style.cssText="position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000";c.addEventListener("click",function(a){a.preventDefault();
-u(++l%c.children.length)},!1);var k=(performance||Date).now(),g=k,a=0,r=e(new f.Panel("FPS","#0ff","#002")),h=e(new f.Panel("MS","#0f0","#020"));if(self.performance&&self.performance.memory)var t=e(new f.Panel("MB","#f08","#201"));u(0);return{REVISION:16,dom:c,addPanel:e,showPanel:u,begin:function(){k=(performance||Date).now()},end:function(){a++;var c=(performance||Date).now();h.update(c-k,200);if(c>g+1E3&&(r.update(1E3*a/(c-g),100),g=c,a=0,t)){var d=performance.memory;t.update(d.usedJSHeapSize/
-1048576,d.jsHeapSizeLimit/1048576)}return c},update:function(){k=this.end()},domElement:c,setMode:u}};f.Panel=function(e,f,l){var c=Infinity,k=0,g=Math.round,a=g(window.devicePixelRatio||1),r=80*a,h=48*a,t=3*a,v=2*a,d=3*a,m=15*a,n=74*a,p=30*a,q=document.createElement("canvas");q.width=r;q.height=h;q.style.cssText="width:80px;height:48px";var b=q.getContext("2d");b.font="bold "+9*a+"px Helvetica,Arial,sans-serif";b.textBaseline="top";b.fillStyle=l;b.fillRect(0,0,r,h);b.fillStyle=f;b.fillText(e,t,v);
-b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{dom:q,update:function(h,w){c=Math.min(c,h);k=Math.max(k,h);b.fillStyle=l;b.globalAlpha=1;b.fillRect(0,0,r,m);b.fillStyle=f;b.fillText(g(h)+" "+e+" ("+g(c)+"-"+g(k)+")",t,v);b.drawImage(q,d+a,m,n-a,p,d,m,n-a,p);b.fillRect(d+n-a,m,a,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d+n-a,m,a,g((1-h/w)*p))}}};return f});
-
-
-/***/ }),
-
 /***/ "./node_modules/strict-uri-encode/index.js":
 /*!*************************************************!*\
   !*** ./node_modules/strict-uri-encode/index.js ***!
@@ -23902,8 +24048,8 @@ const file = "client/App.svelte";
 
 function add_css() {
 	var style = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("style");
-	style.id = "svelte-ux860h-style";
-	style.textContent = "main.svelte-ux860h.svelte-ux860h{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-ux860h.svelte-ux860h{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:10px;height:10px;line-height:20px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#pause-menu.svelte-ux860h.svelte-ux860h{z-index:10000000;display:flex;flex-direction:column;align-items:center;justify-content:center}#pause-menu.svelte-ux860h.svelte-ux860h,#pause-menu.svelte-ux860h>div.svelte-ux860h{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%}#pause-menu.svelte-ux860h>div.svelte-ux860h{background:rgba(1, 1, 1, 0.1);z-index:-1}#pause-menu.svelte-ux860h>h2.svelte-ux860h{color:#ccc;margin-bottom:1em}#world-list-wrapper.svelte-ux860h.svelte-ux860h{width:100%;height:100%;background:#02475e;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-ux860h.svelte-ux860h{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-ux860h.svelte-ux860h{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 5rem;border-radius:5px}#world-list-item.svelte-ux860h.svelte-ux860h{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-ux860h.svelte-ux860h::selection{background:transparent}#world-list-item.svelte-ux860h>h1.svelte-ux860h{color:white;font-size:20px;font-weight:100;width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-ux860h>p.svelte-ux860h{color:gray;font-size:20px}.selected.svelte-ux860h.svelte-ux860h{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,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 */";
+	style.id = "svelte-1avf49t-style";
+	style.textContent = "main.svelte-1avf49t.svelte-1avf49t{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-1avf49t.svelte-1avf49t{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:10px;height:10px;line-height:20px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#pause-menu.svelte-1avf49t.svelte-1avf49t{z-index:10000000;display:flex;flex-direction:column;align-items:center;justify-content:center}#pause-menu.svelte-1avf49t.svelte-1avf49t,#pause-menu.svelte-1avf49t>div.svelte-1avf49t{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%}#pause-menu.svelte-1avf49t>div.svelte-1avf49t{background:rgba(1, 1, 1, 0.1);z-index:-1}#pause-menu.svelte-1avf49t>h2.svelte-1avf49t{color:#ccc;margin-bottom:1em}#chat-wrapper.svelte-1avf49t.svelte-1avf49t{position:fixed;top:0;left:0;z-index:10000000;width:100vw;height:100vh}#chat-wrapper.svelte-1avf49t div.svelte-1avf49t{position:fixed;bottom:75px;left:0;width:600px;margin-left:5px;background:black;background-color:#00000081;word-break:break-all}#chat-wrapper.svelte-1avf49t input.svelte-1avf49t{position:fixed;bottom:0;left:0;width:calc(100% - 10px);margin:5px;height:29px;background:#00000081;padding:5px;z-index:5;font-family:'Alata', sans-serif;color:white;border:none}#chat-wrapper.svelte-1avf49t input.svelte-1avf49t:focus{outline:none}#world-list-wrapper.svelte-1avf49t.svelte-1avf49t{width:100%;height:100%;background:#02475e;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-1avf49t.svelte-1avf49t{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-1avf49t.svelte-1avf49t{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 5rem;border-radius:5px}#world-list-item.svelte-1avf49t.svelte-1avf49t{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-1avf49t.svelte-1avf49t::selection{background:transparent}#world-list-item.svelte-1avf49t>h1.svelte-1avf49t{color:white;font-size:20px;font-weight:100;width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-1avf49t>p.svelte-1avf49t{color:gray;font-size:20px}.selected.svelte-1avf49t.svelte-1avf49t{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,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 */";
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(document.head, style);
 }
 
@@ -23915,7 +24061,7 @@ function get_each_context(ctx, list, i) {
 	return child_ctx;
 }
 
-// (62:2) {:else}
+// (70:2) {:else}
 function create_else_block(ctx) {
 	let div;
 	let h1;
@@ -23935,7 +24081,7 @@ function create_else_block(ctx) {
 		error: 23
 	};
 
-	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise = /*fetchWorlds*/ ctx[6], info);
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise = /*fetchWorlds*/ ctx[4], info);
 
 	const block = {
 		c: function create() {
@@ -23946,14 +24092,14 @@ function create_else_block(ctx) {
 			ul = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("ul");
 			info.block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "id", "world-list-title");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 63, 6, 2460);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 71, 6, 2633);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "id", "world-list");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 64, 6, 2512);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 72, 6, 2685);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "id", "world-list-wrapper");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 62, 4, 2424);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 70, 4, 2597);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
@@ -23969,7 +24115,7 @@ function create_else_block(ctx) {
 			ctx = new_ctx;
 			info.ctx = ctx;
 
-			if (dirty & /*fetchWorlds*/ 64 && promise !== (promise = /*fetchWorlds*/ ctx[6]) && (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise, info)) {
+			if (dirty & /*fetchWorlds*/ 16 && promise !== (promise = /*fetchWorlds*/ ctx[4]) && (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise, info)) {
 				
 			} else {
 				const child_ctx = ctx.slice();
@@ -23992,7 +24138,7 @@ function create_else_block(ctx) {
 		block,
 		id: create_else_block.name,
 		type: "else",
-		source: "(62:2) {:else}",
+		source: "(70:2) {:else}",
 		ctx
 	});
 
@@ -24004,67 +24150,87 @@ function create_if_block(ctx) {
 	let div;
 	let img;
 	let img_src_value;
-	let t;
+	let t0;
+	let t1;
 	let current;
-	let if_block = !/*locked*/ ctx[3] && !/*chatEnabled*/ ctx[5] && create_if_block_1(ctx);
+	let if_block0 = !/*locked*/ ctx[5] && !/*chatEnabled*/ ctx[6] && create_if_block_2(ctx);
+	let if_block1 = /*chatEnabled*/ ctx[6] && create_if_block_1(ctx);
 
 	const block = {
 		c: function create() {
 			div = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
 			img = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("img");
-			t = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			if (if_block) if_block.c();
+			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			if (if_block0) if_block0.c();
+			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			if (if_block1) if_block1.c();
 			if (img.src !== (img_src_value = "https://i.imgur.com/ro6oLCL.png")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "src", img_src_value);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "id", "crosshair");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "alt", "+");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 50, 6, 1892);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 49, 4, 1857);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 50, 6, 1900);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 49, 4, 1865);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, img);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t);
-			if (if_block) if_block.m(div, null);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t0);
+			if (if_block0) if_block0.m(div, null);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t1);
+			if (if_block1) if_block1.m(div, null);
 			/*div_binding*/ ctx[11](div);
 			current = true;
 		},
 		p: function update(ctx, dirty) {
-			if (!/*locked*/ ctx[3] && !/*chatEnabled*/ ctx[5]) {
-				if (if_block) {
-					if_block.p(ctx, dirty);
+			if (!/*locked*/ ctx[5] && !/*chatEnabled*/ ctx[6]) {
+				if (if_block0) {
+					if_block0.p(ctx, dirty);
 
-					if (dirty & /*locked, chatEnabled*/ 40) {
-						(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block, 1);
+					if (dirty & /*locked, chatEnabled*/ 96) {
+						(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block0, 1);
 					}
 				} else {
-					if_block = create_if_block_1(ctx);
-					if_block.c();
-					(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block, 1);
-					if_block.m(div, null);
+					if_block0 = create_if_block_2(ctx);
+					if_block0.c();
+					(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block0, 1);
+					if_block0.m(div, t1);
 				}
-			} else if (if_block) {
+			} else if (if_block0) {
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.group_outros)();
 
-				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block, 1, 1, () => {
-					if_block = null;
+				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block0, 1, 1, () => {
+					if_block0 = null;
 				});
 
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.check_outros)();
 			}
+
+			if (/*chatEnabled*/ ctx[6]) {
+				if (if_block1) {
+					
+				} else {
+					if_block1 = create_if_block_1(ctx);
+					if_block1.c();
+					if_block1.m(div, null);
+				}
+			} else if (if_block1) {
+				if_block1.d(1);
+				if_block1 = null;
+			}
 		},
 		i: function intro(local) {
 			if (current) return;
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block0);
 			current = true;
 		},
 		o: function outro(local) {
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block0);
 			current = false;
 		},
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(div);
-			if (if_block) if_block.d();
+			if (if_block0) if_block0.d();
+			if (if_block1) if_block1.d();
 			/*div_binding*/ ctx[11](null);
 		}
 	};
@@ -24080,7 +24246,7 @@ function create_if_block(ctx) {
 	return block;
 }
 
-// (80:8) {:catch error}
+// (88:8) {:catch error}
 function create_catch_block(ctx) {
 	let p;
 	let t0;
@@ -24092,7 +24258,7 @@ function create_catch_block(ctx) {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)("An error occurred! ");
 			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t1_value);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 80, 10, 3127);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 88, 10, 3300);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
@@ -24100,7 +24266,7 @@ function create_catch_block(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t1);
 		},
 		p: function update(ctx, dirty) {
-			if (dirty & /*fetchWorlds*/ 64 && t1_value !== (t1_value = /*error*/ ctx[23] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t1, t1_value);
+			if (dirty & /*fetchWorlds*/ 16 && t1_value !== (t1_value = /*error*/ ctx[23] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t1, t1_value);
 		},
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(p);
@@ -24111,14 +24277,14 @@ function create_catch_block(ctx) {
 		block,
 		id: create_catch_block.name,
 		type: "catch",
-		source: "(80:8) {:catch error}",
+		source: "(88:8) {:catch error}",
 		ctx
 	});
 
 	return block;
 }
 
-// (68:8) {:then data}
+// (76:8) {:then data}
 function create_then_block(ctx) {
 	let each_1_anchor;
 	let each_value = /*data*/ ctx[17].worlds;
@@ -24145,7 +24311,7 @@ function create_then_block(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, each_1_anchor, anchor);
 		},
 		p: function update(ctx, dirty) {
-			if (dirty & /*selected, fetchWorlds, window*/ 80) {
+			if (dirty & /*selected, fetchWorlds, window*/ 24) {
 				each_value = /*data*/ ctx[17].worlds;
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
 				let i;
@@ -24179,14 +24345,14 @@ function create_then_block(ctx) {
 		block,
 		id: create_then_block.name,
 		type: "then",
-		source: "(68:8) {:then data}",
+		source: "(76:8) {:then data}",
 		ctx
 	});
 
 	return block;
 }
 
-// (69:10) {#each data.worlds as { name, generation, description }}
+// (77:10) {#each data.worlds as { name, generation, description }}
 function create_each_block(ctx) {
 	let li;
 	let h1;
@@ -24223,17 +24389,17 @@ function create_each_block(ctx) {
 			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(" · ");
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t4_value);
 			t5 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 75, 14, 2992);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 76, 14, 3022);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 83, 14, 3165);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 84, 14, 3195);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "id", "world-list-item");
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[18]
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[3] === /*name*/ ctx[18]
 			? "selected"
-			: "") + " svelte-ux860h"));
+			: "") + " svelte-1avf49t"));
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 69, 12, 2719);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 77, 12, 2892);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, li, anchor);
@@ -24257,13 +24423,13 @@ function create_each_block(ctx) {
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
-			if (dirty & /*fetchWorlds*/ 64 && t0_value !== (t0_value = /*name*/ ctx[18] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t0, t0_value);
-			if (dirty & /*fetchWorlds*/ 64 && t2_value !== (t2_value = /*generation*/ ctx[19] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t2, t2_value);
-			if (dirty & /*fetchWorlds*/ 64 && t4_value !== (t4_value = /*description*/ ctx[20] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t4, t4_value);
+			if (dirty & /*fetchWorlds*/ 16 && t0_value !== (t0_value = /*name*/ ctx[18] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t0, t0_value);
+			if (dirty & /*fetchWorlds*/ 16 && t2_value !== (t2_value = /*generation*/ ctx[19] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t2, t2_value);
+			if (dirty & /*fetchWorlds*/ 16 && t4_value !== (t4_value = /*description*/ ctx[20] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t4, t4_value);
 
-			if (dirty & /*selected, fetchWorlds*/ 80 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[4] === /*name*/ ctx[18]
+			if (dirty & /*selected, fetchWorlds*/ 24 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[3] === /*name*/ ctx[18]
 			? "selected"
-			: "") + " svelte-ux860h"))) {
+			: "") + " svelte-1avf49t"))) {
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value);
 			}
 		},
@@ -24278,14 +24444,14 @@ function create_each_block(ctx) {
 		block,
 		id: create_each_block.name,
 		type: "each",
-		source: "(69:10) {#each data.worlds as { name, generation, description }}",
+		source: "(77:10) {#each data.worlds as { name, generation, description }}",
 		ctx
 	});
 
 	return block;
 }
 
-// (66:28)            <p>...waiting</p>         {:then data}
+// (74:28)            <p>...waiting</p>         {:then data}
 function create_pending_block(ctx) {
 	let p;
 
@@ -24293,7 +24459,7 @@ function create_pending_block(ctx) {
 		c: function create() {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			p.textContent = "...waiting";
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 66, 10, 2601);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 74, 10, 2774);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
@@ -24308,7 +24474,7 @@ function create_pending_block(ctx) {
 		block,
 		id: create_pending_block.name,
 		type: "pending",
-		source: "(66:28)            <p>...waiting</p>         {:then data}",
+		source: "(74:28)            <p>...waiting</p>         {:then data}",
 		ctx
 	});
 
@@ -24316,7 +24482,7 @@ function create_pending_block(ctx) {
 }
 
 // (52:6) {#if !locked && !chatEnabled}
-function create_if_block_1(ctx) {
+function create_if_block_2(ctx) {
 	let div1;
 	let div0;
 	let t0;
@@ -24373,13 +24539,13 @@ function create_if_block_1(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button0.$$.fragment);
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button1.$$.fragment);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 53, 10, 2037);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 54, 10, 2055);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 53, 10, 2045);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 54, 10, 2063);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "pause-menu");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 52, 8, 2005);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 52, 8, 2013);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div1, anchor);
@@ -24436,7 +24602,7 @@ function create_if_block_1(ctx) {
 
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
 		block,
-		id: create_if_block_1.name,
+		id: create_if_block_2.name,
 		type: "if",
 		source: "(52:6) {#if !locked && !chatEnabled}",
 		ctx
@@ -24499,6 +24665,54 @@ function create_default_slot(ctx) {
 	return block;
 }
 
+// (61:6) {#if chatEnabled}
+function create_if_block_1(ctx) {
+	let div1;
+	let div0;
+	let ul;
+	let t;
+	let input;
+
+	const block = {
+		c: function create() {
+			div1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
+			div0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
+			ul = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("ul");
+			t = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			input = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("input");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 63, 12, 2491);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 62, 10, 2473);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(input, "id", "chat");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(input, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(input, file, 65, 10, 2525);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "chat-wrapper");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 61, 8, 2439);
+		},
+		m: function mount(target, anchor) {
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div1, anchor);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, div0);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div0, ul);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, t);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, input);
+		},
+		d: function destroy(detaching) {
+			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(div1);
+		}
+	};
+
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
+		block,
+		id: create_if_block_1.name,
+		type: "if",
+		source: "(61:6) {#if chatEnabled}",
+		ctx
+	});
+
+	return block;
+}
+
 function create_fragment(ctx) {
 	let main;
 	let current_block_type_index;
@@ -24519,8 +24733,8 @@ function create_fragment(ctx) {
 		c: function create() {
 			main = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("main");
 			if_block.c();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-ux860h");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 47, 0, 1832);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-1avf49t");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 47, 0, 1840);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -24603,10 +24817,10 @@ function instance($$self, $$props, $$invalidate) {
 	let canvas;
 	let worldListWrapper;
 	let engine;
-	let locked;
 	let selected;
-	let chatEnabled;
 	let fetchWorlds;
+	let locked = false;
+	let chatEnabled = false;
 	const { world } = query_string__WEBPACK_IMPORTED_MODULE_1__.parse(window.location.search);
 
 	if (world) {
@@ -24614,10 +24828,10 @@ function instance($$self, $$props, $$invalidate) {
 		engine = new _core__WEBPACK_IMPORTED_MODULE_5__.Engine({ container: { canvas, domElement } });
 		engine.join(worldName);
 		engine.start();
-		engine.on("lock", () => $$invalidate(3, locked = true));
-		engine.on("unlock", () => $$invalidate(3, locked = false));
-		engine.on("chat-enabled", () => $$invalidate(5, chatEnabled = true));
-		engine.on("chat-disabled", () => $$invalidate(5, chatEnabled = false));
+		engine.on("lock", () => $$invalidate(5, locked = true));
+		engine.on("unlock", () => $$invalidate(5, locked = false));
+		engine.on("chat-enabled", () => $$invalidate(6, chatEnabled = true));
+		engine.on("chat-disabled", () => $$invalidate(6, chatEnabled = false));
 	} else {
 		fetchWorlds = (() => __awaiter(void 0, void 0, void 0, function* () {
 			const response = yield fetch(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getServerURL().toString() + "worlds");
@@ -24646,7 +24860,7 @@ function instance($$self, $$props, $$invalidate) {
 		});
 	}
 
-	const click_handler_2 = name => $$invalidate(4, selected = name);
+	const click_handler_2 = name => $$invalidate(3, selected = name);
 	const dblclick_handler = name => window.location.href = window.location.href + "?world=" + name;
 
 	function ul_binding($$value) {
@@ -24663,15 +24877,14 @@ function instance($$self, $$props, $$invalidate) {
 		Button: _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default,
 		Input: _components_input_svelte__WEBPACK_IMPORTED_MODULE_4__.default,
 		Engine: _core__WEBPACK_IMPORTED_MODULE_5__.Engine,
-		Player: _core__WEBPACK_IMPORTED_MODULE_5__.Player,
 		domElement,
 		canvas,
 		worldListWrapper,
 		engine,
-		locked,
 		selected,
-		chatEnabled,
 		fetchWorlds,
+		locked,
+		chatEnabled,
 		world,
 		onNameChange
 	});
@@ -24682,10 +24895,10 @@ function instance($$self, $$props, $$invalidate) {
 		if ("canvas" in $$props) canvas = $$props.canvas;
 		if ("worldListWrapper" in $$props) $$invalidate(1, worldListWrapper = $$props.worldListWrapper);
 		if ("engine" in $$props) $$invalidate(2, engine = $$props.engine);
-		if ("locked" in $$props) $$invalidate(3, locked = $$props.locked);
-		if ("selected" in $$props) $$invalidate(4, selected = $$props.selected);
-		if ("chatEnabled" in $$props) $$invalidate(5, chatEnabled = $$props.chatEnabled);
-		if ("fetchWorlds" in $$props) $$invalidate(6, fetchWorlds = $$props.fetchWorlds);
+		if ("selected" in $$props) $$invalidate(3, selected = $$props.selected);
+		if ("fetchWorlds" in $$props) $$invalidate(4, fetchWorlds = $$props.fetchWorlds);
+		if ("locked" in $$props) $$invalidate(5, locked = $$props.locked);
+		if ("chatEnabled" in $$props) $$invalidate(6, chatEnabled = $$props.chatEnabled);
 	};
 
 	if ($$props && "$$inject" in $$props) {
@@ -24696,10 +24909,10 @@ function instance($$self, $$props, $$invalidate) {
 		domElement,
 		worldListWrapper,
 		engine,
-		locked,
 		selected,
-		chatEnabled,
 		fetchWorlds,
+		locked,
+		chatEnabled,
 		world,
 		onNameChange,
 		click_handler,
@@ -24714,7 +24927,7 @@ function instance($$self, $$props, $$invalidate) {
 class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		if (!document.getElementById("svelte-ux860h-style")) add_css();
+		if (!document.getElementById("svelte-1avf49t-style")) add_css();
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.init)(this, options, instance, create_fragment, svelte_internal__WEBPACK_IMPORTED_MODULE_0__.safe_not_equal, {});
 
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterComponent", {
@@ -24725,10 +24938,10 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_6__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_7__.default, acceptable: true, cssId: "svelte-ux860h-style", nonCssHash: "1lxorag", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_6__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_7__.default, acceptable: true, cssId: "svelte-1avf49t-style", nonCssHash: "1bv58jv", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
-if (typeof add_css !== 'undefined' && !document.getElementById("svelte-ux860h-style")) add_css();
+if (typeof add_css !== 'undefined' && !document.getElementById("svelte-1avf49t-style")) add_css();
 
 
 /***/ }),
@@ -77314,182 +77527,6 @@ if ( typeof window !== 'undefined' ) {
 	}
 
 }
-
-
-
-
-/***/ }),
-
-/***/ "./node_modules/three/examples/jsm/controls/PointerLockControls.js":
-/*!*************************************************************************!*\
-  !*** ./node_modules/three/examples/jsm/controls/PointerLockControls.js ***!
-  \*************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "PointerLockControls": () => (/* binding */ PointerLockControls)
-/* harmony export */ });
-/* harmony import */ var _build_three_module_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../build/three.module.js */ "./node_modules/three/build/three.module.js");
-
-
-var PointerLockControls = function ( camera, domElement ) {
-
-	if ( domElement === undefined ) {
-
-		console.warn( 'THREE.PointerLockControls: The second parameter "domElement" is now mandatory.' );
-		domElement = document.body;
-
-	}
-
-	this.domElement = domElement;
-	this.isLocked = false;
-
-	// Set to constrain the pitch of the camera
-	// Range is 0 to Math.PI radians
-	this.minPolarAngle = 0; // radians
-	this.maxPolarAngle = Math.PI; // radians
-
-	//
-	// internals
-	//
-
-	var scope = this;
-
-	var changeEvent = { type: 'change' };
-	var lockEvent = { type: 'lock' };
-	var unlockEvent = { type: 'unlock' };
-
-	var euler = new _build_three_module_js__WEBPACK_IMPORTED_MODULE_0__.Euler( 0, 0, 0, 'YXZ' );
-
-	var PI_2 = Math.PI / 2;
-
-	var vec = new _build_three_module_js__WEBPACK_IMPORTED_MODULE_0__.Vector3();
-
-	function onMouseMove( event ) {
-
-		if ( scope.isLocked === false ) return;
-
-		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-		euler.setFromQuaternion( camera.quaternion );
-
-		euler.y -= movementX * 0.002;
-		euler.x -= movementY * 0.002;
-
-		euler.x = Math.max( PI_2 - scope.maxPolarAngle, Math.min( PI_2 - scope.minPolarAngle, euler.x ) );
-
-		camera.quaternion.setFromEuler( euler );
-
-		scope.dispatchEvent( changeEvent );
-
-	}
-
-	function onPointerlockChange() {
-
-		if ( scope.domElement.ownerDocument.pointerLockElement === scope.domElement ) {
-
-			scope.dispatchEvent( lockEvent );
-
-			scope.isLocked = true;
-
-		} else {
-
-			scope.dispatchEvent( unlockEvent );
-
-			scope.isLocked = false;
-
-		}
-
-	}
-
-	function onPointerlockError() {
-
-		console.error( 'THREE.PointerLockControls: Unable to use Pointer Lock API' );
-
-	}
-
-	this.connect = function () {
-
-		scope.domElement.ownerDocument.addEventListener( 'mousemove', onMouseMove );
-		scope.domElement.ownerDocument.addEventListener( 'pointerlockchange', onPointerlockChange );
-		scope.domElement.ownerDocument.addEventListener( 'pointerlockerror', onPointerlockError );
-
-	};
-
-	this.disconnect = function () {
-
-		scope.domElement.ownerDocument.removeEventListener( 'mousemove', onMouseMove );
-		scope.domElement.ownerDocument.removeEventListener( 'pointerlockchange', onPointerlockChange );
-		scope.domElement.ownerDocument.removeEventListener( 'pointerlockerror', onPointerlockError );
-
-	};
-
-	this.dispose = function () {
-
-		this.disconnect();
-
-	};
-
-	this.getObject = function () { // retaining this method for backward compatibility
-
-		return camera;
-
-	};
-
-	this.getDirection = function () {
-
-		var direction = new _build_three_module_js__WEBPACK_IMPORTED_MODULE_0__.Vector3( 0, 0, - 1 );
-
-		return function ( v ) {
-
-			return v.copy( direction ).applyQuaternion( camera.quaternion );
-
-		};
-
-	}();
-
-	this.moveForward = function ( distance ) {
-
-		// move forward parallel to the xz-plane
-		// assumes camera.up is y-up
-
-		vec.setFromMatrixColumn( camera.matrix, 0 );
-
-		vec.crossVectors( camera.up, vec );
-
-		camera.position.addScaledVector( vec, distance );
-
-	};
-
-	this.moveRight = function ( distance ) {
-
-		vec.setFromMatrixColumn( camera.matrix, 0 );
-
-		camera.position.addScaledVector( vec, distance );
-
-	};
-
-	this.lock = function () {
-
-		this.domElement.requestPointerLock();
-
-	};
-
-	this.unlock = function () {
-
-		scope.domElement.ownerDocument.exitPointerLock();
-
-	};
-
-	this.connect();
-
-};
-
-PointerLockControls.prototype = Object.create( _build_three_module_js__WEBPACK_IMPORTED_MODULE_0__.EventDispatcher.prototype );
-PointerLockControls.prototype.constructor = PointerLockControls;
 
 
 

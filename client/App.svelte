@@ -4,17 +4,18 @@
 
   import Button from './components/button.svelte';
   import Input from './components/input.svelte';
-  import { Engine, Player } from './core';
+  import { Engine } from './core';
 
   let domElement: HTMLDivElement;
   let canvas: HTMLCanvasElement;
   let worldListWrapper: HTMLUListElement;
 
   let engine: Engine;
-  let locked: boolean;
   let selected: string;
-  let chatEnabled: boolean;
   let fetchWorlds: Promise<any>;
+
+  let locked = false;
+  let chatEnabled = false;
 
   const { world } = QS.parse(window.location.search);
 
@@ -56,6 +57,14 @@
           <Input placeholder="Username" value={engine.player.name} on:input={onNameChange} maxLength="16" />
           <Button on:click={() => engine.lock()}>Back to Game</Button>
           <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>Quit to Title</Button>
+        </div>
+      {/if}
+      {#if chatEnabled}
+        <div id="chat-wrapper">
+          <div>
+            <ul />
+          </div>
+          <input id="chat" />
         </div>
       {/if}
     </div>
@@ -135,6 +144,46 @@
   #pause-menu > h2 {
     color: #ccc;
     margin-bottom: 1em;
+  }
+
+  #chat-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10000000;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #chat-wrapper div {
+    position: fixed;
+    bottom: 75px;
+    left: 0;
+    width: 600px;
+    /* height: 500px; */
+    margin-left: 5px;
+    background: black;
+    background-color: #00000081;
+    word-break: break-all;
+  }
+
+  #chat-wrapper input {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: calc(100% - 10px);
+    margin: 5px;
+    height: 29px;
+    background: #00000081;
+    padding: 5px;
+    z-index: 5;
+    font-family: 'Alata', sans-serif;
+    color: white;
+    border: none;
+  }
+
+  #chat-wrapper input:focus {
+    outline: none;
   }
 
   #world-list-wrapper {

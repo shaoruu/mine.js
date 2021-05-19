@@ -4,6 +4,7 @@ export * from './clock';
 export * from './clouds';
 export * from './peer';
 export * from './physics';
+export * from './pointerlock-controls';
 export * from './rigid-body';
 export * from './simple-cull';
 export * from './sky';

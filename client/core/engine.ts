@@ -4,7 +4,7 @@ import merge from 'deepmerge';
 
 import { Clock, DeepPartial } from '../libs';
 
-import { Chat } from './chat';
+import { Chat, ChatOptionsType } from './chat';
 import { Particles, ParticlesOptionsType } from './particles';
 import { Peers, PeersOptionsType } from './peers';
 
@@ -34,6 +34,7 @@ type ConfigType = {
   debug: boolean;
   container: ContainerOptionsType;
   camera: CameraOptionsType;
+  chat: ChatOptionsType;
   player: PlayerOptionsType;
   world: WorldOptionsType;
   entities: EntitiesOptionsType;
@@ -56,6 +57,9 @@ const defaultConfig: ConfigType = {
     far: 8000,
     minPolarAngle: 0,
     maxPolarAngle: Math.PI,
+  },
+  chat: {
+    input: null,
   },
   player: {
     acceleration: 1,
@@ -138,6 +142,7 @@ class Engine extends EventEmitter {
     const {
       camera,
       container,
+      chat,
       debug,
       entities,
       physics,
@@ -170,7 +175,7 @@ class Engine extends EventEmitter {
     this.inputs = new Inputs(this);
 
     // chat
-    this.chat = new Chat(this);
+    this.chat = new Chat(this, chat);
 
     // camera
     this.camera = new Camera(this, camera);
@@ -208,16 +213,8 @@ class Engine extends EventEmitter {
 
   boot = () => {
     const cycle = () => {
-      if (this.debug) {
-        this.debug.stats.begin();
-      }
-
       this.tick();
       this.render();
-
-      if (this.debug) {
-        this.debug.stats.end();
-      }
 
       requestAnimationFrame(cycle);
     };
@@ -262,12 +259,12 @@ class Engine extends EventEmitter {
     this.emit('pause');
   };
 
-  lock = () => {
-    this.player.controls.lock();
+  lock = (cb?: () => void) => {
+    this.player.controls.lock(cb);
   };
 
-  unlock = () => {
-    this.player.controls.unlock();
+  unlock = (cb?: () => void) => {
+    this.player.controls.unlock(cb);
   };
 
   setTick = (speed: number, sideEffect = true) => {
