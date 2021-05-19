@@ -4,13 +4,12 @@ import merge from 'deepmerge';
 
 import { Clock, DeepPartial } from '../libs';
 
-import { Chat, ChatOptionsType } from './chat';
-import { Particles, ParticlesOptionsType } from './particles';
-import { Peers, PeersOptionsType } from './peers';
-
+import { NetworkOptionsType } from '.';
 import {
   Camera,
   CameraOptionsType,
+  Chat,
+  ChatOptionsType,
   Container,
   ContainerOptionsType,
   Debug,
@@ -18,6 +17,10 @@ import {
   EntitiesOptionsType,
   Inputs,
   Network,
+  Particles,
+  ParticlesOptionsType,
+  Peers,
+  PeersOptionsType,
   Physics,
   PhysicsOptionsType,
   Player,
@@ -42,6 +45,7 @@ type ConfigType = {
   registry: RegistryOptionsType;
   rendering: RenderingOptionsType;
   peers: PeersOptionsType;
+  network: NetworkOptionsType;
   particles: ParticlesOptionsType;
 };
 
@@ -59,7 +63,8 @@ const defaultConfig: ConfigType = {
     maxPolarAngle: Math.PI,
   },
   chat: {
-    input: null,
+    margin: 8,
+    disappearTimeout: 2000,
   },
   player: {
     acceleration: 1,
@@ -110,6 +115,9 @@ const defaultConfig: ConfigType = {
   peers: {
     updateInterval: 16, // ms
   },
+  network: {
+    reconnectInterval: 10000,
+  },
   particles: {
     count: 10,
   },
@@ -141,17 +149,18 @@ class Engine extends EventEmitter {
 
     const {
       camera,
-      container,
       chat,
+      container,
       debug,
       entities,
+      particles,
+      peers,
       physics,
       player,
       registry,
       rendering,
+      network,
       world,
-      peers,
-      particles,
     } = (this.config = merge(defaultConfig, params));
 
     // debug
@@ -160,7 +169,7 @@ class Engine extends EventEmitter {
     }
 
     // network
-    this.network = new Network(this);
+    this.network = new Network(this, network);
 
     // container
     this.container = new Container(this, container);
@@ -282,6 +291,10 @@ class Engine extends EventEmitter {
   // if pointerlock is locked
   get locked() {
     return this.player.controls.isLocked;
+  }
+
+  get connected() {
+    return this.network.connected;
   }
 }
 

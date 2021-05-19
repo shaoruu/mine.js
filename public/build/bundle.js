@@ -3407,38 +3407,209 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Chat": () => (/* binding */ Chat)
 /* harmony export */ });
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
 
+
+
+
+const HELP_COMMAND = `
+Commands coming soon!
+`;
 class Chat {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
         this.enabled = false;
+        this.messages = [];
+        this.history = new _libs__WEBPACK_IMPORTED_MODULE_1__.ChatHistory(this);
+        this.makeDOM = () => {
+            const { margin } = this.options;
+            this.gui = {
+                messages: document.createElement('div'),
+                wrapper: document.createElement('div'),
+                input: document.createElement('input'),
+            };
+            this.gui.wrapper.id = 'mine.js-chat-wrapper';
+            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.wrapper, {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '4',
+                width: '100vw',
+                height: '100vh',
+                visibility: 'hidden',
+            });
+            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.messages, {
+                position: 'fixed',
+                bottom: '50px',
+                left: '0',
+                width: '600px',
+                overflowY: 'hidden',
+                marginLeft: `${margin}px`,
+                maxHeight: '800px',
+                background: 'rgba(0,0,0,0.45)',
+                wordBreak: 'break-all',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+            });
+            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.input, {
+                position: 'fixed',
+                bottom: '0',
+                left: '0',
+                width: `calc(100% - ${margin * 2}px)`,
+                margin: `${margin}px`,
+                height: '29px',
+                background: 'rgba(0,0,0,0.45)',
+                padding: '5px',
+                zIndex: '5',
+                fontFamily: "'Alata', sans-serif",
+                fontSize: '16px',
+                color: 'white',
+                border: 'none',
+                outline: 'none',
+                visibility: 'hidden',
+            });
+            this.gui.input.type = 'text';
+            this.gui.input.autocapitalize = 'off';
+            this.gui.input.autocomplete = 'off';
+            this.gui.input.autofocus = false;
+            this.gui.input.spellcheck = false;
+            this.gui.wrapper.addEventListener('click', this.focusInput, false);
+            this.gui.wrapper.appendChild(this.gui.messages);
+            this.engine.container.domElement.appendChild(this.gui.wrapper);
+            this.engine.container.domElement.appendChild(this.gui.input);
+            this.gui.input.addEventListener('keyup', (e) => {
+                if (this.engine.inputs.namespace !== 'chat')
+                    return;
+                switch (e.key) {
+                    case 'Escape':
+                        this.disable();
+                        break;
+                    case 'Enter':
+                        this.handleEnter();
+                        this.disable();
+                        break;
+                    case 'ArrowUp':
+                        this.handleUp();
+                        break;
+                    case 'ArrowDown':
+                        this.handleDown();
+                        break;
+                }
+            }, false);
+        };
+        this.handleEnter = () => {
+            const value = this.inputValue;
+            if (value.split(' ').filter((ele) => ele).length === 0)
+                return;
+            if (value === '/help') {
+                this.add({ type: 'SERVER', body: HELP_COMMAND });
+                return;
+            }
+            const { network: { server }, player, } = this.engine;
+            if (value.startsWith('/')) {
+                this.add({ type: 'INFO', body: 'Commands not yet implemented.' });
+                return;
+            }
+            server.sendEvent({
+                type: 'MESSAGE',
+                message: {
+                    type: 'PLAYER',
+                    sender: player.name,
+                    body: value,
+                },
+            });
+            this.history.add(value);
+            this.history.reset();
+        };
+        this.handleUp = () => {
+            const previous = this.history.previous();
+            if (previous)
+                this.inputValue = previous;
+        };
+        this.handleDown = () => {
+            const next = this.history.next();
+            if (next)
+                this.inputValue = next;
+        };
+        this.add = ({ type, sender, body }) => {
+            const newMessage = new _libs__WEBPACK_IMPORTED_MODULE_1__.Message(type, sender, body);
+            this.messages.push(newMessage);
+            this.gui.messages.appendChild(newMessage.wrapper);
+            this.showMessages();
+            if (!this.enabled) {
+                this.fadeMessages();
+            }
+        };
         this.enable = (isCommand = false) => {
+            if (this.disappearTimer) {
+                clearTimeout(this.disappearTimer);
+            }
+            this.enabled = true;
             this.engine.unlock();
             this.engine.emit('chat-enabled');
-            this.enabled = true;
-            const interval = setInterval(() => {
-                const input = document.getElementById('chat');
-                if (!input)
-                    return;
-                input.focus();
-                input.addEventListener('keyup', (e) => {
-                    if (e.key === 'Escape') {
-                        this.disable();
-                    }
-                }, false);
-                clearInterval(interval);
-            }, 1);
+            this.resetInput();
+            this.showInput();
+            this.focusInput();
+            this.showMessages();
+            if (isCommand) {
+            }
+            else {
+                setTimeout(() => (this.inputValue = this.inputValue.substr(1)), 0.01);
+            }
         };
         this.disable = () => {
             this.enabled = false;
+            this.fadeMessages();
+            this.blurInput();
+            this.resetInput();
+            this.hideInput();
             this.engine.lock(() => {
                 this.engine.emit('chat-disabled');
             });
         };
+        this.showMessages = () => {
+            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.wrapper, { opacity: '1', visibility: 'visible', transition: 'all 0s ease 0s' });
+        };
+        this.showInput = () => {
+            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.input, { visibility: 'visible' });
+        };
+        this.fadeMessages = () => {
+            if (this.disappearTimer) {
+                clearTimeout(this.disappearTimer);
+            }
+            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.wrapper, { opacity: '0.8' });
+            this.disappearTimer = setTimeout(() => {
+                _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.wrapper, {
+                    opacity: '0',
+                    transition: 'opacity 1s ease-out',
+                });
+                clearTimeout(this.disappearTimer);
+                this.disappearTimer = undefined;
+            }, this.options.disappearTimeout);
+        };
+        this.hideInput = () => {
+            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.input, { visibility: 'hidden' });
+        };
+        this.resetInput = () => (this.inputValue = '');
+        this.focusInput = () => this.gui.input.focus();
+        this.blurInput = () => this.gui.input.blur();
+        this.makeDOM();
         engine.inputs.bind('t', this.enable, 'in-game');
-        engine.inputs.bind('esc', this.disable, 'chat', 'keyup');
+        engine.inputs.bind('/', () => this.enable(true), 'in-game');
+        engine.inputs.bind('esc', this.disable, 'chat', { occasion: 'keyup' });
+        engine.on('connected', () => this.add({ type: 'SERVER', body: 'Connected to world!' }));
+        engine.on('disconnected', () => this.add({ type: 'ERROR', body: 'World disconnected. Reconnecting...' }));
+    }
+    set inputValue(value) {
+        this.gui.input.value = value;
+    }
+    get inputValue() {
+        return this.gui.input.value;
     }
 }
 
@@ -3698,6 +3869,7 @@ class Debug {
         this.makeDataEntry = () => {
             const dataEntry = document.createElement('p');
             _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(dataEntry, {
+                fontSize: '16px',
                 margin: '0',
             });
             return dataEntry;
@@ -3909,12 +4081,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! deepmerge */ "./node_modules/deepmerge/dist/cjs.js");
 /* harmony import */ var deepmerge__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(deepmerge__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var _chat__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./chat */ "./client/core/chat.ts");
-/* harmony import */ var _particles__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./particles */ "./client/core/particles.ts");
-/* harmony import */ var _peers__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./peers */ "./client/core/peers.ts");
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! . */ "./client/core/index.ts");
-
-
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
 
 
 
@@ -3934,7 +4101,8 @@ const defaultConfig = {
         maxPolarAngle: Math.PI,
     },
     chat: {
-        input: null,
+        margin: 8,
+        disappearTimeout: 2000,
     },
     player: {
         acceleration: 1,
@@ -3984,6 +4152,9 @@ const defaultConfig = {
     },
     peers: {
         updateInterval: 16, // ms
+    },
+    network: {
+        reconnectInterval: 10000,
     },
     particles: {
         count: 10,
@@ -4051,37 +4222,37 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                     },
                 });
         };
-        const { camera, container, chat, debug, entities, physics, player, registry, rendering, world, peers, particles, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
+        const { camera, chat, container, debug, entities, particles, peers, physics, player, registry, rendering, network, world, } = (this.config = deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(defaultConfig, params));
         // debug
         if (debug) {
-            this.debug = new ___WEBPACK_IMPORTED_MODULE_6__.Debug(this);
+            this.debug = new ___WEBPACK_IMPORTED_MODULE_3__.Debug(this);
         }
         // network
-        this.network = new ___WEBPACK_IMPORTED_MODULE_6__.Network(this);
+        this.network = new ___WEBPACK_IMPORTED_MODULE_3__.Network(this, network);
         // container
-        this.container = new ___WEBPACK_IMPORTED_MODULE_6__.Container(this, container);
+        this.container = new ___WEBPACK_IMPORTED_MODULE_3__.Container(this, container);
         // rendering
-        this.rendering = new ___WEBPACK_IMPORTED_MODULE_6__.Rendering(this, rendering);
+        this.rendering = new ___WEBPACK_IMPORTED_MODULE_3__.Rendering(this, rendering);
         // registry
-        this.registry = new ___WEBPACK_IMPORTED_MODULE_6__.Registry(this, registry);
+        this.registry = new ___WEBPACK_IMPORTED_MODULE_3__.Registry(this, registry);
         // inputs
-        this.inputs = new ___WEBPACK_IMPORTED_MODULE_6__.Inputs(this);
+        this.inputs = new ___WEBPACK_IMPORTED_MODULE_3__.Inputs(this);
         // chat
-        this.chat = new _chat__WEBPACK_IMPORTED_MODULE_3__.Chat(this, chat);
+        this.chat = new ___WEBPACK_IMPORTED_MODULE_3__.Chat(this, chat);
         // camera
-        this.camera = new ___WEBPACK_IMPORTED_MODULE_6__.Camera(this, camera);
+        this.camera = new ___WEBPACK_IMPORTED_MODULE_3__.Camera(this, camera);
         // world
-        this.world = new ___WEBPACK_IMPORTED_MODULE_6__.World(this, world);
+        this.world = new ___WEBPACK_IMPORTED_MODULE_3__.World(this, world);
         // player
-        this.player = new ___WEBPACK_IMPORTED_MODULE_6__.Player(this, player);
+        this.player = new ___WEBPACK_IMPORTED_MODULE_3__.Player(this, player);
         // physics
-        this.physics = new ___WEBPACK_IMPORTED_MODULE_6__.Physics(this, physics);
+        this.physics = new ___WEBPACK_IMPORTED_MODULE_3__.Physics(this, physics);
         // entities
-        this.entities = new ___WEBPACK_IMPORTED_MODULE_6__.Entities(this, entities);
+        this.entities = new ___WEBPACK_IMPORTED_MODULE_3__.Entities(this, entities);
         // peers
-        this.peers = new _peers__WEBPACK_IMPORTED_MODULE_5__.Peers(this, peers);
+        this.peers = new ___WEBPACK_IMPORTED_MODULE_3__.Peers(this, peers);
         // particles
-        this.particles = new _particles__WEBPACK_IMPORTED_MODULE_4__.Particles(this, particles);
+        this.particles = new ___WEBPACK_IMPORTED_MODULE_3__.Particles(this, particles);
         // time
         this.clock = new _libs__WEBPACK_IMPORTED_MODULE_2__.Clock();
         this.boot();
@@ -4090,6 +4261,9 @@ class Engine extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     // if pointerlock is locked
     get locked() {
         return this.player.controls.isLocked;
+    }
+    get connected() {
+        return this.network.connected;
     }
 }
 
@@ -4261,6 +4435,9 @@ class Inputs {
         this.add('space', 'space');
         this.add('dbl-space', 'space space');
         this.add('esc', 'esc');
+        this.add('up', 'up');
+        this.add('down', 'down');
+        this.add('enter', 'enter');
         this.initClickListener();
     }
     initClickListener() {
@@ -4287,7 +4464,7 @@ class Inputs {
     add(name, combo) {
         this.combos.set(name, combo);
     }
-    bind(name, callback, namespace, occasion = 'keydown') {
+    bind(name, callback, namespace, { occasion = 'keydown' } = {}) {
         let combo = this.combos.get(name);
         if (!combo) {
             if (name.length === 1) {
@@ -4341,17 +4518,19 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const { Message } = _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol;
+const { Message, ChatMessage } = _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol;
 class Network {
-    constructor(engine) {
+    constructor(engine, options) {
         this.engine = engine;
+        this.options = options;
         this.url = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getServerURL();
         this.connected = false;
         this.join = (worldName) => {
             this.worldName = worldName;
-            this.connect(this.url.toString());
+            this.connect();
         };
-        this.connect = (url) => {
+        this.connect = () => {
+            const url = this.url.toString();
             const socket = new URL(url);
             socket.protocol = socket.protocol.replace(/http/, 'ws');
             socket.hash = '';
@@ -4363,13 +4542,18 @@ class Network {
             };
             server.onopen = () => {
                 this.engine.emit('connected');
+                this.engine.world.handleReconnection();
                 this.connected = true;
+                clearTimeout(this.reconnection);
             };
             server.onerror = () => { };
             server.onmessage = this.onMessage;
             server.onclose = () => {
                 this.engine.emit('disconnected');
                 this.connected = false;
+                this.reconnection = setInterval(() => {
+                    this.connect();
+                }, this.options.reconnectInterval);
             };
             server.serverURL = url;
             this.server = server;
@@ -4377,7 +4561,7 @@ class Network {
         this.onEvent = (event) => {
             const { type } = event;
             const { engine } = this;
-            const { world, player, peers } = engine;
+            const { world, player, peers, chat } = engine;
             switch (type) {
                 case 'INIT': {
                     const { json: { id, time, tickSpeed, spawn }, } = event;
@@ -4426,6 +4610,10 @@ class Network {
                     }
                     break;
                 }
+                case 'MESSAGE': {
+                    const { message } = event;
+                    chat.add(message);
+                }
             }
         };
         this.onMessage = ({ data }) => {
@@ -4460,6 +4648,10 @@ class Network {
         if (message.json) {
             message.json = JSON.parse(message.json);
         }
+        if (message.message) {
+            // @ts-ignore
+            message.message.type = ChatMessage.Type[message.message.type];
+        }
         return message;
     }
     static encode(message) {
@@ -4467,6 +4659,9 @@ class Network {
             message.json = JSON.stringify(message.json);
         }
         message.type = Message.Type[message.type];
+        if (message.message) {
+            message.message.type = ChatMessage.Type[message.message.type];
+        }
         return _protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.encode(_protocol__WEBPACK_IMPORTED_MODULE_1__.protocol.Message.create(message)).finish();
     }
 }
@@ -4812,6 +5007,9 @@ class Player {
             this.lookBlockMesh.renderOrder = 100000;
             rendering.scene.add(this.lookBlockMesh);
         });
+        engine.on('chat-enabled', () => {
+            this.resetMovements();
+        });
         inputs.bind('f', () => this.toggleGodMode(), 'in-game');
         inputs.click('left', () => world.breakVoxel(), 'in-game');
         inputs.click('right', () => world.placeVoxel(type), 'in-game');
@@ -4917,6 +5115,16 @@ class Player {
     setName(name) {
         this.name = name || '';
         localStorage.setItem(LOCAL_STORAGE_PLAYER_NAME, this.name);
+    }
+    resetMovements() {
+        this.movements = {
+            front: false,
+            back: false,
+            left: false,
+            right: false,
+            down: false,
+            up: false,
+        };
     }
     get lookBlockStr() {
         const { lookBlock } = this;
@@ -5309,6 +5517,15 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             });
         }
     }
+    sortPendingChunks() {
+        const [cx, cz] = this.camChunkPos;
+        this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
+    }
+    handleReconnection() {
+        // move requested chunks to pending
+        this.pendingChunks.push(...Array.from(this.requestedChunks).map((rc) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.parseChunkName(rc)));
+        this.sortPendingChunks();
+    }
     get camChunkPosStr() {
         return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
     }
@@ -5361,7 +5578,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         }
         this.pendingChunks = Array.from(new Set(this.pendingChunks.map((pc) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(pc)))).map((pcStr) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.parseChunkName(pcStr));
         // make pending chunks radiate from player, might have easier ways of doing so
-        this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
+        this.sortPendingChunks();
         // if the chunk is too far away, remove from scene.
         const deleteDistance = renderRadius * chunkSize * 1.414;
         for (const chunk of this.visibleChunks) {
@@ -5372,7 +5589,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     }
     requestChunks() {
         // separate chunk request into frames to avoid clogging
-        if (this.pendingChunks.length === 0)
+        if (this.pendingChunks.length === 0 || !this.engine.connected)
             return;
         const { maxChunkRequestPerFrame } = this.options;
         // don't clog up the server
@@ -5651,6 +5868,60 @@ class Brain {
 
 /***/ }),
 
+/***/ "./client/libs/chat-history.ts":
+/*!*************************************!*\
+  !*** ./client/libs/chat-history.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "ChatHistory": () => (/* binding */ ChatHistory)
+/* harmony export */ });
+/* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core */ "./client/core/index.ts");
+
+class ChatHistory {
+    constructor(chat) {
+        this.chat = chat;
+        this.messages = [];
+        this.cursor = -1;
+        this.temp = null;
+        this.add = (message) => this.messages.unshift(message);
+        this.previous = () => {
+            // Already at top
+            if (!this.messages[this.cursor + 1])
+                return null;
+            if (typeof this.temp !== 'string')
+                this.temp = this.chat.inputValue;
+            this.cursor += 1;
+            return this.messages[this.cursor];
+        };
+        this.next = () => {
+            // Already at bottom
+            if (!this.messages[this.cursor - 1]) {
+                if (typeof this.temp !== 'string') {
+                    const { temp } = this;
+                    this.temp = null;
+                    this.cursor -= 1;
+                    return temp;
+                }
+                return null;
+            }
+            this.cursor -= 1;
+            return this.messages[this.cursor];
+        };
+        this.reset = () => {
+            this.temp = null;
+            this.cursor = -1;
+        };
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./client/libs/clock.ts":
 /*!******************************!*\
   !*** ./client/libs/clock.ts ***!
@@ -5866,26 +6137,30 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "AABB": () => (/* reexport safe */ _aabb__WEBPACK_IMPORTED_MODULE_0__.AABB),
 /* harmony export */   "Brain": () => (/* reexport safe */ _brain__WEBPACK_IMPORTED_MODULE_1__.Brain),
-/* harmony export */   "Clock": () => (/* reexport safe */ _clock__WEBPACK_IMPORTED_MODULE_2__.Clock),
-/* harmony export */   "Clouds": () => (/* reexport safe */ _clouds__WEBPACK_IMPORTED_MODULE_3__.Clouds),
-/* harmony export */   "Peer": () => (/* reexport safe */ _peer__WEBPACK_IMPORTED_MODULE_4__.Peer),
-/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_5__.Physics),
-/* harmony export */   "PointerLockControls": () => (/* reexport safe */ _pointerlock_controls__WEBPACK_IMPORTED_MODULE_6__.PointerLockControls),
-/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_7__.RigidBody),
-/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_8__.simpleCull),
-/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_9__.Sky)
+/* harmony export */   "ChatHistory": () => (/* reexport safe */ _chat_history__WEBPACK_IMPORTED_MODULE_2__.ChatHistory),
+/* harmony export */   "Clock": () => (/* reexport safe */ _clock__WEBPACK_IMPORTED_MODULE_3__.Clock),
+/* harmony export */   "Clouds": () => (/* reexport safe */ _clouds__WEBPACK_IMPORTED_MODULE_4__.Clouds),
+/* harmony export */   "Message": () => (/* reexport safe */ _message__WEBPACK_IMPORTED_MODULE_5__.Message),
+/* harmony export */   "Peer": () => (/* reexport safe */ _peer__WEBPACK_IMPORTED_MODULE_6__.Peer),
+/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_7__.Physics),
+/* harmony export */   "PointerLockControls": () => (/* reexport safe */ _pointerlock_controls__WEBPACK_IMPORTED_MODULE_8__.PointerLockControls),
+/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_9__.RigidBody),
+/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_10__.simpleCull),
+/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_11__.Sky)
 /* harmony export */ });
 /* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 /* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
-/* harmony import */ var _clock__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./clock */ "./client/libs/clock.ts");
-/* harmony import */ var _clouds__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./clouds */ "./client/libs/clouds.ts");
-/* harmony import */ var _peer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./peer */ "./client/libs/peer.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
-/* harmony import */ var _pointerlock_controls__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./pointerlock-controls */ "./client/libs/pointerlock-controls.ts");
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
-/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
-/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _chat_history__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./chat-history */ "./client/libs/chat-history.ts");
+/* harmony import */ var _clock__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./clock */ "./client/libs/clock.ts");
+/* harmony import */ var _clouds__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./clouds */ "./client/libs/clouds.ts");
+/* harmony import */ var _message__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./message */ "./client/libs/message.ts");
+/* harmony import */ var _peer__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./peer */ "./client/libs/peer.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
+/* harmony import */ var _pointerlock_controls__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./pointerlock-controls */ "./client/libs/pointerlock-controls.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
+/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
+/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
 
 
 
@@ -5896,6 +6171,77 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+
+
+/***/ }),
+
+/***/ "./client/libs/message.ts":
+/*!********************************!*\
+  !*** ./client/libs/message.ts ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Message": () => (/* binding */ Message)
+/* harmony export */ });
+/* harmony import */ var _shared__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared */ "./shared/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+
+
+class Message {
+    constructor(type, sender, body) {
+        this.type = type;
+        this.wrapper = document.createElement('div');
+        this.sender = document.createElement('p');
+        this.body = document.createElement('p');
+        _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.wrapper, {
+            display: 'flex',
+            alignItems: 'flex-start',
+            padding: '0 5px 5px 5px',
+        });
+        _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle([this.sender, this.body], {
+            fontFamily: "'Alata', sans-serif",
+            fontSize: '16px',
+            color: 'white',
+        });
+        _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.sender, {
+            width: 'fit-content',
+            flexShrink: '0',
+        });
+        this.sender.innerHTML = sender || '';
+        this.body.innerHTML = body || '';
+        switch (type) {
+            case 'ERROR':
+                _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle([this.sender, this.body], {
+                    color: '#f14668',
+                });
+                break;
+            case 'SERVER':
+                _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle([this.sender, this.body], {
+                    color: '#29bb89',
+                });
+                break;
+            case 'PLAYER':
+                this.sender.innerHTML = `&lt;${sender}&gt;`;
+                this.body.innerHTML = `&nbsp;&nbsp;${body}`;
+                break;
+            case 'INFO':
+                _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle([this.sender, this.body], {
+                    color: '#fed049',
+                });
+                break;
+            default:
+                break;
+        }
+        this.wrapper.appendChild(this.sender);
+        this.wrapper.appendChild(this.body);
+    }
+}
 
 
 
@@ -7039,7 +7385,12 @@ Helper.mapWorldPosToVoxelPos = (worldPos, dimension) => {
 Helper.applyStyle = (ele, style) => {
     Object.keys(style).forEach((key) => {
         const attribute = style[key];
-        ele.style[key] = attribute;
+        if (Array.isArray(ele)) {
+            ele.forEach((e) => (e.style[key] = attribute));
+        }
+        else {
+            ele.style[key] = attribute;
+        }
     });
     return ele;
 };
@@ -24033,10 +24384,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/button.svelte */ "./client/components/button.svelte");
 /* harmony import */ var _components_input_svelte__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components/input.svelte */ "./client/components/input.svelte");
 /* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./core */ "./client/core/index.ts");
-/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
-/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
+/* harmony import */ var svelte__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! svelte */ "./node_modules/svelte/index.mjs");
+/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./node_modules/svelte-loader/lib/hot-api.js */ "./node_modules/svelte-loader/lib/hot-api.js");
+/* harmony import */ var _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js */ "./node_modules/svelte-hmr/runtime/proxy-adapter-dom.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* client/App.svelte generated by Svelte v3.37.0 */
+
 
 
 
@@ -24048,20 +24401,21 @@ const file = "client/App.svelte";
 
 function add_css() {
 	var style = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("style");
-	style.id = "svelte-1avf49t-style";
-	style.textContent = "main.svelte-1avf49t.svelte-1avf49t{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-1avf49t.svelte-1avf49t{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:10px;height:10px;line-height:20px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#pause-menu.svelte-1avf49t.svelte-1avf49t{z-index:10000000;display:flex;flex-direction:column;align-items:center;justify-content:center}#pause-menu.svelte-1avf49t.svelte-1avf49t,#pause-menu.svelte-1avf49t>div.svelte-1avf49t{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%}#pause-menu.svelte-1avf49t>div.svelte-1avf49t{background:rgba(1, 1, 1, 0.1);z-index:-1}#pause-menu.svelte-1avf49t>h2.svelte-1avf49t{color:#ccc;margin-bottom:1em}#chat-wrapper.svelte-1avf49t.svelte-1avf49t{position:fixed;top:0;left:0;z-index:10000000;width:100vw;height:100vh}#chat-wrapper.svelte-1avf49t div.svelte-1avf49t{position:fixed;bottom:75px;left:0;width:600px;margin-left:5px;background:black;background-color:#00000081;word-break:break-all}#chat-wrapper.svelte-1avf49t input.svelte-1avf49t{position:fixed;bottom:0;left:0;width:calc(100% - 10px);margin:5px;height:29px;background:#00000081;padding:5px;z-index:5;font-family:'Alata', sans-serif;color:white;border:none}#chat-wrapper.svelte-1avf49t input.svelte-1avf49t:focus{outline:none}#world-list-wrapper.svelte-1avf49t.svelte-1avf49t{width:100%;height:100%;background:#02475e;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-1avf49t.svelte-1avf49t{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-1avf49t.svelte-1avf49t{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 5rem;border-radius:5px}#world-list-item.svelte-1avf49t.svelte-1avf49t{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-1avf49t.svelte-1avf49t::selection{background:transparent}#world-list-item.svelte-1avf49t>h1.svelte-1avf49t{color:white;font-size:20px;font-weight:100;width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-1avf49t>p.svelte-1avf49t{color:gray;font-size:20px}.selected.svelte-1avf49t.svelte-1avf49t{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,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 */";
+	style.id = "svelte-52ztu4-style";
+	style.textContent = "main.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:10px;height:10px;line-height:20px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#pause-menu.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4{z-index:10000000;display:flex;flex-direction:column;align-items:center;justify-content:center}#pause-menu.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4,#pause-menu.svelte-52ztu4>div.svelte-52ztu4.svelte-52ztu4{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%}#pause-menu.svelte-52ztu4>div.svelte-52ztu4.svelte-52ztu4{background:rgba(1, 1, 1, 0.1);z-index:-1}#pause-menu.svelte-52ztu4>h2.svelte-52ztu4.svelte-52ztu4{color:#ccc;margin-bottom:1em}#world-list-wrapper.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4{width:100%;height:100%;background:#02475e;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 5rem;border-radius:5px}#world-list-item.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4::selection{background:transparent}#world-list-item.svelte-52ztu4>div.svelte-52ztu4.svelte-52ztu4{color:white;width:380px;display:flex;justify-content:space-between;align-items:center;overflow:hidden}#world-list-item.svelte-52ztu4>div.svelte-52ztu4>h1.svelte-52ztu4,#world-list-item.svelte-52ztu4>div.svelte-52ztu4>h3.svelte-52ztu4{font-size:20px;font-weight:100;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-52ztu4>div.svelte-52ztu4>h3.svelte-52ztu4{font-size:16px}#world-list-item.svelte-52ztu4>p.svelte-52ztu4.svelte-52ztu4{color:gray;font-size:20px}.selected.svelte-52ztu4.svelte-52ztu4.svelte-52ztu4{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,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 */";
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(document.head, style);
 }
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[18] = list[i].name;
-	child_ctx[19] = list[i].generation;
-	child_ctx[20] = list[i].description;
+	child_ctx[13] = list[i].name;
+	child_ctx[14] = list[i].generation;
+	child_ctx[15] = list[i].description;
+	child_ctx[16] = list[i].players;
 	return child_ctx;
 }
 
-// (70:2) {:else}
+// (71:2) {:else}
 function create_else_block(ctx) {
 	let div;
 	let h1;
@@ -24077,11 +24431,11 @@ function create_else_block(ctx) {
 		pending: create_pending_block,
 		then: create_then_block,
 		catch: create_catch_block,
-		value: 17,
-		error: 23
+		value: 12,
+		error: 19
 	};
 
-	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise = /*fetchWorlds*/ ctx[4], info);
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise = /*fetchWorlds*/ ctx[5], info);
 
 	const block = {
 		c: function create() {
@@ -24092,14 +24446,14 @@ function create_else_block(ctx) {
 			ul = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("ul");
 			info.block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "id", "world-list-title");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 71, 6, 2633);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 72, 6, 2660);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "id", "world-list");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 72, 6, 2685);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 73, 6, 2712);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "id", "world-list-wrapper");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 70, 4, 2597);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 71, 4, 2624);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
@@ -24109,17 +24463,13 @@ function create_else_block(ctx) {
 			info.block.m(ul, info.anchor = null);
 			info.mount = () => ul;
 			info.anchor = null;
-			/*ul_binding*/ ctx[14](ul);
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
-			info.ctx = ctx;
 
-			if (dirty & /*fetchWorlds*/ 16 && promise !== (promise = /*fetchWorlds*/ ctx[4]) && (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise, info)) {
-				
-			} else {
+			{
 				const child_ctx = ctx.slice();
-				child_ctx[17] = child_ctx[23] = info.resolved;
+				child_ctx[12] = child_ctx[19] = info.resolved;
 				info.block.p(child_ctx, dirty);
 			}
 		},
@@ -24130,7 +24480,6 @@ function create_else_block(ctx) {
 			info.block.d();
 			info.token = null;
 			info = null;
-			/*ul_binding*/ ctx[14](null);
 		}
 	};
 
@@ -24138,100 +24487,78 @@ function create_else_block(ctx) {
 		block,
 		id: create_else_block.name,
 		type: "else",
-		source: "(70:2) {:else}",
+		source: "(71:2) {:else}",
 		ctx
 	});
 
 	return block;
 }
 
-// (49:2) {#if world}
+// (53:2) {#if world}
 function create_if_block(ctx) {
 	let div;
 	let img;
 	let img_src_value;
-	let t0;
-	let t1;
+	let t;
 	let current;
-	let if_block0 = !/*locked*/ ctx[5] && !/*chatEnabled*/ ctx[6] && create_if_block_2(ctx);
-	let if_block1 = /*chatEnabled*/ ctx[6] && create_if_block_1(ctx);
+	let if_block = !/*locked*/ ctx[2] && !/*chatEnabled*/ ctx[3] && create_if_block_1(ctx);
 
 	const block = {
 		c: function create() {
 			div = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
 			img = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("img");
-			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			if (if_block0) if_block0.c();
-			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			if (if_block1) if_block1.c();
+			t = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			if (if_block) if_block.c();
 			if (img.src !== (img_src_value = "https://i.imgur.com/ro6oLCL.png")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "src", img_src_value);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "id", "crosshair");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "alt", "+");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 50, 6, 1900);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 49, 4, 1865);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 54, 6, 2020);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 53, 4, 2008);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, img);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t0);
-			if (if_block0) if_block0.m(div, null);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t1);
-			if (if_block1) if_block1.m(div, null);
-			/*div_binding*/ ctx[11](div);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t);
+			if (if_block) if_block.m(div, null);
 			current = true;
 		},
 		p: function update(ctx, dirty) {
-			if (!/*locked*/ ctx[5] && !/*chatEnabled*/ ctx[6]) {
-				if (if_block0) {
-					if_block0.p(ctx, dirty);
+			if (!/*locked*/ ctx[2] && !/*chatEnabled*/ ctx[3]) {
+				if (if_block) {
+					if_block.p(ctx, dirty);
 
-					if (dirty & /*locked, chatEnabled*/ 96) {
-						(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block0, 1);
+					if (dirty & /*locked, chatEnabled*/ 12) {
+						(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2(ctx);
-					if_block0.c();
-					(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block0, 1);
-					if_block0.m(div, t1);
+					if_block = create_if_block_1(ctx);
+					if_block.c();
+					(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block, 1);
+					if_block.m(div, null);
 				}
-			} else if (if_block0) {
+			} else if (if_block) {
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.group_outros)();
 
-				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block0, 1, 1, () => {
-					if_block0 = null;
+				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block, 1, 1, () => {
+					if_block = null;
 				});
 
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.check_outros)();
 			}
-
-			if (/*chatEnabled*/ ctx[6]) {
-				if (if_block1) {
-					
-				} else {
-					if_block1 = create_if_block_1(ctx);
-					if_block1.c();
-					if_block1.m(div, null);
-				}
-			} else if (if_block1) {
-				if_block1.d(1);
-				if_block1 = null;
-			}
 		},
 		i: function intro(local) {
 			if (current) return;
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block0);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block);
 			current = true;
 		},
 		o: function outro(local) {
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block0);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_out)(if_block);
 			current = false;
 		},
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(div);
-			if (if_block0) if_block0.d();
-			if (if_block1) if_block1.d();
-			/*div_binding*/ ctx[11](null);
+			if (if_block) if_block.d();
 		}
 	};
 
@@ -24239,18 +24566,18 @@ function create_if_block(ctx) {
 		block,
 		id: create_if_block.name,
 		type: "if",
-		source: "(49:2) {#if world}",
+		source: "(53:2) {#if world}",
 		ctx
 	});
 
 	return block;
 }
 
-// (88:8) {:catch error}
+// (92:8) {:catch error}
 function create_catch_block(ctx) {
 	let p;
 	let t0;
-	let t1_value = /*error*/ ctx[23] + "";
+	let t1_value = /*error*/ ctx[19] + "";
 	let t1;
 
 	const block = {
@@ -24258,16 +24585,14 @@ function create_catch_block(ctx) {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)("An error occurred! ");
 			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t1_value);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 88, 10, 3300);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 92, 10, 3390);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t0);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t1);
 		},
-		p: function update(ctx, dirty) {
-			if (dirty & /*fetchWorlds*/ 16 && t1_value !== (t1_value = /*error*/ ctx[23] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t1, t1_value);
-		},
+		p: svelte_internal__WEBPACK_IMPORTED_MODULE_0__.noop,
 		d: function destroy(detaching) {
 			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(p);
 		}
@@ -24277,17 +24602,17 @@ function create_catch_block(ctx) {
 		block,
 		id: create_catch_block.name,
 		type: "catch",
-		source: "(88:8) {:catch error}",
+		source: "(92:8) {:catch error}",
 		ctx
 	});
 
 	return block;
 }
 
-// (76:8) {:then data}
+// (77:8) {:then data}
 function create_then_block(ctx) {
 	let each_1_anchor;
-	let each_value = /*data*/ ctx[17].worlds;
+	let each_value = /*data*/ ctx[12].worlds;
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
 	let each_blocks = [];
 
@@ -24311,8 +24636,8 @@ function create_then_block(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, each_1_anchor, anchor);
 		},
 		p: function update(ctx, dirty) {
-			if (dirty & /*selected, fetchWorlds, window*/ 24) {
-				each_value = /*data*/ ctx[17].worlds;
+			if (dirty & /*selected, fetchWorlds, window*/ 34) {
+				each_value = /*data*/ ctx[12].worlds;
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
 				let i;
 
@@ -24345,72 +24670,92 @@ function create_then_block(ctx) {
 		block,
 		id: create_then_block.name,
 		type: "then",
-		source: "(76:8) {:then data}",
+		source: "(77:8) {:then data}",
 		ctx
 	});
 
 	return block;
 }
 
-// (77:10) {#each data.worlds as { name, generation, description }}
+// (78:10) {#each data.worlds as { name, generation, description, players }}
 function create_each_block(ctx) {
 	let li;
+	let div;
 	let h1;
-	let t0_value = /*name*/ ctx[18] + "";
+	let t0_value = /*name*/ ctx[13] + "";
 	let t0;
 	let t1;
-	let p;
-	let t2_value = /*generation*/ ctx[19] + "";
+	let h3;
+	let t2_value = /*players*/ ctx[16] + "";
 	let t2;
 	let t3;
-	let t4_value = /*description*/ ctx[20] + "";
 	let t4;
+	let p;
+	let t5_value = /*generation*/ ctx[14] + "";
 	let t5;
+	let t6;
+	let t7_value = /*description*/ ctx[15] + "";
+	let t7;
+	let t8;
 	let li_class_value;
 	let mounted;
 	let dispose;
 
 	function click_handler_2() {
-		return /*click_handler_2*/ ctx[12](/*name*/ ctx[18]);
+		return /*click_handler_2*/ ctx[9](/*name*/ ctx[13]);
 	}
 
 	function dblclick_handler() {
-		return /*dblclick_handler*/ ctx[13](/*name*/ ctx[18]);
+		return /*dblclick_handler*/ ctx[10](/*name*/ ctx[13]);
 	}
 
 	const block = {
 		c: function create() {
 			li = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("li");
+			div = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
 			h1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("h1");
 			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t0_value);
 			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
+			h3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("h3");
 			t2 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t2_value);
-			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(" · ");
-			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t4_value);
-			t5 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 83, 14, 3165);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 84, 14, 3195);
+			t3 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(" / 10");
+			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
+			t5 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t5_value);
+			t6 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(" · ");
+			t7 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t7_value);
+			t8 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 85, 16, 3194);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h3, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h3, file, 86, 16, 3226);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 84, 14, 3172);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 88, 14, 3285);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "id", "world-list-item");
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[3] === /*name*/ ctx[18]
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[1] === /*name*/ ctx[13]
 			? "selected"
-			: "") + " svelte-1avf49t"));
+			: "") + " svelte-52ztu4"));
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 77, 12, 2892);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li, file, 78, 12, 2899);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, li, anchor);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(li, h1);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(li, div);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, h1);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(h1, t0);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(li, t1);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, t1);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div, h3);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(h3, t2);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(h3, t3);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(li, t4);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(li, p);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t2);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t3);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t4);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(li, t5);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t5);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t6);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(p, t7);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(li, t8);
 
 			if (!mounted) {
 				dispose = [
@@ -24423,13 +24768,10 @@ function create_each_block(ctx) {
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
-			if (dirty & /*fetchWorlds*/ 16 && t0_value !== (t0_value = /*name*/ ctx[18] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t0, t0_value);
-			if (dirty & /*fetchWorlds*/ 16 && t2_value !== (t2_value = /*generation*/ ctx[19] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t2, t2_value);
-			if (dirty & /*fetchWorlds*/ 16 && t4_value !== (t4_value = /*description*/ ctx[20] + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data_dev)(t4, t4_value);
 
-			if (dirty & /*selected, fetchWorlds*/ 24 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[3] === /*name*/ ctx[18]
+			if (dirty & /*selected*/ 2 && li_class_value !== (li_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[1] === /*name*/ ctx[13]
 			? "selected"
-			: "") + " svelte-1avf49t"))) {
+			: "") + " svelte-52ztu4"))) {
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li, "class", li_class_value);
 			}
 		},
@@ -24444,14 +24786,14 @@ function create_each_block(ctx) {
 		block,
 		id: create_each_block.name,
 		type: "each",
-		source: "(77:10) {#each data.worlds as { name, generation, description }}",
+		source: "(78:10) {#each data.worlds as { name, generation, description, players }}",
 		ctx
 	});
 
 	return block;
 }
 
-// (74:28)            <p>...waiting</p>         {:then data}
+// (75:28)            <p>...waiting</p>         {:then data}
 function create_pending_block(ctx) {
 	let p;
 
@@ -24459,7 +24801,7 @@ function create_pending_block(ctx) {
 		c: function create() {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			p.textContent = "...waiting";
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 74, 10, 2774);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 75, 10, 2772);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
@@ -24474,15 +24816,15 @@ function create_pending_block(ctx) {
 		block,
 		id: create_pending_block.name,
 		type: "pending",
-		source: "(74:28)            <p>...waiting</p>         {:then data}",
+		source: "(75:28)            <p>...waiting</p>         {:then data}",
 		ctx
 	});
 
 	return block;
 }
 
-// (52:6) {#if !locked && !chatEnabled}
-function create_if_block_2(ctx) {
+// (56:6) {#if !locked && !chatEnabled}
+function create_if_block_1(ctx) {
 	let div1;
 	let div0;
 	let t0;
@@ -24498,13 +24840,13 @@ function create_if_block_2(ctx) {
 	input = new _components_input_svelte__WEBPACK_IMPORTED_MODULE_4__.default({
 			props: {
 				placeholder: "Username",
-				value: /*engine*/ ctx[2].player.name,
+				value: /*engine*/ ctx[0] ? /*engine*/ ctx[0].player.name : "",
 				maxLength: "16"
 			},
 			$$inline: true
 		});
 
-	input.$on("input", /*onNameChange*/ ctx[8]);
+	input.$on("input", /*onNameChange*/ ctx[6]);
 
 	button0 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
@@ -24514,7 +24856,7 @@ function create_if_block_2(ctx) {
 			$$inline: true
 		});
 
-	button0.$on("click", /*click_handler*/ ctx[9]);
+	button0.$on("click", /*click_handler*/ ctx[7]);
 
 	button1 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
@@ -24524,7 +24866,7 @@ function create_if_block_2(ctx) {
 			$$inline: true
 		});
 
-	button1.$on("click", /*click_handler_1*/ ctx[10]);
+	button1.$on("click", /*click_handler_1*/ ctx[8]);
 
 	const block = {
 		c: function create() {
@@ -24539,13 +24881,13 @@ function create_if_block_2(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button0.$$.fragment);
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button1.$$.fragment);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 53, 10, 2045);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 54, 10, 2063);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 57, 10, 2165);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 58, 10, 2183);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "pause-menu");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 52, 8, 2013);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 56, 8, 2133);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div1, anchor);
@@ -24562,18 +24904,18 @@ function create_if_block_2(ctx) {
 		},
 		p: function update(ctx, dirty) {
 			const input_changes = {};
-			if (dirty & /*engine*/ 4) input_changes.value = /*engine*/ ctx[2].player.name;
+			if (dirty & /*engine*/ 1) input_changes.value = /*engine*/ ctx[0] ? /*engine*/ ctx[0].player.name : "";
 			input.$set(input_changes);
 			const button0_changes = {};
 
-			if (dirty & /*$$scope*/ 16777216) {
+			if (dirty & /*$$scope*/ 1048576) {
 				button0_changes.$$scope = { dirty, ctx };
 			}
 
 			button0.$set(button0_changes);
 			const button1_changes = {};
 
-			if (dirty & /*$$scope*/ 16777216) {
+			if (dirty & /*$$scope*/ 1048576) {
 				button1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -24602,16 +24944,16 @@ function create_if_block_2(ctx) {
 
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
 		block,
-		id: create_if_block_2.name,
+		id: create_if_block_1.name,
 		type: "if",
-		source: "(52:6) {#if !locked && !chatEnabled}",
+		source: "(56:6) {#if !locked && !chatEnabled}",
 		ctx
 	});
 
 	return block;
 }
 
-// (57:10) <Button on:click={() => engine.lock()}>
+// (66:10) <Button on:click={() => engine.lock()}>
 function create_default_slot_1(ctx) {
 	let t;
 
@@ -24631,14 +24973,14 @@ function create_default_slot_1(ctx) {
 		block,
 		id: create_default_slot_1.name,
 		type: "slot",
-		source: "(57:10) <Button on:click={() => engine.lock()}>",
+		source: "(66:10) <Button on:click={() => engine.lock()}>",
 		ctx
 	});
 
 	return block;
 }
 
-// (58:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
+// (67:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
 function create_default_slot(ctx) {
 	let t;
 
@@ -24658,55 +25000,7 @@ function create_default_slot(ctx) {
 		block,
 		id: create_default_slot.name,
 		type: "slot",
-		source: "(58:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
-		ctx
-	});
-
-	return block;
-}
-
-// (61:6) {#if chatEnabled}
-function create_if_block_1(ctx) {
-	let div1;
-	let div0;
-	let ul;
-	let t;
-	let input;
-
-	const block = {
-		c: function create() {
-			div1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
-			div0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("div");
-			ul = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("ul");
-			t = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			input = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("input");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 63, 12, 2491);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 62, 10, 2473);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(input, "id", "chat");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(input, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(input, file, 65, 10, 2525);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "chat-wrapper");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 61, 8, 2439);
-		},
-		m: function mount(target, anchor) {
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div1, anchor);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, div0);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div0, ul);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, t);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(div1, input);
-		},
-		d: function destroy(detaching) {
-			if (detaching) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.detach_dev)(div1);
-		}
-	};
-
-	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterBlock", {
-		block,
-		id: create_if_block_1.name,
-		type: "if",
-		source: "(61:6) {#if chatEnabled}",
+		source: "(67:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
 		ctx
 	});
 
@@ -24722,7 +25016,7 @@ function create_fragment(ctx) {
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (/*world*/ ctx[7]) return 0;
+		if (/*world*/ ctx[4]) return 0;
 		return 1;
 	}
 
@@ -24733,8 +25027,8 @@ function create_fragment(ctx) {
 		c: function create() {
 			main = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("main");
 			if_block.c();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-1avf49t");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 47, 0, 1840);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-52ztu4");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 51, 0, 1983);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -24813,35 +25107,43 @@ function instance($$self, $$props, $$invalidate) {
 			});
 	};
 
-	let domElement;
-	let canvas;
-	let worldListWrapper;
 	let engine;
 	let selected;
-	let fetchWorlds;
 	let locked = false;
 	let chatEnabled = false;
 	const { world } = query_string__WEBPACK_IMPORTED_MODULE_1__.parse(window.location.search);
 
-	if (world) {
-		const worldName = typeof world === "string" ? world : world.join("");
-		engine = new _core__WEBPACK_IMPORTED_MODULE_5__.Engine({ container: { canvas, domElement } });
-		engine.join(worldName);
-		engine.start();
-		engine.on("lock", () => $$invalidate(5, locked = true));
-		engine.on("unlock", () => $$invalidate(5, locked = false));
-		engine.on("chat-enabled", () => $$invalidate(6, chatEnabled = true));
-		engine.on("chat-disabled", () => $$invalidate(6, chatEnabled = false));
-	} else {
-		fetchWorlds = (() => __awaiter(void 0, void 0, void 0, function* () {
-			const response = yield fetch(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getServerURL().toString() + "worlds");
-			return yield response.json();
-		}))();
-	}
+	const fetchWorlds = (() => __awaiter(void 0, void 0, void 0, function* () {
+		if (world) return {};
+
+		const response = yield fetch(_utils__WEBPACK_IMPORTED_MODULE_2__.Helper.getServerURL().toString() + "worlds", {
+			headers: {
+				"Content-Type": "application/json",
+				Accept: "application/json"
+			}
+		});
+
+		return yield response.json();
+	}))();
+
+	(0,svelte__WEBPACK_IMPORTED_MODULE_6__.onMount)(() => {
+		if (world) {
+			const worldName = typeof world === "string" ? world : world.join("");
+			$$invalidate(0, engine = new _core__WEBPACK_IMPORTED_MODULE_5__.Engine());
+			engine.join(worldName);
+			engine.start();
+			engine.on("lock", () => $$invalidate(2, locked = true));
+			engine.on("unlock", () => $$invalidate(2, locked = false));
+			engine.on("chat-enabled", () => $$invalidate(3, chatEnabled = true));
+			engine.on("chat-disabled", () => $$invalidate(3, chatEnabled = false));
+		}
+	});
 
 	const onNameChange = e => {
-		// @ts-ignore
-		engine.player.setName(e.target.value);
+		if (engine) {
+			// @ts-ignore
+			engine.player.setName(e.target.value);
+		}
 	};
 
 	const writable_props = [];
@@ -24852,23 +25154,8 @@ function instance($$self, $$props, $$invalidate) {
 
 	const click_handler = () => engine.lock();
 	const click_handler_1 = () => window.location.href = window.location.href.split("?")[0];
-
-	function div_binding($$value) {
-		svelte_internal__WEBPACK_IMPORTED_MODULE_0__.binding_callbacks[$$value ? "unshift" : "push"](() => {
-			domElement = $$value;
-			$$invalidate(0, domElement);
-		});
-	}
-
-	const click_handler_2 = name => $$invalidate(3, selected = name);
+	const click_handler_2 = name => $$invalidate(1, selected = name);
 	const dblclick_handler = name => window.location.href = window.location.href + "?world=" + name;
-
-	function ul_binding($$value) {
-		svelte_internal__WEBPACK_IMPORTED_MODULE_0__.binding_callbacks[$$value ? "unshift" : "push"](() => {
-			worldListWrapper = $$value;
-			$$invalidate(1, worldListWrapper);
-		});
-	}
 
 	$$self.$capture_state = () => ({
 		__awaiter,
@@ -24877,28 +25164,22 @@ function instance($$self, $$props, $$invalidate) {
 		Button: _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default,
 		Input: _components_input_svelte__WEBPACK_IMPORTED_MODULE_4__.default,
 		Engine: _core__WEBPACK_IMPORTED_MODULE_5__.Engine,
-		domElement,
-		canvas,
-		worldListWrapper,
+		onMount: svelte__WEBPACK_IMPORTED_MODULE_6__.onMount,
 		engine,
 		selected,
-		fetchWorlds,
 		locked,
 		chatEnabled,
 		world,
+		fetchWorlds,
 		onNameChange
 	});
 
 	$$self.$inject_state = $$props => {
 		if ("__awaiter" in $$props) __awaiter = $$props.__awaiter;
-		if ("domElement" in $$props) $$invalidate(0, domElement = $$props.domElement);
-		if ("canvas" in $$props) canvas = $$props.canvas;
-		if ("worldListWrapper" in $$props) $$invalidate(1, worldListWrapper = $$props.worldListWrapper);
-		if ("engine" in $$props) $$invalidate(2, engine = $$props.engine);
-		if ("selected" in $$props) $$invalidate(3, selected = $$props.selected);
-		if ("fetchWorlds" in $$props) $$invalidate(4, fetchWorlds = $$props.fetchWorlds);
-		if ("locked" in $$props) $$invalidate(5, locked = $$props.locked);
-		if ("chatEnabled" in $$props) $$invalidate(6, chatEnabled = $$props.chatEnabled);
+		if ("engine" in $$props) $$invalidate(0, engine = $$props.engine);
+		if ("selected" in $$props) $$invalidate(1, selected = $$props.selected);
+		if ("locked" in $$props) $$invalidate(2, locked = $$props.locked);
+		if ("chatEnabled" in $$props) $$invalidate(3, chatEnabled = $$props.chatEnabled);
 	};
 
 	if ($$props && "$$inject" in $$props) {
@@ -24906,28 +25187,24 @@ function instance($$self, $$props, $$invalidate) {
 	}
 
 	return [
-		domElement,
-		worldListWrapper,
 		engine,
 		selected,
-		fetchWorlds,
 		locked,
 		chatEnabled,
 		world,
+		fetchWorlds,
 		onNameChange,
 		click_handler,
 		click_handler_1,
-		div_binding,
 		click_handler_2,
-		dblclick_handler,
-		ul_binding
+		dblclick_handler
 	];
 }
 
 class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		if (!document.getElementById("svelte-1avf49t-style")) add_css();
+		if (!document.getElementById("svelte-52ztu4-style")) add_css();
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.init)(this, options, instance, create_fragment, svelte_internal__WEBPACK_IMPORTED_MODULE_0__.safe_not_equal, {});
 
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterComponent", {
@@ -24938,10 +25215,10 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_6__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_7__.default, acceptable: true, cssId: "svelte-1avf49t-style", nonCssHash: "1bv58jv", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_7__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_8__.default, acceptable: true, cssId: "svelte-52ztu4-style", nonCssHash: "fsxyyi", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
-if (typeof add_css !== 'undefined' && !document.getElementById("svelte-1avf49t-style")) add_css();
+if (typeof add_css !== 'undefined' && !document.getElementById("svelte-52ztu4-style")) add_css();
 
 
 /***/ }),
@@ -25430,6 +25707,33 @@ const applyHmr = (0,svelte_hmr_runtime__WEBPACK_IMPORTED_MODULE_0__.makeApplyHmr
 
 	return { ...args, hot };
 });
+
+
+/***/ }),
+
+/***/ "./node_modules/svelte/index.mjs":
+/*!***************************************!*\
+  !*** ./node_modules/svelte/index.mjs ***!
+  \***************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "SvelteComponent": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDev),
+/* harmony export */   "SvelteComponentTyped": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentTyped),
+/* harmony export */   "afterUpdate": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.afterUpdate),
+/* harmony export */   "beforeUpdate": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.beforeUpdate),
+/* harmony export */   "createEventDispatcher": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.createEventDispatcher),
+/* harmony export */   "getContext": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.getContext),
+/* harmony export */   "hasContext": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.hasContext),
+/* harmony export */   "onDestroy": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.onDestroy),
+/* harmony export */   "onMount": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.onMount),
+/* harmony export */   "setContext": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.setContext),
+/* harmony export */   "tick": () => (/* reexport safe */ _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__.tick)
+/* harmony export */ });
+/* harmony import */ var _internal_index_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./internal/index.mjs */ "./node_modules/svelte/internal/index.mjs");
+
 
 
 /***/ }),
@@ -81402,6 +81706,279 @@ $root.protocol = (function() {
         return Peer;
     })();
 
+    protocol.ChatMessage = (function() {
+
+        /**
+         * Properties of a ChatMessage.
+         * @memberof protocol
+         * @interface IChatMessage
+         * @property {protocol.ChatMessage.Type|null} [type] ChatMessage type
+         * @property {string|null} [sender] ChatMessage sender
+         * @property {string|null} [body] ChatMessage body
+         */
+
+        /**
+         * Constructs a new ChatMessage.
+         * @memberof protocol
+         * @classdesc Represents a ChatMessage.
+         * @implements IChatMessage
+         * @constructor
+         * @param {protocol.IChatMessage=} [properties] Properties to set
+         */
+        function ChatMessage(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * ChatMessage type.
+         * @member {protocol.ChatMessage.Type} type
+         * @memberof protocol.ChatMessage
+         * @instance
+         */
+        ChatMessage.prototype.type = 1;
+
+        /**
+         * ChatMessage sender.
+         * @member {string} sender
+         * @memberof protocol.ChatMessage
+         * @instance
+         */
+        ChatMessage.prototype.sender = "";
+
+        /**
+         * ChatMessage body.
+         * @member {string} body
+         * @memberof protocol.ChatMessage
+         * @instance
+         */
+        ChatMessage.prototype.body = "";
+
+        /**
+         * Creates a new ChatMessage instance using the specified properties.
+         * @function create
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {protocol.IChatMessage=} [properties] Properties to set
+         * @returns {protocol.ChatMessage} ChatMessage instance
+         */
+        ChatMessage.create = function create(properties) {
+            return new ChatMessage(properties);
+        };
+
+        /**
+         * Encodes the specified ChatMessage message. Does not implicitly {@link protocol.ChatMessage.verify|verify} messages.
+         * @function encode
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {protocol.IChatMessage} message ChatMessage message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ChatMessage.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.type != null && Object.hasOwnProperty.call(message, "type"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.type);
+            if (message.sender != null && Object.hasOwnProperty.call(message, "sender"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.sender);
+            if (message.body != null && Object.hasOwnProperty.call(message, "body"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.body);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified ChatMessage message, length delimited. Does not implicitly {@link protocol.ChatMessage.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {protocol.IChatMessage} message ChatMessage message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ChatMessage.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a ChatMessage message from the specified reader or buffer.
+         * @function decode
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protocol.ChatMessage} ChatMessage
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ChatMessage.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protocol.ChatMessage();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.type = reader.int32();
+                    break;
+                case 2:
+                    message.sender = reader.string();
+                    break;
+                case 3:
+                    message.body = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a ChatMessage message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protocol.ChatMessage} ChatMessage
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ChatMessage.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a ChatMessage message.
+         * @function verify
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        ChatMessage.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.type != null && message.hasOwnProperty("type"))
+                switch (message.type) {
+                default:
+                    return "type: enum value expected";
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    break;
+                }
+            if (message.sender != null && message.hasOwnProperty("sender"))
+                if (!$util.isString(message.sender))
+                    return "sender: string expected";
+            if (message.body != null && message.hasOwnProperty("body"))
+                if (!$util.isString(message.body))
+                    return "body: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a ChatMessage message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protocol.ChatMessage} ChatMessage
+         */
+        ChatMessage.fromObject = function fromObject(object) {
+            if (object instanceof $root.protocol.ChatMessage)
+                return object;
+            var message = new $root.protocol.ChatMessage();
+            switch (object.type) {
+            case "ERROR":
+            case 1:
+                message.type = 1;
+                break;
+            case "SERVER":
+            case 2:
+                message.type = 2;
+                break;
+            case "PLAYER":
+            case 3:
+                message.type = 3;
+                break;
+            case "INFO":
+            case 4:
+                message.type = 4;
+                break;
+            }
+            if (object.sender != null)
+                message.sender = String(object.sender);
+            if (object.body != null)
+                message.body = String(object.body);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a ChatMessage message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {protocol.ChatMessage} message ChatMessage
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        ChatMessage.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.type = options.enums === String ? "ERROR" : 1;
+                object.sender = "";
+                object.body = "";
+            }
+            if (message.type != null && message.hasOwnProperty("type"))
+                object.type = options.enums === String ? $root.protocol.ChatMessage.Type[message.type] : message.type;
+            if (message.sender != null && message.hasOwnProperty("sender"))
+                object.sender = message.sender;
+            if (message.body != null && message.hasOwnProperty("body"))
+                object.body = message.body;
+            return object;
+        };
+
+        /**
+         * Converts this ChatMessage to JSON.
+         * @function toJSON
+         * @memberof protocol.ChatMessage
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        ChatMessage.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Type enum.
+         * @name protocol.ChatMessage.Type
+         * @enum {number}
+         * @property {number} ERROR=1 ERROR value
+         * @property {number} SERVER=2 SERVER value
+         * @property {number} PLAYER=3 PLAYER value
+         * @property {number} INFO=4 INFO value
+         */
+        ChatMessage.Type = (function() {
+            var valuesById = {}, values = Object.create(valuesById);
+            values[valuesById[1] = "ERROR"] = 1;
+            values[valuesById[2] = "SERVER"] = 2;
+            values[valuesById[3] = "PLAYER"] = 3;
+            values[valuesById[4] = "INFO"] = 4;
+            return values;
+        })();
+
+        return ChatMessage;
+    })();
+
     protocol.Message = (function() {
 
         /**
@@ -81411,6 +81988,7 @@ $root.protocol = (function() {
          * @property {protocol.Message.Type|null} [type] Message type
          * @property {string|null} [json] Message json
          * @property {string|null} [text] Message text
+         * @property {protocol.IChatMessage|null} [message] Message message
          * @property {Array.<protocol.IPeer>|null} [peers] Message peers
          * @property {Array.<protocol.IChunk>|null} [chunks] Message chunks
          */
@@ -81455,6 +82033,14 @@ $root.protocol = (function() {
          * @instance
          */
         Message.prototype.text = "";
+
+        /**
+         * Message message.
+         * @member {protocol.IChatMessage|null|undefined} message
+         * @memberof protocol.Message
+         * @instance
+         */
+        Message.prototype.message = null;
 
         /**
          * Message peers.
@@ -81502,12 +82088,14 @@ $root.protocol = (function() {
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.json);
             if (message.text != null && Object.hasOwnProperty.call(message, "text"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.text);
+            if (message.message != null && Object.hasOwnProperty.call(message, "message"))
+                $root.protocol.ChatMessage.encode(message.message, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.peers != null && message.peers.length)
                 for (var i = 0; i < message.peers.length; ++i)
-                    $root.protocol.Peer.encode(message.peers[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                    $root.protocol.Peer.encode(message.peers[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             if (message.chunks != null && message.chunks.length)
                 for (var i = 0; i < message.chunks.length; ++i)
-                    $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                    $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
             return writer;
         };
 
@@ -81552,11 +82140,14 @@ $root.protocol = (function() {
                     message.text = reader.string();
                     break;
                 case 4:
+                    message.message = $root.protocol.ChatMessage.decode(reader, reader.uint32());
+                    break;
+                case 5:
                     if (!(message.peers && message.peers.length))
                         message.peers = [];
                     message.peers.push($root.protocol.Peer.decode(reader, reader.uint32()));
                     break;
-                case 5:
+                case 6:
                     if (!(message.chunks && message.chunks.length))
                         message.chunks = [];
                     message.chunks.push($root.protocol.Chunk.decode(reader, reader.uint32()));
@@ -81621,6 +82212,11 @@ $root.protocol = (function() {
             if (message.text != null && message.hasOwnProperty("text"))
                 if (!$util.isString(message.text))
                     return "text: string expected";
+            if (message.message != null && message.hasOwnProperty("message")) {
+                var error = $root.protocol.ChatMessage.verify(message.message);
+                if (error)
+                    return "message." + error;
+            }
             if (message.peers != null && message.hasOwnProperty("peers")) {
                 if (!Array.isArray(message.peers))
                     return "peers: array expected";
@@ -81712,6 +82308,11 @@ $root.protocol = (function() {
                 message.json = String(object.json);
             if (object.text != null)
                 message.text = String(object.text);
+            if (object.message != null) {
+                if (typeof object.message !== "object")
+                    throw TypeError(".protocol.Message.message: object expected");
+                message.message = $root.protocol.ChatMessage.fromObject(object.message);
+            }
             if (object.peers) {
                 if (!Array.isArray(object.peers))
                     throw TypeError(".protocol.Message.peers: array expected");
@@ -81756,6 +82357,7 @@ $root.protocol = (function() {
                 object.type = options.enums === String ? "ERROR" : 1;
                 object.json = "";
                 object.text = "";
+                object.message = null;
             }
             if (message.type != null && message.hasOwnProperty("type"))
                 object.type = options.enums === String ? $root.protocol.Message.Type[message.type] : message.type;
@@ -81763,6 +82365,8 @@ $root.protocol = (function() {
                 object.json = message.json;
             if (message.text != null && message.hasOwnProperty("text"))
                 object.text = message.text;
+            if (message.message != null && message.hasOwnProperty("message"))
+                object.message = $root.protocol.ChatMessage.toObject(message.message, options);
             if (message.peers && message.peers.length) {
                 object.peers = [];
                 for (var j = 0; j < message.peers.length; ++j)

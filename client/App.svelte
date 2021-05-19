@@ -5,84 +5,90 @@
   import Button from './components/button.svelte';
   import Input from './components/input.svelte';
   import { Engine } from './core';
-
-  let domElement: HTMLDivElement;
-  let canvas: HTMLCanvasElement;
-  let worldListWrapper: HTMLUListElement;
+  import { onMount } from 'svelte';
 
   let engine: Engine;
   let selected: string;
-  let fetchWorlds: Promise<any>;
 
   let locked = false;
   let chatEnabled = false;
 
   const { world } = QS.parse(window.location.search);
 
-  if (world) {
-    const worldName = typeof world === 'string' ? world : world.join('');
-    engine = new Engine({
-      container: { canvas: canvas, domElement },
+  const fetchWorlds = (async () => {
+    if (world) return {};
+
+    const response = await fetch(Helper.getServerURL().toString() + 'worlds', {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
     });
 
-    engine.join(worldName);
-    engine.start();
+    return await response.json();
+  })();
 
-    engine.on('lock', () => (locked = true));
-    engine.on('unlock', () => (locked = false));
-    engine.on('chat-enabled', () => (chatEnabled = true));
-    engine.on('chat-disabled', () => (chatEnabled = false));
-  } else {
-    fetchWorlds = (async () => {
-      const response = await fetch(Helper.getServerURL().toString() + 'worlds');
-      return await response.json();
-    })();
-  }
+  onMount(() => {
+    if (world) {
+      const worldName = typeof world === 'string' ? world : world.join('');
+      engine = new Engine();
+
+      engine.join(worldName);
+      engine.start();
+
+      engine.on('lock', () => (locked = true));
+      engine.on('unlock', () => (locked = false));
+      engine.on('chat-enabled', () => (chatEnabled = true));
+      engine.on('chat-disabled', () => (chatEnabled = false));
+    }
+  });
 
   const onNameChange = (e: InputEvent) => {
-    // @ts-ignore
-    engine.player.setName(e.target.value);
+    if (engine) {
+      // @ts-ignore
+      engine.player.setName(e.target.value);
+    }
   };
 
 </script>
 
 <main>
   {#if world}
-    <div bind:this={domElement}>
+    <div>
       <img src="https://i.imgur.com/ro6oLCL.png" id="crosshair" alt="+" />
       {#if !locked && !chatEnabled}
         <div id="pause-menu">
           <div />
           <h2>Game menu</h2>
-          <Input placeholder="Username" value={engine.player.name} on:input={onNameChange} maxLength="16" />
+          <Input
+            placeholder="Username"
+            value={engine ? engine.player.name : ''}
+            on:input={onNameChange}
+            maxLength="16"
+          />
           <Button on:click={() => engine.lock()}>Back to Game</Button>
           <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>Quit to Title</Button>
-        </div>
-      {/if}
-      {#if chatEnabled}
-        <div id="chat-wrapper">
-          <div>
-            <ul />
-          </div>
-          <input id="chat" />
         </div>
       {/if}
     </div>
   {:else}
     <div id="world-list-wrapper">
       <h1 id="world-list-title">Select a world</h1>
-      <ul id="world-list" bind:this={worldListWrapper}>
+      <ul id="world-list">
         {#await fetchWorlds}
           <p>...waiting</p>
         {:then data}
-          {#each data.worlds as { name, generation, description }}
+          {#each data.worlds as { name, generation, description, players }}
             <li
               id="world-list-item"
               on:click={() => (selected = name)}
               on:dblclick={() => (window.location.href = window.location.href + '?world=' + name)}
               class={selected === name ? 'selected' : ''}
             >
-              <h1>{name}</h1>
+              <div>
+                <h1>{name}</h1>
+                <h3>{players} / 10</h3>
+              </div>
               <p>{generation} · {description}</p>
             </li>
           {/each}
@@ -145,47 +151,6 @@
     color: #ccc;
     margin-bottom: 1em;
   }
-
-  #chat-wrapper {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 10000000;
-    width: 100vw;
-    height: 100vh;
-  }
-
-  #chat-wrapper div {
-    position: fixed;
-    bottom: 75px;
-    left: 0;
-    width: 600px;
-    /* height: 500px; */
-    margin-left: 5px;
-    background: black;
-    background-color: #00000081;
-    word-break: break-all;
-  }
-
-  #chat-wrapper input {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: calc(100% - 10px);
-    margin: 5px;
-    height: 29px;
-    background: #00000081;
-    padding: 5px;
-    z-index: 5;
-    font-family: 'Alata', sans-serif;
-    color: white;
-    border: none;
-  }
-
-  #chat-wrapper input:focus {
-    outline: none;
-  }
-
   #world-list-wrapper {
     width: 100%;
     height: 100%;
@@ -236,14 +201,25 @@
     background: transparent;
   }
 
-  #world-list-item > h1 {
+  #world-list-item > div {
     color: white;
+    width: 380px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  #world-list-item > div > h1,
+  #world-list-item > div > h3 {
     font-size: 20px;
     font-weight: 100;
-    width: 380px;
-    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  #world-list-item > div > h3 {
+    font-size: 16px;
   }
 
   #world-list-item > p {

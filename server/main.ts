@@ -41,8 +41,11 @@ if (WORLDS) {
   app.get('/worlds', (_, reply) => {
     reply
       .code(200)
-      .header('Content-Type', 'application/json; charset=utf-8')
-      .send({ worlds: worldNames.map((key) => ({ name: key, ...WORLD_LIST[key] })) });
+      .header('Content-Type', 'application/json')
+      .header('Accept', 'application/json')
+      .send({
+        worlds: worldNames.map((key) => ({ name: key, ...WORLD_LIST[key], players: Mine.getPlayerCount(key) })),
+      });
   });
 } else {
   console.log(chalk.red('No worlds loaded!'));

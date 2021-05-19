@@ -1391,6 +1391,279 @@ $root.protocol = (function() {
         return Peer;
     })();
 
+    protocol.ChatMessage = (function() {
+
+        /**
+         * Properties of a ChatMessage.
+         * @memberof protocol
+         * @interface IChatMessage
+         * @property {protocol.ChatMessage.Type|null} [type] ChatMessage type
+         * @property {string|null} [sender] ChatMessage sender
+         * @property {string|null} [body] ChatMessage body
+         */
+
+        /**
+         * Constructs a new ChatMessage.
+         * @memberof protocol
+         * @classdesc Represents a ChatMessage.
+         * @implements IChatMessage
+         * @constructor
+         * @param {protocol.IChatMessage=} [properties] Properties to set
+         */
+        function ChatMessage(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * ChatMessage type.
+         * @member {protocol.ChatMessage.Type} type
+         * @memberof protocol.ChatMessage
+         * @instance
+         */
+        ChatMessage.prototype.type = 1;
+
+        /**
+         * ChatMessage sender.
+         * @member {string} sender
+         * @memberof protocol.ChatMessage
+         * @instance
+         */
+        ChatMessage.prototype.sender = "";
+
+        /**
+         * ChatMessage body.
+         * @member {string} body
+         * @memberof protocol.ChatMessage
+         * @instance
+         */
+        ChatMessage.prototype.body = "";
+
+        /**
+         * Creates a new ChatMessage instance using the specified properties.
+         * @function create
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {protocol.IChatMessage=} [properties] Properties to set
+         * @returns {protocol.ChatMessage} ChatMessage instance
+         */
+        ChatMessage.create = function create(properties) {
+            return new ChatMessage(properties);
+        };
+
+        /**
+         * Encodes the specified ChatMessage message. Does not implicitly {@link protocol.ChatMessage.verify|verify} messages.
+         * @function encode
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {protocol.IChatMessage} message ChatMessage message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ChatMessage.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.type != null && Object.hasOwnProperty.call(message, "type"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.type);
+            if (message.sender != null && Object.hasOwnProperty.call(message, "sender"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.sender);
+            if (message.body != null && Object.hasOwnProperty.call(message, "body"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.body);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified ChatMessage message, length delimited. Does not implicitly {@link protocol.ChatMessage.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {protocol.IChatMessage} message ChatMessage message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ChatMessage.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a ChatMessage message from the specified reader or buffer.
+         * @function decode
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protocol.ChatMessage} ChatMessage
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ChatMessage.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protocol.ChatMessage();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.type = reader.int32();
+                    break;
+                case 2:
+                    message.sender = reader.string();
+                    break;
+                case 3:
+                    message.body = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a ChatMessage message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protocol.ChatMessage} ChatMessage
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ChatMessage.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a ChatMessage message.
+         * @function verify
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        ChatMessage.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.type != null && message.hasOwnProperty("type"))
+                switch (message.type) {
+                default:
+                    return "type: enum value expected";
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    break;
+                }
+            if (message.sender != null && message.hasOwnProperty("sender"))
+                if (!$util.isString(message.sender))
+                    return "sender: string expected";
+            if (message.body != null && message.hasOwnProperty("body"))
+                if (!$util.isString(message.body))
+                    return "body: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a ChatMessage message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protocol.ChatMessage} ChatMessage
+         */
+        ChatMessage.fromObject = function fromObject(object) {
+            if (object instanceof $root.protocol.ChatMessage)
+                return object;
+            var message = new $root.protocol.ChatMessage();
+            switch (object.type) {
+            case "ERROR":
+            case 1:
+                message.type = 1;
+                break;
+            case "SERVER":
+            case 2:
+                message.type = 2;
+                break;
+            case "PLAYER":
+            case 3:
+                message.type = 3;
+                break;
+            case "INFO":
+            case 4:
+                message.type = 4;
+                break;
+            }
+            if (object.sender != null)
+                message.sender = String(object.sender);
+            if (object.body != null)
+                message.body = String(object.body);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a ChatMessage message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protocol.ChatMessage
+         * @static
+         * @param {protocol.ChatMessage} message ChatMessage
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        ChatMessage.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.type = options.enums === String ? "ERROR" : 1;
+                object.sender = "";
+                object.body = "";
+            }
+            if (message.type != null && message.hasOwnProperty("type"))
+                object.type = options.enums === String ? $root.protocol.ChatMessage.Type[message.type] : message.type;
+            if (message.sender != null && message.hasOwnProperty("sender"))
+                object.sender = message.sender;
+            if (message.body != null && message.hasOwnProperty("body"))
+                object.body = message.body;
+            return object;
+        };
+
+        /**
+         * Converts this ChatMessage to JSON.
+         * @function toJSON
+         * @memberof protocol.ChatMessage
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        ChatMessage.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Type enum.
+         * @name protocol.ChatMessage.Type
+         * @enum {number}
+         * @property {number} ERROR=1 ERROR value
+         * @property {number} SERVER=2 SERVER value
+         * @property {number} PLAYER=3 PLAYER value
+         * @property {number} INFO=4 INFO value
+         */
+        ChatMessage.Type = (function() {
+            var valuesById = {}, values = Object.create(valuesById);
+            values[valuesById[1] = "ERROR"] = 1;
+            values[valuesById[2] = "SERVER"] = 2;
+            values[valuesById[3] = "PLAYER"] = 3;
+            values[valuesById[4] = "INFO"] = 4;
+            return values;
+        })();
+
+        return ChatMessage;
+    })();
+
     protocol.Message = (function() {
 
         /**
@@ -1400,6 +1673,7 @@ $root.protocol = (function() {
          * @property {protocol.Message.Type|null} [type] Message type
          * @property {string|null} [json] Message json
          * @property {string|null} [text] Message text
+         * @property {protocol.IChatMessage|null} [message] Message message
          * @property {Array.<protocol.IPeer>|null} [peers] Message peers
          * @property {Array.<protocol.IChunk>|null} [chunks] Message chunks
          */
@@ -1444,6 +1718,14 @@ $root.protocol = (function() {
          * @instance
          */
         Message.prototype.text = "";
+
+        /**
+         * Message message.
+         * @member {protocol.IChatMessage|null|undefined} message
+         * @memberof protocol.Message
+         * @instance
+         */
+        Message.prototype.message = null;
 
         /**
          * Message peers.
@@ -1491,12 +1773,14 @@ $root.protocol = (function() {
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.json);
             if (message.text != null && Object.hasOwnProperty.call(message, "text"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.text);
+            if (message.message != null && Object.hasOwnProperty.call(message, "message"))
+                $root.protocol.ChatMessage.encode(message.message, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.peers != null && message.peers.length)
                 for (var i = 0; i < message.peers.length; ++i)
-                    $root.protocol.Peer.encode(message.peers[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                    $root.protocol.Peer.encode(message.peers[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             if (message.chunks != null && message.chunks.length)
                 for (var i = 0; i < message.chunks.length; ++i)
-                    $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                    $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
             return writer;
         };
 
@@ -1541,11 +1825,14 @@ $root.protocol = (function() {
                     message.text = reader.string();
                     break;
                 case 4:
+                    message.message = $root.protocol.ChatMessage.decode(reader, reader.uint32());
+                    break;
+                case 5:
                     if (!(message.peers && message.peers.length))
                         message.peers = [];
                     message.peers.push($root.protocol.Peer.decode(reader, reader.uint32()));
                     break;
-                case 5:
+                case 6:
                     if (!(message.chunks && message.chunks.length))
                         message.chunks = [];
                     message.chunks.push($root.protocol.Chunk.decode(reader, reader.uint32()));
@@ -1610,6 +1897,11 @@ $root.protocol = (function() {
             if (message.text != null && message.hasOwnProperty("text"))
                 if (!$util.isString(message.text))
                     return "text: string expected";
+            if (message.message != null && message.hasOwnProperty("message")) {
+                var error = $root.protocol.ChatMessage.verify(message.message);
+                if (error)
+                    return "message." + error;
+            }
             if (message.peers != null && message.hasOwnProperty("peers")) {
                 if (!Array.isArray(message.peers))
                     return "peers: array expected";
@@ -1701,6 +1993,11 @@ $root.protocol = (function() {
                 message.json = String(object.json);
             if (object.text != null)
                 message.text = String(object.text);
+            if (object.message != null) {
+                if (typeof object.message !== "object")
+                    throw TypeError(".protocol.Message.message: object expected");
+                message.message = $root.protocol.ChatMessage.fromObject(object.message);
+            }
             if (object.peers) {
                 if (!Array.isArray(object.peers))
                     throw TypeError(".protocol.Message.peers: array expected");
@@ -1745,6 +2042,7 @@ $root.protocol = (function() {
                 object.type = options.enums === String ? "ERROR" : 1;
                 object.json = "";
                 object.text = "";
+                object.message = null;
             }
             if (message.type != null && message.hasOwnProperty("type"))
                 object.type = options.enums === String ? $root.protocol.Message.Type[message.type] : message.type;
@@ -1752,6 +2050,8 @@ $root.protocol = (function() {
                 object.json = message.json;
             if (message.text != null && message.hasOwnProperty("text"))
                 object.text = message.text;
+            if (message.message != null && message.hasOwnProperty("message"))
+                object.message = $root.protocol.ChatMessage.toObject(message.message, options);
             if (message.peers && message.peers.length) {
                 object.peers = [];
                 for (var j = 0; j < message.peers.length; ++j)

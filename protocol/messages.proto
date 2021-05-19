@@ -35,6 +35,19 @@ message Peer {
   float qw = 9;
 }
 
+message ChatMessage {
+  enum Type {
+    ERROR = 1;
+    SERVER = 2;
+    PLAYER = 3;
+    INFO = 4;
+  }
+
+  Type type = 1;
+  string sender = 2;
+  string body = 3;
+} 
+
 message Message {
   enum Type {
     ERROR = 1;
@@ -56,6 +69,8 @@ message Message {
   string json = 2;
   string text = 3;
 
-  repeated Peer peers = 4;
-  repeated Chunk chunks = 5;
+  ChatMessage message = 4;
+
+  repeated Peer peers = 5;
+  repeated Chunk chunks = 6;
 }

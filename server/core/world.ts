@@ -341,6 +341,13 @@ class World extends Network {
     }
   };
 
+  onChatMessage = (request) => {
+    this.broadcast({
+      type: 'MESSAGE',
+      message: request.message,
+    });
+  };
+
   onRequest = (client: ClientType, request) => {
     switch (request.type) {
       case 'REQUEST': {
@@ -359,6 +366,9 @@ class World extends Network {
       case 'PEER': {
         this.onPeer(request);
         break;
+      }
+      case 'MESSAGE': {
+        this.onChatMessage(request);
       }
       default:
         break;

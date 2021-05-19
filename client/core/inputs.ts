@@ -21,6 +21,9 @@ class Inputs {
     this.add('space', 'space');
     this.add('dbl-space', 'space space');
     this.add('esc', 'esc');
+    this.add('up', 'up');
+    this.add('down', 'down');
+    this.add('enter', 'enter');
 
     this.initClickListener();
   }
@@ -55,7 +58,12 @@ class Inputs {
     this.combos.set(name, combo);
   }
 
-  bind(name: string, callback: () => void, namespace: InputNamespace, occasion: InputOccasion = 'keydown') {
+  bind(
+    name: string,
+    callback: () => void,
+    namespace: InputNamespace,
+    { occasion = 'keydown' }: { occasion?: InputOccasion } = {},
+  ) {
     let combo = this.combos.get(name);
 
     if (!combo) {

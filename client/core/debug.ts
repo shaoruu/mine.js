@@ -75,6 +75,7 @@ class Debug {
   makeDataEntry = () => {
     const dataEntry = document.createElement('p');
     Helper.applyStyle(dataEntry, {
+      fontSize: '16px',
       margin: '0',
     });
     return dataEntry;
@@ -215,8 +216,8 @@ class Debug {
     const sample = [];
     let index = 0;
     let lastTick = 0;
-    let min;
-    let max;
+    let min: number;
+    let max: number;
 
     return function () {
       // if is first tick, just set tick timestamp and return

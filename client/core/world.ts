@@ -218,6 +218,18 @@ class World extends EventEmitter {
     }
   }
 
+  sortPendingChunks() {
+    const [cx, cz] = this.camChunkPos;
+
+    this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
+  }
+
+  handleReconnection() {
+    // move requested chunks to pending
+    this.pendingChunks.push(...Array.from(this.requestedChunks).map((rc) => Helper.parseChunkName(rc) as Coords2));
+    this.sortPendingChunks();
+  }
+
   get camChunkPosStr() {
     return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
   }
@@ -288,7 +300,7 @@ class World extends EventEmitter {
     );
 
     // make pending chunks radiate from player, might have easier ways of doing so
-    this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
+    this.sortPendingChunks();
 
     // if the chunk is too far away, remove from scene.
     const deleteDistance = renderRadius * chunkSize * 1.414;
@@ -301,7 +313,7 @@ class World extends EventEmitter {
 
   private requestChunks() {
     // separate chunk request into frames to avoid clogging
-    if (this.pendingChunks.length === 0) return;
+    if (this.pendingChunks.length === 0 || !this.engine.connected) return;
 
     const { maxChunkRequestPerFrame } = this.options;
 

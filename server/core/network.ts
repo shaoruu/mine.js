@@ -7,7 +7,7 @@ import WebSocket from 'ws';
 import { protocol } from '../../protocol';
 import { Coords3 } from '../../shared/types';
 
-const { Message } = protocol;
+const { Message, ChatMessage } = protocol;
 
 type NetworkOptionsType = {
   name: string;
@@ -129,6 +129,10 @@ class Network extends EventEmitter {
     if (message.json) {
       message.json = JSON.parse(message.json);
     }
+    if (message.message) {
+      // @ts-ignore
+      message.message.type = ChatMessage.Type[message.message.type];
+    }
     return message;
   }
 
@@ -137,6 +141,9 @@ class Network extends EventEmitter {
     message.type = Message.Type[message.type];
     if (message.json) {
       message.json = JSON.stringify(message.json);
+    }
+    if (message.message) {
+      message.message.type = ChatMessage.Type[message.message.type];
     }
     const buffer = Message.encode(Message.create(message)).finish();
     if (buffer.length > 1024) {

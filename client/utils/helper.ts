@@ -101,10 +101,14 @@ class Helper {
    * @param {Partial<CSSStyleDeclaration>} style
    * @returns {HTMLElement}
    */
-  public static applyStyle = (ele: HTMLElement, style: Partial<CSSStyleDeclaration>) => {
+  public static applyStyle = (ele: HTMLElement | HTMLElement[], style: Partial<CSSStyleDeclaration>) => {
     Object.keys(style).forEach((key: string) => {
       const attribute = style[key];
-      ele.style[key] = attribute;
+      if (Array.isArray(ele)) {
+        ele.forEach((e) => (e.style[key] = attribute));
+      } else {
+        ele.style[key] = attribute;
+      }
     });
 
     return ele;

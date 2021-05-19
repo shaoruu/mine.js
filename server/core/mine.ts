@@ -46,13 +46,18 @@ class Mine {
     return !!name && Mine.worlds.has(name);
   }
 
+  public static randomWorld() {
+    const worlds = Array.from(this.worlds);
+    return worlds[Math.floor(Math.random() * worlds.length)][1];
+  }
+
   public static getWorld(name: string) {
     return Mine.worlds.get(name);
   }
 
-  public static randomWorld() {
-    const worlds = Array.from(this.worlds);
-    return worlds[Math.floor(Math.random() * worlds.length)][1];
+  public static getPlayerCount(name: string) {
+    const world = this.getWorld(name);
+    return world ? world.clients.length : 0;
   }
 }
 

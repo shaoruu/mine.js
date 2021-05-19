@@ -6,11 +6,15 @@ import { Helper } from '../utils';
 
 import { Engine } from './engine';
 
-const { Message } = protocol;
+const { Message, ChatMessage } = protocol;
 
 type CustomWebSocket = WebSocket & {
   sendEvent: (event) => void;
   serverURL: string;
+};
+
+type NetworkOptionsType = {
+  reconnectInterval: number;
 };
 
 class Network {
@@ -21,14 +25,18 @@ class Network {
 
   public worldName: string;
 
-  constructor(public engine: Engine) {}
+  private reconnection: NodeJS.Timeout;
+
+  constructor(public engine: Engine, public options: NetworkOptionsType) {}
 
   join = (worldName: string) => {
     this.worldName = worldName;
-    this.connect(this.url.toString());
+    this.connect();
   };
 
-  connect = (url: string) => {
+  connect = () => {
+    const url = this.url.toString();
+
     const socket = new URL(url);
     socket.protocol = socket.protocol.replace(/http/, 'ws');
     socket.hash = '';
@@ -41,14 +49,22 @@ class Network {
     };
     server.onopen = () => {
       this.engine.emit('connected');
+      this.engine.world.handleReconnection();
       this.connected = true;
+
+      clearTimeout(this.reconnection);
     };
     server.onerror = () => {};
     server.onmessage = this.onMessage;
     server.onclose = () => {
       this.engine.emit('disconnected');
       this.connected = false;
+
+      this.reconnection = setInterval(() => {
+        this.connect();
+      }, this.options.reconnectInterval);
     };
+
     server.serverURL = url;
 
     this.server = server;
@@ -58,7 +74,7 @@ class Network {
     const { type } = event;
 
     const { engine } = this;
-    const { world, player, peers } = engine;
+    const { world, player, peers, chat } = engine;
 
     switch (type) {
       case 'INIT': {
@@ -87,6 +103,7 @@ class Network {
           json: { voxel, type },
         } = event;
         world.setVoxel(voxel, type, false);
+
         // purposely did not break, so i can load afterwards
       }
 
@@ -118,6 +135,11 @@ class Network {
           peers.update(id, { name, position: [px, py, pz], rotation: [qx, qy, qz, qw] });
         }
         break;
+      }
+
+      case 'MESSAGE': {
+        const { message } = event;
+        chat.add(message);
       }
     }
   };
@@ -154,6 +176,10 @@ class Network {
     if (message.json) {
       message.json = JSON.parse(message.json);
     }
+    if (message.message) {
+      // @ts-ignore
+      message.message.type = ChatMessage.Type[message.message.type];
+    }
     return message;
   }
 
@@ -162,8 +188,11 @@ class Network {
       message.json = JSON.stringify(message.json);
     }
     message.type = Message.Type[message.type];
+    if (message.message) {
+      message.message.type = ChatMessage.Type[message.message.type];
+    }
     return protocol.Message.encode(protocol.Message.create(message)).finish();
   }
 }
 
-export { Network };
+export { Network, NetworkOptionsType };

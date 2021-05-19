@@ -12,3 +12,5 @@ export type MeshType = {
   sunlights: Float32Array;
   torchLights: Float32Array;
 };
+
+export type MESSAGE_TYPE = 'ERROR' | 'SERVER' | 'PLAYER' | 'INFO';

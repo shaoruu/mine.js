@@ -82,6 +82,10 @@ class Player {
       rendering.scene.add(this.lookBlockMesh);
     });
 
+    engine.on('chat-enabled', () => {
+      this.resetMovements();
+    });
+
     inputs.bind('f', () => this.toggleGodMode(), 'in-game');
     inputs.click('left', () => world.breakVoxel(), 'in-game');
     inputs.click('right', () => world.placeVoxel(type), 'in-game');
@@ -300,6 +304,17 @@ class Player {
   setName(name: string) {
     this.name = name || '';
     localStorage.setItem(LOCAL_STORAGE_PLAYER_NAME, this.name);
+  }
+
+  resetMovements() {
+    this.movements = {
+      front: false,
+      back: false,
+      left: false,
+      right: false,
+      down: false,
+      up: false,
+    };
   }
 
   get lookBlockStr() {
