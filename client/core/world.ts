@@ -144,6 +144,8 @@ class World extends EventEmitter {
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
     this.requestedChunks.delete(Helper.getChunkName(coords));
+    // const index = this.receivedChunks.findIndex((rc) => rc.x === cx && rc.z === cz);
+    // if (index > -1) this.receivedChunks.splice(index, 1);
     if (prioritized) this.receivedChunks.unshift(serverChunk);
     else this.receivedChunks.push(serverChunk);
   }
@@ -154,7 +156,6 @@ class World extends EventEmitter {
   }
 
   setVoxel(voxel: Coords3, type: number, sideEffects = true) {
-    // TODO
     const [vx, vy, vz] = voxel;
     this.getChunkByVoxel([vx, vy, vz])?.setVoxel(vx, vy, vz, type);
 

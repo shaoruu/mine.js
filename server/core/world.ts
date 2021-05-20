@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import { FastifyInstance } from 'fastify';
 
 import { Coords2, Coords3, Helper } from '../../shared';
-import { GeneratorTypes } from '../libs';
+import { GeneratorTypes, VoxelUpdate } from '../libs';
 
 import { Builder } from './builder';
 
@@ -276,7 +276,7 @@ class World extends Network {
 
   update = (voxel: Coords3, type: number) => {
     const { maxHeight } = this.options;
-    const [, vy] = voxel;
+    const [vx, vy, vz] = voxel;
 
     if (vy < 0 || vy >= maxHeight || !Mine.registry.getBlockByID(type).name) return;
 
@@ -292,19 +292,74 @@ class World extends Network {
     chunk.update(voxel, type);
     this.stopCaching();
 
+    // send the changes first
+    this.broadcast({
+      type: 'UPDATE',
+      updates: [{ vx, vy, vz, type }],
+    });
+
+    // then send the chunk meshes
     this.chunkCache.forEach((chunk) => {
       chunk.remesh();
       this.broadcast({
         type: 'UPDATE',
         chunks: [chunk.getProtocol(false)],
-        json: {
-          voxel,
-          type,
-        },
       });
     });
 
     this.clearCache();
+  };
+
+  updateMany = (changes: VoxelUpdate[], isDecorating = true) => {
+    const { maxHeight } = this.options;
+
+    // this.clearCache();
+
+    // this.startCaching();
+
+    const chunks: Chunk[] = [];
+    const updates: Map<Chunk, VoxelUpdate[]> = new Map();
+
+    for (const { voxel, type } of changes) {
+      const [, vy] = voxel;
+
+      if (vy < 0 || vy >= maxHeight || !Mine.registry.getBlockByID(type).name) continue;
+
+      const chunk = this.getChunkByVoxel(voxel);
+      if (chunk.needsPropagation) continue;
+
+      const currentType = this.getVoxelByVoxel(voxel);
+      if (Mine.registry.isAir(currentType) && Mine.registry.isAir(type)) {
+        continue;
+      }
+
+      if (!updates.has(chunk)) updates.set(chunk, []);
+      updates.get(chunk).push({ voxel, type });
+      chunks.push(chunk);
+    }
+
+    updates.forEach((u, c) => c.updateMany(u));
+
+    // this.stopCaching();
+
+    if (this.chunkCache.size === 0) return;
+
+    // send the changes first
+    this.broadcast({
+      type: 'UPDATE',
+      updates: changes.map(({ voxel: [vx, vy, vz], type }) => ({ vx, vy, vz, type })),
+    });
+
+    // then send the chunk meshes
+    chunks.forEach((chunk) => {
+      chunk.remesh();
+      this.broadcast({
+        type: isDecorating ? 'LOAD' : 'UPDATE',
+        chunks: [chunk.getProtocol(false)],
+      });
+    });
+
+    // this.clearCache();
   };
 
   onConfig = (request) => {

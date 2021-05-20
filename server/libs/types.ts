@@ -1,3 +1,4 @@
+import { Coords3 } from '../../shared/types';
 type AllTextureType = { all?: string };
 
 type ThreeTextureType = { top?: string; side?: string; bottom?: string };
@@ -27,3 +28,8 @@ export type BlockType = {
 };
 
 export type GeneratorTypes = 'sin-cos' | 'flat' | 'hilly';
+
+export type VoxelUpdate = {
+  voxel: Coords3;
+  type: number;
+};

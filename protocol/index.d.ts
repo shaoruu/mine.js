@@ -332,6 +332,114 @@ export namespace protocol {
         public toJSON(): { [k: string]: any };
     }
 
+    /** Properties of an Update. */
+    interface IUpdate {
+
+        /** Update vx */
+        vx?: (number|null);
+
+        /** Update vy */
+        vy?: (number|null);
+
+        /** Update vz */
+        vz?: (number|null);
+
+        /** Update type */
+        type?: (number|null);
+    }
+
+    /** Represents an Update. */
+    class Update implements IUpdate {
+
+        /**
+         * Constructs a new Update.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protocol.IUpdate);
+
+        /** Update vx. */
+        public vx: number;
+
+        /** Update vy. */
+        public vy: number;
+
+        /** Update vz. */
+        public vz: number;
+
+        /** Update type. */
+        public type: number;
+
+        /**
+         * Creates a new Update instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Update instance
+         */
+        public static create(properties?: protocol.IUpdate): protocol.Update;
+
+        /**
+         * Encodes the specified Update message. Does not implicitly {@link protocol.Update.verify|verify} messages.
+         * @param message Update message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protocol.IUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Update message, length delimited. Does not implicitly {@link protocol.Update.verify|verify} messages.
+         * @param message Update message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protocol.IUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an Update message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Update
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protocol.Update;
+
+        /**
+         * Decodes an Update message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Update
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protocol.Update;
+
+        /**
+         * Verifies an Update message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an Update message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Update
+         */
+        public static fromObject(object: { [k: string]: any }): protocol.Update;
+
+        /**
+         * Creates a plain object from an Update message. Also converts values to other types if specified.
+         * @param message Update
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protocol.Update, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Update to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
     /** Properties of a Peer. */
     interface IPeer {
 
@@ -603,6 +711,9 @@ export namespace protocol {
 
         /** Message chunks */
         chunks?: (protocol.IChunk[]|null);
+
+        /** Message updates */
+        updates?: (protocol.IUpdate[]|null);
     }
 
     /** Represents a Message. */
@@ -631,6 +742,9 @@ export namespace protocol {
 
         /** Message chunks. */
         public chunks: protocol.IChunk[];
+
+        /** Message updates. */
+        public updates: protocol.IUpdate[];
 
         /**
          * Creates a new Message instance using the specified properties.

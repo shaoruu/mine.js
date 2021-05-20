@@ -2,6 +2,7 @@ import Noise from 'noisejs';
 
 import { Coords3 } from '../../../shared/types';
 import { Chunk, World, Mine, TERRAIN_CONFIG } from '../../core';
+import { VoxelUpdate } from '../types';
 
 import { Base } from './base';
 
@@ -62,11 +63,18 @@ class Tree extends Base {
 
   build(chunk: Chunk) {
     const locations = this.sample(chunk);
-    const types = Mine.registry.getTypeMap(['blue']);
+    const types = Mine.registry.getTypeMap(['trunk']);
+
+    const updates: VoxelUpdate[] = [];
 
     for (const location of locations) {
-      this.world.update(location, types.blue);
+      const [vx, vy, vz] = location;
+      for (let i = 0; i < 4; i++) {
+        updates.push({ voxel: [vx, vy + i, vz], type: types.trunk });
+      }
     }
+
+    this.world.updateMany(updates);
   }
 }
 

@@ -1027,6 +1027,260 @@ $root.protocol = (function() {
         return Chunk;
     })();
 
+    protocol.Update = (function() {
+
+        /**
+         * Properties of an Update.
+         * @memberof protocol
+         * @interface IUpdate
+         * @property {number|null} [vx] Update vx
+         * @property {number|null} [vy] Update vy
+         * @property {number|null} [vz] Update vz
+         * @property {number|null} [type] Update type
+         */
+
+        /**
+         * Constructs a new Update.
+         * @memberof protocol
+         * @classdesc Represents an Update.
+         * @implements IUpdate
+         * @constructor
+         * @param {protocol.IUpdate=} [properties] Properties to set
+         */
+        function Update(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Update vx.
+         * @member {number} vx
+         * @memberof protocol.Update
+         * @instance
+         */
+        Update.prototype.vx = 0;
+
+        /**
+         * Update vy.
+         * @member {number} vy
+         * @memberof protocol.Update
+         * @instance
+         */
+        Update.prototype.vy = 0;
+
+        /**
+         * Update vz.
+         * @member {number} vz
+         * @memberof protocol.Update
+         * @instance
+         */
+        Update.prototype.vz = 0;
+
+        /**
+         * Update type.
+         * @member {number} type
+         * @memberof protocol.Update
+         * @instance
+         */
+        Update.prototype.type = 0;
+
+        /**
+         * Creates a new Update instance using the specified properties.
+         * @function create
+         * @memberof protocol.Update
+         * @static
+         * @param {protocol.IUpdate=} [properties] Properties to set
+         * @returns {protocol.Update} Update instance
+         */
+        Update.create = function create(properties) {
+            return new Update(properties);
+        };
+
+        /**
+         * Encodes the specified Update message. Does not implicitly {@link protocol.Update.verify|verify} messages.
+         * @function encode
+         * @memberof protocol.Update
+         * @static
+         * @param {protocol.IUpdate} message Update message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Update.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.vx != null && Object.hasOwnProperty.call(message, "vx"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.vx);
+            if (message.vy != null && Object.hasOwnProperty.call(message, "vy"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.vy);
+            if (message.vz != null && Object.hasOwnProperty.call(message, "vz"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.vz);
+            if (message.type != null && Object.hasOwnProperty.call(message, "type"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.type);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Update message, length delimited. Does not implicitly {@link protocol.Update.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protocol.Update
+         * @static
+         * @param {protocol.IUpdate} message Update message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Update.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes an Update message from the specified reader or buffer.
+         * @function decode
+         * @memberof protocol.Update
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protocol.Update} Update
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Update.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protocol.Update();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.vx = reader.int32();
+                    break;
+                case 2:
+                    message.vy = reader.int32();
+                    break;
+                case 3:
+                    message.vz = reader.int32();
+                    break;
+                case 4:
+                    message.type = reader.int32();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes an Update message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protocol.Update
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protocol.Update} Update
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Update.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies an Update message.
+         * @function verify
+         * @memberof protocol.Update
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Update.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.vx != null && message.hasOwnProperty("vx"))
+                if (!$util.isInteger(message.vx))
+                    return "vx: integer expected";
+            if (message.vy != null && message.hasOwnProperty("vy"))
+                if (!$util.isInteger(message.vy))
+                    return "vy: integer expected";
+            if (message.vz != null && message.hasOwnProperty("vz"))
+                if (!$util.isInteger(message.vz))
+                    return "vz: integer expected";
+            if (message.type != null && message.hasOwnProperty("type"))
+                if (!$util.isInteger(message.type))
+                    return "type: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates an Update message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protocol.Update
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protocol.Update} Update
+         */
+        Update.fromObject = function fromObject(object) {
+            if (object instanceof $root.protocol.Update)
+                return object;
+            var message = new $root.protocol.Update();
+            if (object.vx != null)
+                message.vx = object.vx | 0;
+            if (object.vy != null)
+                message.vy = object.vy | 0;
+            if (object.vz != null)
+                message.vz = object.vz | 0;
+            if (object.type != null)
+                message.type = object.type | 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from an Update message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protocol.Update
+         * @static
+         * @param {protocol.Update} message Update
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Update.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.vx = 0;
+                object.vy = 0;
+                object.vz = 0;
+                object.type = 0;
+            }
+            if (message.vx != null && message.hasOwnProperty("vx"))
+                object.vx = message.vx;
+            if (message.vy != null && message.hasOwnProperty("vy"))
+                object.vy = message.vy;
+            if (message.vz != null && message.hasOwnProperty("vz"))
+                object.vz = message.vz;
+            if (message.type != null && message.hasOwnProperty("type"))
+                object.type = message.type;
+            return object;
+        };
+
+        /**
+         * Converts this Update to JSON.
+         * @function toJSON
+         * @memberof protocol.Update
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Update.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Update;
+    })();
+
     protocol.Peer = (function() {
 
         /**
@@ -1676,6 +1930,7 @@ $root.protocol = (function() {
          * @property {protocol.IChatMessage|null} [message] Message message
          * @property {Array.<protocol.IPeer>|null} [peers] Message peers
          * @property {Array.<protocol.IChunk>|null} [chunks] Message chunks
+         * @property {Array.<protocol.IUpdate>|null} [updates] Message updates
          */
 
         /**
@@ -1689,6 +1944,7 @@ $root.protocol = (function() {
         function Message(properties) {
             this.peers = [];
             this.chunks = [];
+            this.updates = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -1744,6 +2000,14 @@ $root.protocol = (function() {
         Message.prototype.chunks = $util.emptyArray;
 
         /**
+         * Message updates.
+         * @member {Array.<protocol.IUpdate>} updates
+         * @memberof protocol.Message
+         * @instance
+         */
+        Message.prototype.updates = $util.emptyArray;
+
+        /**
          * Creates a new Message instance using the specified properties.
          * @function create
          * @memberof protocol.Message
@@ -1781,6 +2045,9 @@ $root.protocol = (function() {
             if (message.chunks != null && message.chunks.length)
                 for (var i = 0; i < message.chunks.length; ++i)
                     $root.protocol.Chunk.encode(message.chunks[i], writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+            if (message.updates != null && message.updates.length)
+                for (var i = 0; i < message.updates.length; ++i)
+                    $root.protocol.Update.encode(message.updates[i], writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
             return writer;
         };
 
@@ -1836,6 +2103,11 @@ $root.protocol = (function() {
                     if (!(message.chunks && message.chunks.length))
                         message.chunks = [];
                     message.chunks.push($root.protocol.Chunk.decode(reader, reader.uint32()));
+                    break;
+                case 7:
+                    if (!(message.updates && message.updates.length))
+                        message.updates = [];
+                    message.updates.push($root.protocol.Update.decode(reader, reader.uint32()));
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1918,6 +2190,15 @@ $root.protocol = (function() {
                     var error = $root.protocol.Chunk.verify(message.chunks[i]);
                     if (error)
                         return "chunks." + error;
+                }
+            }
+            if (message.updates != null && message.hasOwnProperty("updates")) {
+                if (!Array.isArray(message.updates))
+                    return "updates: array expected";
+                for (var i = 0; i < message.updates.length; ++i) {
+                    var error = $root.protocol.Update.verify(message.updates[i]);
+                    if (error)
+                        return "updates." + error;
                 }
             }
             return null;
@@ -2018,6 +2299,16 @@ $root.protocol = (function() {
                     message.chunks[i] = $root.protocol.Chunk.fromObject(object.chunks[i]);
                 }
             }
+            if (object.updates) {
+                if (!Array.isArray(object.updates))
+                    throw TypeError(".protocol.Message.updates: array expected");
+                message.updates = [];
+                for (var i = 0; i < object.updates.length; ++i) {
+                    if (typeof object.updates[i] !== "object")
+                        throw TypeError(".protocol.Message.updates: object expected");
+                    message.updates[i] = $root.protocol.Update.fromObject(object.updates[i]);
+                }
+            }
             return message;
         };
 
@@ -2037,6 +2328,7 @@ $root.protocol = (function() {
             if (options.arrays || options.defaults) {
                 object.peers = [];
                 object.chunks = [];
+                object.updates = [];
             }
             if (options.defaults) {
                 object.type = options.enums === String ? "ERROR" : 1;
@@ -2061,6 +2353,11 @@ $root.protocol = (function() {
                 object.chunks = [];
                 for (var j = 0; j < message.chunks.length; ++j)
                     object.chunks[j] = $root.protocol.Chunk.toObject(message.chunks[j], options);
+            }
+            if (message.updates && message.updates.length) {
+                object.updates = [];
+                for (var j = 0; j < message.updates.length; ++j)
+                    object.updates[j] = $root.protocol.Update.toObject(message.updates[j], options);
             }
             return object;
         };

@@ -108,10 +108,11 @@ class Network {
       }
 
       case 'UPDATE': {
-        const {
-          json: { voxel, type },
-        } = event;
-        world.setVoxel(voxel, type, false);
+        const { updates } = event;
+
+        for (const { vx, vy, vz, type } of updates) {
+          world.setVoxel([vx, vy, vz], type, false);
+        }
 
         // purposely did not break, so i can load afterwards
       }

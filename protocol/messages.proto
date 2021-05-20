@@ -23,6 +23,13 @@ message Chunk {
   repeated int32 voxels = 4;
 }
 
+message Update {
+  int32 vx = 1;
+  int32 vy = 2;
+  int32 vz = 3;
+  int32 type = 4;
+}
+
 message Peer {
   string id = 1;
   string name = 2;
@@ -73,4 +80,5 @@ message Message {
 
   repeated Peer peers = 5;
   repeated Chunk chunks = 6;
+  repeated Update updates = 7;
 }
