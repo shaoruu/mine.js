@@ -391,7 +391,7 @@ class Chunk {
       if (vy === height) {
         // on max height, should set max height to lower
         for (let y = vy - 1; y >= 0; y--) {
-          if (y === 0 || registry.isAir(world.getVoxelByVoxel([vx, y, vz]))) {
+          if (y === 0 || !registry.isAir(world.getVoxelByVoxel([vx, y, vz]))) {
             world.setMaxHeight([vx, vz], y);
             break;
           }

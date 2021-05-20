@@ -279,10 +279,15 @@ class Player {
     const {
       config: {
         world: { dimension },
+        player: { bodyWidth },
       },
     } = this.engine;
     const [vx, vy, vz] = voxel;
-    const newPosition = [vx * dimension, (vy + 2) * dimension, vz * dimension];
+    const newPosition = [
+      (vx - bodyWidth / 2 + 0.5) * dimension,
+      (vy + 1) * dimension,
+      (vz - bodyWidth / 2 + 0.5) * dimension,
+    ];
 
     this.playerEntity.body.setPosition(newPosition);
     return newPosition;

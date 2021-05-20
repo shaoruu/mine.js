@@ -91,6 +91,10 @@ class Network extends EventEmitter {
       this.broadcast({
         type: 'LEAVE',
         text: client.id,
+        message: {
+          type: 'INFO',
+          body: `${client.name} left the game`,
+        },
       });
     }
   };

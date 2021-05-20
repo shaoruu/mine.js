@@ -4511,6 +4511,14 @@ class Network {
         };
         this.connect = () => {
             const url = this.url.toString();
+            // if (this.server) {
+            //   this.server.onclose = null;
+            //   this.server.onmessage = null;
+            //   this.server.close();
+            //   if (this.reconnection) {
+            //     clearTimeout(this.reconnection);
+            //   }
+            // }
             const socket = new URL(url);
             socket.protocol = socket.protocol.replace(/http/, 'ws');
             socket.hash = '';
@@ -4578,8 +4586,11 @@ class Network {
                     break;
                 }
                 case 'LEAVE': {
-                    const { text: id } = event;
+                    const { text: id, message } = event;
                     peers.leave(id);
+                    if (message) {
+                        chat.add(message);
+                    }
                     break;
                 }
                 case 'PEER': {
@@ -5074,9 +5085,13 @@ class Player {
         state.jumping = up ? (down ? false : true) : down ? false : false;
     }
     teleport(voxel) {
-        const { config: { world: { dimension }, }, } = this.engine;
+        const { config: { world: { dimension }, player: { bodyWidth }, }, } = this.engine;
         const [vx, vy, vz] = voxel;
-        const newPosition = [vx * dimension, (vy + 2) * dimension, vz * dimension];
+        const newPosition = [
+            (vx - bodyWidth / 2 + 0.5) * dimension,
+            (vy + 1) * dimension,
+            (vz - bodyWidth / 2 + 0.5) * dimension,
+        ];
         this.playerEntity.body.setPosition(newPosition);
         return newPosition;
     }

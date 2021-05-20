@@ -334,7 +334,17 @@ class World extends Network {
   onPeer = (request) => {
     const { id, name, px, py, pz, qx, qy, qz, qw } = request.peers[0];
     const client = this.clients.find((c) => c.id === id);
+
     if (client) {
+      if (!client.name) {
+        this.broadcast({
+          type: 'MESSAGE',
+          message: {
+            type: 'INFO',
+            body: `${name} joined the game`,
+          },
+        });
+      }
       client.name = name;
       client.position = [px, py, pz];
       client.rotation = [qx, qy, qz, qw];
