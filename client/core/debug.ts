@@ -128,7 +128,7 @@ class Debug {
     worldFolder
       .add(world.options, 'renderRadius', 1, 20, 1)
       .onFinishChange((value) => {
-        world.setRenderRadius(value);
+        world.updateRenderRadius(value);
       })
       .name('Render radius');
     worldFolder.add(world.options, 'requestRadius', 1, 20, 1).name('Request radius');

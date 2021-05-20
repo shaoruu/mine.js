@@ -3410,7 +3410,7 @@ class Chat {
         this.makeDOM = () => {
             const { margin } = this.options;
             this.gui = {
-                messages: document.createElement('div'),
+                messages: document.createElement('ul'),
                 wrapper: document.createElement('div'),
                 input: document.createElement('input'),
             };
@@ -3426,17 +3426,18 @@ class Chat {
             });
             _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.messages, {
                 position: 'fixed',
-                bottom: '50px',
+                bottom: '75px',
                 left: '0',
-                width: '600px',
-                overflowY: 'hidden',
+                width: '40%',
                 marginLeft: `${margin}px`,
-                maxHeight: '800px',
+                maxHeight: '50%',
+                overflowY: 'auto',
                 background: 'rgba(0,0,0,0.45)',
                 wordBreak: 'break-all',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
+                listStyle: 'none',
             });
             _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.gui.input, {
                 position: 'fixed',
@@ -3460,6 +3461,7 @@ class Chat {
             this.gui.input.autocomplete = 'off';
             this.gui.input.autofocus = false;
             this.gui.input.spellcheck = false;
+            this.gui.input.maxLength = 256;
             this.gui.wrapper.addEventListener('click', this.focusInput, false);
             this.gui.wrapper.appendChild(this.gui.messages);
             this.engine.container.domElement.appendChild(this.gui.wrapper);
@@ -3894,7 +3896,7 @@ class Debug {
             worldFolder
                 .add(world.options, 'renderRadius', 1, 20, 1)
                 .onFinishChange((value) => {
-                world.setRenderRadius(value);
+                world.updateRenderRadius(value);
             })
                 .name('Render radius');
             worldFolder.add(world.options, 'requestRadius', 1, 20, 1).name('Request radius');
@@ -5424,7 +5426,13 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.sky = new _libs__WEBPACK_IMPORTED_MODULE_2__.Sky(engine.rendering);
         this.clouds = new _libs__WEBPACK_IMPORTED_MODULE_2__.Clouds(engine.rendering);
         engine.on('ready', () => {
-            this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency + 3, 6));
+            const { hardwareConcurrency } = window.navigator;
+            const renderRadius = Math.max(hardwareConcurrency + 2, 6);
+            this.options.renderRadius = renderRadius;
+            this.options.requestRadius = renderRadius + 2;
+            this.options.maxChunkProcessPerFrame = Math.max(hardwareConcurrency, 3);
+            this.options.maxChunkRequestPerFrame = Math.max(hardwareConcurrency, 3);
+            this.updateRenderRadius(renderRadius);
             engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
         });
         engine.on('focus', async () => {
@@ -5552,7 +5560,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
     removeAsVisible(chunk) {
         this.visibleChunks.delete(chunk);
     }
-    setRenderRadius(renderRadiuus) {
+    updateRenderRadius(renderRadiuus) {
         const { registry } = this.engine;
         const { chunkSize, dimension } = this.options;
         registry.opaqueChunkMaterial.uniforms.uFogNear.value = renderRadiuus * 0.6 * chunkSize * dimension;
@@ -6255,7 +6263,7 @@ __webpack_require__.r(__webpack_exports__);
 class Message {
     constructor(type, sender, body) {
         this.type = type;
-        this.wrapper = document.createElement('div');
+        this.wrapper = document.createElement('li');
         this.sender = document.createElement('p');
         this.body = document.createElement('p');
         _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.wrapper, {

@@ -43,7 +43,15 @@ class World extends EventEmitter {
     this.clouds = new Clouds(engine.rendering);
 
     engine.on('ready', () => {
-      this.setRenderRadius(Math.max(window.navigator.hardwareConcurrency + 3, 6));
+      const { hardwareConcurrency } = window.navigator;
+      const renderRadius = Math.max(hardwareConcurrency + 2, 6);
+
+      this.options.renderRadius = renderRadius;
+      this.options.requestRadius = renderRadius + 2;
+      this.options.maxChunkProcessPerFrame = Math.max(hardwareConcurrency, 3);
+      this.options.maxChunkRequestPerFrame = Math.max(hardwareConcurrency, 3);
+
+      this.updateRenderRadius(renderRadius);
 
       engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
     });
@@ -190,7 +198,7 @@ class World extends EventEmitter {
     this.visibleChunks.delete(chunk);
   }
 
-  setRenderRadius(renderRadiuus: number) {
+  updateRenderRadius(renderRadiuus: number) {
     const { registry } = this.engine;
     const { chunkSize, dimension } = this.options;
 

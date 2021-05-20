@@ -16,7 +16,7 @@ class Chat {
   public history = new ChatHistory(this);
 
   public gui: {
-    messages: HTMLDivElement;
+    messages: HTMLUListElement;
     wrapper: HTMLDivElement;
     input: HTMLInputElement;
   };
@@ -38,7 +38,7 @@ class Chat {
     const { margin } = this.options;
 
     this.gui = {
-      messages: document.createElement('div'),
+      messages: document.createElement('ul'),
       wrapper: document.createElement('div'),
       input: document.createElement('input'),
     };
@@ -57,17 +57,18 @@ class Chat {
 
     Helper.applyStyle(this.gui.messages, {
       position: 'fixed',
-      bottom: '50px',
+      bottom: '75px',
       left: '0',
-      width: '600px',
-      overflowY: 'hidden',
+      width: '40%',
       marginLeft: `${margin}px`,
-      maxHeight: '800px',
+      maxHeight: '50%',
+      overflowY: 'auto',
       background: 'rgba(0,0,0,0.45)',
       wordBreak: 'break-all',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'flex-end',
+      listStyle: 'none',
     });
 
     Helper.applyStyle(this.gui.input, {
@@ -93,6 +94,7 @@ class Chat {
     this.gui.input.autocomplete = 'off';
     this.gui.input.autofocus = false;
     this.gui.input.spellcheck = false;
+    this.gui.input.maxLength = 256;
 
     this.gui.wrapper.addEventListener('click', this.focusInput, false);
 

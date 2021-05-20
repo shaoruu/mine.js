@@ -2,7 +2,7 @@ import { MESSAGE_TYPE } from '../../shared';
 import { Helper } from '../utils';
 
 class Message {
-  public wrapper = document.createElement('div');
+  public wrapper = document.createElement('li');
   public sender = document.createElement('p');
   public body = document.createElement('p');
 
