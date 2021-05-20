@@ -24,6 +24,10 @@ class Message {
       flexShrink: '0',
     });
 
+    Helper.applyStyle(this.body, {
+      paddingLeft: this.sender ? '5px' : '0px',
+    });
+
     this.sender.innerHTML = sender || '';
     this.body.innerHTML = body || '';
 
@@ -40,7 +44,7 @@ class Message {
         break;
       case 'PLAYER':
         this.sender.innerHTML = `&lt;${sender}&gt;`;
-        this.body.innerHTML = `&nbsp;&nbsp;${body}`;
+        this.body.innerHTML = body;
         break;
       case 'INFO':
         Helper.applyStyle([this.sender, this.body], {
