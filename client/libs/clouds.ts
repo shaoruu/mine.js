@@ -124,9 +124,9 @@ class Clouds {
       }
     });
 
-    const { threeCamera } = this.rendering.engine.camera;
-    this.cloudGroup.position.x = threeCamera.position.x;
-    this.cloudGroup.position.z = threeCamera.position.z;
+    const { object } = this.rendering.engine.player.controls;
+    this.cloudGroup.position.x = object.position.x;
+    this.cloudGroup.position.z = object.position.z;
   };
 
   makeRow = async (zOffset: number) => {

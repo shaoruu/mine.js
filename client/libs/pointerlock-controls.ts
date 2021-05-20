@@ -1,4 +1,4 @@
-import { Euler, EventDispatcher, Vector3, PerspectiveCamera } from 'three';
+import { Euler, EventDispatcher, Vector3, PerspectiveCamera, Group } from 'three';
 
 const _euler = new Euler(0, 0, 0, 'YXZ');
 const _vector = new Vector3();
@@ -10,9 +10,11 @@ const _unlockEvent = { type: 'unlock' };
 const _PI_2 = Math.PI / 2;
 
 class PointerLockControls extends EventDispatcher {
+  public object = new Group();
+
   public isLocked = false;
-  public minPolarAngle = 0;
-  public maxPolarAngle = Math.PI;
+  public minPolarAngle = Math.PI * 0.01;
+  public maxPolarAngle = Math.PI * 0.99;
 
   private lockCallback: () => void;
   private unlockCallback: () => void;
@@ -21,6 +23,7 @@ class PointerLockControls extends EventDispatcher {
     super();
 
     this.connect();
+    this.object.add(camera);
   }
 
   onMouseMove = (event: MouseEvent) => {
@@ -29,14 +32,14 @@ class PointerLockControls extends EventDispatcher {
     const movementX = event.movementX || 0;
     const movementY = event.movementY || 0;
 
-    _euler.setFromQuaternion(this.camera.quaternion);
+    _euler.setFromQuaternion(this.object.quaternion);
 
     _euler.y -= movementX * 0.002;
     _euler.x -= movementY * 0.002;
 
     _euler.x = Math.max(_PI_2 - this.maxPolarAngle, Math.min(_PI_2 - this.minPolarAngle, _euler.x));
 
-    this.camera.quaternion.setFromEuler(_euler);
+    this.object.quaternion.setFromEuler(_euler);
 
     this.dispatchEvent(_changeEvent);
   };
@@ -82,14 +85,14 @@ class PointerLockControls extends EventDispatcher {
   };
 
   getObject = () => {
-    return this.camera;
+    return this.object;
   };
 
   getDirection = (() => {
     const direction = new Vector3(0, 0, -1);
 
     return function (v) {
-      return v.copy(direction).applyQuaternion(this.camera.quaternion);
+      return v.copy(direction).applyQuaternion(this.object.quaternion);
     };
   })();
 
@@ -97,17 +100,17 @@ class PointerLockControls extends EventDispatcher {
     // move forward parallel to the xz-plane
     // assumes camera.up is y-up
 
-    _vector.setFromMatrixColumn(this.camera.matrix, 0);
+    _vector.setFromMatrixColumn(this.object.matrix, 0);
 
-    _vector.crossVectors(this.camera.up, _vector);
+    _vector.crossVectors(this.object.up, _vector);
 
-    this.camera.position.addScaledVector(_vector, distance);
+    this.object.position.addScaledVector(_vector, distance);
   };
 
   moveRight = (distance: number) => {
-    _vector.setFromMatrixColumn(this.camera.matrix, 0);
+    _vector.setFromMatrixColumn(this.object.matrix, 0);
 
-    this.camera.position.addScaledVector(_vector, distance);
+    this.object.position.addScaledVector(_vector, distance);
   };
 
   lock = (callback?: () => void) => {

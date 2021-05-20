@@ -73,6 +73,8 @@ const defaultConfig: ConfigType = {
     lookBlockScale: 1.002,
     lookBlockLerp: 0.7,
     lookBlockColor: '#bbb',
+    perspectiveLerpFactor: 0.7,
+    perspectiveDistance: 5,
     distToGround: 1.6,
     distToTop: 0.2,
     bodyWidth: 0.6,
@@ -83,7 +85,7 @@ const defaultConfig: ConfigType = {
     requestRadius: 14,
     chunkSize: 8,
     dimension: 1,
-    // radius of rendering centered by camera
+    // radius of rendering centered by player
     maxChunkRequestPerFrame: 8,
     // maximum amount of chunks to process per frame tick
     maxChunkProcessPerFrame: 8,

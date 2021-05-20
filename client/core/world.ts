@@ -169,7 +169,7 @@ class World extends EventEmitter {
     const { dimension } = this.options;
     const {
       targetBlock,
-      camEntity: {
+      playerEntity: {
         body: { aabb },
       },
     } = this.engine.player;
@@ -239,7 +239,7 @@ class World extends EventEmitter {
   private checkCamChunk() {
     const { chunkSize, renderRadius } = this.options;
 
-    const pos = this.engine.camera.voxel;
+    const pos = this.engine.player.voxel;
     const chunkPos = Helper.mapVoxelPosToChunkPos(pos, chunkSize);
     const chunkName = Helper.getChunkName(chunkPos);
 
@@ -307,7 +307,7 @@ class World extends EventEmitter {
     // if the chunk is too far away, remove from scene.
     const deleteDistance = renderRadius * chunkSize * 1.414;
     for (const chunk of this.visibleChunks) {
-      if (chunk.distTo(...this.engine.camera.voxel) > deleteDistance) {
+      if (chunk.distTo(...this.engine.player.voxel) > deleteDistance) {
         chunk.removeFromScene();
       }
     }

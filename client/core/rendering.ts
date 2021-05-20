@@ -109,9 +109,7 @@ class Rendering extends EventEmitter {
     this.fxaa.material.uniforms['resolution'].value.y = 1 / (height * pixelRatio);
   };
 
-  tick = () => {
-    // this.sky.position.copy(this.engine.camera.controls.getObject().position);
-  };
+  tick = () => {};
 
   render = () => {
     this.composer.render();

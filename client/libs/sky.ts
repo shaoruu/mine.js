@@ -512,9 +512,9 @@ class Sky {
     }
 
     // reposition sky box to player position
-    const { threeCamera } = this.rendering.engine.camera;
-    this.meshGroup.position.x = threeCamera.position.x;
-    this.meshGroup.position.z = threeCamera.position.z;
+    const { object } = this.rendering.engine.player.controls;
+    this.meshGroup.position.x = object.position.x;
+    this.meshGroup.position.z = object.position.z;
   }
 }
 

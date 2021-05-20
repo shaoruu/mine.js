@@ -1,4 +1,13 @@
-import { Mesh, BoxBufferGeometry, MeshBasicMaterial, DoubleSide, Vector3, Quaternion } from 'three';
+import {
+  Mesh,
+  BoxBufferGeometry,
+  MeshBasicMaterial,
+  DoubleSide,
+  Vector3,
+  Quaternion,
+  NearestFilter,
+  sRGBEncoding,
+} from 'three';
 import SpriteText from 'three-spritetext';
 
 type PeerOptionsType = {
@@ -44,6 +53,12 @@ class Peer {
     this.nameMesh.position.y += options.headDimension * 1;
     this.nameMesh.backgroundColor = '#00000077';
     this.nameMesh.material.depthTest = false;
+
+    const image = this.nameMesh.material.map;
+    if (image) {
+      image.minFilter = NearestFilter;
+      image.magFilter = NearestFilter;
+    }
 
     this.mesh.add(this.nameMesh);
   }

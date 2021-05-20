@@ -22,14 +22,14 @@ class Peers {
     const { updateInterval } = this.options;
 
     const {
-      camera: { threeCamera },
+      player: { object },
     } = engine;
 
     let interval: NodeJS.Timeout;
 
     engine.on('init', () => {
       interval = setInterval(() => {
-        const { position, quaternion } = threeCamera;
+        const { position, quaternion } = object;
 
         const { x: px, y: py, z: pz } = position;
         const { x: qx, y: qy, z: qz, w: qw } = quaternion;
@@ -88,7 +88,7 @@ class Peers {
   }
 
   tick() {
-    this.players.forEach((peer) => peer.tick(this.engine.camera.threeCamera.position));
+    this.players.forEach((peer) => peer.tick(this.engine.player.object.position));
   }
 }
 

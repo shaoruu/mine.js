@@ -144,7 +144,7 @@ class Debug {
 
     // const cameraFolder = this.gui.addFolder('camera');
     this.registerDisplay('FPS', this, 'fps');
-    this.registerDisplay('position', camera, 'voxelPositionStr');
+    this.registerDisplay('position', player, 'voxelPositionStr');
     this.registerDisplay('chunk', world, 'camChunkPosStr');
     this.registerDisplay('looking at', player, 'lookBlockStr');
     this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));

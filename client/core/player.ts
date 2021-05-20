@@ -1,8 +1,8 @@
 import raycast from 'fast-voxel-raycast';
-import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Vector3 } from 'three';
+import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3 } from 'three';
 
 import { Coords3, Helper } from '../../shared';
-import { EntityType, PointerLockControls } from '../libs';
+import { EntityType, Peer, PointerLockControls } from '../libs';
 
 import { Engine } from '.';
 
@@ -13,10 +13,14 @@ type PlayerOptionsType = {
   lookBlockScale: number;
   lookBlockLerp: number;
   lookBlockColor: string;
+  perspectiveLerpFactor: number;
+  perspectiveDistance: number;
   distToGround: number;
   distToTop: number;
   bodyWidth: number;
 };
+
+type PerspectiveType = 'first' | 'second' | 'third';
 
 const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 11, 13];
 let type = 1;
@@ -32,7 +36,10 @@ class Player {
 
   public lookBlock: Coords3 | null = [0, 0, 0];
   public targetBlock: Coords3 | null = [0, 0, 0];
-  public camEntity: EntityType;
+  public playerEntity: EntityType;
+  public perspective: PerspectiveType = 'first';
+
+  public own: Peer;
 
   private acc = new Vector3();
   private vel = new Vector3();
@@ -62,33 +69,11 @@ class Player {
 
     const { config, rendering, inputs, world } = engine;
 
-    // look block
-    engine.on('ready', () => {
-      // register camera as entity      // set up look block mesh
-      const { dimension } = config.world;
-      this.addCamEntity();
-
-      this.lookBlockMesh = new Mesh(
-        new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
-        new MeshBasicMaterial({
-          color: lookBlockColor,
-          alphaTest: 0.2,
-          opacity: 0.2,
-          transparent: true,
-        }),
-      );
-      this.lookBlockMesh.renderOrder = 100000;
-
-      rendering.scene.add(this.lookBlockMesh);
-    });
-
-    engine.on('chat-enabled', () => {
-      this.resetMovements();
-    });
-
-    inputs.bind('f', () => this.toggleGodMode(), 'in-game');
     inputs.click('left', () => world.breakVoxel(), 'in-game');
     inputs.click('right', () => world.placeVoxel(type), 'in-game');
+    inputs.bind('f', () => this.toggleGodMode(), 'in-game');
+    inputs.bind('c', () => this.togglePerspective('third'), 'in-game');
+    inputs.bind('b', () => this.togglePerspective('second'), 'in-game');
 
     for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
       inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]), 'in-game');
@@ -106,6 +91,35 @@ class Player {
 
     // retrieve name from localStorage
     this.name = localStorage.getItem(LOCAL_STORAGE_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
+    this.own = new Peer(this.name);
+    this.own.mesh.visible = false;
+    this.object.add(this.own.mesh);
+
+    // look block
+    engine.on('ready', () => {
+      // register camera as entity      // set up look block mesh
+      const { dimension } = config.world;
+      this.addPlayerentity();
+
+      this.lookBlockMesh = new Mesh(
+        new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
+        new MeshBasicMaterial({
+          color: lookBlockColor,
+          alphaTest: 0.2,
+          opacity: 0.2,
+          transparent: true,
+        }),
+      );
+      this.lookBlockMesh.renderOrder = 100000;
+
+      rendering.scene.add(this.lookBlockMesh);
+
+      Peer.material.map = engine.registry.atlasUniform.value;
+    });
+
+    engine.on('chat-enabled', () => {
+      this.resetMovements();
+    });
   }
 
   onKeyDown = ({ code }: KeyboardEvent) => {
@@ -185,6 +199,7 @@ class Player {
       this.moveCamEntity();
     }
     this.updateLookBlock();
+    this.updatePerspective();
   };
 
   godModeMovements() {
@@ -218,8 +233,8 @@ class Player {
   }
 
   moveCamEntity() {
-    const { threeCamera } = this.engine.camera;
-    const { state } = this.camEntity.brain;
+    const { object } = this.controls;
+    const { state } = this.playerEntity.brain;
 
     const { right, left, up, down, front, back } = this.movements;
 
@@ -227,12 +242,12 @@ class Player {
     const rl = left ? (right ? 0 : 1) : right ? -1 : 0;
 
     // get the frontwards-backwards direction vectors
-    this.vec.setFromMatrixColumn(threeCamera.matrix, 0);
-    this.vec.crossVectors(threeCamera.up, this.vec);
+    this.vec.setFromMatrixColumn(object.matrix, 0);
+    this.vec.crossVectors(object.up, this.vec);
     const { x: forwardX, z: forwardZ } = this.vec;
 
     // get the side-ways vectors
-    this.vec.setFromMatrixColumn(threeCamera.matrix, 0);
+    this.vec.setFromMatrixColumn(object.matrix, 0);
     const { x: sideX, z: sideZ } = this.vec;
 
     const totalX = forwardX + sideX;
@@ -269,7 +284,7 @@ class Player {
     const [vx, vy, vz] = voxel;
     const newPosition = [vx * dimension, (vy + 2) * dimension, vz * dimension];
 
-    this.camEntity.body.setPosition(newPosition);
+    this.playerEntity.body.setPosition(newPosition);
     return newPosition;
   }
 
@@ -278,31 +293,31 @@ class Player {
     if (this.godMode) {
       this.vel.set(0, 0, 0);
       this.acc.set(0, 0, 0);
-      this.engine.entities.removeEntity('camera');
+      this.engine.entities.removeEntity('player');
     } else {
       // activated again
-      this.addCamEntity();
+      this.addPlayerentity();
     }
   }
 
-  addCamEntity() {
+  addPlayerentity() {
     const { bodyWidth, distToGround, distToTop } = this.options;
     const { dimension } = this.engine.world.options;
     const cameraWorldWidth = bodyWidth * dimension;
     const cameraWorldHeight = (distToGround + distToTop) * dimension;
 
-    this.camEntity = this.engine.entities.addEntity(
-      'camera',
-      this.engine.camera.threeCamera,
+    this.playerEntity = this.engine.entities.addEntity(
+      'player',
+      this.controls.getObject(),
       [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth],
       [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0],
     );
 
-    this.camEntity.body.applyImpulse([0, 4, 0]);
+    this.playerEntity.body.applyImpulse([0, 4, 0]);
   }
 
   setName(name: string) {
-    this.name = name || '';
+    this.name = name || ' ';
     localStorage.setItem(LOCAL_STORAGE_PLAYER_NAME, this.name);
   }
 
@@ -317,9 +332,66 @@ class Player {
     };
   }
 
-  get lookBlockStr() {
-    const { lookBlock } = this;
-    return lookBlock ? `${lookBlock[0]} ${lookBlock[1]} ${lookBlock[2]}` : 'None';
+  togglePerspective(perspective: PerspectiveType) {
+    this.perspective = this.perspective === perspective ? 'first' : perspective;
+    this.controls.camera.position.copy(new Vector3(0, 0, 0));
+    this.controls.camera.quaternion.copy(new Quaternion(0, 0, 0, 0));
+    this.own.mesh.visible = this.perspective !== 'first';
+  }
+
+  private updatePerspective() {
+    const {
+      world,
+      camera: { threeCamera },
+    } = this.engine;
+    const { object } = this.controls;
+    const { perspectiveLerpFactor, perspectiveDistance } = this.options;
+
+    this.own.update(this.name, this.object.position, this.object.quaternion);
+
+    const getDistance = () => {
+      const camDir = new Vector3();
+      const camPos = object.position;
+
+      const point: number[] = [];
+      const normal: number[] = [];
+
+      (this.perspective === 'second' ? object : threeCamera).getWorldDirection(camDir);
+      camDir.normalize();
+      camDir.multiplyScalar(-1);
+
+      raycast(
+        (x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])),
+        [camPos.x, camPos.y, camPos.z],
+        [camDir.x, camDir.y, camDir.z],
+        10,
+        point,
+        normal,
+      );
+
+      const pointVec = new Vector3(...point);
+      const dist = object.position.distanceTo(pointVec);
+      return Math.min(dist, perspectiveDistance);
+    };
+
+    switch (this.perspective) {
+      case 'first': {
+        break;
+      }
+      case 'second': {
+        const newPos = threeCamera.position.clone();
+        newPos.z = -getDistance();
+        threeCamera.position.lerp(newPos, perspectiveLerpFactor);
+        threeCamera.lookAt(object.position);
+        break;
+      }
+      case 'third': {
+        const newPos = threeCamera.position.clone();
+        newPos.z = getDistance();
+        threeCamera.position.lerp(newPos, perspectiveLerpFactor);
+        break;
+      }
+    }
   }
 
   private updateLookBlock() {
@@ -328,7 +400,7 @@ class Player {
     const { reachDistance, lookBlockLerp } = this.options;
 
     const camDir = new Vector3();
-    const camPos = camera.threeCamera.position;
+    const camPos = this.controls.object.position;
     camera.threeCamera.getWorldDirection(camDir);
     camDir.normalize();
 
@@ -376,6 +448,29 @@ class Player {
     this.lookBlock = newLookBlock;
     // target block is look block summed with the normal
     this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
+  }
+
+  get object() {
+    return this.controls.object;
+  }
+
+  get lookBlockStr() {
+    const { lookBlock } = this;
+    return lookBlock ? `${lookBlock[0]} ${lookBlock[1]} ${lookBlock[2]}` : 'None';
+  }
+
+  get position(): Coords3 {
+    const { x, y, z } = this.controls.object.position;
+    return [x, y, z];
+  }
+
+  get voxel(): Coords3 {
+    return Helper.mapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);
+  }
+
+  get voxelPositionStr() {
+    const { voxel } = this;
+    return `${voxel[0]} ${voxel[1]} ${voxel[2]}`;
   }
 }
 

@@ -1,8 +1,5 @@
 import { PerspectiveCamera, Vector3 } from 'three';
 
-import { Coords3 } from '../../shared';
-import { Helper } from '../utils';
-
 import { Engine } from './engine';
 
 type CameraOptionsType = {
@@ -38,20 +35,6 @@ class Camera {
       this.threeCamera.aspect = engine.rendering.aspectRatio;
       this.threeCamera.updateProjectionMatrix();
     });
-  }
-
-  get voxel(): Coords3 {
-    return Helper.mapWorldPosToVoxelPos(this.position, this.engine.world.options.dimension);
-  }
-
-  get position(): Coords3 {
-    const { x, y, z } = this.threeCamera.position;
-    return [x, y, z];
-  }
-
-  get voxelPositionStr() {
-    const { voxel } = this;
-    return `${voxel[0]} ${voxel[1]} ${voxel[2]}`;
   }
 }
 
