@@ -118,7 +118,7 @@ const defaultConfig: ConfigType = {
     updateInterval: 16, // ms
   },
   network: {
-    reconnectInterval: 10000,
+    reconnectTimeout: 5000,
   },
   particles: {
     count: 10,

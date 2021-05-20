@@ -7,6 +7,8 @@ import { FastifyInstance } from 'fastify';
 import { Coords2, Coords3, Helper } from '../../shared';
 import { GeneratorTypes } from '../libs';
 
+import { Builder } from './builder';
+
 import { ClientType, Network, NetworkOptionsType, Chunk, Mine } from '.';
 
 const chunkNeighbors = [
@@ -42,6 +44,8 @@ class World extends Network {
   public caching = false;
   public storage: string;
 
+  public builder: Builder;
+
   public chunks: Map<string, Chunk> = new Map();
   public chunkCache: Set<Chunk> = new Set();
   public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
@@ -56,6 +60,8 @@ class World extends Network {
 
     this.time = time;
     this.tickSpeed = tickSpeed;
+
+    this.builder = new Builder(this);
 
     console.log(`\nWorld: ${chalk.bgCyan.gray(options.name)}`);
     if (save) this.initStorage();
@@ -169,30 +175,32 @@ class World extends Network {
     chunk.needsSaving = true;
   };
 
-  getChunkByCPos = (cCoords: Coords2) => {
-    return this.getChunkByName(Helper.getChunkName(cCoords));
+  getChunkByCPos = (cCoords: Coords2, instantiate = true) => {
+    return this.getChunkByName(Helper.getChunkName(cCoords), instantiate);
   };
 
-  getChunkByName = (chunkName: string) => {
+  getChunkByName = (chunkName: string, instantiate = true) => {
     let chunk = this.chunks.get(chunkName);
-    if (!chunk) {
-      const { chunkSize, dimension, maxHeight } = this.options;
-      const coords = Helper.parseChunkName(chunkName) as Coords2;
-      chunk = new Chunk(coords, this, {
-        dimension,
-        maxHeight,
-        size: chunkSize,
-      });
-      this.chunks.set(chunkName, chunk);
+    if (instantiate) {
+      if (!chunk) {
+        const { chunkSize, dimension, maxHeight } = this.options;
+        const coords = Helper.parseChunkName(chunkName) as Coords2;
+        chunk = new Chunk(coords, this, {
+          dimension,
+          maxHeight,
+          size: chunkSize,
+        });
+        this.chunks.set(chunkName, chunk);
+      }
+      if (this.caching) this.chunkCache.add(chunk);
     }
-    if (this.caching) this.chunkCache.add(chunk);
     return chunk;
   };
 
-  getChunkByVoxel = (vCoords: Coords3) => {
+  getChunkByVoxel = (vCoords: Coords3, instantiate = true) => {
     const { chunkSize } = this.options;
     const chunkCoords = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
-    return this.getChunkByCPos(chunkCoords);
+    return this.getChunkByCPos(chunkCoords, instantiate);
   };
 
   getNeighborChunks = (coords: Coords2) => {
@@ -266,49 +274,17 @@ class World extends Network {
     return chunk.setVoxel(voxel, type);
   };
 
-  onConfig = (request) => {
-    const { time, tickSpeed } = request.json;
-
-    if (Helper.isNumber(time)) this.time = time;
-    if (Helper.isNumber(tickSpeed)) this.tickSpeed = tickSpeed;
-
-    this.broadcast({
-      type: 'CONFIG',
-      json: request.json,
-    });
-  };
-
-  onUpdate = (request) => {
+  update = (voxel: Coords3, type: number) => {
     const { maxHeight } = this.options;
-    const { x, y, z, type: typeStr } = request.json || {};
+    const [, vy] = voxel;
 
-    const vx = parseInt(x, 10);
-    const vy = parseInt(y, 10);
-    const vz = parseInt(z, 10);
-    const type = parseInt(typeStr, 10);
-    const voxel = <Coords3>[vx, vy, vz];
-
-    // fool proof
-    if (
-      Number.isNaN(x) ||
-      Number.isNaN(y) ||
-      Number.isNaN(z) ||
-      Number.isNaN(type) ||
-      y < 0 ||
-      y >= maxHeight ||
-      !Mine.registry.getBlockByID(type).name
-    ) {
-      return;
-    }
+    if (vy < 0 || vy >= maxHeight || !Mine.registry.getBlockByID(type).name) return;
 
     const chunk = this.getChunkByVoxel(voxel);
     if (chunk.needsPropagation) return;
 
     const currentType = this.getVoxelByVoxel(voxel);
-    if (
-      (Mine.registry.isAir(currentType) && Mine.registry.isAir(type)) ||
-      (!Mine.registry.isAir(currentType) && !Mine.registry.isAir(type))
-    ) {
+    if (Mine.registry.isAir(currentType) && Mine.registry.isAir(type)) {
       return;
     }
 
@@ -329,6 +305,35 @@ class World extends Network {
     });
 
     this.clearCache();
+  };
+
+  onConfig = (request) => {
+    const { time, tickSpeed } = request.json;
+
+    if (Helper.isNumber(time)) this.time = time;
+    if (Helper.isNumber(tickSpeed)) this.tickSpeed = tickSpeed;
+
+    this.broadcast({
+      type: 'CONFIG',
+      json: request.json,
+    });
+  };
+
+  onUpdate = (request) => {
+    const { x, y, z, type: typeStr } = request.json || {};
+
+    const vx = parseInt(x, 10);
+    const vy = parseInt(y, 10);
+    const vz = parseInt(z, 10);
+    const type = parseInt(typeStr, 10);
+    const voxel = <Coords3>[vx, vy, vz];
+
+    // fool proof
+    if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z) || Number.isNaN(type)) {
+      return;
+    }
+
+    this.update(voxel, type);
   };
 
   onPeer = (request) => {

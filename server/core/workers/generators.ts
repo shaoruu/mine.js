@@ -10,42 +10,16 @@ type GeneratorOptionsType = {
   maxHeight: number;
 };
 
-let noise: Noise;
+// @ts-ignore
+const noise: Noise = new Noise.Noise(13412);
 
 class Generators {
   static hilly = ([vx, vy, vz]: Coords3, types: TypeMap) => {
-    if (!noise) {
-      // @ts-ignore
-      noise = new Noise.Noise(13412);
-    }
-
     const {
-      HILLY: { OCTAVES, SCALE, PERSISTANCE, LACUNARITY, AMPLIFIER, HEIGHT_OFFSET, HEIGHT_SCALE, TREE_SCALE },
+      HILLY: { OCTAVES, SCALE, PERSISTANCE, LACUNARITY, AMPLIFIER, HEIGHT_OFFSET, HEIGHT_SCALE },
     } = TERRAIN_CONFIG;
 
     vy = vy - HEIGHT_OFFSET;
-
-    // function shouldPlantTree(x: number, z: number) {
-    //   const noise3x3 = [];
-
-    //   for (let i = -1; i <= 1; i++) {
-    //     for (let j = -1; j <= 1; j++) {
-    //       noise3x3.push(noise.perlin2((x + i) * TREE_SCALE, (z + j) * TREE_SCALE));
-    //     }
-    //   }
-
-    //   let max = noise3x3[0];
-    //   let maxi = 0;
-
-    //   for (let i = 1; i < noise3x3.length; i++) {
-    //     if (max < noise3x3[i]) {
-    //       max = noise3x3[i];
-    //       maxi = i;
-    //     }
-    //   }
-
-    //   return maxi === 4;
-    // }
 
     function fractalOctavePerlin3(x: number, y: number, z: number) {
       let t = 0,

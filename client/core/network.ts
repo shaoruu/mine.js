@@ -14,7 +14,7 @@ type CustomWebSocket = WebSocket & {
 };
 
 type NetworkOptionsType = {
-  reconnectInterval: number;
+  reconnectTimeout: number;
 };
 
 class Network {
@@ -37,14 +37,14 @@ class Network {
   connect = () => {
     const url = this.url.toString();
 
-    // if (this.server) {
-    //   this.server.onclose = null;
-    //   this.server.onmessage = null;
-    //   this.server.close();
-    //   if (this.reconnection) {
-    //     clearTimeout(this.reconnection);
-    //   }
-    // }
+    if (this.server) {
+      this.server.onclose = null;
+      this.server.onmessage = null;
+      this.server.close();
+      if (this.reconnection) {
+        clearTimeout(this.reconnection);
+      }
+    }
 
     const socket = new URL(url);
     socket.protocol = socket.protocol.replace(/http/, 'ws');
@@ -69,9 +69,9 @@ class Network {
       this.engine.emit('disconnected');
       this.connected = false;
 
-      this.reconnection = setInterval(() => {
+      this.reconnection = setTimeout(() => {
         this.connect();
-      }, this.options.reconnectInterval);
+      }, this.options.reconnectTimeout);
     };
 
     server.serverURL = url;

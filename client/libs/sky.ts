@@ -153,6 +153,7 @@ class Sky {
     rendering.scene.add(this.meshGroup);
 
     setInterval(async () => {
+      if (!rendering.engine.network.connected) return;
       this.newTime = await rendering.engine.network.fetchData('/time');
     }, checkInterval);
   }

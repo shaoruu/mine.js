@@ -4136,7 +4136,7 @@ const defaultConfig = {
         updateInterval: 16, // ms
     },
     network: {
-        reconnectInterval: 10000,
+        reconnectTimeout: 5000,
     },
     particles: {
         count: 10,
@@ -4513,14 +4513,14 @@ class Network {
         };
         this.connect = () => {
             const url = this.url.toString();
-            // if (this.server) {
-            //   this.server.onclose = null;
-            //   this.server.onmessage = null;
-            //   this.server.close();
-            //   if (this.reconnection) {
-            //     clearTimeout(this.reconnection);
-            //   }
-            // }
+            if (this.server) {
+                this.server.onclose = null;
+                this.server.onmessage = null;
+                this.server.close();
+                if (this.reconnection) {
+                    clearTimeout(this.reconnection);
+                }
+            }
             const socket = new URL(url);
             socket.protocol = socket.protocol.replace(/http/, 'ws');
             socket.hash = '';
@@ -4541,9 +4541,9 @@ class Network {
             server.onclose = () => {
                 this.engine.emit('disconnected');
                 this.connected = false;
-                this.reconnection = setInterval(() => {
+                this.reconnection = setTimeout(() => {
                     this.connect();
-                }, this.options.reconnectInterval);
+                }, this.options.reconnectTimeout);
             };
             server.serverURL = url;
             this.server = server;
@@ -7043,6 +7043,8 @@ class Sky {
         this.createSkyBox();
         rendering.scene.add(this.meshGroup);
         setInterval(async () => {
+            if (!rendering.engine.network.connected)
+                return;
             this.newTime = await rendering.engine.network.fetchData('/time');
         }, checkInterval);
     }

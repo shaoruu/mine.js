@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
@@ -20,6 +21,8 @@ type LightNode = {
   level: number;
 };
 
+type ChunkStageType = 'empty' | 'terrain' | 'decoration' | 'finalized';
+
 const voxelNeighbors = [
   { x: 1, y: 0, z: 0 },
   { x: -1, y: 0, z: 0 },
@@ -36,7 +39,7 @@ const voxelHorizontalNeighbors = [
   { x: 0, z: 1 },
 ];
 
-class Chunk {
+class Chunk extends EventEmitter {
   public voxels: ndarray;
   public lights: ndarray;
   public heightMap: ndarray;
@@ -55,8 +58,18 @@ class Chunk {
     transparent: MeshType | undefined;
   } = { opaque: undefined, transparent: undefined };
   public topY: number = Number.MIN_SAFE_INTEGER;
+  public neighbors: {
+    px?: Chunk;
+    nx?: Chunk;
+    pz?: Chunk;
+    nz?: Chunk;
+  } = {};
+
+  private stage: ChunkStageType = 'empty';
 
   constructor(public coords: Coords2, public world: World, public options: ChunkOptionsType) {
+    super();
+
     const { size, maxHeight } = options;
     const [cx, cz] = coords;
     const coords3 = [cx, 0, cz];
@@ -73,6 +86,8 @@ class Chunk {
     vec3.add(this.max, this.max, [1, 0, 1]);
     vec3.scale(this.max, this.max, size);
     vec3.add(this.max, this.max, [0, maxHeight, 0]);
+
+    this.markNeighbors();
 
     if (this.world.options.save) {
       try {
@@ -161,6 +176,8 @@ class Chunk {
     this.voxels.data = zlib.inflateSync(Buffer.from(voxels, 'base64'));
     this.lights.data = zlib.inflateSync(Buffer.from(lights, 'base64'));
     this.generateHeightMap();
+
+    this.setStage('finalized');
   };
 
   save = () => {
@@ -182,14 +199,20 @@ class Chunk {
   };
 
   generate = async () => {
+    const { generation, save } = this.world.options;
+
     // generate terrain, height map, and mesh
     this.needsPropagation = true;
     this.needsSaving = true;
-    const { generation, save } = this.world.options;
+
+    // multi-threaded terrain generation
     await Generator.generate(this, generation);
-    // TODO: lighting
     this.generateHeightMap();
+
+    // save to disk
     if (save) this.save();
+
+    this.setStage('terrain');
   };
 
   generateHeightMap = () => {
@@ -485,7 +508,46 @@ class Chunk {
     return <Coords3>vec3.sub([0, 0, 0], voxel, this.min);
   };
 
-  getProtocol(needsVoxels = false) {
+  markNeighbors = () => {
+    const [cx, cz] = this.coords;
+
+    const px = this.world.getChunkByCPos([cx + 1, cz], false);
+    const nx = this.world.getChunkByCPos([cx, cz + 1], false);
+    const pz = this.world.getChunkByCPos([cx - 1, cz], false);
+    const nz = this.world.getChunkByCPos([cx, cz - 1], false);
+
+    if (px) px.nx = this;
+    if (nx) nx.px = this;
+    if (pz) pz.nz = this;
+    if (nz) nz.pz = this;
+
+    this.neighbors = { px, nx, pz, nz };
+  };
+
+  checkDecoration = () => {
+    const { px, nx, pz, nz } = this.neighbors;
+    if (!px || !nx || !pz || !nz) return;
+    if (px.hasTerrain && nx.hasTerrain && pz.hasTerrain && nz.hasTerrain) {
+      this.world.builder.build(this);
+    }
+  };
+
+  setStage = (stage: ChunkStageType) => {
+    this.stage = stage;
+
+    switch (stage) {
+      case 'terrain': {
+        this.emit(stage);
+        break;
+      }
+    }
+  };
+
+  getStage = () => {
+    return this.stage;
+  };
+
+  getProtocol = (needsVoxels = false) => {
     if (!this.hasMesh) this.remesh();
 
     return {
@@ -494,10 +556,34 @@ class Chunk {
       meshes: [this.meshes],
       voxels: needsVoxels ? this.voxels.data : null,
     };
+  };
+
+  set px(chunk: Chunk) {
+    this.neighbors.px = chunk;
+    chunk.on('terrain', this.checkDecoration);
+  }
+
+  set nx(chunk: Chunk) {
+    this.neighbors.nx = chunk;
+    chunk.on('terrain', this.checkDecoration);
+  }
+
+  set pz(chunk: Chunk) {
+    this.neighbors.pz = chunk;
+    chunk.on('terrain', this.checkDecoration);
+  }
+
+  set nz(chunk: Chunk) {
+    this.neighbors.nz = chunk;
+    chunk.on('terrain', this.checkDecoration);
   }
 
   get hasMesh() {
     return !!this.meshes.opaque || !!this.meshes.transparent;
+  }
+
+  get hasTerrain() {
+    return this.stage === 'terrain' || this.stage === 'decoration' || this.stage === 'finalized';
   }
 }
 
