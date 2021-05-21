@@ -51,8 +51,8 @@ class Chunk extends EventEmitter {
   public needsSaving = false;
   public needsPropagation = false;
   public needsTerrain = true;
+  public needsDecoration = true;
   public isEmpty = true;
-  public initialized = false;
 
   public meshes: {
     opaque: MeshType | undefined;
@@ -64,6 +64,10 @@ class Chunk extends EventEmitter {
     nx?: Chunk;
     pz?: Chunk;
     nz?: Chunk;
+    pxpz?: Chunk;
+    pxnz?: Chunk;
+    nxpz?: Chunk;
+    nxnz?: Chunk;
   } = {};
 
   constructor(public coords: Coords2, public world: World, public options: ChunkOptionsType) {
@@ -172,7 +176,7 @@ class Chunk extends EventEmitter {
     const { voxels, lights, needsPropagation } = JSON.parse(fileBuffer);
     this.needsSaving = false;
     this.needsTerrain = false;
-    this.initialized = true;
+    this.needsDecoration = false;
     this.needsPropagation = needsPropagation;
     this.voxels.data = zlib.inflateSync(Buffer.from(voxels, 'base64'));
     this.lights.data = zlib.inflateSync(Buffer.from(lights, 'base64'));
@@ -209,11 +213,15 @@ class Chunk extends EventEmitter {
     this.generateHeightMap();
     this.needsTerrain = false;
 
-    const { px, nx, pz, nz } = this.neighbors;
+    const { px, nx, pz, nz, pxpz, pxnz, nxpz, nxnz } = this.neighbors;
     if (px) px.checkDecoration();
     if (nx) nx.checkDecoration();
     if (pz) pz.checkDecoration();
     if (nz) nz.checkDecoration();
+    if (pxpz) pxpz.checkDecoration();
+    if (pxnz) pxnz.checkDecoration();
+    if (nxpz) nxpz.checkDecoration();
+    if (nxnz) nxnz.checkDecoration();
 
     // save to disk
     if (save) this.save();
@@ -619,22 +627,39 @@ class Chunk extends EventEmitter {
     const nx = this.world.getChunkByCPos([cx, cz + 1], false);
     const pz = this.world.getChunkByCPos([cx - 1, cz], false);
     const nz = this.world.getChunkByCPos([cx, cz - 1], false);
+    const pxpz = this.world.getChunkByCPos([cx + 1, cz + 1], false);
+    const pxnz = this.world.getChunkByCPos([cx + 1, cz - 1], false);
+    const nxpz = this.world.getChunkByCPos([cx - 1, cz + 1], false);
+    const nxnz = this.world.getChunkByCPos([cx - 1, cz - 1], false);
 
     if (px) px.neighbors.nx = this;
     if (nx) nx.neighbors.px = this;
     if (pz) pz.neighbors.nz = this;
     if (nz) nz.neighbors.pz = this;
+    if (pxpz) pxpz.neighbors.nxnz = this;
+    if (pxnz) pxnz.neighbors.nxpz = this;
+    if (nxpz) nxpz.neighbors.pxnz = this;
+    if (nxnz) nxnz.neighbors.pxpz = this;
 
-    this.neighbors = { px, nx, pz, nz };
+    this.neighbors = { px, nx, pz, nz, pxpz, pxnz, nxpz, nxnz };
   };
 
   checkDecoration = () => {
-    if (this.initialized) return;
-    const { px, nx, pz, nz } = this.neighbors;
-    if (!px || !nx || !pz || !nz) return;
-    if (!px.needsTerrain && !nx.needsTerrain && !pz.needsTerrain && !nz.needsTerrain) {
+    if (!this.needsDecoration) return;
+    const { px, nx, pz, nz, pxpz, pxnz, nxpz, nxnz } = this.neighbors;
+    if (!px || !nx || !pz || !nz || !pxpz || !pxnz || !nxpz || !nxnz) return;
+    if (
+      !px.needsTerrain &&
+      !nx.needsTerrain &&
+      !pz.needsTerrain &&
+      !nz.needsTerrain &&
+      !pxpz.needsTerrain &&
+      !pxnz.needsTerrain &&
+      !nxpz.needsTerrain &&
+      !nxnz.needsTerrain
+    ) {
       this.world.builder.build(this);
-      this.initialized = true;
+      this.needsDecoration = false;
     }
   };
 

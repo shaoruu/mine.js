@@ -4104,7 +4104,7 @@ const defaultConfig = {
         chunkSize: 8,
         dimension: 1,
         // radius of rendering centered by player
-        maxChunkRequestPerFrame: 8,
+        maxChunkRequestPerFrame: 10000000,
         // maximum amount of chunks to process per frame tick
         maxChunkProcessPerFrame: 8,
         maxBlockPerFrame: 500,
@@ -5517,8 +5517,6 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         const { x: cx, z: cz } = serverChunk;
         const coords = [cx, cz];
         this.requestedChunks.delete(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(coords));
-        // const index = this.receivedChunks.findIndex((rc) => rc.x === cx && rc.z === cz);
-        // if (index > -1) this.receivedChunks.splice(index, 1);
         if (prioritized)
             this.receivedChunks.unshift(serverChunk);
         else
@@ -5682,7 +5680,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         if (this.receivedChunks.length === 0)
             return;
         const { maxChunkProcessPerFrame } = this.options;
-        const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkProcessPerFrame);
+        const frameReceivedChunks = this.receivedChunks.splice(0, 30);
         frameReceivedChunks.forEach((serverChunk) => {
             const { x: cx, z: cz } = serverChunk;
             const coords = [cx, cz];

@@ -144,8 +144,6 @@ class World extends EventEmitter {
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
     this.requestedChunks.delete(Helper.getChunkName(coords));
-    // const index = this.receivedChunks.findIndex((rc) => rc.x === cx && rc.z === cz);
-    // if (index > -1) this.receivedChunks.splice(index, 1);
     if (prioritized) this.receivedChunks.unshift(serverChunk);
     else this.receivedChunks.push(serverChunk);
   }
@@ -349,7 +347,7 @@ class World extends EventEmitter {
 
     const { maxChunkProcessPerFrame } = this.options;
 
-    const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkProcessPerFrame);
+    const frameReceivedChunks = this.receivedChunks.splice(0, 30);
     frameReceivedChunks.forEach((serverChunk) => {
       const { x: cx, z: cz } = serverChunk;
       const coords = [cx, cz] as Coords2;

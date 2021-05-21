@@ -1,17 +1,20 @@
 import { Tree } from '../libs';
+import { VoxelUpdate } from '../libs/types';
 
 import { Chunk, World } from '.';
 
 class Builder {
-  private tree: Tree;
+  public static tree = new Tree();
 
-  constructor(public world: World) {
-    this.tree = new Tree(world);
-  }
+  constructor(public world: World) {}
 
   build = (chunk: Chunk) => {
+    const updates: VoxelUpdate[] = [];
+
     // 1. tree
-    this.tree.build(chunk);
+    updates.push(...Builder.tree.generate(chunk));
+
+    this.world.updateMany(updates, true);
   };
 }
 

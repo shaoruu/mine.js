@@ -53,6 +53,8 @@ class World extends Network {
   public time = 0;
   public tickSpeed = 2;
 
+  private prevTime = Date.now();
+
   constructor(public app: FastifyInstance, public options: WorldOptionsType) {
     super(options);
 
@@ -67,50 +69,8 @@ class World extends Network {
     if (save) this.initStorage();
     this.preloadChunks();
 
-    let prevTime = Date.now();
-
-    setInterval(async () => {
-      // broadcast player locations
-      this.clients.forEach((client) => {
-        const encoded = Network.encode({
-          type: 'PEER',
-          peers: this.clients
-            .filter((c) => c !== client && c.position && c.rotation)
-            .map(({ position, rotation, id, name }) => {
-              const [px, py, pz] = position;
-              const [qx, qy, qz, qw] = rotation;
-              return {
-                id,
-                name,
-                px,
-                py,
-                pz,
-                qx,
-                qy,
-                qz,
-                qw,
-              };
-            }),
-        });
-        client.send(encoded);
-      });
-
-      // mesh chunks per frame
-      const spliced = this.requestedChunks.splice(0, 2);
-      spliced.forEach(({ coords, client }) => {
-        const [x, z] = coords;
-        const chunk = this.getChunkByCPos([x, z]);
-        if (chunk.hasMesh) chunk.remesh();
-        this.sendChunks(client, [chunk]);
-        this.unloadChunks();
-      });
-
-      // update time
-      this.time = (this.time + (this.tickSpeed * (Date.now() - prevTime)) / 1000) % 2400;
-      prevTime = Date.now();
-    }, 16);
-
     this.setupRoutes();
+    setInterval(this.tick, 16);
   }
 
   initStorage = () => {
@@ -310,14 +270,10 @@ class World extends Network {
     this.clearCache();
   };
 
-  updateMany = (changes: VoxelUpdate[], isDecorating = true) => {
+  updateMany = (changes: VoxelUpdate[], isDecorating = false) => {
     const { maxHeight } = this.options;
 
-    // this.clearCache();
-
-    // this.startCaching();
-
-    const chunks: Chunk[] = [];
+    const chunks: Set<Chunk> = new Set();
     const updates: Map<Chunk, VoxelUpdate[]> = new Map();
 
     for (const { voxel, type } of changes) {
@@ -326,23 +282,18 @@ class World extends Network {
       if (vy < 0 || vy >= maxHeight || !Mine.registry.getBlockByID(type).name) continue;
 
       const chunk = this.getChunkByVoxel(voxel);
-      if (chunk.needsPropagation) continue;
-
       const currentType = this.getVoxelByVoxel(voxel);
+
       if (Mine.registry.isAir(currentType) && Mine.registry.isAir(type)) {
         continue;
       }
 
       if (!updates.has(chunk)) updates.set(chunk, []);
       updates.get(chunk).push({ voxel, type });
-      chunks.push(chunk);
+      chunks.add(chunk);
     }
 
     updates.forEach((u, c) => c.updateMany(u));
-
-    // this.stopCaching();
-
-    if (this.chunkCache.size === 0) return;
 
     // send the changes first
     this.broadcast({
@@ -352,14 +303,13 @@ class World extends Network {
 
     // then send the chunk meshes
     chunks.forEach((chunk) => {
+      if (!chunk.hasMesh) return;
       chunk.remesh();
       this.broadcast({
         type: isDecorating ? 'LOAD' : 'UPDATE',
         chunks: [chunk.getProtocol(false)],
       });
     });
-
-    // this.clearCache();
   };
 
   onConfig = (request) => {
@@ -457,6 +407,47 @@ class World extends Network {
         },
       }),
     );
+  };
+
+  tick = () => {
+    // broadcast player locations
+    this.clients.forEach((client) => {
+      const encoded = Network.encode({
+        type: 'PEER',
+        peers: this.clients
+          .filter((c) => c !== client && c.position && c.rotation)
+          .map(({ position, rotation, id, name }) => {
+            const [px, py, pz] = position;
+            const [qx, qy, qz, qw] = rotation;
+            return {
+              id,
+              name,
+              px,
+              py,
+              pz,
+              qx,
+              qy,
+              qz,
+              qw,
+            };
+          }),
+      });
+      client.send(encoded);
+    });
+
+    // mesh chunks per frame
+    const spliced = this.requestedChunks.splice(0, 2);
+    spliced.forEach(({ coords, client }) => {
+      const [x, z] = coords;
+      const chunk = this.getChunkByCPos([x, z]);
+      if (chunk.hasMesh) chunk.remesh();
+      this.sendChunks(client, [chunk]);
+      this.unloadChunks();
+    });
+
+    // update time
+    this.time = (this.time + (this.tickSpeed * (Date.now() - this.prevTime)) / 1000) % 2400;
+    this.prevTime = Date.now();
   };
 
   sendChunks = (client: ClientType, chunks: Chunk[], type = 'LOAD') => {

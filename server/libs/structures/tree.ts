@@ -10,7 +10,7 @@ import { Base } from './base';
 const noise: Noise = new Noise.Noise(13412);
 
 class Tree extends Base {
-  constructor(public world: World) {
+  constructor() {
     super([5, 5]);
   }
 
@@ -61,20 +61,31 @@ class Tree extends Base {
     return locations;
   }
 
-  build(chunk: Chunk) {
+  generate(chunk: Chunk) {
     const locations = this.sample(chunk);
-    const types = Mine.registry.getTypeMap(['trunk']);
+    const types = Mine.registry.getTypeMap(['trunk', 'leaves']);
 
     const updates: VoxelUpdate[] = [];
 
     for (const location of locations) {
       const [vx, vy, vz] = location;
-      for (let i = 0; i < 4; i++) {
+      const height = 4;
+      for (let i = 0; i < height; i++) {
         updates.push({ voxel: [vx, vy + i, vz], type: types.trunk });
+      }
+      const [tbx, tby, tbz] = [vx, vy + height, vz];
+      const bushSize = 1;
+      const bushHeight = 3;
+      for (let i = -bushSize; i <= bushSize; i++) {
+        for (let j = 0; j <= bushHeight; j++) {
+          for (let k = -bushSize; k <= bushSize; k++) {
+            updates.push({ voxel: [tbx + i, tby + j, tbz + k], type: types.leaves });
+          }
+        }
       }
     }
 
-    this.world.updateMany(updates);
+    return updates;
   }
 }
 

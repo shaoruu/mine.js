@@ -1,5 +1,6 @@
 import { Coords3 } from '../../../shared';
 import { Chunk } from '../../core';
+import { VoxelUpdate } from '../types';
 
 abstract class Base {
   // range: 2x2 area indicating how big the player is
@@ -9,7 +10,7 @@ abstract class Base {
   abstract sample(chunk: Chunk): Coords3[];
 
   // build on all sampled locations within chunk
-  abstract build(chunk: Chunk): void;
+  abstract generate(chunk: Chunk): VoxelUpdate[];
 }
 
 export { Base };

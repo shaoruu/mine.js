@@ -86,7 +86,7 @@ const defaultConfig: ConfigType = {
     chunkSize: 8,
     dimension: 1,
     // radius of rendering centered by player
-    maxChunkRequestPerFrame: 8,
+    maxChunkRequestPerFrame: 10000000,
     // maximum amount of chunks to process per frame tick
     maxChunkProcessPerFrame: 8,
     maxBlockPerFrame: 500,
