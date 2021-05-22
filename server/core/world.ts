@@ -172,6 +172,35 @@ class World extends Network {
     return chunks;
   };
 
+  getNeighborChunksByVoxel = (vCoords: Coords3) => {
+    const { chunkSize } = this.options;
+    const chunk = this.getChunkByVoxel(vCoords);
+    const [cx, cz] = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
+    const [lx, , lz] = Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
+    const neighborChunks: (Chunk | null)[] = [];
+
+    // check if local position is on the edge
+    // TODO: fix this hacky way of doing so.
+    const a = lx <= 0;
+    const b = lz <= 0;
+    const c = lx >= chunkSize - 1;
+    const d = lz >= chunkSize - 1;
+
+    // direct neighbors
+    if (a) neighborChunks.push(this.getChunkByCPos([cx - 1, cz]));
+    if (b) neighborChunks.push(this.getChunkByCPos([cx, cz - 1]));
+    if (c) neighborChunks.push(this.getChunkByCPos([cx + 1, cz]));
+    if (d) neighborChunks.push(this.getChunkByCPos([cx, cz + 1]));
+
+    // side-to-side diagonals
+    if (a && b) neighborChunks.push(this.getChunkByCPos([cx - 1, cz - 1]));
+    if (a && d) neighborChunks.push(this.getChunkByCPos([cx - 1, cz + 1]));
+    if (b && c) neighborChunks.push(this.getChunkByCPos([cx + 1, cz - 1]));
+    if (c && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cz + 1]));
+
+    return neighborChunks.filter(Boolean).filter((c) => c !== chunk);
+  };
+
   getVoxelByVoxel = (vCoords: Coords3) => {
     const chunk = this.getChunkByVoxel(vCoords);
     return chunk ? chunk.getVoxel(vCoords) : 0;
@@ -252,6 +281,9 @@ class World extends Network {
     chunk.update(voxel, type);
     this.stopCaching();
 
+    const neighborChunks = this.getNeighborChunksByVoxel(voxel);
+    neighborChunks.forEach((c) => this.chunkCache.add(c));
+
     // send the changes first
     this.broadcast({
       type: 'UPDATE',
@@ -291,6 +323,9 @@ class World extends Network {
       if (!updates.has(chunk)) updates.set(chunk, []);
       updates.get(chunk).push({ voxel, type });
       chunks.add(chunk);
+
+      const neighborChunks = this.getNeighborChunksByVoxel(voxel);
+      neighborChunks.forEach((c) => chunks.add(c));
     }
 
     updates.forEach((u, c) => c.updateMany(u));
