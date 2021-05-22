@@ -6,7 +6,7 @@ const Leaves: BlockType = {
   name: 'leaves-orange',
   ...BaseBlock,
   textures: {
-    all: 'leaves_orange_transparent.png',
+    all: 'leaves_orange.png',
   },
 };
 

@@ -63,26 +63,30 @@ class Tree extends Base {
 
   generate(chunk: Chunk) {
     const locations = this.sample(chunk);
-    const types = Mine.registry.getTypeMap(['trunk', 'leaves']);
+    const types = Mine.registry.getTypeMap(['trunk', 'leaves', 'leaves-orange']);
 
     const updates: VoxelUpdate[] = [];
 
     for (const location of locations) {
       const [vx, vy, vz] = location;
-      const height = 4;
+      const type = noise.perlin2(vx * 0.005, vz * 0.005) > 0.1 ? types['leaves-orange'] : types['leaves'];
+      const height = 3;
       for (let i = 0; i < height; i++) {
         updates.push({ voxel: [vx, vy + i, vz], type: types.trunk });
       }
       const [tbx, tby, tbz] = [vx, vy + height, vz];
-      const bushSize = 3;
-      const bushHeight = 3;
+
+      const bushSize = 1;
+      const bushBigSize = 2;
+      const bushHeight = 8;
+
       for (let j = 0; j <= bushHeight; j++) {
-        for (let i = -bushSize - j; i <= bushSize + j; i++) {
-          for (let k = -bushSize - j; k <= bushSize + j; k++) {
-            if (i < -bushSize || i > bushSize || k < -bushSize || k > bushSize) {
-              if (noise.perlin3((vx + i) / 2, (vy + j) / 2, (vz + k) / 2) < 0.2) continue;
-            }
-            updates.push({ voxel: [tbx + i, tby + j, tbz + k], type: types.leaves });
+        const limit = j % 3 === 0 || j % 3 === 1 ? bushBigSize : bushSize;
+        for (let i = -limit; i <= limit; i++) {
+          for (let k = -limit; k <= limit; k++) {
+            const mf = i === 0 && k === 0 && j !== bushHeight ? types.trunk : type;
+            if (Math.abs(i) === limit && Math.abs(k) === limit) continue;
+            updates.push({ voxel: [tbx + i, tby + j, tbz + k], type: mf });
           }
         }
       }

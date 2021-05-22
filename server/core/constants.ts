@@ -8,7 +8,7 @@ export const TERRAIN_CONFIG = {
     LACUNARITY: 0.8,
     HEIGHT_OFFSET: 18,
     HEIGHT_SCALE: 0.05,
-    TREE_SCALE: 0.08,
+    TREE_SCALE: 0.1,
     AMPLIFIER: 0.4,
   },
   // HILLY: {
