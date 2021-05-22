@@ -9,11 +9,14 @@
 
   let engine: Engine;
   let selected: string;
+  let wrapper: HTMLDivElement;
 
   let locked = false;
   let chatEnabled = false;
 
   const { world } = QS.parse(window.location.search);
+
+  const BACKGROUNDS = ['#02475e', '#0a1931', '#5b6d5b', '#374045'];
 
   const fetchWorlds = (async () => {
     if (world) return {};
@@ -28,6 +31,12 @@
     return await response.json();
   })();
 
+  fetchWorlds.then(({ worlds }) => {
+    if (worlds) {
+      selected = worlds[0].name;
+    }
+  });
+
   onMount(() => {
     if (world) {
       const worldName = typeof world === 'string' ? world : world.join('');
@@ -40,6 +49,10 @@
       engine.on('unlock', () => (locked = false));
       engine.on('chat-enabled', () => (chatEnabled = true));
       engine.on('chat-disabled', () => (chatEnabled = false));
+    }
+
+    if (wrapper) {
+      wrapper.style.background = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
     }
   });
 
@@ -72,7 +85,7 @@
       {/if}
     </div>
   {:else}
-    <div id="world-list-wrapper">
+    <div id="world-list-wrapper" bind:this={wrapper}>
       <h1 id="world-list-title">Select a world</h1>
       <ul id="world-list">
         {#await fetchWorlds}
@@ -161,7 +174,7 @@
   #world-list-wrapper {
     width: 100%;
     height: 100%;
-    background: #02475e;
+    background: #222;
     background-size: 48px 48px;
     display: flex;
     flex-direction: column;

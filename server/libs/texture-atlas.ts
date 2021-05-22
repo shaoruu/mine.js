@@ -5,7 +5,7 @@ type TextureAtlasOptionsType = {
 };
 
 const defaultTextureAtlasOptions = {
-  textureDimension: 8,
+  textureDimension: 16,
 };
 
 class TextureAtlas {
@@ -60,7 +60,7 @@ class TextureAtlas {
       col++;
     }
 
-    this.makeCanvasPowerOfTwo(this.canvas);
+    // this.makeCanvasPowerOfTwo(this.canvas);
   }
 
   makeCanvasPowerOfTwo(canvas: Canvas) {

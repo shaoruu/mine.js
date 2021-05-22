@@ -1,7 +1,7 @@
 import Noise from 'noisejs';
 
 import { Coords3 } from '../../../shared/types';
-import { Chunk, World, Mine, TERRAIN_CONFIG } from '../../core';
+import { Chunk, Mine, TERRAIN_CONFIG } from '../../core';
 import { VoxelUpdate } from '../types';
 
 import { Base } from './base';
@@ -74,11 +74,14 @@ class Tree extends Base {
         updates.push({ voxel: [vx, vy + i, vz], type: types.trunk });
       }
       const [tbx, tby, tbz] = [vx, vy + height, vz];
-      const bushSize = 1;
+      const bushSize = 3;
       const bushHeight = 3;
-      for (let i = -bushSize; i <= bushSize; i++) {
-        for (let j = 0; j <= bushHeight; j++) {
-          for (let k = -bushSize; k <= bushSize; k++) {
+      for (let j = 0; j <= bushHeight; j++) {
+        for (let i = -bushSize - j; i <= bushSize + j; i++) {
+          for (let k = -bushSize - j; k <= bushSize + j; k++) {
+            if (i < -bushSize || i > bushSize || k < -bushSize || k > bushSize) {
+              if (noise.perlin3((vx + i) / 2, (vy + j) / 2, (vz + k) / 2) < 0.2) continue;
+            }
             updates.push({ voxel: [tbx + i, tby + j, tbz + k], type: types.leaves });
           }
         }

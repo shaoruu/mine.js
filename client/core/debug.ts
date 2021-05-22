@@ -106,7 +106,7 @@ class Debug {
 
   setupAll = () => {
     // RENDERING
-    const { rendering, registry, player, camera, world } = this.engine;
+    const { rendering, registry, player, world } = this.engine;
 
     // ENGINE
     const engineFolder = this.gui.addFolder('Engine');

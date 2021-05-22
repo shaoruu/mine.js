@@ -14,7 +14,7 @@ type ChunkOptions = {
   maxHeight: number;
   dimension: number;
 };
-const MESH_TYPES = ['opaque', 'transparent'];
+const MESH_TYPES = ['transparent', 'opaque'];
 
 class Chunk {
   public voxels: ndarray;
@@ -133,10 +133,9 @@ class Chunk {
 
         this.altMeshes.set(type, []);
 
-        const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData[type];
+        const { positions, indices, uvs, aos, torchLights, sunlights } = meshData[type];
 
         const positionNumComponents = 3;
-        const normalNumComponents = 3;
         const uvNumComponents = 2;
         const occlusionNumComponents = 1;
         const sunlightsNumComponents = 1;
@@ -146,7 +145,6 @@ class Chunk {
 
         // geometry.dispose();
         geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
-        geometry.setAttribute('normal', new Int8BufferAttribute(normals, normalNumComponents));
         geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
         geometry.setAttribute('ao', new Float32BufferAttribute(aos, occlusionNumComponents));
         geometry.setAttribute('sunlight', new Float32BufferAttribute(sunlights, sunlightsNumComponents));
@@ -162,6 +160,7 @@ class Chunk {
           const altMesh = new Mesh(geometry, material);
           altMesh.name = this.name;
           altMesh.frustumCulled = false;
+          altMesh.renderOrder = type === 'opaque' ? 1000 : 100;
 
           this.altMeshes.get(type).push(altMesh);
         });

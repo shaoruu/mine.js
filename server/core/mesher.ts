@@ -21,7 +21,6 @@ class Mesher {
     const { registry } = Mine;
 
     const positions = [];
-    const normals = [];
     const indices = [];
     const uvs = [];
     const aos = [];
@@ -206,7 +205,6 @@ class Mesher {
                   const posY = pos[1] + vy;
                   const posZ = pos[2] + vz;
 
-                  normals.push(...dir);
                   positions.push(posX * dimension, posY * dimension, posZ * dimension);
                   uvs.push(uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV);
                   faceAOs.push(AO_TABLE[vertexAO(nearVoxels[side1], nearVoxels[side2], nearVoxels[corner])] / 255);
@@ -256,7 +254,6 @@ class Mesher {
     return {
       aos: new Float32Array(aos),
       indices: new Float32Array(indices),
-      normals: new Float32Array(normals),
       positions: new Float32Array(positions),
       uvs: new Float32Array(uvs),
       sunlights: new Float32Array(sunlightLevels),

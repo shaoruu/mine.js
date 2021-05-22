@@ -5,14 +5,15 @@ import {
   DepthFormat,
   DepthTexture,
   FloatType,
+  GammaEncoding,
   LinearFilter,
   RGBAFormat,
   Scene,
-  sRGBEncoding,
   UnsignedIntType,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
+import { sRGBEncoding } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
@@ -30,8 +31,8 @@ class Rendering extends EventEmitter {
   public scene: Scene;
   public renderer: WebGLRenderer;
   public composer: EffectComposer;
+  public renderTarget: WebGLRenderTarget;
   public fxaa: ShaderPass;
-  public noColorMateria;
   public fogNearColor: Color;
   public fogFarColor: Color;
   public fogUniforms: { [key: string]: { value: number | Color } };
@@ -52,24 +53,25 @@ class Rendering extends EventEmitter {
       canvas: this.engine.container.canvas,
     });
     this.renderer.setClearColor(new Color(clearColor));
-    this.renderer.outputEncoding = sRGBEncoding;
+    this.renderer.sortObjects = false;
 
     // composer
     const { width, height } = this.renderSize;
-    const renderTarget = new WebGLRenderTarget(width, height, {
+    this.renderTarget = new WebGLRenderTarget(width, height, {
       minFilter: LinearFilter,
       magFilter: LinearFilter,
       format: RGBAFormat,
       type: FloatType,
     });
-    renderTarget.stencilBuffer = false;
-    renderTarget.depthBuffer = true;
+    this.renderTarget.stencilBuffer = false;
+    this.renderTarget.depthBuffer = true;
+    this.renderTarget.texture.encoding = sRGBEncoding;
     // @ts-ignore
-    renderTarget.depthTexture = new DepthTexture();
-    renderTarget.depthTexture.format = DepthFormat;
-    renderTarget.depthTexture.type = UnsignedIntType;
+    this.renderTarget.depthTexture = new DepthTexture();
+    this.renderTarget.depthTexture.format = DepthFormat;
+    this.renderTarget.depthTexture.type = UnsignedIntType;
 
-    this.composer = new EffectComposer(this.renderer, renderTarget);
+    this.composer = new EffectComposer(this.renderer, this.renderTarget);
 
     // fog
     const { renderRadius, chunkSize, dimension } = this.engine.config.world;

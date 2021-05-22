@@ -3626,7 +3626,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const MESH_TYPES = ['opaque', 'transparent'];
+const MESH_TYPES = ['transparent', 'opaque'];
 class Chunk {
     constructor(engine, coords, { size, dimension, maxHeight }) {
         this.engine = engine;
@@ -3725,9 +3725,8 @@ class Chunk {
                     return;
                 }
                 this.altMeshes.set(type, []);
-                const { positions, normals, indices, uvs, aos, torchLights, sunlights } = meshData[type];
+                const { positions, indices, uvs, aos, torchLights, sunlights } = meshData[type];
                 const positionNumComponents = 3;
-                const normalNumComponents = 3;
                 const uvNumComponents = 2;
                 const occlusionNumComponents = 1;
                 const sunlightsNumComponents = 1;
@@ -3735,7 +3734,6 @@ class Chunk {
                 const geometry = this.geometries.get(type);
                 // geometry.dispose();
                 geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(positions, positionNumComponents));
-                geometry.setAttribute('normal', new three__WEBPACK_IMPORTED_MODULE_7__.Int8BufferAttribute(normals, normalNumComponents));
                 geometry.setAttribute('uv', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(uvs, uvNumComponents));
                 geometry.setAttribute('ao', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(aos, occlusionNumComponents));
                 geometry.setAttribute('sunlight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(sunlights, sunlightsNumComponents));
@@ -3748,6 +3746,7 @@ class Chunk {
                     const altMesh = new three__WEBPACK_IMPORTED_MODULE_7__.Mesh(geometry, material);
                     altMesh.name = this.name;
                     altMesh.frustumCulled = false;
+                    altMesh.renderOrder = type === 'opaque' ? 1000 : 100;
                     this.altMeshes.get(type).push(altMesh);
                 });
             });
@@ -3877,7 +3876,7 @@ class Debug {
         };
         this.setupAll = () => {
             // RENDERING
-            const { rendering, registry, player, camera, world } = this.engine;
+            const { rendering, registry, player, world } = this.engine;
             // ENGINE
             const engineFolder = this.gui.addFolder('Engine');
             engineFolder
@@ -4888,7 +4887,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 11, 13];
+const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 9, 13];
 let type = 1;
 const LOCAL_STORAGE_PLAYER_NAME = 'mine.js-player';
 const DEFAULT_PLAYER_NAME = 'naenaebaby';
@@ -4993,8 +4992,7 @@ class Player {
         inputs.click('left', () => world.breakVoxel(), 'in-game');
         inputs.click('right', () => world.placeVoxel(type), 'in-game');
         inputs.bind('f', () => this.toggleGodMode(), 'in-game');
-        inputs.bind('c', () => this.togglePerspective('third'), 'in-game');
-        inputs.bind('b', () => this.togglePerspective('second'), 'in-game');
+        inputs.bind('c', () => this.togglePerspective(), 'in-game');
         for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
             inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]), 'in-game');
         }
@@ -5018,11 +5016,13 @@ class Player {
             this.addPlayerentity();
             this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
                 color: lookBlockColor,
-                alphaTest: 0.2,
-                opacity: 0.2,
+                alphaTest: 0.3,
+                opacity: 0.3,
+                depthWrite: false,
                 transparent: true,
             }));
-            this.lookBlockMesh.renderOrder = 100000;
+            this.lookBlockMesh.frustumCulled = false;
+            this.lookBlockMesh.renderOrder = 1000000;
             rendering.scene.add(this.lookBlockMesh);
             _libs__WEBPACK_IMPORTED_MODULE_2__.Peer.material.map = engine.registry.atlasUniform.value;
         });
@@ -5133,8 +5133,8 @@ class Player {
             up: false,
         };
     }
-    togglePerspective(perspective) {
-        this.perspective = this.perspective === perspective ? 'first' : perspective;
+    togglePerspective() {
+        this.perspective = this.perspective === 'first' ? 'third' : this.perspective === 'third' ? 'second' : 'first';
         this.controls.camera.position.copy(new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(0, 0, 0));
         this.controls.camera.quaternion.copy(new three__WEBPACK_IMPORTED_MODULE_4__.Quaternion(0, 0, 0, 0));
         this.own.mesh.visible = this.perspective !== 'first';
@@ -5243,38 +5243,82 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Registry": () => (/* binding */ Registry)
 /* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-/* harmony import */ var _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shaders/chunk/fragment.glsl */ "./client/core/shaders/chunk/fragment.glsl");
-/* harmony import */ var _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shaders/chunk/vertex.glsl */ "./client/core/shaders/chunk/vertex.glsl");
 
 
 
-
-const TRANSPARENT_SIDES = [three__WEBPACK_IMPORTED_MODULE_3__.FrontSide];
+const TRANSPARENT_SIDES = [three__WEBPACK_IMPORTED_MODULE_1__.FrontSide, three__WEBPACK_IMPORTED_MODULE_1__.BackSide];
 class Registry {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
+        this.makeShaderMaterial = () => {
+            const material = new three__WEBPACK_IMPORTED_MODULE_1__.ShaderMaterial({
+                vertexColors: true,
+                fragmentShader: three__WEBPACK_IMPORTED_MODULE_1__.ShaderLib.basic.fragmentShader.replace('#include <common>', `
+#include <common>
+uniform vec3 uFogColor;
+uniform vec3 uFogNearColor;
+uniform float uFogNear;
+uniform float uFogFar;
+uniform float uSunlightIntensity;
+
+varying float vAO;
+varying float vSunlight;
+varying float vTorchLight;
+`)
+                    .replace('#include <envmap_fragment>', `
+#include <envmap_fragment>
+outgoingLight *= min(vTorchLight + vSunlight * uSunlightIntensity, 1.0) * 0.68;
+`)
+                    .replace('#include <fog_fragment>', `
+gl_FragColor.rgb *= vAO;
+float depth = gl_FragCoord.z / gl_FragCoord.w;
+float fogFactor = smoothstep(uFogNear, uFogFar, depth);
+gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);
+`),
+                vertexShader: three__WEBPACK_IMPORTED_MODULE_1__.ShaderLib.basic.vertexShader.replace('#include <common>', `
+attribute float ao;
+attribute float sunlight;
+attribute float torchLight;
+
+varying float vAO;
+varying float vSunlight;
+varying float vTorchLight;
+
+#include <common>
+`)
+                    .replace('#include <color_vertex>', `
+#include <color_vertex>
+
+vAO = ao;
+vSunlight = sunlight / 15.0;
+vTorchLight = torchLight / 15.0;
+`),
+                uniforms: Object.assign(Object.assign(Object.assign({}, three__WEBPACK_IMPORTED_MODULE_1__.UniformsUtils.clone(three__WEBPACK_IMPORTED_MODULE_1__.ShaderLib.basic.uniforms)), { map: this.atlasUniform, uSunlightIntensity: this.engine.world.uSunlightIntensity }), this.engine.rendering.fogUniforms),
+            });
+            // @ts-ignore
+            material.map = this.atlasUniform.value;
+            return material;
+        };
         engine.on('ready', () => {
             this.atlasUniform = {
-                value: new three__WEBPACK_IMPORTED_MODULE_3__.TextureLoader().load(`${engine.network.cleanURL}atlas`),
+                value: new three__WEBPACK_IMPORTED_MODULE_1__.TextureLoader().load(`${engine.network.cleanURL}atlas`),
             };
             const atlas = this.atlasUniform.value;
-            atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-            atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+            atlas.minFilter = three__WEBPACK_IMPORTED_MODULE_1__.NearestFilter;
+            atlas.magFilter = three__WEBPACK_IMPORTED_MODULE_1__.NearestFilter;
             atlas.generateMipmaps = false;
-            atlas.encoding = three__WEBPACK_IMPORTED_MODULE_3__.sRGBEncoding;
-            this.materialUniform = Object.assign({ uTexture: this.atlasUniform, uSunlightIntensity: engine.world.uSunlightIntensity }, engine.rendering.fogUniforms);
-            const sharedMaterialOptions = {
-                // wireframe: true,
-                vertexShader: _shaders_chunk_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
-                fragmentShader: _shaders_chunk_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
-                vertexColors: true,
-                uniforms: this.materialUniform,
-            };
-            this.opaqueChunkMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign({}, sharedMaterialOptions));
-            this.transparentChunkMaterials = TRANSPARENT_SIDES.map((side) => new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial(Object.assign(Object.assign({}, sharedMaterialOptions), { transparent: true, depthWrite: false, alphaTest: 0.5, side })));
+            atlas.encoding = three__WEBPACK_IMPORTED_MODULE_1__.sRGBEncoding;
+            this.opaqueChunkMaterial = this.makeShaderMaterial();
+            this.transparentChunkMaterials = TRANSPARENT_SIDES.map((side) => {
+                const material = this.makeShaderMaterial();
+                material.side = side;
+                material.transparent = true;
+                material.alphaTest = 0.3;
+                return material;
+            });
         });
     }
 }
@@ -5302,6 +5346,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three_examples_jsm_postprocessing_ShaderPass__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three/examples/jsm/postprocessing/ShaderPass */ "./node_modules/three/examples/jsm/postprocessing/ShaderPass.js");
 /* harmony import */ var three_examples_jsm_shaders_FXAAShader__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three/examples/jsm/shaders/FXAAShader */ "./node_modules/three/examples/jsm/shaders/FXAAShader.js");
 /* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
+
 
 
 
@@ -5339,22 +5384,23 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             canvas: this.engine.container.canvas,
         });
         this.renderer.setClearColor(new three__WEBPACK_IMPORTED_MODULE_2__.Color(clearColor));
-        this.renderer.outputEncoding = three__WEBPACK_IMPORTED_MODULE_2__.sRGBEncoding;
+        this.renderer.sortObjects = false;
         // composer
         const { width, height } = this.renderSize;
-        const renderTarget = new three__WEBPACK_IMPORTED_MODULE_2__.WebGLRenderTarget(width, height, {
+        this.renderTarget = new three__WEBPACK_IMPORTED_MODULE_2__.WebGLRenderTarget(width, height, {
             minFilter: three__WEBPACK_IMPORTED_MODULE_2__.LinearFilter,
             magFilter: three__WEBPACK_IMPORTED_MODULE_2__.LinearFilter,
             format: three__WEBPACK_IMPORTED_MODULE_2__.RGBAFormat,
             type: three__WEBPACK_IMPORTED_MODULE_2__.FloatType,
         });
-        renderTarget.stencilBuffer = false;
-        renderTarget.depthBuffer = true;
+        this.renderTarget.stencilBuffer = false;
+        this.renderTarget.depthBuffer = true;
+        this.renderTarget.texture.encoding = three__WEBPACK_IMPORTED_MODULE_2__.sRGBEncoding;
         // @ts-ignore
-        renderTarget.depthTexture = new three__WEBPACK_IMPORTED_MODULE_2__.DepthTexture();
-        renderTarget.depthTexture.format = three__WEBPACK_IMPORTED_MODULE_2__.DepthFormat;
-        renderTarget.depthTexture.type = three__WEBPACK_IMPORTED_MODULE_2__.UnsignedIntType;
-        this.composer = new three_examples_jsm_postprocessing_EffectComposer__WEBPACK_IMPORTED_MODULE_3__.EffectComposer(this.renderer, renderTarget);
+        this.renderTarget.depthTexture = new three__WEBPACK_IMPORTED_MODULE_2__.DepthTexture();
+        this.renderTarget.depthTexture.format = three__WEBPACK_IMPORTED_MODULE_2__.DepthFormat;
+        this.renderTarget.depthTexture.type = three__WEBPACK_IMPORTED_MODULE_2__.UnsignedIntType;
+        this.composer = new three_examples_jsm_postprocessing_EffectComposer__WEBPACK_IMPORTED_MODULE_3__.EffectComposer(this.renderer, this.renderTarget);
         // fog
         const { renderRadius, chunkSize, dimension } = this.engine.config.world;
         this.fogNearColor = new three__WEBPACK_IMPORTED_MODULE_2__.Color(fogNearColor);
@@ -5419,7 +5465,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.options = options;
         this.isReady = false;
         // uniforms
-        this.uSunlightIntensity = { value: 0.2 };
+        this.uSunlightIntensity = { value: 0.1 };
         this.pendingChunks = [];
         this.requestedChunks = new Set();
         this.receivedChunks = [];
@@ -7034,7 +7080,7 @@ class Sky {
             last: 0,
             until: 0,
             initialized: false,
-            sunlight: 0.2,
+            sunlight: 0.1,
             offset: 0,
         };
         this.newTime = -1;
@@ -7074,6 +7120,7 @@ class Sky {
             side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
         });
         this.shadingMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.shadingGeometry, this.shadingMaterial);
+        this.shadingMesh.frustumCulled = false;
         this.meshGroup.add(this.shadingMesh);
     }
     createSkyBox() {
@@ -7084,6 +7131,8 @@ class Sky {
             this.boxMaterials.set(face, canvasMaterial);
         }
         this.boxMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
+        this.boxMesh.frustumCulled = false;
+        this.boxMesh.renderOrder = -1;
         this.meshGroup.add(this.boxMesh);
     }
     createCanvasMaterial() {
@@ -7295,7 +7344,7 @@ class Sky {
         // turn off sunlight
         if (tracker.time >= -sunlightChangeSpan / 2 + sunlightEndTime &&
             tracker.time <= sunlightChangeSpan / 2 + sunlightEndTime)
-            tracker.sunlight = Math.max(0.2, 1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan);
+            tracker.sunlight = Math.max(0.1, 1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan);
         // lerp sunlight
         const sunlightLerpFactor = 0.008 * speed * delta;
         const { uSunlightIntensity } = this.rendering.engine.world;
@@ -23148,36 +23197,6 @@ exports.exclude = (input, filter, options) => {
 
 /***/ }),
 
-/***/ "./client/core/shaders/chunk/fragment.glsl":
-/*!*************************************************!*\
-  !*** ./client/core/shaders/chunk/fragment.glsl ***!
-  \*************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("uniform sampler2D uTexture;\nuniform vec3 uFogColor;\nuniform vec3 uFogNearColor;\nuniform float uFogNear;\nuniform float uFogFar;\nuniform float uSunlightIntensity;\n\nvarying vec2 vUv; // u, v \nvarying float vAO;\nvarying float vSunlight;\nvarying float vTorchLight;\n\nvoid main() {\n  vec4 textureColor = texture2D(uTexture, vUv);\n\n  gl_FragColor = vec4(textureColor.rgb * vAO, textureColor.w);\n  gl_FragColor.rgb *= min(vTorchLight + vSunlight * uSunlightIntensity, 1.0);\n\n  // fog\n  float depth = gl_FragCoord.z / gl_FragCoord.w;\n  float fogFactor = smoothstep(uFogNear, uFogFar, depth);\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);\n} ");
-
-/***/ }),
-
-/***/ "./client/core/shaders/chunk/vertex.glsl":
-/*!***********************************************!*\
-  !*** ./client/core/shaders/chunk/vertex.glsl ***!
-  \***********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("attribute float ao;\nattribute float sunlight;\nattribute float torchLight;\n\nvarying vec2 vUv;\nvarying float vAO;\nvarying float vSunlight;\nvarying float vTorchLight;\n\nvoid main() {\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n\n  vUv = uv;\n  vAO = ao;\n  vSunlight = sunlight / 15.0;\n  vTorchLight = torchLight / 15.0;\n} ");
-
-/***/ }),
-
 /***/ "./client/libs/shaders/clouds/fragment.glsl":
 /*!**************************************************!*\
   !*** ./client/libs/shaders/clouds/fragment.glsl ***!
@@ -24481,21 +24500,21 @@ const file = "client/App.svelte";
 
 function add_css() {
 	var style = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("style");
-	style.id = "svelte-13mzjx8-style";
-	style.textContent = "main.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:10px;height:10px;line-height:20px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#pause-menu.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{z-index:10000000;display:flex;flex-direction:column;align-items:center;justify-content:center}#pause-menu.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8,#pause-menu.svelte-13mzjx8>div.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%}#pause-menu.svelte-13mzjx8>div.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{background:rgba(1, 1, 1, 0.1);z-index:-1}#pause-menu.svelte-13mzjx8>h2.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{color:#ccc;margin-bottom:1em}#world-list-wrapper.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{width:100%;height:100%;background:#02475e;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 5rem;border-radius:5px}#world-list-item.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8::selection{background:transparent}#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{color:white;width:380px;display:flex;justify-content:space-between;align-items:center;overflow:hidden;margin:4px 0}#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8>h1.svelte-13mzjx8.svelte-13mzjx8,#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8>h3.svelte-13mzjx8.svelte-13mzjx8{font-size:20px;font-weight:100;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8>h3.svelte-13mzjx8.svelte-13mzjx8{font-size:16px}#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8>p.svelte-13mzjx8.svelte-13mzjx8{color:gray;font-size:20px}#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8>ul.svelte-13mzjx8.svelte-13mzjx8{list-style:none;display:flex;align-items:flex-end}#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8>ul.svelte-13mzjx8>li.svelte-13mzjx8{content:'';height:16px;width:3px;margin:2px;background:green}#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8>ul.svelte-13mzjx8>li.svelte-13mzjx8:nth-child(1){height:8px}#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8>ul.svelte-13mzjx8>li.svelte-13mzjx8:nth-child(2){height:12px}#world-list-item.svelte-13mzjx8>div.svelte-13mzjx8>ul.svelte-13mzjx8>li.svelte-13mzjx8:nth-child(3){background:green}.selected.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8.svelte-13mzjx8{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,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 */";
+	style.id = "svelte-bwngwr-style";
+	style.textContent = "main.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#crosshair.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:10px;height:10px;line-height:20px;z-index:99;color:white;filter:grayscale(100);text-shadow:1px 1px 0px black;text-align:center}#pause-menu.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{z-index:10000000;display:flex;flex-direction:column;align-items:center;justify-content:center}#pause-menu.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr,#pause-menu.svelte-bwngwr>div.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%}#pause-menu.svelte-bwngwr>div.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{background:rgba(1, 1, 1, 0.1);z-index:-1}#pause-menu.svelte-bwngwr>h2.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{color:#ccc;margin-bottom:1em}#world-list-wrapper.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{width:100%;height:100%;background:#222;background-size:48px 48px;display:flex;flex-direction:column;align-items:center;justify-content:center}#world-list-title.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{font-weight:400;font-size:24px;text-align:center;color:white;margin-bottom:20px}#world-list.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{background-color:rgba(1, 1, 1, 0.247);min-height:30vh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0px 0px 15px 0px #000000a4;list-style:none;overflow-x:hidden;overflow-y:auto;padding:5px 5rem;border-radius:5px}#world-list-item.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{cursor:pointer;width:400px;height:72px;border:2px solid transparent;border-radius:5px;display:flex;flex-direction:column;padding:8px;transition:border-color 0.1s}#world-list-item.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr::selection{background:transparent}#world-list-item.svelte-bwngwr>div.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{color:white;width:380px;display:flex;justify-content:space-between;align-items:center;overflow:hidden;margin:4px 0}#world-list-item.svelte-bwngwr>div.svelte-bwngwr>h1.svelte-bwngwr.svelte-bwngwr,#world-list-item.svelte-bwngwr>div.svelte-bwngwr>h3.svelte-bwngwr.svelte-bwngwr{font-size:20px;font-weight:100;text-overflow:ellipsis;white-space:nowrap}#world-list-item.svelte-bwngwr>div.svelte-bwngwr>h3.svelte-bwngwr.svelte-bwngwr{font-size:16px}#world-list-item.svelte-bwngwr>div.svelte-bwngwr>p.svelte-bwngwr.svelte-bwngwr{color:gray;font-size:20px}#world-list-item.svelte-bwngwr>div.svelte-bwngwr>ul.svelte-bwngwr.svelte-bwngwr{list-style:none;display:flex;align-items:flex-end}#world-list-item.svelte-bwngwr>div.svelte-bwngwr>ul.svelte-bwngwr>li.svelte-bwngwr{content:'';height:16px;width:3px;margin:2px;background:green}#world-list-item.svelte-bwngwr>div.svelte-bwngwr>ul.svelte-bwngwr>li.svelte-bwngwr:nth-child(1){height:8px}#world-list-item.svelte-bwngwr>div.svelte-bwngwr>ul.svelte-bwngwr>li.svelte-bwngwr:nth-child(2){height:12px}#world-list-item.svelte-bwngwr>div.svelte-bwngwr>ul.svelte-bwngwr>li.svelte-bwngwr:nth-child(3){background:green}.selected.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr.svelte-bwngwr{border-color:rgba(173, 173, 173, 0.74) !important}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,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 */";
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append_dev)(document.head, style);
 }
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[13] = list[i].name;
-	child_ctx[14] = list[i].generation;
-	child_ctx[15] = list[i].description;
-	child_ctx[16] = list[i].players;
+	child_ctx[16] = list[i].name;
+	child_ctx[17] = list[i].generation;
+	child_ctx[18] = list[i].description;
+	child_ctx[19] = list[i].players;
 	return child_ctx;
 }
 
-// (71:2) {:else}
+// (81:2) {:else}
 function create_else_block(ctx) {
 	let div;
 	let h1;
@@ -24511,11 +24530,11 @@ function create_else_block(ctx) {
 		pending: create_pending_block,
 		then: create_then_block,
 		catch: create_catch_block,
-		value: 12,
-		error: 19
+		value: 15,
+		error: 22
 	};
 
-	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise = /*fetchWorlds*/ ctx[5], info);
+	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.handle_promise)(promise = /*fetchWorlds*/ ctx[6], info);
 
 	const block = {
 		c: function create() {
@@ -24526,14 +24545,14 @@ function create_else_block(ctx) {
 			ul = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("ul");
 			info.block.c();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "id", "world-list-title");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 72, 6, 2660);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 82, 6, 2978);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "id", "world-list");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 73, 6, 2712);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 83, 6, 3030);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "id", "world-list-wrapper");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 71, 4, 2624);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 81, 4, 2922);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
@@ -24543,13 +24562,14 @@ function create_else_block(ctx) {
 			info.block.m(ul, info.anchor = null);
 			info.mount = () => ul;
 			info.anchor = null;
+			/*div_binding*/ ctx[12](div);
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
 
 			{
 				const child_ctx = ctx.slice();
-				child_ctx[12] = child_ctx[19] = info.resolved;
+				child_ctx[15] = child_ctx[22] = info.resolved;
 				info.block.p(child_ctx, dirty);
 			}
 		},
@@ -24560,6 +24580,7 @@ function create_else_block(ctx) {
 			info.block.d();
 			info.token = null;
 			info = null;
+			/*div_binding*/ ctx[12](null);
 		}
 	};
 
@@ -24567,21 +24588,21 @@ function create_else_block(ctx) {
 		block,
 		id: create_else_block.name,
 		type: "else",
-		source: "(71:2) {:else}",
+		source: "(81:2) {:else}",
 		ctx
 	});
 
 	return block;
 }
 
-// (53:2) {#if world}
+// (63:2) {#if world}
 function create_if_block(ctx) {
 	let div;
 	let img;
 	let img_src_value;
 	let t;
 	let current;
-	let if_block = !/*locked*/ ctx[2] && !/*chatEnabled*/ ctx[3] && create_if_block_1(ctx);
+	let if_block = !/*locked*/ ctx[3] && !/*chatEnabled*/ ctx[4] && create_if_block_1(ctx);
 
 	const block = {
 		c: function create() {
@@ -24592,9 +24613,9 @@ function create_if_block(ctx) {
 			if (img.src !== (img_src_value = "https://i.imgur.com/ro6oLCL.png")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "src", img_src_value);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "id", "crosshair");
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "alt", "+");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 54, 6, 2020);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 53, 4, 2008);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(img, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(img, file, 64, 6, 2318);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div, file, 63, 4, 2306);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div, anchor);
@@ -24604,11 +24625,11 @@ function create_if_block(ctx) {
 			current = true;
 		},
 		p: function update(ctx, dirty) {
-			if (!/*locked*/ ctx[2] && !/*chatEnabled*/ ctx[3]) {
+			if (!/*locked*/ ctx[3] && !/*chatEnabled*/ ctx[4]) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 
-					if (dirty & /*locked, chatEnabled*/ 12) {
+					if (dirty & /*locked, chatEnabled*/ 24) {
 						(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.transition_in)(if_block, 1);
 					}
 				} else {
@@ -24646,18 +24667,18 @@ function create_if_block(ctx) {
 		block,
 		id: create_if_block.name,
 		type: "if",
-		source: "(53:2) {#if world}",
+		source: "(63:2) {#if world}",
 		ctx
 	});
 
 	return block;
 }
 
-// (99:8) {:catch error}
+// (109:8) {:catch error}
 function create_catch_block(ctx) {
 	let p;
 	let t0;
-	let t1_value = /*error*/ ctx[19] + "";
+	let t1_value = /*error*/ ctx[22] + "";
 	let t1;
 
 	const block = {
@@ -24665,7 +24686,7 @@ function create_catch_block(ctx) {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			t0 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)("An error occurred! ");
 			t1 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t1_value);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 99, 10, 3551);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 109, 10, 3869);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
@@ -24682,17 +24703,17 @@ function create_catch_block(ctx) {
 		block,
 		id: create_catch_block.name,
 		type: "catch",
-		source: "(99:8) {:catch error}",
+		source: "(109:8) {:catch error}",
 		ctx
 	});
 
 	return block;
 }
 
-// (77:8) {:then data}
+// (87:8) {:then data}
 function create_then_block(ctx) {
 	let each_1_anchor;
-	let each_value = /*data*/ ctx[12].worlds;
+	let each_value = /*data*/ ctx[15].worlds;
 	(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
 	let each_blocks = [];
 
@@ -24716,8 +24737,8 @@ function create_then_block(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, each_1_anchor, anchor);
 		},
 		p: function update(ctx, dirty) {
-			if (dirty & /*selected, fetchWorlds, window*/ 34) {
-				each_value = /*data*/ ctx[12].worlds;
+			if (dirty & /*selected, fetchWorlds, window*/ 66) {
+				each_value = /*data*/ ctx[15].worlds;
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.validate_each_argument)(each_value);
 				let i;
 
@@ -24750,32 +24771,32 @@ function create_then_block(ctx) {
 		block,
 		id: create_then_block.name,
 		type: "then",
-		source: "(77:8) {:then data}",
+		source: "(87:8) {:then data}",
 		ctx
 	});
 
 	return block;
 }
 
-// (78:10) {#each data.worlds as { name, generation, description, players }}
+// (88:10) {#each data.worlds as { name, generation, description, players }}
 function create_each_block(ctx) {
 	let li3;
 	let div0;
 	let h1;
-	let t0_value = /*name*/ ctx[13] + "";
+	let t0_value = /*name*/ ctx[16] + "";
 	let t0;
 	let t1;
 	let h3;
-	let t2_value = /*players*/ ctx[16] + "";
+	let t2_value = /*players*/ ctx[19] + "";
 	let t2;
 	let t3;
 	let t4;
 	let div1;
 	let p;
-	let t5_value = /*generation*/ ctx[14] + "";
+	let t5_value = /*generation*/ ctx[17] + "";
 	let t5;
 	let t6;
-	let t7_value = /*description*/ ctx[15] + "";
+	let t7_value = /*description*/ ctx[18] + "";
 	let t7;
 	let t8;
 	let ul;
@@ -24790,11 +24811,11 @@ function create_each_block(ctx) {
 	let dispose;
 
 	function click_handler_2() {
-		return /*click_handler_2*/ ctx[9](/*name*/ ctx[13]);
+		return /*click_handler_2*/ ctx[10](/*name*/ ctx[16]);
 	}
 
 	function dblclick_handler() {
-		return /*dblclick_handler*/ ctx[10](/*name*/ ctx[13]);
+		return /*dblclick_handler*/ ctx[11](/*name*/ ctx[16]);
 	}
 
 	const block = {
@@ -24821,31 +24842,31 @@ function create_each_block(ctx) {
 			t10 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			li2 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("li");
 			t11 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 85, 16, 3194);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h3, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h3, file, 86, 16, 3226);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 84, 14, 3172);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 89, 16, 3307);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li0, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li0, file, 91, 18, 3382);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li1, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li1, file, 92, 18, 3407);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li2, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li2, file, 93, 18, 3432);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 90, 16, 3359);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 88, 14, 3285);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h1, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h1, file, 95, 16, 3512);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h3, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h3, file, 96, 16, 3544);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 94, 14, 3490);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(p, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 99, 16, 3625);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li0, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li0, file, 101, 18, 3700);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li1, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li1, file, 102, 18, 3725);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li2, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li2, file, 103, 18, 3750);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(ul, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(ul, file, 100, 16, 3677);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 98, 14, 3603);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li3, "id", "world-list-item");
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li3, "class", li3_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[1] === /*name*/ ctx[13]
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li3, "class", li3_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[1] === /*name*/ ctx[16]
 			? "selected"
-			: "") + " svelte-13mzjx8"));
+			: "") + " svelte-bwngwr"));
 
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li3, file, 78, 12, 2899);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(li3, file, 88, 12, 3217);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, li3, anchor);
@@ -24883,9 +24904,9 @@ function create_each_block(ctx) {
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
 
-			if (dirty & /*selected*/ 2 && li3_class_value !== (li3_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[1] === /*name*/ ctx[13]
+			if (dirty & /*selected*/ 2 && li3_class_value !== (li3_class_value = "" + ((0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.null_to_empty)(/*selected*/ ctx[1] === /*name*/ ctx[16]
 			? "selected"
-			: "") + " svelte-13mzjx8"))) {
+			: "") + " svelte-bwngwr"))) {
 				(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(li3, "class", li3_class_value);
 			}
 		},
@@ -24900,14 +24921,14 @@ function create_each_block(ctx) {
 		block,
 		id: create_each_block.name,
 		type: "each",
-		source: "(78:10) {#each data.worlds as { name, generation, description, players }}",
+		source: "(88:10) {#each data.worlds as { name, generation, description, players }}",
 		ctx
 	});
 
 	return block;
 }
 
-// (75:28)            <p>...waiting</p>         {:then data}
+// (85:28)            <p>...waiting</p>         {:then data}
 function create_pending_block(ctx) {
 	let p;
 
@@ -24915,7 +24936,7 @@ function create_pending_block(ctx) {
 		c: function create() {
 			p = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("p");
 			p.textContent = "...waiting";
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 75, 10, 2772);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(p, file, 85, 10, 3090);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, p, anchor);
@@ -24930,14 +24951,14 @@ function create_pending_block(ctx) {
 		block,
 		id: create_pending_block.name,
 		type: "pending",
-		source: "(75:28)            <p>...waiting</p>         {:then data}",
+		source: "(85:28)            <p>...waiting</p>         {:then data}",
 		ctx
 	});
 
 	return block;
 }
 
-// (56:6) {#if !locked && !chatEnabled}
+// (66:6) {#if !locked && !chatEnabled}
 function create_if_block_1(ctx) {
 	let div1;
 	let div0;
@@ -24960,7 +24981,7 @@ function create_if_block_1(ctx) {
 			$$inline: true
 		});
 
-	input.$on("input", /*onNameChange*/ ctx[6]);
+	input.$on("input", /*onNameChange*/ ctx[7]);
 
 	button0 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
@@ -24970,7 +24991,7 @@ function create_if_block_1(ctx) {
 			$$inline: true
 		});
 
-	button0.$on("click", /*click_handler*/ ctx[7]);
+	button0.$on("click", /*click_handler*/ ctx[8]);
 
 	button1 = new _components_button_svelte__WEBPACK_IMPORTED_MODULE_3__.default({
 			props: {
@@ -24980,7 +25001,7 @@ function create_if_block_1(ctx) {
 			$$inline: true
 		});
 
-	button1.$on("click", /*click_handler_1*/ ctx[8]);
+	button1.$on("click", /*click_handler_1*/ ctx[9]);
 
 	const block = {
 		c: function create() {
@@ -24995,13 +25016,13 @@ function create_if_block_1(ctx) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button0.$$.fragment);
 			t4 = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.space)();
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.create_component)(button1.$$.fragment);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 57, 10, 2165);
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 58, 10, 2183);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div0, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div0, file, 67, 10, 2463);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(h2, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(h2, file, 68, 10, 2481);
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "id", "pause-menu");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 56, 8, 2133);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(div1, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(div1, file, 66, 8, 2431);
 		},
 		m: function mount(target, anchor) {
 			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.insert_dev)(target, div1, anchor);
@@ -25022,14 +25043,14 @@ function create_if_block_1(ctx) {
 			input.$set(input_changes);
 			const button0_changes = {};
 
-			if (dirty & /*$$scope*/ 1048576) {
+			if (dirty & /*$$scope*/ 8388608) {
 				button0_changes.$$scope = { dirty, ctx };
 			}
 
 			button0.$set(button0_changes);
 			const button1_changes = {};
 
-			if (dirty & /*$$scope*/ 1048576) {
+			if (dirty & /*$$scope*/ 8388608) {
 				button1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -25060,14 +25081,14 @@ function create_if_block_1(ctx) {
 		block,
 		id: create_if_block_1.name,
 		type: "if",
-		source: "(56:6) {#if !locked && !chatEnabled}",
+		source: "(66:6) {#if !locked && !chatEnabled}",
 		ctx
 	});
 
 	return block;
 }
 
-// (66:10) <Button on:click={() => engine.lock()}>
+// (76:10) <Button on:click={() => engine.lock()}>
 function create_default_slot_1(ctx) {
 	let t;
 
@@ -25087,14 +25108,14 @@ function create_default_slot_1(ctx) {
 		block,
 		id: create_default_slot_1.name,
 		type: "slot",
-		source: "(66:10) <Button on:click={() => engine.lock()}>",
+		source: "(76:10) <Button on:click={() => engine.lock()}>",
 		ctx
 	});
 
 	return block;
 }
 
-// (67:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
+// (77:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>
 function create_default_slot(ctx) {
 	let t;
 
@@ -25114,7 +25135,7 @@ function create_default_slot(ctx) {
 		block,
 		id: create_default_slot.name,
 		type: "slot",
-		source: "(67:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
+		source: "(77:10) <Button on:click={() => (window.location.href = window.location.href.split('?')[0])}>",
 		ctx
 	});
 
@@ -25130,7 +25151,7 @@ function create_fragment(ctx) {
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (/*world*/ ctx[4]) return 0;
+		if (/*world*/ ctx[5]) return 0;
 		return 1;
 	}
 
@@ -25141,8 +25162,8 @@ function create_fragment(ctx) {
 		c: function create() {
 			main = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("main");
 			if_block.c();
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-13mzjx8");
-			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 51, 0, 1983);
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.attr_dev)(main, "class", "svelte-bwngwr");
+			(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.add_location)(main, file, 61, 0, 2281);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -25223,9 +25244,11 @@ function instance($$self, $$props, $$invalidate) {
 
 	let engine;
 	let selected;
+	let wrapper;
 	let locked = false;
 	let chatEnabled = false;
 	const { world } = query_string__WEBPACK_IMPORTED_MODULE_1__.parse(window.location.search);
+	const BACKGROUNDS = ["#02475e", "#0a1931", "#5b6d5b", "#374045"];
 
 	const fetchWorlds = (() => __awaiter(void 0, void 0, void 0, function* () {
 		if (world) return {};
@@ -25240,16 +25263,26 @@ function instance($$self, $$props, $$invalidate) {
 		return yield response.json();
 	}))();
 
+	fetchWorlds.then(({ worlds }) => {
+		if (worlds) {
+			$$invalidate(1, selected = worlds[0].name);
+		}
+	});
+
 	(0,svelte__WEBPACK_IMPORTED_MODULE_6__.onMount)(() => {
 		if (world) {
 			const worldName = typeof world === "string" ? world : world.join("");
 			$$invalidate(0, engine = new _core__WEBPACK_IMPORTED_MODULE_5__.Engine());
 			engine.join(worldName);
 			engine.start();
-			engine.on("lock", () => $$invalidate(2, locked = true));
-			engine.on("unlock", () => $$invalidate(2, locked = false));
-			engine.on("chat-enabled", () => $$invalidate(3, chatEnabled = true));
-			engine.on("chat-disabled", () => $$invalidate(3, chatEnabled = false));
+			engine.on("lock", () => $$invalidate(3, locked = true));
+			engine.on("unlock", () => $$invalidate(3, locked = false));
+			engine.on("chat-enabled", () => $$invalidate(4, chatEnabled = true));
+			engine.on("chat-disabled", () => $$invalidate(4, chatEnabled = false));
+		}
+
+		if (wrapper) {
+			$$invalidate(2, wrapper.style.background = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)], wrapper);
 		}
 	});
 
@@ -25271,6 +25304,13 @@ function instance($$self, $$props, $$invalidate) {
 	const click_handler_2 = name => $$invalidate(1, selected = name);
 	const dblclick_handler = name => window.location.href = window.location.href + "?world=" + name;
 
+	function div_binding($$value) {
+		svelte_internal__WEBPACK_IMPORTED_MODULE_0__.binding_callbacks[$$value ? "unshift" : "push"](() => {
+			wrapper = $$value;
+			$$invalidate(2, wrapper);
+		});
+	}
+
 	$$self.$capture_state = () => ({
 		__awaiter,
 		QS: query_string__WEBPACK_IMPORTED_MODULE_1__,
@@ -25281,9 +25321,11 @@ function instance($$self, $$props, $$invalidate) {
 		onMount: svelte__WEBPACK_IMPORTED_MODULE_6__.onMount,
 		engine,
 		selected,
+		wrapper,
 		locked,
 		chatEnabled,
 		world,
+		BACKGROUNDS,
 		fetchWorlds,
 		onNameChange
 	});
@@ -25292,8 +25334,9 @@ function instance($$self, $$props, $$invalidate) {
 		if ("__awaiter" in $$props) __awaiter = $$props.__awaiter;
 		if ("engine" in $$props) $$invalidate(0, engine = $$props.engine);
 		if ("selected" in $$props) $$invalidate(1, selected = $$props.selected);
-		if ("locked" in $$props) $$invalidate(2, locked = $$props.locked);
-		if ("chatEnabled" in $$props) $$invalidate(3, chatEnabled = $$props.chatEnabled);
+		if ("wrapper" in $$props) $$invalidate(2, wrapper = $$props.wrapper);
+		if ("locked" in $$props) $$invalidate(3, locked = $$props.locked);
+		if ("chatEnabled" in $$props) $$invalidate(4, chatEnabled = $$props.chatEnabled);
 	};
 
 	if ($$props && "$$inject" in $$props) {
@@ -25303,6 +25346,7 @@ function instance($$self, $$props, $$invalidate) {
 	return [
 		engine,
 		selected,
+		wrapper,
 		locked,
 		chatEnabled,
 		world,
@@ -25311,14 +25355,15 @@ function instance($$self, $$props, $$invalidate) {
 		click_handler,
 		click_handler_1,
 		click_handler_2,
-		dblclick_handler
+		dblclick_handler,
+		div_binding
 	];
 }
 
 class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		if (!document.getElementById("svelte-13mzjx8-style")) add_css();
+		if (!document.getElementById("svelte-bwngwr-style")) add_css();
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.init)(this, options, instance, create_fragment, svelte_internal__WEBPACK_IMPORTED_MODULE_0__.safe_not_equal, {});
 
 		(0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.dispatch_dev)("SvelteRegisterComponent", {
@@ -25329,10 +25374,10 @@ class App extends svelte_internal__WEBPACK_IMPORTED_MODULE_0__.SvelteComponentDe
 		});
 	}
 }
-if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_7__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_8__.default, acceptable: true, cssId: "svelte-13mzjx8-style", nonCssHash: "h781lr", ignoreCss: false, }); }
+if (module && module.hot) { if (false) {} App = _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_loader_lib_hot_api_js__WEBPACK_IMPORTED_MODULE_7__.applyHmr({ m: module, id: "\"client/App.svelte\"", hotOptions: {"preserveLocalState":false,"noPreserveStateKey":["@hmr:reset","@!hmr"],"preserveAllLocalStateKey":"@hmr:keep-all","preserveLocalStateKey":"@hmr:keep","noReload":false,"optimistic":true,"acceptNamedExports":true,"acceptAccessors":true,"injectCss":true,"cssEjectDelay":100,"native":false,"compatVite":false,"importAdapterName":"___SVELTE_HMR_HOT_API_PROXY_ADAPTER","absoluteImports":true,"noOverlay":false}, Component: App, ProxyAdapter: _home_owner_Desktop_desktop_projects_mine_js_node_modules_svelte_hmr_runtime_proxy_adapter_dom_js__WEBPACK_IMPORTED_MODULE_8__.default, acceptable: true, cssId: "svelte-bwngwr-style", nonCssHash: "1tc9keh", ignoreCss: false, }); }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
-if (typeof add_css !== 'undefined' && !document.getElementById("svelte-13mzjx8-style")) add_css();
+if (typeof add_css !== 'undefined' && !document.getElementById("svelte-bwngwr-style")) add_css();
 
 
 /***/ }),
@@ -80457,7 +80502,6 @@ $root.protocol = (function() {
          * @property {Array.<number>|null} [sunlights] Geometry sunlights
          * @property {Array.<number>|null} [indices] Geometry indices
          * @property {Array.<number>|null} [positions] Geometry positions
-         * @property {Array.<number>|null} [normals] Geometry normals
          * @property {Array.<number>|null} [uvs] Geometry uvs
          * @property {Array.<number>|null} [aos] Geometry aos
          */
@@ -80475,7 +80519,6 @@ $root.protocol = (function() {
             this.sunlights = [];
             this.indices = [];
             this.positions = [];
-            this.normals = [];
             this.uvs = [];
             this.aos = [];
             if (properties)
@@ -80515,14 +80558,6 @@ $root.protocol = (function() {
          * @instance
          */
         Geometry.prototype.positions = $util.emptyArray;
-
-        /**
-         * Geometry normals.
-         * @member {Array.<number>} normals
-         * @memberof protocol.Geometry
-         * @instance
-         */
-        Geometry.prototype.normals = $util.emptyArray;
 
         /**
          * Geometry uvs.
@@ -80586,12 +80621,6 @@ $root.protocol = (function() {
                 writer.uint32(/* id 4, wireType 2 =*/34).fork();
                 for (var i = 0; i < message.positions.length; ++i)
                     writer.float(message.positions[i]);
-                writer.ldelim();
-            }
-            if (message.normals != null && message.normals.length) {
-                writer.uint32(/* id 5, wireType 2 =*/42).fork();
-                for (var i = 0; i < message.normals.length; ++i)
-                    writer.int32(message.normals[i]);
                 writer.ldelim();
             }
             if (message.uvs != null && message.uvs.length) {
@@ -80680,16 +80709,6 @@ $root.protocol = (function() {
                     } else
                         message.positions.push(reader.float());
                     break;
-                case 5:
-                    if (!(message.normals && message.normals.length))
-                        message.normals = [];
-                    if ((tag & 7) === 2) {
-                        var end2 = reader.uint32() + reader.pos;
-                        while (reader.pos < end2)
-                            message.normals.push(reader.int32());
-                    } else
-                        message.normals.push(reader.int32());
-                    break;
                 case 6:
                     if (!(message.uvs && message.uvs.length))
                         message.uvs = [];
@@ -80773,13 +80792,6 @@ $root.protocol = (function() {
                     if (typeof message.positions[i] !== "number")
                         return "positions: number[] expected";
             }
-            if (message.normals != null && message.hasOwnProperty("normals")) {
-                if (!Array.isArray(message.normals))
-                    return "normals: array expected";
-                for (var i = 0; i < message.normals.length; ++i)
-                    if (!$util.isInteger(message.normals[i]))
-                        return "normals: integer[] expected";
-            }
             if (message.uvs != null && message.hasOwnProperty("uvs")) {
                 if (!Array.isArray(message.uvs))
                     return "uvs: array expected";
@@ -80837,13 +80849,6 @@ $root.protocol = (function() {
                 for (var i = 0; i < object.positions.length; ++i)
                     message.positions[i] = Number(object.positions[i]);
             }
-            if (object.normals) {
-                if (!Array.isArray(object.normals))
-                    throw TypeError(".protocol.Geometry.normals: array expected");
-                message.normals = [];
-                for (var i = 0; i < object.normals.length; ++i)
-                    message.normals[i] = object.normals[i] | 0;
-            }
             if (object.uvs) {
                 if (!Array.isArray(object.uvs))
                     throw TypeError(".protocol.Geometry.uvs: array expected");
@@ -80879,7 +80884,6 @@ $root.protocol = (function() {
                 object.sunlights = [];
                 object.indices = [];
                 object.positions = [];
-                object.normals = [];
                 object.uvs = [];
                 object.aos = [];
             }
@@ -80902,11 +80906,6 @@ $root.protocol = (function() {
                 object.positions = [];
                 for (var j = 0; j < message.positions.length; ++j)
                     object.positions[j] = options.json && !isFinite(message.positions[j]) ? String(message.positions[j]) : message.positions[j];
-            }
-            if (message.normals && message.normals.length) {
-                object.normals = [];
-                for (var j = 0; j < message.normals.length; ++j)
-                    object.normals[j] = message.normals[j];
             }
             if (message.uvs && message.uvs.length) {
                 object.uvs = [];

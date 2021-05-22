@@ -1,18 +1,33 @@
-import { ShaderMaterial, NearestFilter, sRGBEncoding, FrontSide, TextureLoader, Texture } from 'three';
+import {
+  ShaderMaterial,
+  NearestFilter,
+  sRGBEncoding,
+  FrontSide,
+  TextureLoader,
+  Texture,
+  ShaderLib,
+  UniformsUtils,
+  BackSide,
+  MixOperation,
+  CustomBlending,
+  AddEquation,
+  OneFactor,
+  MultiplyBlending,
+  LessDepth,
+  LessEqualDepth,
+} from 'three';
+import { AdditiveBlending } from 'three';
 
 import { Engine } from './engine';
-import ChunkFragmentShader from './shaders/chunk/fragment.glsl';
-import ChunkVertexShader from './shaders/chunk/vertex.glsl';
 
 type RegistryOptionsType = {
   textureWidth: number;
 };
 
-const TRANSPARENT_SIDES = [FrontSide];
+const TRANSPARENT_SIDES = [FrontSide, BackSide];
 
 class Registry {
   public atlasUniform: { value: Texture | null };
-  public materialUniform: { [key: string]: { value: any } };
 
   public opaqueChunkMaterial: ShaderMaterial;
 
@@ -31,36 +46,92 @@ class Registry {
       atlas.generateMipmaps = false;
       atlas.encoding = sRGBEncoding;
 
-      this.materialUniform = {
-        uTexture: this.atlasUniform,
-        uSunlightIntensity: engine.world.uSunlightIntensity,
-        ...engine.rendering.fogUniforms,
-      };
+      this.opaqueChunkMaterial = this.makeShaderMaterial();
 
-      const sharedMaterialOptions = {
-        // wireframe: true,
-        vertexShader: ChunkVertexShader,
-        fragmentShader: ChunkFragmentShader,
-        vertexColors: true,
-        uniforms: this.materialUniform,
-      };
-
-      this.opaqueChunkMaterial = new ShaderMaterial({
-        ...sharedMaterialOptions,
+      this.transparentChunkMaterials = TRANSPARENT_SIDES.map((side) => {
+        const material = this.makeShaderMaterial();
+        material.side = side;
+        material.transparent = true;
+        material.alphaTest = 0.3;
+        return material;
       });
-
-      this.transparentChunkMaterials = TRANSPARENT_SIDES.map(
-        (side) =>
-          new ShaderMaterial({
-            ...sharedMaterialOptions,
-            transparent: true,
-            depthWrite: false,
-            alphaTest: 0.5,
-            side,
-          }),
-      );
     });
   }
+
+  private makeShaderMaterial = () => {
+    const material = new ShaderMaterial({
+      vertexColors: true,
+      fragmentShader: ShaderLib.basic.fragmentShader
+        .replace(
+          '#include <common>',
+          `
+#include <common>
+uniform vec3 uFogColor;
+uniform vec3 uFogNearColor;
+uniform float uFogNear;
+uniform float uFogFar;
+uniform float uSunlightIntensity;
+
+varying float vAO;
+varying float vSunlight;
+varying float vTorchLight;
+`,
+        )
+        .replace(
+          '#include <envmap_fragment>',
+          `
+#include <envmap_fragment>
+outgoingLight *= min(vTorchLight + vSunlight * uSunlightIntensity, 1.0) * 0.68;
+`,
+        )
+        .replace(
+          '#include <fog_fragment>',
+          `
+gl_FragColor.rgb *= vAO;
+float depth = gl_FragCoord.z / gl_FragCoord.w;
+float fogFactor = smoothstep(uFogNear, uFogFar, depth);
+gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);
+`,
+        ),
+      vertexShader: ShaderLib.basic.vertexShader
+        .replace(
+          '#include <common>',
+          `
+attribute float ao;
+attribute float sunlight;
+attribute float torchLight;
+
+varying float vAO;
+varying float vSunlight;
+varying float vTorchLight;
+
+#include <common>
+`,
+        )
+        .replace(
+          '#include <color_vertex>',
+          `
+#include <color_vertex>
+
+vAO = ao;
+vSunlight = sunlight / 15.0;
+vTorchLight = torchLight / 15.0;
+`,
+        ),
+
+      uniforms: {
+        ...UniformsUtils.clone(ShaderLib.basic.uniforms),
+        map: this.atlasUniform,
+        uSunlightIntensity: this.engine.world.uSunlightIntensity,
+        ...this.engine.rendering.fogUniforms,
+      },
+    });
+
+    // @ts-ignore
+    material.map = this.atlasUniform.value;
+
+    return material;
+  };
 }
 
 export { Registry, RegistryOptionsType };

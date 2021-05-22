@@ -18,4 +18,9 @@ export const ID_TO_BLOCK = {
   11: require('./models/green'),
   12: require('./models/snow'),
   13: require('./models/yellow'),
+
+  // SOLIDS
+  20: require('./models/sand'),
+  21: require('./models/greysand'),
+  22: require('./models/greystone'),
 };

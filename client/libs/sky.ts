@@ -129,7 +129,7 @@ class Sky {
     last: 0,
     until: 0,
     initialized: false,
-    sunlight: 0.2,
+    sunlight: 0.1,
     offset: 0,
   };
 
@@ -188,6 +188,7 @@ class Sky {
     });
 
     this.shadingMesh = new Mesh(this.shadingGeometry, this.shadingMaterial);
+    this.shadingMesh.frustumCulled = false;
 
     this.meshGroup.add(this.shadingMesh);
   }
@@ -202,6 +203,8 @@ class Sky {
     }
 
     this.boxMesh = new Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
+    this.boxMesh.frustumCulled = false;
+    this.boxMesh.renderOrder = -1;
 
     this.meshGroup.add(this.boxMesh);
   }
@@ -476,7 +479,7 @@ class Sky {
       tracker.time <= sunlightChangeSpan / 2 + sunlightEndTime
     )
       tracker.sunlight = Math.max(
-        0.2,
+        0.1,
         1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan,
       );
 

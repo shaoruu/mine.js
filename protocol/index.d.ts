@@ -17,9 +17,6 @@ export namespace protocol {
         /** Geometry positions */
         positions?: (number[]|null);
 
-        /** Geometry normals */
-        normals?: (number[]|null);
-
         /** Geometry uvs */
         uvs?: (number[]|null);
 
@@ -47,9 +44,6 @@ export namespace protocol {
 
         /** Geometry positions. */
         public positions: number[];
-
-        /** Geometry normals. */
-        public normals: number[];
 
         /** Geometry uvs. */
         public uvs: number[];

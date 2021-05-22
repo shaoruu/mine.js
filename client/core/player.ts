@@ -1,5 +1,5 @@
 import raycast from 'fast-voxel-raycast';
-import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3 } from 'three';
+import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3, AdditiveBlending } from 'three';
 
 import { Coords3, Helper } from '../../shared';
 import { EntityType, Peer, PointerLockControls } from '../libs';
@@ -22,7 +22,7 @@ type PlayerOptionsType = {
 
 type PerspectiveType = 'first' | 'second' | 'third';
 
-const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 11, 13];
+const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 9, 13];
 let type = 1;
 
 const LOCAL_STORAGE_PLAYER_NAME = 'mine.js-player';
@@ -72,8 +72,7 @@ class Player {
     inputs.click('left', () => world.breakVoxel(), 'in-game');
     inputs.click('right', () => world.placeVoxel(type), 'in-game');
     inputs.bind('f', () => this.toggleGodMode(), 'in-game');
-    inputs.bind('c', () => this.togglePerspective('third'), 'in-game');
-    inputs.bind('b', () => this.togglePerspective('second'), 'in-game');
+    inputs.bind('c', () => this.togglePerspective(), 'in-game');
 
     for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
       inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]), 'in-game');
@@ -105,12 +104,14 @@ class Player {
         new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
         new MeshBasicMaterial({
           color: lookBlockColor,
-          alphaTest: 0.2,
-          opacity: 0.2,
+          alphaTest: 0.3,
+          opacity: 0.3,
+          depthWrite: false,
           transparent: true,
         }),
       );
-      this.lookBlockMesh.renderOrder = 100000;
+      this.lookBlockMesh.frustumCulled = false;
+      this.lookBlockMesh.renderOrder = 1000000;
 
       rendering.scene.add(this.lookBlockMesh);
 
@@ -337,8 +338,8 @@ class Player {
     };
   }
 
-  togglePerspective(perspective: PerspectiveType) {
-    this.perspective = this.perspective === perspective ? 'first' : perspective;
+  togglePerspective() {
+    this.perspective = this.perspective === 'first' ? 'third' : this.perspective === 'third' ? 'second' : 'first';
     this.controls.camera.position.copy(new Vector3(0, 0, 0));
     this.controls.camera.quaternion.copy(new Quaternion(0, 0, 0, 0));
     this.own.mesh.visible = this.perspective !== 'first';

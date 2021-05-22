@@ -28,7 +28,6 @@ $root.protocol = (function() {
          * @property {Array.<number>|null} [sunlights] Geometry sunlights
          * @property {Array.<number>|null} [indices] Geometry indices
          * @property {Array.<number>|null} [positions] Geometry positions
-         * @property {Array.<number>|null} [normals] Geometry normals
          * @property {Array.<number>|null} [uvs] Geometry uvs
          * @property {Array.<number>|null} [aos] Geometry aos
          */
@@ -46,7 +45,6 @@ $root.protocol = (function() {
             this.sunlights = [];
             this.indices = [];
             this.positions = [];
-            this.normals = [];
             this.uvs = [];
             this.aos = [];
             if (properties)
@@ -86,14 +84,6 @@ $root.protocol = (function() {
          * @instance
          */
         Geometry.prototype.positions = $util.emptyArray;
-
-        /**
-         * Geometry normals.
-         * @member {Array.<number>} normals
-         * @memberof protocol.Geometry
-         * @instance
-         */
-        Geometry.prototype.normals = $util.emptyArray;
 
         /**
          * Geometry uvs.
@@ -157,12 +147,6 @@ $root.protocol = (function() {
                 writer.uint32(/* id 4, wireType 2 =*/34).fork();
                 for (var i = 0; i < message.positions.length; ++i)
                     writer.float(message.positions[i]);
-                writer.ldelim();
-            }
-            if (message.normals != null && message.normals.length) {
-                writer.uint32(/* id 5, wireType 2 =*/42).fork();
-                for (var i = 0; i < message.normals.length; ++i)
-                    writer.int32(message.normals[i]);
                 writer.ldelim();
             }
             if (message.uvs != null && message.uvs.length) {
@@ -251,16 +235,6 @@ $root.protocol = (function() {
                     } else
                         message.positions.push(reader.float());
                     break;
-                case 5:
-                    if (!(message.normals && message.normals.length))
-                        message.normals = [];
-                    if ((tag & 7) === 2) {
-                        var end2 = reader.uint32() + reader.pos;
-                        while (reader.pos < end2)
-                            message.normals.push(reader.int32());
-                    } else
-                        message.normals.push(reader.int32());
-                    break;
                 case 6:
                     if (!(message.uvs && message.uvs.length))
                         message.uvs = [];
@@ -344,13 +318,6 @@ $root.protocol = (function() {
                     if (typeof message.positions[i] !== "number")
                         return "positions: number[] expected";
             }
-            if (message.normals != null && message.hasOwnProperty("normals")) {
-                if (!Array.isArray(message.normals))
-                    return "normals: array expected";
-                for (var i = 0; i < message.normals.length; ++i)
-                    if (!$util.isInteger(message.normals[i]))
-                        return "normals: integer[] expected";
-            }
             if (message.uvs != null && message.hasOwnProperty("uvs")) {
                 if (!Array.isArray(message.uvs))
                     return "uvs: array expected";
@@ -408,13 +375,6 @@ $root.protocol = (function() {
                 for (var i = 0; i < object.positions.length; ++i)
                     message.positions[i] = Number(object.positions[i]);
             }
-            if (object.normals) {
-                if (!Array.isArray(object.normals))
-                    throw TypeError(".protocol.Geometry.normals: array expected");
-                message.normals = [];
-                for (var i = 0; i < object.normals.length; ++i)
-                    message.normals[i] = object.normals[i] | 0;
-            }
             if (object.uvs) {
                 if (!Array.isArray(object.uvs))
                     throw TypeError(".protocol.Geometry.uvs: array expected");
@@ -450,7 +410,6 @@ $root.protocol = (function() {
                 object.sunlights = [];
                 object.indices = [];
                 object.positions = [];
-                object.normals = [];
                 object.uvs = [];
                 object.aos = [];
             }
@@ -473,11 +432,6 @@ $root.protocol = (function() {
                 object.positions = [];
                 for (var j = 0; j < message.positions.length; ++j)
                     object.positions[j] = options.json && !isFinite(message.positions[j]) ? String(message.positions[j]) : message.positions[j];
-            }
-            if (message.normals && message.normals.length) {
-                object.normals = [];
-                for (var j = 0; j < message.normals.length; ++j)
-                    object.normals[j] = message.normals[j];
             }
             if (message.uvs && message.uvs.length) {
                 object.uvs = [];

@@ -31,6 +31,9 @@ class Generator {
           'blue',
           'trunk',
           'leaves',
+          'sand',
+          'greysand',
+          'greystone',
         ]);
         break;
       case 'sin-cos':
