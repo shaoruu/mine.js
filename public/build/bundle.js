@@ -3854,6 +3854,7 @@ class Debug {
             return dataEntry;
         };
         this.makeDOM = () => {
+            this.wrapper = document.createElement('div');
             this.dataWrapper = document.createElement('div');
             _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.dataWrapper, {
                 position: 'absolute',
@@ -3869,10 +3870,24 @@ class Debug {
                 alignItems: 'flex-start',
                 justifyContent: 'flex-start',
             });
+            _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.gui.domElement, {
+                position: 'absolute',
+                top: '0',
+                right: '0',
+            });
+            _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.wrapper, {
+                top: '0',
+                width: '100%',
+                display: 'inline',
+                position: 'fixed',
+                zIndex: '10000000000',
+            });
         };
         this.mount = () => {
             const { domElement } = this.engine.container;
-            domElement.appendChild(this.dataWrapper);
+            domElement.appendChild(this.wrapper);
+            this.wrapper.appendChild(this.dataWrapper);
+            this.wrapper.appendChild(this.gui.domElement);
         };
         this.setupAll = () => {
             // RENDERING
@@ -3944,6 +3959,10 @@ class Debug {
             const { chunkSize, maxHeight, dimension } = this.engine.world.options;
             this.chunkHighlight.position.set((cx + 0.5) * chunkSize * dimension, 0.5 * maxHeight * dimension, (cz + 0.5) * chunkSize * dimension);
         };
+        this.toggle = () => {
+            const { display } = this.wrapper.style;
+            this.wrapper.style.display = display === 'none' ? 'inline' : 'none';
+        };
         this.calculateFPS = (function () {
             const sampleSize = 60;
             let value = 0;
@@ -3996,17 +4015,15 @@ class Debug {
         // move dat.gui panel to the top
         const { parentElement } = this.gui.domElement;
         if (parentElement) {
-            const zIndex = '1000000000';
-            _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(parentElement, {
-                zIndex,
-            });
+            parentElement.parentNode.removeChild(parentElement);
         }
         engine.on('ready', () => {
             this.makeDOM();
             this.setupAll();
             this.mount();
-            engine.rendering.scene.add(this.chunkHighlight);
             this.chunkHighlight.visible = false;
+            engine.rendering.scene.add(this.chunkHighlight);
+            engine.inputs.bind('j', this.toggle, '*');
         });
         engine.on('world-ready', () => {
             // textureTest

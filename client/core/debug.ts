@@ -10,6 +10,7 @@ type FormatterType = (input: any) => string;
 
 class Debug {
   public gui: dat.GUI;
+  public wrapper: HTMLDivElement;
   public dataWrapper: HTMLDivElement;
   public dataEntries: {
     ele: HTMLParagraphElement;
@@ -40,11 +41,7 @@ class Debug {
     // move dat.gui panel to the top
     const { parentElement } = this.gui.domElement;
     if (parentElement) {
-      const zIndex = '1000000000';
-
-      Helper.applyStyle(parentElement, {
-        zIndex,
-      });
+      parentElement.parentNode.removeChild(parentElement);
     }
 
     engine.on('ready', () => {
@@ -52,8 +49,9 @@ class Debug {
       this.setupAll();
       this.mount();
 
-      engine.rendering.scene.add(this.chunkHighlight);
       this.chunkHighlight.visible = false;
+      engine.rendering.scene.add(this.chunkHighlight);
+      engine.inputs.bind('j', this.toggle, '*');
     });
 
     engine.on('world-ready', () => {
@@ -82,6 +80,7 @@ class Debug {
   };
 
   makeDOM = () => {
+    this.wrapper = document.createElement('div');
     this.dataWrapper = document.createElement('div');
     Helper.applyStyle(this.dataWrapper, {
       position: 'absolute',
@@ -97,11 +96,25 @@ class Debug {
       alignItems: 'flex-start',
       justifyContent: 'flex-start',
     });
+    Helper.applyStyle(this.gui.domElement, {
+      position: 'absolute',
+      top: '0',
+      right: '0',
+    });
+    Helper.applyStyle(this.wrapper, {
+      top: '0',
+      width: '100%',
+      display: 'inline',
+      position: 'fixed',
+      zIndex: '10000000000',
+    });
   };
 
   mount = () => {
     const { domElement } = this.engine.container;
-    domElement.appendChild(this.dataWrapper);
+    domElement.appendChild(this.wrapper);
+    this.wrapper.appendChild(this.dataWrapper);
+    this.wrapper.appendChild(this.gui.domElement);
   };
 
   setupAll = () => {
@@ -195,6 +208,11 @@ class Debug {
       0.5 * maxHeight * dimension,
       (cz + 0.5) * chunkSize * dimension,
     );
+  };
+
+  toggle = () => {
+    const { display } = this.wrapper.style;
+    this.wrapper.style.display = display === 'none' ? 'inline' : 'none';
   };
 
   registerDisplay(name: string, object: any, attribute: string, formatter: FormatterType = (str) => str) {
