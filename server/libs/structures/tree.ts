@@ -61,6 +61,18 @@ class Tree extends Base {
     return locations;
   }
 
+  fractalOctavePerlin3 = (x: number, y: number, z: number, scale: number, octaves = 9) => {
+    let t = 0,
+      f = 1,
+      n = 0;
+    for (let i = 0; i < octaves; i++) {
+      n += noise.perlin3(x * f * scale, y * f * scale, z * f * scale) / f;
+      t += 1 / f;
+      f *= 2;
+    }
+    return n / t;
+  };
+
   generate(chunk: Chunk) {
     const locations = this.sample(chunk);
     const types = Mine.registry.getTypeMap(['trunk', 'leaves', 'leaves-orange']);
@@ -69,23 +81,39 @@ class Tree extends Base {
 
     for (const location of locations) {
       const [vx, vy, vz] = location;
+      const test = 0.4124;
+      const test2 = 0.1424;
+      const test3 = 0.241;
+      const test4 = 0.53425;
+      const height = noise.perlin2(vx * test4, vz * test4) > 0.06 ? 3 : 2;
+      const bushHeight =
+        noise.perlin2(vx * test, vz * test) > 0.2
+          ? 8
+          : noise.perlin2(vx * test2, vz * test2) > 0.1
+          ? 5
+          : height === 3
+          ? 3
+          : 2;
+
       const type = noise.perlin2(vx * 0.005, vz * 0.005) > 0.1 ? types['leaves-orange'] : types['leaves'];
-      const height = 3;
+
       for (let i = 0; i < height; i++) {
         updates.push({ voxel: [vx, vy + i, vz], type: types.trunk });
       }
+
       const [tbx, tby, tbz] = [vx, vy + height, vz];
 
       const bushSize = 1;
       const bushBigSize = 2;
-      const bushHeight = 8;
 
       for (let j = 0; j <= bushHeight; j++) {
-        const limit = j % 3 === 0 || j % 3 === 1 ? bushBigSize : bushSize;
+        const limit = (j % 3 === 1 || j % 3 === (height === 2 ? 0 : 2)) && j !== bushHeight ? bushBigSize : bushSize;
         for (let i = -limit; i <= limit; i++) {
           for (let k = -limit; k <= limit; k++) {
-            const mf = i === 0 && k === 0 && j !== bushHeight ? types.trunk : type;
+            const center = i === 0 && k === 0;
+            const mf = center && j !== bushHeight ? types.trunk : type;
             if (Math.abs(i) === limit && Math.abs(k) === limit) continue;
+            if (!center && this.fractalOctavePerlin3(vx + i, vy + j, vz + k, test3) > 0.4) continue;
             updates.push({ voxel: [tbx + i, tby + j, tbz + k], type: mf });
           }
         }
