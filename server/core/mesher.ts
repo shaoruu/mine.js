@@ -217,19 +217,16 @@ class Mesher {
 
                 const threshold = 0;
 
+                /* -------------------------------------------------------------------------- */
+                /*                     I KNOW THIS IS UGLY, BUT IT WORKS!                     */
+                /* -------------------------------------------------------------------------- */
                 // at least one is zero
                 const oneT0 = aT <= threshold || bT <= threshold || cT <= threshold || dT <= threshold;
-                // one is zero, and ao rule
-                const ozao = aT + dT < bT + cT;
+                // one is zero, and ao rule, but only for zero AO's
+                const ozao = aT + dT < bT + cT && faceAOs[0] + faceAOs[3] === faceAOs[1] + faceAOs[2];
                 // all not zero, 4 parts
-
-                //  b        d
-                //     -
-                //        -
-                //  a        c
-
                 const anzp1 = (bT > (aT + dT) / 2 && (aT + dT) / 2 > cT) || (cT > (aT + dT) / 2 && (aT + dT) / 2 > bT); // fixed two light sources colliding
-                const anz = oneT0 && anzp1;
+                const anz = oneT0 && anzp1; // at least one is zero, and light source colliding fix
 
                 if (faceAOs[0] + faceAOs[3] > faceAOs[1] + faceAOs[2] || (useSmoothLighting && (ozao || anz))) {
                   // generate flipped quad
