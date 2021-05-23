@@ -1,5 +1,7 @@
-import { Mesh, BoxBufferGeometry, MeshBasicMaterial, DoubleSide, Vector3, Quaternion, NearestFilter } from 'three';
+import { Vector3, Quaternion, NearestFilter } from 'three';
 import SpriteText from 'three-spritetext';
+
+import { Head } from './head';
 
 type PeerOptionsType = {
   lerpFactor: number;
@@ -16,29 +18,20 @@ const defaultPeerOptions: PeerOptionsType = {
 };
 
 class Peer {
-  public mesh: Mesh;
+  public head: Head;
 
   public name = 'testtesttest';
   public newPosition: Vector3;
   public newQuaternion: Quaternion;
   public nameMesh: SpriteText;
 
-  public static geometry: BoxBufferGeometry;
-  public static material: MeshBasicMaterial;
-
-  public static setupBasics = ({ headColor, headDimension }: PeerOptionsType) => {
-    if (Peer.geometry && Peer.material) return;
-
-    Peer.geometry = new BoxBufferGeometry(headDimension, headDimension, headDimension);
-    Peer.material = new MeshBasicMaterial({ color: headColor, side: DoubleSide });
-  };
-
   constructor(public id: string, public options: PeerOptionsType = defaultPeerOptions) {
-    Peer.setupBasics(this.options);
+    const { headDimension } = this.options;
 
-    this.mesh = new Mesh(Peer.geometry, Peer.material);
-    this.newPosition = this.mesh.position;
-    this.newQuaternion = this.mesh.quaternion;
+    this.head = new Head({ headDimension });
+
+    this.newPosition = this.head.mesh.position;
+    this.newQuaternion = this.head.mesh.quaternion;
 
     this.nameMesh = new SpriteText(this.name, options.headDimension / 3);
     this.nameMesh.position.y += options.headDimension * 1;
@@ -51,7 +44,7 @@ class Peer {
       image.magFilter = NearestFilter;
     }
 
-    this.mesh.add(this.nameMesh);
+    this.head.mesh.add(this.nameMesh);
   }
 
   update = (name: string, position: Vector3, quaternion: Quaternion) => {
@@ -63,11 +56,15 @@ class Peer {
   tick = (camPos: Vector3) => {
     const { lerpFactor, maxNameDistance } = this.options;
 
-    this.mesh.position.lerp(this.newPosition, lerpFactor);
-    this.mesh.quaternion.slerp(this.newQuaternion, lerpFactor);
+    this.head.mesh.position.lerp(this.newPosition, lerpFactor);
+    this.head.mesh.quaternion.slerp(this.newQuaternion, lerpFactor);
 
-    this.nameMesh.visible = this.mesh.position.distanceTo(camPos) < maxNameDistance;
+    this.nameMesh.visible = this.head.mesh.position.distanceTo(camPos) < maxNameDistance;
   };
+
+  get mesh() {
+    return this.head.mesh;
+  }
 }
 
 export { Peer };

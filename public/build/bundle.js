@@ -4779,7 +4779,6 @@ class Peers {
         this.players = new Map();
         this.join = (id) => {
             const newPlayer = new _libs__WEBPACK_IMPORTED_MODULE_1__.Peer(id);
-            _libs__WEBPACK_IMPORTED_MODULE_1__.Peer.material.map = this.engine.registry.atlasUniform.value;
             this.engine.rendering.scene.add(newPlayer.mesh);
             this.players.set(id, newPlayer);
         };
@@ -5204,6 +5203,7 @@ class Player {
         this.name = localStorage.getItem(LOCAL_STORAGE_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
         this.own = new _libs__WEBPACK_IMPORTED_MODULE_2__.Peer(this.name);
         this.own.mesh.visible = false;
+        this.own.mesh.rotation.y = Math.PI * 2;
         this.object.add(this.own.mesh);
         // look block
         engine.on('ready', () => {
@@ -5220,7 +5220,6 @@ class Player {
             this.lookBlockMesh.frustumCulled = false;
             this.lookBlockMesh.renderOrder = 1000000;
             rendering.scene.add(this.lookBlockMesh);
-            _libs__WEBPACK_IMPORTED_MODULE_2__.Peer.material.map = engine.registry.atlasUniform.value;
         });
         engine.on('chat-enabled', () => {
             this.resetMovements();
@@ -5999,6 +5998,105 @@ class Brain {
 
 /***/ }),
 
+/***/ "./client/libs/canvas-box.ts":
+/*!***********************************!*\
+  !*** ./client/libs/canvas-box.ts ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "CanvasBox": () => (/* binding */ CanvasBox)
+/* harmony export */ });
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+
+const defaultCanvasBoxOptions = {
+    gap: 0,
+    layers: 1,
+    width: 8,
+    dimension: 1,
+    side: three__WEBPACK_IMPORTED_MODULE_0__.FrontSide,
+};
+const BOX_SIDES = ['back', 'front', 'top', 'bottom', 'left', 'right'];
+class Layer {
+    constructor(dimension, width, side) {
+        this.side = side;
+        this.materials = new Map();
+        this.createCanvasMaterial = (width) => {
+            const canvas = document.createElement('canvas');
+            canvas.height = width;
+            canvas.width = width;
+            const material = new three__WEBPACK_IMPORTED_MODULE_0__.MeshBasicMaterial({
+                side: this.side,
+                map: new three__WEBPACK_IMPORTED_MODULE_0__.Texture(canvas),
+                transparent: true,
+            });
+            material.map.magFilter = three__WEBPACK_IMPORTED_MODULE_0__.NearestFilter;
+            material.map.minFilter = three__WEBPACK_IMPORTED_MODULE_0__.LinearMipMapLinearFilter;
+            material.map.wrapS = three__WEBPACK_IMPORTED_MODULE_0__.RepeatWrapping;
+            material.map.wrapT = three__WEBPACK_IMPORTED_MODULE_0__.RepeatWrapping;
+            material.map.needsUpdate = true;
+            return material;
+        };
+        this.paint = (side, art) => {
+            const actualSides = Array.isArray(side)
+                ? side
+                : side === 'all'
+                    ? BOX_SIDES
+                    : side === 'sides'
+                        ? ['front', 'back', 'left', 'right']
+                        : [side];
+            for (const face of actualSides) {
+                const material = this.materials.get(face);
+                if (!material)
+                    continue;
+                art(material);
+                material.map.needsUpdate = true;
+            }
+        };
+        this.geometry = new three__WEBPACK_IMPORTED_MODULE_0__.BoxBufferGeometry(dimension, dimension, dimension);
+        for (const face of BOX_SIDES) {
+            this.materials.set(face, this.createCanvasMaterial(width));
+        }
+        this.mesh = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(this.geometry, Array.from(this.materials.values()));
+        this.mesh.rotation.y = -Math.PI / 2;
+    }
+}
+class CanvasBox {
+    constructor(options = {}) {
+        this.meshes = new three__WEBPACK_IMPORTED_MODULE_0__.Group();
+        this.layers = [];
+        this.makeBoxes = () => {
+            const { layers, gap, dimension, side, width } = this.options;
+            for (let i = 0; i < layers; i++) {
+                const newLayer = new Layer(dimension + i * gap * 2, width, side);
+                this.layers.push(newLayer);
+                this.meshes.add(newLayer.mesh);
+            }
+            this.meshes.rotation.y = -Math.PI * 0.5;
+        };
+        this.paint = (side, art, layer = 0) => {
+            if (layer >= this.layers.length) {
+                throw new Error('Canvas box layer does not exist.');
+            }
+            this.layers[layer].paint(side, art);
+        };
+        this.options = Object.assign(Object.assign({}, defaultCanvasBoxOptions), options);
+        this.makeBoxes();
+    }
+    get mesh() {
+        return this.layers[0].mesh;
+    }
+    get boxMaterials() {
+        return this.layers[0].materials;
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./client/libs/chat-history.ts":
 /*!*************************************!*\
   !*** ./client/libs/chat-history.ts ***!
@@ -6257,6 +6355,111 @@ class Clouds {
 
 /***/ }),
 
+/***/ "./client/libs/head.ts":
+/*!*****************************!*\
+  !*** ./client/libs/head.ts ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Head": () => (/* binding */ Head)
+/* harmony export */ });
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _canvas_box__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvas-box */ "./client/libs/canvas-box.ts");
+
+
+class Head {
+    constructor(options) {
+        this.options = options;
+        this.drawBackground = (material) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#8e9775';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        };
+        this.drawFace = (material) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#e7d4b5';
+            context.fillRect(1, 1, 6, 6);
+            // context.fillStyle = 'white';
+            // context.fillRect(2, 3, 1, 1);
+            // context.fillRect(5, 3, 1, 1);
+            context.fillStyle = '#121013';
+            // mouth
+            context.fillRect(3, 4, 1, 1);
+            context.fillRect(3, 5, 1, 1);
+            context.fillRect(4, 5, 1, 1);
+            context.fillRect(5, 5, 1, 1);
+            context.fillRect(5, 4, 1, 1);
+            // eyes
+            context.fillRect(0, 4, 1, 1);
+            context.fillRect(7, 3, 1, 1);
+        };
+        this.drawCrown = (material) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const context = canvas.getContext('2d');
+            const gold = [
+                [0, 0],
+                [0, 1],
+                [0, 2],
+                [1, 2],
+                [2, 2],
+                [2, 1],
+                [3, 0],
+                [3, 2],
+                [4, 0],
+                [4, 2],
+                [5, 1],
+                [5, 2],
+                [6, 2],
+                [7, 0],
+                [7, 1],
+                [7, 2],
+            ];
+            const blue = [
+                [1, 1],
+                [6, 1],
+            ];
+            context.fillStyle = '#f7ea00';
+            gold.forEach(([x, y]) => context.fillRect(x, y, 1, 1));
+            context.fillStyle = '#51c2d5';
+            blue.forEach(([x, y]) => context.fillRect(x, y, 1, 1));
+            context.fillStyle = '#ff005c';
+            context.fillRect(3, 1, 1, 1);
+            context.fillRect(4, 1, 1, 1);
+        };
+        this.drawHair = (material) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#000000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        };
+        const { headDimension } = this.options;
+        this.box = new _canvas_box__WEBPACK_IMPORTED_MODULE_0__.CanvasBox({ dimension: headDimension, gap: 0.02, layers: 2, side: three__WEBPACK_IMPORTED_MODULE_1__.DoubleSide });
+        this.box.paint('all', this.drawBackground);
+        this.box.paint('front', this.drawFace);
+        this.box.paint('sides', this.drawCrown, 1);
+    }
+    get mesh() {
+        return this.box.meshes;
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./client/libs/index.ts":
 /*!******************************!*\
   !*** ./client/libs/index.ts ***!
@@ -6268,30 +6471,33 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "AABB": () => (/* reexport safe */ _aabb__WEBPACK_IMPORTED_MODULE_0__.AABB),
 /* harmony export */   "Brain": () => (/* reexport safe */ _brain__WEBPACK_IMPORTED_MODULE_1__.Brain),
-/* harmony export */   "ChatHistory": () => (/* reexport safe */ _chat_history__WEBPACK_IMPORTED_MODULE_2__.ChatHistory),
-/* harmony export */   "Clock": () => (/* reexport safe */ _clock__WEBPACK_IMPORTED_MODULE_3__.Clock),
-/* harmony export */   "Clouds": () => (/* reexport safe */ _clouds__WEBPACK_IMPORTED_MODULE_4__.Clouds),
-/* harmony export */   "Message": () => (/* reexport safe */ _message__WEBPACK_IMPORTED_MODULE_5__.Message),
-/* harmony export */   "Peer": () => (/* reexport safe */ _peer__WEBPACK_IMPORTED_MODULE_6__.Peer),
-/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_7__.Physics),
-/* harmony export */   "PointerLockControls": () => (/* reexport safe */ _pointerlock_controls__WEBPACK_IMPORTED_MODULE_8__.PointerLockControls),
-/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_9__.RigidBody),
-/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_10__.simpleCull),
-/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_11__.Sky)
+/* harmony export */   "CanvasBox": () => (/* reexport safe */ _canvas_box__WEBPACK_IMPORTED_MODULE_2__.CanvasBox),
+/* harmony export */   "ChatHistory": () => (/* reexport safe */ _chat_history__WEBPACK_IMPORTED_MODULE_3__.ChatHistory),
+/* harmony export */   "Clock": () => (/* reexport safe */ _clock__WEBPACK_IMPORTED_MODULE_4__.Clock),
+/* harmony export */   "Clouds": () => (/* reexport safe */ _clouds__WEBPACK_IMPORTED_MODULE_5__.Clouds),
+/* harmony export */   "Message": () => (/* reexport safe */ _message__WEBPACK_IMPORTED_MODULE_6__.Message),
+/* harmony export */   "Peer": () => (/* reexport safe */ _peer__WEBPACK_IMPORTED_MODULE_7__.Peer),
+/* harmony export */   "Physics": () => (/* reexport safe */ _physics__WEBPACK_IMPORTED_MODULE_8__.Physics),
+/* harmony export */   "PointerLockControls": () => (/* reexport safe */ _pointerlock_controls__WEBPACK_IMPORTED_MODULE_9__.PointerLockControls),
+/* harmony export */   "RigidBody": () => (/* reexport safe */ _rigid_body__WEBPACK_IMPORTED_MODULE_10__.RigidBody),
+/* harmony export */   "simpleCull": () => (/* reexport safe */ _simple_cull__WEBPACK_IMPORTED_MODULE_11__.simpleCull),
+/* harmony export */   "Sky": () => (/* reexport safe */ _sky__WEBPACK_IMPORTED_MODULE_12__.Sky)
 /* harmony export */ });
 /* harmony import */ var _aabb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./aabb */ "./client/libs/aabb.ts");
 /* harmony import */ var _brain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./brain */ "./client/libs/brain.ts");
-/* harmony import */ var _chat_history__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./chat-history */ "./client/libs/chat-history.ts");
-/* harmony import */ var _clock__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./clock */ "./client/libs/clock.ts");
-/* harmony import */ var _clouds__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./clouds */ "./client/libs/clouds.ts");
-/* harmony import */ var _message__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./message */ "./client/libs/message.ts");
-/* harmony import */ var _peer__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./peer */ "./client/libs/peer.ts");
-/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
-/* harmony import */ var _pointerlock_controls__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./pointerlock-controls */ "./client/libs/pointerlock-controls.ts");
-/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
-/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
-/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+/* harmony import */ var _canvas_box__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./canvas-box */ "./client/libs/canvas-box.ts");
+/* harmony import */ var _chat_history__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./chat-history */ "./client/libs/chat-history.ts");
+/* harmony import */ var _clock__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./clock */ "./client/libs/clock.ts");
+/* harmony import */ var _clouds__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./clouds */ "./client/libs/clouds.ts");
+/* harmony import */ var _message__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./message */ "./client/libs/message.ts");
+/* harmony import */ var _peer__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./peer */ "./client/libs/peer.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./physics */ "./client/libs/physics.ts");
+/* harmony import */ var _pointerlock_controls__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./pointerlock-controls */ "./client/libs/pointerlock-controls.ts");
+/* harmony import */ var _rigid_body__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./rigid-body */ "./client/libs/rigid-body.ts");
+/* harmony import */ var _simple_cull__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./simple-cull */ "./client/libs/simple-cull.ts");
+/* harmony import */ var _sky__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./sky */ "./client/libs/sky.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./types */ "./client/libs/types.ts");
+
 
 
 
@@ -6392,8 +6598,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Peer": () => (/* binding */ Peer)
 /* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var three_spritetext__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three-spritetext */ "./node_modules/three-spritetext/dist/three-spritetext.module.js");
+/* harmony import */ var _head__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./head */ "./client/libs/head.ts");
+
 
 
 const defaultPeerOptions = {
@@ -6414,32 +6622,29 @@ class Peer {
         };
         this.tick = (camPos) => {
             const { lerpFactor, maxNameDistance } = this.options;
-            this.mesh.position.lerp(this.newPosition, lerpFactor);
-            this.mesh.quaternion.slerp(this.newQuaternion, lerpFactor);
-            this.nameMesh.visible = this.mesh.position.distanceTo(camPos) < maxNameDistance;
+            this.head.mesh.position.lerp(this.newPosition, lerpFactor);
+            this.head.mesh.quaternion.slerp(this.newQuaternion, lerpFactor);
+            this.nameMesh.visible = this.head.mesh.position.distanceTo(camPos) < maxNameDistance;
         };
-        Peer.setupBasics(this.options);
-        this.mesh = new three__WEBPACK_IMPORTED_MODULE_1__.Mesh(Peer.geometry, Peer.material);
-        this.newPosition = this.mesh.position;
-        this.newQuaternion = this.mesh.quaternion;
+        const { headDimension } = this.options;
+        this.head = new _head__WEBPACK_IMPORTED_MODULE_1__.Head({ headDimension });
+        this.newPosition = this.head.mesh.position;
+        this.newQuaternion = this.head.mesh.quaternion;
         this.nameMesh = new three_spritetext__WEBPACK_IMPORTED_MODULE_0__.default(this.name, options.headDimension / 3);
         this.nameMesh.position.y += options.headDimension * 1;
         this.nameMesh.backgroundColor = '#00000077';
         this.nameMesh.material.depthTest = false;
         const image = this.nameMesh.material.map;
         if (image) {
-            image.minFilter = three__WEBPACK_IMPORTED_MODULE_1__.NearestFilter;
-            image.magFilter = three__WEBPACK_IMPORTED_MODULE_1__.NearestFilter;
+            image.minFilter = three__WEBPACK_IMPORTED_MODULE_2__.NearestFilter;
+            image.magFilter = three__WEBPACK_IMPORTED_MODULE_2__.NearestFilter;
         }
-        this.mesh.add(this.nameMesh);
+        this.head.mesh.add(this.nameMesh);
+    }
+    get mesh() {
+        return this.head.mesh;
     }
 }
-Peer.setupBasics = ({ headColor, headDimension }) => {
-    if (Peer.geometry && Peer.material)
-        return;
-    Peer.geometry = new three__WEBPACK_IMPORTED_MODULE_1__.BoxBufferGeometry(headDimension, headDimension, headDimension);
-    Peer.material = new three__WEBPACK_IMPORTED_MODULE_1__.MeshBasicMaterial({ color: headColor, side: three__WEBPACK_IMPORTED_MODULE_1__.DoubleSide });
-};
 
 
 
@@ -7006,10 +7211,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Sky": () => (/* binding */ Sky)
 /* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core */ "./client/core/index.ts");
-/* harmony import */ var _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shaders/sky/fragment.glsl */ "./client/libs/shaders/sky/fragment.glsl");
-/* harmony import */ var _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shaders/sky/vertex.glsl */ "./client/libs/shaders/sky/vertex.glsl");
+/* harmony import */ var _canvas_box__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./canvas-box */ "./client/libs/canvas-box.ts");
+/* harmony import */ var _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shaders/sky/fragment.glsl */ "./client/libs/shaders/sky/fragment.glsl");
+/* harmony import */ var _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./shaders/sky/vertex.glsl */ "./client/libs/shaders/sky/vertex.glsl");
+
 
 
 
@@ -7029,7 +7236,6 @@ const defaultSkyOptions = {
     speed: 0.08,
     checkInterval: 4000,
 };
-const SKY_BOX_SIDES = ['back', 'front', 'top', 'bottom', 'left', 'right'];
 const STAR_COLORS = [
     '#FFFFFF',
     '#FFFFFF',
@@ -7048,40 +7254,40 @@ const SKY_CONFIGS = {
     hours: {
         0: {
             color: {
-                top: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#000'),
-                bottom: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#000'),
+                top: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#000'),
+                bottom: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#000'),
             },
             offset: 200,
         },
         // start of sunrise
         600: {
             color: {
-                top: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#7694CF'),
-                bottom: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#B0483A'),
+                top: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#7694CF'),
+                bottom: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#B0483A'),
             },
             offset: 100,
         },
         // end of sunrise, start of day
         700: {
             color: {
-                top: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#73A3FB'),
-                bottom: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#B1CCFD'),
+                top: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#73A3FB'),
+                bottom: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#B1CCFD'),
             },
             offset: 0,
         },
         // start of sunset
         1700: {
             color: {
-                top: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#A57A59'),
-                bottom: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#FC5935'),
+                top: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#A57A59'),
+                bottom: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#FC5935'),
             },
             offset: 100,
         },
         // end of sunset, back to night
         1800: {
             color: {
-                top: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#000'),
-                bottom: new three__WEBPACK_IMPORTED_MODULE_3__.Color('#000'),
+                top: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#000'),
+                bottom: new three__WEBPACK_IMPORTED_MODULE_4__.Color('#000'),
             },
             offset: 200,
         },
@@ -7090,7 +7296,6 @@ const SKY_CONFIGS = {
 class Sky {
     constructor(rendering, options = {}) {
         this.rendering = rendering;
-        this.boxMaterials = new Map();
         this.tracker = {
             day: 0,
             time: 0,
@@ -7101,7 +7306,7 @@ class Sky {
             offset: 0,
         };
         this.newTime = -1;
-        this.meshGroup = new three__WEBPACK_IMPORTED_MODULE_3__.Group();
+        this.meshGroup = new three__WEBPACK_IMPORTED_MODULE_4__.Group();
         this.init = () => {
             this.paint('sides', 'stars');
             this.paint('top', 'stars');
@@ -7110,91 +7315,56 @@ class Sky {
         };
         this.createSkyShading = () => {
             const { dimension, topColor, bottomColor, domeOffset } = this.options;
-            this.topColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor);
-            this.bottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(bottomColor);
+            this.topColor = new three__WEBPACK_IMPORTED_MODULE_4__.Color(topColor);
+            this.bottomColor = new three__WEBPACK_IMPORTED_MODULE_4__.Color(bottomColor);
             const uniforms = {
                 topColor: { value: this.topColor },
                 bottomColor: { value: this.bottomColor },
                 offset: { value: domeOffset },
                 exponent: { value: 0.6 },
             };
-            this.shadingGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.SphereGeometry(dimension);
-            this.shadingMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
+            this.shadingGeometry = new three__WEBPACK_IMPORTED_MODULE_4__.SphereGeometry(dimension);
+            this.shadingMaterial = new three__WEBPACK_IMPORTED_MODULE_4__.ShaderMaterial({
                 uniforms,
-                vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
-                fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
+                vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_3__.default,
+                fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
                 depthWrite: false,
-                side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
+                side: three__WEBPACK_IMPORTED_MODULE_4__.BackSide,
             });
-            this.shadingMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.shadingGeometry, this.shadingMaterial);
+            this.shadingMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(this.shadingGeometry, this.shadingMaterial);
             this.shadingMesh.frustumCulled = false;
             this.meshGroup.add(this.shadingMesh);
         };
         this.createSkyBox = () => {
             const { dimension } = this.options;
-            this.boxGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.BoxBufferGeometry(dimension * 0.9, dimension * 0.9, dimension * 0.9);
-            for (const face of SKY_BOX_SIDES) {
-                const canvasMaterial = this.createCanvasMaterial();
-                this.boxMaterials.set(face, canvasMaterial);
-            }
-            this.boxMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
-            this.boxMesh.frustumCulled = false;
-            this.boxMesh.renderOrder = -1;
-            this.meshGroup.add(this.boxMesh);
-        };
-        this.createCanvasMaterial = () => {
-            const canvas = document.createElement('canvas');
-            canvas.height = 512;
-            canvas.width = 512;
-            const material = new three__WEBPACK_IMPORTED_MODULE_3__.MeshBasicMaterial({
-                side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
-                map: new three__WEBPACK_IMPORTED_MODULE_3__.Texture(canvas),
-                transparent: true,
-                depthWrite: false,
-                fog: false,
-            });
-            material.map.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-            material.map.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.LinearMipMapLinearFilter;
-            material.map.wrapS = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
-            material.map.wrapT = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
-            material.map.needsUpdate = true;
-            material.polygonOffset = true;
-            material.polygonOffsetFactor = -0.5;
-            return material;
+            this.skyBox = new _canvas_box__WEBPACK_IMPORTED_MODULE_1__.CanvasBox({ dimension: dimension * 0.9, side: three__WEBPACK_IMPORTED_MODULE_4__.BackSide, width: 512 });
+            this.skyBox.boxMaterials.forEach((m) => (m.depthWrite = false));
+            const { mesh } = this.skyBox;
+            mesh.frustumCulled = false;
+            mesh.renderOrder = -1;
+            this.meshGroup.add(mesh);
         };
         this.setTopColor = (color) => {
-            this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
+            this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_4__.Color(color);
         };
         this.setBottomColor = (color) => {
-            this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
+            this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_4__.Color(color);
         };
         this.paint = (side, art) => {
-            const actualSides = Array.isArray(side)
-                ? side
-                : side === 'all'
-                    ? SKY_BOX_SIDES
-                    : side === 'sides'
-                        ? ['front', 'back', 'left', 'right']
-                        : [side];
-            for (const face of actualSides) {
-                const material = this.boxMaterials.get(face);
-                if (!material)
-                    continue;
-                switch (art) {
-                    case 'sun':
-                        this.drawSun(material);
-                        break;
-                    case 'moon':
-                        this.drawMoon(material);
-                        break;
-                    case 'stars':
-                        this.drawStars(material);
-                        break;
-                    case 'clear':
-                        this.clear(material);
-                        break;
-                }
-                material.map.needsUpdate = true;
+            const { skyBox } = this;
+            switch (art) {
+                case 'sun':
+                    skyBox.paint(side, this.drawSun);
+                    break;
+                case 'moon':
+                    skyBox.paint(side, this.drawMoon);
+                    break;
+                case 'stars':
+                    skyBox.paint(side, this.drawStars);
+                    break;
+                case 'clear':
+                    skyBox.paint(side, this.clear);
+                    break;
             }
         };
         this.drawMoon = (material, phase = 1) => {
@@ -7202,7 +7372,7 @@ class Sky {
             if (!canvas)
                 return;
             const { moonRadius: radius, moonColor } = this.options;
-            const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(moonColor);
+            const color = new three__WEBPACK_IMPORTED_MODULE_4__.Color(moonColor);
             const context = canvas.getContext('2d');
             const x = canvas.width / 2;
             const y = canvas.height / 2;
@@ -7265,7 +7435,7 @@ class Sky {
                 return;
             const { sunColor } = this.options;
             const context = canvas.getContext('2d');
-            const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(sunColor);
+            const color = new three__WEBPACK_IMPORTED_MODULE_4__.Color(sunColor);
             context.save();
             // bg glow
             context.beginPath();
@@ -7308,7 +7478,7 @@ class Sky {
             return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`;
         };
         this.spin = (rotation) => {
-            this.boxMesh.rotation.z = rotation;
+            this.skyBox.mesh.rotation.z = rotation;
         };
         this.tick = (delta = 0) => {
             const { tracker } = this;
@@ -7331,8 +7501,8 @@ class Sky {
             if (SKY_CONFIGS.hours[hour]) {
                 if (!tracker.until) {
                     const { color, offset } = SKY_CONFIGS.hours[hour];
-                    this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
-                    this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
+                    this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_4__.Color();
+                    this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_4__.Color();
                     this.newTopColor.copy(color.top);
                     this.newBottomColor.copy(color.bottom);
                     tracker.offset = offset;
@@ -7355,17 +7525,17 @@ class Sky {
             // lerp sunlight
             const sunlightLerpFactor = 0.008 * speed * delta;
             const { uSunlightIntensity } = this.rendering.engine.world;
-            uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
+            uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_4__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
             const cloudColor = this.rendering.engine.world.clouds.material.uniforms.uCloudColor.value;
             const cloudColorHSL = cloudColor.getHSL({});
-            cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.clamp(uSunlightIntensity.value, 0, 1));
+            cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, three__WEBPACK_IMPORTED_MODULE_4__.MathUtils.clamp(uSunlightIntensity.value, 0, 1));
             const { offset } = this.shadingMaterial.uniforms;
-            offset.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
+            offset.value = three__WEBPACK_IMPORTED_MODULE_4__.MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
             // lerp sky colors
             ['top', 'right', 'left', 'front', 'back'].forEach((face) => {
-                const mat = this.boxMaterials.get(face);
+                const mat = this.skyBox.boxMaterials.get(face);
                 if (mat) {
-                    mat.opacity = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(mat.opacity, 1.2 - tracker.sunlight, sunlightLerpFactor);
+                    mat.opacity = three__WEBPACK_IMPORTED_MODULE_4__.MathUtils.lerp(mat.opacity, 1.2 - tracker.sunlight, sunlightLerpFactor);
                 }
             });
             const colorLerpFactor = 0.006 * speed * delta;

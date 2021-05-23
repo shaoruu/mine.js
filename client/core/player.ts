@@ -1,5 +1,5 @@
 import raycast from 'fast-voxel-raycast';
-import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3, AdditiveBlending } from 'three';
+import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3 } from 'three';
 
 import { Coords3, Helper } from '../../shared';
 import { EntityType, Peer, PointerLockControls } from '../libs';
@@ -92,6 +92,7 @@ class Player {
     this.name = localStorage.getItem(LOCAL_STORAGE_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     this.own = new Peer(this.name);
     this.own.mesh.visible = false;
+    this.own.mesh.rotation.y = Math.PI * 2;
     this.object.add(this.own.mesh);
 
     // look block
@@ -114,8 +115,6 @@ class Player {
       this.lookBlockMesh.renderOrder = 1000000;
 
       rendering.scene.add(this.lookBlockMesh);
-
-      Peer.material.map = engine.registry.atlasUniform.value;
     });
 
     engine.on('chat-enabled', () => {

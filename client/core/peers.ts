@@ -60,7 +60,6 @@ class Peers {
 
   join = (id: string) => {
     const newPlayer = new Peer(id);
-    Peer.material.map = this.engine.registry.atlasUniform.value;
 
     this.engine.rendering.scene.add(newPlayer.mesh);
     this.players.set(id, newPlayer);

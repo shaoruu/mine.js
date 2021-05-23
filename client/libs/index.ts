@@ -1,5 +1,6 @@
 export * from './aabb';
 export * from './brain';
+export * from './canvas-box';
 export * from './chat-history';
 export * from './clock';
 export * from './clouds';

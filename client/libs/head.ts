@@ -1,62 +1,113 @@
-import {
-  BackSide,
-  LinearMipMapLinearFilter,
-  NearestFilter,
-  RepeatWrapping,
-  Texture,
-  MeshBasicMaterial,
-  BoxBufferGeometry,
-} from 'three';
-import { Mesh, DoubleSide } from 'three';
+import { MeshBasicMaterial, DoubleSide } from 'three';
 
-import { Peer } from './peer';
+import { CanvasBox } from './canvas-box';
 
 type HeadOptionsType = {
   headDimension: number;
 };
 
 class Head {
-  public mesh: Mesh;
-  public material: MeshBasicMaterial;
-  public geometry: BoxBufferGeometry;
+  public box: CanvasBox;
 
-  constructor(public peer: Peer, public options: HeadOptionsType) {
+  constructor(public options: HeadOptionsType) {
     const { headDimension } = this.options;
 
-    this.geometry = new BoxBufferGeometry(headDimension, headDimension, headDimension);
-    this.material = this.createCanvasMaterial();
+    this.box = new CanvasBox({ dimension: headDimension, gap: 0.02, layers: 2, side: DoubleSide });
 
-    this.mesh = new Mesh(this.geometry, this.material);
-    this.drawFaces();
+    this.box.paint('all', this.drawBackground);
+    this.box.paint('front', this.drawFace);
+    this.box.paint('sides', this.drawCrown, 1);
   }
 
-  createHead() {}
+  drawBackground = (material: MeshBasicMaterial) => {
+    const canvas = <HTMLCanvasElement>material.map.image;
+    if (!canvas) return;
 
-  createCanvasMaterial = () => {
-    const canvas = document.createElement('canvas');
-    canvas.height = 512;
-    canvas.width = 512;
+    const context = canvas.getContext('2d');
 
-    const material = new MeshBasicMaterial({
-      side: DoubleSide,
-      map: new Texture(canvas),
-      transparent: true,
-      depthWrite: false,
-      fog: false,
-    });
-
-    material.map.magFilter = NearestFilter;
-    material.map.minFilter = LinearMipMapLinearFilter;
-    material.map.wrapS = RepeatWrapping;
-    material.map.wrapT = RepeatWrapping;
-    material.map.needsUpdate = true;
-    material.polygonOffset = true;
-    material.polygonOffsetFactor = -0.5;
-
-    return material;
+    context.fillStyle = '#8e9775';
+    context.fillRect(0, 0, canvas.width, canvas.height);
   };
 
-  drawFaces = () => {};
+  drawFace = (material: MeshBasicMaterial) => {
+    const canvas = <HTMLCanvasElement>material.map.image;
+    if (!canvas) return;
+
+    const context = canvas.getContext('2d');
+
+    context.fillStyle = '#e7d4b5';
+    context.fillRect(1, 1, 6, 6);
+
+    // context.fillStyle = 'white';
+    // context.fillRect(2, 3, 1, 1);
+    // context.fillRect(5, 3, 1, 1);
+
+    context.fillStyle = '#121013';
+    // mouth
+    context.fillRect(3, 4, 1, 1);
+    context.fillRect(3, 5, 1, 1);
+    context.fillRect(4, 5, 1, 1);
+    context.fillRect(5, 5, 1, 1);
+    context.fillRect(5, 4, 1, 1);
+    // eyes
+    context.fillRect(0, 4, 1, 1);
+    context.fillRect(7, 3, 1, 1);
+  };
+
+  drawCrown = (material: MeshBasicMaterial) => {
+    const canvas = <HTMLCanvasElement>material.map.image;
+    if (!canvas) return;
+
+    const context = canvas.getContext('2d');
+
+    const gold = [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [1, 2],
+      [2, 2],
+      [2, 1],
+      [3, 0],
+      [3, 2],
+      [4, 0],
+      [4, 2],
+      [5, 1],
+      [5, 2],
+      [6, 2],
+      [7, 0],
+      [7, 1],
+      [7, 2],
+    ];
+
+    const blue = [
+      [1, 1],
+      [6, 1],
+    ];
+
+    context.fillStyle = '#f7ea00';
+    gold.forEach(([x, y]) => context.fillRect(x, y, 1, 1));
+
+    context.fillStyle = '#51c2d5';
+    blue.forEach(([x, y]) => context.fillRect(x, y, 1, 1));
+
+    context.fillStyle = '#ff005c';
+    context.fillRect(3, 1, 1, 1);
+    context.fillRect(4, 1, 1, 1);
+  };
+
+  drawHair = (material: MeshBasicMaterial) => {
+    const canvas = <HTMLCanvasElement>material.map.image;
+    if (!canvas) return;
+
+    const context = canvas.getContext('2d');
+
+    context.fillStyle = '#000000';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  get mesh() {
+    return this.box.meshes;
+  }
 }
 
 export { Head };

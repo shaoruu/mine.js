@@ -214,6 +214,7 @@ class Chunk extends EventEmitter {
     this.needsTerrain = false;
 
     const { px, nx, pz, nz, pxpz, pxnz, nxpz, nxnz } = this.neighbors;
+
     if (px) px.checkDecoration();
     if (nx) nx.checkDecoration();
     if (pz) pz.checkDecoration();

@@ -1,21 +1,8 @@
-import {
-  BackSide,
-  BoxBufferGeometry,
-  Color,
-  Group,
-  LinearMipMapLinearFilter,
-  MathUtils,
-  Mesh,
-  MeshBasicMaterial,
-  NearestFilter,
-  RepeatWrapping,
-  ShaderMaterial,
-  SphereGeometry,
-  Texture,
-} from 'three';
+import { BackSide, Color, Group, MathUtils, Mesh, MeshBasicMaterial, ShaderMaterial, SphereGeometry } from 'three';
 
 import { Rendering } from '../core';
 
+import { BoxSidesType, CanvasBox } from './canvas-box';
 import SkyFragmentShader from './shaders/sky/fragment.glsl';
 import SkyVertexShader from './shaders/sky/vertex.glsl';
 
@@ -48,10 +35,6 @@ const defaultSkyOptions: SkyOptionsType = {
   speed: 0.08,
   checkInterval: 4000,
 };
-
-type SkyBoxSidesType = 'top' | 'front' | 'back' | 'left' | 'right' | 'bottom';
-
-const SKY_BOX_SIDES = ['back', 'front', 'top', 'bottom', 'left', 'right'];
 
 const STAR_COLORS = [
   '#FFFFFF',
@@ -119,9 +102,7 @@ class Sky {
   public shadingMaterial: ShaderMaterial;
   public shadingMesh: Mesh;
 
-  public boxGeometry: BoxBufferGeometry;
-  public boxMaterials: Map<string, MeshBasicMaterial> = new Map();
-  public boxMesh: Mesh;
+  public skyBox: CanvasBox;
 
   public tracker = {
     day: 0,
@@ -196,41 +177,15 @@ class Sky {
   createSkyBox = () => {
     const { dimension } = this.options;
 
-    this.boxGeometry = new BoxBufferGeometry(dimension * 0.9, dimension * 0.9, dimension * 0.9);
-    for (const face of SKY_BOX_SIDES) {
-      const canvasMaterial = this.createCanvasMaterial();
-      this.boxMaterials.set(face, canvasMaterial);
-    }
+    this.skyBox = new CanvasBox({ dimension: dimension * 0.9, side: BackSide, width: 512 });
+    this.skyBox.boxMaterials.forEach((m) => (m.depthWrite = false));
 
-    this.boxMesh = new Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
-    this.boxMesh.frustumCulled = false;
-    this.boxMesh.renderOrder = -1;
+    const { mesh } = this.skyBox;
 
-    this.meshGroup.add(this.boxMesh);
-  };
+    mesh.frustumCulled = false;
+    mesh.renderOrder = -1;
 
-  createCanvasMaterial = () => {
-    const canvas = document.createElement('canvas');
-    canvas.height = 512;
-    canvas.width = 512;
-
-    const material = new MeshBasicMaterial({
-      side: BackSide,
-      map: new Texture(canvas),
-      transparent: true,
-      depthWrite: false,
-      fog: false,
-    });
-
-    material.map.magFilter = NearestFilter;
-    material.map.minFilter = LinearMipMapLinearFilter;
-    material.map.wrapS = RepeatWrapping;
-    material.map.wrapT = RepeatWrapping;
-    material.map.needsUpdate = true;
-    material.polygonOffset = true;
-    material.polygonOffsetFactor = -0.5;
-
-    return material;
+    this.meshGroup.add(mesh);
   };
 
   setTopColor = (color: Color | string) => {
@@ -241,35 +196,22 @@ class Sky {
     this.newBottomColor = new Color(color);
   };
 
-  paint = (side: SkyBoxSidesType[] | 'all' | 'sides' | string, art: 'sun' | 'moon' | 'stars' | 'clear') => {
-    const actualSides = Array.isArray(side)
-      ? side
-      : side === 'all'
-      ? SKY_BOX_SIDES
-      : side === 'sides'
-      ? ['front', 'back', 'left', 'right']
-      : [side];
+  paint = (side: BoxSidesType[] | BoxSidesType, art: 'sun' | 'moon' | 'stars' | 'clear') => {
+    const { skyBox } = this;
 
-    for (const face of actualSides) {
-      const material = this.boxMaterials.get(face);
-      if (!material) continue;
-
-      switch (art) {
-        case 'sun':
-          this.drawSun(material);
-          break;
-        case 'moon':
-          this.drawMoon(material);
-          break;
-        case 'stars':
-          this.drawStars(material);
-          break;
-        case 'clear':
-          this.clear(material);
-          break;
-      }
-
-      material.map.needsUpdate = true;
+    switch (art) {
+      case 'sun':
+        skyBox.paint(side, this.drawSun);
+        break;
+      case 'moon':
+        skyBox.paint(side, this.drawMoon);
+        break;
+      case 'stars':
+        skyBox.paint(side, this.drawStars);
+        break;
+      case 'clear':
+        skyBox.paint(side, this.clear);
+        break;
     }
   };
 
@@ -419,7 +361,7 @@ class Sky {
   };
 
   spin = (rotation: number) => {
-    this.boxMesh.rotation.z = rotation;
+    this.skyBox.mesh.rotation.z = rotation;
   };
 
   tick = (delta = 0) => {
@@ -497,7 +439,7 @@ class Sky {
 
     // lerp sky colors
     ['top', 'right', 'left', 'front', 'back'].forEach((face) => {
-      const mat = this.boxMaterials.get(face);
+      const mat = this.skyBox.boxMaterials.get(face);
       if (mat) {
         mat.opacity = MathUtils.lerp(mat.opacity, 1.2 - tracker.sunlight, sunlightLerpFactor);
       }
