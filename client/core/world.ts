@@ -61,28 +61,28 @@ class World extends EventEmitter {
     });
   }
 
-  tick() {
+  tick = () => {
     this.checkCamChunk();
     this.requestChunks();
     this.meshChunks();
     this.animateSky();
-  }
+  };
 
-  getChunkByCPos(cCoords: Coords2) {
+  getChunkByCPos = (cCoords: Coords2) => {
     return this.getChunkByName(Helper.getChunkName(cCoords));
-  }
+  };
 
-  getChunkByName(chunkName: string) {
+  getChunkByName = (chunkName: string) => {
     return this.chunks.get(chunkName);
-  }
+  };
 
-  getChunkByVoxel(vCoords: Coords3) {
+  getChunkByVoxel = (vCoords: Coords3) => {
     const { chunkSize } = this.options;
     const chunkCoords = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
     return this.getChunkByCPos(chunkCoords);
-  }
+  };
 
-  getNeighborChunksByVoxel(vCoords: Coords3, padding = 0) {
+  getNeighborChunksByVoxel = (vCoords: Coords3, padding = 0) => {
     const { chunkSize } = this.options;
     const chunk = this.getChunkByVoxel(vCoords);
     const [cx, cz] = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
@@ -109,51 +109,51 @@ class World extends EventEmitter {
     if (c && d) neighborChunks.push(this.getChunkByCPos([cx + 1, cz + 1]));
 
     return neighborChunks.filter(Boolean).filter((c) => c !== chunk);
-  }
+  };
 
-  getVoxelByVoxel(vCoords: Coords3) {
+  getVoxelByVoxel = (vCoords: Coords3) => {
     const chunk = this.getChunkByVoxel(vCoords);
     return chunk ? chunk.getVoxel(...vCoords) : null;
-  }
+  };
 
-  getVoxelByWorld(wCoords: Coords3) {
+  getVoxelByWorld = (wCoords: Coords3) => {
     const vCoords = Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
     return this.getVoxelByVoxel(vCoords);
-  }
+  };
 
-  getSolidityByVoxel(vCoords: Coords3) {
+  getSolidityByVoxel = (vCoords: Coords3) => {
     return !!this.getVoxelByVoxel(vCoords);
-  }
+  };
 
-  getFluidityByVoxel(vCoords: Coords3) {
+  getFluidityByVoxel = (vCoords: Coords3) => {
     // TODO
     return false;
-  }
+  };
 
-  getSolidityByWorld(wCoords: Coords3) {
+  getSolidityByWorld = (wCoords: Coords3) => {
     const vCoords = Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
     return this.getSolidityByVoxel(vCoords);
-  }
+  };
 
-  getFluidityByWorld(wCoords: Coords3) {
+  getFluidityByWorld = (wCoords: Coords3) => {
     const vCoords = Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
     return this.getFluidityByVoxel(vCoords);
-  }
+  };
 
-  handleServerChunk(serverChunk: ServerChunkType, prioritized = false) {
+  handleServerChunk = (serverChunk: ServerChunkType, prioritized = false) => {
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
     this.requestedChunks.delete(Helper.getChunkName(coords));
     if (prioritized) this.receivedChunks.unshift(serverChunk);
     else this.receivedChunks.push(serverChunk);
-  }
+  };
 
-  setChunk(chunk: Chunk) {
+  setChunk = (chunk: Chunk) => {
     // TODO: remove chunks that are too far away
     return this.chunks.set(chunk.name, chunk);
-  }
+  };
 
-  setVoxel(voxel: Coords3, type: number, sideEffects = true) {
+  setVoxel = (voxel: Coords3, type: number, sideEffects = true) => {
     const [vx, vy, vz] = voxel;
     this.getChunkByVoxel([vx, vy, vz])?.setVoxel(vx, vy, vz, type);
 
@@ -163,16 +163,16 @@ class World extends EventEmitter {
         json: { x: vx, y: vy, z: vz, type },
       });
     }
-  }
+  };
 
-  breakVoxel() {
+  breakVoxel = () => {
     if (this.engine.player.lookBlock) {
       // TODO: use type.air instead of 0
       this.setVoxel(this.engine.player.lookBlock, 0);
     }
-  }
+  };
 
-  placeVoxel(type: number) {
+  placeVoxel = (type: number) => {
     const { dimension } = this.options;
     const {
       targetBlock,
@@ -187,17 +187,17 @@ class World extends EventEmitter {
       const blockAABB = new AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
       if (!aabb.intersects(blockAABB)) this.setVoxel(targetBlock, type);
     }
-  }
+  };
 
-  addAsVisible(chunk: Chunk) {
+  addAsVisible = (chunk: Chunk) => {
     this.visibleChunks.add(chunk);
-  }
+  };
 
-  removeAsVisible(chunk: Chunk) {
+  removeAsVisible = (chunk: Chunk) => {
     this.visibleChunks.delete(chunk);
-  }
+  };
 
-  updateRenderRadius(renderRadiuus: number) {
+  updateRenderRadius = (renderRadiuus: number) => {
     const { registry } = this.engine;
     const { chunkSize, dimension } = this.options;
 
@@ -206,9 +206,9 @@ class World extends EventEmitter {
 
     this.checkCamChunk();
     this.surroundCamChunks();
-  }
+  };
 
-  setTime(time: number, sideEffect = true) {
+  setTime = (time: number, sideEffect = true) => {
     this.sky.tracker.time = time % 2400;
 
     // full cycle to sync up the colors
@@ -225,25 +225,25 @@ class World extends EventEmitter {
         },
       });
     }
-  }
+  };
 
-  sortPendingChunks() {
+  sortPendingChunks = () => {
     const [cx, cz] = this.camChunkPos;
 
     this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
-  }
+  };
 
-  handleReconnection() {
+  handleReconnection = () => {
     // move requested chunks to pending
     this.pendingChunks.push(...Array.from(this.requestedChunks).map((rc) => Helper.parseChunkName(rc) as Coords2));
     this.sortPendingChunks();
-  }
+  };
 
   get camChunkPosStr() {
     return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
   }
 
-  private checkCamChunk() {
+  private checkCamChunk = () => {
     const { chunkSize, renderRadius } = this.options;
 
     const pos = this.engine.player.voxel;
@@ -283,9 +283,9 @@ class World extends EventEmitter {
       this.isReady = true;
       this.engine.emit('world-ready');
     }
-  }
+  };
 
-  private surroundCamChunks() {
+  private surroundCamChunks = () => {
     const { renderRadius, requestRadius, chunkSize } = this.options;
 
     const [cx, cz] = this.camChunkPos;
@@ -318,9 +318,9 @@ class World extends EventEmitter {
         chunk.removeFromScene();
       }
     }
-  }
+  };
 
-  private requestChunks() {
+  private requestChunks = () => {
     // separate chunk request into frames to avoid clogging
     if (this.pendingChunks.length === 0 || !this.engine.connected) return;
 
@@ -339,9 +339,9 @@ class World extends EventEmitter {
         this.requestedChunks.add(rep);
       });
     }
-  }
+  };
 
-  private meshChunks() {
+  private meshChunks = () => {
     // separate chunk meshing into frames to avoid clogging
     if (this.receivedChunks.length === 0) return;
 
@@ -367,13 +367,13 @@ class World extends EventEmitter {
         chunk.voxels.data = new Uint8Array(serverChunk.voxels);
       }
     });
-  }
+  };
 
-  private animateSky() {
+  private animateSky = () => {
     const { delta } = this.engine.clock;
     this.sky.tick(delta);
     this.clouds.tick(delta);
-  }
+  };
 }
 
 export { World, WorldOptionsType };

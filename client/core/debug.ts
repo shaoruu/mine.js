@@ -216,7 +216,7 @@ class Debug {
     this.wrapper.style.display = display === 'none' ? 'inline' : 'none';
   };
 
-  registerDisplay(name: string, object: any, attribute: string, formatter: FormatterType = (str) => str) {
+  registerDisplay = (name: string, object: any, attribute: string, formatter: FormatterType = (str) => str) => {
     const wrapper = this.makeDataEntry();
     const newEntry = {
       ele: wrapper,
@@ -227,7 +227,7 @@ class Debug {
     };
     this.dataEntries.push(newEntry);
     this.dataWrapper.insertBefore(wrapper, this.dataWrapper.firstChild);
-  }
+  };
 
   calculateFPS = (function () {
     const sampleSize = 60;

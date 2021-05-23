@@ -35,7 +35,7 @@ class Physics {
     public options: PhysicsOptionsType,
   ) {}
 
-  addBody(options: Partial<BodyOptionsType>) {
+  addBody = (options: Partial<BodyOptionsType>) => {
     const defaultOptions = {
       aabb: new AABB([0, 0, 0], [1, 1, 1]),
       mass: 1,
@@ -54,22 +54,22 @@ class Physics {
     const b = new RigidBody(aabb, mass, friction, restitution, gravityMultiplier, onCollide, autoStep);
     this.bodies.push(b);
     return b;
-  }
+  };
 
-  removeBody(b: RigidBody) {
+  removeBody = (b: RigidBody) => {
     const i = this.bodies.indexOf(b);
     if (i < 0) return undefined;
     this.bodies.splice(i, 1);
     // not sure if this is needed.
     // b.aabb = b.onCollide = null;
-  }
+  };
 
-  tick(dt: number) {
+  tick = (dt: number) => {
     const noGravity = Helper.approxEquals(0, vec3.len(this.options.gravity) ** 2);
     this.bodies.forEach((b) => this.iterateBody(b, dt, noGravity));
-  }
+  };
 
-  iterateBody(b: RigidBody, dt: number, noGravity: boolean) {
+  iterateBody = (b: RigidBody, dt: number, noGravity: boolean) => {
     vec3.copy(this.oldResting, b.resting);
 
     // treat bodies with <= mass as static
@@ -165,9 +165,9 @@ class Physics {
     // sleep check
     const vsq = vec3.len(b.velocity) ** 2;
     if (vsq > 1e-5) b.markActive();
-  }
+  };
 
-  applyFluidForces(body: RigidBody) {
+  applyFluidForces = (body: RigidBody) => {
     // First pass at handling fluids. Assumes fluids are settled
     //   thus, only check at corner of body, and only from bottom up
     const box = body.aabb;
@@ -202,9 +202,9 @@ class Physics {
 
     body.inFluid = true;
     body.ratioInFluid = ratioInFluid;
-  }
+  };
 
-  applyFrictionByAxis(axis: number, body: RigidBody, dvel: number[]) {
+  applyFrictionByAxis = (axis: number, body: RigidBody, dvel: number[]) => {
     // friction applies only if moving into a touched surface
     const restDir = body.resting[axis];
     const vNormal = dvel[axis];
@@ -232,17 +232,17 @@ class Physics {
     const scaler = vCurr > dvMax ? (vCurr - dvMax) / vCurr : 0;
     body.velocity[(axis + 1) % 3] *= scaler;
     body.velocity[(axis + 2) % 3] *= scaler;
-  }
+  };
 
-  processCollisions(box: AABB, velocity: number[], resting: number[]) {
+  processCollisions = (box: AABB, velocity: number[], resting: number[]) => {
     vec3.set(resting, 0, 0, 0);
     return sweep(this.testSolid, box, velocity, function (_: never, axis: number, dir: number, vec: number[]) {
       resting[axis] = dir;
       vec[axis] = 0;
     });
-  }
+  };
 
-  tryAutoStepping(b: RigidBody, oldBox: AABB, dx: number[]) {
+  tryAutoStepping = (b: RigidBody, oldBox: AABB, dx: number[]) => {
     if (b.resting[1] >= 0 && !b.inFluid) return;
 
     // // direction movement was blocked before trying a step
@@ -291,9 +291,9 @@ class Physics {
     b.resting[0] = this.tmpResting[0];
     b.resting[2] = this.tmpResting[2];
     if (b.onStep) b.onStep();
-  }
+  };
 
-  bodyAsleep(body: RigidBody, dt: number, noGravity: boolean) {
+  bodyAsleep = (body: RigidBody, dt: number, noGravity: boolean) => {
     if (body.sleepFrameCount > 0) return false;
 
     // without gravity bodies stay asleep until a force/impulse wakes them up
@@ -318,7 +318,7 @@ class Physics {
     );
 
     return isResting;
-  }
+  };
 }
 
 export { Physics };

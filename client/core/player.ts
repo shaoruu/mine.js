@@ -203,7 +203,7 @@ class Player {
     this.updatePerspective();
   };
 
-  godModeMovements() {
+  godModeMovements = () => {
     const { delta } = this.engine.clock;
 
     const { right, left, up, down, front, back } = this.movements;
@@ -231,9 +231,9 @@ class Player {
     this.controls.moveForward(-this.vel.z);
 
     this.controls.getObject().position.y += this.vel.y;
-  }
+  };
 
-  moveCamEntity() {
+  moveCamEntity = () => {
     const { object } = this.controls;
     const { state } = this.playerEntity.brain;
 
@@ -274,9 +274,9 @@ class Player {
 
     // set jump as true, and brain will handle the jumping
     state.jumping = up ? (down ? false : true) : down ? false : false;
-  }
+  };
 
-  teleport(voxel: Coords3) {
+  teleport = (voxel: Coords3) => {
     const {
       config: {
         world: { dimension },
@@ -292,9 +292,9 @@ class Player {
 
     this.playerEntity.body.setPosition(newPosition);
     return newPosition;
-  }
+  };
 
-  toggleGodMode() {
+  toggleGodMode = () => {
     this.godMode = !this.godMode;
     if (this.godMode) {
       this.vel.set(0, 0, 0);
@@ -304,9 +304,9 @@ class Player {
       // activated again
       this.addPlayerentity();
     }
-  }
+  };
 
-  addPlayerentity() {
+  addPlayerentity = () => {
     const { bodyWidth, distToGround, distToTop } = this.options;
     const { dimension } = this.engine.world.options;
     const cameraWorldWidth = bodyWidth * dimension;
@@ -320,14 +320,14 @@ class Player {
     );
 
     this.playerEntity.body.applyImpulse([0, 4, 0]);
-  }
+  };
 
-  setName(name: string) {
+  setName = (name: string) => {
     this.name = name || ' ';
     localStorage.setItem(LOCAL_STORAGE_PLAYER_NAME, this.name);
-  }
+  };
 
-  resetMovements() {
+  resetMovements = () => {
     this.movements = {
       front: false,
       back: false,
@@ -336,16 +336,16 @@ class Player {
       down: false,
       up: false,
     };
-  }
+  };
 
-  togglePerspective() {
+  togglePerspective = () => {
     this.perspective = this.perspective === 'first' ? 'third' : this.perspective === 'third' ? 'second' : 'first';
     this.controls.camera.position.copy(new Vector3(0, 0, 0));
     this.controls.camera.quaternion.copy(new Quaternion(0, 0, 0, 0));
     this.own.mesh.visible = this.perspective !== 'first';
-  }
+  };
 
-  private updatePerspective() {
+  private updatePerspective = () => {
     const {
       world,
       camera: { threeCamera },
@@ -398,9 +398,9 @@ class Player {
         break;
       }
     }
-  }
+  };
 
-  private updateLookBlock() {
+  private updateLookBlock = () => {
     const { world, camera } = this.engine;
     const { dimension } = world.options;
     const { reachDistance, lookBlockLerp } = this.options;
@@ -454,7 +454,7 @@ class Player {
     this.lookBlock = newLookBlock;
     // target block is look block summed with the normal
     this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
-  }
+  };
 
   get object() {
     return this.controls.object;

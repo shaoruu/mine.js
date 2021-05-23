@@ -64,31 +64,31 @@ class Chunk {
     vec3.add(this.max, this.max, [0, maxHeight, 0]);
   }
 
-  setVoxel(vx: number, vy: number, vz: number, type: number) {
+  setVoxel = (vx: number, vy: number, vz: number, type: number) => {
     if (!this.contains(vx, vy, vz)) return;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
     return this.voxels.set(lx, ly, lz, type);
-  }
+  };
 
-  getVoxel(vx: number, vy: number, vz: number) {
+  getVoxel = (vx: number, vy: number, vz: number) => {
     if (!this.contains(vx, vy, vz)) return;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
     return this.voxels.get(lx, ly, lz);
-  }
+  };
 
-  contains(vx: number, vy: number, vz: number, padding = 0) {
+  contains = (vx: number, vy: number, vz: number, padding = 0) => {
     const { size, maxHeight } = this;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
 
     return lx >= -padding && lx < size + padding && ly >= 0 && ly < maxHeight && lz >= -padding && lz < size + padding;
-  }
+  };
 
-  distTo(vx: number, _: number, vz: number) {
+  distTo = (vx: number, _: number, vz: number) => {
     const [mx, , mz] = this.min;
     return Math.sqrt((mx + this.size / 2 - vx) ** 2 + (mz + this.size / 2 - vz) ** 2);
-  }
+  };
 
-  addToScene() {
+  addToScene = () => {
     const { rendering, world } = this.engine;
     this.removeFromScene();
     if (!this.isAdded) {
@@ -102,9 +102,9 @@ class Chunk {
       world.addAsVisible(this);
       this.isAdded = true;
     }
-  }
+  };
 
-  removeFromScene() {
+  removeFromScene = () => {
     const { rendering, world } = this.engine;
     if (this.isAdded) {
       MESH_TYPES.forEach((type) => {
@@ -114,14 +114,14 @@ class Chunk {
       world.removeAsVisible(this);
       this.isAdded = false;
     }
-  }
+  };
 
-  dispose() {
+  dispose = () => {
     this.geometries.forEach((geo) => geo.dispose());
     pool.free(this.voxels.data);
-  }
+  };
 
-  setupMesh(meshDataList: ServerMeshType[]) {
+  setupMesh = (meshDataList: ServerMeshType[]) => {
     this.isMeshing = true;
 
     meshDataList.forEach((meshData) => {
@@ -169,7 +169,7 @@ class Chunk {
 
     // mark chunk as built mesh
     this.isMeshing = false;
-  }
+  };
 
   private toLocal = (vx: number, vy: number, vz: number) => {
     return <Coords3>vec3.sub([0, 0, 0], [vx, vy, vz], this.min);

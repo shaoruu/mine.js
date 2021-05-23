@@ -15,13 +15,13 @@ class Entities {
 
   constructor(public engine: Engine, public options: EntitiesOptionsType) {}
 
-  addEntity(
+  addEntity = (
     name: string,
     object: Object3D,
     size: [number, number, number],
     offsets: [number, number, number] = [0, 0, 0],
     options: Partial<BodyOptionsType> = {},
-  ) {
+  ) => {
     if (this.list.size >= this.options.maxEntities)
       throw new Error(`Failed to add entity, ${name}: max entities reached.`);
 
@@ -45,22 +45,22 @@ class Entities {
     this.list.set(name, newEntity);
 
     return newEntity;
-  }
+  };
 
-  removeEntity(name: string) {
+  removeEntity = (name: string) => {
     const entity = this.list.get(name);
     if (!entity) return;
     this.engine.physics.core.removeBody(entity.body);
     return this.list.delete(name);
-  }
+  };
 
-  preTick() {
+  preTick = () => {
     this.list.forEach((entity) => {
       entity.brain.tick(this.engine.clock.delta);
     });
-  }
+  };
 
-  tick() {
+  tick = () => {
     const { movementLerp, movementLerpFactor } = this.options;
     this.list.forEach(({ object, body, offsets }) => {
       const [px, py, pz] = this.engine.physics.getPositionFromRB(body);
@@ -70,7 +70,7 @@ class Entities {
         object.position.set(px + offsets[0], py + offsets[1], pz + offsets[2]);
       }
     });
-  }
+  };
 }
 
 export { Entities, EntitiesOptionsType };

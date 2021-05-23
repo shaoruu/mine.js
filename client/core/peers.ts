@@ -58,15 +58,15 @@ class Peers {
     });
   }
 
-  join(id: string) {
+  join = (id: string) => {
     const newPlayer = new Peer(id);
     Peer.material.map = this.engine.registry.atlasUniform.value;
 
     this.engine.rendering.scene.add(newPlayer.mesh);
     this.players.set(id, newPlayer);
-  }
+  };
 
-  update(id: string, packet: PacketType) {
+  update = (id: string, packet: PacketType) => {
     if (!this.players.has(id)) {
       // might have missed the player's join event
       this.join(id);
@@ -76,20 +76,20 @@ class Peers {
 
     const { name, position, rotation } = packet;
     player.update(name, new Vector3(...position), new Quaternion(...rotation));
-  }
+  };
 
-  leave(id: string) {
+  leave = (id: string) => {
     const player = this.players.get(id);
 
     if (!player) return;
 
     this.engine.rendering.scene.remove(player.mesh);
     this.players.delete(id);
-  }
+  };
 
-  tick() {
+  tick = () => {
     this.players.forEach((peer) => peer.tick(this.engine.player.object.position));
-  }
+  };
 }
 
 export { Peers, PeersOptionsType };

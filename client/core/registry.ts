@@ -8,15 +8,7 @@ import {
   ShaderLib,
   UniformsUtils,
   BackSide,
-  MixOperation,
-  CustomBlending,
-  AddEquation,
-  OneFactor,
-  MultiplyBlending,
-  LessDepth,
-  LessEqualDepth,
 } from 'three';
-import { AdditiveBlending } from 'three';
 
 import { Engine } from './engine';
 

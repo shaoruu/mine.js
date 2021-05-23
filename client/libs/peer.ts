@@ -1,13 +1,4 @@
-import {
-  Mesh,
-  BoxBufferGeometry,
-  MeshBasicMaterial,
-  DoubleSide,
-  Vector3,
-  Quaternion,
-  NearestFilter,
-  sRGBEncoding,
-} from 'three';
+import { Mesh, BoxBufferGeometry, MeshBasicMaterial, DoubleSide, Vector3, Quaternion, NearestFilter } from 'three';
 import SpriteText from 'three-spritetext';
 
 type PeerOptionsType = {
@@ -63,20 +54,20 @@ class Peer {
     this.mesh.add(this.nameMesh);
   }
 
-  update(name: string, position: Vector3, quaternion: Quaternion) {
+  update = (name: string, position: Vector3, quaternion: Quaternion) => {
     this.nameMesh.text = name;
     this.newPosition = position;
     this.newQuaternion = quaternion;
-  }
+  };
 
-  tick(camPos: Vector3) {
+  tick = (camPos: Vector3) => {
     const { lerpFactor, maxNameDistance } = this.options;
 
     this.mesh.position.lerp(this.newPosition, lerpFactor);
     this.mesh.quaternion.slerp(this.newQuaternion, lerpFactor);
 
     this.nameMesh.visible = this.mesh.position.distanceTo(camPos) < maxNameDistance;
-  }
+  };
 }
 
 export { Peer };

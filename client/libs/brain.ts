@@ -71,7 +71,7 @@ class Brain {
     };
   }
 
-  tick(dt: number) {
+  tick = (dt: number) => {
     // move implementation originally written as external module
     //   see https://github.com/andyhall/voxel-fps-controller
     //   for original code
@@ -147,7 +147,7 @@ class Brain {
     } else {
       this.body.friction = this.options.standingFriction;
     }
-  }
+  };
 }
 
 export { Brain, BrainOptionsType, BrainStateType };

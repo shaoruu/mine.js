@@ -28,7 +28,7 @@ class Inputs {
     this.initClickListener();
   }
 
-  initClickListener() {
+  initClickListener = () => {
     (['left', 'middle', 'right'] as ClickType[]).forEach((type) => this.clickCallbacks.set(type, []));
 
     document.addEventListener(
@@ -48,22 +48,22 @@ class Inputs {
       },
       false,
     );
-  }
+  };
 
-  click(type: ClickType, callback: () => void, namespace: InputNamespace) {
+  click = (type: ClickType, callback: () => void, namespace: InputNamespace) => {
     this.clickCallbacks.get(type).push({ namespace, callback });
-  }
+  };
 
-  add(name: string, combo: string) {
+  add = (name: string, combo: string) => {
     this.combos.set(name, combo);
-  }
+  };
 
-  bind(
+  bind = (
     name: string,
     callback: () => void,
     namespace: InputNamespace,
     { occasion = 'keydown' }: { occasion?: InputOccasion } = {},
-  ) {
+  ) => {
     let combo = this.combos.get(name);
 
     if (!combo) {
@@ -85,16 +85,16 @@ class Inputs {
       },
       occasion,
     );
-  }
+  };
 
-  unbind(name: string) {
+  unbind = (name: string) => {
     const combo = this.combos.get(name);
     if (combo) Mousetrap.unbind(combo);
-  }
+  };
 
-  setNamespace(namespace: InputNamespace) {
+  setNamespace = (namespace: InputNamespace) => {
     this.namespace = namespace;
-  }
+  };
 }
 
 export { Inputs };

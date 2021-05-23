@@ -1,3 +1,0 @@
-class VoxelOctree {}
-
-export { VoxelOctree };

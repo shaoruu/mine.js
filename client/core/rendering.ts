@@ -5,7 +5,6 @@ import {
   DepthFormat,
   DepthTexture,
   FloatType,
-  GammaEncoding,
   LinearFilter,
   RGBAFormat,
   Scene,

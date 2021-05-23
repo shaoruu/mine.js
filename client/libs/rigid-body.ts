@@ -31,29 +31,29 @@ class RigidBody {
     this.onStep = null;
   }
 
-  setPosition(p: number[]) {
+  setPosition = (p: number[]) => {
     vec3.sub(p, p, this.aabb.base);
     this.aabb.translate(p);
     this.markActive();
-  }
+  };
 
-  getPosition() {
+  getPosition = () => {
     return vec3.clone(this.aabb.base);
-  }
+  };
 
-  applyForce(f: number[]) {
+  applyForce = (f: number[]) => {
     vec3.add(this.forces, this.forces, f);
     this.markActive();
-  }
+  };
 
-  applyImpulse(i: number[]) {
+  applyImpulse = (i: number[]) => {
     vec3.add(this.impulses, this.impulses, i);
     this.markActive();
-  }
+  };
 
-  markActive() {
+  markActive = () => {
     this.sleepFrameCount = 10 | 0;
-  }
+  };
 
   get atRestX() {
     return this.resting[0];

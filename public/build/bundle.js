@@ -3643,6 +3643,96 @@ class Chunk {
         this.isMeshing = false; // is meshing
         this.isInitialized = false; // is populated with terrain info
         this.isPending = false; // pending for client-side terrain generation
+        this.setVoxel = (vx, vy, vz, type) => {
+            if (!this.contains(vx, vy, vz))
+                return;
+            const [lx, ly, lz] = this.toLocal(vx, vy, vz);
+            return this.voxels.set(lx, ly, lz, type);
+        };
+        this.getVoxel = (vx, vy, vz) => {
+            if (!this.contains(vx, vy, vz))
+                return;
+            const [lx, ly, lz] = this.toLocal(vx, vy, vz);
+            return this.voxels.get(lx, ly, lz);
+        };
+        this.contains = (vx, vy, vz, padding = 0) => {
+            const { size, maxHeight } = this;
+            const [lx, ly, lz] = this.toLocal(vx, vy, vz);
+            return lx >= -padding && lx < size + padding && ly >= 0 && ly < maxHeight && lz >= -padding && lz < size + padding;
+        };
+        this.distTo = (vx, _, vz) => {
+            const [mx, , mz] = this.min;
+            return Math.sqrt((mx + this.size / 2 - vx) ** 2 + (mz + this.size / 2 - vz) ** 2);
+        };
+        this.addToScene = () => {
+            const { rendering, world } = this.engine;
+            this.removeFromScene();
+            if (!this.isAdded) {
+                MESH_TYPES.forEach((type) => {
+                    const altMesh = this.altMeshes.get(type);
+                    if (altMesh && altMesh.length) {
+                        rendering.scene.add(...altMesh);
+                        this.meshes.set(type, altMesh);
+                    }
+                });
+                world.addAsVisible(this);
+                this.isAdded = true;
+            }
+        };
+        this.removeFromScene = () => {
+            const { rendering, world } = this.engine;
+            if (this.isAdded) {
+                MESH_TYPES.forEach((type) => {
+                    const mesh = this.meshes.get(type);
+                    if (mesh && mesh.length)
+                        rendering.scene.remove(...mesh);
+                });
+                world.removeAsVisible(this);
+                this.isAdded = false;
+            }
+        };
+        this.dispose = () => {
+            this.geometries.forEach((geo) => geo.dispose());
+            typedarray_pool__WEBPACK_IMPORTED_MODULE_2__.free(this.voxels.data);
+        };
+        this.setupMesh = (meshDataList) => {
+            this.isMeshing = true;
+            meshDataList.forEach((meshData) => {
+                MESH_TYPES.forEach((type) => {
+                    if (!meshData[type]) {
+                        this.altMeshes.set(type, undefined);
+                        return;
+                    }
+                    this.altMeshes.set(type, []);
+                    const { positions, indices, uvs, aos, torchLights, sunlights } = meshData[type];
+                    const positionNumComponents = 3;
+                    const uvNumComponents = 2;
+                    const occlusionNumComponents = 1;
+                    const sunlightsNumComponents = 1;
+                    const torchLightsNumComponents = 1;
+                    const geometry = this.geometries.get(type);
+                    // geometry.dispose();
+                    geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(positions, positionNumComponents));
+                    geometry.setAttribute('uv', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(uvs, uvNumComponents));
+                    geometry.setAttribute('ao', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(aos, occlusionNumComponents));
+                    geometry.setAttribute('sunlight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(sunlights, sunlightsNumComponents));
+                    geometry.setAttribute('torchLight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(torchLights, torchLightsNumComponents));
+                    geometry.setIndex(Array.from(indices));
+                    const materials = type === 'opaque'
+                        ? [this.engine.registry.opaqueChunkMaterial]
+                        : this.engine.registry.transparentChunkMaterials;
+                    materials.forEach((material) => {
+                        const altMesh = new three__WEBPACK_IMPORTED_MODULE_7__.Mesh(geometry, material);
+                        altMesh.name = this.name;
+                        altMesh.frustumCulled = false;
+                        altMesh.renderOrder = type === 'opaque' ? 1000 : 100;
+                        this.altMeshes.get(type).push(altMesh);
+                    });
+                });
+            });
+            // mark chunk as built mesh
+            this.isMeshing = false;
+        };
         this.toLocal = (vx, vy, vz) => {
             return gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub([0, 0, 0], [vx, vy, vz], this.min);
         };
@@ -3663,96 +3753,6 @@ class Chunk {
         gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.max, this.max, [1, 0, 1]);
         gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.max, this.max, size);
         gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.max, this.max, [0, maxHeight, 0]);
-    }
-    setVoxel(vx, vy, vz, type) {
-        if (!this.contains(vx, vy, vz))
-            return;
-        const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-        return this.voxels.set(lx, ly, lz, type);
-    }
-    getVoxel(vx, vy, vz) {
-        if (!this.contains(vx, vy, vz))
-            return;
-        const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-        return this.voxels.get(lx, ly, lz);
-    }
-    contains(vx, vy, vz, padding = 0) {
-        const { size, maxHeight } = this;
-        const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-        return lx >= -padding && lx < size + padding && ly >= 0 && ly < maxHeight && lz >= -padding && lz < size + padding;
-    }
-    distTo(vx, _, vz) {
-        const [mx, , mz] = this.min;
-        return Math.sqrt((mx + this.size / 2 - vx) ** 2 + (mz + this.size / 2 - vz) ** 2);
-    }
-    addToScene() {
-        const { rendering, world } = this.engine;
-        this.removeFromScene();
-        if (!this.isAdded) {
-            MESH_TYPES.forEach((type) => {
-                const altMesh = this.altMeshes.get(type);
-                if (altMesh && altMesh.length) {
-                    rendering.scene.add(...altMesh);
-                    this.meshes.set(type, altMesh);
-                }
-            });
-            world.addAsVisible(this);
-            this.isAdded = true;
-        }
-    }
-    removeFromScene() {
-        const { rendering, world } = this.engine;
-        if (this.isAdded) {
-            MESH_TYPES.forEach((type) => {
-                const mesh = this.meshes.get(type);
-                if (mesh && mesh.length)
-                    rendering.scene.remove(...mesh);
-            });
-            world.removeAsVisible(this);
-            this.isAdded = false;
-        }
-    }
-    dispose() {
-        this.geometries.forEach((geo) => geo.dispose());
-        typedarray_pool__WEBPACK_IMPORTED_MODULE_2__.free(this.voxels.data);
-    }
-    setupMesh(meshDataList) {
-        this.isMeshing = true;
-        meshDataList.forEach((meshData) => {
-            MESH_TYPES.forEach((type) => {
-                if (!meshData[type]) {
-                    this.altMeshes.set(type, undefined);
-                    return;
-                }
-                this.altMeshes.set(type, []);
-                const { positions, indices, uvs, aos, torchLights, sunlights } = meshData[type];
-                const positionNumComponents = 3;
-                const uvNumComponents = 2;
-                const occlusionNumComponents = 1;
-                const sunlightsNumComponents = 1;
-                const torchLightsNumComponents = 1;
-                const geometry = this.geometries.get(type);
-                // geometry.dispose();
-                geometry.setAttribute('position', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(positions, positionNumComponents));
-                geometry.setAttribute('uv', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(uvs, uvNumComponents));
-                geometry.setAttribute('ao', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(aos, occlusionNumComponents));
-                geometry.setAttribute('sunlight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(sunlights, sunlightsNumComponents));
-                geometry.setAttribute('torchLight', new three__WEBPACK_IMPORTED_MODULE_7__.Float32BufferAttribute(torchLights, torchLightsNumComponents));
-                geometry.setIndex(Array.from(indices));
-                const materials = type === 'opaque'
-                    ? [this.engine.registry.opaqueChunkMaterial]
-                    : this.engine.registry.transparentChunkMaterials;
-                materials.forEach((material) => {
-                    const altMesh = new three__WEBPACK_IMPORTED_MODULE_7__.Mesh(geometry, material);
-                    altMesh.name = this.name;
-                    altMesh.frustumCulled = false;
-                    altMesh.renderOrder = type === 'opaque' ? 1000 : 100;
-                    this.altMeshes.get(type).push(altMesh);
-                });
-            });
-        });
-        // mark chunk as built mesh
-        this.isMeshing = false;
     }
 }
 
@@ -3963,6 +3963,18 @@ class Debug {
             const { display } = this.wrapper.style;
             this.wrapper.style.display = display === 'none' ? 'inline' : 'none';
         };
+        this.registerDisplay = (name, object, attribute, formatter = (str) => str) => {
+            const wrapper = this.makeDataEntry();
+            const newEntry = {
+                ele: wrapper,
+                obj: object,
+                name,
+                formatter,
+                attribute,
+            };
+            this.dataEntries.push(newEntry);
+            this.dataWrapper.insertBefore(wrapper, this.dataWrapper.firstChild);
+        };
         this.calculateFPS = (function () {
             const sampleSize = 60;
             let value = 0;
@@ -4040,18 +4052,6 @@ class Debug {
             this.atlasTest.visible = false;
             this.engine.rendering.scene.add(this.atlasTest);
         });
-    }
-    registerDisplay(name, object, attribute, formatter = (str) => str) {
-        const wrapper = this.makeDataEntry();
-        const newEntry = {
-            ele: wrapper,
-            obj: object,
-            name,
-            formatter,
-            attribute,
-        };
-        this.dataEntries.push(newEntry);
-        this.dataWrapper.insertBefore(wrapper, this.dataWrapper.firstChild);
     }
     get fps() {
         return this.calculateFPS();
@@ -4292,49 +4292,49 @@ class Entities {
         this.engine = engine;
         this.options = options;
         this.list = new Map();
-    }
-    addEntity(name, object, size, offsets = [0, 0, 0], options = {}) {
-        if (this.list.size >= this.options.maxEntities)
-            throw new Error(`Failed to add entity, ${name}: max entities reached.`);
-        const { physics } = this.engine;
-        const { x, y, z } = object.position;
-        const [sx, sy, sz] = size;
-        const [ox, oy, oz] = offsets;
-        const aabb = new _libs__WEBPACK_IMPORTED_MODULE_0__.AABB([x - sx / 2 - ox, y - sy / 2 - oy, z - sz / 2 - oz], size);
-        const rigidBody = physics.core.addBody(Object.assign({ aabb }, options));
-        const brain = new _libs__WEBPACK_IMPORTED_MODULE_0__.Brain(rigidBody);
-        const newEntity = {
-            brain,
-            object,
-            offsets,
-            body: rigidBody,
+        this.addEntity = (name, object, size, offsets = [0, 0, 0], options = {}) => {
+            if (this.list.size >= this.options.maxEntities)
+                throw new Error(`Failed to add entity, ${name}: max entities reached.`);
+            const { physics } = this.engine;
+            const { x, y, z } = object.position;
+            const [sx, sy, sz] = size;
+            const [ox, oy, oz] = offsets;
+            const aabb = new _libs__WEBPACK_IMPORTED_MODULE_0__.AABB([x - sx / 2 - ox, y - sy / 2 - oy, z - sz / 2 - oz], size);
+            const rigidBody = physics.core.addBody(Object.assign({ aabb }, options));
+            const brain = new _libs__WEBPACK_IMPORTED_MODULE_0__.Brain(rigidBody);
+            const newEntity = {
+                brain,
+                object,
+                offsets,
+                body: rigidBody,
+            };
+            this.list.set(name, newEntity);
+            return newEntity;
         };
-        this.list.set(name, newEntity);
-        return newEntity;
-    }
-    removeEntity(name) {
-        const entity = this.list.get(name);
-        if (!entity)
-            return;
-        this.engine.physics.core.removeBody(entity.body);
-        return this.list.delete(name);
-    }
-    preTick() {
-        this.list.forEach((entity) => {
-            entity.brain.tick(this.engine.clock.delta);
-        });
-    }
-    tick() {
-        const { movementLerp, movementLerpFactor } = this.options;
-        this.list.forEach(({ object, body, offsets }) => {
-            const [px, py, pz] = this.engine.physics.getPositionFromRB(body);
-            if (movementLerp) {
-                object.position.lerp(new three__WEBPACK_IMPORTED_MODULE_2__.Vector3(px + offsets[0], py + offsets[1], pz + offsets[2]), movementLerpFactor);
-            }
-            else {
-                object.position.set(px + offsets[0], py + offsets[1], pz + offsets[2]);
-            }
-        });
+        this.removeEntity = (name) => {
+            const entity = this.list.get(name);
+            if (!entity)
+                return;
+            this.engine.physics.core.removeBody(entity.body);
+            return this.list.delete(name);
+        };
+        this.preTick = () => {
+            this.list.forEach((entity) => {
+                entity.brain.tick(this.engine.clock.delta);
+            });
+        };
+        this.tick = () => {
+            const { movementLerp, movementLerpFactor } = this.options;
+            this.list.forEach(({ object, body, offsets }) => {
+                const [px, py, pz] = this.engine.physics.getPositionFromRB(body);
+                if (movementLerp) {
+                    object.position.lerp(new three__WEBPACK_IMPORTED_MODULE_2__.Vector3(px + offsets[0], py + offsets[1], pz + offsets[2]), movementLerpFactor);
+                }
+                else {
+                    object.position.set(px + offsets[0], py + offsets[1], pz + offsets[2]);
+                }
+            });
+        };
     }
 }
 
@@ -4427,6 +4427,56 @@ class Inputs {
         this.combos = new Map();
         this.callbacks = new Map();
         this.clickCallbacks = new Map();
+        this.initClickListener = () => {
+            ['left', 'middle', 'right'].forEach((type) => this.clickCallbacks.set(type, []));
+            document.addEventListener('mousedown', ({ button }) => {
+                if (!this.engine.locked)
+                    return;
+                let callbacks = [];
+                if (button === 0)
+                    callbacks = this.clickCallbacks.get('left');
+                else if (button === 1)
+                    callbacks = this.clickCallbacks.get('middle');
+                else if (button === 2)
+                    callbacks = this.clickCallbacks.get('right');
+                callbacks.forEach(({ namespace, callback }) => {
+                    if (this.namespace === namespace)
+                        callback();
+                });
+            }, false);
+        };
+        this.click = (type, callback, namespace) => {
+            this.clickCallbacks.get(type).push({ namespace, callback });
+        };
+        this.add = (name, combo) => {
+            this.combos.set(name, combo);
+        };
+        this.bind = (name, callback, namespace, { occasion = 'keydown' } = {}) => {
+            let combo = this.combos.get(name);
+            if (!combo) {
+                if (name.length === 1) {
+                    // single keys
+                    this.add(name, name);
+                    combo = name;
+                }
+                else {
+                    throw new Error(`Error registering input, combo ${name}: not found.`);
+                }
+            }
+            mousetrap__WEBPACK_IMPORTED_MODULE_0___default().bind(combo, () => {
+                if (this.namespace === namespace || namespace === '*') {
+                    callback();
+                }
+            }, occasion);
+        };
+        this.unbind = (name) => {
+            const combo = this.combos.get(name);
+            if (combo)
+                mousetrap__WEBPACK_IMPORTED_MODULE_0___default().unbind(combo);
+        };
+        this.setNamespace = (namespace) => {
+            this.namespace = namespace;
+        };
         this.add('forward', 'w');
         this.add('backward', 's');
         this.add('left', 'a');
@@ -4438,56 +4488,6 @@ class Inputs {
         this.add('down', 'down');
         this.add('enter', 'enter');
         this.initClickListener();
-    }
-    initClickListener() {
-        ['left', 'middle', 'right'].forEach((type) => this.clickCallbacks.set(type, []));
-        document.addEventListener('mousedown', ({ button }) => {
-            if (!this.engine.locked)
-                return;
-            let callbacks = [];
-            if (button === 0)
-                callbacks = this.clickCallbacks.get('left');
-            else if (button === 1)
-                callbacks = this.clickCallbacks.get('middle');
-            else if (button === 2)
-                callbacks = this.clickCallbacks.get('right');
-            callbacks.forEach(({ namespace, callback }) => {
-                if (this.namespace === namespace)
-                    callback();
-            });
-        }, false);
-    }
-    click(type, callback, namespace) {
-        this.clickCallbacks.get(type).push({ namespace, callback });
-    }
-    add(name, combo) {
-        this.combos.set(name, combo);
-    }
-    bind(name, callback, namespace, { occasion = 'keydown' } = {}) {
-        let combo = this.combos.get(name);
-        if (!combo) {
-            if (name.length === 1) {
-                // single keys
-                this.add(name, name);
-                combo = name;
-            }
-            else {
-                throw new Error(`Error registering input, combo ${name}: not found.`);
-            }
-        }
-        mousetrap__WEBPACK_IMPORTED_MODULE_0___default().bind(combo, () => {
-            if (this.namespace === namespace || namespace === '*') {
-                callback();
-            }
-        }, occasion);
-    }
-    unbind(name) {
-        const combo = this.combos.get(name);
-        if (combo)
-            mousetrap__WEBPACK_IMPORTED_MODULE_0___default().unbind(combo);
-    }
-    setNamespace(namespace) {
-        this.namespace = namespace;
     }
 }
 
@@ -4777,6 +4777,31 @@ class Peers {
         this.engine = engine;
         this.options = options;
         this.players = new Map();
+        this.join = (id) => {
+            const newPlayer = new _libs__WEBPACK_IMPORTED_MODULE_1__.Peer(id);
+            _libs__WEBPACK_IMPORTED_MODULE_1__.Peer.material.map = this.engine.registry.atlasUniform.value;
+            this.engine.rendering.scene.add(newPlayer.mesh);
+            this.players.set(id, newPlayer);
+        };
+        this.update = (id, packet) => {
+            if (!this.players.has(id)) {
+                // might have missed the player's join event
+                this.join(id);
+            }
+            const player = this.players.get(id);
+            const { name, position, rotation } = packet;
+            player.update(name, new three__WEBPACK_IMPORTED_MODULE_3__.Vector3(...position), new three__WEBPACK_IMPORTED_MODULE_3__.Quaternion(...rotation));
+        };
+        this.leave = (id) => {
+            const player = this.players.get(id);
+            if (!player)
+                return;
+            this.engine.rendering.scene.remove(player.mesh);
+            this.players.delete(id);
+        };
+        this.tick = () => {
+            this.players.forEach((peer) => peer.tick(this.engine.player.object.position));
+        };
         const { updateInterval } = this.options;
         const { player: { object }, } = engine;
         let interval;
@@ -4807,31 +4832,6 @@ class Peers {
             clearInterval(interval);
         });
     }
-    join(id) {
-        const newPlayer = new _libs__WEBPACK_IMPORTED_MODULE_1__.Peer(id);
-        _libs__WEBPACK_IMPORTED_MODULE_1__.Peer.material.map = this.engine.registry.atlasUniform.value;
-        this.engine.rendering.scene.add(newPlayer.mesh);
-        this.players.set(id, newPlayer);
-    }
-    update(id, packet) {
-        if (!this.players.has(id)) {
-            // might have missed the player's join event
-            this.join(id);
-        }
-        const player = this.players.get(id);
-        const { name, position, rotation } = packet;
-        player.update(name, new three__WEBPACK_IMPORTED_MODULE_3__.Vector3(...position), new three__WEBPACK_IMPORTED_MODULE_3__.Quaternion(...rotation));
-    }
-    leave(id) {
-        const player = this.players.get(id);
-        if (!player)
-            return;
-        this.engine.rendering.scene.remove(player.mesh);
-        this.players.delete(id);
-    }
-    tick() {
-        this.players.forEach((peer) => peer.tick(this.engine.player.object.position));
-    }
 }
 
 
@@ -4857,6 +4857,18 @@ class Physics {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
+        this.tick = () => {
+            const { world, clock } = this.engine;
+            if (!world.isReady)
+                return;
+            const { delta } = clock;
+            this.core.tick(delta);
+        };
+        this.getPositionFromRB = (rigidBody) => {
+            const [px, py, pz] = rigidBody.getPosition();
+            const { vec } = rigidBody.aabb;
+            return [px + vec[0] / 2, py + vec[1] / 2, pz + vec[2] / 2];
+        };
         const testSolidity = (wx, wy, wz) => {
             return engine.world.getSolidityByWorld([wx, wy, wz]);
         };
@@ -4864,18 +4876,6 @@ class Physics {
             return engine.world.getFluidityByVoxel([wx, wy, wz]);
         };
         this.core = new _libs__WEBPACK_IMPORTED_MODULE_0__.Physics(testSolidity, testFluidity, this.options);
-    }
-    tick() {
-        const { world, clock } = this.engine;
-        if (!world.isReady)
-            return;
-        const { delta } = clock;
-        this.core.tick(delta);
-    }
-    getPositionFromRB(rigidBody) {
-        const [px, py, pz] = rigidBody.getPosition();
-        const { vec } = rigidBody.aabb;
-        return [px + vec[0] / 2, py + vec[1] / 2, pz + vec[2] / 2];
     }
 }
 
@@ -4998,6 +4998,184 @@ class Player {
             this.updateLookBlock();
             this.updatePerspective();
         };
+        this.godModeMovements = () => {
+            const { delta } = this.engine.clock;
+            const { right, left, up, down, front, back } = this.movements;
+            const { acceleration, flyingInertia } = this.options;
+            const movementVec = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+            movementVec.x = Number(right) - Number(left);
+            movementVec.z = Number(front) - Number(back);
+            movementVec.normalize();
+            const yMovement = Number(up) - Number(down);
+            this.acc.x = -movementVec.x * acceleration;
+            this.acc.y = yMovement * acceleration;
+            this.acc.z = -movementVec.z * acceleration;
+            this.vel.x -= this.vel.x * flyingInertia * delta;
+            this.vel.y -= this.vel.y * flyingInertia * delta;
+            this.vel.z -= this.vel.z * flyingInertia * delta;
+            this.vel.add(this.acc.multiplyScalar(delta));
+            this.acc.set(0, 0, 0);
+            this.controls.moveRight(-this.vel.x);
+            this.controls.moveForward(-this.vel.z);
+            this.controls.getObject().position.y += this.vel.y;
+        };
+        this.moveCamEntity = () => {
+            const { object } = this.controls;
+            const { state } = this.playerEntity.brain;
+            const { right, left, up, down, front, back } = this.movements;
+            const fb = front ? (back ? 0 : 1) : back ? -1 : 0;
+            const rl = left ? (right ? 0 : 1) : right ? -1 : 0;
+            // get the frontwards-backwards direction vectors
+            this.vec.setFromMatrixColumn(object.matrix, 0);
+            this.vec.crossVectors(object.up, this.vec);
+            const { x: forwardX, z: forwardZ } = this.vec;
+            // get the side-ways vectors
+            this.vec.setFromMatrixColumn(object.matrix, 0);
+            const { x: sideX, z: sideZ } = this.vec;
+            const totalX = forwardX + sideX;
+            const totalZ = forwardZ + sideZ;
+            let angle = Math.atan2(totalX, totalZ);
+            if ((fb | rl) === 0) {
+                state.running = false;
+            }
+            else {
+                state.running = true;
+                if (fb) {
+                    if (fb === -1)
+                        angle += Math.PI;
+                    if (rl) {
+                        angle += (Math.PI / 4) * fb * rl;
+                    }
+                }
+                else {
+                    angle += (rl * Math.PI) / 2;
+                }
+                // not sure why add Math.PI / 4, but it was always off by that.
+                state.heading = angle + Math.PI / 4;
+            }
+            // set jump as true, and brain will handle the jumping
+            state.jumping = up ? (down ? false : true) : down ? false : false;
+        };
+        this.teleport = (voxel) => {
+            const { config: { world: { dimension }, player: { bodyWidth }, }, } = this.engine;
+            const [vx, vy, vz] = voxel;
+            const newPosition = [
+                (vx - bodyWidth / 2 + 0.5) * dimension,
+                (vy + 1) * dimension,
+                (vz - bodyWidth / 2 + 0.5) * dimension,
+            ];
+            this.playerEntity.body.setPosition(newPosition);
+            return newPosition;
+        };
+        this.toggleGodMode = () => {
+            this.godMode = !this.godMode;
+            if (this.godMode) {
+                this.vel.set(0, 0, 0);
+                this.acc.set(0, 0, 0);
+                this.engine.entities.removeEntity('player');
+            }
+            else {
+                // activated again
+                this.addPlayerentity();
+            }
+        };
+        this.addPlayerentity = () => {
+            const { bodyWidth, distToGround, distToTop } = this.options;
+            const { dimension } = this.engine.world.options;
+            const cameraWorldWidth = bodyWidth * dimension;
+            const cameraWorldHeight = (distToGround + distToTop) * dimension;
+            this.playerEntity = this.engine.entities.addEntity('player', this.controls.getObject(), [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth], [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0]);
+            this.playerEntity.body.applyImpulse([0, 4, 0]);
+        };
+        this.setName = (name) => {
+            this.name = name || ' ';
+            localStorage.setItem(LOCAL_STORAGE_PLAYER_NAME, this.name);
+        };
+        this.resetMovements = () => {
+            this.movements = {
+                front: false,
+                back: false,
+                left: false,
+                right: false,
+                down: false,
+                up: false,
+            };
+        };
+        this.togglePerspective = () => {
+            this.perspective = this.perspective === 'first' ? 'third' : this.perspective === 'third' ? 'second' : 'first';
+            this.controls.camera.position.copy(new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(0, 0, 0));
+            this.controls.camera.quaternion.copy(new three__WEBPACK_IMPORTED_MODULE_4__.Quaternion(0, 0, 0, 0));
+            this.own.mesh.visible = this.perspective !== 'first';
+        };
+        this.updatePerspective = () => {
+            const { world, camera: { threeCamera }, } = this.engine;
+            const { object } = this.controls;
+            const { perspectiveLerpFactor, perspectiveDistance } = this.options;
+            this.own.update(this.name, this.object.position, this.object.quaternion);
+            const getDistance = () => {
+                const camDir = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+                const camPos = object.position;
+                const point = [];
+                const normal = [];
+                (this.perspective === 'second' ? object : threeCamera).getWorldDirection(camDir);
+                camDir.normalize();
+                camDir.multiplyScalar(-1);
+                fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default()((x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])), [camPos.x, camPos.y, camPos.z], [camDir.x, camDir.y, camDir.z], 10, point, normal);
+                const pointVec = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(...point);
+                const dist = object.position.distanceTo(pointVec);
+                return Math.min(dist, perspectiveDistance);
+            };
+            switch (this.perspective) {
+                case 'first': {
+                    break;
+                }
+                case 'second': {
+                    const newPos = threeCamera.position.clone();
+                    newPos.z = -getDistance();
+                    threeCamera.position.lerp(newPos, perspectiveLerpFactor);
+                    threeCamera.lookAt(object.position);
+                    break;
+                }
+                case 'third': {
+                    const newPos = threeCamera.position.clone();
+                    newPos.z = getDistance();
+                    threeCamera.position.lerp(newPos, perspectiveLerpFactor);
+                    break;
+                }
+            }
+        };
+        this.updateLookBlock = () => {
+            const { world, camera } = this.engine;
+            const { dimension } = world.options;
+            const { reachDistance, lookBlockLerp } = this.options;
+            const camDir = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
+            const camPos = this.controls.object.position;
+            camera.threeCamera.getWorldDirection(camDir);
+            camDir.normalize();
+            const point = [];
+            const normal = [];
+            const result = fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default()((x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])), [camPos.x, camPos.y, camPos.z], [camDir.x, camDir.y, camDir.z], reachDistance * dimension, point, normal);
+            if (!result) {
+                // no target
+                this.lookBlockMesh.visible = false;
+                this.lookBlock = null;
+                this.targetBlock = null;
+                return;
+            }
+            this.lookBlockMesh.visible = true;
+            const flooredPoint = point.map((n, i) => Math.floor(parseFloat(n.toFixed(3))) - Number(normal[i] > 0));
+            const [nx, ny, nz] = normal;
+            const newLookBlock = _shared__WEBPACK_IMPORTED_MODULE_1__.Helper.mapWorldPosToVoxelPos(flooredPoint, world.options.dimension);
+            if (!world.getVoxelByVoxel(newLookBlock)) {
+                // this means the look block isn't actually a block
+                return;
+            }
+            const [lbx, lby, lbz] = newLookBlock;
+            this.lookBlockMesh.position.lerp(new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(lbx * dimension + 0.5 * dimension, lby * dimension + 0.5 * dimension, lbz * dimension + 0.5 * dimension), lookBlockLerp);
+            this.lookBlock = newLookBlock;
+            // target block is look block summed with the normal
+            this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
+        };
         const { lookBlockScale, lookBlockColor } = options;
         // three.js pointerlock controls
         this.controls = new _libs__WEBPACK_IMPORTED_MODULE_2__.PointerLockControls(engine.camera.threeCamera, engine.container.canvas);
@@ -5048,184 +5226,6 @@ class Player {
             this.resetMovements();
         });
     }
-    godModeMovements() {
-        const { delta } = this.engine.clock;
-        const { right, left, up, down, front, back } = this.movements;
-        const { acceleration, flyingInertia } = this.options;
-        const movementVec = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
-        movementVec.x = Number(right) - Number(left);
-        movementVec.z = Number(front) - Number(back);
-        movementVec.normalize();
-        const yMovement = Number(up) - Number(down);
-        this.acc.x = -movementVec.x * acceleration;
-        this.acc.y = yMovement * acceleration;
-        this.acc.z = -movementVec.z * acceleration;
-        this.vel.x -= this.vel.x * flyingInertia * delta;
-        this.vel.y -= this.vel.y * flyingInertia * delta;
-        this.vel.z -= this.vel.z * flyingInertia * delta;
-        this.vel.add(this.acc.multiplyScalar(delta));
-        this.acc.set(0, 0, 0);
-        this.controls.moveRight(-this.vel.x);
-        this.controls.moveForward(-this.vel.z);
-        this.controls.getObject().position.y += this.vel.y;
-    }
-    moveCamEntity() {
-        const { object } = this.controls;
-        const { state } = this.playerEntity.brain;
-        const { right, left, up, down, front, back } = this.movements;
-        const fb = front ? (back ? 0 : 1) : back ? -1 : 0;
-        const rl = left ? (right ? 0 : 1) : right ? -1 : 0;
-        // get the frontwards-backwards direction vectors
-        this.vec.setFromMatrixColumn(object.matrix, 0);
-        this.vec.crossVectors(object.up, this.vec);
-        const { x: forwardX, z: forwardZ } = this.vec;
-        // get the side-ways vectors
-        this.vec.setFromMatrixColumn(object.matrix, 0);
-        const { x: sideX, z: sideZ } = this.vec;
-        const totalX = forwardX + sideX;
-        const totalZ = forwardZ + sideZ;
-        let angle = Math.atan2(totalX, totalZ);
-        if ((fb | rl) === 0) {
-            state.running = false;
-        }
-        else {
-            state.running = true;
-            if (fb) {
-                if (fb === -1)
-                    angle += Math.PI;
-                if (rl) {
-                    angle += (Math.PI / 4) * fb * rl;
-                }
-            }
-            else {
-                angle += (rl * Math.PI) / 2;
-            }
-            // not sure why add Math.PI / 4, but it was always off by that.
-            state.heading = angle + Math.PI / 4;
-        }
-        // set jump as true, and brain will handle the jumping
-        state.jumping = up ? (down ? false : true) : down ? false : false;
-    }
-    teleport(voxel) {
-        const { config: { world: { dimension }, player: { bodyWidth }, }, } = this.engine;
-        const [vx, vy, vz] = voxel;
-        const newPosition = [
-            (vx - bodyWidth / 2 + 0.5) * dimension,
-            (vy + 1) * dimension,
-            (vz - bodyWidth / 2 + 0.5) * dimension,
-        ];
-        this.playerEntity.body.setPosition(newPosition);
-        return newPosition;
-    }
-    toggleGodMode() {
-        this.godMode = !this.godMode;
-        if (this.godMode) {
-            this.vel.set(0, 0, 0);
-            this.acc.set(0, 0, 0);
-            this.engine.entities.removeEntity('player');
-        }
-        else {
-            // activated again
-            this.addPlayerentity();
-        }
-    }
-    addPlayerentity() {
-        const { bodyWidth, distToGround, distToTop } = this.options;
-        const { dimension } = this.engine.world.options;
-        const cameraWorldWidth = bodyWidth * dimension;
-        const cameraWorldHeight = (distToGround + distToTop) * dimension;
-        this.playerEntity = this.engine.entities.addEntity('player', this.controls.getObject(), [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth], [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0]);
-        this.playerEntity.body.applyImpulse([0, 4, 0]);
-    }
-    setName(name) {
-        this.name = name || ' ';
-        localStorage.setItem(LOCAL_STORAGE_PLAYER_NAME, this.name);
-    }
-    resetMovements() {
-        this.movements = {
-            front: false,
-            back: false,
-            left: false,
-            right: false,
-            down: false,
-            up: false,
-        };
-    }
-    togglePerspective() {
-        this.perspective = this.perspective === 'first' ? 'third' : this.perspective === 'third' ? 'second' : 'first';
-        this.controls.camera.position.copy(new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(0, 0, 0));
-        this.controls.camera.quaternion.copy(new three__WEBPACK_IMPORTED_MODULE_4__.Quaternion(0, 0, 0, 0));
-        this.own.mesh.visible = this.perspective !== 'first';
-    }
-    updatePerspective() {
-        const { world, camera: { threeCamera }, } = this.engine;
-        const { object } = this.controls;
-        const { perspectiveLerpFactor, perspectiveDistance } = this.options;
-        this.own.update(this.name, this.object.position, this.object.quaternion);
-        const getDistance = () => {
-            const camDir = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
-            const camPos = object.position;
-            const point = [];
-            const normal = [];
-            (this.perspective === 'second' ? object : threeCamera).getWorldDirection(camDir);
-            camDir.normalize();
-            camDir.multiplyScalar(-1);
-            fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default()((x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])), [camPos.x, camPos.y, camPos.z], [camDir.x, camDir.y, camDir.z], 10, point, normal);
-            const pointVec = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(...point);
-            const dist = object.position.distanceTo(pointVec);
-            return Math.min(dist, perspectiveDistance);
-        };
-        switch (this.perspective) {
-            case 'first': {
-                break;
-            }
-            case 'second': {
-                const newPos = threeCamera.position.clone();
-                newPos.z = -getDistance();
-                threeCamera.position.lerp(newPos, perspectiveLerpFactor);
-                threeCamera.lookAt(object.position);
-                break;
-            }
-            case 'third': {
-                const newPos = threeCamera.position.clone();
-                newPos.z = getDistance();
-                threeCamera.position.lerp(newPos, perspectiveLerpFactor);
-                break;
-            }
-        }
-    }
-    updateLookBlock() {
-        const { world, camera } = this.engine;
-        const { dimension } = world.options;
-        const { reachDistance, lookBlockLerp } = this.options;
-        const camDir = new three__WEBPACK_IMPORTED_MODULE_4__.Vector3();
-        const camPos = this.controls.object.position;
-        camera.threeCamera.getWorldDirection(camDir);
-        camDir.normalize();
-        const point = [];
-        const normal = [];
-        const result = fast_voxel_raycast__WEBPACK_IMPORTED_MODULE_0___default()((x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])), [camPos.x, camPos.y, camPos.z], [camDir.x, camDir.y, camDir.z], reachDistance * dimension, point, normal);
-        if (!result) {
-            // no target
-            this.lookBlockMesh.visible = false;
-            this.lookBlock = null;
-            this.targetBlock = null;
-            return;
-        }
-        this.lookBlockMesh.visible = true;
-        const flooredPoint = point.map((n, i) => Math.floor(parseFloat(n.toFixed(3))) - Number(normal[i] > 0));
-        const [nx, ny, nz] = normal;
-        const newLookBlock = _shared__WEBPACK_IMPORTED_MODULE_1__.Helper.mapWorldPosToVoxelPos(flooredPoint, world.options.dimension);
-        if (!world.getVoxelByVoxel(newLookBlock)) {
-            // this means the look block isn't actually a block
-            return;
-        }
-        const [lbx, lby, lbz] = newLookBlock;
-        this.lookBlockMesh.position.lerp(new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(lbx * dimension + 0.5 * dimension, lby * dimension + 0.5 * dimension, lbz * dimension + 0.5 * dimension), lookBlockLerp);
-        this.lookBlock = newLookBlock;
-        // target block is look block summed with the normal
-        this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
-    }
     get object() {
         return this.controls.object;
     }
@@ -5263,7 +5263,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _engine__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./engine */ "./client/core/engine.ts");
-
 
 
 const TRANSPARENT_SIDES = [three__WEBPACK_IMPORTED_MODULE_1__.FrontSide, three__WEBPACK_IMPORTED_MODULE_1__.BackSide];
@@ -5489,6 +5488,264 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.receivedChunks = [];
         this.chunks = new Map();
         this.visibleChunks = new Set();
+        this.tick = () => {
+            this.checkCamChunk();
+            this.requestChunks();
+            this.meshChunks();
+            this.animateSky();
+        };
+        this.getChunkByCPos = (cCoords) => {
+            return this.getChunkByName(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(cCoords));
+        };
+        this.getChunkByName = (chunkName) => {
+            return this.chunks.get(chunkName);
+        };
+        this.getChunkByVoxel = (vCoords) => {
+            const { chunkSize } = this.options;
+            const chunkCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
+            return this.getChunkByCPos(chunkCoords);
+        };
+        this.getNeighborChunksByVoxel = (vCoords, padding = 0) => {
+            const { chunkSize } = this.options;
+            const chunk = this.getChunkByVoxel(vCoords);
+            const [cx, cz] = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
+            const [lx, , lz] = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
+            const neighborChunks = [];
+            // check if local position is on the edge
+            // TODO: fix this hacky way of doing so.
+            const a = lx < padding;
+            const b = lz < padding;
+            const c = lx >= chunkSize - padding;
+            const d = lz >= chunkSize - padding;
+            // direct neighbors
+            if (a)
+                neighborChunks.push(this.getChunkByCPos([cx - 1, cz]));
+            if (b)
+                neighborChunks.push(this.getChunkByCPos([cx, cz - 1]));
+            if (c)
+                neighborChunks.push(this.getChunkByCPos([cx + 1, cz]));
+            if (d)
+                neighborChunks.push(this.getChunkByCPos([cx, cz + 1]));
+            // side-to-side diagonals
+            if (a && b)
+                neighborChunks.push(this.getChunkByCPos([cx - 1, cz - 1]));
+            if (a && d)
+                neighborChunks.push(this.getChunkByCPos([cx - 1, cz + 1]));
+            if (b && c)
+                neighborChunks.push(this.getChunkByCPos([cx + 1, cz - 1]));
+            if (c && d)
+                neighborChunks.push(this.getChunkByCPos([cx + 1, cz + 1]));
+            return neighborChunks.filter(Boolean).filter((c) => c !== chunk);
+        };
+        this.getVoxelByVoxel = (vCoords) => {
+            const chunk = this.getChunkByVoxel(vCoords);
+            return chunk ? chunk.getVoxel(...vCoords) : null;
+        };
+        this.getVoxelByWorld = (wCoords) => {
+            const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+            return this.getVoxelByVoxel(vCoords);
+        };
+        this.getSolidityByVoxel = (vCoords) => {
+            return !!this.getVoxelByVoxel(vCoords);
+        };
+        this.getFluidityByVoxel = (vCoords) => {
+            // TODO
+            return false;
+        };
+        this.getSolidityByWorld = (wCoords) => {
+            const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+            return this.getSolidityByVoxel(vCoords);
+        };
+        this.getFluidityByWorld = (wCoords) => {
+            const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
+            return this.getFluidityByVoxel(vCoords);
+        };
+        this.handleServerChunk = (serverChunk, prioritized = false) => {
+            const { x: cx, z: cz } = serverChunk;
+            const coords = [cx, cz];
+            this.requestedChunks.delete(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(coords));
+            if (prioritized)
+                this.receivedChunks.unshift(serverChunk);
+            else
+                this.receivedChunks.push(serverChunk);
+        };
+        this.setChunk = (chunk) => {
+            // TODO: remove chunks that are too far away
+            return this.chunks.set(chunk.name, chunk);
+        };
+        this.setVoxel = (voxel, type, sideEffects = true) => {
+            var _a;
+            const [vx, vy, vz] = voxel;
+            (_a = this.getChunkByVoxel([vx, vy, vz])) === null || _a === void 0 ? void 0 : _a.setVoxel(vx, vy, vz, type);
+            if (sideEffects) {
+                this.engine.network.server.sendEvent({
+                    type: 'UPDATE',
+                    json: { x: vx, y: vy, z: vz, type },
+                });
+            }
+        };
+        this.breakVoxel = () => {
+            if (this.engine.player.lookBlock) {
+                // TODO: use type.air instead of 0
+                this.setVoxel(this.engine.player.lookBlock, 0);
+            }
+        };
+        this.placeVoxel = (type) => {
+            const { dimension } = this.options;
+            const { targetBlock, playerEntity: { body: { aabb }, }, } = this.engine.player;
+            const blockSize = dimension - 0.05;
+            if (targetBlock) {
+                const [tx, ty, tz] = targetBlock;
+                const offset = (dimension - blockSize) / 2;
+                const blockAABB = new _libs__WEBPACK_IMPORTED_MODULE_2__.AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
+                if (!aabb.intersects(blockAABB))
+                    this.setVoxel(targetBlock, type);
+            }
+        };
+        this.addAsVisible = (chunk) => {
+            this.visibleChunks.add(chunk);
+        };
+        this.removeAsVisible = (chunk) => {
+            this.visibleChunks.delete(chunk);
+        };
+        this.updateRenderRadius = (renderRadiuus) => {
+            const { registry } = this.engine;
+            const { chunkSize, dimension } = this.options;
+            registry.opaqueChunkMaterial.uniforms.uFogNear.value = renderRadiuus * 0.6 * chunkSize * dimension;
+            registry.opaqueChunkMaterial.uniforms.uFogFar.value = renderRadiuus * chunkSize * dimension;
+            this.checkCamChunk();
+            this.surroundCamChunks();
+        };
+        this.setTime = (time, sideEffect = true) => {
+            this.sky.tracker.time = time % 2400;
+            // full cycle to sync up the colors
+            if (this.engine.tickSpeed !== 0)
+                for (let i = 0; i < 2400; i++) {
+                    this.sky.tick(1 / this.engine.tickSpeed);
+                }
+            if (sideEffect) {
+                this.engine.network.server.sendEvent({
+                    type: 'CONFIG',
+                    json: {
+                        time: this.sky.tracker.time,
+                    },
+                });
+            }
+        };
+        this.sortPendingChunks = () => {
+            const [cx, cz] = this.camChunkPos;
+            this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
+        };
+        this.handleReconnection = () => {
+            // move requested chunks to pending
+            this.pendingChunks.push(...Array.from(this.requestedChunks).map((rc) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.parseChunkName(rc)));
+            this.sortPendingChunks();
+        };
+        this.checkCamChunk = () => {
+            const { chunkSize, renderRadius } = this.options;
+            const pos = this.engine.player.voxel;
+            const chunkPos = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(pos, chunkSize);
+            const chunkName = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(chunkPos);
+            if (chunkName !== this.camChunkName) {
+                this.engine.emit('chunk-changed', chunkPos);
+                this.camChunkName = chunkName;
+                this.camChunkPos = chunkPos;
+                this.surroundCamChunks();
+            }
+            let supposed = 0;
+            const [cx, cz] = this.camChunkPos;
+            for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
+                for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
+                    const dx = x - cx;
+                    const dz = z - cz;
+                    // sphere of chunks around camera effect
+                    if (dx * dx + dz * dz > renderRadius * renderRadius)
+                        continue;
+                    const chunk = this.getChunkByCPos([x, z]);
+                    if (chunk) {
+                        chunk.addToScene();
+                    }
+                    supposed++;
+                }
+            }
+            if (!this.isReady && supposed <= this.chunks.size) {
+                this.isReady = true;
+                this.engine.emit('world-ready');
+            }
+        };
+        this.surroundCamChunks = () => {
+            const { renderRadius, requestRadius, chunkSize } = this.options;
+            const [cx, cz] = this.camChunkPos;
+            for (let x = cx - requestRadius; x <= cx + requestRadius; x++) {
+                for (let z = cz - requestRadius; z <= cz + requestRadius; z++) {
+                    const dx = x - cx;
+                    const dz = z - cz;
+                    if (dx * dx + dz * dz > requestRadius * requestRadius)
+                        continue;
+                    const chunk = this.getChunkByCPos([x, z]);
+                    if (!chunk && !this.requestedChunks.has(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName([x, z]))) {
+                        this.pendingChunks.push([x, z]);
+                    }
+                }
+            }
+            this.pendingChunks = Array.from(new Set(this.pendingChunks.map((pc) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(pc)))).map((pcStr) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.parseChunkName(pcStr));
+            // make pending chunks radiate from player, might have easier ways of doing so
+            this.sortPendingChunks();
+            // if the chunk is too far away, remove from scene.
+            const deleteDistance = renderRadius * chunkSize * 1.414;
+            for (const chunk of this.visibleChunks) {
+                if (chunk.distTo(...this.engine.player.voxel) > deleteDistance) {
+                    chunk.removeFromScene();
+                }
+            }
+        };
+        this.requestChunks = () => {
+            // separate chunk request into frames to avoid clogging
+            if (this.pendingChunks.length === 0 || !this.engine.connected)
+                return;
+            const { maxChunkRequestPerFrame } = this.options;
+            // don't clog up the server
+            if (this.requestedChunks.size < maxChunkRequestPerFrame) {
+                const framePendingChunks = this.pendingChunks.splice(0, maxChunkRequestPerFrame);
+                framePendingChunks.forEach(([cx, cz]) => {
+                    const rep = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName([cx, cz]);
+                    if (this.requestedChunks.has(rep))
+                        return;
+                    this.engine.network.server.sendEvent({
+                        type: 'REQUEST',
+                        json: { x: cx, z: cz },
+                    });
+                    this.requestedChunks.add(rep);
+                });
+            }
+        };
+        this.meshChunks = () => {
+            // separate chunk meshing into frames to avoid clogging
+            if (this.receivedChunks.length === 0)
+                return;
+            const { maxChunkProcessPerFrame } = this.options;
+            const frameReceivedChunks = this.receivedChunks.splice(0, 30);
+            frameReceivedChunks.forEach((serverChunk) => {
+                const { x: cx, z: cz } = serverChunk;
+                const coords = [cx, cz];
+                let chunk = this.getChunkByCPos(coords);
+                if (!chunk) {
+                    const { chunkSize, dimension, maxHeight } = this.options;
+                    chunk = new _chunk__WEBPACK_IMPORTED_MODULE_4__.Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
+                    this.setChunk(chunk);
+                }
+                const { meshes, voxels } = serverChunk;
+                chunk.setupMesh(meshes);
+                if (voxels.length) {
+                    chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+                }
+            });
+        };
+        this.animateSky = () => {
+            const { delta } = this.engine.clock;
+            this.sky.tick(delta);
+            this.clouds.tick(delta);
+        };
         this.sky = new _libs__WEBPACK_IMPORTED_MODULE_2__.Sky(engine.rendering);
         this.clouds = new _libs__WEBPACK_IMPORTED_MODULE_2__.Clouds(engine.rendering);
         engine.on('ready', () => {
@@ -5505,266 +5762,8 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.setTime(await engine.network.fetchData('/time'), false);
         });
     }
-    tick() {
-        this.checkCamChunk();
-        this.requestChunks();
-        this.meshChunks();
-        this.animateSky();
-    }
-    getChunkByCPos(cCoords) {
-        return this.getChunkByName(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(cCoords));
-    }
-    getChunkByName(chunkName) {
-        return this.chunks.get(chunkName);
-    }
-    getChunkByVoxel(vCoords) {
-        const { chunkSize } = this.options;
-        const chunkCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
-        return this.getChunkByCPos(chunkCoords);
-    }
-    getNeighborChunksByVoxel(vCoords, padding = 0) {
-        const { chunkSize } = this.options;
-        const chunk = this.getChunkByVoxel(vCoords);
-        const [cx, cz] = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
-        const [lx, , lz] = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkLocalPos(vCoords, chunkSize);
-        const neighborChunks = [];
-        // check if local position is on the edge
-        // TODO: fix this hacky way of doing so.
-        const a = lx < padding;
-        const b = lz < padding;
-        const c = lx >= chunkSize - padding;
-        const d = lz >= chunkSize - padding;
-        // direct neighbors
-        if (a)
-            neighborChunks.push(this.getChunkByCPos([cx - 1, cz]));
-        if (b)
-            neighborChunks.push(this.getChunkByCPos([cx, cz - 1]));
-        if (c)
-            neighborChunks.push(this.getChunkByCPos([cx + 1, cz]));
-        if (d)
-            neighborChunks.push(this.getChunkByCPos([cx, cz + 1]));
-        // side-to-side diagonals
-        if (a && b)
-            neighborChunks.push(this.getChunkByCPos([cx - 1, cz - 1]));
-        if (a && d)
-            neighborChunks.push(this.getChunkByCPos([cx - 1, cz + 1]));
-        if (b && c)
-            neighborChunks.push(this.getChunkByCPos([cx + 1, cz - 1]));
-        if (c && d)
-            neighborChunks.push(this.getChunkByCPos([cx + 1, cz + 1]));
-        return neighborChunks.filter(Boolean).filter((c) => c !== chunk);
-    }
-    getVoxelByVoxel(vCoords) {
-        const chunk = this.getChunkByVoxel(vCoords);
-        return chunk ? chunk.getVoxel(...vCoords) : null;
-    }
-    getVoxelByWorld(wCoords) {
-        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
-        return this.getVoxelByVoxel(vCoords);
-    }
-    getSolidityByVoxel(vCoords) {
-        return !!this.getVoxelByVoxel(vCoords);
-    }
-    getFluidityByVoxel(vCoords) {
-        // TODO
-        return false;
-    }
-    getSolidityByWorld(wCoords) {
-        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
-        return this.getSolidityByVoxel(vCoords);
-    }
-    getFluidityByWorld(wCoords) {
-        const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
-        return this.getFluidityByVoxel(vCoords);
-    }
-    handleServerChunk(serverChunk, prioritized = false) {
-        const { x: cx, z: cz } = serverChunk;
-        const coords = [cx, cz];
-        this.requestedChunks.delete(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(coords));
-        if (prioritized)
-            this.receivedChunks.unshift(serverChunk);
-        else
-            this.receivedChunks.push(serverChunk);
-    }
-    setChunk(chunk) {
-        // TODO: remove chunks that are too far away
-        return this.chunks.set(chunk.name, chunk);
-    }
-    setVoxel(voxel, type, sideEffects = true) {
-        var _a;
-        const [vx, vy, vz] = voxel;
-        (_a = this.getChunkByVoxel([vx, vy, vz])) === null || _a === void 0 ? void 0 : _a.setVoxel(vx, vy, vz, type);
-        if (sideEffects) {
-            this.engine.network.server.sendEvent({
-                type: 'UPDATE',
-                json: { x: vx, y: vy, z: vz, type },
-            });
-        }
-    }
-    breakVoxel() {
-        if (this.engine.player.lookBlock) {
-            // TODO: use type.air instead of 0
-            this.setVoxel(this.engine.player.lookBlock, 0);
-        }
-    }
-    placeVoxel(type) {
-        const { dimension } = this.options;
-        const { targetBlock, playerEntity: { body: { aabb }, }, } = this.engine.player;
-        const blockSize = dimension - 0.05;
-        if (targetBlock) {
-            const [tx, ty, tz] = targetBlock;
-            const offset = (dimension - blockSize) / 2;
-            const blockAABB = new _libs__WEBPACK_IMPORTED_MODULE_2__.AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
-            if (!aabb.intersects(blockAABB))
-                this.setVoxel(targetBlock, type);
-        }
-    }
-    addAsVisible(chunk) {
-        this.visibleChunks.add(chunk);
-    }
-    removeAsVisible(chunk) {
-        this.visibleChunks.delete(chunk);
-    }
-    updateRenderRadius(renderRadiuus) {
-        const { registry } = this.engine;
-        const { chunkSize, dimension } = this.options;
-        registry.opaqueChunkMaterial.uniforms.uFogNear.value = renderRadiuus * 0.6 * chunkSize * dimension;
-        registry.opaqueChunkMaterial.uniforms.uFogFar.value = renderRadiuus * chunkSize * dimension;
-        this.checkCamChunk();
-        this.surroundCamChunks();
-    }
-    setTime(time, sideEffect = true) {
-        this.sky.tracker.time = time % 2400;
-        // full cycle to sync up the colors
-        if (this.engine.tickSpeed !== 0)
-            for (let i = 0; i < 2400; i++) {
-                this.sky.tick(1 / this.engine.tickSpeed);
-            }
-        if (sideEffect) {
-            this.engine.network.server.sendEvent({
-                type: 'CONFIG',
-                json: {
-                    time: this.sky.tracker.time,
-                },
-            });
-        }
-    }
-    sortPendingChunks() {
-        const [cx, cz] = this.camChunkPos;
-        this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
-    }
-    handleReconnection() {
-        // move requested chunks to pending
-        this.pendingChunks.push(...Array.from(this.requestedChunks).map((rc) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.parseChunkName(rc)));
-        this.sortPendingChunks();
-    }
     get camChunkPosStr() {
         return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
-    }
-    checkCamChunk() {
-        const { chunkSize, renderRadius } = this.options;
-        const pos = this.engine.player.voxel;
-        const chunkPos = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapVoxelPosToChunkPos(pos, chunkSize);
-        const chunkName = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(chunkPos);
-        if (chunkName !== this.camChunkName) {
-            this.engine.emit('chunk-changed', chunkPos);
-            this.camChunkName = chunkName;
-            this.camChunkPos = chunkPos;
-            this.surroundCamChunks();
-        }
-        let supposed = 0;
-        const [cx, cz] = this.camChunkPos;
-        for (let x = cx - renderRadius; x <= cx + renderRadius; x++) {
-            for (let z = cz - renderRadius; z <= cz + renderRadius; z++) {
-                const dx = x - cx;
-                const dz = z - cz;
-                // sphere of chunks around camera effect
-                if (dx * dx + dz * dz > renderRadius * renderRadius)
-                    continue;
-                const chunk = this.getChunkByCPos([x, z]);
-                if (chunk) {
-                    chunk.addToScene();
-                }
-                supposed++;
-            }
-        }
-        if (!this.isReady && supposed <= this.chunks.size) {
-            this.isReady = true;
-            this.engine.emit('world-ready');
-        }
-    }
-    surroundCamChunks() {
-        const { renderRadius, requestRadius, chunkSize } = this.options;
-        const [cx, cz] = this.camChunkPos;
-        for (let x = cx - requestRadius; x <= cx + requestRadius; x++) {
-            for (let z = cz - requestRadius; z <= cz + requestRadius; z++) {
-                const dx = x - cx;
-                const dz = z - cz;
-                if (dx * dx + dz * dz > requestRadius * requestRadius)
-                    continue;
-                const chunk = this.getChunkByCPos([x, z]);
-                if (!chunk && !this.requestedChunks.has(_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName([x, z]))) {
-                    this.pendingChunks.push([x, z]);
-                }
-            }
-        }
-        this.pendingChunks = Array.from(new Set(this.pendingChunks.map((pc) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName(pc)))).map((pcStr) => _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.parseChunkName(pcStr));
-        // make pending chunks radiate from player, might have easier ways of doing so
-        this.sortPendingChunks();
-        // if the chunk is too far away, remove from scene.
-        const deleteDistance = renderRadius * chunkSize * 1.414;
-        for (const chunk of this.visibleChunks) {
-            if (chunk.distTo(...this.engine.player.voxel) > deleteDistance) {
-                chunk.removeFromScene();
-            }
-        }
-    }
-    requestChunks() {
-        // separate chunk request into frames to avoid clogging
-        if (this.pendingChunks.length === 0 || !this.engine.connected)
-            return;
-        const { maxChunkRequestPerFrame } = this.options;
-        // don't clog up the server
-        if (this.requestedChunks.size < maxChunkRequestPerFrame) {
-            const framePendingChunks = this.pendingChunks.splice(0, maxChunkRequestPerFrame);
-            framePendingChunks.forEach(([cx, cz]) => {
-                const rep = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName([cx, cz]);
-                if (this.requestedChunks.has(rep))
-                    return;
-                this.engine.network.server.sendEvent({
-                    type: 'REQUEST',
-                    json: { x: cx, z: cz },
-                });
-                this.requestedChunks.add(rep);
-            });
-        }
-    }
-    meshChunks() {
-        // separate chunk meshing into frames to avoid clogging
-        if (this.receivedChunks.length === 0)
-            return;
-        const { maxChunkProcessPerFrame } = this.options;
-        const frameReceivedChunks = this.receivedChunks.splice(0, 30);
-        frameReceivedChunks.forEach((serverChunk) => {
-            const { x: cx, z: cz } = serverChunk;
-            const coords = [cx, cz];
-            let chunk = this.getChunkByCPos(coords);
-            if (!chunk) {
-                const { chunkSize, dimension, maxHeight } = this.options;
-                chunk = new _chunk__WEBPACK_IMPORTED_MODULE_4__.Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
-                this.setChunk(chunk);
-            }
-            const { meshes, voxels } = serverChunk;
-            chunk.setupMesh(meshes);
-            if (voxels.length) {
-                chunk.voxels.data = new Uint8Array(serverChunk.voxels);
-            }
-        });
-    }
-    animateSky() {
-        const { delta } = this.engine.clock;
-        this.sky.tick(delta);
-        this.clouds.tick(delta);
     }
 }
 
@@ -5915,84 +5914,84 @@ class Brain {
         this.tempVec = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().create();
         this.zeroVec = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().create();
         this.tempVec2 = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().create();
-        this.state = Object.assign(Object.assign({}, defaultBrainState), state);
-        this.options = Object.assign(Object.assign({}, defaultBrainOptions), options);
-    }
-    tick(dt) {
-        // move implementation originally written as external module
-        //   see https://github.com/andyhall/voxel-fps-controller
-        //   for original code
-        // jumping
-        const onGround = this.body.atRestY < 0;
-        const canjump = onGround || this.state.jumpCount < this.options.airJumps;
-        if (onGround) {
-            this.state.isJumping = false;
-            this.state.jumpCount = 0;
-        }
-        // process jump input
-        if (this.state.jumping) {
-            if (this.state.isJumping) {
-                // continue previous jump
-                if (this.state.currentJumpTime > 0) {
-                    let jf = this.options.jumpForce;
-                    if (this.state.currentJumpTime < dt)
-                        jf *= this.state.currentJumpTime / dt;
-                    this.body.applyForce([0, jf, 0]);
-                    this.state.currentJumpTime -= dt;
+        this.tick = (dt) => {
+            // move implementation originally written as external module
+            //   see https://github.com/andyhall/voxel-fps-controller
+            //   for original code
+            // jumping
+            const onGround = this.body.atRestY < 0;
+            const canjump = onGround || this.state.jumpCount < this.options.airJumps;
+            if (onGround) {
+                this.state.isJumping = false;
+                this.state.jumpCount = 0;
+            }
+            // process jump input
+            if (this.state.jumping) {
+                if (this.state.isJumping) {
+                    // continue previous jump
+                    if (this.state.currentJumpTime > 0) {
+                        let jf = this.options.jumpForce;
+                        if (this.state.currentJumpTime < dt)
+                            jf *= this.state.currentJumpTime / dt;
+                        this.body.applyForce([0, jf, 0]);
+                        this.state.currentJumpTime -= dt;
+                    }
+                }
+                else if (canjump) {
+                    // start new jump
+                    this.state.isJumping = true;
+                    if (!onGround)
+                        this.state.jumpCount++;
+                    this.state.currentJumpTime = this.options.jumpTime;
+                    this.body.applyImpulse([0, this.options.jumpImpulse, 0]);
+                    // clear downward velocity on airjump
+                    if (!onGround && this.body.velocity[1] < 0)
+                        this.body.velocity[1] = 0;
                 }
             }
-            else if (canjump) {
-                // start new jump
-                this.state.isJumping = true;
-                if (!onGround)
-                    this.state.jumpCount++;
-                this.state.currentJumpTime = this.options.jumpTime;
-                this.body.applyImpulse([0, this.options.jumpImpulse, 0]);
-                // clear downward velocity on airjump
-                if (!onGround && this.body.velocity[1] < 0)
-                    this.body.velocity[1] = 0;
+            else {
+                this.state.isJumping = false;
             }
-        }
-        else {
-            this.state.isJumping = false;
-        }
-        // apply movement forces if entity is moving, otherwise just friction
-        const m = this.tempVec;
-        const push = this.tempVec2;
-        if (this.state.running) {
-            const speed = this.options.maxSpeed;
-            // todo: add crouch/sprint modifiers if needed
-            // if (state.sprint) speed *= state.sprintMoveMult
-            // if (state.crouch) speed *= state.crouchMoveMult
-            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(m, 0, 0, speed);
-            // rotate move vector to entity's heading
-            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().rotateY(m, m, this.zeroVec, this.state.heading);
-            // push vector to achieve desired speed & dir
-            // following code to adjust 2D velocity to desired amount is patterned on Quake:
-            // https://github.com/id-Software/Quake-III-Arena/blob/master/code/game/bg_pmove.c#L275
-            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub(push, m, this.body.velocity);
-            push[1] = 0;
-            const pushLen = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(push);
-            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().normalize(push, push);
-            if (pushLen > 0) {
-                // pushing force vector
-                let canPush = this.options.moveForce;
-                if (!onGround)
-                    canPush *= this.options.airMoveMult;
-                // apply final force
-                const pushAmt = this.options.responsiveness * pushLen;
-                if (canPush > pushAmt)
-                    canPush = pushAmt;
-                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(push, push, canPush);
-                this.body.applyForce(push);
+            // apply movement forces if entity is moving, otherwise just friction
+            const m = this.tempVec;
+            const push = this.tempVec2;
+            if (this.state.running) {
+                const speed = this.options.maxSpeed;
+                // todo: add crouch/sprint modifiers if needed
+                // if (state.sprint) speed *= state.sprintMoveMult
+                // if (state.crouch) speed *= state.crouchMoveMult
+                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(m, 0, 0, speed);
+                // rotate move vector to entity's heading
+                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().rotateY(m, m, this.zeroVec, this.state.heading);
+                // push vector to achieve desired speed & dir
+                // following code to adjust 2D velocity to desired amount is patterned on Quake:
+                // https://github.com/id-Software/Quake-III-Arena/blob/master/code/game/bg_pmove.c#L275
+                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub(push, m, this.body.velocity);
+                push[1] = 0;
+                const pushLen = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(push);
+                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().normalize(push, push);
+                if (pushLen > 0) {
+                    // pushing force vector
+                    let canPush = this.options.moveForce;
+                    if (!onGround)
+                        canPush *= this.options.airMoveMult;
+                    // apply final force
+                    const pushAmt = this.options.responsiveness * pushLen;
+                    if (canPush > pushAmt)
+                        canPush = pushAmt;
+                    gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(push, push, canPush);
+                    this.body.applyForce(push);
+                }
+                // different friction when not moving
+                // idea from Sonic: http://info.sonicretro.org/SPG:Running
+                this.body.friction = this.options.runningFriction;
             }
-            // different friction when not moving
-            // idea from Sonic: http://info.sonicretro.org/SPG:Running
-            this.body.friction = this.options.runningFriction;
-        }
-        else {
-            this.body.friction = this.options.standingFriction;
-        }
+            else {
+                this.body.friction = this.options.standingFriction;
+            }
+        };
+        this.state = Object.assign(Object.assign({}, defaultBrainState), state);
+        this.options = Object.assign(Object.assign({}, defaultBrainOptions), options);
     }
 }
 
@@ -6071,27 +6070,27 @@ const defaultClockOptions = {
 class Clock {
     constructor(options = {}) {
         this.intervals = new Map();
+        this.tick = () => {
+            const now = Date.now();
+            this.delta = Math.min((now - this.lastFrameTime) / 1000, this.options.maxDelta);
+            this.lastFrameTime = now;
+        };
+        this.registerInterval = (name, func, interval) => {
+            const newInterval = window.setInterval(func, interval);
+            this.intervals.set(name, newInterval);
+            return newInterval;
+        };
+        this.clearInterval = (name) => {
+            const interval = this.intervals.get(name);
+            window.clearInterval(interval);
+            return this.intervals.delete(name);
+        };
+        this.hasInterval = (name) => {
+            return this.intervals.has(name);
+        };
         this.options = Object.assign(Object.assign({}, defaultClockOptions), options);
         this.lastFrameTime = Date.now();
         this.delta = 0;
-    }
-    tick() {
-        const now = Date.now();
-        this.delta = Math.min((now - this.lastFrameTime) / 1000, this.options.maxDelta);
-        this.lastFrameTime = now;
-    }
-    registerInterval(name, func, interval) {
-        const newInterval = window.setInterval(func, interval);
-        this.intervals.set(name, newInterval);
-        return newInterval;
-    }
-    clearInterval(name) {
-        const interval = this.intervals.get(name);
-        window.clearInterval(interval);
-        return this.intervals.delete(name);
-    }
-    hasInterval(name) {
-        return this.intervals.has(name);
     }
 }
 
@@ -6408,6 +6407,17 @@ class Peer {
         this.id = id;
         this.options = options;
         this.name = 'testtesttest';
+        this.update = (name, position, quaternion) => {
+            this.nameMesh.text = name;
+            this.newPosition = position;
+            this.newQuaternion = quaternion;
+        };
+        this.tick = (camPos) => {
+            const { lerpFactor, maxNameDistance } = this.options;
+            this.mesh.position.lerp(this.newPosition, lerpFactor);
+            this.mesh.quaternion.slerp(this.newQuaternion, lerpFactor);
+            this.nameMesh.visible = this.mesh.position.distanceTo(camPos) < maxNameDistance;
+        };
         Peer.setupBasics(this.options);
         this.mesh = new three__WEBPACK_IMPORTED_MODULE_1__.Mesh(Peer.geometry, Peer.material);
         this.newPosition = this.mesh.position;
@@ -6422,17 +6432,6 @@ class Peer {
             image.magFilter = three__WEBPACK_IMPORTED_MODULE_1__.NearestFilter;
         }
         this.mesh.add(this.nameMesh);
-    }
-    update(name, position, quaternion) {
-        this.nameMesh.text = name;
-        this.newPosition = position;
-        this.newQuaternion = quaternion;
-    }
-    tick(camPos) {
-        const { lerpFactor, maxNameDistance } = this.options;
-        this.mesh.position.lerp(this.newPosition, lerpFactor);
-        this.mesh.quaternion.slerp(this.newQuaternion, lerpFactor);
-        this.nameMesh.visible = this.mesh.position.distanceTo(camPos) < maxNameDistance;
     }
 }
 Peer.setupBasics = ({ headColor, headDimension }) => {
@@ -6492,258 +6491,258 @@ class Physics {
         this.targetPos = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().create();
         this.upvec = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().create();
         this.leftover = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().create();
-    }
-    addBody(options) {
-        const defaultOptions = {
-            aabb: new _aabb__WEBPACK_IMPORTED_MODULE_4__.AABB([0, 0, 0], [1, 1, 1]),
-            mass: 1,
-            friction: 1,
-            restitution: 0,
-            gravityMultiplier: 1,
-            onCollide: () => { },
-            autoStep: false,
+        this.addBody = (options) => {
+            const defaultOptions = {
+                aabb: new _aabb__WEBPACK_IMPORTED_MODULE_4__.AABB([0, 0, 0], [1, 1, 1]),
+                mass: 1,
+                friction: 1,
+                restitution: 0,
+                gravityMultiplier: 1,
+                onCollide: () => { },
+                autoStep: false,
+            };
+            const { aabb, mass, friction, restitution, gravityMultiplier, onCollide, autoStep } = Object.assign(Object.assign({}, defaultOptions), options);
+            const b = new _rigid_body__WEBPACK_IMPORTED_MODULE_5__.RigidBody(aabb, mass, friction, restitution, gravityMultiplier, onCollide, autoStep);
+            this.bodies.push(b);
+            return b;
         };
-        const { aabb, mass, friction, restitution, gravityMultiplier, onCollide, autoStep } = Object.assign(Object.assign({}, defaultOptions), options);
-        const b = new _rigid_body__WEBPACK_IMPORTED_MODULE_5__.RigidBody(aabb, mass, friction, restitution, gravityMultiplier, onCollide, autoStep);
-        this.bodies.push(b);
-        return b;
-    }
-    removeBody(b) {
-        const i = this.bodies.indexOf(b);
-        if (i < 0)
-            return undefined;
-        this.bodies.splice(i, 1);
-        // not sure if this is needed.
-        // b.aabb = b.onCollide = null;
-    }
-    tick(dt) {
-        const noGravity = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.approxEquals(0, gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(this.options.gravity) ** 2);
-        this.bodies.forEach((b) => this.iterateBody(b, dt, noGravity));
-    }
-    iterateBody(b, dt, noGravity) {
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.oldResting, b.resting);
-        // treat bodies with <= mass as static
-        if (b.mass <= 0) {
-            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(b.velocity, 0, 0, 0);
+        this.removeBody = (b) => {
+            const i = this.bodies.indexOf(b);
+            if (i < 0)
+                return undefined;
+            this.bodies.splice(i, 1);
+            // not sure if this is needed.
+            // b.aabb = b.onCollide = null;
+        };
+        this.tick = (dt) => {
+            const noGravity = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.approxEquals(0, gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(this.options.gravity) ** 2);
+            this.bodies.forEach((b) => this.iterateBody(b, dt, noGravity));
+        };
+        this.iterateBody = (b, dt, noGravity) => {
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.oldResting, b.resting);
+            // treat bodies with <= mass as static
+            if (b.mass <= 0) {
+                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(b.velocity, 0, 0, 0);
+                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(b.forces, 0, 0, 0);
+                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(b.impulses, 0, 0, 0);
+                return;
+            }
+            // skip bodies if static or no velocity/forces/impulses
+            const localNoGrav = noGravity || b.gravityMultiplier === 0;
+            if (this.bodyAsleep(b, dt, localNoGrav))
+                return;
+            b.sleepFrameCount--;
+            // check if under water, if so apply buoyancy and drag forces
+            this.applyFluidForces(b);
+            // semi-implicit Euler integration
+            // a = f/m + gravity*gravityMultiplier
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.a, b.forces, 1 / b.mass);
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scaleAndAdd(this.a, this.a, this.options.gravity, b.gravityMultiplier);
+            // dv = i/m + a*dt
+            // v1 = v0 + dv
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.dv, b.impulses, 1 / b.mass);
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scaleAndAdd(this.dv, this.dv, this.a, dt);
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(b.velocity, b.velocity, this.dv);
+            // apply friction based on change in velocity this frame
+            if (b.friction) {
+                this.applyFrictionByAxis(0, b, this.dv);
+                this.applyFrictionByAxis(1, b, this.dv);
+                this.applyFrictionByAxis(2, b, this.dv);
+            }
+            // linear air or fluid friction - effectively v *= drag
+            // body settings override global settings
+            let drag = b.airDrag >= 0 ? b.airDrag : this.options.airDrag;
+            if (b.inFluid) {
+                drag = b.fluidDrag >= 0 ? b.fluidDrag : this.options.fluidDrag;
+                drag *= 1 - (1 - b.ratioInFluid) ** 2;
+            }
+            const mult = Math.max(1 - (drag * dt) / b.mass, 0);
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(b.velocity, b.velocity, mult);
+            // x1-x0 = v1*dt
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.dx, b.velocity, dt);
+            // clear forces and impulses for next timestep
             gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(b.forces, 0, 0, 0);
             gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(b.impulses, 0, 0, 0);
-            return;
-        }
-        // skip bodies if static or no velocity/forces/impulses
-        const localNoGrav = noGravity || b.gravityMultiplier === 0;
-        if (this.bodyAsleep(b, dt, localNoGrav))
-            return;
-        b.sleepFrameCount--;
-        // check if under water, if so apply buoyancy and drag forces
-        this.applyFluidForces(b);
-        // semi-implicit Euler integration
-        // a = f/m + gravity*gravityMultiplier
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.a, b.forces, 1 / b.mass);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scaleAndAdd(this.a, this.a, this.options.gravity, b.gravityMultiplier);
-        // dv = i/m + a*dt
-        // v1 = v0 + dv
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.dv, b.impulses, 1 / b.mass);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scaleAndAdd(this.dv, this.dv, this.a, dt);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(b.velocity, b.velocity, this.dv);
-        // apply friction based on change in velocity this frame
-        if (b.friction) {
-            this.applyFrictionByAxis(0, b, this.dv);
-            this.applyFrictionByAxis(1, b, this.dv);
-            this.applyFrictionByAxis(2, b, this.dv);
-        }
-        // linear air or fluid friction - effectively v *= drag
-        // body settings override global settings
-        let drag = b.airDrag >= 0 ? b.airDrag : this.options.airDrag;
-        if (b.inFluid) {
-            drag = b.fluidDrag >= 0 ? b.fluidDrag : this.options.fluidDrag;
-            drag *= 1 - (1 - b.ratioInFluid) ** 2;
-        }
-        const mult = Math.max(1 - (drag * dt) / b.mass, 0);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(b.velocity, b.velocity, mult);
-        // x1-x0 = v1*dt
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.dx, b.velocity, dt);
-        // clear forces and impulses for next timestep
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(b.forces, 0, 0, 0);
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(b.impulses, 0, 0, 0);
-        // cache old position for use in autostepping
-        if (b.autoStep) {
-            _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.cloneAABB(this.tmpBox, b.aabb);
-        }
-        // sweeps aabb along dx and accounts for collisions
-        this.processCollisions(b.aabb, this.dx, b.resting);
-        // if autostep, and on ground, run collisions again with stepped up aabb
-        if (b.autoStep) {
-            this.tryAutoStepping(b, this.tmpBox, this.dx);
-        }
-        // Collision impacts. b.resting shows which axes had collisions:
-        for (let i = 0; i < 3; ++i) {
-            this.impacts[i] = 0;
-            if (b.resting[i]) {
-                // count impact only if wasn't collided last frame
-                if (!this.oldResting[i])
-                    this.impacts[i] = -b.velocity[i];
-                b.velocity[i] = 0;
+            // cache old position for use in autostepping
+            if (b.autoStep) {
+                _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.cloneAABB(this.tmpBox, b.aabb);
             }
-        }
-        const mag = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(this.impacts);
-        if (mag > 0.001) {
-            // epsilon
-            // send collision event - allows client to optionally change
-            // body's restitution depending on what terrain it hit
-            // event argument is impulse J = m * dv
-            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.impacts, this.impacts, b.mass);
-            if (b.onCollide)
-                b.onCollide(this.impacts);
-            // bounce depending on restitution and minBounceImpulse
-            if (b.restitution > 0 && mag > this.options.minBounceImpulse) {
-                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.impacts, this.impacts, b.restitution);
-                b.applyImpulse(this.impacts);
+            // sweeps aabb along dx and accounts for collisions
+            this.processCollisions(b.aabb, this.dx, b.resting);
+            // if autostep, and on ground, run collisions again with stepped up aabb
+            if (b.autoStep) {
+                this.tryAutoStepping(b, this.tmpBox, this.dx);
             }
-        }
-        // sleep check
-        const vsq = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(b.velocity) ** 2;
-        if (vsq > 1e-5)
-            b.markActive();
-    }
-    applyFluidForces(body) {
-        // First pass at handling fluids. Assumes fluids are settled
-        //   thus, only check at corner of body, and only from bottom up
-        const box = body.aabb;
-        const cx = Math.floor(box.base[0]);
-        const cz = Math.floor(box.base[2]);
-        const y0 = Math.floor(box.base[1]);
-        const y1 = Math.floor(box.max[1]);
-        if (!this.testFluid(cx, y0, cz)) {
-            body.inFluid = false;
-            body.ratioInFluid = 0;
-            return;
-        }
-        // body is in a fluid - find out how much of body is submerged
-        let submerged = 1;
-        let cy = y0 + 1;
-        while (cy <= y1 && this.testFluid(cx, cy, cz)) {
-            submerged++;
-            cy++;
-        }
-        const fluidLevel = y0 + submerged;
-        const heightInFluid = fluidLevel - box.base[1];
-        let ratioInFluid = heightInFluid / box.vec[1];
-        if (ratioInFluid > 1)
-            ratioInFluid = 1;
-        const vol = box.vec[0] * box.vec[1] * box.vec[2];
-        const displaced = vol * ratioInFluid;
-        // bouyant force = -gravity * fluidDensity * volumeDisplaced
-        const f = this.fluidVec;
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(f, this.options.gravity, -this.options.fluidDensity * displaced);
-        body.applyForce(f);
-        body.inFluid = true;
-        body.ratioInFluid = ratioInFluid;
-    }
-    applyFrictionByAxis(axis, body, dvel) {
-        // friction applies only if moving into a touched surface
-        const restDir = body.resting[axis];
-        const vNormal = dvel[axis];
-        if (restDir === 0)
-            return;
-        if (restDir * vNormal <= 0)
-            return;
-        // current vel lateral to friction axis
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.lateralVel, body.velocity);
-        this.lateralVel[axis] = 0;
-        const vCurr = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(this.lateralVel);
-        if (_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.approxEquals(vCurr, 0))
-            return;
-        // treat current change in velocity as the result of a pseudoforce
-        //        Fpseudo = m*dv/dt
-        // Base friction force on normal component of the pseudoforce
-        //        Ff = u * Fnormal
-        //        Ff = u * m * dvnormal / dt
-        // change in velocity due to friction force
-        //        dvF = dt * Ff / m
-        //            = dt * (u * m * dvnormal / dt) / m
-        //            = u * dvnormal
-        const dvMax = Math.abs(body.friction * vNormal);
-        // decrease lateral vel by dvMax (or clamp to zero)
-        const scaler = vCurr > dvMax ? (vCurr - dvMax) / vCurr : 0;
-        body.velocity[(axis + 1) % 3] *= scaler;
-        body.velocity[(axis + 2) % 3] *= scaler;
-    }
-    processCollisions(box, velocity, resting) {
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(resting, 0, 0, 0);
-        return voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1___default()(this.testSolid, box, velocity, function (_, axis, dir, vec) {
-            resting[axis] = dir;
-            vec[axis] = 0;
-        });
-    }
-    tryAutoStepping(b, oldBox, dx) {
-        if (b.resting[1] >= 0 && !b.inFluid)
-            return;
-        // // direction movement was blocked before trying a step
-        const xBlocked = b.resting[0] !== 0;
-        const zBlocked = b.resting[2] !== 0;
-        if (!(xBlocked || zBlocked))
-            return;
-        // continue autostepping only if headed sufficiently into obstruction
-        const ratio = Math.abs(dx[0] / dx[2]);
-        const cutoff = 4;
-        if (!xBlocked && ratio > cutoff)
-            return;
-        if (!zBlocked && ratio < 1 / cutoff)
-            return;
-        // original target position before being obstructed
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.targetPos, oldBox.base, dx);
-        // move towards the target until the first X/Z collision
-        const getVoxels = this.testSolid;
-        voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1___default()(getVoxels, oldBox, dx, function (_, axis, dir, vec) {
-            if (axis === 1)
+            // Collision impacts. b.resting shows which axes had collisions:
+            for (let i = 0; i < 3; ++i) {
+                this.impacts[i] = 0;
+                if (b.resting[i]) {
+                    // count impact only if wasn't collided last frame
+                    if (!this.oldResting[i])
+                        this.impacts[i] = -b.velocity[i];
+                    b.velocity[i] = 0;
+                }
+            }
+            const mag = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(this.impacts);
+            if (mag > 0.001) {
+                // epsilon
+                // send collision event - allows client to optionally change
+                // body's restitution depending on what terrain it hit
+                // event argument is impulse J = m * dv
+                gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.impacts, this.impacts, b.mass);
+                if (b.onCollide)
+                    b.onCollide(this.impacts);
+                // bounce depending on restitution and minBounceImpulse
+                if (b.restitution > 0 && mag > this.options.minBounceImpulse) {
+                    gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.impacts, this.impacts, b.restitution);
+                    b.applyImpulse(this.impacts);
+                }
+            }
+            // sleep check
+            const vsq = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(b.velocity) ** 2;
+            if (vsq > 1e-5)
+                b.markActive();
+        };
+        this.applyFluidForces = (body) => {
+            // First pass at handling fluids. Assumes fluids are settled
+            //   thus, only check at corner of body, and only from bottom up
+            const box = body.aabb;
+            const cx = Math.floor(box.base[0]);
+            const cz = Math.floor(box.base[2]);
+            const y0 = Math.floor(box.base[1]);
+            const y1 = Math.floor(box.max[1]);
+            if (!this.testFluid(cx, y0, cz)) {
+                body.inFluid = false;
+                body.ratioInFluid = 0;
+                return;
+            }
+            // body is in a fluid - find out how much of body is submerged
+            let submerged = 1;
+            let cy = y0 + 1;
+            while (cy <= y1 && this.testFluid(cx, cy, cz)) {
+                submerged++;
+                cy++;
+            }
+            const fluidLevel = y0 + submerged;
+            const heightInFluid = fluidLevel - box.base[1];
+            let ratioInFluid = heightInFluid / box.vec[1];
+            if (ratioInFluid > 1)
+                ratioInFluid = 1;
+            const vol = box.vec[0] * box.vec[1] * box.vec[2];
+            const displaced = vol * ratioInFluid;
+            // bouyant force = -gravity * fluidDensity * volumeDisplaced
+            const f = this.fluidVec;
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(f, this.options.gravity, -this.options.fluidDensity * displaced);
+            body.applyForce(f);
+            body.inFluid = true;
+            body.ratioInFluid = ratioInFluid;
+        };
+        this.applyFrictionByAxis = (axis, body, dvel) => {
+            // friction applies only if moving into a touched surface
+            const restDir = body.resting[axis];
+            const vNormal = dvel[axis];
+            if (restDir === 0)
+                return;
+            if (restDir * vNormal <= 0)
+                return;
+            // current vel lateral to friction axis
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().copy(this.lateralVel, body.velocity);
+            this.lateralVel[axis] = 0;
+            const vCurr = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().len(this.lateralVel);
+            if (_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.approxEquals(vCurr, 0))
+                return;
+            // treat current change in velocity as the result of a pseudoforce
+            //        Fpseudo = m*dv/dt
+            // Base friction force on normal component of the pseudoforce
+            //        Ff = u * Fnormal
+            //        Ff = u * m * dvnormal / dt
+            // change in velocity due to friction force
+            //        dvF = dt * Ff / m
+            //            = dt * (u * m * dvnormal / dt) / m
+            //            = u * dvnormal
+            const dvMax = Math.abs(body.friction * vNormal);
+            // decrease lateral vel by dvMax (or clamp to zero)
+            const scaler = vCurr > dvMax ? (vCurr - dvMax) / vCurr : 0;
+            body.velocity[(axis + 1) % 3] *= scaler;
+            body.velocity[(axis + 2) % 3] *= scaler;
+        };
+        this.processCollisions = (box, velocity, resting) => {
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(resting, 0, 0, 0);
+            return voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1___default()(this.testSolid, box, velocity, function (_, axis, dir, vec) {
+                resting[axis] = dir;
                 vec[axis] = 0;
-            else
+            });
+        };
+        this.tryAutoStepping = (b, oldBox, dx) => {
+            if (b.resting[1] >= 0 && !b.inFluid)
+                return;
+            // // direction movement was blocked before trying a step
+            const xBlocked = b.resting[0] !== 0;
+            const zBlocked = b.resting[2] !== 0;
+            if (!(xBlocked || zBlocked))
+                return;
+            // continue autostepping only if headed sufficiently into obstruction
+            const ratio = Math.abs(dx[0] / dx[2]);
+            const cutoff = 4;
+            if (!xBlocked && ratio > cutoff)
+                return;
+            if (!zBlocked && ratio < 1 / cutoff)
+                return;
+            // original target position before being obstructed
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.targetPos, oldBox.base, dx);
+            // move towards the target until the first X/Z collision
+            const getVoxels = this.testSolid;
+            voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1___default()(getVoxels, oldBox, dx, function (_, axis, dir, vec) {
+                if (axis === 1)
+                    vec[axis] = 0;
+                else
+                    return true;
+            });
+            const y = b.aabb.base[1];
+            const ydist = Math.floor(y + 1.001) - y;
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(this.upvec, 0, ydist, 0);
+            let collided = false;
+            // sweep up, bailing on any obstruction
+            voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1___default()(getVoxels, oldBox, this.upvec, function () {
+                collided = true;
                 return true;
-        });
-        const y = b.aabb.base[1];
-        const ydist = Math.floor(y + 1.001) - y;
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().set(this.upvec, 0, ydist, 0);
-        let collided = false;
-        // sweep up, bailing on any obstruction
-        voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1___default()(getVoxels, oldBox, this.upvec, function () {
-            collided = true;
-            return true;
-        });
-        if (collided)
-            return; // could't move upwards
-        // now move in X/Z however far was left over before hitting the obstruction
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub(this.leftover, this.targetPos, oldBox.base);
-        this.leftover[1] = 0;
-        this.processCollisions(oldBox, this.leftover, this.tmpResting);
-        // bail if no movement happened in the originally blocked direction
-        if (xBlocked && !_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.approxEquals(oldBox.base[0], this.targetPos[0]))
-            return;
-        if (zBlocked && !_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.approxEquals(oldBox.base[2], this.targetPos[2]))
-            return;
-        // done - oldBox is now at the target autostepped position
-        _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.cloneAABB(b.aabb, oldBox);
-        b.resting[0] = this.tmpResting[0];
-        b.resting[2] = this.tmpResting[2];
-        if (b.onStep)
-            b.onStep();
-    }
-    bodyAsleep(body, dt, noGravity) {
-        if (body.sleepFrameCount > 0)
-            return false;
-        // without gravity bodies stay asleep until a force/impulse wakes them up
-        if (noGravity)
-            return true;
-        // otherwise check body is resting against something
-        // i.e. sweep along by distance d = 1/2 g*t^2
-        // and check there's still a collision
-        let isResting = false;
-        const gmult = 0.5 * dt * dt * body.gravityMultiplier;
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.sleepVec, this.options.gravity, gmult);
-        voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1___default()(this.testSolid, body.aabb, this.sleepVec, function () {
-            isResting = true;
-            return true;
-        }, true);
-        return isResting;
+            });
+            if (collided)
+                return; // could't move upwards
+            // now move in X/Z however far was left over before hitting the obstruction
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub(this.leftover, this.targetPos, oldBox.base);
+            this.leftover[1] = 0;
+            this.processCollisions(oldBox, this.leftover, this.tmpResting);
+            // bail if no movement happened in the originally blocked direction
+            if (xBlocked && !_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.approxEquals(oldBox.base[0], this.targetPos[0]))
+                return;
+            if (zBlocked && !_utils__WEBPACK_IMPORTED_MODULE_3__.Helper.approxEquals(oldBox.base[2], this.targetPos[2]))
+                return;
+            // done - oldBox is now at the target autostepped position
+            _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.cloneAABB(b.aabb, oldBox);
+            b.resting[0] = this.tmpResting[0];
+            b.resting[2] = this.tmpResting[2];
+            if (b.onStep)
+                b.onStep();
+        };
+        this.bodyAsleep = (body, dt, noGravity) => {
+            if (body.sleepFrameCount > 0)
+                return false;
+            // without gravity bodies stay asleep until a force/impulse wakes them up
+            if (noGravity)
+                return true;
+            // otherwise check body is resting against something
+            // i.e. sweep along by distance d = 1/2 g*t^2
+            // and check there's still a collision
+            let isResting = false;
+            const gmult = 0.5 * dt * dt * body.gravityMultiplier;
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.sleepVec, this.options.gravity, gmult);
+            voxel_aabb_sweep__WEBPACK_IMPORTED_MODULE_1___default()(this.testSolid, body.aabb, this.sleepVec, function () {
+                isResting = true;
+                return true;
+            }, true);
+            return isResting;
+        };
     }
 }
 
@@ -6897,28 +6896,28 @@ class RigidBody {
         this.forces = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().create();
         this.impulses = gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().create();
         this.sleepFrameCount = 10 | 0;
+        this.setPosition = (p) => {
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub(p, p, this.aabb.base);
+            this.aabb.translate(p);
+            this.markActive();
+        };
+        this.getPosition = () => {
+            return gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().clone(this.aabb.base);
+        };
+        this.applyForce = (f) => {
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.forces, this.forces, f);
+            this.markActive();
+        };
+        this.applyImpulse = (i) => {
+            gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.impulses, this.impulses, i);
+            this.markActive();
+        };
+        this.markActive = () => {
+            this.sleepFrameCount = 10 | 0;
+        };
         this.airDrag = -1;
         this.fluidDrag = -1;
         this.onStep = null;
-    }
-    setPosition(p) {
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().sub(p, p, this.aabb.base);
-        this.aabb.translate(p);
-        this.markActive();
-    }
-    getPosition() {
-        return gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().clone(this.aabb.base);
-    }
-    applyForce(f) {
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.forces, this.forces, f);
-        this.markActive();
-    }
-    applyImpulse(i) {
-        gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.impulses, this.impulses, i);
-        this.markActive();
-    }
-    markActive() {
-        this.sleepFrameCount = 10 | 0;
     }
     get atRestX() {
         return this.resting[0];
@@ -7103,6 +7102,286 @@ class Sky {
         };
         this.newTime = -1;
         this.meshGroup = new three__WEBPACK_IMPORTED_MODULE_3__.Group();
+        this.init = () => {
+            this.paint('sides', 'stars');
+            this.paint('top', 'stars');
+            this.paint('top', 'moon');
+            this.paint('bottom', 'sun');
+        };
+        this.createSkyShading = () => {
+            const { dimension, topColor, bottomColor, domeOffset } = this.options;
+            this.topColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor);
+            this.bottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(bottomColor);
+            const uniforms = {
+                topColor: { value: this.topColor },
+                bottomColor: { value: this.bottomColor },
+                offset: { value: domeOffset },
+                exponent: { value: 0.6 },
+            };
+            this.shadingGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.SphereGeometry(dimension);
+            this.shadingMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
+                uniforms,
+                vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
+                fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
+                depthWrite: false,
+                side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
+            });
+            this.shadingMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.shadingGeometry, this.shadingMaterial);
+            this.shadingMesh.frustumCulled = false;
+            this.meshGroup.add(this.shadingMesh);
+        };
+        this.createSkyBox = () => {
+            const { dimension } = this.options;
+            this.boxGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.BoxBufferGeometry(dimension * 0.9, dimension * 0.9, dimension * 0.9);
+            for (const face of SKY_BOX_SIDES) {
+                const canvasMaterial = this.createCanvasMaterial();
+                this.boxMaterials.set(face, canvasMaterial);
+            }
+            this.boxMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
+            this.boxMesh.frustumCulled = false;
+            this.boxMesh.renderOrder = -1;
+            this.meshGroup.add(this.boxMesh);
+        };
+        this.createCanvasMaterial = () => {
+            const canvas = document.createElement('canvas');
+            canvas.height = 512;
+            canvas.width = 512;
+            const material = new three__WEBPACK_IMPORTED_MODULE_3__.MeshBasicMaterial({
+                side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
+                map: new three__WEBPACK_IMPORTED_MODULE_3__.Texture(canvas),
+                transparent: true,
+                depthWrite: false,
+                fog: false,
+            });
+            material.map.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
+            material.map.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.LinearMipMapLinearFilter;
+            material.map.wrapS = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
+            material.map.wrapT = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
+            material.map.needsUpdate = true;
+            material.polygonOffset = true;
+            material.polygonOffsetFactor = -0.5;
+            return material;
+        };
+        this.setTopColor = (color) => {
+            this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
+        };
+        this.setBottomColor = (color) => {
+            this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
+        };
+        this.paint = (side, art) => {
+            const actualSides = Array.isArray(side)
+                ? side
+                : side === 'all'
+                    ? SKY_BOX_SIDES
+                    : side === 'sides'
+                        ? ['front', 'back', 'left', 'right']
+                        : [side];
+            for (const face of actualSides) {
+                const material = this.boxMaterials.get(face);
+                if (!material)
+                    continue;
+                switch (art) {
+                    case 'sun':
+                        this.drawSun(material);
+                        break;
+                    case 'moon':
+                        this.drawMoon(material);
+                        break;
+                    case 'stars':
+                        this.drawStars(material);
+                        break;
+                    case 'clear':
+                        this.clear(material);
+                        break;
+                }
+                material.map.needsUpdate = true;
+            }
+        };
+        this.drawMoon = (material, phase = 1) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const { moonRadius: radius, moonColor } = this.options;
+            const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(moonColor);
+            const context = canvas.getContext('2d');
+            const x = canvas.width / 2;
+            const y = canvas.height / 2;
+            // bg glow
+            context.beginPath();
+            const grd = context.createRadialGradient(x + radius / 2, y + radius / 2, 1, x + radius / 2, y + radius / 2, radius * 2);
+            grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
+            grd.addColorStop(1, this.rgba(1, 1, 1, 0));
+            context.arc(x + radius / 2, y + radius / 2, radius * 2, 0, 2 * Math.PI, false);
+            context.fillStyle = grd;
+            context.fill();
+            context.closePath();
+            // clipping region
+            context.save();
+            context.beginPath();
+            context.rect(x, y, radius, radius);
+            context.clip();
+            // moon bg
+            context.beginPath();
+            context.rect(x, y, radius, radius);
+            context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
+            context.fill();
+            context.translate(x, y);
+            // lighter inside
+            context.beginPath();
+            context.rect(4, 4, radius - 8, radius - 8);
+            context.fillStyle = this.rgba(1, 1, 1, 0.8);
+            context.fill();
+            // moon phase
+            const px = phase * radius * 2 - radius;
+            context.beginPath();
+            context.rect(px, 0, radius, radius);
+            context.fillStyle = this.rgba(0, 0, 0, 0.8);
+            context.fill();
+            context.beginPath();
+            context.rect(2 + px, 2, radius - 4, radius - 4);
+            context.fillStyle = this.rgba(0, 0, 0, 0.9);
+            context.fill();
+            context.restore();
+        };
+        this.drawStars = (material) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const { starsCount } = this.options;
+            const context = canvas.getContext('2d');
+            const alpha = context.globalAlpha;
+            for (let i = 0; i < starsCount; i++) {
+                context.globalAlpha = Math.random() * 1 + 0.5;
+                context.beginPath();
+                context.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 0.5, 0, 2 * Math.PI, false);
+                context.fillStyle = STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)];
+                context.fill();
+            }
+            context.globalAlpha = alpha;
+        };
+        this.drawSun = (material, radius = 50) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const { sunColor } = this.options;
+            const context = canvas.getContext('2d');
+            const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(sunColor);
+            context.save();
+            // bg glow
+            context.beginPath();
+            let x = canvas.width / 2;
+            let y = canvas.height / 2;
+            const grd = context.createRadialGradient(x, y, 1, x, y, radius * 2);
+            grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
+            grd.addColorStop(1, this.rgba(1, 1, 1, 0));
+            context.arc(x, y, radius * 3, 0, 2 * Math.PI, false);
+            context.fillStyle = grd;
+            context.fill();
+            context.closePath();
+            // outer sun
+            context.beginPath();
+            x = canvas.width / 2 - radius / 2;
+            y = canvas.height / 2 - radius / 2;
+            context.rect(x, y, radius, radius);
+            context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
+            context.fill();
+            context.closePath();
+            // inner sun
+            context.beginPath();
+            const r = radius / 1.6;
+            x = canvas.width / 2 - r / 2;
+            y = canvas.height / 2 - r / 2;
+            context.rect(x, y, r, r);
+            context.fillStyle = this.rgba(1, 1, 1, 0.5);
+            context.fill();
+            context.closePath();
+            context.restore();
+        };
+        this.clear = (material) => {
+            const canvas = material.map.image;
+            if (!canvas)
+                return;
+            const context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        };
+        this.rgba = (r, g, b, a) => {
+            return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`;
+        };
+        this.spin = (rotation) => {
+            this.boxMesh.rotation.z = rotation;
+        };
+        this.tick = (delta = 0) => {
+            const { tracker } = this;
+            if (!tracker.initialized) {
+                this.init();
+                tracker.initialized = true;
+            }
+            // add speed to time, and spin box meshes
+            const speed = this.rendering.engine.tickSpeed;
+            tracker.time += speed * delta;
+            // sync with server
+            if (this.newTime > 0) {
+                tracker.time = (tracker.time + this.newTime) / 2;
+                this.newTime = -1;
+            }
+            tracker.time = tracker.time % 2400;
+            this.spin(Math.PI * 2 * (tracker.time / 2400));
+            const hour = Math.round(tracker.time / 100) * 100;
+            tracker.last = tracker.time;
+            if (SKY_CONFIGS.hours[hour]) {
+                if (!tracker.until) {
+                    const { color, offset } = SKY_CONFIGS.hours[hour];
+                    this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
+                    this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
+                    this.newTopColor.copy(color.top);
+                    this.newBottomColor.copy(color.bottom);
+                    tracker.offset = offset;
+                    tracker.until = hour + 100;
+                }
+            }
+            if (tracker.until === hour)
+                tracker.until = 0;
+            const sunlightStartTime = 600;
+            const sunlightEndTime = 1800;
+            const sunlightChangeSpan = 200;
+            // turn on sunlight
+            if (tracker.time >= -sunlightChangeSpan / 2 + sunlightStartTime &&
+                tracker.time <= sunlightChangeSpan / 2 + sunlightStartTime)
+                tracker.sunlight = (tracker.time - (sunlightStartTime - sunlightChangeSpan / 2)) / sunlightChangeSpan;
+            // turn off sunlight
+            if (tracker.time >= -sunlightChangeSpan / 2 + sunlightEndTime &&
+                tracker.time <= sunlightChangeSpan / 2 + sunlightEndTime)
+                tracker.sunlight = Math.max(0.1, 1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan);
+            // lerp sunlight
+            const sunlightLerpFactor = 0.008 * speed * delta;
+            const { uSunlightIntensity } = this.rendering.engine.world;
+            uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
+            const cloudColor = this.rendering.engine.world.clouds.material.uniforms.uCloudColor.value;
+            const cloudColorHSL = cloudColor.getHSL({});
+            cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.clamp(uSunlightIntensity.value, 0, 1));
+            const { offset } = this.shadingMaterial.uniforms;
+            offset.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
+            // lerp sky colors
+            ['top', 'right', 'left', 'front', 'back'].forEach((face) => {
+                const mat = this.boxMaterials.get(face);
+                if (mat) {
+                    mat.opacity = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(mat.opacity, 1.2 - tracker.sunlight, sunlightLerpFactor);
+                }
+            });
+            const colorLerpFactor = 0.006 * speed * delta;
+            if (this.newTopColor) {
+                this.topColor.lerp(this.newTopColor, colorLerpFactor);
+            }
+            if (this.newBottomColor) {
+                this.bottomColor.lerp(this.newBottomColor, colorLerpFactor);
+                this.rendering.fogNearColor.lerp(this.newBottomColor, colorLerpFactor);
+                this.rendering.fogFarColor.lerp(this.newBottomColor, colorLerpFactor);
+            }
+            // reposition sky box to player position
+            const { object } = this.rendering.engine.player.controls;
+            this.meshGroup.position.x = object.position.x;
+            this.meshGroup.position.z = object.position.z;
+        };
         const { checkInterval } = (this.options = Object.assign(Object.assign({}, defaultSkyOptions), options));
         this.createSkyShading();
         this.createSkyBox();
@@ -7112,286 +7391,6 @@ class Sky {
                 return;
             this.newTime = await rendering.engine.network.fetchData('/time');
         }, checkInterval);
-    }
-    init() {
-        this.paint('sides', 'stars');
-        this.paint('top', 'stars');
-        this.paint('top', 'moon');
-        this.paint('bottom', 'sun');
-    }
-    createSkyShading() {
-        const { dimension, topColor, bottomColor, domeOffset } = this.options;
-        this.topColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(topColor);
-        this.bottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(bottomColor);
-        const uniforms = {
-            topColor: { value: this.topColor },
-            bottomColor: { value: this.bottomColor },
-            offset: { value: domeOffset },
-            exponent: { value: 0.6 },
-        };
-        this.shadingGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.SphereGeometry(dimension);
-        this.shadingMaterial = new three__WEBPACK_IMPORTED_MODULE_3__.ShaderMaterial({
-            uniforms,
-            vertexShader: _shaders_sky_vertex_glsl__WEBPACK_IMPORTED_MODULE_2__.default,
-            fragmentShader: _shaders_sky_fragment_glsl__WEBPACK_IMPORTED_MODULE_1__.default,
-            depthWrite: false,
-            side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
-        });
-        this.shadingMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.shadingGeometry, this.shadingMaterial);
-        this.shadingMesh.frustumCulled = false;
-        this.meshGroup.add(this.shadingMesh);
-    }
-    createSkyBox() {
-        const { dimension } = this.options;
-        this.boxGeometry = new three__WEBPACK_IMPORTED_MODULE_3__.BoxBufferGeometry(dimension * 0.9, dimension * 0.9, dimension * 0.9);
-        for (const face of SKY_BOX_SIDES) {
-            const canvasMaterial = this.createCanvasMaterial();
-            this.boxMaterials.set(face, canvasMaterial);
-        }
-        this.boxMesh = new three__WEBPACK_IMPORTED_MODULE_3__.Mesh(this.boxGeometry, Array.from(this.boxMaterials.values()));
-        this.boxMesh.frustumCulled = false;
-        this.boxMesh.renderOrder = -1;
-        this.meshGroup.add(this.boxMesh);
-    }
-    createCanvasMaterial() {
-        const canvas = document.createElement('canvas');
-        canvas.height = 512;
-        canvas.width = 512;
-        const material = new three__WEBPACK_IMPORTED_MODULE_3__.MeshBasicMaterial({
-            side: three__WEBPACK_IMPORTED_MODULE_3__.BackSide,
-            map: new three__WEBPACK_IMPORTED_MODULE_3__.Texture(canvas),
-            transparent: true,
-            depthWrite: false,
-            fog: false,
-        });
-        material.map.magFilter = three__WEBPACK_IMPORTED_MODULE_3__.NearestFilter;
-        material.map.minFilter = three__WEBPACK_IMPORTED_MODULE_3__.LinearMipMapLinearFilter;
-        material.map.wrapS = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
-        material.map.wrapT = three__WEBPACK_IMPORTED_MODULE_3__.RepeatWrapping;
-        material.map.needsUpdate = true;
-        material.polygonOffset = true;
-        material.polygonOffsetFactor = -0.5;
-        return material;
-    }
-    setTopColor(color) {
-        this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
-    }
-    setBottomColor(color) {
-        this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color(color);
-    }
-    paint(side, art) {
-        const actualSides = Array.isArray(side)
-            ? side
-            : side === 'all'
-                ? SKY_BOX_SIDES
-                : side === 'sides'
-                    ? ['front', 'back', 'left', 'right']
-                    : [side];
-        for (const face of actualSides) {
-            const material = this.boxMaterials.get(face);
-            if (!material)
-                continue;
-            switch (art) {
-                case 'sun':
-                    this.drawSun(material);
-                    break;
-                case 'moon':
-                    this.drawMoon(material);
-                    break;
-                case 'stars':
-                    this.drawStars(material);
-                    break;
-                case 'clear':
-                    this.clear(material);
-                    break;
-            }
-            material.map.needsUpdate = true;
-        }
-    }
-    drawMoon(material, phase = 1) {
-        const canvas = material.map.image;
-        if (!canvas)
-            return;
-        const { moonRadius: radius, moonColor } = this.options;
-        const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(moonColor);
-        const context = canvas.getContext('2d');
-        const x = canvas.width / 2;
-        const y = canvas.height / 2;
-        // bg glow
-        context.beginPath();
-        const grd = context.createRadialGradient(x + radius / 2, y + radius / 2, 1, x + radius / 2, y + radius / 2, radius * 2);
-        grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
-        grd.addColorStop(1, this.rgba(1, 1, 1, 0));
-        context.arc(x + radius / 2, y + radius / 2, radius * 2, 0, 2 * Math.PI, false);
-        context.fillStyle = grd;
-        context.fill();
-        context.closePath();
-        // clipping region
-        context.save();
-        context.beginPath();
-        context.rect(x, y, radius, radius);
-        context.clip();
-        // moon bg
-        context.beginPath();
-        context.rect(x, y, radius, radius);
-        context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
-        context.fill();
-        context.translate(x, y);
-        // lighter inside
-        context.beginPath();
-        context.rect(4, 4, radius - 8, radius - 8);
-        context.fillStyle = this.rgba(1, 1, 1, 0.8);
-        context.fill();
-        // moon phase
-        const px = phase * radius * 2 - radius;
-        context.beginPath();
-        context.rect(px, 0, radius, radius);
-        context.fillStyle = this.rgba(0, 0, 0, 0.8);
-        context.fill();
-        context.beginPath();
-        context.rect(2 + px, 2, radius - 4, radius - 4);
-        context.fillStyle = this.rgba(0, 0, 0, 0.9);
-        context.fill();
-        context.restore();
-    }
-    drawStars(material) {
-        const canvas = material.map.image;
-        if (!canvas)
-            return;
-        const { starsCount } = this.options;
-        const context = canvas.getContext('2d');
-        const alpha = context.globalAlpha;
-        for (let i = 0; i < starsCount; i++) {
-            context.globalAlpha = Math.random() * 1 + 0.5;
-            context.beginPath();
-            context.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 0.5, 0, 2 * Math.PI, false);
-            context.fillStyle = STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)];
-            context.fill();
-        }
-        context.globalAlpha = alpha;
-    }
-    drawSun(material, radius = 50) {
-        const canvas = material.map.image;
-        if (!canvas)
-            return;
-        const { sunColor } = this.options;
-        const context = canvas.getContext('2d');
-        const color = new three__WEBPACK_IMPORTED_MODULE_3__.Color(sunColor);
-        context.save();
-        // bg glow
-        context.beginPath();
-        let x = canvas.width / 2;
-        let y = canvas.height / 2;
-        const grd = context.createRadialGradient(x, y, 1, x, y, radius * 2);
-        grd.addColorStop(0, this.rgba(1, 1, 1, 0.3));
-        grd.addColorStop(1, this.rgba(1, 1, 1, 0));
-        context.arc(x, y, radius * 3, 0, 2 * Math.PI, false);
-        context.fillStyle = grd;
-        context.fill();
-        context.closePath();
-        // outer sun
-        context.beginPath();
-        x = canvas.width / 2 - radius / 2;
-        y = canvas.height / 2 - radius / 2;
-        context.rect(x, y, radius, radius);
-        context.fillStyle = this.rgba(color.r, color.g, color.b, 1);
-        context.fill();
-        context.closePath();
-        // inner sun
-        context.beginPath();
-        const r = radius / 1.6;
-        x = canvas.width / 2 - r / 2;
-        y = canvas.height / 2 - r / 2;
-        context.rect(x, y, r, r);
-        context.fillStyle = this.rgba(1, 1, 1, 0.5);
-        context.fill();
-        context.closePath();
-        context.restore();
-    }
-    clear(material) {
-        const canvas = material.map.image;
-        if (!canvas)
-            return;
-        const context = canvas.getContext('2d');
-        context.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    rgba(r, g, b, a) {
-        return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`;
-    }
-    spin(rotation) {
-        this.boxMesh.rotation.z = rotation;
-    }
-    tick(delta = 0) {
-        const { tracker } = this;
-        if (!tracker.initialized) {
-            this.init();
-            tracker.initialized = true;
-        }
-        // add speed to time, and spin box meshes
-        const speed = this.rendering.engine.tickSpeed;
-        tracker.time += speed * delta;
-        // sync with server
-        if (this.newTime > 0) {
-            tracker.time = (tracker.time + this.newTime) / 2;
-            this.newTime = -1;
-        }
-        tracker.time = tracker.time % 2400;
-        this.spin(Math.PI * 2 * (tracker.time / 2400));
-        const hour = Math.round(tracker.time / 100) * 100;
-        tracker.last = tracker.time;
-        if (SKY_CONFIGS.hours[hour]) {
-            if (!tracker.until) {
-                const { color, offset } = SKY_CONFIGS.hours[hour];
-                this.newTopColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
-                this.newBottomColor = new three__WEBPACK_IMPORTED_MODULE_3__.Color();
-                this.newTopColor.copy(color.top);
-                this.newBottomColor.copy(color.bottom);
-                tracker.offset = offset;
-                tracker.until = hour + 100;
-            }
-        }
-        if (tracker.until === hour)
-            tracker.until = 0;
-        const sunlightStartTime = 600;
-        const sunlightEndTime = 1800;
-        const sunlightChangeSpan = 200;
-        // turn on sunlight
-        if (tracker.time >= -sunlightChangeSpan / 2 + sunlightStartTime &&
-            tracker.time <= sunlightChangeSpan / 2 + sunlightStartTime)
-            tracker.sunlight = (tracker.time - (sunlightStartTime - sunlightChangeSpan / 2)) / sunlightChangeSpan;
-        // turn off sunlight
-        if (tracker.time >= -sunlightChangeSpan / 2 + sunlightEndTime &&
-            tracker.time <= sunlightChangeSpan / 2 + sunlightEndTime)
-            tracker.sunlight = Math.max(0.1, 1 - (tracker.time - (sunlightEndTime - sunlightChangeSpan / 2)) / sunlightChangeSpan);
-        // lerp sunlight
-        const sunlightLerpFactor = 0.008 * speed * delta;
-        const { uSunlightIntensity } = this.rendering.engine.world;
-        uSunlightIntensity.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(uSunlightIntensity.value, tracker.sunlight, sunlightLerpFactor);
-        const cloudColor = this.rendering.engine.world.clouds.material.uniforms.uCloudColor.value;
-        const cloudColorHSL = cloudColor.getHSL({});
-        cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.clamp(uSunlightIntensity.value, 0, 1));
-        const { offset } = this.shadingMaterial.uniforms;
-        offset.value = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
-        // lerp sky colors
-        ['top', 'right', 'left', 'front', 'back'].forEach((face) => {
-            const mat = this.boxMaterials.get(face);
-            if (mat) {
-                mat.opacity = three__WEBPACK_IMPORTED_MODULE_3__.MathUtils.lerp(mat.opacity, 1.2 - tracker.sunlight, sunlightLerpFactor);
-            }
-        });
-        const colorLerpFactor = 0.006 * speed * delta;
-        if (this.newTopColor) {
-            this.topColor.lerp(this.newTopColor, colorLerpFactor);
-        }
-        if (this.newBottomColor) {
-            this.bottomColor.lerp(this.newBottomColor, colorLerpFactor);
-            this.rendering.fogNearColor.lerp(this.newBottomColor, colorLerpFactor);
-            this.rendering.fogFarColor.lerp(this.newBottomColor, colorLerpFactor);
-        }
-        // reposition sky box to player position
-        const { object } = this.rendering.engine.player.controls;
-        this.meshGroup.position.x = object.position.x;
-        this.meshGroup.position.z = object.position.z;
     }
 }
 
