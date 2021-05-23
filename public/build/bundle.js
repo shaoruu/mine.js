@@ -4008,6 +4008,7 @@ class Debug {
         this.gui = new dat_gui__WEBPACK_IMPORTED_MODULE_0__.GUI({
             width: 300,
             closed: true,
+            hideable: false,
         });
         const { world: { chunkSize, dimension, maxHeight }, } = engine.config;
         const width = chunkSize * dimension;

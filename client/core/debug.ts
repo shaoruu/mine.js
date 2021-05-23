@@ -27,6 +27,7 @@ class Debug {
     this.gui = new GUI({
       width: 300,
       closed: true,
+      hideable: false,
     });
 
     const {
