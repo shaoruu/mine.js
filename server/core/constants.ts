@@ -9,7 +9,7 @@ export const TERRAIN_CONFIG = {
     HEIGHT_OFFSET: 18,
     HEIGHT_SCALE: 0.05,
     TREE_SCALE: 0.1,
-    PLANT_SCALE: 0.5,
+    PLANT_SCALE: 0.2,
     AMPLIFIER: 0.4,
   },
   // HILLY: {
@@ -33,7 +33,7 @@ export const TERRAIN_CONFIG = {
 // meshing
 export const AO_TABLE = new Uint8Array([100, 170, 210, 255]);
 
-export const FACES = [
+export const BLOCK_FACES = [
   {
     // viewing from -x to +x (head towards +y) (indices):
     // 0 1 2
@@ -218,6 +218,29 @@ export const FACES = [
       [1, -1, 1],
       [0, -1, 1],
       [-1, -1, 1],
+    ],
+  },
+];
+
+export const PLANT_FACES = [
+  {
+    // diagonal 1
+    mat: 'one',
+    corners: [
+      { pos: [0, 1, 0], uv: [0, 1] },
+      { pos: [0, 0, 0], uv: [0, 0] },
+      { pos: [1, 1, 1], uv: [1, 1] },
+      { pos: [1, 0, 1], uv: [1, 0] },
+    ],
+  },
+  {
+    // diagonal 2
+    mat: 'two',
+    corners: [
+      { pos: [1, 1, 0], uv: [0, 1] },
+      { pos: [1, 0, 0], uv: [0, 0] },
+      { pos: [0, 1, 1], uv: [1, 1] },
+      { pos: [0, 0, 1], uv: [1, 0] },
     ],
   },
 ];

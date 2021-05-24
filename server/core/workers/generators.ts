@@ -20,7 +20,7 @@ class Generators {
 
     function isSolidAt(vx: number, vy: number, vz: number) {
       return (
-        Noise.getOctavePerlin3(vx, vy, vz, SCALE, {
+        Noise.octavePerlin3(vx, vy, vz, SCALE, {
           octaves: OCTAVES,
           persistence: PERSISTENCE,
           lacunarity: LACUNARITY,

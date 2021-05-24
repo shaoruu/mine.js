@@ -16,7 +16,7 @@ type TextureMapType = {
 };
 
 class Registry {
-  public blockTypes: { [key: string]: BlockType & { id: number } } = {};
+  public blockTypes: Map<string, BlockType & { id: number }> = new Map();
   public blockTypesArr: BlockType[] = [];
   public textureAtlas: TextureAtlas;
 
@@ -64,7 +64,7 @@ class Registry {
   };
 
   getBlockByName = (name: string) => {
-    return this.blockTypes[name] || ({ isTransparent: true, isEmpty: true } as BlockType);
+    return this.blockTypes.get(name) || ({ isTransparent: true, isEmpty: true } as BlockType);
   };
 
   getTextureByID = (id: number) => {
@@ -105,8 +105,14 @@ class Registry {
 
   getTypeMap = (blockTypes: string[]) => {
     const typeMap: TypeMap = {};
-    blockTypes.forEach((type) => (typeMap[type] = this.blockTypes[type].id));
+    blockTypes.forEach((type) => (typeMap[type] = this.blockTypes.get(type).id));
     return typeMap;
+  };
+
+  getPassableSolids = () => {
+    return Array.from(this.blockTypes.values())
+      .filter((bt) => !bt.isSolid && (bt.isBlock || bt.isPlant))
+      .map((bt) => bt.id);
   };
 
   isAir = (type: number) => {
@@ -115,7 +121,7 @@ class Registry {
 
   isPlantable = (type: number) => {
     const { name } = this.getBlockByID(type);
-    return name === 'dirt' || name === 'grass';
+    return name === 'dirt' || name === 'grass-block';
   };
 
   loadTexture = (textureFile: string, textureMap: TextureMapType) => {
@@ -149,12 +155,12 @@ class Registry {
       const block = ID_TO_BLOCK[key] as BlockType;
       const { name, textures } = block;
 
-      this.blockTypes[name] = { ...block, id: parseInt(key, 10) };
+      this.blockTypes.set(name, { ...block, id: parseInt(key, 10) });
       this.blockTypesArr[key] = block;
 
       if (textures) {
         const length = Object.keys(textures).length;
-        if (length !== 1 && length !== 3 && length !== 6) {
+        if (length !== 1 && length !== 2 && length !== 3 && length !== 6) {
           console.error('Wrong texture format.');
           process.exit(1);
         }
@@ -164,6 +170,7 @@ class Registry {
             this.loadTexture(textures.all, textureMap);
             break;
           }
+          case 2:
           case 3:
           case 6: {
             for (const side of Object.keys(textures)) {

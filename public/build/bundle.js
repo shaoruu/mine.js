@@ -4571,9 +4571,11 @@ class Network {
             const { world, player, peers, chat } = engine;
             switch (type) {
                 case 'INIT': {
-                    const { json: { id, time, tickSpeed, spawn }, } = event;
+                    const { json: { id, time, tickSpeed, spawn, passables }, } = event;
+                    console.log(passables);
                     player.id = id;
                     world.setTime(time, false);
+                    world.setBlockData({ passables });
                     engine.setTick(tickSpeed, false);
                     player.teleport(spawn);
                     engine.emit('init');
@@ -5534,6 +5536,9 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.isReady = false;
         // uniforms
         this.uSunlightIntensity = { value: 0.1 };
+        this.blockData = {
+            passables: [],
+        };
         this.pendingChunks = [];
         this.requestedChunks = new Set();
         this.receivedChunks = [];
@@ -5597,7 +5602,8 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             return this.getVoxelByVoxel(vCoords);
         };
         this.getSolidityByVoxel = (vCoords) => {
-            return !!this.getVoxelByVoxel(vCoords);
+            const type = this.getVoxelByVoxel(vCoords);
+            return type !== 0 && !this.blockData.passables.includes(type);
         };
         this.getFluidityByVoxel = (vCoords) => {
             // TODO
@@ -5682,6 +5688,10 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                     },
                 });
             }
+        };
+        this.setBlockData = ({ passables }) => {
+            if (passables && passables.length)
+                this.blockData.passables = passables;
         };
         this.sortPendingChunks = () => {
             const [cx, cz] = this.camChunkPos;
@@ -7886,6 +7896,12 @@ Helper.applyStyle = (ele, style) => {
 };
 Helper.approxEquals = (a, b) => {
     return Math.abs(a - b) < 1e-5;
+};
+Helper.round = (n, digits) => {
+    return Math.round(n * 10 ** digits) / 10 ** digits;
+};
+Helper.clamp = (n, min, max) => {
+    return Math.min(Math.max(n, min), max);
 };
 Helper.isNumber = (value) => {
     return typeof value === 'number' && isFinite(value);

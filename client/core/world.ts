@@ -27,6 +27,10 @@ class World extends EventEmitter {
   // uniforms
   public uSunlightIntensity = { value: 0.1 };
 
+  public blockData: { passables: number[] } = {
+    passables: [],
+  };
+
   private camChunkName: string;
   private camChunkPos: Coords2;
 
@@ -122,7 +126,8 @@ class World extends EventEmitter {
   };
 
   getSolidityByVoxel = (vCoords: Coords3) => {
-    return !!this.getVoxelByVoxel(vCoords);
+    const type = this.getVoxelByVoxel(vCoords);
+    return type !== 0 && !this.blockData.passables.includes(type);
   };
 
   getFluidityByVoxel = (vCoords: Coords3) => {
@@ -225,6 +230,10 @@ class World extends EventEmitter {
         },
       });
     }
+  };
+
+  setBlockData = ({ passables }) => {
+    if (passables && passables.length) this.blockData.passables = passables;
   };
 
   sortPendingChunks = () => {

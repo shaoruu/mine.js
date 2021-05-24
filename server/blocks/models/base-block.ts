@@ -5,6 +5,7 @@ const BaseBlock = {
   isTransparent: false,
   isLight: false,
   isBlock: true,
+  isPlant: false,
   scale: [1, 1, 1],
 };
 

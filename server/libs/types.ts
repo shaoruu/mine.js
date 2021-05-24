@@ -27,6 +27,7 @@ export type BlockType = {
   isTransparent: boolean;
   isLight: boolean;
   isBlock: boolean;
+  isPlant: boolean;
   lightLevel?: number;
   textures?: TextureType;
   scale: number[];

@@ -26,7 +26,36 @@ class Noise {
     return n / t;
   };
 
-  public static getOctavePerlin3(
+  public static octavePerlin2(
+    x: number,
+    z: number,
+    scale: number,
+    {
+      octaves = 3,
+      persistence = 0.6,
+      lacunarity = 0.8,
+      heightScale = 0.05,
+      amplifier = 0.4,
+    }: { octaves?: number; persistence?: number; lacunarity?: number; amplifier?: number; heightScale?: number } = {},
+  ) {
+    let total = 0;
+    let frequency = 1;
+    let amplitude = 1;
+    let maxVal = 0;
+
+    for (let i = 0; i < octaves; i++) {
+      total += noise.perlin2(x * frequency * scale, z * frequency * scale) * amplitude;
+
+      maxVal += amplitude;
+
+      amplitude *= persistence;
+      frequency *= lacunarity;
+    }
+
+    return (total / maxVal) * amplifier;
+  }
+
+  public static octavePerlin3(
     x: number,
     y: number,
     z: number,
@@ -37,7 +66,7 @@ class Noise {
       lacunarity = 0.8,
       heightScale = 0.05,
       amplifier = 0.4,
-    }: { octaves: number; persistence: number; lacunarity: number; amplifier: number; heightScale: number },
+    }: { octaves?: number; persistence?: number; lacunarity?: number; amplifier?: number; heightScale?: number } = {},
   ) {
     let total = 0;
     let frequency = 1;

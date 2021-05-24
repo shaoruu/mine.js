@@ -63,6 +63,14 @@ class Helper {
     return Math.abs(a - b) < 1e-5;
   };
 
+  public static round = (n: number, digits: number) => {
+    return Math.round(n * 10 ** digits) / 10 ** digits;
+  };
+
+  public static clamp = (n: number, min: number, max: number) => {
+    return Math.min(Math.max(n, min), max);
+  };
+
   public static isNumber = (value: unknown) => {
     return typeof value === 'number' && isFinite(value);
   };

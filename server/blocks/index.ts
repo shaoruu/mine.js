@@ -24,4 +24,7 @@ export const ID_TO_BLOCK = {
   21: require('./models/sand'),
   22: require('./models/greysand'),
   23: require('./models/greystone'),
+
+  // PLANTS
+  50: require('./models/grass'),
 };

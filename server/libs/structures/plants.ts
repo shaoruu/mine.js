@@ -34,7 +34,7 @@ class Plants extends Base {
     }
 
     // 2 more than trees
-    return maxi === 4 || maxi === 3 || maxi === 5;
+    return maxi === 3;
   }
 
   sample(chunk: Chunk) {
@@ -49,7 +49,7 @@ class Plants extends Base {
       for (let vz = startZ; vz < endZ; vz++) {
         const vy = chunk.getMaxHeight([vx, vz]);
         if (Mine.registry.isPlantable(chunk.getVoxel([vx, vy, vz])) && this.isTreeLocation(vx, vz)) {
-          locations.push([vx, vy, vz]);
+          locations.push([vx, vy + 1, vz]);
         }
       }
     }
@@ -59,12 +59,12 @@ class Plants extends Base {
 
   generate(chunk: Chunk) {
     const locations = this.sample(chunk);
-    const types = Mine.registry.getTypeMap(['trunk', 'leaves', 'leaves-orange']);
+    const types = Mine.registry.getTypeMap(['grass']);
 
     const updates: VoxelUpdate[] = [];
 
     for (const location of locations) {
-      const [vx, vy, vz] = location;
+      updates.push({ type: types.grass, voxel: location });
     }
 
     return updates;

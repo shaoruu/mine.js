@@ -88,10 +88,12 @@ class Network {
     switch (type) {
       case 'INIT': {
         const {
-          json: { id, time, tickSpeed, spawn },
+          json: { id, time, tickSpeed, spawn, passables },
         } = event;
+        console.log(passables);
         player.id = id;
         world.setTime(time, false);
+        world.setBlockData({ passables });
         engine.setTick(tickSpeed, false);
         player.teleport(spawn);
         engine.emit('init');

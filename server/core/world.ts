@@ -436,6 +436,7 @@ class World extends Network {
           time: this.time,
           tickSpeed: this.tickSpeed,
           spawn: [0, this.getMaxHeight([0, 0]), 0],
+          passables: Mine.registry.getPassableSolids(),
         },
       }),
     );
