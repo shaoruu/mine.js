@@ -113,6 +113,11 @@ class Registry {
     return this.getBlockByID(type).name === 'air';
   };
 
+  isPlantable = (type: number) => {
+    const { name } = this.getBlockByID(type);
+    return name === 'dirt' || name === 'grass';
+  };
+
   loadTexture = (textureFile: string, textureMap: TextureMapType) => {
     const { basePath } = this.options;
     const extension = path.extname(textureFile);

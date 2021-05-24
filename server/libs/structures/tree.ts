@@ -14,7 +14,7 @@ class Tree extends Base {
     super([5, 5]);
   }
 
-  shouldPlantTree(vx: number, vz: number) {
+  isTreeLocation(vx: number, vz: number) {
     const noise3x3 = [];
 
     const {
@@ -40,8 +40,6 @@ class Tree extends Base {
     return maxi === 4;
   }
 
-  plantTree() {}
-
   sample(chunk: Chunk) {
     const { min, max } = chunk;
 
@@ -52,8 +50,9 @@ class Tree extends Base {
 
     for (let vx = startX; vx < endX; vx++) {
       for (let vz = startZ; vz < endZ; vz++) {
-        if (this.shouldPlantTree(vx, vz)) {
-          locations.push([vx, chunk.getMaxHeight([vx, vz]), vz]);
+        const vy = chunk.getMaxHeight([vx, vz]);
+        if (Mine.registry.isPlantable(chunk.getVoxel([vx, vy, vz])) && this.isTreeLocation(vx, vz)) {
+          locations.push([vx, vy, vz]);
         }
       }
     }

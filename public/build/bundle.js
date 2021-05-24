@@ -3537,9 +3537,7 @@ class Chat {
             this.focusInput();
             this.showMessages();
             if (isCommand) {
-            }
-            else {
-                setTimeout(() => (this.inputValue = this.inputValue.substr(1)), 0.01);
+                this.inputValue = '/';
             }
         };
         this.disable = () => {
