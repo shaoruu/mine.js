@@ -4,7 +4,7 @@ export const ID_TO_BLOCK = {
   // SOLIDS
   0: require('./models/air'),
   1: require('./models/dirt'),
-  2: require('./models/grass'),
+  2: require('./models/grass-block'),
   3: require('./models/stone'),
   4: require('./models/glass'),
   5: require('./models/wood'),

@@ -52,101 +52,102 @@ class Mesher {
         for (let vz = startZ; vz < endZ; vz++) {
           const voxel = world.getVoxelByVoxel([vx, vy, vz]);
           const vBlockType = world.getBlockTypeByType(voxel);
-          const { isSolid, isTransparent } = vBlockType;
+          const { isSolid, isTransparent, isBlock } = vBlockType;
 
           if (isSolid && (transparent ? isTransparent : !isTransparent)) {
-            for (const { dir, corners } of FACES) {
-              const nvx = vx + dir[0];
-              const nvy = vy + dir[1];
-              const nvz = vz + dir[2];
+            if (isBlock)
+              for (const { dir, corners } of FACES) {
+                const nvx = vx + dir[0];
+                const nvy = vy + dir[1];
+                const nvz = vz + dir[2];
 
-              const neighbor = world.getVoxelByVoxel([nvx, nvy, nvz]);
-              const nBlockType = world.getBlockTypeByType(neighbor);
-              const { isEmpty: isNeighborEmpty, isTransparent: isNeighborTransparent } = nBlockType;
+                const neighbor = world.getVoxelByVoxel([nvx, nvy, nvz]);
+                const nBlockType = world.getBlockTypeByType(neighbor);
+                const { isEmpty: isNeighborEmpty, isTransparent: isNeighborTransparent } = nBlockType;
 
-              if (isNeighborTransparent && (!transparent || isNeighborEmpty)) {
-                const torchLightLevel = world.getTorchLight([nvx, nvy, nvz]);
-                const sunlightLevel = world.getSunlight([nvx, nvy, nvz]);
+                if (isNeighborTransparent && (!transparent || isNeighborEmpty)) {
+                  const torchLightLevel = world.getTorchLight([nvx, nvy, nvz]);
+                  const sunlightLevel = world.getSunlight([nvx, nvy, nvz]);
 
-                for (const { pos } of corners) {
-                  const posX = pos[0] + vx;
-                  const posY = pos[1] + vy;
-                  const posZ = pos[2] + vz;
+                  for (const { pos } of corners) {
+                    const posX = pos[0] + vx;
+                    const posY = pos[1] + vy;
+                    const posZ = pos[2] + vz;
 
-                  if (useSmoothLighting) {
-                    const rep = Helper.getVoxelName([posX * dimension, posY * dimension, posZ * dimension]);
+                    if (useSmoothLighting) {
+                      const rep = Helper.getVoxelName([posX * dimension, posY * dimension, posZ * dimension]);
 
-                    if (vertexToLight.has(rep)) {
-                      const { count, torchLight, sunlight } = vertexToLight.get(rep);
-                      vertexToLight.set(rep, {
-                        count: count + 1,
-                        torchLight: torchLight + torchLightLevel,
-                        sunlight: sunlight + sunlightLevel,
-                      });
-                    } else {
-                      vertexToLight.set(rep, {
-                        count: 1,
-                        torchLight: torchLightLevel,
-                        sunlight: sunlightLevel,
-                      });
-                    }
-
-                    const test: [boolean, Coords3][] = [
-                      [posX === startX, [-1, 0, 0]],
-                      [posY === startY, [0, -1, 0]],
-                      [posZ === startZ, [0, 0, -1]],
-                      // position can be voxel + 1, thus can reach end
-                      [posX === endX, [1, 0, 0]],
-                      [posY === endY, [0, 1, 0]],
-                      [posZ === endZ, [0, 0, 1]],
-                      // edges
-                      [posX === startX && posY === startY, [-1, -1, 0]],
-                      [posX === startX && posZ === startZ, [-1, 0, -1]],
-                      [posX === startX && posY === endY, [-1, 1, 0]],
-                      [posX === startX && posZ === endZ, [-1, 0, 1]],
-                      [posX === endX && posY === startY, [1, -1, 0]],
-                      [posX === endX && posZ === startZ, [1, 0, -1]],
-                      [posX === endX && posY === endY, [1, 1, 0]],
-                      [posX === endX && posZ === endZ, [1, 0, 1]],
-                      [posY === startY && posZ === startZ, [0, -1, -1]],
-                      [posY === endY && posZ === startZ, [0, 1, -1]],
-                      [posY === startY && posZ === endZ, [0, -1, 1]],
-                      [posY === endY && posZ === endZ, [0, 1, 1]],
-                      // corners
-                      [posX === startX && posY === startY && posZ === startZ, [-1, -1, -1]],
-                      [posX === startX && posY === startY && posZ === endZ, [-1, -1, 1]],
-                      [posX === startX && posY === endY && posZ === startZ, [-1, 1, -1]],
-                      [posX === startX && posY === endY && posZ === endZ, [-1, 1, 1]],
-                      [posX === endX && posY === startY && posZ === startZ, [1, -1, -1]],
-                      [posX === endX && posY === startY && posZ === endZ, [1, -1, 1]],
-                      [posX === endX && posY === endY && posZ === startZ, [1, 1, -1]],
-                      [posX === endX && posY === endY && posZ === endZ, [1, 1, 1]],
-                    ];
-
-                    test.forEach(([check, [a, b, c]]) => {
-                      if (check && world.getTransparencyByVoxel([nvx + a, nvy + b, nvz + c])) {
-                        const torchLightLevelN = world.getTorchLight([nvx + a, nvy + b, nvz + c]);
-                        const sunlightLevelN = world.getSunlight([nvx + a, nvy + b, nvz + c]);
+                      if (vertexToLight.has(rep)) {
                         const { count, torchLight, sunlight } = vertexToLight.get(rep);
                         vertexToLight.set(rep, {
                           count: count + 1,
-                          torchLight: torchLight + torchLightLevelN,
-                          sunlight: sunlight + sunlightLevelN,
+                          torchLight: torchLight + torchLightLevel,
+                          sunlight: sunlight + sunlightLevel,
+                        });
+                      } else {
+                        vertexToLight.set(rep, {
+                          count: 1,
+                          torchLight: torchLightLevel,
+                          sunlight: sunlightLevel,
                         });
                       }
-                    });
 
-                    smoothSunlightLevels.push(rep);
-                    smoothTorchlightLevels.push(rep);
+                      const test: [boolean, Coords3][] = [
+                        [posX === startX, [-1, 0, 0]],
+                        [posY === startY, [0, -1, 0]],
+                        [posZ === startZ, [0, 0, -1]],
+                        // position can be voxel + 1, thus can reach end
+                        [posX === endX, [1, 0, 0]],
+                        [posY === endY, [0, 1, 0]],
+                        [posZ === endZ, [0, 0, 1]],
+                        // edges
+                        [posX === startX && posY === startY, [-1, -1, 0]],
+                        [posX === startX && posZ === startZ, [-1, 0, -1]],
+                        [posX === startX && posY === endY, [-1, 1, 0]],
+                        [posX === startX && posZ === endZ, [-1, 0, 1]],
+                        [posX === endX && posY === startY, [1, -1, 0]],
+                        [posX === endX && posZ === startZ, [1, 0, -1]],
+                        [posX === endX && posY === endY, [1, 1, 0]],
+                        [posX === endX && posZ === endZ, [1, 0, 1]],
+                        [posY === startY && posZ === startZ, [0, -1, -1]],
+                        [posY === endY && posZ === startZ, [0, 1, -1]],
+                        [posY === startY && posZ === endZ, [0, -1, 1]],
+                        [posY === endY && posZ === endZ, [0, 1, 1]],
+                        // corners
+                        [posX === startX && posY === startY && posZ === startZ, [-1, -1, -1]],
+                        [posX === startX && posY === startY && posZ === endZ, [-1, -1, 1]],
+                        [posX === startX && posY === endY && posZ === startZ, [-1, 1, -1]],
+                        [posX === startX && posY === endY && posZ === endZ, [-1, 1, 1]],
+                        [posX === endX && posY === startY && posZ === startZ, [1, -1, -1]],
+                        [posX === endX && posY === startY && posZ === endZ, [1, -1, 1]],
+                        [posX === endX && posY === endY && posZ === startZ, [1, 1, -1]],
+                        [posX === endX && posY === endY && posZ === endZ, [1, 1, 1]],
+                      ];
+
+                      test.forEach(([check, [a, b, c]]) => {
+                        if (check && world.getTransparencyByVoxel([nvx + a, nvy + b, nvz + c])) {
+                          const torchLightLevelN = world.getTorchLight([nvx + a, nvy + b, nvz + c]);
+                          const sunlightLevelN = world.getSunlight([nvx + a, nvy + b, nvz + c]);
+                          const { count, torchLight, sunlight } = vertexToLight.get(rep);
+                          vertexToLight.set(rep, {
+                            count: count + 1,
+                            torchLight: torchLight + torchLightLevelN,
+                            sunlight: sunlight + sunlightLevelN,
+                          });
+                        }
+                      });
+
+                      smoothSunlightLevels.push(rep);
+                      smoothTorchlightLevels.push(rep);
+                    }
+                  }
+
+                  if (!useSmoothLighting) {
+                    torchLightLevels.push(torchLightLevel, torchLightLevel, torchLightLevel, torchLightLevel);
+                    sunlightLevels.push(sunlightLevel, sunlightLevel, sunlightLevel, sunlightLevel);
                   }
                 }
-
-                if (!useSmoothLighting) {
-                  torchLightLevels.push(torchLightLevel, torchLightLevel, torchLightLevel, torchLightLevel);
-                  sunlightLevels.push(sunlightLevel, sunlightLevel, sunlightLevel, sunlightLevel);
-                }
               }
-            }
           }
         }
       }

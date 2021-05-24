@@ -41,7 +41,7 @@ class Generators {
         blockID = types.stone;
         if (Noise.simplex3(vx, vy, vz, SCALE) > 0.01) {
           blockID = types.dirt;
-        } else if (Noise.simplex2(vx, vz, SCALE) > 0.05) blockID = types.grass;
+        } else if (Noise.simplex2(vx, vz, SCALE) > 0.05) blockID = types['grass-block'];
 
         if (Noise.simplex2(vx, vz, SCALE) < 0.03 && Noise.perlin2(vz, vx, SCALE) > 0.06) {
           blockID = types.snow;
@@ -61,7 +61,7 @@ class Generators {
   static heightMap = () => {};
 
   static flat = ([, vy]: Coords3, types: TypeMap) => {
-    if (vy === 6) return types.grass;
+    if (vy === 6) return types['grass-block'];
     if (vy < 6 && vy > 3) return types.dirt;
     else if (vy <= 3) return types.stone;
     return types.air;
@@ -78,7 +78,7 @@ class Generators {
     const height1 = 5 * Math.sin(vx / 10) + 8 * Math.cos(vz / 20);
     const height2 = 0;
     if (vy < height1 && vy > height2) {
-      blockID = Math.random() > 0.5 ? types.grass : types.stone;
+      blockID = Math.random() > 0.5 ? types['grass-block'] : types.stone;
     }
 
     return blockID;

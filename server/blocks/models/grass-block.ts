@@ -2,9 +2,9 @@ import { BlockType } from '../../libs';
 
 import { BaseBlock } from './base-block';
 
-const Grass: BlockType = {
+const GrassBlock: BlockType = {
   ...BaseBlock,
-  name: 'grass',
+  name: 'grass-block',
   textures: {
     top: 'grass_top.png',
     side: 'grass_side.png',
@@ -12,4 +12,4 @@ const Grass: BlockType = {
   },
 };
 
-module.exports = Grass;
+module.exports = GrassBlock;

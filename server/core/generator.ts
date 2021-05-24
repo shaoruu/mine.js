@@ -18,12 +18,12 @@ class Generator {
 
     switch (type) {
       case 'flat':
-        types = Mine.registry.getTypeMap(['air', 'dirt', 'grass', 'stone']);
+        types = Mine.registry.getTypeMap(['air', 'dirt', 'grass-block', 'stone']);
         break;
       case 'hilly':
         types = Mine.registry.getTypeMap([
           'dirt',
-          'grass',
+          'grass-block',
           'stone',
           'yellow',
           'snow',
@@ -37,7 +37,7 @@ class Generator {
         ]);
         break;
       case 'sin-cos':
-        types = Mine.registry.getTypeMap(['air', 'dirt', 'stone', 'grass']);
+        types = Mine.registry.getTypeMap(['air', 'dirt', 'stone', 'grass-block']);
         break;
     }
 
