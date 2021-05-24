@@ -207,6 +207,7 @@ class Chunk extends EventEmitter {
     // generate terrain, height map, and mesh
     this.needsPropagation = true;
     this.needsSaving = true;
+    this.needsDecoration = generation === 'hilly';
 
     // multi-threaded terrain generation
     await Generator.generate(this, generation);

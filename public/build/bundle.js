@@ -5286,10 +5286,9 @@ varying float vTorchLight;
 `)
                     .replace('#include <envmap_fragment>', `
 #include <envmap_fragment>
-outgoingLight *= min(vTorchLight + vSunlight * uSunlightIntensity, 1.0) * 0.68;
+outgoingLight *= min(vTorchLight + vSunlight * uSunlightIntensity, 1.0) * 0.68 * vAO;
 `)
                     .replace('#include <fog_fragment>', `
-gl_FragColor.rgb *= vAO;
 float depth = gl_FragCoord.z / gl_FragCoord.w;
 float fogFactor = smoothstep(uFogNear, uFogFar, depth);
 gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor), fogFactor);

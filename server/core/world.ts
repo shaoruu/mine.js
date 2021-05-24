@@ -284,18 +284,12 @@ class World extends Network {
     const neighborChunks = this.getNeighborChunksByVoxel(voxel);
     neighborChunks.forEach((c) => this.chunkCache.add(c));
 
-    // send the changes first
-    this.broadcast({
-      type: 'UPDATE',
-      updates: [{ vx, vy, vz, type }],
-    });
-
-    // then send the chunk meshes
     this.chunkCache.forEach((chunk) => {
       chunk.remesh();
       this.broadcast({
         type: 'UPDATE',
         chunks: [chunk.getProtocol(false)],
+        updates: [{ vx, vy, vz, type }],
       });
     });
 
@@ -431,6 +425,9 @@ class World extends Network {
   };
 
   onInit = (client: ClientType) => {
+    const spawnChunk = this.getChunkByCPos([0, 0]);
+    spawnChunk.generateHeightMap();
+
     client.send(
       Network.encode({
         type: 'INIT',
