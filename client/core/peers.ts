@@ -24,15 +24,23 @@ class Peers {
   constructor(public engine: Engine, public options: PeersOptionsType) {
     const { updateInterval } = this.options;
 
-    const {
-      player: { object },
-    } = engine;
-
     let interval: NodeJS.Timeout;
 
     engine.on('init', () => {
+      const {
+        player: { object },
+      } = engine;
+
+      const prevQuat = new Quaternion();
+
       interval = setInterval(() => {
         const { position, quaternion } = object;
+
+        if (engine.player.entity.body.sleepFrameCount === 0 && Helper.approxEquals(prevQuat.dot(quaternion), 1))
+          // means this player is not moving
+          return;
+
+        prevQuat.copy(quaternion);
 
         const { x: px, y: py, z: pz } = position;
         const { x: qx, y: qy, z: qz, w: qw } = quaternion;

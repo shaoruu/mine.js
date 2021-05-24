@@ -36,7 +36,7 @@ class Player {
 
   public lookBlock: Coords3 | null = [0, 0, 0];
   public targetBlock: Coords3 | null = [0, 0, 0];
-  public playerEntity: EntityType;
+  public entity: EntityType;
   public perspective: PerspectiveType = 'first';
 
   public own: Peer;
@@ -99,7 +99,7 @@ class Player {
     engine.on('ready', () => {
       // register camera as entity      // set up look block mesh
       const { dimension } = config.world;
-      this.addPlayerentity();
+      this.addEntity();
 
       this.lookBlockMesh = new Mesh(
         new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
@@ -196,7 +196,7 @@ class Player {
     if (this.godMode) {
       this.godModeMovements();
     } else {
-      this.moveCamEntity();
+      this.moveEntity();
     }
     this.updateLookBlock();
     this.updatePerspective();
@@ -232,9 +232,9 @@ class Player {
     this.controls.getObject().position.y += this.vel.y;
   };
 
-  moveCamEntity = () => {
+  moveEntity = () => {
     const { object } = this.controls;
-    const { state } = this.playerEntity.brain;
+    const { state } = this.entity.brain;
 
     const { right, left, up, down, front, back } = this.movements;
 
@@ -289,7 +289,7 @@ class Player {
       (vz - bodyWidth / 2 + 0.5) * dimension,
     ];
 
-    this.playerEntity.body.setPosition(newPosition);
+    this.entity.body.setPosition(newPosition);
     return newPosition;
   };
 
@@ -301,24 +301,24 @@ class Player {
       this.engine.entities.removeEntity('player');
     } else {
       // activated again
-      this.addPlayerentity();
+      this.addEntity();
     }
   };
 
-  addPlayerentity = () => {
+  addEntity = () => {
     const { bodyWidth, distToGround, distToTop } = this.options;
     const { dimension } = this.engine.world.options;
     const cameraWorldWidth = bodyWidth * dimension;
     const cameraWorldHeight = (distToGround + distToTop) * dimension;
 
-    this.playerEntity = this.engine.entities.addEntity(
+    this.entity = this.engine.entities.addEntity(
       'player',
       this.controls.getObject(),
       [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth],
       [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0],
     );
 
-    this.playerEntity.body.applyImpulse([0, 4, 0]);
+    this.entity.body.applyImpulse([0, 4, 0]);
   };
 
   setName = (name: string) => {

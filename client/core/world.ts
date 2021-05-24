@@ -176,7 +176,7 @@ class World extends EventEmitter {
     const { dimension } = this.options;
     const {
       targetBlock,
-      playerEntity: {
+      entity: {
         body: { aabb },
       },
     } = this.engine.player;

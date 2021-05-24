@@ -4844,11 +4844,16 @@ class Peers {
             this.players.forEach((peer) => peer.tick(this.engine.player.object.position));
         };
         const { updateInterval } = this.options;
-        const { player: { object }, } = engine;
         let interval;
         engine.on('init', () => {
+            const { player: { object }, } = engine;
+            const prevQuat = new three__WEBPACK_IMPORTED_MODULE_4__.Quaternion();
             interval = setInterval(() => {
                 const { position, quaternion } = object;
+                if (engine.player.entity.body.sleepFrameCount === 0 && _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.approxEquals(prevQuat.dot(quaternion), 1))
+                    // means this player is not moving
+                    return;
+                prevQuat.copy(quaternion);
                 const { x: px, y: py, z: pz } = position;
                 const { x: qx, y: qy, z: qz, w: qw } = quaternion;
                 engine.network.server.sendEvent({
@@ -5040,7 +5045,7 @@ class Player {
                 this.godModeMovements();
             }
             else {
-                this.moveCamEntity();
+                this.moveEntity();
             }
             this.updateLookBlock();
             this.updatePerspective();
@@ -5066,9 +5071,9 @@ class Player {
             this.controls.moveForward(-this.vel.z);
             this.controls.getObject().position.y += this.vel.y;
         };
-        this.moveCamEntity = () => {
+        this.moveEntity = () => {
             const { object } = this.controls;
-            const { state } = this.playerEntity.brain;
+            const { state } = this.entity.brain;
             const { right, left, up, down, front, back } = this.movements;
             const fb = front ? (back ? 0 : 1) : back ? -1 : 0;
             const rl = left ? (right ? 0 : 1) : right ? -1 : 0;
@@ -5111,7 +5116,7 @@ class Player {
                 (vy + 1) * dimension,
                 (vz - bodyWidth / 2 + 0.5) * dimension,
             ];
-            this.playerEntity.body.setPosition(newPosition);
+            this.entity.body.setPosition(newPosition);
             return newPosition;
         };
         this.toggleGodMode = () => {
@@ -5123,16 +5128,16 @@ class Player {
             }
             else {
                 // activated again
-                this.addPlayerentity();
+                this.addEntity();
             }
         };
-        this.addPlayerentity = () => {
+        this.addEntity = () => {
             const { bodyWidth, distToGround, distToTop } = this.options;
             const { dimension } = this.engine.world.options;
             const cameraWorldWidth = bodyWidth * dimension;
             const cameraWorldHeight = (distToGround + distToTop) * dimension;
-            this.playerEntity = this.engine.entities.addEntity('player', this.controls.getObject(), [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth], [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0]);
-            this.playerEntity.body.applyImpulse([0, 4, 0]);
+            this.entity = this.engine.entities.addEntity('player', this.controls.getObject(), [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth], [0, (distToGround - (distToGround + distToTop) / 2) * dimension, 0]);
+            this.entity.body.applyImpulse([0, 4, 0]);
         };
         this.setName = (name) => {
             this.name = name || ' ';
@@ -5257,7 +5262,7 @@ class Player {
         engine.on('ready', () => {
             // register camera as entity      // set up look block mesh
             const { dimension } = config.world;
-            this.addPlayerentity();
+            this.addEntity();
             this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
                 color: lookBlockColor,
                 alphaTest: 0.3,
@@ -5638,7 +5643,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         };
         this.placeVoxel = (type) => {
             const { dimension } = this.options;
-            const { targetBlock, playerEntity: { body: { aabb }, }, } = this.engine.player;
+            const { targetBlock, entity: { body: { aabb }, }, } = this.engine.player;
             const blockSize = dimension - 0.05;
             if (targetBlock) {
                 const [tx, ty, tz] = targetBlock;
