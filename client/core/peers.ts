@@ -2,6 +2,7 @@ import { Quaternion, Vector3 } from 'three';
 
 import { Coords3 } from '../../shared/types';
 import { Peer } from '../libs';
+import { Helper } from '../utils';
 
 import { Engine } from '.';
 
@@ -16,6 +17,8 @@ type PeersOptionsType = {
 };
 
 class Peers {
+  public wrapper: HTMLUListElement;
+
   public players: Map<string, Peer> = new Map();
 
   constructor(public engine: Engine, public options: PeersOptionsType) {
@@ -56,7 +59,63 @@ class Peers {
     engine.on('disconnected', () => {
       clearInterval(interval);
     });
+
+    engine.on('ready', () => {
+      this.makeDOM();
+      this.updateDOM();
+
+      engine.inputs.bind('tab', this.openDOM, 'in-game', { occasion: 'keydown' });
+      engine.inputs.bind('tab', this.closeDOM, 'in-game', { occasion: 'keyup' });
+    });
   }
+
+  openDOM = () => {
+    this.updateDOM();
+    this.wrapper.style.display = 'block';
+  };
+
+  closeDOM = () => {
+    this.wrapper.style.display = 'none';
+  };
+
+  makeDOM = () => {
+    this.wrapper = document.createElement('ul');
+
+    Helper.applyStyle(this.wrapper, {
+      width: '200px',
+      zIndex: '10000',
+      minHeight: '20px',
+      fontSize: '1em',
+      top: '1vh',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      background: 'rgba(0, 0, 0, 0.133)',
+      position: 'fixed',
+      listStyle: 'none',
+      color: 'white',
+      display: 'none',
+    });
+
+    this.engine.container.domElement.appendChild(this.wrapper);
+  };
+
+  updateDOM = () => {
+    this.wrapper.innerHTML = '';
+
+    const peerNames = Array.from(this.players.values()).map((p) => p.name);
+    peerNames.push(this.engine.player.name);
+
+    peerNames.forEach((pn) => {
+      const newEle = document.createElement('li');
+      Helper.applyStyle(newEle, {
+        textAlign: 'left',
+        padding: '2px 10px',
+        borderBottom: '2px solid rgba(0, 0, 0, 0.222)',
+      });
+      newEle.innerHTML = pn;
+      this.wrapper.appendChild(newEle);
+    });
+  };
 
   join = (id: string) => {
     const newPlayer = new Peer(id);

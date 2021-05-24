@@ -24,6 +24,7 @@ class Inputs {
     this.add('up', 'up');
     this.add('down', 'down');
     this.add('enter', 'enter');
+    this.add('tab', 'tab');
 
     this.initClickListener();
   }
@@ -62,7 +63,7 @@ class Inputs {
     name: string,
     callback: () => void,
     namespace: InputNamespace,
-    { occasion = 'keydown' }: { occasion?: InputOccasion } = {},
+    { occasion = 'keydown', element }: { occasion?: InputOccasion; element?: HTMLElement } = {},
   ) => {
     let combo = this.combos.get(name);
 
@@ -76,12 +77,13 @@ class Inputs {
       }
     }
 
-    Mousetrap.bind(
+    const mousetrap = element ? new Mousetrap(element) : Mousetrap;
+
+    mousetrap.bind(
       combo,
       () => {
-        if (this.namespace === namespace || namespace === '*') {
-          callback();
-        }
+        if (this.namespace === namespace || namespace === '*') callback();
+        return false;
       },
       occasion,
     );

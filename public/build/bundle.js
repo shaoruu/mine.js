@@ -3855,6 +3855,13 @@ class Debug {
         };
         this.makeDOM = () => {
             this.wrapper = document.createElement('div');
+            _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.wrapper, {
+                top: '0',
+                width: '100%',
+                display: 'none',
+                position: 'fixed',
+                zIndex: '10000000000',
+            });
             this.dataWrapper = document.createElement('div');
             _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.dataWrapper, {
                 position: 'absolute',
@@ -3874,13 +3881,6 @@ class Debug {
                 position: 'absolute',
                 top: '0',
                 right: '0',
-            });
-            _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.wrapper, {
-                top: '0',
-                width: '100%',
-                display: 'inline',
-                position: 'fixed',
-                zIndex: '10000000000',
             });
         };
         this.mount = () => {
@@ -4451,7 +4451,7 @@ class Inputs {
         this.add = (name, combo) => {
             this.combos.set(name, combo);
         };
-        this.bind = (name, callback, namespace, { occasion = 'keydown' } = {}) => {
+        this.bind = (name, callback, namespace, { occasion = 'keydown', element } = {}) => {
             let combo = this.combos.get(name);
             if (!combo) {
                 if (name.length === 1) {
@@ -4463,10 +4463,11 @@ class Inputs {
                     throw new Error(`Error registering input, combo ${name}: not found.`);
                 }
             }
-            mousetrap__WEBPACK_IMPORTED_MODULE_0___default().bind(combo, () => {
-                if (this.namespace === namespace || namespace === '*') {
+            const mousetrap = element ? new (mousetrap__WEBPACK_IMPORTED_MODULE_0___default())(element) : (mousetrap__WEBPACK_IMPORTED_MODULE_0___default());
+            mousetrap.bind(combo, () => {
+                if (this.namespace === namespace || namespace === '*')
                     callback();
-                }
+                return false;
             }, occasion);
         };
         this.unbind = (name) => {
@@ -4487,6 +4488,7 @@ class Inputs {
         this.add('up', 'up');
         this.add('down', 'down');
         this.add('enter', 'enter');
+        this.add('tab', 'tab');
         this.initClickListener();
     }
 }
@@ -4764,10 +4766,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Peers": () => (/* binding */ Peers)
 /* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _shared_types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../shared/types */ "./shared/types.ts");
 /* harmony import */ var _libs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../libs */ "./client/libs/index.ts");
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./client/utils/index.ts");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! . */ "./client/core/index.ts");
+
 
 
 
@@ -4777,6 +4781,46 @@ class Peers {
         this.engine = engine;
         this.options = options;
         this.players = new Map();
+        this.openDOM = () => {
+            this.updateDOM();
+            this.wrapper.style.display = 'block';
+        };
+        this.closeDOM = () => {
+            this.wrapper.style.display = 'none';
+        };
+        this.makeDOM = () => {
+            this.wrapper = document.createElement('ul');
+            _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(this.wrapper, {
+                width: '200px',
+                zIndex: '10000',
+                minHeight: '20px',
+                fontSize: '1em',
+                top: '1vh',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'rgba(0, 0, 0, 0.133)',
+                position: 'fixed',
+                listStyle: 'none',
+                color: 'white',
+                display: 'none',
+            });
+            this.engine.container.domElement.appendChild(this.wrapper);
+        };
+        this.updateDOM = () => {
+            this.wrapper.innerHTML = '';
+            const peerNames = Array.from(this.players.values()).map((p) => p.name);
+            peerNames.push(this.engine.player.name);
+            peerNames.forEach((pn) => {
+                const newEle = document.createElement('li');
+                _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.applyStyle(newEle, {
+                    textAlign: 'left',
+                    padding: '2px 10px',
+                    borderBottom: '2px solid rgba(0, 0, 0, 0.222)',
+                });
+                newEle.innerHTML = pn;
+                this.wrapper.appendChild(newEle);
+            });
+        };
         this.join = (id) => {
             const newPlayer = new _libs__WEBPACK_IMPORTED_MODULE_1__.Peer(id);
             this.engine.rendering.scene.add(newPlayer.mesh);
@@ -4789,7 +4833,7 @@ class Peers {
             }
             const player = this.players.get(id);
             const { name, position, rotation } = packet;
-            player.update(name, new three__WEBPACK_IMPORTED_MODULE_3__.Vector3(...position), new three__WEBPACK_IMPORTED_MODULE_3__.Quaternion(...rotation));
+            player.update(name, new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(...position), new three__WEBPACK_IMPORTED_MODULE_4__.Quaternion(...rotation));
         };
         this.leave = (id) => {
             const player = this.players.get(id);
@@ -4829,6 +4873,12 @@ class Peers {
         });
         engine.on('disconnected', () => {
             clearInterval(interval);
+        });
+        engine.on('ready', () => {
+            this.makeDOM();
+            this.updateDOM();
+            engine.inputs.bind('tab', this.openDOM, 'in-game', { occasion: 'keydown' });
+            engine.inputs.bind('tab', this.closeDOM, 'in-game', { occasion: 'keyup' });
         });
     }
 }

@@ -82,6 +82,14 @@ class Debug {
 
   makeDOM = () => {
     this.wrapper = document.createElement('div');
+    Helper.applyStyle(this.wrapper, {
+      top: '0',
+      width: '100%',
+      display: 'none',
+      position: 'fixed',
+      zIndex: '10000000000',
+    });
+
     this.dataWrapper = document.createElement('div');
     Helper.applyStyle(this.dataWrapper, {
       position: 'absolute',
@@ -97,17 +105,11 @@ class Debug {
       alignItems: 'flex-start',
       justifyContent: 'flex-start',
     });
+
     Helper.applyStyle(this.gui.domElement, {
       position: 'absolute',
       top: '0',
       right: '0',
-    });
-    Helper.applyStyle(this.wrapper, {
-      top: '0',
-      width: '100%',
-      display: 'inline',
-      position: 'fixed',
-      zIndex: '10000000000',
     });
   };
 
