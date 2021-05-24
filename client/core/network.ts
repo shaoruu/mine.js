@@ -90,7 +90,6 @@ class Network {
         const {
           json: { id, time, tickSpeed, spawn, passables },
         } = event;
-        console.log(passables);
         player.id = id;
         world.setTime(time, false);
         world.setBlockData({ passables });
