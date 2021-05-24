@@ -1,8 +1,8 @@
 import ndarray from 'ndarray';
-import Noise from 'noisejs';
 import { Transfer, expose } from 'threads';
 
 import { Coords3, TypeMap } from '../../../shared';
+import { Noise } from '../../libs/noise';
 import { GeneratorTypes } from '../../libs/types';
 import { TERRAIN_CONFIG } from '../constants';
 
@@ -10,49 +10,24 @@ type GeneratorOptionsType = {
   maxHeight: number;
 };
 
-// @ts-ignore
-const noise: Noise = new Noise.Noise(13412);
-
 class Generators {
   static hilly = ([vx, vy, vz]: Coords3, types: TypeMap) => {
     const {
-      HILLY: { OCTAVES, SCALE, PERSISTANCE, LACUNARITY, AMPLIFIER, HEIGHT_OFFSET, HEIGHT_SCALE },
+      HILLY: { OCTAVES, SCALE, PERSISTENCE, LACUNARITY, AMPLIFIER, HEIGHT_OFFSET, HEIGHT_SCALE },
     } = TERRAIN_CONFIG;
 
     vy = vy - HEIGHT_OFFSET;
 
-    function fractalOctavePerlin3(x: number, y: number, z: number) {
-      let t = 0,
-        f = 1,
-        n = 0;
-      for (let i = 0; i < 9; i++) {
-        n += noise.perlin3(x * f * SCALE, y * f * SCALE, z * f * SCALE) / f;
-        t += 1 / f;
-        f *= 2;
-      }
-      return n / t;
-    }
-
-    function getOctavePerlin3(x: number, y: number, z: number) {
-      let total = 0;
-      let frequency = 1;
-      let amplitude = 1;
-      let maxVal = 0;
-
-      for (let i = 0; i < OCTAVES; i++) {
-        total += noise.perlin3(x * frequency * SCALE, y * frequency * SCALE, z * frequency * SCALE) * amplitude;
-
-        maxVal += amplitude;
-
-        amplitude *= PERSISTANCE;
-        frequency *= LACUNARITY;
-      }
-
-      return (total / maxVal) * AMPLIFIER - y * HEIGHT_SCALE;
-    }
-
     function isSolidAt(vx: number, vy: number, vz: number) {
-      return getOctavePerlin3(vx, vy, vz) > -0.2;
+      return (
+        Noise.getOctavePerlin3(vx, vy, vz, SCALE, {
+          octaves: OCTAVES,
+          persistence: PERSISTENCE,
+          lacunarity: LACUNARITY,
+          amplifier: AMPLIFIER,
+          heightScale: HEIGHT_SCALE,
+        }) > -0.2
+      );
     }
 
     const isSolid = isSolidAt(vx, vy, vz);
@@ -64,15 +39,15 @@ class Generators {
     if (isSolid) {
       if (!isSolidTop && !isSolidTop2) {
         blockID = types.stone;
-        if (noise.simplex3(vx * SCALE, vy * SCALE, vz * SCALE) > 0.01) {
+        if (Noise.simplex3(vx, vy, vz, SCALE) > 0.01) {
           blockID = types.dirt;
-        } else if (noise.simplex2(vx * SCALE, vz * SCALE) > 0.05) blockID = types.grass;
+        } else if (Noise.simplex2(vx, vz, SCALE) > 0.05) blockID = types.grass;
 
-        if (noise.simplex2(vx * SCALE, vz * SCALE) < 0.03 && noise.perlin2(vz * SCALE, vx * SCALE) > 0.06) {
+        if (Noise.simplex2(vx, vz, SCALE) < 0.03 && Noise.perlin2(vz, vx, SCALE) > 0.06) {
           blockID = types.snow;
         }
 
-        if (fractalOctavePerlin3(vx, vy, vz) > 0.25) {
+        if (Noise.fractalOctavePerlin3(vx, vy, vz, SCALE) > 0.25) {
           blockID = types.green;
         }
       } else {

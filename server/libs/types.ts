@@ -12,7 +12,12 @@ type SixTextureType = {
   nz?: string;
 };
 
-export type TextureType = AllTextureType & ThreeTextureType & SixTextureType;
+type PlantTextureType = {
+  one?: string;
+  two?: string;
+};
+
+export type TextureType = AllTextureType & ThreeTextureType & SixTextureType & PlantTextureType;
 
 export type BlockType = {
   name: string;

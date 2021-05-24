@@ -4,11 +4,12 @@ export const TERRAIN_CONFIG = {
     // this was pretty hilly, but decently smooth like MC
     SCALE: 0.03,
     OCTAVES: 3,
-    PERSISTANCE: 0.6,
+    PERSISTENCE: 0.6,
     LACUNARITY: 0.8,
     HEIGHT_OFFSET: 18,
     HEIGHT_SCALE: 0.05,
     TREE_SCALE: 0.1,
+    PLANT_SCALE: 0.5,
     AMPLIFIER: 0.4,
   },
   // HILLY: {

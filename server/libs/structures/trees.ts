@@ -1,15 +1,11 @@
-import Noise from 'noisejs';
-
 import { Coords3 } from '../../../shared/types';
 import { Chunk, Mine, TERRAIN_CONFIG } from '../../core';
+import { Noise } from '../noise';
 import { VoxelUpdate } from '../types';
 
 import { Base } from './base';
 
-// @ts-ignore
-const noise: Noise = new Noise.Noise(13412);
-
-class Tree extends Base {
+class Trees extends Base {
   constructor() {
     super([5, 5]);
   }
@@ -23,7 +19,7 @@ class Tree extends Base {
 
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
-        noise3x3.push(noise.perlin2((vx + i) * TREE_SCALE, (vz + j) * TREE_SCALE));
+        noise3x3.push(Noise.perlin2(vx + i, vz + j, TREE_SCALE));
       }
     }
 
@@ -60,18 +56,6 @@ class Tree extends Base {
     return locations;
   }
 
-  fractalOctavePerlin3 = (x: number, y: number, z: number, scale: number, octaves = 9) => {
-    let t = 0,
-      f = 1,
-      n = 0;
-    for (let i = 0; i < octaves; i++) {
-      n += noise.perlin3(x * f * scale, y * f * scale, z * f * scale) / f;
-      t += 1 / f;
-      f *= 2;
-    }
-    return n / t;
-  };
-
   generate(chunk: Chunk) {
     const locations = this.sample(chunk);
     const types = Mine.registry.getTypeMap(['trunk', 'leaves', 'leaves-orange']);
@@ -84,17 +68,11 @@ class Tree extends Base {
       const test2 = 0.1424;
       const test3 = 0.241;
       const test4 = 0.53425;
-      const height = noise.perlin2(vx * test4, vz * test4) > 0.06 ? 3 : 2;
+      const height = Noise.perlin2(vx, vz, test4) > 0.06 ? 3 : 2;
       const bushHeight =
-        noise.perlin2(vx * test, vz * test) > 0.2
-          ? 8
-          : noise.perlin2(vx * test2, vz * test2) > 0.1
-          ? 5
-          : height === 3
-          ? 3
-          : 2;
+        Noise.perlin2(vx, vz, test) > 0.2 ? 8 : Noise.perlin2(vx, vz, test2) > 0.1 ? 5 : height === 3 ? 3 : 2;
 
-      const type = noise.perlin2(vx * 0.005, vz * 0.005) > 0.1 ? types['leaves-orange'] : types['leaves'];
+      const type = Noise.perlin2(vx, vz, 0.005) > 0.1 ? types['leaves-orange'] : types['leaves'];
 
       for (let i = 0; i < height; i++) {
         updates.push({ voxel: [vx, vy + i, vz], type: types.trunk });
@@ -112,7 +90,7 @@ class Tree extends Base {
             const center = i === 0 && k === 0;
             const mf = center && j !== bushHeight ? types.trunk : type;
             if (Math.abs(i) === limit && Math.abs(k) === limit) continue;
-            if (!center && this.fractalOctavePerlin3(vx + i, vy + j, vz + k, test3) > 0.4) continue;
+            if (!center && Noise.fractalOctavePerlin3(vx + i, vy + j, vz + k, test3) > 0.4) continue;
             updates.push({ voxel: [tbx + i, tby + j, tbz + k], type: mf });
           }
         }
@@ -123,4 +101,4 @@ class Tree extends Base {
   }
 }
 
-export { Tree };
+export { Trees };
