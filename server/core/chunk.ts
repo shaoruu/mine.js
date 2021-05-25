@@ -237,7 +237,7 @@ class Chunk extends EventEmitter {
       for (let lz = 0; lz < size; lz++) {
         for (let ly = maxHeight - 1; ly >= 0; ly--) {
           // TODO: air check
-          if (ly === 0 || this.voxels.get(lx, ly, lz) !== 0) {
+          if (ly === 0 || !Mine.registry.isAir(this.voxels.get(lx, ly, lz))) {
             if (this.topY < ly) this.topY = ly;
             this.heightMap.set(lx, lz, ly);
             break;
@@ -323,11 +323,7 @@ class Chunk extends EventEmitter {
         const nVoxel = <Coords3>[nvx, nvy, nvz];
         const blockType = world.getBlockTypeByVoxel(nVoxel);
 
-        if (
-          !blockType.isTransparent ||
-          // (isSunlight && offset.y !== -1 && level === maxLightLevel && nvy > world.getMaxHeight([nvx, nvz])) ||
-          (isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel)) >= nl
-        ) {
+        if (!blockType.isTransparent || (isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel)) >= nl) {
           return;
         }
 

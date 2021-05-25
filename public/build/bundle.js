@@ -3856,7 +3856,6 @@ class Debug {
             _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.wrapper, {
                 top: '0',
                 width: '100%',
-                display: 'none',
                 position: 'fixed',
                 zIndex: '10000000000',
             });

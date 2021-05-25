@@ -12,8 +12,10 @@ class Builder {
   build = (chunk: Chunk) => {
     const updates: VoxelUpdate[] = [];
 
-    // 1. tree
+    // 1. plants
     updates.push(...Builder.plants.generate(chunk));
+
+    // 2. trees
     updates.push(...Builder.trees.generate(chunk));
 
     this.world.updateMany(updates, true);

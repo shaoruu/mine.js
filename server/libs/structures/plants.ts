@@ -34,7 +34,7 @@ class Plants extends Base {
     }
 
     // 2 more than trees
-    return maxi === 3;
+    return maxi === 4;
   }
 
   sample(chunk: Chunk) {
@@ -59,12 +59,33 @@ class Plants extends Base {
 
   generate(chunk: Chunk) {
     const locations = this.sample(chunk);
-    const types = Mine.registry.getTypeMap(['grass']);
+    const types = Mine.registry.getTypeMap([
+      'dirt',
+      'grass',
+      'tan-grass',
+      'brown-grass',
+      'brown-mushroom',
+      'red-mushroom',
+      'tan-mushroom',
+    ]);
 
     const updates: VoxelUpdate[] = [];
 
     for (const location of locations) {
-      updates.push({ type: types.grass, voxel: location });
+      const [vx, vy, vz] = location;
+      const stand = chunk.getVoxel([vx, vy - 1, vz]);
+
+      let type = types.grass;
+
+      if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.123, 3) > 0.2) type = types['red-mushroom'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.5852, 6) > 0.23 && stand === types.dirt)
+        type = types['brown-mushroom'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.4512, 4) > 0.2) type = types['tan-grass'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.3245, 2) > 0.26) type = types['tan-mushroom'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.222, 1) > 0.15 && stand === types.dirt)
+        type = types['brown-grass'];
+
+      updates.push({ type, voxel: location });
     }
 
     return updates;

@@ -6,8 +6,8 @@ const Grass: BlockType = {
   ...BasePlant,
   name: 'grass',
   textures: {
-    one: 'grass1.png',
-    two: 'grass1.png',
+    one: 'grass4.png',
+    two: 'grass4.png',
   },
 };
 

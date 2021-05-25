@@ -85,7 +85,6 @@ class Debug {
     Helper.applyStyle(this.wrapper, {
       top: '0',
       width: '100%',
-      display: 'none',
       position: 'fixed',
       zIndex: '10000000000',
     });

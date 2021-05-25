@@ -119,6 +119,10 @@ class Registry {
     return this.getBlockByID(type).name === 'air';
   };
 
+  isPlant = (type: number) => {
+    return this.getBlockByID(type).isPlant;
+  };
+
   isPlantable = (type: number) => {
     const { name } = this.getBlockByID(type);
     return name === 'dirt' || name === 'grass-block';
