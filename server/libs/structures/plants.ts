@@ -19,7 +19,7 @@ class Plants extends Base {
 
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
-        noise3x3.push(Noise.perlin2(vx + i, vz + j, PLANT_SCALE));
+        noise3x3.push(Noise.fractalOctavePerlin2(vx + i, vz + j, PLANT_SCALE));
       }
     }
 

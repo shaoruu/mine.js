@@ -14,6 +14,18 @@ class Noise {
   public static simplex3 = (x: number, y: number, z: number, scale = 1) =>
     noise.simplex3(x * scale, y * scale, z * scale);
 
+  public static fractalOctavePerlin2 = (x: number, z: number, scale: number, octaves = 9) => {
+    let t = 0,
+      f = 1,
+      n = 0;
+    for (let i = 0; i < octaves; i++) {
+      n += noise.perlin2(x * f * scale, z * f * scale) / f;
+      t += 1 / f;
+      f *= 2;
+    }
+    return n / t;
+  };
+
   public static fractalOctavePerlin3 = (x: number, y: number, z: number, scale: number, octaves = 9) => {
     let t = 0,
       f = 1,
