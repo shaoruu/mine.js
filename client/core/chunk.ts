@@ -1,6 +1,6 @@
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
-import { BufferGeometry, Float32BufferAttribute, Int8BufferAttribute, Mesh } from 'three';
+import { BufferGeometry, Float32BufferAttribute, Mesh } from 'three';
 import pool from 'typedarray-pool';
 
 import { Coords2, Coords3 } from '../../shared';

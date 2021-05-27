@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 
 import { protocol } from '../../protocol';
-import { Coords3 } from '../../shared/types';
+import { Coords3, Coords2 } from '../../shared/types';
 
 const { Message, ChatMessage } = protocol;
 
@@ -21,6 +21,7 @@ type ClientType = WebSocket & {
   isAlive: boolean;
   position: Coords3;
   rotation: [...Coords3, number];
+  requestedChunks: Coords2[];
 };
 
 class Network extends EventEmitter {
@@ -43,6 +44,7 @@ class Network extends EventEmitter {
 
     client.id = uuidv4();
     client.isAlive = true;
+    client.requestedChunks = [];
 
     this.onInit(client);
 

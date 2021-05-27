@@ -644,6 +644,9 @@ class Chunk extends EventEmitter {
 
   checkDecoration = () => {
     if (!this.needsDecoration) return;
+
+    this.markNeighbors();
+
     const { px, nx, pz, nz, pxpz, pxnz, nxpz, nxnz } = this.neighbors;
     if (!px || !nx || !pz || !nz || !pxpz || !pxnz || !nxpz || !nxnz) return;
     if (

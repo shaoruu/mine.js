@@ -4588,7 +4588,11 @@ class Network {
                     break;
                 }
                 case 'UPDATE': {
-                    const { updates } = event;
+                    const { json, updates } = event;
+                    if (json) {
+                        const { vx, vy, vz, type } = json;
+                        world.setVoxel([vx, vy, vz], type, false);
+                    }
                     for (const { vx, vy, vz, type } of updates) {
                         world.setVoxel([vx, vy, vz], type, false);
                     }

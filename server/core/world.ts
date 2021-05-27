@@ -48,7 +48,6 @@ class World extends Network {
 
   public chunks: Map<string, Chunk> = new Map();
   public chunkCache: Set<Chunk> = new Set();
-  public requestedChunks: { coords: Coords2; client: ClientType }[] = [];
 
   public time = 0;
   public tickSpeed = 2;
@@ -284,12 +283,16 @@ class World extends Network {
     const neighborChunks = this.getNeighborChunksByVoxel(voxel);
     neighborChunks.forEach((c) => this.chunkCache.add(c));
 
+    this.broadcast({
+      type: 'UPDATE',
+      json: { vx, vy, vz, type },
+    });
+
     this.chunkCache.forEach((chunk) => {
       chunk.remesh();
       this.broadcast({
         type: 'UPDATE',
         chunks: [chunk.getProtocol(false)],
-        updates: [{ vx, vy, vz, type }],
       });
     });
 
@@ -336,7 +339,7 @@ class World extends Network {
       chunk.remesh();
       this.broadcast({
         type: isDecorating ? 'LOAD' : 'UPDATE',
-        chunks: [chunk.getProtocol(false)],
+        chunks: [chunk.getProtocol(isDecorating)],
       });
     });
   };
@@ -401,7 +404,7 @@ class World extends Network {
     switch (request.type) {
       case 'REQUEST': {
         const { x, z } = request.json;
-        this.requestedChunks.push({ coords: [x, z], client });
+        client.requestedChunks.push([x, z]);
         break;
       }
       case 'CONFIG': {
@@ -469,14 +472,15 @@ class World extends Network {
     });
 
     // mesh chunks per frame
-    const spliced = this.requestedChunks.splice(0, 2);
-    spliced.forEach(({ coords, client }) => {
-      const [x, z] = coords;
-      const chunk = this.getChunkByCPos([x, z]);
-      if (chunk.hasMesh) chunk.remesh();
-      this.sendChunks(client, [chunk]);
-      this.unloadChunks();
-    });
+    for (const client of this.clients) {
+      const spliced = client.requestedChunks.splice(0, 2);
+      spliced.forEach((coords) => {
+        const chunk = this.getChunkByCPos(coords);
+        if (chunk.hasMesh) chunk.remesh();
+        this.sendChunks(client, [chunk]);
+        this.unloadChunks();
+      });
+    }
 
     // update time
     this.time = (this.time + (this.tickSpeed * (Date.now() - this.prevTime)) / 1000) % 2400;
@@ -487,7 +491,8 @@ class World extends Network {
     client.send(
       Network.encode({
         type,
-        chunks: chunks.map((c) => c.getProtocol(true)),
+        // don't send voxel information if chunk isn't set up
+        chunks: chunks.map((c) => c.getProtocol(!c.needsDecoration)),
       }),
     );
   };
