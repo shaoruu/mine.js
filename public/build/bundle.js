@@ -3663,7 +3663,7 @@ class Chunk {
             return Math.sqrt((mx + this.size / 2 - vx) ** 2 + (mz + this.size / 2 - vz) ** 2);
         };
         this.addToScene = () => {
-            const { rendering, world } = this.engine;
+            const { rendering } = this.engine;
             this.removeFromScene();
             if (!this.isAdded) {
                 MESH_TYPES.forEach((type) => {
@@ -3673,19 +3673,17 @@ class Chunk {
                         this.meshes.set(type, altMesh);
                     }
                 });
-                world.addAsVisible(this);
                 this.isAdded = true;
             }
         };
         this.removeFromScene = () => {
-            const { rendering, world } = this.engine;
+            const { rendering } = this.engine;
             if (this.isAdded) {
                 MESH_TYPES.forEach((type) => {
                     const mesh = this.meshes.get(type);
                     if (mesh && mesh.length)
                         rendering.scene.remove(...mesh);
                 });
-                world.removeAsVisible(this);
                 this.isAdded = false;
             }
         };
@@ -5563,7 +5561,6 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.requestedChunks = new Set();
         this.receivedChunks = [];
         this.chunks = new Map();
-        this.visibleChunks = new Set();
         this.tick = () => {
             this.checkCamChunk();
             this.requestChunks();
@@ -5687,12 +5684,6 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                     this.setVoxel(targetBlock, type);
             }
         };
-        this.addAsVisible = (chunk) => {
-            this.visibleChunks.add(chunk);
-        };
-        this.removeAsVisible = (chunk) => {
-            this.visibleChunks.delete(chunk);
-        };
         this.updateRenderRadius = (renderRadiuus) => {
             const { registry } = this.engine;
             const { chunkSize, dimension } = this.options;
@@ -5782,9 +5773,15 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.sortPendingChunks();
             // if the chunk is too far away, remove from scene.
             const deleteDistance = renderRadius * chunkSize * 1.414;
-            for (const chunk of this.visibleChunks) {
-                if (chunk.distTo(...this.engine.player.voxel) > deleteDistance) {
+            const removeDistance = requestRadius * chunkSize * 1.414;
+            for (const chunk of this.chunks.values()) {
+                const dist = chunk.distTo(...this.engine.player.voxel);
+                if (dist > deleteDistance) {
                     chunk.removeFromScene();
+                }
+                if (dist > removeDistance) {
+                    chunk.dispose();
+                    this.chunks.delete(chunk.name);
                 }
             }
         };

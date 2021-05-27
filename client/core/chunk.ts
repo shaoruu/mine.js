@@ -109,7 +109,7 @@ class Chunk {
   };
 
   addToScene = () => {
-    const { rendering, world } = this.engine;
+    const { rendering } = this.engine;
     this.removeFromScene();
     if (!this.isAdded) {
       MESH_TYPES.forEach((type) => {
@@ -119,19 +119,17 @@ class Chunk {
           this.meshes.set(type, altMesh);
         }
       });
-      world.addAsVisible(this);
       this.isAdded = true;
     }
   };
 
   removeFromScene = () => {
-    const { rendering, world } = this.engine;
+    const { rendering } = this.engine;
     if (this.isAdded) {
       MESH_TYPES.forEach((type) => {
         const mesh = this.meshes.get(type);
         if (mesh && mesh.length) rendering.scene.remove(...mesh);
       });
-      world.removeAsVisible(this);
       this.isAdded = false;
     }
   };

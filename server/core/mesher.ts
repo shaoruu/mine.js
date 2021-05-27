@@ -78,9 +78,10 @@ class Mesher {
 
               for (const { corners } of PLANT_FACES) {
                 for (const { pos } of corners) {
-                  const posX = pos[0] + vx + dx;
+                  const offset = (1 - PLANT_SHRINK) / 2;
+                  const posX = pos[0] * PLANT_SHRINK + offset + vx + dx;
                   const posY = pos[1] + vy;
-                  const posZ = pos[2] + vz + dz;
+                  const posZ = pos[2] * PLANT_SHRINK + offset + vz + dz;
 
                   const rep = Helper.getVoxelName([posX * dimension, posY * dimension, posZ * dimension]);
 

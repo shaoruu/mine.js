@@ -38,7 +38,6 @@ class World extends EventEmitter {
   private requestedChunks: Set<string> = new Set();
   private receivedChunks: ServerChunkType[] = [];
   private chunks: Map<string, Chunk> = new Map();
-  private visibleChunks: Set<Chunk> = new Set();
 
   constructor(public engine: Engine, public options: WorldOptionsType) {
     super();
@@ -204,14 +203,6 @@ class World extends EventEmitter {
     }
   };
 
-  addAsVisible = (chunk: Chunk) => {
-    this.visibleChunks.add(chunk);
-  };
-
-  removeAsVisible = (chunk: Chunk) => {
-    this.visibleChunks.delete(chunk);
-  };
-
   updateRenderRadius = (renderRadiuus: number) => {
     const { registry } = this.engine;
     const { chunkSize, dimension } = this.options;
@@ -332,9 +323,16 @@ class World extends EventEmitter {
 
     // if the chunk is too far away, remove from scene.
     const deleteDistance = renderRadius * chunkSize * 1.414;
-    for (const chunk of this.visibleChunks) {
-      if (chunk.distTo(...this.engine.player.voxel) > deleteDistance) {
+    const removeDistance = requestRadius * chunkSize * 1.414;
+    for (const chunk of this.chunks.values()) {
+      const dist = chunk.distTo(...this.engine.player.voxel);
+      if (dist > deleteDistance) {
         chunk.removeFromScene();
+      }
+
+      if (dist > removeDistance) {
+        chunk.dispose();
+        this.chunks.delete(chunk.name);
       }
     }
   };

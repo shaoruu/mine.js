@@ -25,6 +25,7 @@ class TextureAtlas {
     const canvasHeight = countPerSide * textureDimension;
 
     this.canvas = createCanvas(canvasWidth, canvasHeight);
+    this.makeCanvasPowerOfTwo(this.canvas);
 
     let row = 0;
     let col = 0;
@@ -44,10 +45,10 @@ class TextureAtlas {
         // ? idk if this works
         context.drawImage(texture, startX, startY, textureDimension, textureDimension);
 
-        const startU = startX / canvasWidth;
-        const endU = (startX + textureDimension) / canvasWidth;
-        const startV = 1 - startY / canvasHeight;
-        const endV = 1 - (startY + textureDimension) / canvasHeight;
+        const startU = startX / this.canvas.width;
+        const endU = (startX + textureDimension) / this.canvas.width;
+        const startV = 1 - startY / this.canvas.height;
+        const endV = 1 - (startY + textureDimension) / this.canvas.height;
 
         this.ranges[textureName] = {
           startU,
@@ -59,8 +60,6 @@ class TextureAtlas {
 
       col++;
     }
-
-    // this.makeCanvasPowerOfTwo(this.canvas);
   }
 
   makeCanvasPowerOfTwo(canvas: Canvas) {

@@ -70,6 +70,18 @@ class World extends Network {
 
     this.setupRoutes();
     setInterval(this.tick, 16);
+    setInterval(() => {
+      // mesh chunks per frame
+      for (const client of this.clients) {
+        const spliced = client.requestedChunks.splice(0, 2);
+        spliced.forEach((coords) => {
+          const chunk = this.getChunkByCPos(coords);
+          if (chunk.hasMesh) chunk.remesh();
+          this.sendChunks(client, [chunk]);
+          this.unloadChunks();
+        });
+      }
+    }, 8);
   }
 
   initStorage = () => {
@@ -470,17 +482,6 @@ class World extends Network {
       });
       client.send(encoded);
     });
-
-    // mesh chunks per frame
-    for (const client of this.clients) {
-      const spliced = client.requestedChunks.splice(0, 2);
-      spliced.forEach((coords) => {
-        const chunk = this.getChunkByCPos(coords);
-        if (chunk.hasMesh) chunk.remesh();
-        this.sendChunks(client, [chunk]);
-        this.unloadChunks();
-      });
-    }
 
     // update time
     this.time = (this.time + (this.tickSpeed * (Date.now() - this.prevTime)) / 1000) % 2400;
