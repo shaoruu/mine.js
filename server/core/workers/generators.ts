@@ -38,18 +38,19 @@ class Generators {
 
     if (isSolid) {
       if (!isSolidTop && !isSolidTop2) {
-        blockID = types.stone;
-        if (Noise.simplex3(vx, vy, vz, SCALE) > 0.01) {
+        blockID = types['grass-block'];
+        if (Noise.fractalOctavePerlin3(vx, vy, vz, SCALE) > 0.3) {
           blockID = types.dirt;
-        } else if (Noise.simplex2(vx, vz, SCALE) > 0.05) blockID = types['grass-block'];
-
-        if (Noise.simplex2(vx, vz, SCALE) < 0.03 && Noise.perlin2(vz, vx, SCALE) > 0.06) {
-          blockID = types.snow;
         }
+        //  else if (Noise.simplex2(vx, vz, SCALE) > 0.05) blockID = types['grass-block'];
 
-        if (Noise.fractalOctavePerlin3(vx, vy, vz, SCALE) > 0.25) {
-          blockID = types.green;
-        }
+        // if (Noise.simplex2(vx, vz, SCALE) < 0.03 && Noise.perlin2(vz, vx, SCALE) > 0.06) {
+        //   blockID = types.snow;
+        // }
+
+        // if (Noise.fractalOctavePerlin3(vx, vy, vz, SCALE) > 0.25) {
+        //   blockID = types.green;
+        // }
       } else {
         blockID = types.stone;
       }

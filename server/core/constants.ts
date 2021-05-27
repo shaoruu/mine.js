@@ -9,7 +9,7 @@ export const TERRAIN_CONFIG = {
     HEIGHT_OFFSET: 18,
     HEIGHT_SCALE: 0.05,
     TREE_SCALE: 0.1,
-    PLANT_SCALE: 0.1,
+    PLANT_SCALE: 0.5,
     AMPLIFIER: 0.4,
   },
   // HILLY: {

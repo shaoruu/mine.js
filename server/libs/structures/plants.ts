@@ -19,7 +19,7 @@ class Plants extends Base {
 
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
-        noise3x3.push(Noise.fractalOctavePerlin2(vx + i, vz + j, PLANT_SCALE));
+        noise3x3.push(Noise.fractalOctavePerlin2(vx + i, vz + j, PLANT_SCALE, 5));
       }
     }
 
@@ -77,12 +77,12 @@ class Plants extends Base {
 
       let type = types.grass;
 
-      if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.123, 3) > 0.2) type = types['red-mushroom'];
-      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.5852, 6) > 0.23 && stand === types.dirt)
+      if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.123, 3) > 0.3) type = types['red-mushroom'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.5852, 6) > 0.33 && stand === types.dirt)
         type = types['brown-mushroom'];
-      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.4512, 4) > 0.2) type = types['tan-grass'];
-      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.3245, 2) > 0.26) type = types['tan-mushroom'];
-      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.222, 1) > 0.15 && stand === types.dirt)
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.4512, 4) > 0.3) type = types['tan-grass'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.3245, 2) > 0.36) type = types['tan-mushroom'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.222, 1) > 0.25 && stand === types.dirt)
         type = types['brown-grass'];
 
       updates.push({ type, voxel: location });
