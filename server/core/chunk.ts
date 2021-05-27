@@ -202,7 +202,7 @@ class Chunk extends EventEmitter {
   };
 
   generate = async () => {
-    const { generation, save } = this.world.options;
+    const { generation } = this.world.options;
 
     // generate terrain, height map, and mesh
     this.needsPropagation = true;
@@ -224,9 +224,6 @@ class Chunk extends EventEmitter {
     if (pxnz) pxnz.checkDecoration();
     if (nxpz) nxpz.checkDecoration();
     if (nxnz) nxnz.checkDecoration();
-
-    // save to disk
-    if (save) this.save();
   };
 
   generateHeightMap = () => {
@@ -647,7 +644,9 @@ class Chunk extends EventEmitter {
 
     this.markNeighbors();
 
+    const { save } = this.world.options;
     const { px, nx, pz, nz, pxpz, pxnz, nxpz, nxnz } = this.neighbors;
+
     if (!px || !nx || !pz || !nz || !pxpz || !pxnz || !nxpz || !nxnz) return;
     if (
       !px.needsTerrain &&
@@ -661,6 +660,9 @@ class Chunk extends EventEmitter {
     ) {
       this.world.builder.build(this);
       this.needsDecoration = false;
+
+      // save to disk
+      if (save) this.save();
     }
   };
 
