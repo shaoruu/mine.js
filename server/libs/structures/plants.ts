@@ -58,6 +58,10 @@ class Plants extends Base {
   }
 
   generate(chunk: Chunk) {
+    const {
+      HILLY: { PLANT_SCALE },
+    } = TERRAIN_CONFIG;
+
     const locations = this.sample(chunk);
     const types = Mine.registry.getTypeMap([
       'dirt',
@@ -77,12 +81,12 @@ class Plants extends Base {
 
       let type = types.grass;
 
-      if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.123, 3) > 0.3) type = types['red-mushroom'];
-      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.5852, 6) > 0.33 && stand === types.dirt)
+      if (Noise.fractalOctavePerlin3(vx, vy, vz, PLANT_SCALE * 2.46, 3) > 0.3) type = types['red-mushroom'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, PLANT_SCALE * 10.852, 6) > 0.33 && stand === types.dirt)
         type = types['brown-mushroom'];
-      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.4512, 4) > 0.3) type = types['tan-grass'];
-      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.3245, 2) > 0.36) type = types['tan-mushroom'];
-      else if (Noise.fractalOctavePerlin3(vx, vy, vz, 0.222, 1) > 0.25 && stand === types.dirt)
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, PLANT_SCALE * 9.012, 4) > 0.3) type = types['tan-grass'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, PLANT_SCALE * 6.45, 2) > 0.36) type = types['tan-mushroom'];
+      else if (Noise.fractalOctavePerlin3(vx, vy, vz, PLANT_SCALE * 4.44, 1) > 0.25 && stand === types.dirt)
         type = types['brown-grass'];
 
       updates.push({ type, voxel: location });

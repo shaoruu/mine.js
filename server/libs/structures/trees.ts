@@ -57,6 +57,10 @@ class Trees extends Base {
   }
 
   generate(chunk: Chunk) {
+    const {
+      HILLY: { TREE_SCALE },
+    } = TERRAIN_CONFIG;
+
     const locations = this.sample(chunk);
     const types = Mine.registry.getTypeMap(['trunk', 'leaves', 'leaves-orange']);
 
@@ -64,10 +68,10 @@ class Trees extends Base {
 
     for (const location of locations) {
       const [vx, vy, vz] = location;
-      const test = 0.4124;
-      const test2 = 0.1424;
-      const test3 = 0.241;
-      const test4 = 0.53425;
+      const test = TREE_SCALE * 4.124;
+      const test2 = TREE_SCALE * 1.424;
+      const test3 = TREE_SCALE * 2.41;
+      const test4 = TREE_SCALE * 5.3425;
       const height = Noise.perlin2(vx, vz, test4) > 0.06 ? 3 : 2;
       const bushHeight =
         Noise.perlin2(vx, vz, test) > 0.2 ? 8 : Noise.perlin2(vx, vz, test2) > 0.1 ? 5 : height === 3 ? 3 : 2;

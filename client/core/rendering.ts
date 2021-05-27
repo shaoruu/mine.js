@@ -53,6 +53,7 @@ class Rendering extends EventEmitter {
     });
     this.renderer.setClearColor(new Color(clearColor));
     this.renderer.sortObjects = false;
+    this.renderer.extensions.get('EXT_color_buffer_float');
 
     // composer
     const { width, height } = this.renderSize;

@@ -5457,6 +5457,7 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         });
         this.renderer.setClearColor(new three__WEBPACK_IMPORTED_MODULE_2__.Color(clearColor));
         this.renderer.sortObjects = false;
+        this.renderer.extensions.get('EXT_color_buffer_float');
         // composer
         const { width, height } = this.renderSize;
         this.renderTarget = new three__WEBPACK_IMPORTED_MODULE_2__.WebGLRenderTarget(width, height, {
