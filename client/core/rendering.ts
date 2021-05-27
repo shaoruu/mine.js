@@ -101,6 +101,8 @@ class Rendering extends EventEmitter {
     const { width, height } = this.renderSize;
     const pixelRatio = Math.min(window.devicePixelRatio, 2);
 
+    if (width === 0 || height === 0) return;
+
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(pixelRatio);
 

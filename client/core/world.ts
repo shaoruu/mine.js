@@ -145,6 +145,16 @@ class World extends EventEmitter {
     return this.getFluidityByVoxel(vCoords);
   };
 
+  getTorchLight = (vCoords: Coords3) => {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk?.getTorchLight(...vCoords) || 0;
+  };
+
+  getSunlight = (vCoords: Coords3) => {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk?.getSunlight(...vCoords);
+  };
+
   handleServerChunk = (serverChunk: ServerChunkType, prioritized = false) => {
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
@@ -356,7 +366,7 @@ class World extends EventEmitter {
 
     const { maxChunkProcessPerFrame } = this.options;
 
-    const frameReceivedChunks = this.receivedChunks.splice(0, 30);
+    const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkProcessPerFrame);
     frameReceivedChunks.forEach((serverChunk) => {
       const { x: cx, z: cz } = serverChunk;
       const coords = [cx, cz] as Coords2;
@@ -369,12 +379,11 @@ class World extends EventEmitter {
         this.setChunk(chunk);
       }
 
-      const { meshes, voxels } = serverChunk;
+      const { meshes, voxels, lights } = serverChunk;
 
       chunk.setupMesh(meshes);
-      if (voxels.length) {
-        chunk.voxels.data = new Uint8Array(serverChunk.voxels);
-      }
+      if (voxels.length) chunk.voxels.data = new Uint8Array(serverChunk.voxels);
+      if (lights.length) chunk.lights.data = new Uint8Array(serverChunk.lights);
     });
   };
 

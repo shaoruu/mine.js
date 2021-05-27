@@ -690,6 +690,7 @@ $root.protocol = (function() {
          * @property {number|null} [z] Chunk z
          * @property {Array.<protocol.IMesh>|null} [meshes] Chunk meshes
          * @property {Array.<number>|null} [voxels] Chunk voxels
+         * @property {Array.<number>|null} [lights] Chunk lights
          */
 
         /**
@@ -703,6 +704,7 @@ $root.protocol = (function() {
         function Chunk(properties) {
             this.meshes = [];
             this.voxels = [];
+            this.lights = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -742,6 +744,14 @@ $root.protocol = (function() {
         Chunk.prototype.voxels = $util.emptyArray;
 
         /**
+         * Chunk lights.
+         * @member {Array.<number>} lights
+         * @memberof protocol.Chunk
+         * @instance
+         */
+        Chunk.prototype.lights = $util.emptyArray;
+
+        /**
          * Creates a new Chunk instance using the specified properties.
          * @function create
          * @memberof protocol.Chunk
@@ -776,6 +786,12 @@ $root.protocol = (function() {
                 writer.uint32(/* id 4, wireType 2 =*/34).fork();
                 for (var i = 0; i < message.voxels.length; ++i)
                     writer.int32(message.voxels[i]);
+                writer.ldelim();
+            }
+            if (message.lights != null && message.lights.length) {
+                writer.uint32(/* id 5, wireType 2 =*/42).fork();
+                for (var i = 0; i < message.lights.length; ++i)
+                    writer.int32(message.lights[i]);
                 writer.ldelim();
             }
             return writer;
@@ -832,6 +848,16 @@ $root.protocol = (function() {
                             message.voxels.push(reader.int32());
                     } else
                         message.voxels.push(reader.int32());
+                    break;
+                case 5:
+                    if (!(message.lights && message.lights.length))
+                        message.lights = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.lights.push(reader.int32());
+                    } else
+                        message.lights.push(reader.int32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -890,6 +916,13 @@ $root.protocol = (function() {
                     if (!$util.isInteger(message.voxels[i]))
                         return "voxels: integer[] expected";
             }
+            if (message.lights != null && message.hasOwnProperty("lights")) {
+                if (!Array.isArray(message.lights))
+                    return "lights: array expected";
+                for (var i = 0; i < message.lights.length; ++i)
+                    if (!$util.isInteger(message.lights[i]))
+                        return "lights: integer[] expected";
+            }
             return null;
         };
 
@@ -926,6 +959,13 @@ $root.protocol = (function() {
                 for (var i = 0; i < object.voxels.length; ++i)
                     message.voxels[i] = object.voxels[i] | 0;
             }
+            if (object.lights) {
+                if (!Array.isArray(object.lights))
+                    throw TypeError(".protocol.Chunk.lights: array expected");
+                message.lights = [];
+                for (var i = 0; i < object.lights.length; ++i)
+                    message.lights[i] = object.lights[i] | 0;
+            }
             return message;
         };
 
@@ -945,6 +985,7 @@ $root.protocol = (function() {
             if (options.arrays || options.defaults) {
                 object.meshes = [];
                 object.voxels = [];
+                object.lights = [];
             }
             if (options.defaults) {
                 object.x = 0;
@@ -963,6 +1004,11 @@ $root.protocol = (function() {
                 object.voxels = [];
                 for (var j = 0; j < message.voxels.length; ++j)
                     object.voxels[j] = message.voxels[j];
+            }
+            if (message.lights && message.lights.length) {
+                object.lights = [];
+                for (var j = 0; j < message.lights.length; ++j)
+                    object.lights[j] = message.lights[j];
             }
             return object;
         };

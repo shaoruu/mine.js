@@ -58,5 +58,6 @@ export type ServerChunkType = {
   z: number;
   meshes: ServerMeshType[];
   voxels: Uint8Array;
+  lights: Uint8Array;
   json: { voxel: Coords3; type: number };
 };

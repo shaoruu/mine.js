@@ -232,6 +232,9 @@ export namespace protocol {
 
         /** Chunk voxels */
         voxels?: (number[]|null);
+
+        /** Chunk lights */
+        lights?: (number[]|null);
     }
 
     /** Represents a Chunk. */
@@ -254,6 +257,9 @@ export namespace protocol {
 
         /** Chunk voxels. */
         public voxels: number[];
+
+        /** Chunk lights. */
+        public lights: number[];
 
         /**
          * Creates a new Chunk instance using the specified properties.

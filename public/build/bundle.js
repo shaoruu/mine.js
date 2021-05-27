@@ -3739,6 +3739,7 @@ class Chunk {
         this.dimension = dimension;
         this.name = _utils__WEBPACK_IMPORTED_MODULE_5__.Helper.getChunkName(this.coords);
         this.voxels = ndarray__WEBPACK_IMPORTED_MODULE_1___default()(typedarray_pool__WEBPACK_IMPORTED_MODULE_2__.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
+        this.lights = ndarray__WEBPACK_IMPORTED_MODULE_1___default()(typedarray_pool__WEBPACK_IMPORTED_MODULE_2__.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
         MESH_TYPES.forEach((type) => {
             this.geometries.set(type, new three__WEBPACK_IMPORTED_MODULE_7__.BufferGeometry());
         });
@@ -3751,6 +3752,20 @@ class Chunk {
         gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.max, this.max, [1, 0, 1]);
         gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().scale(this.max, this.max, size);
         gl_vec3__WEBPACK_IMPORTED_MODULE_0___default().add(this.max, this.max, [0, maxHeight, 0]);
+    }
+    getLocalTorchLight(lx, ly, lz) {
+        return this.lights.get(lx, ly, lz) & 0xf;
+    }
+    getLocalSunlight(lx, ly, lz) {
+        return (this.lights.get(lx, ly, lz) >> 4) & 0xf;
+    }
+    getTorchLight(vx, vy, vz) {
+        const lCoords = this.toLocal(vx, vy, vz);
+        return this.getLocalTorchLight(...lCoords);
+    }
+    getSunlight(vx, vy, vz) {
+        const lCoords = this.toLocal(vx, vy, vz);
+        return this.getLocalSunlight(...lCoords);
     }
 }
 
@@ -5434,6 +5449,8 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         this.adjustRenderer = () => {
             const { width, height } = this.renderSize;
             const pixelRatio = Math.min(window.devicePixelRatio, 2);
+            if (width === 0 || height === 0)
+                return;
             this.renderer.setSize(width, height);
             this.renderer.setPixelRatio(pixelRatio);
             this.composer.setSize(width, height);
@@ -5620,6 +5637,14 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             const vCoords = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.mapWorldPosToVoxelPos(wCoords, this.options.dimension);
             return this.getFluidityByVoxel(vCoords);
         };
+        this.getTorchLight = (vCoords) => {
+            const chunk = this.getChunkByVoxel(vCoords);
+            return (chunk === null || chunk === void 0 ? void 0 : chunk.getTorchLight(...vCoords)) || 0;
+        };
+        this.getSunlight = (vCoords) => {
+            const chunk = this.getChunkByVoxel(vCoords);
+            return chunk === null || chunk === void 0 ? void 0 : chunk.getSunlight(...vCoords);
+        };
         this.handleServerChunk = (serverChunk, prioritized = false) => {
             const { x: cx, z: cz } = serverChunk;
             const coords = [cx, cz];
@@ -5788,7 +5813,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             if (this.receivedChunks.length === 0)
                 return;
             const { maxChunkProcessPerFrame } = this.options;
-            const frameReceivedChunks = this.receivedChunks.splice(0, 30);
+            const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkProcessPerFrame);
             frameReceivedChunks.forEach((serverChunk) => {
                 const { x: cx, z: cz } = serverChunk;
                 const coords = [cx, cz];
@@ -5798,11 +5823,12 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                     chunk = new _chunk__WEBPACK_IMPORTED_MODULE_4__.Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
                     this.setChunk(chunk);
                 }
-                const { meshes, voxels } = serverChunk;
+                const { meshes, voxels, lights } = serverChunk;
                 chunk.setupMesh(meshes);
-                if (voxels.length) {
+                if (voxels.length)
                     chunk.voxels.data = new Uint8Array(serverChunk.voxels);
-                }
+                if (lights.length)
+                    chunk.lights.data = new Uint8Array(serverChunk.lights);
             });
         };
         this.animateSky = () => {
@@ -81422,6 +81448,7 @@ $root.protocol = (function() {
          * @property {number|null} [z] Chunk z
          * @property {Array.<protocol.IMesh>|null} [meshes] Chunk meshes
          * @property {Array.<number>|null} [voxels] Chunk voxels
+         * @property {Array.<number>|null} [lights] Chunk lights
          */
 
         /**
@@ -81435,6 +81462,7 @@ $root.protocol = (function() {
         function Chunk(properties) {
             this.meshes = [];
             this.voxels = [];
+            this.lights = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -81474,6 +81502,14 @@ $root.protocol = (function() {
         Chunk.prototype.voxels = $util.emptyArray;
 
         /**
+         * Chunk lights.
+         * @member {Array.<number>} lights
+         * @memberof protocol.Chunk
+         * @instance
+         */
+        Chunk.prototype.lights = $util.emptyArray;
+
+        /**
          * Creates a new Chunk instance using the specified properties.
          * @function create
          * @memberof protocol.Chunk
@@ -81508,6 +81544,12 @@ $root.protocol = (function() {
                 writer.uint32(/* id 4, wireType 2 =*/34).fork();
                 for (var i = 0; i < message.voxels.length; ++i)
                     writer.int32(message.voxels[i]);
+                writer.ldelim();
+            }
+            if (message.lights != null && message.lights.length) {
+                writer.uint32(/* id 5, wireType 2 =*/42).fork();
+                for (var i = 0; i < message.lights.length; ++i)
+                    writer.int32(message.lights[i]);
                 writer.ldelim();
             }
             return writer;
@@ -81564,6 +81606,16 @@ $root.protocol = (function() {
                             message.voxels.push(reader.int32());
                     } else
                         message.voxels.push(reader.int32());
+                    break;
+                case 5:
+                    if (!(message.lights && message.lights.length))
+                        message.lights = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.lights.push(reader.int32());
+                    } else
+                        message.lights.push(reader.int32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -81622,6 +81674,13 @@ $root.protocol = (function() {
                     if (!$util.isInteger(message.voxels[i]))
                         return "voxels: integer[] expected";
             }
+            if (message.lights != null && message.hasOwnProperty("lights")) {
+                if (!Array.isArray(message.lights))
+                    return "lights: array expected";
+                for (var i = 0; i < message.lights.length; ++i)
+                    if (!$util.isInteger(message.lights[i]))
+                        return "lights: integer[] expected";
+            }
             return null;
         };
 
@@ -81658,6 +81717,13 @@ $root.protocol = (function() {
                 for (var i = 0; i < object.voxels.length; ++i)
                     message.voxels[i] = object.voxels[i] | 0;
             }
+            if (object.lights) {
+                if (!Array.isArray(object.lights))
+                    throw TypeError(".protocol.Chunk.lights: array expected");
+                message.lights = [];
+                for (var i = 0; i < object.lights.length; ++i)
+                    message.lights[i] = object.lights[i] | 0;
+            }
             return message;
         };
 
@@ -81677,6 +81743,7 @@ $root.protocol = (function() {
             if (options.arrays || options.defaults) {
                 object.meshes = [];
                 object.voxels = [];
+                object.lights = [];
             }
             if (options.defaults) {
                 object.x = 0;
@@ -81695,6 +81762,11 @@ $root.protocol = (function() {
                 object.voxels = [];
                 for (var j = 0; j < message.voxels.length; ++j)
                     object.voxels[j] = message.voxels[j];
+            }
+            if (message.lights && message.lights.length) {
+                object.lights = [];
+                for (var j = 0; j < message.lights.length; ++j)
+                    object.lights[j] = message.lights[j];
             }
             return object;
         };

@@ -674,6 +674,7 @@ class Chunk extends EventEmitter {
       z: this.coords[1],
       meshes: [this.meshes],
       voxels: needsVoxels ? this.voxels.data : null,
+      lights: needsVoxels ? this.lights.data : null,
     };
   };
 

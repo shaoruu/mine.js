@@ -18,6 +18,7 @@ const MESH_TYPES = ['transparent', 'opaque'];
 
 class Chunk {
   public voxels: ndarray;
+  public lights: ndarray;
 
   public name: string;
   public size: number;
@@ -47,6 +48,7 @@ class Chunk {
     this.name = Helper.getChunkName(this.coords);
 
     this.voxels = ndarray(pool.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
+    this.lights = ndarray(pool.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
 
     MESH_TYPES.forEach((type) => {
       this.geometries.set(type, new BufferGeometry());
@@ -75,6 +77,24 @@ class Chunk {
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
     return this.voxels.get(lx, ly, lz);
   };
+
+  getLocalTorchLight(lx: number, ly: number, lz: number) {
+    return this.lights.get(lx, ly, lz) & 0xf;
+  }
+
+  getLocalSunlight(lx: number, ly: number, lz: number) {
+    return (this.lights.get(lx, ly, lz) >> 4) & 0xf;
+  }
+
+  getTorchLight(vx: number, vy: number, vz: number) {
+    const lCoords = this.toLocal(vx, vy, vz);
+    return this.getLocalTorchLight(...lCoords);
+  }
+
+  getSunlight(vx: number, vy: number, vz: number) {
+    const lCoords = this.toLocal(vx, vy, vz);
+    return this.getLocalSunlight(...lCoords);
+  }
 
   contains = (vx: number, vy: number, vz: number, padding = 0) => {
     const { size, maxHeight } = this;
