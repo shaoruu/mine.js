@@ -39,6 +39,7 @@ class Peer {
     this.nameMesh.material.depthTest = false;
 
     const image = this.nameMesh.material.map;
+
     if (image) {
       image.minFilter = NearestFilter;
       image.magFilter = NearestFilter;
@@ -48,6 +49,7 @@ class Peer {
   }
 
   update = (name: string, position: Vector3, quaternion: Quaternion) => {
+    this.name = name;
     this.nameMesh.text = name;
     this.newPosition = position;
     this.newQuaternion = quaternion;

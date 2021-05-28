@@ -36,10 +36,6 @@ class Peers {
       interval = setInterval(() => {
         const { position, quaternion } = object;
 
-        if (engine.player.entity.body.sleepFrameCount === 0 && Helper.approxEquals(prevQuat.dot(quaternion), 1))
-          // means this player is not moving
-          return;
-
         prevQuat.copy(quaternion);
 
         const { x: px, y: py, z: pz } = position;
@@ -141,6 +137,8 @@ class Peers {
     const player = this.players.get(id);
 
     const { name, position, rotation } = packet;
+
+    if (name !== player.name) this.updateDOM();
     player.update(name, new Vector3(...position), new Quaternion(...rotation));
   };
 

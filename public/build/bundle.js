@@ -4848,6 +4848,8 @@ class Peers {
             }
             const player = this.players.get(id);
             const { name, position, rotation } = packet;
+            if (name !== player.name)
+                this.updateDOM();
             player.update(name, new three__WEBPACK_IMPORTED_MODULE_4__.Vector3(...position), new three__WEBPACK_IMPORTED_MODULE_4__.Quaternion(...rotation));
         };
         this.leave = (id) => {
@@ -4867,9 +4869,6 @@ class Peers {
             const prevQuat = new three__WEBPACK_IMPORTED_MODULE_4__.Quaternion();
             interval = setInterval(() => {
                 const { position, quaternion } = object;
-                if (engine.player.entity.body.sleepFrameCount === 0 && _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.approxEquals(prevQuat.dot(quaternion), 1))
-                    // means this player is not moving
-                    return;
                 prevQuat.copy(quaternion);
                 const { x: px, y: py, z: pz } = position;
                 const { x: qx, y: qy, z: qz, w: qw } = quaternion;
@@ -6704,6 +6703,7 @@ class Peer {
         this.options = options;
         this.name = 'testtesttest';
         this.update = (name, position, quaternion) => {
+            this.name = name;
             this.nameMesh.text = name;
             this.newPosition = position;
             this.newQuaternion = quaternion;
