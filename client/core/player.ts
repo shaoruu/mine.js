@@ -31,6 +31,7 @@ const DEFAULT_PLAYER_NAME = 'naenaebaby';
 class Player {
   public id: string;
   public name: string;
+  public godMode = false;
 
   public controls: PointerLockControls;
 
@@ -53,7 +54,6 @@ class Player {
     back: false,
   };
   private lookBlockMesh: Group;
-  private godMode = false;
 
   constructor(public engine: Engine, public options: PlayerOptionsType) {
     const { lookBlockScale, lookBlockColor } = options;

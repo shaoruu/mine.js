@@ -47,7 +47,7 @@ class Chunk {
   public max: Coords3 = [0, 0, 0];
 
   public needsSaving = false;
-  public needsPropagation = false;
+  public needsPropagation = true;
   public needsTerrain = true;
   public needsDecoration = true;
   public isEmpty = true;
@@ -137,7 +137,7 @@ class Chunk {
   };
 
   setMaxHeight = (column: Coords2, height: number) => {
-    if (height > this.topY) this.topY = height;
+    if (height > this.topY) this.topY = height + 3;
     return this.heightMap.set(...column, height);
   };
 
@@ -187,7 +187,6 @@ class Chunk {
     const { generation } = this.world.options;
 
     // generate terrain, height map, and mesh
-    this.needsPropagation = true;
     this.needsSaving = true;
     this.needsDecoration = generation === 'hilly';
 
@@ -212,7 +211,7 @@ class Chunk {
           // TODO: air check
           const type = this.voxels.get(lx, ly, lz);
           if (ly === 0 || (!Mine.registry.isAir(type) && !Mine.registry.isPlant(type))) {
-            if (this.topY < ly) this.topY = ly;
+            if (this.topY < ly) this.topY = ly + 3;
             this.heightMap.set(lx, lz, ly);
             break;
           }

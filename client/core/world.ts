@@ -191,13 +191,14 @@ class World extends EventEmitter {
       entity: {
         body: { aabb },
       },
+      godMode,
     } = this.engine.player;
     const blockSize = dimension - 0.05;
     if (targetBlock) {
       const [tx, ty, tz] = targetBlock;
       const offset = (dimension - blockSize) / 2;
       const blockAABB = new AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
-      if (!aabb.intersects(blockAABB)) this.setVoxel(targetBlock, type);
+      if (!aabb.intersects(blockAABB) || godMode) this.setVoxel(targetBlock, type);
     }
   };
 

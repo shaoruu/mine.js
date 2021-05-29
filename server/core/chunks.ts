@@ -38,11 +38,25 @@ class Chunks {
     return chunk;
   };
 
+  preload = async (width: number) => {
+    await this.load([0, 0], width, true);
+  };
+
   generate = async (client: ClientType) => {
-    const { position, renderRadius } = client;
+    const { currentChunk, renderRadius } = client;
+    if (currentChunk) await this.load(currentChunk, renderRadius);
+  };
+
+  setVoxel = (voxel: Coords3, type: number) => {
+    const { chunkSize } = this.world.options;
+    const coords = Helper.mapVoxelPosToChunkPos(voxel, chunkSize);
+    this.raw(coords)?.setVoxel(voxel, type);
+  };
+
+  private load = async (coords: Coords2, renderRadius: number, mesh = false) => {
     const { chunkSize, dimension, maxHeight } = this.world.options;
 
-    const [cx, cz] = Helper.mapVoxelPosToChunkPos(Helper.mapWorldPosToVoxelPos(position, dimension), chunkSize);
+    const [cx, cz] = coords;
 
     const toDecorate: Chunk[] = [];
     const toGenerate: Chunk[] = [];
@@ -97,12 +111,12 @@ class Chunks {
     toDecorate.forEach((chunk) => {
       chunk.generateHeightMap();
     });
-  };
 
-  setVoxel = (voxel: Coords3, type: number) => {
-    const { chunkSize } = this.world.options;
-    const coords = Helper.mapVoxelPosToChunkPos(voxel, chunkSize);
-    this.raw(coords)?.setVoxel(voxel, type);
+    if (mesh) {
+      toDecorate.forEach((chunk) => {
+        if (chunk.isDirty) chunk.remesh();
+      });
+    }
   };
 
   private addChunk = (chunk: Chunk) => {

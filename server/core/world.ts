@@ -65,7 +65,7 @@ class World extends Network {
 
     console.log(`\nWorld: ${chalk.bgCyan.gray(options.name)}`);
     if (save) this.initStorage();
-    // this.preloadChunks();
+    this.preloadChunks();
 
     this.setupRoutes();
     setInterval(this.tick, 16);
@@ -88,7 +88,6 @@ class World extends Network {
           }
 
           this.sendChunks(client, [chunk]);
-          this.unloadChunks();
         });
 
         const { currentChunk: cc } = client;
@@ -125,13 +124,9 @@ class World extends Network {
 
   preloadChunks = () => {
     const { preload } = this.options;
-    console.log(`Preloading ${chalk.cyan((preload * 2 + 1) ** 2)} chunks...`);
-    for (let x = -preload; x <= preload; x++) {
-      for (let z = -preload; z <= preload; z++) {
-        this.getChunkByCPos([x, z]).remesh();
-      }
-    }
-    console.log(`Preloaded ${chalk.cyan((preload * 2 + 1) ** 2)} chunks.\n`);
+    this.chunks.preload(preload).then(() => {
+      console.log(`Preloaded ${this.chunks.all().length} amount of chunks.\n`);
+    });
   };
 
   setupRoutes = () => {
@@ -227,22 +222,22 @@ class World extends Network {
 
   getTorchLight = (vCoords: Coords3) => {
     const chunk = this.getChunkByVoxel(vCoords);
-    return chunk.getTorchLight(vCoords) || 0;
+    return chunk?.getTorchLight(vCoords) || 0;
   };
 
   setTorchLight = (vCoords: Coords3, level: number) => {
     const chunk = this.getChunkByVoxel(vCoords);
-    chunk.setTorchLight(vCoords, level);
+    chunk?.setTorchLight(vCoords, level);
   };
 
   getSunlight = (vCoords: Coords3) => {
     const chunk = this.getChunkByVoxel(vCoords);
-    return chunk.getSunlight(vCoords);
+    return chunk?.getSunlight(vCoords);
   };
 
   setSunlight = (vCoords: Coords3, level: number) => {
     const chunk = this.getChunkByVoxel(vCoords);
-    return chunk.setSunlight(vCoords, level);
+    return chunk?.setSunlight(vCoords, level);
   };
 
   getBlockTypeByVoxel = (vCoords: Coords3) => {
@@ -256,12 +251,12 @@ class World extends Network {
 
   getMaxHeight = (column: Coords2) => {
     const chunk = this.getChunkByVoxel([column[0], 0, column[1]]);
-    return chunk.getMaxHeight(column);
+    return chunk?.getMaxHeight(column);
   };
 
   setMaxHeight = (column: Coords2, height: number) => {
     const chunk = this.getChunkByVoxel([column[0], 0, column[1]]);
-    return chunk.setMaxHeight(column, height);
+    return chunk?.setMaxHeight(column, height);
   };
 
   getTransparencyByVoxel = (vCoords: Coords3) => {
@@ -270,7 +265,7 @@ class World extends Network {
 
   setVoxel = (voxel: Coords3, type: number) => {
     const chunk = this.getChunkByVoxel(voxel);
-    return chunk.setVoxel(voxel, type);
+    return chunk?.setVoxel(voxel, type);
   };
 
   update = (voxel: Coords3, type: number) => {
@@ -301,10 +296,11 @@ class World extends Network {
 
     this.chunkCache.forEach((chunk) => {
       chunk.remesh();
-      this.broadcast({
-        type: 'UPDATE',
-        chunks: [chunk.getProtocol(false)],
-      });
+    });
+
+    this.broadcast({
+      type: 'UPDATE',
+      chunks: Array.from(this.chunkCache).map((c) => c.getProtocol(false)),
     });
 
     this.clearCache();
@@ -403,9 +399,6 @@ class World extends Network {
   };
 
   onInit = (client: ClientType) => {
-    // const spawnChunk = this.getChunkByCPos([0, 0]);
-    // spawnChunk.generateHeightMap();
-
     client.send(
       Network.encode({
         type: 'INIT',
@@ -413,8 +406,7 @@ class World extends Network {
           id: client.id,
           time: this.time,
           tickSpeed: this.tickSpeed,
-          // spawn: [0, this.getMaxHeight([0, 0]), 0],
-          spawn: [0, 27, 0],
+          spawn: [0, this.getMaxHeight([0, 0]), 0],
           passables: Mine.registry.getPassableSolids(),
         },
       }),

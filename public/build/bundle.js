@@ -4979,6 +4979,7 @@ class Player {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
+        this.godMode = false;
         this.lookBlock = [0, 0, 0];
         this.targetBlock = [0, 0, 0];
         this.perspective = 'first';
@@ -4993,7 +4994,6 @@ class Player {
             front: false,
             back: false,
         };
-        this.godMode = false;
         this.onKeyDown = ({ code }) => {
             if (!this.controls.isLocked || this.engine.chat.enabled)
                 return;
@@ -5699,13 +5699,13 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         };
         this.placeVoxel = (type) => {
             const { dimension } = this.options;
-            const { targetBlock, entity: { body: { aabb }, }, } = this.engine.player;
+            const { targetBlock, entity: { body: { aabb }, }, godMode, } = this.engine.player;
             const blockSize = dimension - 0.05;
             if (targetBlock) {
                 const [tx, ty, tz] = targetBlock;
                 const offset = (dimension - blockSize) / 2;
                 const blockAABB = new _libs__WEBPACK_IMPORTED_MODULE_2__.AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
-                if (!aabb.intersects(blockAABB))
+                if (!aabb.intersects(blockAABB) || godMode)
                     this.setVoxel(targetBlock, type);
             }
         };
