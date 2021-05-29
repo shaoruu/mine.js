@@ -5,11 +5,9 @@ import chalk from 'chalk';
 import { FastifyInstance } from 'fastify';
 
 import { Coords2, Coords3, Helper } from '../../shared';
-import { GeneratorTypes, VoxelUpdate } from '../libs';
+import { GeneratorTypes } from '../libs';
 
-import { Builder } from './builder';
-
-import { ClientType, Network, NetworkOptionsType, Chunk, Mine } from '.';
+import { ClientType, Network, NetworkOptionsType, Chunk, Mine, Builder, Chunks } from '.';
 
 const chunkNeighbors = [
   { x: -1, z: -1 },
@@ -46,7 +44,7 @@ class World extends Network {
 
   public builder: Builder;
 
-  public chunks: Map<string, Chunk> = new Map();
+  public chunks: Chunks;
   public chunkCache: Set<Chunk> = new Set();
 
   public time = 0;
@@ -63,23 +61,44 @@ class World extends Network {
     this.tickSpeed = tickSpeed;
 
     this.builder = new Builder(this);
+    this.chunks = new Chunks(this);
 
     console.log(`\nWorld: ${chalk.bgCyan.gray(options.name)}`);
     if (save) this.initStorage();
-    this.preloadChunks();
+    // this.preloadChunks();
 
     this.setupRoutes();
     setInterval(this.tick, 16);
     setInterval(() => {
       // mesh chunks per frame
       for (const client of this.clients) {
-        const spliced = client.requestedChunks.splice(0, 2);
+        const spliced = client.requestedChunks.splice(0, 10);
+        const unprepared: Coords2[] = [];
+
         spliced.forEach((coords) => {
-          const chunk = this.getChunkByCPos(coords);
-          if (chunk.hasMesh) chunk.remesh();
+          const chunk = this.chunks.get(coords);
+
+          if (!chunk) {
+            unprepared.push(coords);
+            return;
+          }
+
+          if (chunk.isDirty) {
+            chunk.remesh();
+          }
+
           this.sendChunks(client, [chunk]);
           this.unloadChunks();
         });
+
+        const { currentChunk: cc } = client;
+        if (cc) {
+          const [cx, cz] = cc;
+          client.requestedChunks.sort((a, b) => {
+            return (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2;
+          });
+        }
+        client.requestedChunks.push(...unprepared);
       }
     }, 8);
   }
@@ -134,7 +153,7 @@ class World extends Network {
   save = () => {
     if (!this.options.save) return;
 
-    this.chunks.forEach((chunk) => {
+    this.chunks.all().forEach((chunk) => {
       if (chunk.needsSaving) {
         chunk.save();
       }
@@ -146,32 +165,16 @@ class World extends Network {
     chunk.needsSaving = true;
   };
 
-  getChunkByCPos = (cCoords: Coords2, instantiate = true) => {
-    return this.getChunkByName(Helper.getChunkName(cCoords), instantiate);
-  };
-
-  getChunkByName = (chunkName: string, instantiate = true) => {
-    let chunk = this.chunks.get(chunkName);
-    if (instantiate) {
-      if (!chunk) {
-        const { chunkSize, dimension, maxHeight } = this.options;
-        const coords = Helper.parseChunkName(chunkName) as Coords2;
-        chunk = new Chunk(coords, this, {
-          dimension,
-          maxHeight,
-          size: chunkSize,
-        });
-        this.chunks.set(chunkName, chunk);
-      }
-      if (this.caching) this.chunkCache.add(chunk);
-    }
+  getChunkByCPos = (cCoords: Coords2) => {
+    const chunk = this.chunks.raw(cCoords);
+    if (this.caching && chunk) this.chunkCache.add(chunk);
     return chunk;
   };
 
-  getChunkByVoxel = (vCoords: Coords3, instantiate = true) => {
+  getChunkByVoxel = (vCoords: Coords3) => {
     const { chunkSize } = this.options;
     const chunkCoords = Helper.mapVoxelPosToChunkPos(vCoords, chunkSize);
-    return this.getChunkByCPos(chunkCoords, instantiate);
+    return this.getChunkByCPos(chunkCoords);
   };
 
   getNeighborChunks = (coords: Coords2) => {
@@ -265,10 +268,6 @@ class World extends Network {
     return this.getBlockTypeByVoxel(vCoords).isTransparent;
   };
 
-  setChunk = (chunk: Chunk) => {
-    return this.chunks.set(chunk.name, chunk);
-  };
-
   setVoxel = (voxel: Coords3, type: number) => {
     const chunk = this.getChunkByVoxel(voxel);
     return chunk.setVoxel(voxel, type);
@@ -311,52 +310,7 @@ class World extends Network {
     this.clearCache();
   };
 
-  updateMany = (changes: VoxelUpdate[], isDecorating = false) => {
-    const { maxHeight } = this.options;
-
-    const chunks: Set<Chunk> = new Set();
-    const updates: Map<Chunk, VoxelUpdate[]> = new Map();
-
-    for (const { voxel, type } of changes) {
-      const [, vy] = voxel;
-
-      if (vy < 0 || vy >= maxHeight || !Mine.registry.getBlockByID(type).name) continue;
-
-      const chunk = this.getChunkByVoxel(voxel);
-      const currentType = this.getVoxelByVoxel(voxel);
-
-      if (Mine.registry.isAir(currentType) && Mine.registry.isAir(type)) {
-        continue;
-      }
-
-      if (!updates.has(chunk)) updates.set(chunk, []);
-      updates.get(chunk).push({ voxel, type });
-      chunks.add(chunk);
-
-      const neighborChunks = this.getNeighborChunksByVoxel(voxel);
-      neighborChunks.forEach((c) => chunks.add(c));
-    }
-
-    updates.forEach((u, c) => c.updateMany(u));
-
-    // send the changes first
-    this.broadcast({
-      type: 'UPDATE',
-      updates: changes.map(({ voxel: [vx, vy, vz], type }) => ({ vx, vy, vz, type })),
-    });
-
-    // then send the chunk meshes
-    chunks.forEach((chunk) => {
-      if (!chunk.hasMesh) return;
-      chunk.remesh();
-      this.broadcast({
-        type: isDecorating ? 'LOAD' : 'UPDATE',
-        chunks: [chunk.getProtocol(isDecorating)],
-      });
-    });
-  };
-
-  onConfig = (request) => {
+  onConfig = (client: ClientType, request) => {
     const { time, tickSpeed } = request.json;
 
     if (Helper.isNumber(time)) this.time = time;
@@ -385,9 +339,8 @@ class World extends Network {
     this.update(voxel, type);
   };
 
-  onPeer = (request) => {
-    const { id, name, px, py, pz, qx, qy, qz, qw } = request.peers[0];
-    const client = this.clients.find((c) => c.id === id);
+  onPeer = (client: ClientType, request) => {
+    const { name, px, py, pz, qx, qy, qz, qw } = request.peers[0];
 
     if (client) {
       if (!client.name) {
@@ -399,9 +352,19 @@ class World extends Network {
           },
         });
       }
+
       client.name = name;
       client.position = [px, py, pz];
       client.rotation = [qx, qy, qz, qw];
+
+      const { dimension, chunkSize } = this.options;
+      const { currentChunk, position } = client;
+      const [cx, cz] = Helper.mapVoxelPosToChunkPos(Helper.mapWorldPosToVoxelPos(position, dimension), chunkSize);
+
+      if (!currentChunk || cx !== currentChunk[0] || cz !== currentChunk[1]) {
+        client.currentChunk = [cx, cz];
+        this.chunks.generate(client);
+      }
     }
   };
 
@@ -420,7 +383,7 @@ class World extends Network {
         break;
       }
       case 'CONFIG': {
-        this.onConfig(request);
+        this.onConfig(client, request);
         break;
       }
       case 'UPDATE': {
@@ -428,7 +391,7 @@ class World extends Network {
         break;
       }
       case 'PEER': {
-        this.onPeer(request);
+        this.onPeer(client, request);
         break;
       }
       case 'MESSAGE': {
@@ -440,8 +403,8 @@ class World extends Network {
   };
 
   onInit = (client: ClientType) => {
-    const spawnChunk = this.getChunkByCPos([0, 0]);
-    spawnChunk.generateHeightMap();
+    // const spawnChunk = this.getChunkByCPos([0, 0]);
+    // spawnChunk.generateHeightMap();
 
     client.send(
       Network.encode({
@@ -450,7 +413,8 @@ class World extends Network {
           id: client.id,
           time: this.time,
           tickSpeed: this.tickSpeed,
-          spawn: [0, this.getMaxHeight([0, 0]), 0],
+          // spawn: [0, this.getMaxHeight([0, 0]), 0],
+          spawn: [0, 27, 0],
           passables: Mine.registry.getPassableSolids(),
         },
       }),
@@ -500,12 +464,13 @@ class World extends Network {
 
   unloadChunks() {
     const { maxLoadedChunks } = this.options;
-    while (this.chunks.size > maxLoadedChunks) {
-      const [oldestKey, oldestChunk] = this.chunks.entries().next().value;
+    const data = this.chunks.data();
+    while (data.size > maxLoadedChunks) {
+      const [oldestKey, oldestChunk] = data.entries().next().value;
       if (oldestChunk.needsSaving) {
         oldestChunk.save();
       }
-      this.chunks.delete(oldestKey);
+      data.delete(oldestKey);
     }
   }
 }

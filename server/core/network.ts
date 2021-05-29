@@ -22,7 +22,11 @@ type ClientType = WebSocket & {
   position: Coords3;
   rotation: [...Coords3, number];
   requestedChunks: Coords2[];
+  currentChunk: Coords2;
+  renderRadius: number;
 };
+
+const DECORATION_RADIUS = 12;
 
 class Network extends EventEmitter {
   public pingInterval: NodeJS.Timeout;
@@ -45,6 +49,7 @@ class Network extends EventEmitter {
     client.id = uuidv4();
     client.isAlive = true;
     client.requestedChunks = [];
+    client.renderRadius = DECORATION_RADIUS;
 
     this.onInit(client);
 

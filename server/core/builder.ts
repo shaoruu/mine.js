@@ -18,7 +18,9 @@ class Builder {
     // 2. trees
     updates.push(...Builder.trees.generate(chunk));
 
-    this.world.updateMany(updates, true);
+    updates.forEach(({ voxel, type }) => {
+      this.world.setVoxel(voxel, type);
+    });
   };
 }
 

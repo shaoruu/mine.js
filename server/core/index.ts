@@ -7,3 +7,4 @@ export * from './registry';
 export * from './world';
 export * from './mine';
 export * from './builder';
+export * from './chunks';

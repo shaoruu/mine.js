@@ -5788,21 +5788,18 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             // separate chunk request into frames to avoid clogging
             if (this.pendingChunks.length === 0 || !this.engine.connected)
                 return;
-            const { maxChunkRequestPerFrame } = this.options;
             // don't clog up the server
-            if (this.requestedChunks.size < maxChunkRequestPerFrame) {
-                const framePendingChunks = this.pendingChunks.splice(0, maxChunkRequestPerFrame);
-                framePendingChunks.forEach(([cx, cz]) => {
-                    const rep = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName([cx, cz]);
-                    if (this.requestedChunks.has(rep))
-                        return;
-                    this.engine.network.server.sendEvent({
-                        type: 'REQUEST',
-                        json: { x: cx, z: cz },
-                    });
-                    this.requestedChunks.add(rep);
+            const framePendingChunks = this.pendingChunks.splice(0, 2);
+            framePendingChunks.forEach(([cx, cz]) => {
+                const rep = _utils__WEBPACK_IMPORTED_MODULE_3__.Helper.getChunkName([cx, cz]);
+                if (this.requestedChunks.has(rep))
+                    return;
+                this.engine.network.server.sendEvent({
+                    type: 'REQUEST',
+                    json: { x: cx, z: cz },
                 });
-            }
+                this.requestedChunks.add(rep);
+            });
         };
         this.meshChunks = () => {
             // separate chunk meshing into frames to avoid clogging
@@ -5840,7 +5837,6 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.options.renderRadius = renderRadius;
             this.options.requestRadius = renderRadius + 2;
             this.options.maxChunkProcessPerFrame = Math.max(hardwareConcurrency, 3);
-            this.options.maxChunkRequestPerFrame = Math.max(hardwareConcurrency, 3);
             this.updateRenderRadius(renderRadius);
             engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
         });

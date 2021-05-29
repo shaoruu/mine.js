@@ -13,7 +13,6 @@ type WorldOptionsType = {
   dimension: number;
   renderRadius: number;
   requestRadius: number;
-  maxChunkRequestPerFrame: number;
   maxChunkProcessPerFrame: number;
   maxBlockPerFrame: number;
 };
@@ -52,7 +51,6 @@ class World extends EventEmitter {
       this.options.renderRadius = renderRadius;
       this.options.requestRadius = renderRadius + 2;
       this.options.maxChunkProcessPerFrame = Math.max(hardwareConcurrency, 3);
-      this.options.maxChunkRequestPerFrame = Math.max(hardwareConcurrency, 3);
 
       this.updateRenderRadius(renderRadius);
 
@@ -341,21 +339,17 @@ class World extends EventEmitter {
     // separate chunk request into frames to avoid clogging
     if (this.pendingChunks.length === 0 || !this.engine.connected) return;
 
-    const { maxChunkRequestPerFrame } = this.options;
-
     // don't clog up the server
-    if (this.requestedChunks.size < maxChunkRequestPerFrame) {
-      const framePendingChunks = this.pendingChunks.splice(0, maxChunkRequestPerFrame);
-      framePendingChunks.forEach(([cx, cz]) => {
-        const rep = Helper.getChunkName([cx, cz]);
-        if (this.requestedChunks.has(rep)) return;
-        this.engine.network.server.sendEvent({
-          type: 'REQUEST',
-          json: { x: cx, z: cz },
-        });
-        this.requestedChunks.add(rep);
+    const framePendingChunks = this.pendingChunks.splice(0, 2);
+    framePendingChunks.forEach(([cx, cz]) => {
+      const rep = Helper.getChunkName([cx, cz]);
+      if (this.requestedChunks.has(rep)) return;
+      this.engine.network.server.sendEvent({
+        type: 'REQUEST',
+        json: { x: cx, z: cz },
       });
-    }
+      this.requestedChunks.add(rep);
+    });
   };
 
   private meshChunks = () => {
@@ -380,6 +374,7 @@ class World extends EventEmitter {
       const { meshes, voxels, lights } = serverChunk;
 
       chunk.setupMesh(meshes);
+
       if (voxels.length) chunk.voxels.data = new Uint8Array(serverChunk.voxels);
       if (lights.length) chunk.lights.data = new Uint8Array(serverChunk.lights);
     });

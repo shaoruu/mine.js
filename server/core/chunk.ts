@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
@@ -7,7 +6,6 @@ import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
 
 import { Coords2, Coords3, Helper, MeshType } from '../../shared';
-import { VoxelUpdate } from '../libs/types';
 
 import { World, Mesher, Generator, Mine } from '.';
 
@@ -38,7 +36,7 @@ const voxelHorizontalNeighbors = [
   { x: 0, z: 1 },
 ];
 
-class Chunk extends EventEmitter {
+class Chunk {
   public voxels: ndarray;
   public lights: ndarray;
   public heightMap: ndarray;
@@ -53,26 +51,15 @@ class Chunk extends EventEmitter {
   public needsTerrain = true;
   public needsDecoration = true;
   public isEmpty = true;
+  public isDirty = true;
 
   public meshes: {
     opaque: MeshType | undefined;
     transparent: MeshType | undefined;
   } = { opaque: undefined, transparent: undefined };
   public topY: number = Number.MIN_SAFE_INTEGER;
-  public neighbors: {
-    px?: Chunk;
-    nx?: Chunk;
-    pz?: Chunk;
-    nz?: Chunk;
-    pxpz?: Chunk;
-    pxnz?: Chunk;
-    nxpz?: Chunk;
-    nxnz?: Chunk;
-  } = {};
 
   constructor(public coords: Coords2, public world: World, public options: ChunkOptionsType) {
-    super();
-
     const { size, maxHeight } = options;
     const [cx, cz] = coords;
     const coords3 = [cx, 0, cz];
@@ -90,16 +77,10 @@ class Chunk extends EventEmitter {
     vec3.scale(this.max, this.max, size);
     vec3.add(this.max, this.max, [0, maxHeight, 0]);
 
-    this.markNeighbors();
-
     if (this.world.options.save) {
       try {
         this.load();
-      } catch (e) {
-        this.generate();
-      }
-    } else {
-      this.generate();
+      } catch (e) {}
     }
   }
 
@@ -108,6 +89,7 @@ class Chunk extends EventEmitter {
   };
 
   setVoxel = (voxel: Coords3, type: number) => {
+    this.isDirty = true;
     return this.voxels.set(...this.toLocal(voxel), type);
   };
 
@@ -213,17 +195,11 @@ class Chunk extends EventEmitter {
     await Generator.generate(this, generation);
     this.generateHeightMap();
     this.needsTerrain = false;
+  };
 
-    const { px, nx, pz, nz, pxpz, pxnz, nxpz, nxnz } = this.neighbors;
-
-    if (px) px.checkDecoration();
-    if (nx) nx.checkDecoration();
-    if (pz) pz.checkDecoration();
-    if (nz) nz.checkDecoration();
-    if (pxpz) pxpz.checkDecoration();
-    if (pxnz) pxnz.checkDecoration();
-    if (nxpz) nxpz.checkDecoration();
-    if (nxnz) nxnz.checkDecoration();
+  decorate = () => {
+    this.world.builder.build(this);
+    this.needsDecoration = false;
   };
 
   generateHeightMap = () => {
@@ -234,7 +210,8 @@ class Chunk extends EventEmitter {
       for (let lz = 0; lz < size; lz++) {
         for (let ly = maxHeight - 1; ly >= 0; ly--) {
           // TODO: air check
-          if (ly === 0 || !Mine.registry.isAir(this.voxels.get(lx, ly, lz))) {
+          const type = this.voxels.get(lx, ly, lz);
+          if (ly === 0 || (!Mine.registry.isAir(type) && !Mine.registry.isPlant(type))) {
             if (this.topY < ly) this.topY = ly;
             this.heightMap.set(lx, lz, ly);
             break;
@@ -492,106 +469,6 @@ class Chunk extends EventEmitter {
     this.needsSaving = true;
   };
 
-  updateMany = (updates: VoxelUpdate[]) => {
-    // update blocks
-    const { world, needsPropagation } = this;
-    const { maxHeight } = this.options;
-    const { maxLightLevel } = world.options;
-    const { registry } = Mine;
-
-    const sunlightQueue: LightNode[] = [];
-    const torchlightQueue: LightNode[] = [];
-
-    for (const { voxel, type } of updates) {
-      const [vx, vy, vz] = voxel;
-      const height = world.getMaxHeight([vx, vz]);
-      const currentType = world.getBlockTypeByVoxel(voxel);
-      const updatedType = world.getBlockTypeByType(type);
-
-      // updating the new block
-      world.setVoxel(voxel, type);
-
-      // update height map
-      if (registry.isAir(type)) {
-        if (vy === height) {
-          // on max height, should set max height to lower
-          for (let y = vy - 1; y >= 0; y--) {
-            if (y === 0 || !registry.isAir(world.getVoxelByVoxel([vx, y, vz]))) {
-              world.setMaxHeight([vx, vz], y);
-              break;
-            }
-          }
-        }
-      } else if (height < vy) {
-        world.setMaxHeight([vx, vz], vy);
-      }
-
-      // update light levels
-      if (!needsPropagation) {
-        if (currentType.isLight) {
-          // remove leftover light
-          this.removeLight(voxel);
-        } else if (currentType.isTransparent && !updatedType.isTransparent) {
-          // remove light if solid block is placed.
-          [false, true].forEach((isSunlight) => {
-            const level = isSunlight ? world.getSunlight(voxel) : world.getTorchLight(voxel);
-            if (level !== 0) {
-              this.removeLight(voxel, isSunlight);
-            }
-          });
-        }
-
-        if (updatedType.isLight) {
-          // placing a light
-          world.setTorchLight(voxel, updatedType.lightLevel);
-          this.floodLight([{ voxel, level: updatedType.lightLevel }]);
-        } else if (updatedType.isTransparent && !currentType.isTransparent) {
-          // solid block removed
-          [false, true].forEach((isSunlight) => {
-            const queue = isSunlight ? sunlightQueue : torchlightQueue;
-            if (isSunlight && vy === maxHeight - 1) {
-              // propagate sunlight down
-              world.setSunlight(voxel, maxLightLevel);
-              queue.push({
-                voxel,
-                level: maxLightLevel,
-              });
-            } else {
-              voxelNeighbors.forEach((offset) => {
-                const nvy = vy + offset.y;
-
-                if (nvy < 0 || nvy >= maxHeight) {
-                  return;
-                }
-
-                const nvx = vx + offset.x;
-                const nvz = vz + offset.z;
-                const nVoxel = <Coords3>[nvx, nvy, nvz];
-                const { isLight, isTransparent } = world.getBlockTypeByVoxel([nvx, nvy, nvz]);
-
-                // need propagation after solid block removed
-                const level = isSunlight ? world.getSunlight(nVoxel) : world.getTorchLight(nVoxel);
-                if (level !== 0 && (isTransparent || (isLight && !isSunlight))) {
-                  queue.push({
-                    voxel: nVoxel,
-                    level,
-                  });
-                }
-              });
-            }
-          });
-        }
-      }
-    }
-
-    if (!this.needsPropagation) {
-      this.floodLight(sunlightQueue, true);
-      this.floodLight(torchlightQueue, false);
-    }
-
-    this.needsSaving = true;
-  };
-
   remesh = () => {
     // rebuild mesh
     // propagate light first
@@ -599,7 +476,7 @@ class Chunk extends EventEmitter {
     if (this.needsPropagation) this.propagate();
 
     // propagate neighbor chunks
-    this.world.getNeighborChunks(this.coords).forEach((neighbor) => {
+    this.neighbors.forEach((neighbor) => {
       if (neighbor.needsPropagation) {
         neighbor.propagate();
       }
@@ -609,66 +486,15 @@ class Chunk extends EventEmitter {
     // mesh TODO: sub chunk meshes
     this.meshes.opaque = Mesher.meshChunk(this);
     this.meshes.transparent = Mesher.meshChunk(this, true);
+
+    this.isDirty = false;
   };
 
   toLocal = (voxel: Coords3) => {
     return <Coords3>vec3.sub([0, 0, 0], voxel, this.min);
   };
 
-  markNeighbors = () => {
-    const [cx, cz] = this.coords;
-
-    const px = this.world.getChunkByCPos([cx + 1, cz], false);
-    const nx = this.world.getChunkByCPos([cx, cz + 1], false);
-    const pz = this.world.getChunkByCPos([cx - 1, cz], false);
-    const nz = this.world.getChunkByCPos([cx, cz - 1], false);
-    const pxpz = this.world.getChunkByCPos([cx + 1, cz + 1], false);
-    const pxnz = this.world.getChunkByCPos([cx + 1, cz - 1], false);
-    const nxpz = this.world.getChunkByCPos([cx - 1, cz + 1], false);
-    const nxnz = this.world.getChunkByCPos([cx - 1, cz - 1], false);
-
-    if (px) px.neighbors.nx = this;
-    if (nx) nx.neighbors.px = this;
-    if (pz) pz.neighbors.nz = this;
-    if (nz) nz.neighbors.pz = this;
-    if (pxpz) pxpz.neighbors.nxnz = this;
-    if (pxnz) pxnz.neighbors.nxpz = this;
-    if (nxpz) nxpz.neighbors.pxnz = this;
-    if (nxnz) nxnz.neighbors.pxpz = this;
-
-    this.neighbors = { px, nx, pz, nz, pxpz, pxnz, nxpz, nxnz };
-  };
-
-  checkDecoration = () => {
-    if (!this.needsDecoration) return;
-
-    this.markNeighbors();
-
-    const { save } = this.world.options;
-    const { px, nx, pz, nz, pxpz, pxnz, nxpz, nxnz } = this.neighbors;
-
-    if (!px || !nx || !pz || !nz || !pxpz || !pxnz || !nxpz || !nxnz) return;
-    if (
-      !px.needsTerrain &&
-      !nx.needsTerrain &&
-      !pz.needsTerrain &&
-      !nz.needsTerrain &&
-      !pxpz.needsTerrain &&
-      !pxnz.needsTerrain &&
-      !nxpz.needsTerrain &&
-      !nxnz.needsTerrain
-    ) {
-      this.world.builder.build(this);
-      this.needsDecoration = false;
-
-      // save to disk
-      if (save) this.save();
-    }
-  };
-
   getProtocol = (needsVoxels = false) => {
-    if (!this.hasMesh) this.remesh();
-
     return {
       x: this.coords[0],
       z: this.coords[1],
@@ -680,6 +506,10 @@ class Chunk extends EventEmitter {
 
   get hasMesh() {
     return !!this.meshes.opaque || !!this.meshes.transparent;
+  }
+
+  get neighbors(): Chunk[] {
+    return this.world.getNeighborChunks(this.coords).filter((c) => !!c);
   }
 }
 

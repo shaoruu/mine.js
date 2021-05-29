@@ -45,7 +45,7 @@ class Generator {
 
     const { isEmpty, buffer } = await new Promise((resolve) => {
       Generator.pool.queue(async (generator) => {
-        const result = generator.generate(
+        const result = await generator.generate(
           Transfer((<Uint8Array>voxels.data).buffer.slice(0)),
           min,
           max,
