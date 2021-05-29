@@ -3804,6 +3804,8 @@ class Container extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                 padding: '0',
                 top: '0px',
                 left: '0px',
+                bottom: '0px',
+                right: '0px',
             });
             this.canvas = canvas;
             this.fitCanvas();

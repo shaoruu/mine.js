@@ -30,6 +30,8 @@ class Container extends EventEmitter {
       padding: '0',
       top: '0px',
       left: '0px',
+      bottom: '0px',
+      right: '0px',
     });
 
     this.canvas = canvas;
