@@ -10,7 +10,7 @@ class Plants extends Base {
     super([5, 5]);
   }
 
-  isTreeLocation(vx: number, vz: number) {
+  isPlantLocation(vx: number, vz: number) {
     const noise3x3 = [];
 
     const {
@@ -48,7 +48,7 @@ class Plants extends Base {
     for (let vx = startX; vx < endX; vx++) {
       for (let vz = startZ; vz < endZ; vz++) {
         const vy = chunk.getMaxHeight([vx, vz]);
-        if (Mine.registry.isPlantable(chunk.getVoxel([vx, vy, vz])) && this.isTreeLocation(vx, vz)) {
+        if (Mine.registry.isPlantable(chunk.getVoxel([vx, vy, vz])) && this.isPlantLocation(vx, vz)) {
           locations.push([vx, vy + 1, vz]);
         }
       }

@@ -296,11 +296,10 @@ class World extends Network {
 
     this.chunkCache.forEach((chunk) => {
       chunk.remesh();
-    });
-
-    this.broadcast({
-      type: 'UPDATE',
-      chunks: Array.from(this.chunkCache).map((c) => c.getProtocol(false)),
+      this.broadcast({
+        type: 'UPDATE',
+        chunks: [chunk.getProtocol(false)],
+      });
     });
 
     this.clearCache();

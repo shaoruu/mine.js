@@ -39,7 +39,7 @@ class Chunks {
   };
 
   preload = async (width: number) => {
-    await this.load([0, 0], width, true);
+    await this.load([0, 0], width);
   };
 
   generate = async (client: ClientType) => {

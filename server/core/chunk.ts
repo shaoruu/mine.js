@@ -255,7 +255,10 @@ class Chunk {
                   });
               }
             });
-          } else if (blockType.isLight) {
+          }
+
+          // ?: might be erroneous here, but this is for lights like plants
+          if (blockType.isLight) {
             world.setTorchLight(voxel, blockType.lightLevel);
             lightQueue.push({
               voxel: voxel,
