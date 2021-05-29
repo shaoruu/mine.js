@@ -91,7 +91,6 @@ class Rendering extends EventEmitter {
 
       this.composer.addPass(new RenderPass(this.scene, engine.camera.threeCamera));
       this.composer.addPass(this.fxaa);
-      // this.composer.addPass(new ShaderPass());
 
       this.adjustRenderer();
     });

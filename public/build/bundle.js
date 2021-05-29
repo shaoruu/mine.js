@@ -5531,7 +5531,6 @@ class Rendering extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             this.fxaa = new three_examples_jsm_postprocessing_ShaderPass__WEBPACK_IMPORTED_MODULE_4__.ShaderPass(three_examples_jsm_shaders_FXAAShader__WEBPACK_IMPORTED_MODULE_5__.FXAAShader);
             this.composer.addPass(new three_examples_jsm_postprocessing_RenderPass__WEBPACK_IMPORTED_MODULE_6__.RenderPass(this.scene, engine.camera.threeCamera));
             this.composer.addPass(this.fxaa);
-            // this.composer.addPass(new ShaderPass());
             this.adjustRenderer();
         });
     }
