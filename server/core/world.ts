@@ -72,7 +72,7 @@ class World extends Network {
     setInterval(() => {
       // mesh chunks per frame
       for (const client of this.clients) {
-        const spliced = client.requestedChunks.splice(0, 10);
+        const spliced = client.requestedChunks.splice(0, 4);
         const unprepared: Coords2[] = [];
 
         spliced.forEach((coords) => {
@@ -83,7 +83,7 @@ class World extends Network {
             return;
           }
 
-          if (chunk.isDirty) {
+          if (chunk.isDirty && !chunk.hasMesh) {
             chunk.remesh();
           }
 

@@ -4116,8 +4116,8 @@ const defaultConfig = {
         flyingInertia: 3,
         reachDistance: 32,
         lookBlockScale: 1.002,
-        lookBlockLerp: 0.7,
-        lookBlockColor: '#bbb',
+        lookBlockLerp: 1,
+        lookBlockColor: 'black',
         perspectiveLerpFactor: 0.7,
         perspectiveDistance: 5,
         distToGround: 1.6,
@@ -4130,8 +4130,6 @@ const defaultConfig = {
         requestRadius: 14,
         chunkSize: 8,
         dimension: 1,
-        // radius of rendering centered by player
-        maxChunkRequestPerFrame: 10000000,
         // maximum amount of chunks to process per frame tick
         maxChunkProcessPerFrame: 8,
         maxBlockPerFrame: 500,
@@ -5279,13 +5277,41 @@ class Player {
             // register camera as entity      // set up look block mesh
             const { dimension } = config.world;
             this.addEntity();
-            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale), new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
-                color: lookBlockColor,
-                alphaTest: 0.3,
+            this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Group();
+            const mat = new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
+                color: new three__WEBPACK_IMPORTED_MODULE_4__.Color(lookBlockColor),
                 opacity: 0.3,
-                depthWrite: false,
                 transparent: true,
-            }));
+            });
+            const w = 0.01;
+            const dim = dimension * lookBlockScale;
+            const side = new three__WEBPACK_IMPORTED_MODULE_4__.Mesh(new three__WEBPACK_IMPORTED_MODULE_4__.BoxBufferGeometry(dim, w, w), mat);
+            for (let i = -1; i <= 1; i += 2) {
+                for (let j = -1; j <= 1; j += 2) {
+                    const temp = side.clone();
+                    temp.position.y = ((dim - w) / 2) * i;
+                    temp.position.z = ((dim - w) / 2) * j;
+                    this.lookBlockMesh.add(temp);
+                }
+            }
+            for (let i = -1; i <= 1; i += 2) {
+                for (let j = -1; j <= 1; j += 2) {
+                    const temp = side.clone();
+                    temp.position.x = ((dim - w) / 2) * i;
+                    temp.position.y = ((dim - w) / 2) * j;
+                    temp.rotation.y = Math.PI / 2;
+                    this.lookBlockMesh.add(temp);
+                }
+            }
+            for (let i = -1; i <= 1; i += 2) {
+                for (let j = -1; j <= 1; j += 2) {
+                    const temp = side.clone();
+                    temp.position.z = ((dim - w) / 2) * i;
+                    temp.position.x = ((dim - w) / 2) * j;
+                    temp.rotation.z = Math.PI / 2;
+                    this.lookBlockMesh.add(temp);
+                }
+            }
             this.lookBlockMesh.frustumCulled = false;
             this.lookBlockMesh.renderOrder = 1000000;
             rendering.scene.add(this.lookBlockMesh);
@@ -5355,7 +5381,7 @@ varying float vTorchLight;
 `)
                     .replace('#include <envmap_fragment>', `
 #include <envmap_fragment>
-outgoingLight *= min(vTorchLight + vSunlight * uSunlightIntensity, 1.0) * 0.68 * vAO;
+outgoingLight *= min(vTorchLight + (vSunlight + 0.1) * uSunlightIntensity, 1.0) * 0.58 * vAO;
 `)
                     .replace('#include <fog_fragment>', `
 float depth = gl_FragCoord.z / gl_FragCoord.w;

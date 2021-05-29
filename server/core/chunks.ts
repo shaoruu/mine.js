@@ -1,4 +1,5 @@
 import { Coords2, Helper } from '../../shared';
+import { Coords3 } from '../../shared/types';
 
 import { World, Chunk, ClientType } from '.';
 
@@ -16,14 +17,21 @@ class Chunks {
   };
 
   raw = (coords: Coords2) => {
-    return this.getChunk(coords);
+    const chunk = this.getChunk(coords);
+    return chunk;
   };
 
   get = (coords: Coords2) => {
     const chunk = this.getChunk(coords);
 
     // TODO: add more conditions here?
-    if (!chunk || chunk.neighbors.length !== 8 || chunk.needsTerrain || chunk.needsDecoration) {
+    if (
+      !chunk ||
+      chunk.needsTerrain ||
+      chunk.needsDecoration ||
+      chunk.neighbors.length !== 8 ||
+      chunk.neighbors.filter((n) => n.needsDecoration).length !== 0
+    ) {
       return null;
     }
 
@@ -39,11 +47,13 @@ class Chunks {
     const toDecorate: Chunk[] = [];
     const toGenerate: Chunk[] = [];
 
-    const terrainRadius = renderRadius + 2;
+    const terrainRadius = renderRadius + 4;
+    const decorateRadius = renderRadius;
 
     for (let x = -terrainRadius; x <= terrainRadius; x++) {
       for (let z = -terrainRadius; z <= terrainRadius; z++) {
-        if (x ** 2 + z ** 2 >= terrainRadius * terrainRadius) continue;
+        const dist = x ** 2 + z ** 2;
+        if (dist >= terrainRadius * terrainRadius) continue;
 
         const coords = [cx + x, cz + z] as Coords2;
         let chunk = this.getChunk(coords);
@@ -56,7 +66,7 @@ class Chunks {
           this.addChunk(chunk);
         }
 
-        if (x ** 2 + z ** 2 <= renderRadius * renderRadius) {
+        if (dist <= decorateRadius * decorateRadius) {
           toDecorate.push(chunk);
         }
       }
@@ -87,6 +97,12 @@ class Chunks {
     toDecorate.forEach((chunk) => {
       chunk.generateHeightMap();
     });
+  };
+
+  setVoxel = (voxel: Coords3, type: number) => {
+    const { chunkSize } = this.world.options;
+    const coords = Helper.mapVoxelPosToChunkPos(voxel, chunkSize);
+    this.raw(coords)?.setVoxel(voxel, type);
   };
 
   private addChunk = (chunk: Chunk) => {

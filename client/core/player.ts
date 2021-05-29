@@ -1,5 +1,5 @@
 import raycast from 'fast-voxel-raycast';
-import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3 } from 'three';
+import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3, Group, Color } from 'three';
 
 import { Coords3, Helper } from '../../shared';
 import { EntityType, Peer, PointerLockControls } from '../libs';
@@ -52,7 +52,7 @@ class Player {
     front: false,
     back: false,
   };
-  private lookBlockMesh: Mesh;
+  private lookBlockMesh: Group;
   private godMode = false;
 
   constructor(public engine: Engine, public options: PlayerOptionsType) {
@@ -101,16 +101,53 @@ class Player {
       const { dimension } = config.world;
       this.addEntity();
 
-      this.lookBlockMesh = new Mesh(
-        new BoxBufferGeometry(dimension * lookBlockScale, dimension * lookBlockScale, dimension * lookBlockScale),
-        new MeshBasicMaterial({
-          color: lookBlockColor,
-          alphaTest: 0.3,
-          opacity: 0.3,
-          depthWrite: false,
-          transparent: true,
-        }),
-      );
+      this.lookBlockMesh = new Group();
+
+      const mat = new MeshBasicMaterial({
+        color: new Color(lookBlockColor),
+        opacity: 0.3,
+        transparent: true,
+      });
+
+      const w = 0.01;
+      const dim = dimension * lookBlockScale;
+      const side = new Mesh(new BoxBufferGeometry(dim, w, w), mat);
+
+      for (let i = -1; i <= 1; i += 2) {
+        for (let j = -1; j <= 1; j += 2) {
+          const temp = side.clone();
+
+          temp.position.y = ((dim - w) / 2) * i;
+          temp.position.z = ((dim - w) / 2) * j;
+
+          this.lookBlockMesh.add(temp);
+        }
+      }
+
+      for (let i = -1; i <= 1; i += 2) {
+        for (let j = -1; j <= 1; j += 2) {
+          const temp = side.clone();
+
+          temp.position.x = ((dim - w) / 2) * i;
+          temp.position.y = ((dim - w) / 2) * j;
+          temp.rotation.y = Math.PI / 2;
+
+          this.lookBlockMesh.add(temp);
+        }
+      }
+
+      for (let i = -1; i <= 1; i += 2) {
+        for (let j = -1; j <= 1; j += 2) {
+          const temp = side.clone();
+
+          temp.position.z = ((dim - w) / 2) * i;
+          temp.position.x = ((dim - w) / 2) * j;
+          temp.rotation.z = Math.PI / 2;
+
+          this.lookBlockMesh.add(temp);
+        }
+      }
+
       this.lookBlockMesh.frustumCulled = false;
       this.lookBlockMesh.renderOrder = 1000000;
 

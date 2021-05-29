@@ -71,8 +71,8 @@ const defaultConfig: ConfigType = {
     flyingInertia: 3,
     reachDistance: 32,
     lookBlockScale: 1.002,
-    lookBlockLerp: 0.7,
-    lookBlockColor: '#bbb',
+    lookBlockLerp: 1,
+    lookBlockColor: 'black',
     perspectiveLerpFactor: 0.7,
     perspectiveDistance: 5,
     distToGround: 1.6,
@@ -85,8 +85,6 @@ const defaultConfig: ConfigType = {
     requestRadius: 14,
     chunkSize: 8,
     dimension: 1,
-    // radius of rendering centered by player
-    maxChunkRequestPerFrame: 10000000,
     // maximum amount of chunks to process per frame tick
     maxChunkProcessPerFrame: 8,
     maxBlockPerFrame: 500,
