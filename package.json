@@ -86,6 +86,7 @@
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.3",
+    "@tweenjs/tween.js": "^18",
     "@types/query-string": "^6.3.0",
     "@types/three": "^0.127.1",
     "buffer": "^6.0.3",

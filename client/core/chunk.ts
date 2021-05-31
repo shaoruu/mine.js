@@ -1,6 +1,7 @@
+import TWEEN from '@tweenjs/tween.js';
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
-import { BufferGeometry, Float32BufferAttribute, Mesh } from 'three';
+import { BufferGeometry, Float32BufferAttribute, Mesh, Group } from 'three';
 import pool from 'typedarray-pool';
 
 import { Coords2, Coords3 } from '../../shared';
@@ -33,6 +34,7 @@ class Chunk {
   public geometries: Map<string, BufferGeometry> = new Map();
   public meshes: Map<string, Mesh[]> = new Map();
   public altMeshes: Map<string, Mesh[]> = new Map();
+  public mesh: Group;
 
   public isEmpty = true;
   public isDirty = true;
@@ -49,6 +51,8 @@ class Chunk {
 
     this.voxels = ndarray(pool.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
     this.lights = ndarray(pool.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
+
+    this.mesh = new Group();
 
     MESH_TYPES.forEach((type) => {
       this.geometries.set(type, new BufferGeometry());
@@ -108,27 +112,42 @@ class Chunk {
     return Math.sqrt((mx + this.size / 2 - vx) ** 2 + (mz + this.size / 2 - vz) ** 2);
   };
 
+  animate = () => {
+    // chunk floating upwards animation
+    const { chunkAnimation, animationTime } = this.engine.world.options;
+    if (!chunkAnimation) return;
+    this.mesh.position.y = -10;
+    new TWEEN.Tween(this.mesh.position).to({ y: 0 }, animationTime).start();
+  };
+
   addToScene = () => {
     const { rendering } = this.engine;
-    this.removeFromScene();
+
+    rendering.scene.add(this.mesh);
+
     if (!this.isAdded) {
       MESH_TYPES.forEach((type) => {
         const altMesh = this.altMeshes.get(type);
         if (altMesh && altMesh.length) {
-          rendering.scene.add(...altMesh);
+          this.mesh.add(...altMesh);
           this.meshes.set(type, altMesh);
         }
       });
       this.isAdded = true;
+
+      this.animate();
     }
   };
 
   removeFromScene = () => {
     const { rendering } = this.engine;
+
+    rendering.scene.remove(this.mesh);
+
     if (this.isAdded) {
       MESH_TYPES.forEach((type) => {
         const mesh = this.meshes.get(type);
-        if (mesh && mesh.length) rendering.scene.remove(...mesh);
+        if (mesh && mesh.length) this.mesh.remove(...mesh);
       });
       this.isAdded = false;
     }

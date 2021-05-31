@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 
+import TWEEN from '@tweenjs/tween.js';
 import merge from 'deepmerge';
 
 import { Clock, DeepPartial } from '../libs';
@@ -88,6 +89,8 @@ const defaultConfig: ConfigType = {
     // maximum amount of chunks to process per frame tick
     maxChunkProcessPerFrame: 8,
     maxBlockPerFrame: 500,
+    chunkAnimation: true,
+    animationTime: 500,
   },
   entities: {
     movementLerp: true,
@@ -236,6 +239,8 @@ class Engine extends EventEmitter {
 
     this.emit('tick-begin');
 
+    // TWEEN animations
+
     // pre-ticks for before physics
     this.entities.preTick();
 
@@ -246,6 +251,8 @@ class Engine extends EventEmitter {
     this.peers.tick();
     this.world.tick();
     this.rendering.tick();
+
+    TWEEN.update();
 
     if (this.debug) {
       this.debug.tick();

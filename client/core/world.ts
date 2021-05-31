@@ -15,6 +15,8 @@ type WorldOptionsType = {
   requestRadius: number;
   maxChunkProcessPerFrame: number;
   maxBlockPerFrame: number;
+  chunkAnimation: boolean;
+  animationTime: number;
 };
 
 class World extends EventEmitter {
@@ -46,7 +48,7 @@ class World extends EventEmitter {
 
     engine.on('ready', () => {
       const { hardwareConcurrency } = window.navigator;
-      const renderRadius = Math.max(hardwareConcurrency + 2, 6);
+      const renderRadius = Math.min(Math.max(hardwareConcurrency + 2, 6), 8);
 
       this.options.renderRadius = renderRadius;
       this.options.requestRadius = renderRadius + 2;
@@ -376,8 +378,8 @@ class World extends EventEmitter {
 
       chunk.setupMesh(meshes);
 
-      if (voxels.length) chunk.voxels.data = new Uint8Array(serverChunk.voxels);
-      if (lights.length) chunk.lights.data = new Uint8Array(serverChunk.lights);
+      if (voxels.length) chunk.voxels.data = serverChunk.voxels;
+      if (lights.length) chunk.lights.data = serverChunk.lights;
     });
   };
 
