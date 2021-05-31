@@ -4650,10 +4650,9 @@ class Container extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
                 left: '0px',
                 bottom: '0px',
                 right: '0px',
-                width: '100vw',
-                height: '100vh',
             });
             this.canvas = canvas;
+            this.fitCanvas();
             this.domElement = domElement;
             this.domElement.append(this.canvas);
             this.domElement.id = 'mine.js-container';
@@ -4664,6 +4663,12 @@ class Container extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             });
             window.addEventListener('focus', () => {
                 this.engine.emit('focus');
+            });
+        };
+        this.fitCanvas = () => {
+            _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.canvas, {
+                width: '100vw',
+                height: '100vh',
             });
         };
         this.setupCanvas(options);

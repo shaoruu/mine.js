@@ -32,11 +32,10 @@ class Container extends EventEmitter {
       left: '0px',
       bottom: '0px',
       right: '0px',
-      width: '100vw',
-      height: '100vh',
     });
 
     this.canvas = canvas;
+    this.fitCanvas();
 
     this.domElement = domElement;
     this.domElement.append(this.canvas);
@@ -49,6 +48,13 @@ class Container extends EventEmitter {
     });
     window.addEventListener('focus', () => {
       this.engine.emit('focus');
+    });
+  };
+
+  fitCanvas = () => {
+    Helper.applyStyle(this.canvas, {
+      width: '100vw',
+      height: '100vh',
     });
   };
 }
