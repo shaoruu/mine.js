@@ -7630,6 +7630,7 @@ class Peer {
         this.nameMesh.position.y += options.headDimension * 1;
         this.nameMesh.backgroundColor = '#00000077';
         this.nameMesh.material.depthTest = false;
+        this.nameMesh.renderOrder = 1000000;
         const image = this.nameMesh.material.map;
         if (image) {
             image.minFilter = three__WEBPACK_IMPORTED_MODULE_2__.NearestFilter;
