@@ -152,7 +152,22 @@ class Peers {
   };
 
   tick = () => {
-    this.players.forEach((peer) => peer.tick(this.engine.player.object.position));
+    this.players.forEach((peer) => {
+      this.light(peer);
+      peer.tick(this.engine.player.object.position);
+    });
+  };
+
+  light = (peer: Peer) => {
+    const {
+      newPosition: { x, y, z },
+    } = peer;
+    const { world } = this.engine;
+
+    const voxel = Helper.mapWorldPosToVoxelPos([x, y, z], world.options.dimension);
+    const level = Math.max((world.getSunlight(voxel) + world.getTorchLight(voxel)) / 15 || 0, 0.1);
+
+    peer.head.box.scaleColor(level);
   };
 }
 

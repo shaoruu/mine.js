@@ -1,3 +1,4 @@
+import { MathUtils } from 'three';
 import {
   BoxBufferGeometry,
   FrontSide,
@@ -122,6 +123,21 @@ class CanvasBox {
 
     this.layers[layer].paint(side, art);
   };
+
+  // TODO: fix this ugly code ?
+  scaleColor = (() => {
+    let m = 1.0;
+
+    return (multiplier: number) => {
+      const scale = MathUtils.lerp(m, multiplier, 0.1);
+      this.layers.forEach((layer) => {
+        layer.materials.forEach((material) => {
+          material.color.multiplyScalar((1 / m) * scale);
+        });
+      });
+      m = scale;
+    };
+  })();
 
   get mesh() {
     return this.layers[0].mesh;

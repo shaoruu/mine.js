@@ -238,8 +238,11 @@ class Player {
     } else {
       this.moveEntity();
     }
+
     this.updateLookBlock();
     this.updatePerspective();
+
+    this.engine.peers.light(this.own);
   };
 
   godModeMovements = () => {

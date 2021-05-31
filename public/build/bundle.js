@@ -5728,7 +5728,17 @@ class Peers {
             this.players.delete(id);
         };
         this.tick = () => {
-            this.players.forEach((peer) => peer.tick(this.engine.player.object.position));
+            this.players.forEach((peer) => {
+                this.light(peer);
+                peer.tick(this.engine.player.object.position);
+            });
+        };
+        this.light = (peer) => {
+            const { newPosition: { x, y, z }, } = peer;
+            const { world } = this.engine;
+            const voxel = _utils__WEBPACK_IMPORTED_MODULE_2__.Helper.mapWorldPosToVoxelPos([x, y, z], world.options.dimension);
+            const level = Math.max((world.getSunlight(voxel) + world.getTorchLight(voxel)) / 15 || 0, 0.1);
+            peer.head.box.scaleColor(level);
         };
         const { updateInterval } = this.options;
         let interval;
@@ -5933,6 +5943,7 @@ class Player {
             }
             this.updateLookBlock();
             this.updatePerspective();
+            this.engine.peers.light(this.own);
         };
         this.godModeMovements = () => {
             const { delta } = this.engine.clock;
@@ -7005,6 +7016,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 
+
 const defaultCanvasBoxOptions = {
     gap: 0,
     layers: 1,
@@ -7076,6 +7088,19 @@ class CanvasBox {
             }
             this.layers[layer].paint(side, art);
         };
+        // TODO: fix this ugly code ?
+        this.scaleColor = (() => {
+            let m = 1.0;
+            return (multiplier) => {
+                const scale = three__WEBPACK_IMPORTED_MODULE_0__.MathUtils.lerp(m, multiplier, 0.1);
+                this.layers.forEach((layer) => {
+                    layer.materials.forEach((material) => {
+                        material.color.multiplyScalar((1 / m) * scale);
+                    });
+                });
+                m = scale;
+            };
+        })();
         this.options = Object.assign(Object.assign({}, defaultCanvasBoxOptions), options);
         this.makeBoxes();
     }
