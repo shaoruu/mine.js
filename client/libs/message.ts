@@ -7,6 +7,8 @@ class Message {
   public body = document.createElement('p');
 
   constructor(public type: MESSAGE_TYPE, sender?: string, body?: string) {
+    body = body.trim().split('\n').join('<br />');
+
     Helper.applyStyle(this.wrapper, {
       display: 'flex',
       alignItems: 'flex-start',

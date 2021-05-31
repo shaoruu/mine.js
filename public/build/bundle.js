@@ -4231,6 +4231,18 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const HELP_TEXT = `
+Basic controls of the game:
+- <span>T</span>: Toggle chat
+- <span>F</span>: Toggle physics
+- <span>C</span>: Toggle perspective
+- <span>0-9</span>: Change block
+- <span>Space</span>: Jump / fly up
+- <span>W/A/S/D</span>: Movements
+- <span>L-Shift</span>: Fly down
+- <span>L-Mouse</span>: Break block
+- <span>R-Mouse</span>: Place block
+`;
 class Chat {
     constructor(engine, options) {
         this.engine = engine;
@@ -4322,8 +4334,12 @@ class Chat {
             if (value.split(' ').filter((ele) => ele).length === 0)
                 return;
             const { network: { server }, player, } = this.engine;
+            if (value === '/help') {
+                this.add({ type: 'INFO', body: HELP_TEXT });
+                return;
+            }
             if (value.startsWith('/')) {
-                this.add({ type: 'INFO', body: 'Commands has not yet been implemented. Help me out!!' });
+                this.add({ type: 'INFO', body: 'Commands coming soon!' });
                 return;
             }
             server.sendEvent({
@@ -4411,7 +4427,7 @@ class Chat {
         engine.inputs.bind('t', this.enable, 'in-game');
         engine.inputs.bind('/', () => this.enable(true), 'in-game');
         engine.inputs.bind('esc', this.disable, 'chat', { occasion: 'keyup' });
-        engine.on('connected', () => this.add({ type: 'SERVER', body: 'Connected to world!' }));
+        engine.on('connected', () => this.add({ type: 'SERVER', body: 'Connected to world! Try /help' }));
         engine.on('disconnected', () => this.add({ type: 'ERROR', body: 'World disconnected. Reconnecting...' }));
     }
     set inputValue(value) {
@@ -7514,6 +7530,7 @@ class Message {
         this.wrapper = document.createElement('li');
         this.sender = document.createElement('p');
         this.body = document.createElement('p');
+        body = body.trim().split('\n').join('<br />');
         _utils__WEBPACK_IMPORTED_MODULE_1__.Helper.applyStyle(this.wrapper, {
             display: 'flex',
             alignItems: 'flex-start',

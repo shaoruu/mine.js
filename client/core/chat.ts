@@ -9,6 +9,19 @@ type ChatOptionsType = {
   disappearTimeout: number;
 };
 
+const HELP_TEXT = `
+Basic controls of the game:
+- <span>T</span>: Toggle chat
+- <span>F</span>: Toggle physics
+- <span>C</span>: Toggle perspective
+- <span>0-9</span>: Change block
+- <span>Space</span>: Jump / fly up
+- <span>W/A/S/D</span>: Movements
+- <span>L-Shift</span>: Fly down
+- <span>L-Mouse</span>: Break block
+- <span>R-Mouse</span>: Place block
+`;
+
 class Chat {
   public enabled = false;
 
@@ -30,7 +43,7 @@ class Chat {
     engine.inputs.bind('/', () => this.enable(true), 'in-game');
     engine.inputs.bind('esc', this.disable, 'chat', { occasion: 'keyup' });
 
-    engine.on('connected', () => this.add({ type: 'SERVER', body: 'Connected to world!' }));
+    engine.on('connected', () => this.add({ type: 'SERVER', body: 'Connected to world! Try /help' }));
     engine.on('disconnected', () => this.add({ type: 'ERROR', body: 'World disconnected. Reconnecting...' }));
   }
 
@@ -138,8 +151,13 @@ class Chat {
       player,
     } = this.engine;
 
+    if (value === '/help') {
+      this.add({ type: 'INFO', body: HELP_TEXT });
+      return;
+    }
+
     if (value.startsWith('/')) {
-      this.add({ type: 'INFO', body: 'Commands has not yet been implemented. Help me out!!' });
+      this.add({ type: 'INFO', body: 'Commands coming soon!' });
       return;
     }
 
