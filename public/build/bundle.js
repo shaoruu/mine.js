@@ -5833,7 +5833,7 @@ class Player {
     constructor(engine, options) {
         this.engine = engine;
         this.options = options;
-        this.godMode = false;
+        this.godMode = true;
         this.lookBlock = [0, 0, 0];
         this.targetBlock = [0, 0, 0];
         this.perspective = 'first';
@@ -5977,14 +5977,21 @@ class Player {
             state.jumping = up ? (down ? false : true) : down ? false : false;
         };
         this.teleport = (voxel) => {
-            const { config: { world: { dimension }, player: { bodyWidth }, }, } = this.engine;
+            const { config: { world: { dimension }, player: { bodyWidth, distToGround }, }, } = this.engine;
             const [vx, vy, vz] = voxel;
-            const newPosition = [
-                (vx - bodyWidth / 2 + 0.5) * dimension,
-                (vy + 1) * dimension,
-                (vz - bodyWidth / 2 + 0.5) * dimension,
-            ];
-            this.entity.body.setPosition(newPosition);
+            let newPosition;
+            if (this.godMode) {
+                newPosition = [(vx + 0.5) * dimension, (vy + 1 + distToGround) * dimension, (vz + 0.5) * dimension];
+                this.controls.getObject().position.set(...newPosition);
+            }
+            else {
+                newPosition = [
+                    (vx - bodyWidth / 2 + 0.5) * dimension,
+                    (vy + 1) * dimension,
+                    (vz - bodyWidth / 2 + 0.5) * dimension,
+                ];
+                this.entity.body.setPosition(newPosition);
+            }
             return newPosition;
         };
         this.toggleGodMode = () => {
@@ -6130,7 +6137,9 @@ class Player {
         engine.on('ready', () => {
             // register camera as entity      // set up look block mesh
             const { dimension } = config.world;
-            this.addEntity();
+            if (!this.godMode) {
+                this.addEntity();
+            }
             this.lookBlockMesh = new three__WEBPACK_IMPORTED_MODULE_4__.Group();
             const mat = new three__WEBPACK_IMPORTED_MODULE_4__.MeshBasicMaterial({
                 color: new three__WEBPACK_IMPORTED_MODULE_4__.Color(lookBlockColor),

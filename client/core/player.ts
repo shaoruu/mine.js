@@ -31,7 +31,7 @@ const DEFAULT_PLAYER_NAME = 'naenaebaby';
 class Player {
   public id: string;
   public name: string;
-  public godMode = false;
+  public godMode = true;
 
   public controls: PointerLockControls;
 
@@ -99,7 +99,10 @@ class Player {
     engine.on('ready', () => {
       // register camera as entity      // set up look block mesh
       const { dimension } = config.world;
-      this.addEntity();
+
+      if (!this.godMode) {
+        this.addEntity();
+      }
 
       this.lookBlockMesh = new Group();
 
@@ -316,17 +319,28 @@ class Player {
     const {
       config: {
         world: { dimension },
-        player: { bodyWidth },
+        player: { bodyWidth, distToGround },
       },
     } = this.engine;
-    const [vx, vy, vz] = voxel;
-    const newPosition = [
-      (vx - bodyWidth / 2 + 0.5) * dimension,
-      (vy + 1) * dimension,
-      (vz - bodyWidth / 2 + 0.5) * dimension,
-    ];
 
-    this.entity.body.setPosition(newPosition);
+    const [vx, vy, vz] = voxel;
+
+    let newPosition: Coords3;
+
+    if (this.godMode) {
+      newPosition = [(vx + 0.5) * dimension, (vy + 1 + distToGround) * dimension, (vz + 0.5) * dimension];
+
+      this.controls.getObject().position.set(...newPosition);
+    } else {
+      newPosition = [
+        (vx - bodyWidth / 2 + 0.5) * dimension,
+        (vy + 1) * dimension,
+        (vz - bodyWidth / 2 + 0.5) * dimension,
+      ];
+
+      this.entity.body.setPosition(newPosition);
+    }
+
     return newPosition;
   };
 
