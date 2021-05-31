@@ -30,6 +30,7 @@ export type BlockType = {
   isPlant: boolean;
   lightLevel?: number;
   textures?: TextureType;
+  transparentStandalone?: boolean; // faces will not be culled
   scale: number[];
 };
 

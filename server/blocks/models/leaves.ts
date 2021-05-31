@@ -5,8 +5,10 @@ import { BaseBlock } from './base-block';
 const Leaves: BlockType = {
   name: 'leaves',
   ...BaseBlock,
+  isTransparent: true,
+  transparentStandalone: true,
   textures: {
-    all: 'leaves.png',
+    all: 'leaves_transparent.png',
   },
 };
 

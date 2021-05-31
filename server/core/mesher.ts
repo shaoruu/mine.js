@@ -112,9 +112,19 @@ class Mesher {
 
                 const neighbor = world.getVoxelByVoxel([nvx, nvy, nvz]);
                 const nBlockType = world.getBlockTypeByType(neighbor);
-                const { isEmpty: isNeighborEmpty, isTransparent: isNeighborTransparent } = nBlockType;
+                const {
+                  isEmpty: isNeighborEmpty,
+                  isTransparent: isNeighborTransparent,
+                  transparentStandalone,
+                } = nBlockType;
 
-                if (isNeighborTransparent && (!transparent || isNeighborEmpty)) {
+                if (
+                  isNeighborTransparent &&
+                  (!transparent ||
+                    isNeighborEmpty ||
+                    neighbor !== voxel ||
+                    (transparentStandalone && dir[0] + dir[1] + dir[2] >= 1))
+                ) {
                   const torchLightLevel = world.getTorchLight([nvx, nvy, nvz]);
                   const sunlightLevel = world.getSunlight([nvx, nvy, nvz]);
 
@@ -250,10 +260,20 @@ class Mesher {
                 const nvz = vz + dir[2];
 
                 const neighbor = world.getVoxelByVoxel([nvx, nvy, nvz]);
-                const isNeighborEmpty = registry.getEmptinessByID(neighbor);
-                const isNeighborTransparent = registry.getTransparencyByID(neighbor);
+                const nBlockType = world.getBlockTypeByType(neighbor);
+                const {
+                  isEmpty: isNeighborEmpty,
+                  isTransparent: isNeighborTransparent,
+                  transparentStandalone,
+                } = nBlockType;
 
-                if (isNeighborTransparent && (!transparent || isNeighborEmpty)) {
+                if (
+                  isNeighborTransparent &&
+                  (!transparent ||
+                    isNeighborEmpty ||
+                    neighbor !== voxel ||
+                    (transparentStandalone && dir[0] + dir[1] + dir[2] >= 1))
+                ) {
                   const nearVoxels = neighbors.map(([a, b, c]) => world.getVoxelByVoxel([vx + a, vy + b, vz + c]));
 
                   const { startU, endU, startV, endV } = isMat1
