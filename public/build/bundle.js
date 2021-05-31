@@ -6561,14 +6561,21 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
         };
         this.placeVoxel = (type) => {
             const { dimension } = this.options;
-            const { targetBlock, entity: { body: { aabb }, }, godMode, } = this.engine.player;
-            const blockSize = dimension - 0.05;
-            if (targetBlock) {
-                const [tx, ty, tz] = targetBlock;
-                const offset = (dimension - blockSize) / 2;
-                const blockAABB = new _libs__WEBPACK_IMPORTED_MODULE_2__.AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
-                if (!aabb.intersects(blockAABB) || godMode)
+            const { targetBlock, godMode } = this.engine.player;
+            if (godMode) {
+                if (targetBlock)
                     this.setVoxel(targetBlock, type);
+            }
+            else {
+                const { entity: { body: { aabb }, }, } = this.engine.player;
+                const blockSize = dimension - 0.05;
+                if (targetBlock) {
+                    const [tx, ty, tz] = targetBlock;
+                    const offset = (dimension - blockSize) / 2;
+                    const blockAABB = new _libs__WEBPACK_IMPORTED_MODULE_2__.AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
+                    if (!aabb.intersects(blockAABB))
+                        this.setVoxel(targetBlock, type);
+                }
             }
         };
         this.updateRenderRadius = (renderRadiuus) => {

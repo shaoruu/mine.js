@@ -188,19 +188,24 @@ class World extends EventEmitter {
 
   placeVoxel = (type: number) => {
     const { dimension } = this.options;
-    const {
-      targetBlock,
-      entity: {
-        body: { aabb },
-      },
-      godMode,
-    } = this.engine.player;
-    const blockSize = dimension - 0.05;
-    if (targetBlock) {
-      const [tx, ty, tz] = targetBlock;
-      const offset = (dimension - blockSize) / 2;
-      const blockAABB = new AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
-      if (!aabb.intersects(blockAABB) || godMode) this.setVoxel(targetBlock, type);
+    const { targetBlock, godMode } = this.engine.player;
+    if (godMode) {
+      if (targetBlock) this.setVoxel(targetBlock, type);
+    } else {
+      const {
+        entity: {
+          body: { aabb },
+        },
+      } = this.engine.player;
+
+      const blockSize = dimension - 0.05;
+
+      if (targetBlock) {
+        const [tx, ty, tz] = targetBlock;
+        const offset = (dimension - blockSize) / 2;
+        const blockAABB = new AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
+        if (!aabb.intersects(blockAABB)) this.setVoxel(targetBlock, type);
+      }
     }
   };
 
