@@ -7092,7 +7092,7 @@ class CanvasBox {
         this.scaleColor = (() => {
             let m = 1.0;
             return (multiplier) => {
-                const scale = three__WEBPACK_IMPORTED_MODULE_0__.MathUtils.lerp(m, multiplier, 0.1);
+                const scale = three__WEBPACK_IMPORTED_MODULE_0__.MathUtils.lerp(m, multiplier, 0.3);
                 this.layers.forEach((layer) => {
                     layer.materials.forEach((material) => {
                         material.color.multiplyScalar((1 / m) * scale);
