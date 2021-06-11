@@ -37,6 +37,32 @@ class Network {
   connect = () => {
     const url = this.url.toString();
 
+    this.url.port = '8080';
+    this.url.path = '/ws/';
+    const socket2 = new URL(this.url.toString());
+    socket2.protocol = socket2.protocol.replace(/http/, 'ws');
+    socket2.hash = '';
+    socket2.searchParams.set('world', this.worldName);
+
+    const server2 = new WebSocket(socket2.toString()) as CustomWebSocket;
+    server2.binaryType = 'arraybuffer';
+    server2.sendEvent = (event) => {
+      server2.send(Network.encode(event));
+    };
+    server2.onopen = () => {
+      server2.sendEvent({
+        type: 'INIT',
+        json: JSON.stringify({ test: 'BRUH' }),
+        text: 'BRUHHHH',
+        chunks: [
+          {
+            x: 2,
+            z: 5,
+          },
+        ],
+      });
+    };
+
     if (this.server) {
       this.server.onclose = null;
       this.server.onmessage = null;

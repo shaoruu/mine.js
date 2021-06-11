@@ -1,0 +1,8 @@
+{
+  "base": "base-plant.json",
+  "name": "Brown Grass",
+  "textures": {
+    "one": "grass_brown.png",
+    "two": "grass_brown.png"
+  }
+}

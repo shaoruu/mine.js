@@ -44,10 +44,10 @@ message Peer {
 
 message ChatMessage {
   enum Type {
-    ERROR = 1;
-    SERVER = 2;
-    PLAYER = 3;
-    INFO = 4;
+    ERROR = 0;
+    SERVER = 1;
+    PLAYER = 2;
+    INFO = 3;
   }
 
   Type type = 1;
@@ -57,19 +57,19 @@ message ChatMessage {
 
 message Message {
   enum Type {
-    ERROR = 1;
-    INIT = 2;
-    JOIN = 3;
-    LEAVE = 4;
-    LOAD = 5;
-    PICK = 6;
-    TELEPORT = 7;
-    UPDATE = 8;
-    REQUEST = 9;
-    CONFIG = 10;
-    PEER = 11;
-    ENTITY = 12;
-    MESSAGE = 13;
+    ERROR = 0;
+    INIT = 1;
+    JOIN = 2;
+    LEAVE = 3;
+    LOAD = 4;
+    PICK = 5;
+    TELEPORT = 6;
+    UPDATE = 7;
+    REQUEST = 8;
+    CONFIG = 9;
+    PEER = 10;
+    ENTITY = 11;
+    MESSAGE = 12;
   }
 
   Type type = 1;

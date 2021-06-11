@@ -1,0 +1,7 @@
+{
+  "base": "base-block.json",
+  "name": "Greystone",
+  "textures": {
+    "all": "greystone.png"
+  }
+}

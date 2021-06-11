@@ -1,0 +1,8 @@
+{
+  "base": "base-plant.json",
+  "name": "Red Mushroom",
+  "textures": {
+    "one": "mushroom_red.png",
+    "two": "mushroom_red.png"
+  }
+}

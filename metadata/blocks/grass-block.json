@@ -1,0 +1,9 @@
+{
+  "base": "base-block.json",
+  "name": "Grass Block",
+  "textures": {
+    "top": "grass_top.png",
+    "side": "grass_side.png",
+    "bottom": "dirt.png"
+  }
+}

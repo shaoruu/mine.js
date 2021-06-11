@@ -1,0 +1,9 @@
+{
+  "isEmpty": false,
+  "isSolid": false,
+  "isFluid": false,
+  "isTransparent": false,
+  "isLight": false,
+  "isBlock": false,
+  "isPlant": true
+}

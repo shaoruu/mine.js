@@ -1,0 +1,7 @@
+{
+  "base": "base-block.json",
+  "name": "Dirt",
+  "textures": {
+    "all": "dirt.png"
+  }
+}
