@@ -6,6 +6,7 @@ use actix_web::{get, web, App, Error, HttpRequest, HttpResponse, HttpServer, Res
 use actix_web_actors::ws;
 
 mod models;
+mod registry;
 mod server;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -20,8 +21,8 @@ async fn ws_route(
         WsSession {
             id: 0,
             hb: Instant::now(),
-            room: "Main".to_owned(),
-            name: None,
+            // room: "Main".to_owned(),
+            // name: None,
             addr: srv.get_ref().clone(),
         },
         &req,
@@ -32,8 +33,8 @@ async fn ws_route(
 struct WsSession {
     id: usize,
     hb: Instant,
-    room: String,
-    name: Option<String>,
+    // room: String,
+    // name: Option<String>,
     addr: Addr<server::WsServer>,
 }
 
@@ -144,15 +145,23 @@ async fn index() -> Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("public/index.html")?)
 }
 
+#[get("/atlas")]
+async fn atlas() -> Result<fs::NamedFile> {
+    Ok(fs::NamedFile::open("textures/atlas.png")?)
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
+
+    registry::Registry::new();
 
     let server = server::WsServer::new().start();
 
     HttpServer::new(move || {
         App::new()
             .data(server.clone())
+            .service(atlas)
             .service(index)
             .service(web::resource("/ws/").to(ws_route))
             .service(fs::Files::new("/", "public/").show_files_listing())

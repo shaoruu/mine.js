@@ -5,5 +5,7 @@
   "isTransparent": false,
   "isLight": false,
   "isBlock": false,
-  "isPlant": true
+  "isPlant": true,
+  "lightLevel": 0,
+  "transparentStandalone": false
 }
