@@ -83390,7 +83390,7 @@ $root.protocol = (function() {
          * @memberof protocol.ChatMessage
          * @instance
          */
-        ChatMessage.prototype.type = 1;
+        ChatMessage.prototype.type = 0;
 
         /**
          * ChatMessage sender.
@@ -83520,10 +83520,10 @@ $root.protocol = (function() {
                 switch (message.type) {
                 default:
                     return "type: enum value expected";
+                case 0:
                 case 1:
                 case 2:
                 case 3:
-                case 4:
                     break;
                 }
             if (message.sender != null && message.hasOwnProperty("sender"))
@@ -83549,20 +83549,20 @@ $root.protocol = (function() {
             var message = new $root.protocol.ChatMessage();
             switch (object.type) {
             case "ERROR":
+            case 0:
+                message.type = 0;
+                break;
+            case "SERVER":
             case 1:
                 message.type = 1;
                 break;
-            case "SERVER":
+            case "PLAYER":
             case 2:
                 message.type = 2;
                 break;
-            case "PLAYER":
+            case "INFO":
             case 3:
                 message.type = 3;
-                break;
-            case "INFO":
-            case 4:
-                message.type = 4;
                 break;
             }
             if (object.sender != null)
@@ -83586,7 +83586,7 @@ $root.protocol = (function() {
                 options = {};
             var object = {};
             if (options.defaults) {
-                object.type = options.enums === String ? "ERROR" : 1;
+                object.type = options.enums === String ? "ERROR" : 0;
                 object.sender = "";
                 object.body = "";
             }
@@ -83614,17 +83614,17 @@ $root.protocol = (function() {
          * Type enum.
          * @name protocol.ChatMessage.Type
          * @enum {number}
-         * @property {number} ERROR=1 ERROR value
-         * @property {number} SERVER=2 SERVER value
-         * @property {number} PLAYER=3 PLAYER value
-         * @property {number} INFO=4 INFO value
+         * @property {number} ERROR=0 ERROR value
+         * @property {number} SERVER=1 SERVER value
+         * @property {number} PLAYER=2 PLAYER value
+         * @property {number} INFO=3 INFO value
          */
         ChatMessage.Type = (function() {
             var valuesById = {}, values = Object.create(valuesById);
-            values[valuesById[1] = "ERROR"] = 1;
-            values[valuesById[2] = "SERVER"] = 2;
-            values[valuesById[3] = "PLAYER"] = 3;
-            values[valuesById[4] = "INFO"] = 4;
+            values[valuesById[0] = "ERROR"] = 0;
+            values[valuesById[1] = "SERVER"] = 1;
+            values[valuesById[2] = "PLAYER"] = 2;
+            values[valuesById[3] = "INFO"] = 3;
             return values;
         })();
 
@@ -83670,7 +83670,7 @@ $root.protocol = (function() {
          * @memberof protocol.Message
          * @instance
          */
-        Message.prototype.type = 1;
+        Message.prototype.type = 0;
 
         /**
          * Message json.
@@ -83861,6 +83861,7 @@ $root.protocol = (function() {
                 switch (message.type) {
                 default:
                     return "type: enum value expected";
+                case 0:
                 case 1:
                 case 2:
                 case 3:
@@ -83873,7 +83874,6 @@ $root.protocol = (function() {
                 case 10:
                 case 11:
                 case 12:
-                case 13:
                     break;
                 }
             if (message.json != null && message.hasOwnProperty("json"))
@@ -83931,56 +83931,56 @@ $root.protocol = (function() {
             var message = new $root.protocol.Message();
             switch (object.type) {
             case "ERROR":
+            case 0:
+                message.type = 0;
+                break;
+            case "INIT":
             case 1:
                 message.type = 1;
                 break;
-            case "INIT":
+            case "JOIN":
             case 2:
                 message.type = 2;
                 break;
-            case "JOIN":
+            case "LEAVE":
             case 3:
                 message.type = 3;
                 break;
-            case "LEAVE":
+            case "LOAD":
             case 4:
                 message.type = 4;
                 break;
-            case "LOAD":
+            case "PICK":
             case 5:
                 message.type = 5;
                 break;
-            case "PICK":
+            case "TELEPORT":
             case 6:
                 message.type = 6;
                 break;
-            case "TELEPORT":
+            case "UPDATE":
             case 7:
                 message.type = 7;
                 break;
-            case "UPDATE":
+            case "REQUEST":
             case 8:
                 message.type = 8;
                 break;
-            case "REQUEST":
+            case "CONFIG":
             case 9:
                 message.type = 9;
                 break;
-            case "CONFIG":
+            case "PEER":
             case 10:
                 message.type = 10;
                 break;
-            case "PEER":
+            case "ENTITY":
             case 11:
                 message.type = 11;
                 break;
-            case "ENTITY":
+            case "MESSAGE":
             case 12:
                 message.type = 12;
-                break;
-            case "MESSAGE":
-            case 13:
-                message.type = 13;
                 break;
             }
             if (object.json != null)
@@ -84044,7 +84044,7 @@ $root.protocol = (function() {
                 object.updates = [];
             }
             if (options.defaults) {
-                object.type = options.enums === String ? "ERROR" : 1;
+                object.type = options.enums === String ? "ERROR" : 0;
                 object.json = "";
                 object.text = "";
                 object.message = null;
@@ -84090,35 +84090,35 @@ $root.protocol = (function() {
          * Type enum.
          * @name protocol.Message.Type
          * @enum {number}
-         * @property {number} ERROR=1 ERROR value
-         * @property {number} INIT=2 INIT value
-         * @property {number} JOIN=3 JOIN value
-         * @property {number} LEAVE=4 LEAVE value
-         * @property {number} LOAD=5 LOAD value
-         * @property {number} PICK=6 PICK value
-         * @property {number} TELEPORT=7 TELEPORT value
-         * @property {number} UPDATE=8 UPDATE value
-         * @property {number} REQUEST=9 REQUEST value
-         * @property {number} CONFIG=10 CONFIG value
-         * @property {number} PEER=11 PEER value
-         * @property {number} ENTITY=12 ENTITY value
-         * @property {number} MESSAGE=13 MESSAGE value
+         * @property {number} ERROR=0 ERROR value
+         * @property {number} INIT=1 INIT value
+         * @property {number} JOIN=2 JOIN value
+         * @property {number} LEAVE=3 LEAVE value
+         * @property {number} LOAD=4 LOAD value
+         * @property {number} PICK=5 PICK value
+         * @property {number} TELEPORT=6 TELEPORT value
+         * @property {number} UPDATE=7 UPDATE value
+         * @property {number} REQUEST=8 REQUEST value
+         * @property {number} CONFIG=9 CONFIG value
+         * @property {number} PEER=10 PEER value
+         * @property {number} ENTITY=11 ENTITY value
+         * @property {number} MESSAGE=12 MESSAGE value
          */
         Message.Type = (function() {
             var valuesById = {}, values = Object.create(valuesById);
-            values[valuesById[1] = "ERROR"] = 1;
-            values[valuesById[2] = "INIT"] = 2;
-            values[valuesById[3] = "JOIN"] = 3;
-            values[valuesById[4] = "LEAVE"] = 4;
-            values[valuesById[5] = "LOAD"] = 5;
-            values[valuesById[6] = "PICK"] = 6;
-            values[valuesById[7] = "TELEPORT"] = 7;
-            values[valuesById[8] = "UPDATE"] = 8;
-            values[valuesById[9] = "REQUEST"] = 9;
-            values[valuesById[10] = "CONFIG"] = 10;
-            values[valuesById[11] = "PEER"] = 11;
-            values[valuesById[12] = "ENTITY"] = 12;
-            values[valuesById[13] = "MESSAGE"] = 13;
+            values[valuesById[0] = "ERROR"] = 0;
+            values[valuesById[1] = "INIT"] = 1;
+            values[valuesById[2] = "JOIN"] = 2;
+            values[valuesById[3] = "LEAVE"] = 3;
+            values[valuesById[4] = "LOAD"] = 4;
+            values[valuesById[5] = "PICK"] = 5;
+            values[valuesById[6] = "TELEPORT"] = 6;
+            values[valuesById[7] = "UPDATE"] = 7;
+            values[valuesById[8] = "REQUEST"] = 8;
+            values[valuesById[9] = "CONFIG"] = 9;
+            values[valuesById[10] = "PEER"] = 10;
+            values[valuesById[11] = "ENTITY"] = 11;
+            values[valuesById[12] = "MESSAGE"] = 12;
             return values;
         })();
 

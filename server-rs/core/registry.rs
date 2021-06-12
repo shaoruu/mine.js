@@ -82,14 +82,14 @@ impl Registry {
                                 .unwrap();
                         let color_vec = texture_data["color"].as_array().unwrap().as_slice();
 
-                        let color_r = color_vec[0].as_i64().unwrap() as u8;
-                        let color_g = color_vec[1].as_i64().unwrap() as u8;
-                        let color_b = color_vec[2].as_i64().unwrap() as u8;
+                        let color_r = (color_vec[0].as_f64().unwrap() * 255.0) as u8;
+                        let color_g = (color_vec[1].as_f64().unwrap() * 255.0) as u8;
+                        let color_b = (color_vec[2].as_f64().unwrap() * 255.0) as u8;
 
                         let imgbuf = image::ImageBuffer::from_pixel(
                             16,
                             16,
-                            image::Rgb([color_r * 255, color_g * 255, color_b * 255]),
+                            image::Rgb([color_r, color_g, color_b]),
                         );
 
                         image::DynamicImage::ImageRgb8(imgbuf)
