@@ -5,6 +5,8 @@ use actix_web::{web, App, HttpServer};
 use std::sync::Mutex;
 
 mod core;
+mod libs;
+mod utils;
 
 use crate::core::{models, registry, routes, server};
 

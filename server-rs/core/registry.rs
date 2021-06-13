@@ -1,31 +1,10 @@
+use crate::libs::types::{Block, UV};
+use crate::utils::json;
+
 use std::collections::HashMap;
-use std::io::Read;
 
 type Ranges = HashMap<String, UV>;
 type Blocks = HashMap<String, Block>;
-
-#[derive(Debug)]
-pub struct UV {
-    start_u: f32,
-    end_u: f32,
-    start_v: f32,
-    end_v: f32,
-}
-
-#[derive(Debug)]
-pub struct Block {
-    name: String,
-    is_block: bool,
-    is_empty: bool,
-    is_fluid: bool,
-    is_light: bool,
-    is_plant: bool,
-    is_solid: bool,
-    is_transparent: bool,
-    light_level: i64,
-    textures: HashMap<String, String>,
-    transparent_standalone: bool,
-}
 
 pub struct Registry {
     pub atlas: image::RgbaImage,
@@ -37,7 +16,7 @@ pub struct Registry {
 
 impl Registry {
     pub fn new() -> Self {
-        let blocks_json = json_to_string("metadata/blocks.json").unwrap();
+        let blocks_json = json::read_json_file("metadata/blocks.json").unwrap();
 
         let mut base_cache: HashMap<String, serde_json::Value> = HashMap::new();
         let mut texture_map: HashMap<String, image::DynamicImage> = HashMap::new();
@@ -50,21 +29,22 @@ impl Registry {
             // remove first and last characters to remove the ""
             let value_str = value.as_str().unwrap();
             let path = format!("./metadata/blocks/{}", value_str);
-            let mut block_json = json_to_string(&path).unwrap();
+            let mut block_json = json::read_json_file(&path).unwrap();
 
             let base = &block_json["base"];
 
             let base = match base {
-                serde_json::Value::String(base_str) => {
-                    Some(base_cache.entry(base_str.to_owned()).or_insert(
-                        json_to_string(format!("./metadata/blocks/{}", base_str).as_str()).unwrap(),
-                    ))
-                }
+                serde_json::Value::String(base_str) => Some(
+                    base_cache.entry(base_str.to_owned()).or_insert(
+                        json::read_json_file(format!("./metadata/blocks/{}", base_str).as_str())
+                            .unwrap(),
+                    ),
+                ),
                 _ => None,
             }
             .unwrap();
 
-            merge(&mut block_json, base);
+            json::merge(&mut block_json, base);
 
             let textures = &block_json["textures"];
             let mut textures_hash = HashMap::new();
@@ -78,7 +58,7 @@ impl Registry {
                     } else {
                         // texture data
                         let texture_data =
-                            json_to_string(&format!("textures/procedural/{}", img_src_str))
+                            json::read_json_file(&format!("textures/procedural/{}", img_src_str))
                                 .unwrap();
                         let color_vec = texture_data["color"].as_array().unwrap().as_slice();
 
@@ -196,26 +176,6 @@ impl Registry {
         match id {
             Some(&id) => self.get_block_by_id(id),
             None => None,
-        }
-    }
-}
-
-fn json_to_string(path: &str) -> Result<serde_json::Value, serde_json::Error> {
-    let mut file = std::fs::File::open(path).unwrap();
-    let mut string = String::new();
-    file.read_to_string(&mut string).unwrap();
-    serde_json::from_str(&string)
-}
-
-fn merge(a: &mut serde_json::Value, b: &serde_json::Value) {
-    match (a, b) {
-        (&mut serde_json::Value::Object(ref mut a), &serde_json::Value::Object(ref b)) => {
-            for (k, v) in b {
-                merge(a.entry(k.clone()).or_insert(serde_json::Value::Null), v);
-            }
-        }
-        (a, b) => {
-            *a = b.clone();
         }
     }
 }
