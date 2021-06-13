@@ -24,25 +24,22 @@ pub async fn ws_route(
     let world_query = params.get("world");
     let addr = data.server.lock().unwrap().clone();
 
-    let worlds = addr.send(server::ListWorlds).await.unwrap();
-    println!("{:?}", worlds);
-
-    // let world = match world_query {
-    //     None => {
-    //     }
-    //     Some(world) => world.to_owned(),
-    // };
-
-    // println!("WORLD: {}", world);
+    let world_name = match world_query {
+        Some(name) => name.to_owned(),
+        None => {
+            let worlds = addr.send(server::ListWorlds).await.unwrap();
+            worlds[0].to_owned()
+        }
+    };
 
     ws::start(
         server::WsSession {
             addr,
             id: 0,
             name: None,
+            world_name,
             render_radius: 8,
             hb: Instant::now(),
-            world: String::from("terrains"),
             position: Coords3(0.0, 0.0, 0.0),
             rotation: Quaternion(0.0, 0.0, 0.0, 0.0),
             current_chunk: Coords2(0,0,),

@@ -20,6 +20,7 @@ impl<T: Copy + 'static> Coords3<T> {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Quaternion(pub f32, pub f32, pub f32, pub f32);
 
 #[derive(Debug)]

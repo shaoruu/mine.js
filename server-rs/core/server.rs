@@ -3,15 +3,12 @@ use rand::{self, rngs::ThreadRng, Rng};
 use actix::prelude::*;
 use actix_web_actors::ws;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs::File;
-use std::io::Read;
 use std::time::{Duration, Instant};
 
-use serde::Deserialize;
-
 use crate::core::world::World;
-use crate::libs::types::{Coords2, Coords3, GeneratorType, Quaternion};
+use crate::libs::types::{Coords2, Coords3, Quaternion};
 use crate::models::{
     self,
     messages::{self, message::Type as MessageType},
@@ -28,6 +25,7 @@ pub struct Message(pub String);
 #[derive(Message)]
 #[rtype(usize)]
 pub struct Connect {
+    pub world_name: String,
     pub addr: Recipient<Message>,
 }
 
@@ -55,47 +53,28 @@ impl actix::Message for ListWorlds {
     type Result = Vec<String>;
 }
 
+#[derive(Debug)]
 pub struct WsServer {
     clients: HashMap<usize, Recipient<Message>>,
-    worlds: HashMap<String, HashSet<usize>>,
+    worlds: HashMap<String, World>,
     rng: ThreadRng,
 }
 
 impl WsServer {
     pub fn new() -> WsServer {
-        let mut worlds = HashMap::new();
-        worlds.insert("Main".to_owned(), HashSet::new());
+        let mut worlds: HashMap<String, World> = HashMap::new();
 
         let worlds_json: serde_json::Value =
             serde_json::from_reader(File::open("metadata/worlds.json").unwrap()).unwrap();
-        // println!("{:?}", worlds_json);
 
         let world_default = &worlds_json["default"];
 
-        // println!("{:?}", worlds_json);
+        for world_json in worlds_json["worlds"].as_array().unwrap() {
+            let mut world_json = world_json.clone();
+            json::merge(&mut world_json, world_default, false);
 
-        for world in worlds_json["worlds"].as_array().unwrap() {
-            let mut world = world.clone();
-            json::merge(&mut world, world_default, false);
-
-            let new_world = World {
-                time: world["time"].as_i64().unwrap() as i32,
-                name: world["name"].as_str().unwrap().to_owned(),
-                save: world["save"].as_bool().unwrap(),
-                tick_speed: world["tickSpeed"].as_i64().unwrap() as i32,
-                chunk_root: world["chunkRoot"].as_str().unwrap().to_owned(),
-                preload: world["preload"].as_i64().unwrap() as i32,
-                chunk_size: world["chunkSize"].as_i64().unwrap() as i32,
-                dimension: world["dimension"].as_i64().unwrap() as i32,
-                max_height: world["maxHeight"].as_i64().unwrap() as i32,
-                render_radius: world["renderRadius"].as_i64().unwrap() as i32,
-                max_light_level: world["maxLightLevel"].as_i64().unwrap() as i32,
-                max_loaded_chunks: world["maxLoadedChunks"].as_i64().unwrap() as i32,
-                description: world["description"].as_str().unwrap().to_owned(),
-                generation: GeneratorType::parse(world["generation"].as_str().unwrap()).unwrap(),
-            };
-
-            println!("{:?}", new_world);
+            let new_world = World::load(world_json);
+            worlds.insert(new_world.name.to_owned(), new_world);
         }
 
         WsServer {
@@ -106,12 +85,10 @@ impl WsServer {
     }
 
     pub fn send_message(&self, world: &str, message: &str, skip_id: usize) {
-        if let Some(sessions) = self.worlds.get(world) {
-            for id in sessions {
+        if let Some(world) = self.worlds.get(world) {
+            for (id, recipient) in &world.clients {
                 if *id != skip_id {
-                    if let Some(addr) = self.clients.get(id) {
-                        addr.do_send(Message(message.to_owned())).unwrap();
-                    }
+                    recipient.do_send(Message(message.to_owned())).unwrap();
                 }
             }
         }
@@ -132,12 +109,11 @@ impl Handler<Connect> for WsServer {
 
         // register session with random id
         let id = self.rng.gen::<usize>();
-        self.clients.insert(id, msg.addr);
+        self.clients.insert(id, msg.addr.clone()); // ? NOT SURE IF THIS WORKS
 
-        self.worlds
-            .entry("Main".to_owned())
-            .or_insert_with(HashSet::new)
-            .insert(id);
+        let world_name = msg.world_name;
+        let world = self.worlds.get_mut(&world_name).unwrap();
+        world.add_client(id, msg.addr.to_owned());
 
         id
     }
@@ -166,10 +142,8 @@ impl Handler<Disconnect> for WsServer {
         // remove address
         if self.clients.remove(&msg.id).is_some() {
             // remove session from all rooms
-            for (name, sessions) in &mut self.worlds {
-                if sessions.remove(&msg.id) {
-                    rooms.push(name.to_owned())
-                }
+            for world in self.worlds.values_mut() {
+                &mut world.clients.remove_entry(&msg.id);
             }
         }
 
@@ -179,6 +153,7 @@ impl Handler<Disconnect> for WsServer {
     }
 }
 
+#[derive(Debug)]
 pub struct WsSession {
     // unique sessions id
     pub id: usize,
@@ -186,7 +161,7 @@ pub struct WsSession {
     // otherwise we drop connection
     pub hb: Instant,
     // joined world
-    pub world: String,
+    pub world_name: String,
     // name in world
     pub name: Option<String>,
     // chat server
@@ -212,6 +187,7 @@ impl Actor for WsSession {
         let addr = ctx.address();
         self.addr
             .send(Connect {
+                world_name: self.world_name.to_owned(),
                 addr: addr.recipient(),
             })
             .into_actor(self)
@@ -235,6 +211,7 @@ impl Handler<Message> for WsSession {
     type Result = ();
 
     fn handle(&mut self, msg: Message, ctx: &mut Self::Context) {
+        // TODO: PROTOCOL BUFFER SENDING HERE
         ctx.text(msg.0)
     }
 }
