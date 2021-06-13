@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-
 use num::cast;
+
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub struct Coords2<T>(pub T, pub T);
@@ -19,6 +19,8 @@ impl<T: Copy + 'static> Coords3<T> {
         Coords3(other.0.as_(), other.1.as_(), other.2.as_())
     }
 }
+
+pub struct Quaternion(pub f32, pub f32, pub f32, pub f32);
 
 #[derive(Debug)]
 pub struct UV {

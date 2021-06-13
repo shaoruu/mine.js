@@ -46,22 +46,6 @@ class Network {
 
     const server2 = new WebSocket(socket2.toString()) as CustomWebSocket;
     server2.binaryType = 'arraybuffer';
-    server2.sendEvent = (event) => {
-      server2.send(Network.encode(event));
-    };
-    server2.onopen = () => {
-      server2.sendEvent({
-        type: 'INIT',
-        json: JSON.stringify({ test: 'BRUH' }),
-        text: 'BRUHHHH',
-        chunks: [
-          {
-            x: 2,
-            z: 5,
-          },
-        ],
-      });
-    };
 
     if (this.server) {
       this.server.onclose = null;
@@ -80,7 +64,9 @@ class Network {
     const server = new WebSocket(socket.toString()) as CustomWebSocket;
     server.binaryType = 'arraybuffer';
     server.sendEvent = (event) => {
-      server.send(Network.encode(event));
+      const encoded = Network.encode(event);
+      server.send(encoded);
+      server2.send(encoded);
     };
     server.onopen = () => {
       this.engine.emit('connected');

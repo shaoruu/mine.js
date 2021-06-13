@@ -6,6 +6,7 @@ use actix_web_actors::ws;
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 
+use crate::libs::types::{Coords2, Coords3, Quaternion};
 use crate::models::{
     self,
     messages::{self, message::Type as MessageType},
@@ -42,32 +43,32 @@ pub struct ClientMessage {
 }
 
 // list of available rooms
-pub struct ListRooms;
+pub struct ListWorlds;
 
-impl actix::Message for ListRooms {
+impl actix::Message for ListWorlds {
     type Result = Vec<String>;
 }
 
 pub struct WsServer {
     sessions: HashMap<usize, Recipient<Message>>,
-    rooms: HashMap<String, HashSet<usize>>,
+    worlds: HashMap<String, HashSet<usize>>,
     rng: ThreadRng,
 }
 
 impl WsServer {
     pub fn new() -> WsServer {
-        let mut rooms = HashMap::new();
-        rooms.insert("Main".to_owned(), HashSet::new());
+        let mut worlds = HashMap::new();
+        worlds.insert("Main".to_owned(), HashSet::new());
 
         WsServer {
-            rooms,
+            worlds,
             sessions: HashMap::new(),
             rng: rand::thread_rng(),
         }
     }
 
-    pub fn send_message(&self, room: &str, message: &str, skip_id: usize) {
-        if let Some(sessions) = self.rooms.get(room) {
+    pub fn send_message(&self, world: &str, message: &str, skip_id: usize) {
+        if let Some(sessions) = self.worlds.get(world) {
             for id in sessions {
                 if *id != skip_id {
                     if let Some(addr) = self.sessions.get(id) {
@@ -95,7 +96,7 @@ impl Handler<Connect> for WsServer {
         let id = self.rng.gen::<usize>();
         self.sessions.insert(id, msg.addr);
 
-        self.rooms
+        self.worlds
             .entry("Main".to_owned())
             .or_insert_with(HashSet::new)
             .insert(id);
@@ -113,7 +114,7 @@ impl Handler<Disconnect> for WsServer {
         // remove address
         if self.sessions.remove(&msg.id).is_some() {
             // remove session from all rooms
-            for (name, sessions) in &mut self.rooms {
+            for (name, sessions) in &mut self.worlds {
                 if sessions.remove(&msg.id) {
                     rooms.push(name.to_owned())
                 }
@@ -127,11 +128,27 @@ impl Handler<Disconnect> for WsServer {
 }
 
 pub struct WsSession {
+    // unique sessions id
     pub id: usize,
+    // client must ping at least once per 10 seconds (CLIENT_TIMEOUT)
+    // otherwise we drop connection
     pub hb: Instant,
+    // joined world
+    pub world: String,
+    // name in world
+    pub name: Option<String>,
+    // chat server
     pub addr: Addr<WsServer>,
-    // room: String,
-    // name: Option<String>,
+    // position in world
+    pub position: Coords3<f32>,
+    // rotation in world
+    pub rotation: Quaternion,
+    // current chunk in world
+    pub current_chunk: Coords2<i32>,
+    // requested chunk in world
+    pub requested_chunks: Vec<Coords2<i32>>,
+    // radius of render?
+    pub render_radius: i16,
 }
 
 impl Actor for WsSession {
@@ -190,7 +207,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsSession {
             }
             ws::Message::Binary(bytes) => {
                 let message = models::decode_message(&bytes.to_vec()).unwrap();
-                self.on_request(self, message);
+                self.on_request(message);
             }
             ws::Message::Close(reason) => {
                 ctx.close(reason);
@@ -220,11 +237,18 @@ impl WsSession {
         });
     }
 
-    fn on_request(&self, session: &WsSession, message: messages::Message) {
+    fn on_request(&mut self, message: messages::Message) {
         let msg_type = messages::Message::r#type(&message);
 
         match msg_type {
-            MessageType::Request => {}
+            MessageType::Request => {
+                let json = message.parse_json().unwrap();
+
+                let cx = json["x"].as_i64().unwrap() as i32;
+                let cz = json["z"].as_i64().unwrap() as i32;
+
+                self.requested_chunks.push(Coords2(cx, cz));
+            }
             MessageType::Config => {}
             MessageType::Update => {}
             MessageType::Peer => {}

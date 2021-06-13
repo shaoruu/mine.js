@@ -1,7 +1,7 @@
+use std::collections::HashMap;
+
 use crate::libs::types::{Block, UV};
 use crate::utils::json;
-
-use std::collections::HashMap;
 
 type Ranges = HashMap<String, UV>;
 type Blocks = HashMap<String, Block>;
