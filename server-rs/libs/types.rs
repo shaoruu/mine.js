@@ -1,26 +1,24 @@
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq)]
-pub struct Coords2(pub i32, pub i32);
+use num::cast;
 
 #[derive(Debug, PartialEq)]
-pub struct FCoords2(pub f32, pub f32);
+pub struct Coords2<T>(pub T, pub T);
 
-#[derive(Debug, PartialEq)]
-pub struct Coords3(pub i32, pub i32, pub i32);
-
-impl Coords3 {
-    pub fn from_fcoords(f_coords: &FCoords3) -> Self {
-        Coords3(f_coords.0 as i32, f_coords.1 as i32, f_coords.2 as i32)
-    }
-
-    pub fn to_fcoords(&self) -> FCoords3 {
-        FCoords3(self.0 as f32, self.1 as f32, self.2 as f32)
+impl<T: Copy + 'static> Coords2<T> {
+    pub fn from<U: cast::AsPrimitive<T>>(other: &Coords2<U>) -> Coords2<T> {
+        Coords2(other.0.as_(), other.1.as_())
     }
 }
 
 #[derive(Debug, PartialEq)]
-pub struct FCoords3(pub f32, pub f32, pub f32);
+pub struct Coords3<T>(pub T, pub T, pub T);
+
+impl<T: Copy + 'static> Coords3<T> {
+    pub fn from<U: cast::AsPrimitive<T>>(other: &Coords3<U>) -> Coords3<T> {
+        Coords3(other.0.as_(), other.1.as_(), other.2.as_())
+    }
+}
 
 #[derive(Debug)]
 pub struct UV {
