@@ -17,20 +17,32 @@ use super::super::AppState;
 
 pub async fn ws_route(
     req: HttpRequest,
-    info: Query<HashMap<String, String>>,
+    params: Query<HashMap<String, String>>,
     stream: web::Payload,
     data: web::Data<AppState>,
 ) -> Result<HttpResponse, Error> {
-    println!("{:?}", info.get("world"));
+    let world_query = params.get("world");
+    let addr = data.server.lock().unwrap().clone();
+
+    let worlds = addr.send(server::ListWorlds).await.unwrap();
+    println!("{:?}", worlds);
+
+    // let world = match world_query {
+    //     None => {
+    //     }
+    //     Some(world) => world.to_owned(),
+    // };
+
+    // println!("WORLD: {}", world);
 
     ws::start(
         server::WsSession {
+            addr,
             id: 0,
             name: None,
             render_radius: 8,
             hb: Instant::now(),
-            world: String::from("Main"),
-            addr: data.server.lock().unwrap().clone(),
+            world: String::from("terrains"),
             position: Coords3(0.0, 0.0, 0.0),
             rotation: Quaternion(0.0, 0.0, 0.0, 0.0),
             current_chunk: Coords2(0,0,),

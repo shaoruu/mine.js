@@ -45,7 +45,20 @@ pub struct Block {
     pub transparent_standalone: bool,
 }
 
+#[derive(Debug)]
 pub enum GeneratorType {
     FLAT,
     HILLY,
+}
+
+impl GeneratorType {
+    pub fn parse(name: &str) -> Option<Self> {
+        let lower = name.to_lowercase();
+        if lower == "flat" {
+            return Some(Self::FLAT);
+        } else if lower == "hilly" {
+            return Some(Self::HILLY);
+        }
+        None
+    }
 }

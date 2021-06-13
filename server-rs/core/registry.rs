@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fs::File;
 
 use crate::libs::types::{Block, UV};
 use crate::utils::json;
@@ -16,7 +17,8 @@ pub struct Registry {
 
 impl Registry {
     pub fn new() -> Self {
-        let blocks_json = json::read_json_file("metadata/blocks.json").unwrap();
+        let blocks_json: serde_json::Value =
+            serde_json::from_reader(File::open("metadata/blocks.json").unwrap()).unwrap();
 
         let mut base_cache: HashMap<String, serde_json::Value> = HashMap::new();
         let mut texture_map: HashMap<String, image::DynamicImage> = HashMap::new();
@@ -29,22 +31,25 @@ impl Registry {
             // remove first and last characters to remove the ""
             let value_str = value.as_str().unwrap();
             let path = format!("./metadata/blocks/{}", value_str);
-            let mut block_json = json::read_json_file(&path).unwrap();
+            let mut block_json: serde_json::Value =
+                serde_json::from_reader(File::open(path).unwrap()).unwrap();
 
             let base = &block_json["base"];
 
             let base = match base {
                 serde_json::Value::String(base_str) => Some(
                     base_cache.entry(base_str.to_owned()).or_insert(
-                        json::read_json_file(format!("./metadata/blocks/{}", base_str).as_str())
-                            .unwrap(),
+                        serde_json::from_reader(
+                            File::open(format!("./metadata/blocks/{}", base_str).as_str()).unwrap(),
+                        )
+                        .unwrap(),
                     ),
                 ),
                 _ => None,
             }
             .unwrap();
 
-            json::merge(&mut block_json, base);
+            json::merge(&mut block_json, base, false);
 
             let textures = &block_json["textures"];
             let mut textures_hash = HashMap::new();
@@ -57,9 +62,11 @@ impl Registry {
                         image::open(&format!("textures/images/{}", img_src_str)).unwrap()
                     } else {
                         // texture data
-                        let texture_data =
-                            json::read_json_file(&format!("textures/procedural/{}", img_src_str))
-                                .unwrap();
+                        let texture_data: serde_json::Value = serde_json::from_reader(
+                            File::open(format!("textures/procedural/{}", img_src_str)).unwrap(),
+                        )
+                        .unwrap();
+
                         let color_vec = texture_data["color"].as_array().unwrap().as_slice();
 
                         let color_r = (color_vec[0].as_f64().unwrap() * 255.0) as u8;

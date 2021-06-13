@@ -1,7 +1,7 @@
 {
   "base": "base-block.json",
   "name": "Glass",
-  "isTransparent": "true",
+  "isTransparent": true,
   "textures": {
     "all": "glass.png"
   }

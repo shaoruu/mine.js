@@ -4,13 +4,19 @@ use actix::prelude::*;
 use actix_web_actors::ws;
 
 use std::collections::{HashMap, HashSet};
+use std::fs::File;
+use std::io::Read;
 use std::time::{Duration, Instant};
 
-use crate::libs::types::{Coords2, Coords3, Quaternion};
+use serde::Deserialize;
+
+use crate::core::world::World;
+use crate::libs::types::{Coords2, Coords3, GeneratorType, Quaternion};
 use crate::models::{
     self,
     messages::{self, message::Type as MessageType},
 };
+use crate::utils::json;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
@@ -50,7 +56,7 @@ impl actix::Message for ListWorlds {
 }
 
 pub struct WsServer {
-    sessions: HashMap<usize, Recipient<Message>>,
+    clients: HashMap<usize, Recipient<Message>>,
     worlds: HashMap<String, HashSet<usize>>,
     rng: ThreadRng,
 }
@@ -60,9 +66,41 @@ impl WsServer {
         let mut worlds = HashMap::new();
         worlds.insert("Main".to_owned(), HashSet::new());
 
+        let worlds_json: serde_json::Value =
+            serde_json::from_reader(File::open("metadata/worlds.json").unwrap()).unwrap();
+        // println!("{:?}", worlds_json);
+
+        let world_default = &worlds_json["default"];
+
+        // println!("{:?}", worlds_json);
+
+        for world in worlds_json["worlds"].as_array().unwrap() {
+            let mut world = world.clone();
+            json::merge(&mut world, world_default, false);
+
+            let new_world = World {
+                time: world["time"].as_i64().unwrap() as i32,
+                name: world["name"].as_str().unwrap().to_owned(),
+                save: world["save"].as_bool().unwrap(),
+                tick_speed: world["tickSpeed"].as_i64().unwrap() as i32,
+                chunk_root: world["chunkRoot"].as_str().unwrap().to_owned(),
+                preload: world["preload"].as_i64().unwrap() as i32,
+                chunk_size: world["chunkSize"].as_i64().unwrap() as i32,
+                dimension: world["dimension"].as_i64().unwrap() as i32,
+                max_height: world["maxHeight"].as_i64().unwrap() as i32,
+                render_radius: world["renderRadius"].as_i64().unwrap() as i32,
+                max_light_level: world["maxLightLevel"].as_i64().unwrap() as i32,
+                max_loaded_chunks: world["maxLoadedChunks"].as_i64().unwrap() as i32,
+                description: world["description"].as_str().unwrap().to_owned(),
+                generation: GeneratorType::parse(world["generation"].as_str().unwrap()).unwrap(),
+            };
+
+            println!("{:?}", new_world);
+        }
+
         WsServer {
             worlds,
-            sessions: HashMap::new(),
+            clients: HashMap::new(),
             rng: rand::thread_rng(),
         }
     }
@@ -71,7 +109,7 @@ impl WsServer {
         if let Some(sessions) = self.worlds.get(world) {
             for id in sessions {
                 if *id != skip_id {
-                    if let Some(addr) = self.sessions.get(id) {
+                    if let Some(addr) = self.clients.get(id) {
                         addr.do_send(Message(message.to_owned())).unwrap();
                     }
                 }
@@ -94,7 +132,7 @@ impl Handler<Connect> for WsServer {
 
         // register session with random id
         let id = self.rng.gen::<usize>();
-        self.sessions.insert(id, msg.addr);
+        self.clients.insert(id, msg.addr);
 
         self.worlds
             .entry("Main".to_owned())
@@ -105,6 +143,20 @@ impl Handler<Connect> for WsServer {
     }
 }
 
+impl Handler<ListWorlds> for WsServer {
+    type Result = MessageResult<ListWorlds>;
+
+    fn handle(&mut self, _: ListWorlds, _: &mut Context<Self>) -> Self::Result {
+        let mut worlds = Vec::new();
+
+        for key in self.worlds.keys() {
+            worlds.push(key.to_owned());
+        }
+
+        MessageResult(worlds)
+    }
+}
+
 impl Handler<Disconnect> for WsServer {
     type Result = ();
 
@@ -112,7 +164,7 @@ impl Handler<Disconnect> for WsServer {
         let mut rooms: Vec<String> = Vec::new();
 
         // remove address
-        if self.sessions.remove(&msg.id).is_some() {
+        if self.clients.remove(&msg.id).is_some() {
             // remove session from all rooms
             for (name, sessions) in &mut self.worlds {
                 if sessions.remove(&msg.id) {

@@ -1,0 +1,34 @@
+{
+  "default": {
+    "time": 0,
+    "save": true,
+    "dimension": 1,
+    "chunkSize": 8,
+    "tickSpeed": 3,
+    "maxClients": 10,
+    "maxHeight": 128,
+    "renderRadius": 8,
+    "preload": 3,
+    "name": "testbed",
+    "chunkRoot": "data",
+    "maxLightLevel": 15,
+    "pingInterval": 50000,
+    "maxLoadedChunks": 2000,
+    "description": "a testbed world"
+  },
+  "worlds": [
+    {
+      "name": "terrains",
+      "time": 670,
+      "save": false,
+      "tickSpeed": 0,
+      "generation": "hilly",
+      "description": "idek bro"
+    },
+    {
+      "name": "testbed",
+      "generation": "flat",
+      "description": "A testbed, go crazy"
+    }
+  ]
+}
