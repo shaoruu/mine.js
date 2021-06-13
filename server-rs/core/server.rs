@@ -6,7 +6,10 @@ use actix_web_actors::ws;
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 
-use crate::models::{self, messages};
+use crate::models::{
+    self,
+    messages::{self, message::Type as MessageType},
+};
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
@@ -187,7 +190,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsSession {
             }
             ws::Message::Binary(bytes) => {
                 let message = models::decode_message(&bytes.to_vec()).unwrap();
-                self.on_request(message);
+                self.on_request(self, message);
             }
             ws::Message::Close(reason) => {
                 ctx.close(reason);
@@ -217,12 +220,18 @@ impl WsSession {
         });
     }
 
-    fn on_request(&self, message: messages::Message) {
+    fn on_request(&self, session: &WsSession, message: messages::Message) {
         let msg_type = messages::Message::r#type(&message);
 
-        println!("TYPE OF MESSAGE: {} - {:?}", message.r#type, msg_type);
-
         match msg_type {
+            MessageType::Request => {}
+            MessageType::Config => {}
+            MessageType::Update => {}
+            MessageType::Peer => {}
+            MessageType::Message => {}
+            MessageType::Init => {
+                println!("INIT?")
+            }
             _ => {}
         }
         // println!("TYPE OF MESSAGE: {}", message.r#type);

@@ -8,6 +8,8 @@ mod core;
 
 use crate::core::{models, registry, routes, server};
 
+const SERVER_ADDR: &str = "localhost:8080";
+
 pub struct AppState {
     registry: Mutex<registry::Registry>,
     server: Mutex<Addr<server::WsServer>>,
@@ -22,6 +24,8 @@ async fn main() -> std::io::Result<()> {
         server: Mutex::new(server::WsServer::new().start()),
     });
 
+    println!("\n🚀  MineJS running on http://{}", SERVER_ADDR);
+
     HttpServer::new(move || {
         App::new()
             .app_data(data.clone())
@@ -30,7 +34,7 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/ws/").to(routes::ws_route))
             .service(fs::Files::new("/", "public/").show_files_listing())
     })
-    .bind("127.0.0.1:8080")?
+    .bind(SERVER_ADDR)?
     .run()
     .await
 }
