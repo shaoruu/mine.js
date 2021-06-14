@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use crate::libs::types::GeneratorType;
 use crate::server::Message;
 
+use super::chunks::Chunks;
+
 #[derive(Debug)]
 pub struct World {
     pub time: usize,
@@ -21,26 +23,33 @@ pub struct World {
     pub generation: GeneratorType,
     pub description: String,
     pub clients: HashMap<usize, Recipient<Message>>,
+    pub chunks: Chunks,
 }
 
 impl World {
     pub fn load(json_world: serde_json::Value) -> Self {
+        let chunk_size = json_world["chunkSize"].as_i64().unwrap() as usize;
+        let max_height = json_world["dimension"].as_i64().unwrap() as usize;
+
         World {
+            chunk_size,
+            max_height,
+
             time: json_world["time"].as_i64().unwrap() as usize,
             name: json_world["name"].as_str().unwrap().to_owned(),
             save: json_world["save"].as_bool().unwrap(),
             tick_speed: json_world["tickSpeed"].as_i64().unwrap() as usize,
             chunk_root: json_world["chunkRoot"].as_str().unwrap().to_owned(),
             preload: json_world["preload"].as_i64().unwrap() as i32,
-            chunk_size: json_world["chunkSize"].as_i64().unwrap() as usize,
             dimension: json_world["dimension"].as_i64().unwrap() as usize,
-            max_height: json_world["maxHeight"].as_i64().unwrap() as usize,
             render_radius: json_world["renderRadius"].as_i64().unwrap() as usize,
             max_light_level: json_world["maxLightLevel"].as_i64().unwrap() as usize,
             max_loaded_chunks: json_world["maxLoadedChunks"].as_i64().unwrap() as i32,
             description: json_world["description"].as_str().unwrap().to_owned(),
             generation: GeneratorType::parse(json_world["generation"].as_str().unwrap()).unwrap(),
+
             clients: HashMap::new(),
+            chunks: Chunks::new(chunk_size, max_height),
         }
     }
 

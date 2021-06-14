@@ -8,6 +8,7 @@ use crate::{
 
 use super::{chunk::Chunk, server::WsSession};
 
+#[derive(Debug)]
 pub struct Chunks {
     chunk_size: usize,
     max_height: usize,
