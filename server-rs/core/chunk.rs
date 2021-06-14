@@ -5,13 +5,10 @@ use crate::{
     utils::convert,
 };
 
-use super::world::World;
-
 #[derive(Debug)]
-pub struct Chunk<'a> {
+pub struct Chunk {
     pub name: String,
 
-    pub world: &'a World,
     pub coords: Coords2<i32>,
 
     pub voxels: Array3<u8>,
@@ -30,16 +27,16 @@ pub struct Chunk<'a> {
     pub is_dirty: bool,
 
     pub top_y: i32,
+
+    pub size: usize,
+    pub max_height: usize,
 }
 
-impl<'a> Chunk<'a> {
-    pub fn new(coords: Coords2<i32>, world: &'a World) -> Self {
-        let size = world.chunk_size;
-        let max_height = world.max_height;
-
+impl Chunk {
+    pub fn new(coords: Coords2<i32>, size: usize, max_height: usize) -> Self {
         let Coords2(cx, cz) = coords;
 
-        let name = convert::get_chunk_name(&coords, "_");
+        let name = convert::get_chunk_name(&coords);
 
         let voxels: Array3<u8> = Array3::zeros((size, max_height, size));
         let lights: Array3<u8> = Array3::zeros((size, max_height, size));
@@ -58,8 +55,6 @@ impl<'a> Chunk<'a> {
             name,
 
             coords,
-            world,
-
             voxels,
             lights,
             height_map,
@@ -75,6 +70,9 @@ impl<'a> Chunk<'a> {
             is_dirty: true,
 
             top_y: max_height as i32,
+
+            size,
+            max_height,
         }
     }
 
@@ -87,11 +85,11 @@ impl<'a> Chunk<'a> {
         self.voxels[[lx as usize, ly as usize, lz as usize]]
     }
 
-    pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, voxel: u8) {
+    pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u8) {
         assert!(self.contains(vx, vy, vz, 0));
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
-        self.voxels[[lx as usize, ly as usize, lz as usize]] = voxel;
+        self.voxels[[lx as usize, ly as usize, lz as usize]] = id;
     }
 
     pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u8 {
@@ -128,7 +126,7 @@ impl<'a> Chunk<'a> {
 
     pub fn get_max_height(&self, column: &Coords2<i32>) -> i32 {
         if !self.contains(column.0, 0, column.1, 0) {
-            return self.world.max_height as i32;
+            return self.max_height as i32;
         }
 
         let Coords3(lx, _, lz) = self.to_local(column.0, 0, column.1);
@@ -211,8 +209,8 @@ impl<'a> Chunk<'a> {
     }
 
     fn contains(&self, vx: i32, vy: i32, vz: i32, padding: i32) -> bool {
-        let size = self.world.chunk_size as i32;
-        let max_height = self.world.max_height as i32;
+        let size = self.size as i32;
+        let max_height = self.max_height as i32;
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
 

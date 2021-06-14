@@ -1712,6 +1712,7 @@ dependencies = [
  "prost",
  "prost-build",
  "rand 0.8.3",
+ "rayon",
  "serde",
  "serde_json",
 ]
