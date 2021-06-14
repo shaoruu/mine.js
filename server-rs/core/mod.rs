@@ -1,3 +1,4 @@
+pub mod chunk;
 pub mod models;
 pub mod registry;
 pub mod routes;

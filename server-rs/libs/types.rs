@@ -1,8 +1,8 @@
-use num::cast;
+use num::{cast, Num};
 
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Coords2<T>(pub T, pub T);
 
 impl<T: Copy + 'static> Coords2<T> {
@@ -11,12 +11,29 @@ impl<T: Copy + 'static> Coords2<T> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Coords3<T>(pub T, pub T, pub T);
 
 impl<T: Copy + 'static> Coords3<T> {
     pub fn from<U: cast::AsPrimitive<T>>(other: &Coords3<U>) -> Coords3<T> {
         Coords3(other.0.as_(), other.1.as_(), other.2.as_())
+    }
+}
+
+impl<T> Coords3<T>
+where
+    T: Num + Copy,
+{
+    pub fn add(&self, other: &Self) -> Self {
+        Coords3(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+    }
+
+    pub fn sub(&self, other: &Self) -> Self {
+        Coords3(self.0 - other.0, self.1 - other.1, self.2 - other.2)
+    }
+
+    pub fn scale(&self, scale: T) -> Self {
+        Coords3(self.0 * scale, self.1 * scale, self.2 * scale)
     }
 }
 

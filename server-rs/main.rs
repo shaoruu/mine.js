@@ -8,12 +8,11 @@ mod core;
 mod libs;
 mod utils;
 
-use crate::core::{models, registry, routes, server};
+use crate::core::{models, routes, server};
 
 const SERVER_ADDR: &str = "localhost:8080";
 
 pub struct AppState {
-    registry: Mutex<registry::Registry>,
     server: Mutex<Addr<server::WsServer>>,
 }
 
@@ -22,7 +21,6 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
 
     let data = web::Data::new(AppState {
-        registry: Mutex::new(registry::Registry::new()),
         server: Mutex::new(server::WsServer::new().start()),
     });
 
