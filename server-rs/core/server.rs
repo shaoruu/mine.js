@@ -76,7 +76,8 @@ impl WsServer {
             let mut world_json = world_json.clone();
             json::merge(&mut world_json, world_default, false);
 
-            let new_world = World::load(world_json);
+            let mut new_world = World::new(world_json);
+            new_world.chunks.preload(3);
             worlds.insert(new_world.name.to_owned(), new_world);
         }
 

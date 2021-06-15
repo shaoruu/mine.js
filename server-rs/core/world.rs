@@ -27,26 +27,26 @@ pub struct World {
 }
 
 impl World {
-    pub fn load(json_world: serde_json::Value) -> Self {
-        let chunk_size = json_world["chunkSize"].as_i64().unwrap() as usize;
-        let max_height = json_world["dimension"].as_i64().unwrap() as usize;
+    pub fn new(json: serde_json::Value) -> Self {
+        let chunk_size = json["chunkSize"].as_i64().unwrap() as usize;
+        let max_height = json["maxHeight"].as_i64().unwrap() as usize;
 
         World {
             chunk_size,
             max_height,
 
-            time: json_world["time"].as_i64().unwrap() as usize,
-            name: json_world["name"].as_str().unwrap().to_owned(),
-            save: json_world["save"].as_bool().unwrap(),
-            tick_speed: json_world["tickSpeed"].as_i64().unwrap() as usize,
-            chunk_root: json_world["chunkRoot"].as_str().unwrap().to_owned(),
-            preload: json_world["preload"].as_i64().unwrap() as i32,
-            dimension: json_world["dimension"].as_i64().unwrap() as usize,
-            render_radius: json_world["renderRadius"].as_i64().unwrap() as usize,
-            max_light_level: json_world["maxLightLevel"].as_i64().unwrap() as usize,
-            max_loaded_chunks: json_world["maxLoadedChunks"].as_i64().unwrap() as i32,
-            description: json_world["description"].as_str().unwrap().to_owned(),
-            generation: GeneratorType::parse(json_world["generation"].as_str().unwrap()).unwrap(),
+            time: json["time"].as_i64().unwrap() as usize,
+            name: json["name"].as_str().unwrap().to_owned(),
+            save: json["save"].as_bool().unwrap(),
+            tick_speed: json["tickSpeed"].as_i64().unwrap() as usize,
+            chunk_root: json["chunkRoot"].as_str().unwrap().to_owned(),
+            preload: json["preload"].as_i64().unwrap() as i32,
+            dimension: json["dimension"].as_i64().unwrap() as usize,
+            render_radius: json["renderRadius"].as_i64().unwrap() as usize,
+            max_light_level: json["maxLightLevel"].as_i64().unwrap() as usize,
+            max_loaded_chunks: json["maxLoadedChunks"].as_i64().unwrap() as i32,
+            description: json["description"].as_str().unwrap().to_owned(),
+            generation: GeneratorType::parse(json["generation"].as_str().unwrap()).unwrap(),
 
             clients: HashMap::new(),
             chunks: Chunks::new(chunk_size, max_height),

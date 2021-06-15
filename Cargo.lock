@@ -1703,6 +1703,7 @@ dependencies = [
  "actix-web-actors",
  "awc",
  "bytes 1.0.1",
+ "crossbeam-channel 0.5.1",
  "env_logger",
  "futures",
  "image",

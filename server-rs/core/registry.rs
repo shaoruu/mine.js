@@ -121,7 +121,10 @@ impl Registry {
         let mut row = 0;
         let mut col = 0;
 
-        for (key, image) in texture_map {
+        let mut texture_map_vec: Vec<_> = texture_map.into_iter().collect();
+        texture_map_vec.sort_by(|x, y| x.0.cmp(&y.0));
+
+        for (key, image) in texture_map_vec {
             if col >= count_per_side {
                 col = 0;
                 row = row + 1;
