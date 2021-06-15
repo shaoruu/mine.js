@@ -96,6 +96,7 @@ impl Registry {
                     is_plant: block_json["isPlant"].as_bool().unwrap(),
                     is_solid: block_json["isSolid"].as_bool().unwrap(),
                     is_transparent: block_json["isTransparent"].as_bool().unwrap(),
+                    is_plantable: block_json["isPlantable"].as_bool().unwrap(),
                     light_level: block_json["lightLevel"].as_i64().unwrap(),
                     textures: textures_hash,
                     transparent_standalone: block_json["transparentStandalone"].as_bool().unwrap(),
@@ -176,17 +177,116 @@ impl Registry {
         }
     }
 
-    pub fn get_block_by_id(&self, id: u32) -> Option<&Block> {
-        let id_key = id.to_string();
-        self.blocks.get(&id_key)
+    pub fn get_transparency_by_id(&self, id: u32) -> bool {
+        self.get_block_by_id(id).is_transparent
     }
 
-    pub fn get_block_by_name(&self, name: String) -> Option<&Block> {
-        let id = self.name_map.get(&name);
+    pub fn get_transparency_by_name(&self, name: &str) -> bool {
+        self.get_block_by_name(name).is_transparent
+    }
 
-        match id {
-            Some(&id) => self.get_block_by_id(id),
-            None => None,
+    pub fn get_fluiditiy_by_id(&self, id: u32) -> bool {
+        self.get_block_by_id(id).is_fluid
+    }
+
+    pub fn get_fluiditiy_by_name(&self, name: &str) -> bool {
+        self.get_block_by_name(name).is_fluid
+    }
+
+    pub fn get_solidity_by_id(&self, id: u32) -> bool {
+        self.get_block_by_id(id).is_solid
+    }
+
+    pub fn get_solidity_by_name(&self, name: &str) -> bool {
+        self.get_block_by_name(name).is_solid
+    }
+
+    pub fn get_emptiness_by_id(&self, id: u32) -> bool {
+        self.get_block_by_id(id).is_empty
+    }
+
+    pub fn get_emptiness_by_name(&self, name: &str) -> bool {
+        self.get_block_by_name(name).is_empty
+    }
+
+    pub fn get_texture_by_id(&self, id: u32) -> &HashMap<String, String> {
+        &self.get_block_by_id(id).textures
+    }
+
+    pub fn get_texture_by_name(&self, name: &str) -> &HashMap<String, String> {
+        &self.get_block_by_name(name).textures
+    }
+
+    pub fn get_uv_by_id(&self, id: u32) -> HashMap<String, &UV> {
+        self.get_uv_map(self.get_block_by_id(id))
+    }
+
+    pub fn get_uv_by_name(&self, name: &str) -> HashMap<String, &UV> {
+        self.get_uv_map(self.get_block_by_name(name))
+    }
+
+    pub fn is_air(&self, id: u32) -> bool {
+        self.get_block_by_id(id).name == "Air"
+    }
+
+    pub fn is_plant(&self, id: u32) -> bool {
+        self.get_block_by_id(id).is_plant
+    }
+
+    pub fn is_plantable(&self, id: u32) -> bool {
+        self.get_block_by_id(id).is_plantable
+    }
+
+    pub fn get_block_by_id(&self, id: u32) -> &Block {
+        let id_key = id.to_string();
+        self.blocks
+            .get(&id_key)
+            .expect(&format!("Block id not found: {}", id))
+    }
+
+    pub fn get_block_by_name(&self, name: &str) -> &Block {
+        let &id = self
+            .name_map
+            .get(name)
+            .expect(&format!("Block name not found: {}", name));
+        self.get_block_by_id(id)
+    }
+
+    pub fn get_uv_map(&self, block: &Block) -> HashMap<String, &UV> {
+        let mut uv_map = HashMap::new();
+
+        for source in block.textures.values().into_iter() {
+            let uv = self
+                .ranges
+                .get(source)
+                .expect(&format!("UV range not found: {}", source));
+
+            uv_map.insert(source.to_owned(), uv);
         }
+
+        uv_map
+    }
+
+    pub fn get_type_map(&self, blocks: Vec<String>) -> HashMap<String, u32> {
+        let mut type_map = HashMap::new();
+
+        for block in blocks {
+            let &id = self
+                .name_map
+                .get(&block)
+                .expect(&format!("Block name not found: {}", block));
+
+            type_map.insert(block, id);
+        }
+
+        type_map
+    }
+
+    pub fn get_passable_solids(&self) -> Vec<u32> {
+        self.blocks
+            .iter()
+            .filter(|&(_, b)| !b.is_solid && (b.is_block || b.is_plant))
+            .map(|(id, _)| id.parse().unwrap())
+            .collect()
     }
 }

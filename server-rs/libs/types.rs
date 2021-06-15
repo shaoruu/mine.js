@@ -59,6 +59,7 @@ pub struct Block {
     pub is_solid: bool,
     pub is_transparent: bool,
     pub light_level: i64,
+    pub is_plantable: bool,
     pub textures: HashMap<String, String>,
     pub transparent_standalone: bool,
 }

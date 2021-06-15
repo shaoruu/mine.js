@@ -6,6 +6,7 @@
   "isLight": false,
   "isBlock": false,
   "isPlant": true,
+  "isPlantable": false,
   "lightLevel": 0,
   "transparentStandalone": false
 }

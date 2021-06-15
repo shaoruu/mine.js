@@ -1,6 +1,7 @@
 {
   "base": "base-block.json",
   "name": "Dirt",
+  "isPlantable": true,
   "textures": {
     "all": "dirt.png"
   }
