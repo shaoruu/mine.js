@@ -5,6 +5,7 @@ use crate::libs::types::GeneratorType;
 use crate::server::Message;
 
 use super::chunks::Chunks;
+use super::registry::Registry;
 
 #[derive(Debug)]
 pub struct World {
@@ -27,7 +28,7 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(json: serde_json::Value) -> Self {
+    pub fn new(json: serde_json::Value, registry: Registry) -> Self {
         let chunk_size = json["chunkSize"].as_i64().unwrap() as usize;
         let max_height = json["maxHeight"].as_i64().unwrap() as usize;
 
@@ -49,7 +50,7 @@ impl World {
             generation: GeneratorType::parse(json["generation"].as_str().unwrap()).unwrap(),
 
             clients: HashMap::new(),
-            chunks: Chunks::new(chunk_size, max_height),
+            chunks: Chunks::new(chunk_size, max_height, registry),
         }
     }
 

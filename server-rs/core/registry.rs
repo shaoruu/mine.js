@@ -7,7 +7,7 @@ use crate::utils::json;
 type Ranges = HashMap<String, UV>;
 type Blocks = HashMap<String, Block>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Registry {
     pub atlas: image::RgbaImage,
     pub ranges: Ranges,

@@ -59,7 +59,6 @@ impl actix::Message for ListWorlds {
 pub struct WsServer {
     clients: HashMap<usize, Recipient<Message>>,
     worlds: HashMap<String, World>,
-    registry: Registry,
     rng: ThreadRng,
 }
 
@@ -72,18 +71,19 @@ impl WsServer {
 
         let world_default = &worlds_json["default"];
 
+        let registry = Registry::new();
+
         for world_json in worlds_json["worlds"].as_array().unwrap() {
             let mut world_json = world_json.clone();
             json::merge(&mut world_json, world_default, false);
 
-            let mut new_world = World::new(world_json);
+            let mut new_world = World::new(world_json, registry.clone());
             new_world.chunks.preload(3);
             worlds.insert(new_world.name.to_owned(), new_world);
         }
 
         WsServer {
             worlds,
-            registry: Registry::new(),
             clients: HashMap::new(),
             rng: rand::thread_rng(),
         }

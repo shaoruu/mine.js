@@ -40,7 +40,7 @@ where
 #[derive(Debug, PartialEq)]
 pub struct Quaternion(pub f32, pub f32, pub f32, pub f32);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UV {
     pub start_u: f32,
     pub end_u: f32,
@@ -48,7 +48,7 @@ pub struct UV {
     pub end_v: f32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Block {
     pub name: String,
     pub is_block: bool,

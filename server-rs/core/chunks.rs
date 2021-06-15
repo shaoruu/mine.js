@@ -6,21 +6,23 @@ use crate::{
     utils::convert::{get_chunk_name, map_voxel_to_chunk},
 };
 
-use super::{chunk::Chunk, server::WsSession};
+use super::{chunk::Chunk, registry::Registry, server::WsSession};
 
 #[derive(Debug)]
 pub struct Chunks {
     chunk_size: usize,
     max_height: usize,
     chunks: HashMap<String, Chunk>,
+    registry: Registry,
 }
 
 impl Chunks {
-    pub fn new(chunk_size: usize, max_height: usize) -> Self {
+    pub fn new(chunk_size: usize, max_height: usize, registry: Registry) -> Self {
         Chunks {
             chunk_size,
             max_height,
             chunks: HashMap::new(),
+            registry,
         }
     }
 
