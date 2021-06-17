@@ -420,6 +420,7 @@ impl Chunks {
                         }
                     }
 
+                    // ? might be erroneous here, but this is for lights on voxels like plants
                     if block_type.is_light {
                         self.set_torch_light(vx, vy, vz, block_type.light_level);
                         light_queue.push_back(LightNode {
@@ -537,6 +538,7 @@ impl Chunks {
                     continue;
                 }
 
+                // if level is less, or if sunlight is propagating downwards without stopping
                 if nl < level
                     || (is_sunlight
                         && *oy == -1
@@ -591,10 +593,13 @@ impl Chunks {
 
         let voxel = Coords3(vx, vy, vz);
 
+        // updating the new block
         self.set_voxel_by_voxel(vx, vy, vz, id);
 
+        // updating the height map
         if self.registry.is_air(id) {
             if vy == height {
+                // on max height, should set max height to lower
                 for y in (0..vy).rev() {
                     if y == 0 || !self.registry.is_air(self.get_voxel_by_voxel(vx, y, vz)) {
                         self.set_max_height(vx, vz, y);
@@ -606,10 +611,13 @@ impl Chunks {
             self.set_max_height(vx, vz, vy);
         }
 
+        // update light levels
         if !needs_propagation {
             if current_type.is_light {
+                // remove leftover light
                 self.remove_light(vx, vy, vz, false);
             } else if current_type.is_transparent && !updated_type.is_transparent {
+                // remove light if solid block is placed
                 [false, true].iter().for_each(|&is_sunlight| {
                     let level = if is_sunlight {
                         self.get_sunlight(vx, vy, vz)
@@ -623,6 +631,7 @@ impl Chunks {
             }
 
             if updated_type.is_light {
+                // placing a light
                 self.set_torch_light(vx, vy, vz, updated_type.light_level);
                 self.flood_light(
                     VecDeque::from(vec![LightNode {
@@ -632,10 +641,12 @@ impl Chunks {
                     false,
                 );
             } else if updated_type.is_transparent && !current_type.is_transparent {
+                // solid block removed
                 [false, true].iter().for_each(|&is_sunlight| {
                     let mut queue = VecDeque::<LightNode>::new();
 
                     if is_sunlight && vy == max_height - 1 {
+                        // propagate sunlight down
                         self.set_sunlight(vx, vy, vz, max_light_level);
                         queue.push_back(LightNode {
                             voxel: voxel.clone(),
@@ -658,6 +669,7 @@ impl Chunks {
                                 ..
                             } = self.get_block_by_voxel(nvx, nvy, nvz);
 
+                            // need propagation after solid block removed
                             let level = if is_sunlight {
                                 self.get_sunlight(nvx, nvy, nvz)
                             } else {
@@ -679,12 +691,13 @@ impl Chunks {
 
     /// Remesh a chunk, propagating itself and its neighbors then mesh.
     fn remesh_chunk(&mut self, coords: &Coords2<i32>) {
+        // propagate light first
         let chunk = self.get_chunk(coords).unwrap();
         if chunk.needs_propagation {
             self.propagate_chunk(coords);
         }
 
-        // let neighbors = self.neighbors(coords);
+        // propagate neighboring chunks too
         for [ox, oz] in CHUNK_NEIGHBORS.iter() {
             let coords = Coords2(coords.0 + ox, coords.1 + oz);
             if self.get_chunk_mut(&coords).unwrap().needs_propagation {
@@ -692,7 +705,7 @@ impl Chunks {
             }
         }
 
-        // TODO: MESH HERE
+        // TODO: MESH HERE (AND SUB MESHES)
     }
 
     /// Meshing a chunk. Poorly written. Needs refactor.
