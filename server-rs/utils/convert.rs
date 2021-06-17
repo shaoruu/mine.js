@@ -10,6 +10,10 @@ pub fn get_voxel_name(coords: &Coords3<i32>) -> String {
     format!("{}{}{}{}{}", coords.0, CONCAT, coords.1, CONCAT, coords.2)
 }
 
+pub fn get_position_name(coords: &Coords3<f32>) -> String {
+    format!("{}{}{}{}{}", coords.0, CONCAT, coords.1, CONCAT, coords.2)
+}
+
 pub fn parse_chunk_name(name: &String) -> Coords2<i32> {
     let vec = name.split(CONCAT).collect::<Vec<&str>>();
     return Coords2(vec[0].parse().unwrap(), vec[1].parse().unwrap());

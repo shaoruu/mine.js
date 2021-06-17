@@ -6,7 +6,10 @@ use actix_web::{
 };
 use actix_web_actors::ws;
 
-use std::{collections::HashMap, time::Instant};
+use std::{
+    collections::{HashMap, VecDeque},
+    time::Instant,
+};
 
 use crate::{
     libs::types::{Coords2, Coords3, Quaternion},
@@ -42,10 +45,8 @@ pub async fn ws_route(
             hb: Instant::now(),
             position: Coords3(0.0, 0.0, 0.0),
             rotation: Quaternion(0.0, 0.0, 0.0, 0.0),
-            current_chunk: Coords2(0,0,),
-            requested_chunks: Vec::new()
-            // room: "Main".to_owned(),
-            // name: None,
+            current_chunk: Coords2(0, 0),
+            requested_chunks: VecDeque::new(),
         },
         &req,
         stream,

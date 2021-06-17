@@ -3,7 +3,7 @@ use rand::{self, rngs::ThreadRng, Rng};
 use actix::prelude::*;
 use actix_web_actors::ws;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::time::{Duration, Instant};
 
@@ -13,11 +13,13 @@ use crate::models::{
     self,
     messages::{self, message::Type as MessageType},
 };
+use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
 use super::registry::Registry;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
+const CHUNKING_INTERVAL: Duration = Duration::from_millis(16);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Message)]
@@ -39,13 +41,31 @@ pub struct Disconnect {
 
 #[derive(Message)]
 #[rtype(result = "()")]
+pub struct Generate {
+    pub world: String,
+    pub coords: Coords2<i32>,
+    pub render_radius: i16,
+}
+
+#[derive(MessageResponse)]
+pub struct ChunkResult(Option<Chunk>);
+
+#[derive(Message)]
+#[rtype(result = "ChunkResult")]
+pub struct Chunk {
+    pub world: String,
+    pub coords: Coords2<i32>,
+}
+
+#[derive(Message)]
+#[rtype(result = "()")]
 pub struct ClientMessage {
     // id of client session
     pub id: usize,
     // Peer message
     pub msg: models::messages::Message,
     // Room name
-    pub room: String,
+    pub world: String,
 }
 
 // list of available rooms
@@ -138,22 +158,40 @@ impl Handler<ListWorlds> for WsServer {
     }
 }
 
+impl Handler<Generate> for WsServer {
+    type Result = ();
+
+    fn handle(&mut self, data: Generate, _: &mut Context<Self>) {
+        let Generate {
+            coords,
+            render_radius,
+            world,
+        } = data;
+
+        let world = self.worlds.get_mut(&world).unwrap();
+        world.chunks.generate(coords, render_radius);
+    }
+}
+
 impl Handler<Disconnect> for WsServer {
     type Result = ();
 
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
-        let mut rooms: Vec<String> = Vec::new();
+        let mut worlds: Vec<String> = Vec::new();
 
         // remove address
         if self.clients.remove(&msg.id).is_some() {
             // remove session from all rooms
             for world in self.worlds.values_mut() {
-                &mut world.clients.remove_entry(&msg.id);
+                let id = world.clients.remove_entry(&msg.id);
+                if id.is_some() {
+                    worlds.push(world.name.to_owned());
+                }
             }
         }
 
-        for room in rooms {
-            self.send_message(&room, "Someone disconnected", 0)
+        for world in worlds {
+            self.send_message(&world, "Someone disconnected", 0)
         }
     }
 }
@@ -178,7 +216,7 @@ pub struct WsSession {
     // current chunk in world
     pub current_chunk: Coords2<i32>,
     // requested chunk in world
-    pub requested_chunks: Vec<Coords2<i32>>,
+    pub requested_chunks: VecDeque<Coords2<i32>>,
     // radius of render?
     pub render_radius: i16,
 }
@@ -188,6 +226,7 @@ impl Actor for WsSession {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         self.hb(ctx);
+        self.chunk(ctx);
 
         let addr = ctx.address();
         self.addr
@@ -271,6 +310,22 @@ impl WsSession {
         });
     }
 
+    fn chunk(&self, ctx: &mut ws::WebsocketContext<Self>) {
+        ctx.run_interval(CHUNKING_INTERVAL, |act, ctx| {
+            let requested_chunk = act.requested_chunks.pop_front();
+
+            if let Some(coords) = requested_chunk {
+                // act.addr.do_send(Generate {
+                //     coords,
+                //     render_radius: act.render_radius,
+                //     world: act.world_name.to_owned(),
+                // });
+            }
+
+            // println!("BRUH");
+        });
+    }
+
     fn on_request(&mut self, message: messages::Message) {
         let msg_type = messages::Message::r#type(&message);
 
@@ -281,11 +336,35 @@ impl WsSession {
                 let cx = json["x"].as_i64().unwrap() as i32;
                 let cz = json["z"].as_i64().unwrap() as i32;
 
-                self.requested_chunks.push(Coords2(cx, cz));
+                self.requested_chunks.push_back(Coords2(cx, cz));
             }
             MessageType::Config => {}
             MessageType::Update => {}
-            MessageType::Peer => {}
+            MessageType::Peer => {
+                let messages::Peer {
+                    name,
+                    px,
+                    py,
+                    pz,
+                    qx,
+                    qy,
+                    qz,
+                    qw,
+                    ..
+                } = &message.peers[0];
+
+                // means this player just joined.
+                if self.name.is_none() {
+                    // TODO: broadcast "joined the game" message
+                }
+
+                self.name = Some(name.to_owned());
+                self.position = Coords3(*px, *py, *pz);
+                self.rotation = Quaternion(*qx, *qy, *qz, *qw);
+
+                let current_chunk = &self.current_chunk;
+                let Coords2(cx, cz) = map_voxel_to_chunk(&map_world_to_voxel(&self.position, 1), 8);
+            }
             MessageType::Message => {}
             MessageType::Init => {
                 println!("INIT?")

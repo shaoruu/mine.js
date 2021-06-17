@@ -1,5 +1,3 @@
-use rand::Rng;
-
 use ndarray::{Array2, Array3};
 
 use crate::{
@@ -31,11 +29,12 @@ pub struct Chunk {
     pub top_y: i32,
 
     pub size: usize,
+    pub dimension: usize,
     pub max_height: usize,
 }
 
 impl Chunk {
-    pub fn new(coords: Coords2<i32>, size: usize, max_height: usize) -> Self {
+    pub fn new(coords: Coords2<i32>, size: usize, max_height: usize, dimension: usize) -> Self {
         let Coords2(cx, cz) = coords;
 
         let name = convert::get_chunk_name(&coords);
@@ -75,6 +74,7 @@ impl Chunk {
 
             size,
             max_height,
+            dimension,
         }
     }
 
@@ -146,50 +146,20 @@ impl Chunk {
         self.height_map[[lx as usize, lz as usize]] = height;
     }
 
+    pub fn dist_sqr_to_chunk(&self, coords: &Coords2<i32>) -> i32 {
+        let Coords2(cx, cz) = self.coords;
+        let Coords2(ox, oz) = coords;
+        let dx = cx - *ox;
+        let dz = cz - *oz;
+        dx * dx + dz * dz
+    }
+
     pub fn load(&mut self) {
         todo!()
     }
 
     pub fn save(&mut self) {
         todo!()
-    }
-
-    pub fn generate(&mut self) {
-        let Coords3(start_x, start_y, start_z) = self.min;
-        let Coords3(end_x, end_y, end_z) = self.max;
-
-        let mut rng = rand::thread_rng();
-        let mut is_empty = true;
-
-        for vx in start_x..end_x {
-            for vz in start_z..end_z {
-                for vy in start_y..end_y {
-                    // TODO: TERRAIN GENERATION HERE
-                    self.set_voxel(vx, vy, vz, rng.gen::<u8>() % 8);
-                }
-            }
-        }
-    }
-
-    pub fn generate_height_map(&mut self) {
-        for lx in 0..self.size {
-            for lz in 0..self.size {
-                for ly in (0..self.max_height).rev() {
-                    let id = self.voxels[[lx, ly, lz]];
-                    let ly_i32 = ly as i32;
-
-                    // TODO: CHECK FROM REGISTRY &&&&& PLANTS
-                    if ly == 0 || id != 0 {
-                        if self.top_y < ly_i32 {
-                            self.top_y = ly_i32 + 3;
-                        }
-
-                        self.height_map[[lx, lz]] = ly_i32;
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     pub fn propagate(&mut self) {

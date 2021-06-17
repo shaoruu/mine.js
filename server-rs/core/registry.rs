@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs::File;
 
-use crate::libs::types::{Block, UV};
+use crate::libs::types::{Block, TypeMap, UV};
 use crate::utils::json;
 
 type Ranges = HashMap<String, UV>;
@@ -13,7 +13,7 @@ pub struct Registry {
     pub ranges: Ranges,
     pub blocks: Blocks,
 
-    name_map: HashMap<String, u32>,
+    name_map: HashMap<String, u8>,
 }
 
 impl Registry {
@@ -86,26 +86,26 @@ impl Registry {
                     texture_map.insert(img_src_str.to_owned(), image);
                     textures_hash.insert(side.to_owned(), img_src_str.to_owned());
                 }
-
-                let new_block = Block {
-                    name: block_json["name"].as_str().unwrap().to_owned(),
-                    is_block: block_json["isBlock"].as_bool().unwrap(),
-                    is_empty: block_json["isEmpty"].as_bool().unwrap(),
-                    is_fluid: block_json["isFluid"].as_bool().unwrap(),
-                    is_light: block_json["isLight"].as_bool().unwrap(),
-                    is_plant: block_json["isPlant"].as_bool().unwrap(),
-                    is_solid: block_json["isSolid"].as_bool().unwrap(),
-                    is_transparent: block_json["isTransparent"].as_bool().unwrap(),
-                    is_plantable: block_json["isPlantable"].as_bool().unwrap(),
-                    light_level: block_json["lightLevel"].as_i64().unwrap(),
-                    textures: textures_hash,
-                    transparent_standalone: block_json["transparentStandalone"].as_bool().unwrap(),
-                };
-
-                name_map.insert(new_block.name.clone(), id.parse::<u32>().unwrap() as u32);
-
-                blocks.insert(id.to_owned(), new_block);
             }
+
+            let new_block = Block {
+                name: block_json["name"].as_str().unwrap().to_owned(),
+                is_block: block_json["isBlock"].as_bool().unwrap(),
+                is_empty: block_json["isEmpty"].as_bool().unwrap(),
+                is_fluid: block_json["isFluid"].as_bool().unwrap(),
+                is_light: block_json["isLight"].as_bool().unwrap(),
+                is_plant: block_json["isPlant"].as_bool().unwrap(),
+                is_solid: block_json["isSolid"].as_bool().unwrap(),
+                is_transparent: block_json["isTransparent"].as_bool().unwrap(),
+                is_plantable: block_json["isPlantable"].as_bool().unwrap(),
+                light_level: block_json["lightLevel"].as_i64().unwrap() as u8,
+                textures: textures_hash,
+                transparent_standalone: block_json["transparentStandalone"].as_bool().unwrap(),
+            };
+
+            name_map.insert(new_block.name.clone(), id.parse::<u8>().unwrap());
+
+            blocks.insert(id.to_owned(), new_block);
         }
 
         // OBTAINED TEXTURE MAP
@@ -177,7 +177,7 @@ impl Registry {
         }
     }
 
-    pub fn get_transparency_by_id(&self, id: u32) -> bool {
+    pub fn get_transparency_by_id(&self, id: u8) -> bool {
         self.get_block_by_id(id).is_transparent
     }
 
@@ -185,7 +185,7 @@ impl Registry {
         self.get_block_by_name(name).is_transparent
     }
 
-    pub fn get_fluiditiy_by_id(&self, id: u32) -> bool {
+    pub fn get_fluiditiy_by_id(&self, id: u8) -> bool {
         self.get_block_by_id(id).is_fluid
     }
 
@@ -193,7 +193,7 @@ impl Registry {
         self.get_block_by_name(name).is_fluid
     }
 
-    pub fn get_solidity_by_id(&self, id: u32) -> bool {
+    pub fn get_solidity_by_id(&self, id: u8) -> bool {
         self.get_block_by_id(id).is_solid
     }
 
@@ -201,7 +201,7 @@ impl Registry {
         self.get_block_by_name(name).is_solid
     }
 
-    pub fn get_emptiness_by_id(&self, id: u32) -> bool {
+    pub fn get_emptiness_by_id(&self, id: u8) -> bool {
         self.get_block_by_id(id).is_empty
     }
 
@@ -209,7 +209,7 @@ impl Registry {
         self.get_block_by_name(name).is_empty
     }
 
-    pub fn get_texture_by_id(&self, id: u32) -> &HashMap<String, String> {
+    pub fn get_texture_by_id(&self, id: u8) -> &HashMap<String, String> {
         &self.get_block_by_id(id).textures
     }
 
@@ -217,7 +217,7 @@ impl Registry {
         &self.get_block_by_name(name).textures
     }
 
-    pub fn get_uv_by_id(&self, id: u32) -> HashMap<String, &UV> {
+    pub fn get_uv_by_id(&self, id: u8) -> HashMap<String, &UV> {
         self.get_uv_map(self.get_block_by_id(id))
     }
 
@@ -225,19 +225,19 @@ impl Registry {
         self.get_uv_map(self.get_block_by_name(name))
     }
 
-    pub fn is_air(&self, id: u32) -> bool {
+    pub fn is_air(&self, id: u8) -> bool {
         self.get_block_by_id(id).name == "Air"
     }
 
-    pub fn is_plant(&self, id: u32) -> bool {
+    pub fn is_plant(&self, id: u8) -> bool {
         self.get_block_by_id(id).is_plant
     }
 
-    pub fn is_plantable(&self, id: u32) -> bool {
+    pub fn is_plantable(&self, id: u8) -> bool {
         self.get_block_by_id(id).is_plantable
     }
 
-    pub fn get_block_by_id(&self, id: u32) -> &Block {
+    pub fn get_block_by_id(&self, id: u8) -> &Block {
         let id_key = id.to_string();
         self.blocks
             .get(&id_key)
@@ -267,16 +267,16 @@ impl Registry {
         uv_map
     }
 
-    pub fn get_type_map(&self, blocks: Vec<String>) -> HashMap<String, u32> {
+    pub fn get_type_map(&self, blocks: Vec<&str>) -> TypeMap {
         let mut type_map = HashMap::new();
 
         for block in blocks {
             let &id = self
                 .name_map
-                .get(&block)
+                .get(block)
                 .expect(&format!("Block name not found: {}", block));
 
-            type_map.insert(block, id);
+            type_map.insert(block.to_owned(), id);
         }
 
         type_map
@@ -288,5 +288,19 @@ impl Registry {
             .filter(|&(_, b)| !b.is_solid && (b.is_block || b.is_plant))
             .map(|(id, _)| id.parse().unwrap())
             .collect()
+    }
+}
+
+pub fn get_texture_type(texture: &HashMap<String, String>) -> &str {
+    let len = texture.len();
+
+    if len == 1 {
+        "mat1"
+    } else if len == 3 {
+        "mat3"
+    } else if len == 6 {
+        "mat6"
+    } else {
+        "x"
     }
 }
