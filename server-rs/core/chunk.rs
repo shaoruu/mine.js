@@ -1,9 +1,15 @@
 use ndarray::{Array2, Array3};
 
 use crate::{
-    libs::types::{Coords2, Coords3},
+    libs::types::{Coords2, Coords3, MeshType},
     utils::convert,
 };
+
+#[derive(Debug, Clone)]
+pub struct Meshes {
+    pub opaque: Option<MeshType>,
+    pub transparent: Option<MeshType>,
+}
 
 #[derive(Debug)]
 pub struct Chunk {
@@ -31,6 +37,8 @@ pub struct Chunk {
     pub size: usize,
     pub dimension: usize,
     pub max_height: usize,
+
+    pub meshes: Meshes,
 }
 
 impl Chunk {
@@ -67,7 +75,7 @@ impl Chunk {
             needs_terrain: true,
             needs_decoration: true,
 
-            is_empty: true,
+            is_empty: false,
             is_dirty: true,
 
             top_y: max_height as i32,
@@ -75,6 +83,11 @@ impl Chunk {
             size,
             max_height,
             dimension,
+
+            meshes: Meshes {
+                opaque: None,
+                transparent: None,
+            },
         }
     }
 
@@ -126,23 +139,23 @@ impl Chunk {
         self.set_local_sunlight(lx as usize, ly as usize, lz as usize, level)
     }
 
-    pub fn get_max_height(&self, column: &Coords2<i32>) -> i32 {
-        if !self.contains(column.0, 0, column.1, 0) {
+    pub fn get_max_height(&self, vx: i32, vz: i32) -> i32 {
+        if !self.contains(vx, 0, vz, 0) {
             return self.max_height as i32;
         }
 
-        let Coords3(lx, _, lz) = self.to_local(column.0, 0, column.1);
+        let Coords3(lx, _, lz) = self.to_local(vx, 0, vz);
         self.height_map[[lx as usize, lz as usize]]
     }
 
-    pub fn set_max_height(&mut self, column: &Coords2<i32>, height: i32) {
-        assert!(self.contains(column.0, 0, column.1, 0));
+    pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
+        assert!(self.contains(vx, 0, vz, 0));
 
         if height > self.top_y {
             self.top_y = height;
         }
 
-        let Coords3(lx, _, lz) = self.to_local(column.0, 0, column.1);
+        let Coords3(lx, _, lz) = self.to_local(vx, 0, vz);
         self.height_map[[lx as usize, lz as usize]] = height;
     }
 

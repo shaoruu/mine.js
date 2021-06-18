@@ -2,7 +2,7 @@
   "isEmpty": false,
   "isSolid": false,
   "isFluid": false,
-  "isTransparent": false,
+  "isTransparent": true,
   "isLight": false,
   "isBlock": false,
   "isPlant": true,

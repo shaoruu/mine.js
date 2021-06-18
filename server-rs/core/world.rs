@@ -23,7 +23,7 @@ pub struct World {
 
     pub name: String,
     pub save: bool,
-    pub preload: i32,
+    pub preload: i16,
     pub chunk_root: String,
     pub description: String,
 
@@ -44,7 +44,7 @@ impl World {
         let save = json["save"].as_bool().unwrap();
         let tick_speed = json["tickSpeed"].as_i64().unwrap() as usize;
         let chunk_root = json["chunkRoot"].as_str().unwrap().to_owned();
-        let preload = json["preload"].as_i64().unwrap() as i32;
+        let preload = json["preload"].as_i64().unwrap() as i16;
         let render_radius = json["renderRadius"].as_i64().unwrap() as usize;
         let max_loaded_chunks = json["maxLoadedChunks"].as_i64().unwrap() as i32;
         let description = json["description"].as_str().unwrap().to_owned();
@@ -74,7 +74,18 @@ impl World {
         new_world
     }
 
-    // pub fn on_config(&mut self, id: usize, client)
+    pub fn preload(&mut self) {
+        println!(
+            "Preloading world \"{}\" with radius {}...",
+            self.name, self.preload
+        );
+        self.chunks.preload(self.preload);
+        println!(
+            "Preloaded {} chunks for world \"{}\".",
+            self.chunks.len(),
+            self.name,
+        );
+    }
 
     pub fn add_client(&mut self, id: usize, client: Recipient<Message>) {
         self.clients.insert(id, client);

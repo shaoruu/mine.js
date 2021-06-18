@@ -5,10 +5,11 @@ use actix_web_actors::ws;
 
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
+use std::thread::current;
 use std::time::{Duration, Instant};
 
 use crate::core::world::World;
-use crate::libs::types::{Coords2, Coords3, Quaternion};
+use crate::libs::types::{Coords2, Coords3, MeshType, Quaternion};
 use crate::models::{
     self,
     messages::{self, message::Type as MessageType},
@@ -16,7 +17,9 @@ use crate::models::{
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
+use super::chunk::Meshes;
 use super::registry::Registry;
+use super::world::WorldMetrics;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CHUNKING_INTERVAL: Duration = Duration::from_millis(16);
@@ -26,8 +29,14 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 #[rtype(result = "()")]
 pub struct Message(pub String);
 
+#[derive(MessageResponse)]
+pub struct ConnectionResult {
+    pub id: usize,
+    pub metrics: WorldMetrics,
+}
+
 #[derive(Message)]
-#[rtype(usize)]
+#[rtype(result = "ConnectionResult")]
 pub struct Connect {
     pub world_name: String,
     pub addr: Recipient<Message>,
@@ -48,11 +57,13 @@ pub struct Generate {
 }
 
 #[derive(MessageResponse)]
-pub struct ChunkResult(Option<Chunk>);
+pub struct ChunkRequestResult {
+    meshes: Option<Meshes>,
+}
 
 #[derive(Message)]
-#[rtype(result = "ChunkResult")]
-pub struct Chunk {
+#[rtype(result = "ChunkRequestResult")]
+pub struct ChunkRequest {
     pub world: String,
     pub coords: Coords2<i32>,
 }
@@ -98,7 +109,7 @@ impl WsServer {
             json::merge(&mut world_json, world_default, false);
 
             let mut new_world = World::new(world_json, registry.clone());
-            new_world.chunks.preload(3);
+            new_world.preload();
             worlds.insert(new_world.name.to_owned(), new_world);
         }
 
@@ -125,7 +136,7 @@ impl Actor for WsServer {
 }
 
 impl Handler<Connect> for WsServer {
-    type Result = usize;
+    type Result = MessageResult<Connect>;
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
         println!("Someone joined");
@@ -140,7 +151,10 @@ impl Handler<Connect> for WsServer {
         let world = self.worlds.get_mut(&world_name).unwrap();
         world.add_client(id, msg.addr.to_owned());
 
-        id
+        MessageResult(ConnectionResult {
+            id,
+            metrics: world.chunks.metrics.clone(),
+        })
     }
 }
 
@@ -170,6 +184,36 @@ impl Handler<Generate> for WsServer {
 
         let world = self.worlds.get_mut(&world).unwrap();
         world.chunks.generate(coords, render_radius);
+    }
+}
+
+impl Handler<ChunkRequest> for WsServer {
+    type Result = MessageResult<ChunkRequest>;
+
+    fn handle(&mut self, request: ChunkRequest, _: &mut Context<Self>) -> Self::Result {
+        let ChunkRequest { world, coords } = request;
+
+        let chunk = self.worlds.get(&world).unwrap().chunks.get(&coords);
+
+        if chunk.is_none() {
+            return MessageResult(ChunkRequestResult { meshes: None });
+        }
+
+        let coords = chunk.unwrap().coords.clone();
+
+        // TODO: OPTIMIZE THIS? CLONE?
+        MessageResult(ChunkRequestResult {
+            meshes: Some(
+                self.worlds
+                    .get_mut(&world)
+                    .unwrap()
+                    .chunks
+                    .get(&coords)
+                    .unwrap()
+                    .meshes
+                    .clone(),
+            ),
+        })
     }
 }
 
@@ -205,6 +249,8 @@ pub struct WsSession {
     pub hb: Instant,
     // joined world
     pub world_name: String,
+    // world metrics
+    pub metrics: Option<WorldMetrics>,
     // name in world
     pub name: Option<String>,
     // chat server
@@ -214,7 +260,7 @@ pub struct WsSession {
     // rotation in world
     pub rotation: Quaternion,
     // current chunk in world
-    pub current_chunk: Coords2<i32>,
+    pub current_chunk: Option<Coords2<i32>>,
     // requested chunk in world
     pub requested_chunks: VecDeque<Coords2<i32>>,
     // radius of render?
@@ -226,7 +272,6 @@ impl Actor for WsSession {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         self.hb(ctx);
-        self.chunk(ctx);
 
         let addr = ctx.address();
         self.addr
@@ -237,12 +282,17 @@ impl Actor for WsSession {
             .into_actor(self)
             .then(|res, act, ctx| {
                 match res {
-                    Ok(res) => act.id = res,
+                    Ok(res) => {
+                        act.id = res.id;
+                        act.metrics = Some(res.metrics);
+                    }
                     _ => ctx.stop(),
                 }
                 fut::ready(())
             })
             .wait(ctx);
+
+        self.chunk(ctx);
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
@@ -311,19 +361,32 @@ impl WsSession {
     }
 
     fn chunk(&self, ctx: &mut ws::WebsocketContext<Self>) {
-        ctx.run_interval(CHUNKING_INTERVAL, |act, ctx| {
-            let requested_chunk = act.requested_chunks.pop_front();
+        // ctx.run_interval(CHUNKING_INTERVAL, |act, ctx| {
+        //     let requested_chunk = act.requested_chunks.pop_front();
 
-            if let Some(coords) = requested_chunk {
-                // act.addr.do_send(Generate {
-                //     coords,
-                //     render_radius: act.render_radius,
-                //     world: act.world_name.to_owned(),
-                // });
-            }
-
-            // println!("BRUH");
-        });
+        //     if let Some(coords) = requested_chunk {
+        //         act.addr
+        //             .send(ChunkRequest {
+        //                 coords: coords.clone(),
+        //                 world: act.world_name.to_owned(),
+        //             })
+        //             .into_actor(act)
+        //             .then(|res, act, ctx| {
+        //                 match res {
+        //                     Ok(ChunkRequestResult { meshes }) => {
+        //                         if meshes.is_none() {
+        //                             act.requested_chunks.push_back(coords);
+        //                         } else {
+        //                             println!("Meshes: {:?}", meshes);
+        //                         }
+        //                     }
+        //                     _ => ctx.stop(),
+        //                 }
+        //                 fut::ready(())
+        //             })
+        //             .wait(ctx);
+        //     }
+        // });
     }
 
     fn on_request(&mut self, message: messages::Message) {
@@ -362,8 +425,29 @@ impl WsSession {
                 self.position = Coords3(*px, *py, *pz);
                 self.rotation = Quaternion(*qx, *qy, *qz, *qw);
 
-                let current_chunk = &self.current_chunk;
-                let Coords2(cx, cz) = map_voxel_to_chunk(&map_world_to_voxel(&self.position, 1), 8);
+                let WorldMetrics {
+                    chunk_size,
+                    dimension,
+                    ..
+                } = self.metrics.as_ref().unwrap();
+
+                let current_chunk = self.current_chunk.as_ref();
+                let new_chunk = map_voxel_to_chunk(
+                    &map_world_to_voxel(&self.position, *dimension),
+                    *chunk_size,
+                );
+
+                if current_chunk.is_none()
+                    || current_chunk.unwrap().0 != new_chunk.0
+                    || current_chunk.unwrap().1 != new_chunk.1
+                {
+                    self.current_chunk = Some(new_chunk.clone());
+                    self.addr.do_send(Generate {
+                        coords: new_chunk,
+                        render_radius: self.render_radius,
+                        world: self.world_name.to_owned(),
+                    });
+                }
             }
             MessageType::Message => {}
             MessageType::Init => {

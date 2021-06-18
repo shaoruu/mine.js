@@ -3,7 +3,10 @@
 use rand::Rng;
 
 // use rayon::prelude::*;
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    time::Instant,
+};
 
 use crate::{
     libs::types::{Block, Coords2, Coords3, MeshType, UV},
@@ -13,7 +16,7 @@ use crate::{
 };
 
 use super::{
-    chunk::Chunk,
+    chunk::{Chunk, Meshes},
     constants::{
         BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES,
         CHUNK_HORIZONTAL_NEIGHBORS, CHUNK_NEIGHBORS, PLANT_FACES, VOXEL_NEIGHBORS,
@@ -38,7 +41,7 @@ struct VertexLight {
 /// A wrapper around all the chunks
 #[derive(Debug)]
 pub struct Chunks {
-    metrics: WorldMetrics,
+    pub metrics: WorldMetrics,
     max_loaded_chunks: i32,
     chunks: HashMap<String, Chunk>,
     registry: Registry,
@@ -56,6 +59,10 @@ impl Chunks {
             chunks: HashMap::new(),
             registry,
         }
+    }
+
+    pub fn len(&self) -> usize {
+        self.chunks.len()
     }
 
     /// Return all chunks as raw
@@ -77,6 +84,13 @@ impl Chunks {
         match chunk {
             None => None,
             Some(chunk) => {
+                // println!(
+                //     "{}, {}, {}, {}",
+                //     chunk.needs_terrain,
+                //     chunk.needs_decoration,
+                //     neighbors.iter().any(|&c| c.is_none()),
+                //     neighbors.iter().any(|&c| c.unwrap().needs_decoration)
+                // );
                 if chunk.needs_terrain
                     || chunk.needs_decoration
                     || neighbors.iter().any(|&c| c.is_none())
@@ -96,13 +110,57 @@ impl Chunks {
 
     /// Generate chunks around a certain coordinate
     pub fn generate(&mut self, coords: Coords2<i32>, render_radius: i16) {
-        println!("Generating chunk: {:?}", coords);
+        println!(
+            "Generating chunks surrounding {:?} with radius {}",
+            coords, render_radius
+        );
+
         self.load(coords, render_radius, false);
     }
 
     /// Unload chunks when too many chunks are loaded.
     pub fn unload() {
         todo!();
+    }
+
+    /// Remesh a chunk, propagating itself and its neighbors then mesh.
+    pub fn remesh_chunk(&mut self, coords: &Coords2<i32>) {
+        // propagate light first
+        let chunk = self.get_chunk(coords).unwrap();
+
+        if !chunk.is_dirty {
+            return;
+        }
+
+        if chunk.needs_propagation {
+            // let start = Instant::now();
+            self.propagate_chunk(coords);
+            // let duration = start.elapsed();
+            // println!(
+            //     "Time elapsed in propagating a chunk at coords {:?}: {:?}",
+            //     coords, duration
+            // );
+        }
+
+        // propagate neighboring chunks too
+        for [ox, oz] in CHUNK_NEIGHBORS.iter() {
+            let n_coords = Coords2(coords.0 + ox, coords.1 + oz);
+            if self.get_chunk(&n_coords).unwrap().needs_propagation {
+                self.propagate_chunk(&n_coords);
+            }
+        }
+
+        // TODO: MESH HERE (AND SUB MESHES)
+        let opaque = self.mesh_chunk(coords, false);
+        let transparent = self.mesh_chunk(coords, true);
+
+        let chunk = self.get_chunk_mut(coords).unwrap();
+        chunk.meshes = Meshes {
+            opaque,
+            transparent,
+        };
+
+        chunk.is_dirty = false
     }
 
     /// Load in chunks in two steps:
@@ -156,10 +214,14 @@ impl Chunks {
             self.decorate_chunk(coords);
         }
 
+        let start = Instant::now();
         for coords in to_decorate.iter() {
             // ?
             self.generate_chunk_height_map(coords);
+            self.remesh_chunk(&coords);
         }
+        let duration = start.elapsed();
+        println!("Took {:?} to remesh.", duration);
 
         if should_mesh {
             // TODO: MESH?
@@ -171,6 +233,10 @@ impl Chunks {
         let chunk = self
             .get_chunk_mut(&coords)
             .expect(format!("Chunk not found {:?}", coords).as_str());
+
+        if !chunk.needs_decoration {
+            return;
+        }
 
         chunk.needs_decoration = false;
 
@@ -231,8 +297,7 @@ impl Chunks {
 
     /// Get the voxel type at a world coordinate
     fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u8 {
-        let Coords3(vx, vy, vz) =
-            map_world_to_voxel(&Coords3(wx, wy, wz), self.metrics.dimension as i32);
+        let Coords3(vx, vy, vz) = map_world_to_voxel(&Coords3(wx, wy, wz), self.metrics.dimension);
         self.get_voxel_by_voxel(vx, vy, vz)
     }
 
@@ -242,6 +307,7 @@ impl Chunks {
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
         chunk.set_voxel(vx, vy, vz, id);
+        chunk.is_dirty = true;
     }
 
     /// Get the sunlight level at a voxel coordinate
@@ -292,7 +358,7 @@ impl Chunks {
         let chunk = self
             .get_chunk_by_voxel(vx, 0, vz)
             .expect("Chunk not found.");
-        chunk.get_max_height(&Coords2(vx, vz))
+        chunk.get_max_height(vx, vz)
     }
 
     /// Set the max height at a voxel column coordinate
@@ -300,7 +366,7 @@ impl Chunks {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, 0, vz)
             .expect("Chunk not found.");
-        chunk.set_max_height(&Coords2(vx, vz), height)
+        chunk.set_max_height(vx, vz, height)
     }
 
     /// Mark a chunk for saving from a voxel coordinate
@@ -315,27 +381,26 @@ impl Chunks {
         let Coords3(start_x, start_y, start_z) = chunk.min;
         let Coords3(end_x, end_y, end_z) = chunk.max;
 
-        // TODO: USE TYPESSSS
-        let _ = self.registry.get_type_map(vec!["Stone", "Dirt"]);
+        let types = self.registry.get_type_map(vec!["Stone", "Dirt"]);
+        let stone = types.get("Stone").unwrap();
+        let dirt = types.get("Dirt").unwrap();
 
-        let mut rng = rand::thread_rng();
         let is_empty = true;
 
         for vx in start_x..end_x {
             for vz in start_z..end_z {
                 for vy in start_y..end_y {
-                    if f32::sin(vx as f32 / 10.0) * f32::cos(vz as f32 / 10.0) > 0.8 {
-                        continue;
+                    if vy == 10 {
+                        chunk.set_voxel(vx, vy, vz, *dirt);
+                    } else if vy < 10 {
+                        chunk.set_voxel(vx, vy, vz, *stone)
                     }
-                    // TODO: TERRAIN GENERATION HERE
-
-                    let id = rng.gen::<u8>() % 8 + 1;
-                    chunk.set_voxel(vx, vy, vz, id);
                 }
             }
         }
 
         chunk.is_empty = is_empty;
+        chunk.needs_terrain = false;
     }
 
     /// Generate chunk's height map
@@ -355,7 +420,7 @@ impl Chunks {
                     let ly_i32 = ly as i32;
 
                     // TODO: CHECK FROM REGISTRY &&&&& PLANTS
-                    if ly == 0 || (registry.is_air(id) && registry.is_plant(id)) {
+                    if ly == 0 || (!registry.is_air(id) && !registry.is_plant(id)) {
                         if chunk.top_y < ly_i32 {
                             chunk.top_y = ly_i32 + 3;
                         }
@@ -373,31 +438,33 @@ impl Chunks {
     /// 1. Spread sunlight from the very top of the chunk
     /// 2. Recognize the torch lights and flood-fill them as well
     fn propagate_chunk(&mut self, coords: &Coords2<i32>) {
+        // println!("Propagating: {:?}", coords);
         let chunk = self.get_chunk_mut(coords).expect("Chunk not found");
+
+        let Coords3(start_x, start_y, start_z) = chunk.min;
+        let Coords3(end_x, end_y, end_z) = chunk.max;
 
         chunk.needs_propagation = false;
         chunk.needs_saving = true;
-
-        let min = chunk.min.clone();
-        let max = chunk.max.clone();
 
         let max_light_level = self.metrics.max_light_level;
 
         let mut light_queue = VecDeque::<LightNode>::new();
         let mut sunlight_queue = VecDeque::<LightNode>::new();
 
-        let Coords3(start_x, start_y, start_z) = min;
-        let Coords3(end_x, end_y, end_z) = max;
-
         for vz in start_z..end_z {
             for vx in start_x..end_x {
                 let h = self.get_max_height(vx, vz);
 
                 for vy in (start_y..end_y).rev() {
-                    // ! NOT COMFORTABLE USING CLONE !
-                    let block_type = self.get_block_by_voxel(vx, vy, vz).clone();
+                    let &Block {
+                        is_transparent,
+                        is_light,
+                        light_level,
+                        ..
+                    } = self.get_block_by_voxel(vx, vy, vz);
 
-                    if vy > h && block_type.is_transparent {
+                    if vy > h && is_transparent {
                         self.set_sunlight(vx, vy, vz, max_light_level);
 
                         for [ox, oz] in CHUNK_HORIZONTAL_NEIGHBORS.iter() {
@@ -408,6 +475,7 @@ impl Chunks {
                             }
 
                             if self.get_max_height(vx + ox, vz + oz) > vy {
+                                // means sunlight should propagate here horizontally
                                 if !sunlight_queue.iter().any(|LightNode { voxel, .. }| {
                                     voxel.0 == vx && voxel.1 == vy && voxel.2 == vz
                                 }) {
@@ -421,19 +489,26 @@ impl Chunks {
                     }
 
                     // ? might be erroneous here, but this is for lights on voxels like plants
-                    if block_type.is_light {
-                        self.set_torch_light(vx, vy, vz, block_type.light_level);
+                    if is_light {
+                        self.set_torch_light(vx, vy, vz, light_level);
                         light_queue.push_back(LightNode {
-                            level: block_type.light_level,
+                            level: light_level,
                             voxel: Coords3(vx, vy, vz),
                         })
                     }
                 }
             }
         }
+        // println!("{} {}", sunlight_queue.len(), light_queue.len());
 
+        // let s1 = Instant::now();
         self.flood_light(light_queue, false);
+        // let d1 = s1.elapsed();
+        // let s2 = Instant::now();
         self.flood_light(sunlight_queue, true);
+        // let d2 = s2.elapsed();
+
+        // println!("Time taken to flood lights: {:?} and {:?}", d1, d2);
     }
 
     /// Flood fill light from a queue
@@ -689,25 +764,6 @@ impl Chunks {
         }
     }
 
-    /// Remesh a chunk, propagating itself and its neighbors then mesh.
-    fn remesh_chunk(&mut self, coords: &Coords2<i32>) {
-        // propagate light first
-        let chunk = self.get_chunk(coords).unwrap();
-        if chunk.needs_propagation {
-            self.propagate_chunk(coords);
-        }
-
-        // propagate neighboring chunks too
-        for [ox, oz] in CHUNK_NEIGHBORS.iter() {
-            let coords = Coords2(coords.0 + ox, coords.1 + oz);
-            if self.get_chunk_mut(&coords).unwrap().needs_propagation {
-                self.propagate_chunk(&coords);
-            }
-        }
-
-        // TODO: MESH HERE (AND SUB MESHES)
-    }
-
     /// Meshing a chunk. Poorly written. Needs refactor.
     fn mesh_chunk(&self, coords: &Coords2<i32>, transparent: bool) -> Option<MeshType> {
         let Chunk {
@@ -726,8 +782,8 @@ impl Chunks {
         let mut smooth_sunlights_reps = Vec::<String>::new();
         let mut smooth_torch_light_reps = Vec::<String>::new();
 
-        let Coords3(start_x, start_y, start_z) = min.clone();
-        let Coords3(end_x, end_y, end_z) = max.clone();
+        let &Coords3(start_x, start_y, start_z) = min;
+        let &Coords3(end_x, end_y, end_z) = max;
 
         let mut vertex_to_light = HashMap::<String, VertexLight>::new();
 

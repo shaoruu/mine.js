@@ -53,7 +53,7 @@ pub fn map_voxel_to_chunk_local(voxel_pos: &Coords3<i32>, chunk_size: usize) -> 
     Coords3(vx - cx * cs, *vy, vz - cz * cs)
 }
 
-pub fn map_world_to_voxel(world_pos: &Coords3<f32>, dimension: i32) -> Coords3<i32> {
+pub fn map_world_to_voxel(world_pos: &Coords3<f32>, dimension: usize) -> Coords3<i32> {
     Coords3::<i32>::from(&floor_scale_coords(world_pos, 1.0 / (dimension as f32)))
 }
 

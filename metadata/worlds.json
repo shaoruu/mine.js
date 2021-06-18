@@ -8,7 +8,7 @@
     "maxClients": 10,
     "maxHeight": 128,
     "renderRadius": 8,
-    "preload": 3,
+    "preload": 1,
     "name": "testbed",
     "chunkRoot": "data",
     "maxLightLevel": 15,

@@ -34,3 +34,7 @@ crossbeam-channel = "0.5.1"
 
 [build-dependencies]
 prost-build = "0.7.0"
+
+[profile.release]
+# lto = "fat"
+# codegen-units = 1
