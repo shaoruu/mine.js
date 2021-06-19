@@ -12,7 +12,7 @@ use std::{
 };
 
 use crate::{
-    libs::types::{Coords2, Coords3, Quaternion},
+    libs::types::{Coords3, Quaternion},
     server,
 };
 

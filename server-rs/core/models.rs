@@ -121,7 +121,7 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
             .map(|chunk| messages::Chunk {
                 meshes: chunk
                     .meshes
-                    .into_iter()
+                    .iter()
                     .map(|mesh| {
                         let opaque = mesh.opaque.as_ref();
                         let transparent = mesh.transparent.as_ref();

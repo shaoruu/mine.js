@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
 
-use num::{iter::Range, Num};
+use num::Num;
 
 #[derive(Debug, Clone)]
 pub struct Ndarray<T>

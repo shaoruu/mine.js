@@ -5,7 +5,6 @@ use actix_web_actors::ws;
 
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
-use std::thread::current;
 use std::time::{Duration, Instant};
 
 use crate::core::models::{create_message, encode_message, MessageComponents};
@@ -384,9 +383,11 @@ impl WsSession {
                                     components.chunks = Some(vec![protocol]);
 
                                     let message = create_message(components);
-                                    let encoded = encode_message(&message);
+                                    let _encoded = encode_message(&message);
 
-                                    println!("Meshes received for {:?}", encoded);
+                                    // TODO: SEND ENCODED TO CLIENT THROUGH CTX
+
+                                    println!("Meshes received for {:?}", coords);
                                 }
                             }
                             _ => ctx.stop(),
