@@ -16,7 +16,7 @@ use crate::{
     server,
 };
 
-use super::super::AppState;
+use super::{super::AppState, message, session};
 
 pub async fn ws_route(
     req: HttpRequest,
@@ -30,13 +30,13 @@ pub async fn ws_route(
     let world_name = match world_query {
         Some(name) => name.to_owned(),
         None => {
-            let worlds = addr.send(server::ListWorlds).await.unwrap();
+            let worlds = addr.send(message::ListWorlds).await.unwrap();
             worlds[0].to_owned()
         }
     };
 
     ws::start(
-        server::WsSession {
+        session::WsSession {
             addr,
             id: 0,
             name: None,

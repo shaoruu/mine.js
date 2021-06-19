@@ -18,7 +18,7 @@ pub struct AppState {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    env_logger::init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let data = web::Data::new(AppState {
         server: Mutex::new(server::WsServer::new().start()),

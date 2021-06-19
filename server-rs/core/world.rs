@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use std::time::Instant;
 
 use crate::libs::types::GeneratorType;
-use crate::server::Message;
 
 use super::chunks::Chunks;
+use super::message;
 use super::registry::Registry;
 
 #[derive(Debug, Clone)]
@@ -31,7 +31,7 @@ pub struct World {
     pub generation: GeneratorType,
 
     pub chunks: Chunks,
-    pub clients: HashMap<usize, Recipient<Message>>,
+    pub clients: HashMap<usize, Recipient<message::Message>>,
 }
 
 impl World {
@@ -93,7 +93,7 @@ impl World {
         );
     }
 
-    pub fn add_client(&mut self, id: usize, client: Recipient<Message>) {
+    pub fn add_client(&mut self, id: usize, client: Recipient<message::Message>) {
         self.clients.insert(id, client);
     }
 }
