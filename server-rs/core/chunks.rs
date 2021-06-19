@@ -3,6 +3,8 @@
 // use rayon::prelude::*;
 use std::collections::{HashMap, VecDeque};
 
+use log::info;
+
 use crate::{
     libs::types::{Block, Coords2, Coords3, MeshType, UV},
     utils::convert::{
@@ -75,7 +77,6 @@ impl Chunks {
         let chunk = self.get_chunk(coords);
         let neighbors = self.neighbors(coords);
 
-        // TODO: need to implement neighbors
         match chunk {
             None => {
                 return None;
@@ -104,7 +105,7 @@ impl Chunks {
 
     /// Generate chunks around a certain coordinate
     pub fn generate(&mut self, coords: Coords2<i32>, render_radius: i16) {
-        println!(
+        info!(
             "Generating chunks surrounding {:?} with radius {}",
             coords, render_radius
         );
@@ -127,13 +128,7 @@ impl Chunks {
         }
 
         if chunk.needs_propagation {
-            // let start = Instant::now();
             self.propagate_chunk(coords);
-            // let duration = start.elapsed();
-            // println!(
-            //     "Time elapsed in propagating a chunk at coords {:?}: {:?}",
-            //     coords, duration
-            // );
         }
 
         // propagate neighboring chunks too
@@ -424,7 +419,6 @@ impl Chunks {
     /// 1. Spread sunlight from the very top of the chunk
     /// 2. Recognize the torch lights and flood-fill them as well
     fn propagate_chunk(&mut self, coords: &Coords2<i32>) {
-        // println!("Propagating: {:?}", coords);
         let chunk = self.get_chunk_mut(coords).expect("Chunk not found");
 
         let Coords3(start_x, start_y, start_z) = chunk.min;
@@ -485,16 +479,9 @@ impl Chunks {
                 }
             }
         }
-        // println!("{} {}", sunlight_queue.len(), light_queue.len());
 
-        // let s1 = Instant::now();
         self.flood_light(light_queue, false);
-        // let d1 = s1.elapsed();
-        // let s2 = Instant::now();
         self.flood_light(sunlight_queue, true);
-        // let d2 = s2.elapsed();
-
-        // println!("Time taken to flood lights: {:?} and {:?}", d1, d2);
     }
 
     /// Flood fill light from a queue

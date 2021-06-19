@@ -1,3 +1,4 @@
+use actix::SystemService;
 use actix_files as fs;
 use actix_web::{
     get,
@@ -6,52 +7,33 @@ use actix_web::{
 };
 use actix_web_actors::ws;
 
-use std::{
-    collections::{HashMap, VecDeque},
-    time::Instant,
-};
+use std::collections::HashMap;
 
-use crate::{
-    libs::types::{Coords3, Quaternion},
-    server,
-};
-
-use super::{super::AppState, message, session};
+use super::{message, server::WsServer, session};
 
 pub async fn ws_route(
     req: HttpRequest,
     params: Query<HashMap<String, String>>,
     stream: web::Payload,
-    data: web::Data<AppState>,
 ) -> Result<HttpResponse, Error> {
     let world_query = params.get("world");
-    let addr = data.server.lock().unwrap().clone();
 
     let world_name = match world_query {
         Some(name) => name.to_owned(),
         None => {
-            let worlds = addr.send(message::ListWorlds).await.unwrap();
+            let worlds = WsServer::from_registry()
+                .send(message::ListWorlds)
+                .await
+                .unwrap();
             worlds[0].to_owned()
         }
     };
 
-    ws::start(
-        session::WsSession {
-            addr,
-            id: 0,
-            name: None,
-            world_name,
-            metrics: None,
-            render_radius: 12,
-            hb: Instant::now(),
-            current_chunk: None,
-            position: Coords3(0.0, 0.0, 0.0),
-            rotation: Quaternion(0.0, 0.0, 0.0, 0.0),
-            requested_chunks: VecDeque::new(),
-        },
-        &req,
-        stream,
-    )
+    let mut client = session::WsSession::default();
+    client.world_name = world_name;
+    client.render_radius = 12;
+
+    ws::start(client, &req, stream)
 }
 
 #[get("/")]

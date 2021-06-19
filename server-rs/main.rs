@@ -1,40 +1,49 @@
-use actix::*;
+use log::info;
+
 use actix_files as fs;
 use actix_web::{web, App, HttpServer};
-
-use std::sync::Mutex;
 
 mod core;
 mod libs;
 mod utils;
 
-use crate::core::{models, routes, server};
+use crate::core::{models, routes};
 
-const SERVER_ADDR: &str = "localhost:8080";
+fn setup_logger() -> Result<(), fern::InitError> {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{} [Server thread/{}] [{}] {}",
+                chrono::Local::now().format("[%H:%M:%S]"),
+                record.level(),
+                record.target(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Debug)
+        .chain(std::io::stdout())
+        // .chain(fern::log_file("output.log")?)
+        .apply()?;
 
-pub struct AppState {
-    server: Mutex<Addr<server::WsServer>>,
+    Ok(())
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    setup_logger().expect("Something went wrong with fern...");
 
-    let data = web::Data::new(AppState {
-        server: Mutex::new(server::WsServer::new().start()),
-    });
+    let addr = "localhost:8080";
 
-    println!("\n🚀  MineJS running on http://{}", SERVER_ADDR);
-
-    HttpServer::new(move || {
+    let srv = HttpServer::new(move || {
         App::new()
-            .app_data(data.clone())
             .service(routes::atlas)
             .service(routes::index)
             .service(web::resource("/ws/").to(routes::ws_route))
             .service(fs::Files::new("/", "public/").show_files_listing())
     })
-    .bind(SERVER_ADDR)?
-    .run()
-    .await
+    .bind(&addr)?;
+
+    info!("🚀  MineJS running on http://{}", &addr);
+
+    srv.run().await
 }

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 pub type TypeMap = HashMap<String, u32>;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Coords2<T>(pub T, pub T);
 
 impl<T: Copy + 'static> Coords2<T> {
@@ -13,7 +13,7 @@ impl<T: Copy + 'static> Coords2<T> {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Coords3<T>(pub T, pub T, pub T);
 
 impl<T: Copy + 'static> Coords3<T> {
@@ -39,7 +39,7 @@ where
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct Quaternion(pub f32, pub f32, pub f32, pub f32);
 
 #[derive(Debug, Clone)]

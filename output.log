@@ -1,0 +1,12 @@
+[2021-06-20][01:39:54][main][INFO] 🚀  MineJS running on http://localhost:8080
+[2021-06-20][01:39:54][actix_server::builder][INFO] Starting 8 workers
+[2021-06-20][01:39:54][actix_server::builder][INFO] Starting "actix-web-service-127.0.0.1:8080" service on 127.0.0.1:8080
+[2021-06-20][01:39:55][actix_server::builder][INFO] SIGTERM received, stopping
+[2021-06-20][01:39:55][actix_server::worker][INFO] Shutting down worker, 0 connections
+[2021-06-20][01:39:55][actix_server::worker][INFO] Shutting down worker, 0 connections
+[2021-06-20][01:39:55][actix_server::worker][INFO] Shutting down worker, 0 connections
+[2021-06-20][01:39:55][actix_server::worker][INFO] Shutting down worker, 0 connections
+[2021-06-20][01:39:55][actix_server::worker][INFO] Shutting down worker, 0 connections
+[2021-06-20][01:39:55][actix_server::worker][INFO] Shutting down worker, 0 connections
+[2021-06-20][01:39:55][actix_server::worker][INFO] Shutting down worker, 0 connections
+[2021-06-20][01:39:55][actix_server::worker][INFO] Shutting down worker, 0 connections

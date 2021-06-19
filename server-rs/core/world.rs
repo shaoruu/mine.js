@@ -1,3 +1,5 @@
+use log::info;
+
 use actix::prelude::*;
 use std::collections::HashMap;
 use std::time::Instant;
@@ -7,6 +9,7 @@ use crate::libs::types::GeneratorType;
 use super::chunks::Chunks;
 use super::message;
 use super::registry::Registry;
+use super::server::Client;
 
 #[derive(Debug, Clone)]
 pub struct WorldMetrics {
@@ -31,7 +34,7 @@ pub struct World {
     pub generation: GeneratorType,
 
     pub chunks: Chunks,
-    pub clients: HashMap<usize, Recipient<message::Message>>,
+    pub clients: HashMap<usize, Client>,
 }
 
 impl World {
@@ -76,7 +79,7 @@ impl World {
     }
 
     pub fn preload(&mut self) {
-        println!(
+        info!(
             "Preloading world \"{}\" with radius {}...",
             self.name, self.preload
         );
@@ -85,7 +88,7 @@ impl World {
         self.chunks.preload(self.preload);
         let duration = start.elapsed();
 
-        println!(
+        info!(
             "Preloaded {} chunks for world \"{}\" in {:?}.",
             self.chunks.len(),
             self.name,
