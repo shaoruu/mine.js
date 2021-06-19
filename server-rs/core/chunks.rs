@@ -23,14 +23,14 @@ use super::{
 /// Node of a light propagation queue
 struct LightNode {
     voxel: Coords3<i32>,
-    level: i32,
+    level: u32,
 }
 
 /// Light data of a single vertex
 struct VertexLight {
-    count: i32,
-    torch_light: i32,
-    sunlight: i32,
+    count: u32,
+    torch_light: u32,
+    sunlight: u32,
 }
 
 /// A wrapper around all the chunks
@@ -274,7 +274,7 @@ impl Chunks {
     }
 
     /// Get the voxel type at a voxel coordinate
-    fn get_voxel_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> i32 {
+    fn get_voxel_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self
             .get_chunk_by_voxel(vx, vy, vz)
             .expect("Chunk not found.");
@@ -282,13 +282,13 @@ impl Chunks {
     }
 
     /// Get the voxel type at a world coordinate
-    fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> i32 {
+    fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u32 {
         let Coords3(vx, vy, vz) = map_world_to_voxel(&Coords3(wx, wy, wz), self.metrics.dimension);
         self.get_voxel_by_voxel(vx, vy, vz)
     }
 
     /// Set the voxel type for a voxel coordinate
-    fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: i32) {
+    fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
@@ -297,7 +297,7 @@ impl Chunks {
     }
 
     /// Get the sunlight level at a voxel coordinate
-    fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> i32 {
+    fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self
             .get_chunk_by_voxel(vx, vy, vz)
             .expect("Chunk not found.");
@@ -305,7 +305,7 @@ impl Chunks {
     }
 
     /// Set the sunlight level for a voxel coordinate
-    fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: i32) {
+    fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
@@ -313,7 +313,7 @@ impl Chunks {
     }
 
     /// Get the torch light level at a voxel coordinate
-    fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> i32 {
+    fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self
             .get_chunk_by_voxel(vx, vy, vz)
             .expect("Chunk not found.");
@@ -321,7 +321,7 @@ impl Chunks {
     }
 
     /// Set the torch light level at a voxel coordinate
-    fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: i32) {
+    fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
@@ -335,7 +335,7 @@ impl Chunks {
     }
 
     /// Get a block type from a voxel id
-    fn get_block_by_id(&self, id: i32) -> &Block {
+    fn get_block_by_id(&self, id: u32) -> &Block {
         self.registry.get_block_by_id(id)
     }
 
@@ -633,7 +633,7 @@ impl Chunks {
     }
 
     /// Update a voxel to a new type
-    fn update(&mut self, vx: i32, vy: i32, vz: i32, id: i32) {
+    fn update(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         // TODO: fix this code (might have better way)
         self.get_chunk_by_voxel_mut(vx, vy, vz)
             .unwrap()
@@ -761,7 +761,7 @@ impl Chunks {
         } = self.get_chunk(coords).unwrap();
 
         let mut positions = Vec::<f32>::new();
-        let mut indices = Vec::<f32>::new();
+        let mut indices = Vec::<i32>::new();
         let mut uvs = Vec::<f32>::new();
         let mut aos = Vec::<f32>::new();
 
@@ -773,7 +773,7 @@ impl Chunks {
 
         let mut vertex_to_light = HashMap::<String, VertexLight>::new();
 
-        let vertex_ao = |side1: i32, side2: i32, corner: i32| -> usize {
+        let vertex_ao = |side1: u32, side2: u32, corner: u32| -> usize {
             let num_s1 = self.registry.get_transparency_by_id(side1) as usize;
             let num_s2 = self.registry.get_transparency_by_id(side2) as usize;
             let num_c = self.registry.get_transparency_by_id(corner) as usize;
@@ -1028,23 +1028,23 @@ impl Chunks {
             }
         }
 
-        let sunlight_levels: Vec<f32> = smooth_sunlights_reps
+        let sunlight_levels: Vec<i32> = smooth_sunlights_reps
             .iter()
             .map(|rep| {
                 let VertexLight {
                     sunlight, count, ..
                 } = vertex_to_light.get(rep).unwrap();
-                *sunlight as f32 / *count as f32
+                (*sunlight as f32 / *count as f32) as i32
             })
             .collect();
 
-        let torch_light_levels: Vec<f32> = smooth_torch_light_reps
+        let torch_light_levels: Vec<i32> = smooth_torch_light_reps
             .iter()
             .map(|rep| {
                 let VertexLight {
                     torch_light, count, ..
                 } = vertex_to_light.get(rep).unwrap();
-                *torch_light as f32 / *count as f32
+                (*torch_light as f32 / *count as f32) as i32
             })
             .collect();
 
@@ -1083,7 +1083,7 @@ impl Chunks {
                                     start_v,
                                     end_v,
                                 } = uv_map.get(texture.get(*mat).unwrap()).unwrap();
-                                let ndx = positions.len() as f32 / 3.0;
+                                let ndx = (positions.len() / 3) as i32;
 
                                 for &CornerSimplified { pos, uv } in corners.iter() {
                                     let offset = (1.0 - plant_shrink) / 2.0;
@@ -1104,11 +1104,11 @@ impl Chunks {
                                 }
 
                                 indices.push(ndx);
-                                indices.push(ndx + 1.0);
-                                indices.push(ndx + 2.0);
-                                indices.push(ndx + 2.0);
-                                indices.push(ndx + 1.0);
-                                indices.push(ndx + 3.0);
+                                indices.push(ndx + 1);
+                                indices.push(ndx + 2);
+                                indices.push(ndx + 2);
+                                indices.push(ndx + 1);
+                                indices.push(ndx + 3);
 
                                 i += 4;
                             }
@@ -1138,7 +1138,7 @@ impl Chunks {
                                         || (n_block_type.transparent_standalone
                                             && dir[0] + dir[1] + dir[2] >= 1))
                                 {
-                                    let near_voxels: Vec<i32> = neighbors
+                                    let near_voxels: Vec<u32> = neighbors
                                         .iter()
                                         .map(|[a, b, c]| {
                                             self.get_voxel_by_voxel(vx + a, vy + b, vz + c)
@@ -1160,7 +1160,7 @@ impl Chunks {
                                         }
                                     };
 
-                                    let ndx = positions.len() as f32 / 3.0;
+                                    let ndx = (positions.len() / 3) as i32;
                                     let mut face_aos = vec![];
 
                                     for CornerData {
@@ -1195,7 +1195,7 @@ impl Chunks {
                                     let c_t = torch_light_levels[i + 2];
                                     let d_t = torch_light_levels[i + 3];
 
-                                    let threshold = 0.0;
+                                    let threshold = 0;
 
                                     /* -------------------------------------------------------------------------- */
                                     /*                     I KNOW THIS IS UGLY, BUT IT WORKS!                     */
@@ -1209,9 +1209,10 @@ impl Chunks {
                                     let ozao = a_t + d_t < b_t + c_t
                                         && face_aos[0] + face_aos[3] == face_aos[1] + face_aos[2];
                                     // all not zero, 4 parts
-                                    let anzp1 = (b_t > (a_t + d_t) / 2.0
-                                        && (a_t + d_t) / 2.0 > c_t)
-                                        || (c_t > (a_t + d_t) / 2.0 && (a_t + d_t) / 2.0 > b_t);
+                                    let anzp1 = (b_t as f32 > (a_t + d_t) as f32 / 2.0
+                                        && (a_t + d_t) as f32 / 2.0 > c_t as f32)
+                                        || (c_t as f32 > (a_t + d_t) as f32 / 2.0
+                                            && (a_t + d_t) as f32 / 2.0 > b_t as f32);
                                     // fixed two light sources colliding
                                     let anz = one_t0 && anzp1;
 
@@ -1221,18 +1222,18 @@ impl Chunks {
                                     {
                                         // generate flipped quad
                                         indices.push(ndx);
-                                        indices.push(ndx + 1.0);
-                                        indices.push(ndx + 3.0);
-                                        indices.push(ndx + 3.0);
-                                        indices.push(ndx + 2.0);
+                                        indices.push(ndx + 1);
+                                        indices.push(ndx + 3);
+                                        indices.push(ndx + 3);
+                                        indices.push(ndx + 2);
                                         indices.push(ndx);
                                     } else {
                                         indices.push(ndx);
-                                        indices.push(ndx + 1.0);
-                                        indices.push(ndx + 2.0);
-                                        indices.push(ndx + 2.0);
-                                        indices.push(ndx + 1.0);
-                                        indices.push(ndx + 3.0);
+                                        indices.push(ndx + 1);
+                                        indices.push(ndx + 2);
+                                        indices.push(ndx + 2);
+                                        indices.push(ndx + 1);
+                                        indices.push(ndx + 3);
                                     }
 
                                     i += 4;

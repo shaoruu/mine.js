@@ -2,7 +2,7 @@ use num::{cast, Num};
 
 use std::collections::HashMap;
 
-pub type TypeMap = HashMap<String, i32>;
+pub type TypeMap = HashMap<String, u32>;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Coords2<T>(pub T, pub T);
@@ -60,7 +60,7 @@ pub struct Block {
     pub is_plant: bool,
     pub is_solid: bool,
     pub is_transparent: bool,
-    pub light_level: i32,
+    pub light_level: u32,
     pub is_plantable: bool,
     pub textures: HashMap<String, String>,
     pub transparent_standalone: bool,
@@ -87,9 +87,9 @@ impl GeneratorType {
 #[derive(Debug, Clone)]
 pub struct MeshType {
     pub positions: Vec<f32>,
-    pub indices: Vec<f32>,
+    pub indices: Vec<i32>,
     pub uvs: Vec<f32>,
     pub aos: Vec<f32>,
-    pub sunlights: Vec<f32>,
-    pub torch_lights: Vec<f32>,
+    pub sunlights: Vec<i32>,
+    pub torch_lights: Vec<i32>,
 }

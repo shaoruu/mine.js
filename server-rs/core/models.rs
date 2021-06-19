@@ -11,8 +11,8 @@ pub struct ChunkProtocol {
     pub x: i32,
     pub z: i32,
     pub meshes: [Meshes; 1],
-    pub voxels: Option<Ndarray<i32>>,
-    pub lights: Option<Ndarray<i32>>,
+    pub voxels: Option<Ndarray<u32>>,
+    pub lights: Option<Ndarray<u32>>,
 }
 
 #[derive(Debug)]
@@ -33,7 +33,7 @@ pub struct UpdateProtocol {
     pub vx: i32,
     pub vy: i32,
     pub vz: i32,
-    pub r#type: u8,
+    pub r#type: u32,
 }
 
 #[derive(Debug)]
@@ -51,6 +51,20 @@ pub struct MessageComponents {
     pub peers: Option<Vec<PeerProtocol>>,
     pub chunks: Option<Vec<ChunkProtocol>>,
     pub updates: Option<Vec<UpdateProtocol>>,
+}
+
+impl MessageComponents {
+    pub fn default_for(message_type: messages::message::Type) -> Self {
+        Self {
+            r#type: message_type,
+            json: None,
+            text: None,
+            message: None,
+            peers: None,
+            chunks: None,
+            updates: None,
+        }
+    }
 }
 
 pub mod messages {
@@ -101,41 +115,72 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
             .collect()
     }
 
-    // if let Some(chunks) = components.chunks {
-    //     messages.chunks = chunks.into_iter().map(|chunk| messages::Chunk {
-    //         meshes: chunk.meshes.into_iter().map(|mesh| {
-    //             let opaque = mesh.opaque.unwrap();
-    //             let transparent = mesh.transparent.unwrap();
+    if let Some(chunks) = components.chunks {
+        message.chunks = chunks
+            .into_iter()
+            .map(|chunk| messages::Chunk {
+                meshes: chunk
+                    .meshes
+                    .into_iter()
+                    .map(|mesh| {
+                        let opaque = mesh.opaque.as_ref();
+                        let transparent = mesh.transparent.as_ref();
 
-    //             messages::Mesh {
-    //                 opaque: messages::Geometry {
-    //                     aos: opaque.aos,
-    //                     indices: opaque.indices,
-    //                     positions: opaque.positions,
-    //                     sunlights: opaque.sunlights,
-    //                     torch_lights: opaque.torch_lights,
-    //                     uvs: opaque.uvs,
-    //                 },
-    //                 transparent: messages::Geometry {
-    //                     aos: transparent.aos,
-    //                     indices: transparent.indices,
-    //                     positions: transparent.positions,
-    //                     sunlights: transparent.sunlights,
-    //                     torch_lights: transparent.torch_lights,
-    //                     uvs: transparent.uvs,
-    //                 },
-    //             }
-    //         }),
-    //         lights: if chunk.lights.is_some() {
-    //             chunk.lights.unwrap().data.map(i32::into).collect()
-    //         } else {
-    //             []
-    //         },
-    //         voxels: chunk.voxels,
-    //         x: chunk.x,
-    //         z: chunk.z,
-    //     })
-    // }
+                        messages::Mesh {
+                            opaque: if let Some(opaque) = opaque {
+                                Some(messages::Geometry {
+                                    aos: opaque.aos.to_owned(),
+                                    indices: opaque.indices.to_owned(),
+                                    positions: opaque.positions.to_owned(),
+                                    sunlights: opaque.sunlights.to_owned(),
+                                    torch_lights: opaque.torch_lights.to_owned(),
+                                    uvs: opaque.uvs.to_owned(),
+                                })
+                            } else {
+                                None
+                            },
+                            transparent: if let Some(transparent) = transparent {
+                                Some(messages::Geometry {
+                                    aos: transparent.aos.to_owned(),
+                                    indices: transparent.indices.to_owned(),
+                                    positions: transparent.positions.to_owned(),
+                                    sunlights: transparent.sunlights.to_owned(),
+                                    torch_lights: transparent.torch_lights.to_owned(),
+                                    uvs: transparent.uvs.to_owned(),
+                                })
+                            } else {
+                                None
+                            },
+                        }
+                    })
+                    .collect(),
+                lights: if let Some(l) = chunk.lights {
+                    l.data
+                } else {
+                    Vec::<u32>::new()
+                },
+                voxels: if let Some(v) = chunk.voxels {
+                    v.data
+                } else {
+                    Vec::<u32>::new()
+                },
+                x: chunk.x,
+                z: chunk.z,
+            })
+            .collect()
+    }
+
+    if let Some(updates) = components.updates {
+        message.updates = updates
+            .into_iter()
+            .map(|update| messages::Update {
+                r#type: update.r#type,
+                vx: update.vx,
+                vy: update.vy,
+                vz: update.vz,
+            })
+            .collect()
+    }
 
     message
 }

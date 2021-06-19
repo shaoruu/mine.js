@@ -8,6 +8,7 @@ use std::fs::File;
 use std::thread::current;
 use std::time::{Duration, Instant};
 
+use crate::core::models::{create_message, encode_message, MessageComponents};
 use crate::core::world::World;
 use crate::libs::types::{Coords2, Coords3, Quaternion};
 use crate::models::{
@@ -378,8 +379,14 @@ impl WsSession {
                                     act.requested_chunks.push_back(coords);
                                 } else {
                                     let protocol = protocol.unwrap();
+                                    let mut components =
+                                        MessageComponents::default_for(MessageType::Load);
+                                    components.chunks = Some(vec![protocol]);
 
-                                    println!("Meshes received for {:?}", coords);
+                                    let message = create_message(components);
+                                    let encoded = encode_message(&message);
+
+                                    println!("Meshes received for {:?}", encoded);
                                 }
                             }
                             _ => ctx.stop(),

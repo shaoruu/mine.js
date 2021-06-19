@@ -27,7 +27,7 @@ message Update {
   int32 vx = 1;
   int32 vy = 2;
   int32 vz = 3;
-  int32 type = 4;
+  uint32 type = 4;
 }
 
 message Peer {

@@ -128,13 +128,13 @@ $root.protocol = (function() {
             if (message.torchLights != null && message.torchLights.length) {
                 writer.uint32(/* id 1, wireType 2 =*/10).fork();
                 for (var i = 0; i < message.torchLights.length; ++i)
-                    writer.int32(message.torchLights[i]);
+                    writer.float(message.torchLights[i]);
                 writer.ldelim();
             }
             if (message.sunlights != null && message.sunlights.length) {
                 writer.uint32(/* id 2, wireType 2 =*/18).fork();
                 for (var i = 0; i < message.sunlights.length; ++i)
-                    writer.int32(message.sunlights[i]);
+                    writer.float(message.sunlights[i]);
                 writer.ldelim();
             }
             if (message.indices != null && message.indices.length) {
@@ -201,9 +201,9 @@ $root.protocol = (function() {
                     if ((tag & 7) === 2) {
                         var end2 = reader.uint32() + reader.pos;
                         while (reader.pos < end2)
-                            message.torchLights.push(reader.int32());
+                            message.torchLights.push(reader.float());
                     } else
-                        message.torchLights.push(reader.int32());
+                        message.torchLights.push(reader.float());
                     break;
                 case 2:
                     if (!(message.sunlights && message.sunlights.length))
@@ -211,9 +211,9 @@ $root.protocol = (function() {
                     if ((tag & 7) === 2) {
                         var end2 = reader.uint32() + reader.pos;
                         while (reader.pos < end2)
-                            message.sunlights.push(reader.int32());
+                            message.sunlights.push(reader.float());
                     } else
-                        message.sunlights.push(reader.int32());
+                        message.sunlights.push(reader.float());
                     break;
                 case 3:
                     if (!(message.indices && message.indices.length))
@@ -294,15 +294,15 @@ $root.protocol = (function() {
                 if (!Array.isArray(message.torchLights))
                     return "torchLights: array expected";
                 for (var i = 0; i < message.torchLights.length; ++i)
-                    if (!$util.isInteger(message.torchLights[i]))
-                        return "torchLights: integer[] expected";
+                    if (typeof message.torchLights[i] !== "number")
+                        return "torchLights: number[] expected";
             }
             if (message.sunlights != null && message.hasOwnProperty("sunlights")) {
                 if (!Array.isArray(message.sunlights))
                     return "sunlights: array expected";
                 for (var i = 0; i < message.sunlights.length; ++i)
-                    if (!$util.isInteger(message.sunlights[i]))
-                        return "sunlights: integer[] expected";
+                    if (typeof message.sunlights[i] !== "number")
+                        return "sunlights: number[] expected";
             }
             if (message.indices != null && message.hasOwnProperty("indices")) {
                 if (!Array.isArray(message.indices))
@@ -352,14 +352,14 @@ $root.protocol = (function() {
                     throw TypeError(".protocol.Geometry.torchLights: array expected");
                 message.torchLights = [];
                 for (var i = 0; i < object.torchLights.length; ++i)
-                    message.torchLights[i] = object.torchLights[i] | 0;
+                    message.torchLights[i] = Number(object.torchLights[i]);
             }
             if (object.sunlights) {
                 if (!Array.isArray(object.sunlights))
                     throw TypeError(".protocol.Geometry.sunlights: array expected");
                 message.sunlights = [];
                 for (var i = 0; i < object.sunlights.length; ++i)
-                    message.sunlights[i] = object.sunlights[i] | 0;
+                    message.sunlights[i] = Number(object.sunlights[i]);
             }
             if (object.indices) {
                 if (!Array.isArray(object.indices))
@@ -416,12 +416,12 @@ $root.protocol = (function() {
             if (message.torchLights && message.torchLights.length) {
                 object.torchLights = [];
                 for (var j = 0; j < message.torchLights.length; ++j)
-                    object.torchLights[j] = message.torchLights[j];
+                    object.torchLights[j] = options.json && !isFinite(message.torchLights[j]) ? String(message.torchLights[j]) : message.torchLights[j];
             }
             if (message.sunlights && message.sunlights.length) {
                 object.sunlights = [];
                 for (var j = 0; j < message.sunlights.length; ++j)
-                    object.sunlights[j] = message.sunlights[j];
+                    object.sunlights[j] = options.json && !isFinite(message.sunlights[j]) ? String(message.sunlights[j]) : message.sunlights[j];
             }
             if (message.indices && message.indices.length) {
                 object.indices = [];

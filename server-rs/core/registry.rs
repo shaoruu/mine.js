@@ -13,7 +13,7 @@ pub struct Registry {
     pub ranges: Ranges,
     pub blocks: Blocks,
 
-    name_map: HashMap<String, i32>,
+    name_map: HashMap<String, u32>,
 }
 
 impl Registry {
@@ -98,12 +98,12 @@ impl Registry {
                 is_solid: block_json["isSolid"].as_bool().unwrap(),
                 is_transparent: block_json["isTransparent"].as_bool().unwrap(),
                 is_plantable: block_json["isPlantable"].as_bool().unwrap(),
-                light_level: block_json["lightLevel"].as_i64().unwrap() as i32,
+                light_level: block_json["lightLevel"].as_i64().unwrap() as u32,
                 textures: textures_hash,
                 transparent_standalone: block_json["transparentStandalone"].as_bool().unwrap(),
             };
 
-            name_map.insert(new_block.name.clone(), id.parse::<i32>().unwrap());
+            name_map.insert(new_block.name.clone(), id.parse::<u32>().unwrap());
 
             blocks.insert(id.to_owned(), new_block);
         }
@@ -177,7 +177,7 @@ impl Registry {
         }
     }
 
-    pub fn get_transparency_by_id(&self, id: i32) -> bool {
+    pub fn get_transparency_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_transparent
     }
 
@@ -185,7 +185,7 @@ impl Registry {
         self.get_block_by_name(name).is_transparent
     }
 
-    pub fn get_fluiditiy_by_id(&self, id: i32) -> bool {
+    pub fn get_fluiditiy_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_fluid
     }
 
@@ -193,7 +193,7 @@ impl Registry {
         self.get_block_by_name(name).is_fluid
     }
 
-    pub fn get_solidity_by_id(&self, id: i32) -> bool {
+    pub fn get_solidity_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_solid
     }
 
@@ -201,7 +201,7 @@ impl Registry {
         self.get_block_by_name(name).is_solid
     }
 
-    pub fn get_emptiness_by_id(&self, id: i32) -> bool {
+    pub fn get_emptiness_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_empty
     }
 
@@ -209,7 +209,7 @@ impl Registry {
         self.get_block_by_name(name).is_empty
     }
 
-    pub fn get_texture_by_id(&self, id: i32) -> &HashMap<String, String> {
+    pub fn get_texture_by_id(&self, id: u32) -> &HashMap<String, String> {
         &self.get_block_by_id(id).textures
     }
 
@@ -217,7 +217,7 @@ impl Registry {
         &self.get_block_by_name(name).textures
     }
 
-    pub fn get_uv_by_id(&self, id: i32) -> HashMap<String, &UV> {
+    pub fn get_uv_by_id(&self, id: u32) -> HashMap<String, &UV> {
         self.get_uv_map(self.get_block_by_id(id))
     }
 
@@ -225,19 +225,19 @@ impl Registry {
         self.get_uv_map(self.get_block_by_name(name))
     }
 
-    pub fn is_air(&self, id: i32) -> bool {
+    pub fn is_air(&self, id: u32) -> bool {
         self.get_block_by_id(id).name == "Air"
     }
 
-    pub fn is_plant(&self, id: i32) -> bool {
+    pub fn is_plant(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_plant
     }
 
-    pub fn is_plantable(&self, id: i32) -> bool {
+    pub fn is_plantable(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_plantable
     }
 
-    pub fn get_block_by_id(&self, id: i32) -> &Block {
+    pub fn get_block_by_id(&self, id: u32) -> &Block {
         let id_key = id.to_string();
         self.blocks
             .get(&id_key)

@@ -13,7 +13,7 @@ pub struct WorldMetrics {
     pub dimension: usize,
     pub chunk_size: usize,
     pub max_height: usize,
-    pub max_light_level: i32,
+    pub max_light_level: u32,
     pub render_radius: usize,
 }
 
@@ -39,7 +39,7 @@ impl World {
         let chunk_size = json["chunkSize"].as_i64().unwrap() as usize;
         let max_height = json["maxHeight"].as_i64().unwrap() as usize;
         let dimension = json["dimension"].as_i64().unwrap() as usize;
-        let max_light_level = json["maxLightLevel"].as_i64().unwrap() as i32;
+        let max_light_level = json["maxLightLevel"].as_i64().unwrap() as u32;
         let time = json["time"].as_i64().unwrap() as usize;
         let name = json["name"].as_str().unwrap().to_owned();
         let save = json["save"].as_bool().unwrap();
