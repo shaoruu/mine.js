@@ -1,12 +1,7 @@
 #![allow(dead_code)]
 
-use rand::Rng;
-
 // use rayon::prelude::*;
-use std::{
-    collections::{HashMap, VecDeque},
-    time::Instant,
-};
+use std::collections::{HashMap, VecDeque};
 
 use crate::{
     libs::types::{Block, Coords2, Coords3, MeshType, UV},
@@ -28,14 +23,14 @@ use super::{
 /// Node of a light propagation queue
 struct LightNode {
     voxel: Coords3<i32>,
-    level: u8,
+    level: i32,
 }
 
 /// Light data of a single vertex
 struct VertexLight {
     count: i32,
-    torch_light: u8,
-    sunlight: u8,
+    torch_light: i32,
+    sunlight: i32,
 }
 
 /// A wrapper around all the chunks
@@ -76,21 +71,16 @@ impl Chunks {
     }
 
     /// Return a chunk references only if chunk is fully initialized (generated and decorated)
-    pub fn get(&self, coords: &Coords2<i32>) -> Option<&Chunk> {
+    pub fn get(&mut self, coords: &Coords2<i32>) -> Option<&Chunk> {
         let chunk = self.get_chunk(coords);
         let neighbors = self.neighbors(coords);
 
         // TODO: need to implement neighbors
         match chunk {
-            None => None,
+            None => {
+                return None;
+            }
             Some(chunk) => {
-                // println!(
-                //     "{}, {}, {}, {}",
-                //     chunk.needs_terrain,
-                //     chunk.needs_decoration,
-                //     neighbors.iter().any(|&c| c.is_none()),
-                //     neighbors.iter().any(|&c| c.unwrap().needs_decoration)
-                // );
                 if chunk.needs_terrain
                     || chunk.needs_decoration
                     || neighbors.iter().any(|&c| c.is_none())
@@ -98,14 +88,18 @@ impl Chunks {
                 {
                     return None;
                 }
-                Some(chunk)
+                chunk
             }
-        }
+        };
+
+        self.remesh_chunk(coords);
+
+        return self.get_chunk(coords);
     }
 
     /// To preload chunks surrounding 0,0
     pub fn preload(&mut self, width: i16) {
-        self.load(Coords2(0, 0), width, false);
+        self.load(Coords2(0, 0), width);
     }
 
     /// Generate chunks around a certain coordinate
@@ -115,7 +109,7 @@ impl Chunks {
             coords, render_radius
         );
 
-        self.load(coords, render_radius, false);
+        self.load(coords, render_radius);
     }
 
     /// Unload chunks when too many chunks are loaded.
@@ -169,7 +163,7 @@ impl Chunks {
     /// 2. Populate the terrains within `decorate_radius` with decoration
     ///
     /// Note: `decorate_radius` should always be less than `terrain_radius`
-    fn load(&mut self, coords: Coords2<i32>, render_radius: i16, should_mesh: bool) {
+    fn load(&mut self, coords: Coords2<i32>, render_radius: i16) {
         let Coords2(cx, cz) = coords;
 
         let mut to_generate: Vec<Chunk> = Vec::new();
@@ -214,17 +208,9 @@ impl Chunks {
             self.decorate_chunk(coords);
         }
 
-        let start = Instant::now();
         for coords in to_decorate.iter() {
             // ?
             self.generate_chunk_height_map(coords);
-            self.remesh_chunk(&coords);
-        }
-        let duration = start.elapsed();
-        println!("Took {:?} to remesh.", duration);
-
-        if should_mesh {
-            // TODO: MESH?
         }
     }
 
@@ -288,7 +274,7 @@ impl Chunks {
     }
 
     /// Get the voxel type at a voxel coordinate
-    fn get_voxel_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> u8 {
+    fn get_voxel_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> i32 {
         let chunk = self
             .get_chunk_by_voxel(vx, vy, vz)
             .expect("Chunk not found.");
@@ -296,13 +282,13 @@ impl Chunks {
     }
 
     /// Get the voxel type at a world coordinate
-    fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u8 {
+    fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> i32 {
         let Coords3(vx, vy, vz) = map_world_to_voxel(&Coords3(wx, wy, wz), self.metrics.dimension);
         self.get_voxel_by_voxel(vx, vy, vz)
     }
 
     /// Set the voxel type for a voxel coordinate
-    fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u8) {
+    fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: i32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
@@ -311,7 +297,7 @@ impl Chunks {
     }
 
     /// Get the sunlight level at a voxel coordinate
-    fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u8 {
+    fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> i32 {
         let chunk = self
             .get_chunk_by_voxel(vx, vy, vz)
             .expect("Chunk not found.");
@@ -319,7 +305,7 @@ impl Chunks {
     }
 
     /// Set the sunlight level for a voxel coordinate
-    fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u8) {
+    fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: i32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
@@ -327,7 +313,7 @@ impl Chunks {
     }
 
     /// Get the torch light level at a voxel coordinate
-    fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u8 {
+    fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> i32 {
         let chunk = self
             .get_chunk_by_voxel(vx, vy, vz)
             .expect("Chunk not found.");
@@ -335,7 +321,7 @@ impl Chunks {
     }
 
     /// Set the torch light level at a voxel coordinate
-    fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u8) {
+    fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: i32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
@@ -349,7 +335,7 @@ impl Chunks {
     }
 
     /// Get a block type from a voxel id
-    fn get_block_by_id(&self, id: u8) -> &Block {
+    fn get_block_by_id(&self, id: i32) -> &Block {
         self.registry.get_block_by_id(id)
     }
 
@@ -416,7 +402,7 @@ impl Chunks {
         for lx in 0..size {
             for lz in 0..size {
                 for ly in (0..max_height).rev() {
-                    let id = chunk.voxels[[lx, ly, lz]];
+                    let id = chunk.voxels[&[lx, ly, lz]];
                     let ly_i32 = ly as i32;
 
                     // TODO: CHECK FROM REGISTRY &&&&& PLANTS
@@ -425,7 +411,7 @@ impl Chunks {
                             chunk.top_y = ly_i32 + 3;
                         }
 
-                        chunk.height_map[[lx, lz]] = ly_i32;
+                        chunk.height_map[&[lx, lz]] = ly_i32;
                         break;
                     }
                 }
@@ -647,7 +633,7 @@ impl Chunks {
     }
 
     /// Update a voxel to a new type
-    fn update(&mut self, vx: i32, vy: i32, vz: i32, id: u8) {
+    fn update(&mut self, vx: i32, vy: i32, vz: i32, id: i32) {
         // TODO: fix this code (might have better way)
         self.get_chunk_by_voxel_mut(vx, vy, vz)
             .unwrap()
@@ -787,7 +773,7 @@ impl Chunks {
 
         let mut vertex_to_light = HashMap::<String, VertexLight>::new();
 
-        let vertex_ao = |side1: u8, side2: u8, corner: u8| -> usize {
+        let vertex_ao = |side1: i32, side2: i32, corner: i32| -> usize {
             let num_s1 = self.registry.get_transparency_by_id(side1) as usize;
             let num_s2 = self.registry.get_transparency_by_id(side2) as usize;
             let num_c = self.registry.get_transparency_by_id(corner) as usize;
@@ -1152,7 +1138,7 @@ impl Chunks {
                                         || (n_block_type.transparent_standalone
                                             && dir[0] + dir[1] + dir[2] >= 1))
                                 {
-                                    let near_voxels: Vec<u8> = neighbors
+                                    let near_voxels: Vec<i32> = neighbors
                                         .iter()
                                         .map(|[a, b, c]| {
                                             self.get_voxel_by_voxel(vx + a, vy + b, vz + c)

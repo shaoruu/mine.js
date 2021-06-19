@@ -42,7 +42,7 @@ pub async fn ws_route(
             name: None,
             world_name,
             metrics: None,
-            render_radius: 8,
+            render_radius: 12,
             hb: Instant::now(),
             current_chunk: None,
             position: Coords3(0.0, 0.0, 0.0),

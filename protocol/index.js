@@ -785,13 +785,13 @@ $root.protocol = (function() {
             if (message.voxels != null && message.voxels.length) {
                 writer.uint32(/* id 4, wireType 2 =*/34).fork();
                 for (var i = 0; i < message.voxels.length; ++i)
-                    writer.int32(message.voxels[i]);
+                    writer.uint32(message.voxels[i]);
                 writer.ldelim();
             }
             if (message.lights != null && message.lights.length) {
                 writer.uint32(/* id 5, wireType 2 =*/42).fork();
                 for (var i = 0; i < message.lights.length; ++i)
-                    writer.int32(message.lights[i]);
+                    writer.uint32(message.lights[i]);
                 writer.ldelim();
             }
             return writer;
@@ -845,9 +845,9 @@ $root.protocol = (function() {
                     if ((tag & 7) === 2) {
                         var end2 = reader.uint32() + reader.pos;
                         while (reader.pos < end2)
-                            message.voxels.push(reader.int32());
+                            message.voxels.push(reader.uint32());
                     } else
-                        message.voxels.push(reader.int32());
+                        message.voxels.push(reader.uint32());
                     break;
                 case 5:
                     if (!(message.lights && message.lights.length))
@@ -855,9 +855,9 @@ $root.protocol = (function() {
                     if ((tag & 7) === 2) {
                         var end2 = reader.uint32() + reader.pos;
                         while (reader.pos < end2)
-                            message.lights.push(reader.int32());
+                            message.lights.push(reader.uint32());
                     } else
-                        message.lights.push(reader.int32());
+                        message.lights.push(reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -957,14 +957,14 @@ $root.protocol = (function() {
                     throw TypeError(".protocol.Chunk.voxels: array expected");
                 message.voxels = [];
                 for (var i = 0; i < object.voxels.length; ++i)
-                    message.voxels[i] = object.voxels[i] | 0;
+                    message.voxels[i] = object.voxels[i] >>> 0;
             }
             if (object.lights) {
                 if (!Array.isArray(object.lights))
                     throw TypeError(".protocol.Chunk.lights: array expected");
                 message.lights = [];
                 for (var i = 0; i < object.lights.length; ++i)
-                    message.lights[i] = object.lights[i] | 0;
+                    message.lights[i] = object.lights[i] >>> 0;
             }
             return message;
         };

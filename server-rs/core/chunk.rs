@@ -1,9 +1,12 @@
-use ndarray::{Array2, Array3};
-
 use crate::{
-    libs::types::{Coords2, Coords3, MeshType},
+    libs::{
+        ndarray::{ndarray, Ndarray},
+        types::{Coords2, Coords3, MeshType},
+    },
     utils::convert,
 };
+
+use super::models::ChunkProtocol;
 
 #[derive(Debug, Clone)]
 pub struct Meshes {
@@ -17,9 +20,9 @@ pub struct Chunk {
 
     pub coords: Coords2<i32>,
 
-    pub voxels: Array3<u8>,
-    pub lights: Array3<u8>,
-    pub height_map: Array2<i32>,
+    pub voxels: Ndarray<i32>,
+    pub lights: Ndarray<i32>,
+    pub height_map: Ndarray<i32>,
 
     pub min: Coords3<i32>,
     pub max: Coords3<i32>,
@@ -47,9 +50,9 @@ impl Chunk {
 
         let name = convert::get_chunk_name(&coords);
 
-        let voxels: Array3<u8> = Array3::zeros((size, max_height, size));
-        let lights: Array3<u8> = Array3::zeros((size, max_height, size));
-        let height_map: Array2<i32> = Array2::zeros((size, size));
+        let voxels = ndarray(vec![size, max_height, size], 0);
+        let lights = ndarray(vec![size, max_height, size], 0);
+        let height_map = ndarray(vec![size, size], 0);
 
         let coords3 = Coords3(cx, 0, cz);
 
@@ -91,23 +94,23 @@ impl Chunk {
         }
     }
 
-    pub fn get_voxel(&self, vx: i32, vy: i32, vz: i32) -> u8 {
+    pub fn get_voxel(&self, vx: i32, vy: i32, vz: i32) -> i32 {
         if !self.contains(vx, vy, vz, 0) {
             return 0;
         }
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
-        self.voxels[[lx as usize, ly as usize, lz as usize]]
+        self.voxels[&[lx as usize, ly as usize, lz as usize]]
     }
 
-    pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u8) {
+    pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: i32) {
         assert!(self.contains(vx, vy, vz, 0));
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
-        self.voxels[[lx as usize, ly as usize, lz as usize]] = id;
+        self.voxels[&[lx as usize, ly as usize, lz as usize]] = id;
     }
 
-    pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u8 {
+    pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> i32 {
         if !self.contains(vx, vy, vz, 0) {
             return 0;
         }
@@ -116,14 +119,14 @@ impl Chunk {
         self.get_local_torch_light(lx as usize, ly as usize, lz as usize)
     }
 
-    pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u8) {
+    pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: i32) {
         assert!(self.contains(vx, vy, vz, 0));
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.set_local_torch_light(lx as usize, ly as usize, lz as usize, level)
     }
 
-    pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u8 {
+    pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> i32 {
         if !self.contains(vx, vy, vz, 0) {
             return 0;
         }
@@ -132,7 +135,7 @@ impl Chunk {
         self.get_local_sunlight(lx as usize, ly as usize, lz as usize)
     }
 
-    pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u8) {
+    pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: i32) {
         assert!(self.contains(vx, vy, vz, 0));
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
@@ -145,7 +148,7 @@ impl Chunk {
         }
 
         let Coords3(lx, _, lz) = self.to_local(vx, 0, vz);
-        self.height_map[[lx as usize, lz as usize]]
+        self.height_map[&[lx as usize, lz as usize]]
     }
 
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
@@ -156,7 +159,7 @@ impl Chunk {
         }
 
         let Coords3(lx, _, lz) = self.to_local(vx, 0, vz);
-        self.height_map[[lx as usize, lz as usize]] = height;
+        self.height_map[&[lx as usize, lz as usize]] = height;
     }
 
     pub fn dist_sqr_to_chunk(&self, coords: &Coords2<i32>) -> i32 {
@@ -175,48 +178,43 @@ impl Chunk {
         todo!()
     }
 
-    pub fn propagate(&mut self) {
-        todo!()
+    pub fn get_protocol(&self, needs_voxels: bool) -> ChunkProtocol {
+        // TODO: clone? idk
+        ChunkProtocol {
+            x: self.coords.0,
+            z: self.coords.1,
+            meshes: [self.meshes.to_owned()],
+            voxels: if needs_voxels {
+                Some(self.voxels.to_owned())
+            } else {
+                None
+            },
+            lights: if needs_voxels {
+                Some(self.lights.to_owned())
+            } else {
+                None
+            },
+        }
     }
 
-    pub fn update(&mut self) {
-        todo!()
+    fn get_local_torch_light(&self, lx: usize, ly: usize, lz: usize) -> i32 {
+        self.lights[&[lx, ly, lz]] & 0xf
     }
 
-    pub fn remesh(&mut self) {
-        todo!()
+    fn set_local_torch_light(&mut self, lx: usize, ly: usize, lz: usize, level: i32) {
+        self.lights[&[lx, ly, lz]] = (self.lights[&[lx, ly, lz]] & 0xf0) | level;
     }
 
-    pub fn get_protocol(&self) {
-        todo!()
+    fn get_local_sunlight(&self, lx: usize, ly: usize, lz: usize) -> i32 {
+        (self.lights[&[lx, ly, lz]] >> 4) & 0xf
     }
 
-    fn get_local_torch_light(&self, lx: usize, ly: usize, lz: usize) -> u8 {
-        self.lights[[lx, ly, lz]] & 0xf
-    }
-
-    fn set_local_torch_light(&mut self, lx: usize, ly: usize, lz: usize, level: u8) {
-        self.lights[[lx, ly, lz]] = (self.lights[[lx, ly, lz]] & 0xf0) | level;
-    }
-
-    fn get_local_sunlight(&self, lx: usize, ly: usize, lz: usize) -> u8 {
-        (self.lights[[lx, ly, lz]] >> 4) & 0xf
-    }
-
-    fn set_local_sunlight(&mut self, lx: usize, ly: usize, lz: usize, level: u8) {
-        self.lights[[lx, ly, lz]] = (self.lights[[lx, ly, lz]] & 0xf) | (level << 4);
+    fn set_local_sunlight(&mut self, lx: usize, ly: usize, lz: usize, level: i32) {
+        self.lights[&[lx, ly, lz]] = (self.lights[&[lx, ly, lz]] & 0xf) | (level << 4);
     }
 
     fn to_local(&self, vx: i32, vy: i32, vz: i32) -> Coords3<i32> {
         Coords3(vx, vy, vz).sub(&self.min)
-    }
-
-    fn flood_light() {
-        todo!()
-    }
-
-    fn remove_light() {
-        todo!()
     }
 
     fn contains(&self, vx: i32, vy: i32, vz: i32, padding: i32) -> bool {

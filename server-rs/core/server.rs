@@ -9,7 +9,7 @@ use std::thread::current;
 use std::time::{Duration, Instant};
 
 use crate::core::world::World;
-use crate::libs::types::{Coords2, Coords3, MeshType, Quaternion};
+use crate::libs::types::{Coords2, Coords3, Quaternion};
 use crate::models::{
     self,
     messages::{self, message::Type as MessageType},
@@ -17,7 +17,7 @@ use crate::models::{
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
-use super::chunk::Meshes;
+use super::models::ChunkProtocol;
 use super::registry::Registry;
 use super::world::WorldMetrics;
 
@@ -58,13 +58,14 @@ pub struct Generate {
 
 #[derive(MessageResponse)]
 pub struct ChunkRequestResult {
-    meshes: Option<Meshes>,
+    protocol: Option<ChunkProtocol>,
 }
 
 #[derive(Message)]
 #[rtype(result = "ChunkRequestResult")]
 pub struct ChunkRequest {
     pub world: String,
+    pub needs_voxels: bool,
     pub coords: Coords2<i32>,
 }
 
@@ -141,6 +142,7 @@ impl Handler<Connect> for WsServer {
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
         println!("Someone joined");
 
+        // TODO: send join message here.
         self.send_message(&"Main".to_owned(), "Someone joined", 0);
 
         // register session with random id
@@ -191,28 +193,25 @@ impl Handler<ChunkRequest> for WsServer {
     type Result = MessageResult<ChunkRequest>;
 
     fn handle(&mut self, request: ChunkRequest, _: &mut Context<Self>) -> Self::Result {
-        let ChunkRequest { world, coords } = request;
+        let ChunkRequest {
+            world,
+            coords,
+            needs_voxels,
+        } = request;
 
-        let chunk = self.worlds.get(&world).unwrap().chunks.get(&coords);
+        let world = self.worlds.get_mut(&world).unwrap();
+
+        let chunk = world.chunks.get(&coords);
 
         if chunk.is_none() {
-            return MessageResult(ChunkRequestResult { meshes: None });
+            return MessageResult(ChunkRequestResult { protocol: None });
         }
 
-        let coords = chunk.unwrap().coords.clone();
+        let chunk = chunk.unwrap();
 
         // TODO: OPTIMIZE THIS? CLONE?
         MessageResult(ChunkRequestResult {
-            meshes: Some(
-                self.worlds
-                    .get_mut(&world)
-                    .unwrap()
-                    .chunks
-                    .get(&coords)
-                    .unwrap()
-                    .meshes
-                    .clone(),
-            ),
+            protocol: Some(chunk.get_protocol(needs_voxels)),
         })
     }
 }
@@ -361,32 +360,35 @@ impl WsSession {
     }
 
     fn chunk(&self, ctx: &mut ws::WebsocketContext<Self>) {
-        // ctx.run_interval(CHUNKING_INTERVAL, |act, ctx| {
-        //     let requested_chunk = act.requested_chunks.pop_front();
+        ctx.run_interval(CHUNKING_INTERVAL, |act, ctx| {
+            let requested_chunk = act.requested_chunks.pop_front();
 
-        //     if let Some(coords) = requested_chunk {
-        //         act.addr
-        //             .send(ChunkRequest {
-        //                 coords: coords.clone(),
-        //                 world: act.world_name.to_owned(),
-        //             })
-        //             .into_actor(act)
-        //             .then(|res, act, ctx| {
-        //                 match res {
-        //                     Ok(ChunkRequestResult { meshes }) => {
-        //                         if meshes.is_none() {
-        //                             act.requested_chunks.push_back(coords);
-        //                         } else {
-        //                             println!("Meshes: {:?}", meshes);
-        //                         }
-        //                     }
-        //                     _ => ctx.stop(),
-        //                 }
-        //                 fut::ready(())
-        //             })
-        //             .wait(ctx);
-        //     }
-        // });
+            if let Some(coords) = requested_chunk {
+                act.addr
+                    .send(ChunkRequest {
+                        needs_voxels: true,
+                        coords: coords.clone(),
+                        world: act.world_name.to_owned(),
+                    })
+                    .into_actor(act)
+                    .then(|res, act, ctx| {
+                        match res {
+                            Ok(ChunkRequestResult { protocol }) => {
+                                if protocol.is_none() {
+                                    act.requested_chunks.push_back(coords);
+                                } else {
+                                    let protocol = protocol.unwrap();
+
+                                    println!("Meshes received for {:?}", coords);
+                                }
+                            }
+                            _ => ctx.stop(),
+                        }
+                        fut::ready(())
+                    })
+                    .wait(ctx);
+            }
+        });
     }
 
     fn on_request(&mut self, message: messages::Message) {

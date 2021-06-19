@@ -2,7 +2,7 @@ use num::{cast, Num};
 
 use std::collections::HashMap;
 
-pub type TypeMap = HashMap<String, u8>;
+pub type TypeMap = HashMap<String, i32>;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Coords2<T>(pub T, pub T);
@@ -60,7 +60,7 @@ pub struct Block {
     pub is_plant: bool,
     pub is_solid: bool,
     pub is_transparent: bool,
-    pub light_level: u8,
+    pub light_level: i32,
     pub is_plantable: bool,
     pub textures: HashMap<String, String>,
     pub transparent_standalone: bool,
