@@ -1206,7 +1206,10 @@ impl Chunks {
                                         || d_t <= threshold;
                                     // one is zero, and ao rule, but only for zero AO's
                                     let ozao = a_t + d_t < b_t + c_t
-                                        && face_aos[0] + face_aos[3] == face_aos[1] + face_aos[2];
+                                        && ((face_aos[0] + face_aos[3])
+                                            - (face_aos[1] + face_aos[2]))
+                                            .abs()
+                                            < f32::EPSILON;
                                     // all not zero, 4 parts
                                     let anzp1 = (b_t as f32 > (a_t + d_t) as f32 / 2.0
                                         && (a_t + d_t) as f32 / 2.0 > c_t as f32)
@@ -1215,20 +1218,20 @@ impl Chunks {
                                     // fixed two light sources colliding
                                     let anz = one_t0 && anzp1;
 
+                                    // common starting indices
+                                    indices.push(ndx);
+                                    indices.push(ndx + 1);
+
                                     if face_aos[0] + face_aos[3] > face_aos[1] + face_aos[2]
                                         || ozao
                                         || anz
                                     {
                                         // generate flipped quad
-                                        indices.push(ndx);
-                                        indices.push(ndx + 1);
                                         indices.push(ndx + 3);
                                         indices.push(ndx + 3);
                                         indices.push(ndx + 2);
                                         indices.push(ndx);
                                     } else {
-                                        indices.push(ndx);
-                                        indices.push(ndx + 1);
                                         indices.push(ndx + 2);
                                         indices.push(ndx + 2);
                                         indices.push(ndx + 1);
