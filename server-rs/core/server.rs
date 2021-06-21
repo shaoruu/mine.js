@@ -1,20 +1,33 @@
-use log::info;
-
 use actix::prelude::*;
 use actix_broker::BrokerSubscribe;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fs::File;
+use std::time::Duration;
 
 use crate::core::world::World;
+use crate::libs::types::{Coords2, Coords3, Quaternion};
+use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
 use super::message::{
-    self, ChunkRequest, Generate, JoinResult, JoinWorld, LeaveWorld, ListWorlds, SendMessage,
+    self, JoinResult, JoinWorld, LeaveWorld, ListWorlds, PlayerUpdate, SendMessage,
 };
 use super::registry::Registry;
+use super::world::WorldMetrics;
 
-pub type Client = Recipient<message::Message>;
+const SERVER_TICK: Duration = Duration::from_millis(16);
+
+#[derive(Debug)]
+pub struct Client {
+    pub name: Option<String>,
+    pub addr: Recipient<message::Message>,
+    pub position: Coords3<f32>,
+    pub rotation: Quaternion,
+    pub current_chunk: Option<Coords2<i32>>,
+    pub requested_chunks: VecDeque<Coords2<i32>>,
+    pub render_radius: i16,
+}
 
 #[derive(Debug, Default)]
 pub struct WsServer {
@@ -41,10 +54,7 @@ impl WsServer {
 
         world.clients.insert(id, client);
 
-        JoinResult {
-            id,
-            metrics: world.chunks.metrics.clone(),
-        }
+        JoinResult { id }
     }
 
     fn send_message(
@@ -58,7 +68,7 @@ impl WsServer {
         let mut resting_clients = vec![];
 
         for (id, client) in world.clients.iter() {
-            if client.do_send(msg.to_owned()).is_err() {
+            if client.addr.do_send(msg.to_owned()).is_err() {
                 resting_clients.push(*id);
             }
         }
@@ -70,12 +80,57 @@ impl WsServer {
 
         Some(())
     }
+
+    fn tick(&mut self) {
+        for world in self.worlds.values_mut() {
+            let WorldMetrics {
+                chunk_size,
+                dimension,
+                ..
+            } = world.chunks.metrics;
+
+            for client in world.clients.values_mut() {
+                if client.name.is_none() {
+                    continue;
+                }
+
+                let current_chunk = client.current_chunk.as_ref();
+                let new_chunk = map_voxel_to_chunk(
+                    &&map_world_to_voxel(&client.position, dimension),
+                    chunk_size,
+                );
+
+                if current_chunk.is_none()
+                    || current_chunk.unwrap().0 != new_chunk.0
+                    || current_chunk.unwrap().1 != new_chunk.1
+                {
+                    client.current_chunk = Some(new_chunk.clone());
+
+                    // tell world to regenerate
+                    world.chunks.generate(&new_chunk, client.render_radius);
+                }
+
+                let requested_chunk = client.requested_chunks.pop_front();
+
+                if let Some(coords) = requested_chunk {
+                    let chunk = world.chunks.get(&coords);
+
+                    if chunk.is_none() {
+                        client.requested_chunks.push_back(coords);
+                    } else {
+                        // SEND CHUNK BACK TO CLIENT
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl Actor for WsServer {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
+        ctx.set_mailbox_capacity(usize::MAX);
         self.subscribe_system_async::<LeaveWorld>(ctx);
         self.subscribe_system_async::<SendMessage>(ctx);
     }
@@ -88,10 +143,20 @@ impl Handler<JoinWorld> for WsServer {
         let JoinWorld {
             world_name,
             client_name,
-            client,
+            client_addr,
+            render_radius,
         } = msg;
 
-        let result = self.add_client_to_world(&world_name, None, client);
+        let new_client = Client {
+            name: client_name,
+            addr: client_addr,
+            current_chunk: None,
+            position: Coords3::default(),
+            rotation: Quaternion::default(),
+            requested_chunks: VecDeque::default(),
+            render_radius,
+        };
+        let result = self.add_client_to_world(&world_name, None, new_client);
 
         // TODO: SEND "SOMEONE JOINED" MESSAGE
 
@@ -117,6 +182,45 @@ impl Handler<ListWorlds> for WsServer {
     }
 }
 
+impl Handler<PlayerUpdate> for WsServer {
+    type Result = ();
+
+    fn handle(&mut self, msg: PlayerUpdate, _ctx: &mut Self::Context) -> Self::Result {
+        let PlayerUpdate {
+            world_name,
+            client_id,
+
+            name,
+            position,
+            rotation,
+            chunk,
+        } = msg;
+
+        let world = self
+            .worlds
+            .get_mut(world_name.as_str())
+            .expect("World not found.");
+        let client = world
+            .clients
+            .get_mut(&client_id)
+            .expect("Client not found.");
+
+        client.name = name;
+
+        if let Some(rotation) = rotation {
+            client.rotation = rotation;
+        }
+
+        if let Some(position) = position {
+            client.position = position;
+        }
+
+        if let Some(chunk) = chunk {
+            client.requested_chunks.push_back(chunk);
+        }
+    }
+}
+
 impl Handler<SendMessage> for WsServer {
     type Result = ();
 
@@ -128,47 +232,6 @@ impl Handler<SendMessage> for WsServer {
         } = msg;
 
         self.send_message(&world_name, &message::Message(content), client_id);
-    }
-}
-
-impl Handler<Generate> for WsServer {
-    type Result = ();
-
-    fn handle(&mut self, data: Generate, _: &mut Context<Self>) {
-        let Generate {
-            coords,
-            render_radius,
-            world_name,
-        } = data;
-
-        let world = self.worlds.get_mut(&world_name).unwrap();
-        world.chunks.generate(coords, render_radius);
-    }
-}
-
-impl Handler<ChunkRequest> for WsServer {
-    type Result = MessageResult<message::ChunkRequest>;
-
-    fn handle(&mut self, request: ChunkRequest, _: &mut Context<Self>) -> Self::Result {
-        let ChunkRequest {
-            world_name,
-            needs_voxels,
-            coords,
-        } = request;
-
-        let world = self.worlds.get_mut(&world_name).unwrap();
-        let chunk = world.chunks.get(&coords);
-
-        if chunk.is_none() {
-            return MessageResult(message::ChunkRequestResult { protocol: None });
-        }
-
-        let chunk = chunk.unwrap();
-
-        // TODO: OPTIMIZE THIS? CLONE?
-        MessageResult(message::ChunkRequestResult {
-            protocol: Some(chunk.get_protocol(needs_voxels)),
-        })
     }
 }
 
@@ -193,6 +256,10 @@ impl SystemService for WsServer {
         }
 
         self.worlds = worlds;
+
+        ctx.run_interval(SERVER_TICK, |act, _ctx| {
+            act.tick();
+        });
     }
 }
 impl Supervised for WsServer {}

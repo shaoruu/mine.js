@@ -96,7 +96,7 @@ impl World {
         );
     }
 
-    pub fn add_client(&mut self, id: usize, client: Recipient<message::Message>) {
+    pub fn add_client(&mut self, id: usize, client: Client) {
         self.clients.insert(id, client);
     }
 }

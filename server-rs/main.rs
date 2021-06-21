@@ -13,7 +13,7 @@ fn setup_logger() -> Result<(), fern::InitError> {
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
-                "{} [Server thread/{}] [{}] {}",
+                "{} [{}] [{}]: {}",
                 chrono::Local::now().format("[%H:%M:%S]"),
                 record.level(),
                 record.target(),

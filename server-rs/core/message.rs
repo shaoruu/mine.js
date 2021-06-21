@@ -1,6 +1,6 @@
 use actix::prelude::*;
 
-use crate::libs::types::Coords2;
+use crate::libs::types::{Coords2, Coords3, Quaternion};
 
 use super::{
     models::{self, ChunkProtocol},
@@ -18,7 +18,6 @@ pub struct Message(pub models::messages::Message);
 #[derive(MessageResponse)]
 pub struct JoinResult {
     pub id: usize,
-    pub metrics: WorldMetrics,
 }
 
 #[derive(Clone, Message)]
@@ -26,7 +25,8 @@ pub struct JoinResult {
 pub struct JoinWorld {
     pub world_name: String,
     pub client_name: Option<String>,
-    pub client: Recipient<Message>,
+    pub client_addr: Recipient<Message>,
+    pub render_radius: i16,
 }
 
 #[derive(Clone, Message)]
@@ -39,25 +39,17 @@ pub struct LeaveWorld {
 /* -------------------------------------------------------------------------- */
 /*                             Game Play Messages                             */
 /* -------------------------------------------------------------------------- */
-#[derive(Clone, Message)]
+#[derive(Clone, Message, Default)]
 #[rtype(result = "()")]
-pub struct Generate {
+pub struct PlayerUpdate {
     pub world_name: String,
-    pub coords: Coords2<i32>,
-    pub render_radius: i16,
-}
+    pub client_id: usize,
 
-#[derive(MessageResponse)]
-pub struct ChunkRequestResult {
-    pub protocol: Option<ChunkProtocol>,
-}
-
-#[derive(Clone, Message)]
-#[rtype(result = "ChunkRequestResult")]
-pub struct ChunkRequest {
-    pub world_name: String,
-    pub needs_voxels: bool,
-    pub coords: Coords2<i32>,
+    // Client attributes below
+    pub name: Option<String>,
+    pub position: Option<Coords3<f32>>,
+    pub rotation: Option<Quaternion>,
+    pub chunk: Option<Coords2<i32>>,
 }
 
 #[derive(Clone, Message)]

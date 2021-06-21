@@ -1,9 +1,12 @@
 #![allow(dead_code)]
 
 // use rayon::prelude::*;
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    time::Instant,
+};
 
-use log::info;
+use log::{debug, info};
 
 use crate::{
     libs::types::{Block, Coords2, Coords3, MeshType, UV},
@@ -100,17 +103,21 @@ impl Chunks {
 
     /// To preload chunks surrounding 0,0
     pub fn preload(&mut self, width: i16) {
-        self.load(Coords2(0, 0), width);
+        self.load(&Coords2(0, 0), width);
     }
 
     /// Generate chunks around a certain coordinate
-    pub fn generate(&mut self, coords: Coords2<i32>, render_radius: i16) {
-        info!(
-            "Generating chunks surrounding {:?} with radius {}",
-            coords, render_radius
-        );
+    pub fn generate(&mut self, coords: &Coords2<i32>, render_radius: i16) {
+        let start = Instant::now();
 
         self.load(coords, render_radius);
+
+        info!(
+            "Generated chunks surrounding {:?} with radius {} in {:?}",
+            coords,
+            render_radius,
+            start.elapsed()
+        );
     }
 
     /// Unload chunks when too many chunks are loaded.
@@ -149,7 +156,7 @@ impl Chunks {
             transparent,
         };
 
-        chunk.is_dirty = false
+        chunk.is_dirty = false;
     }
 
     /// Load in chunks in two steps:
@@ -158,7 +165,7 @@ impl Chunks {
     /// 2. Populate the terrains within `decorate_radius` with decoration
     ///
     /// Note: `decorate_radius` should always be less than `terrain_radius`
-    fn load(&mut self, coords: Coords2<i32>, render_radius: i16) {
+    fn load(&mut self, coords: &Coords2<i32>, render_radius: i16) {
         let Coords2(cx, cz) = coords;
 
         let mut to_generate: Vec<Chunk> = Vec::new();

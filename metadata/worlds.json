@@ -6,7 +6,7 @@
     "chunkSize": 8,
     "tickSpeed": 3,
     "maxClients": 10,
-    "maxHeight": 128,
+    "maxHeight": 256,
     "renderRadius": 8,
     "preload": 1,
     "name": "testbed",
