@@ -127,6 +127,7 @@ impl Chunks {
 
     /// Remesh a chunk, propagating itself and its neighbors then mesh.
     pub fn remesh_chunk(&mut self, coords: &Coords2<i32>) {
+        // let start = Instant::now();
         // propagate light first
         let chunk = self.get_chunk(coords).unwrap();
 
@@ -147,6 +148,7 @@ impl Chunks {
         }
 
         // TODO: MESH HERE (AND SUB MESHES)
+
         let opaque = self.mesh_chunk(coords, false);
         let transparent = self.mesh_chunk(coords, true);
 
@@ -157,6 +159,7 @@ impl Chunks {
         };
 
         chunk.is_dirty = false;
+        // debug!("Meshing took a total of {:?}", start.elapsed());
     }
 
     /// Load in chunks in two steps:

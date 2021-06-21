@@ -1,4 +1,4 @@
-use log::info;
+use log::{debug, info};
 
 use ansi_term::Colour::Yellow;
 
@@ -6,6 +6,7 @@ use actix::prelude::*;
 use actix_broker::BrokerIssue;
 use actix_web_actors::ws;
 
+use crate::core::message::ChatMessage;
 use crate::core::models::{create_message, encode_message, MessageComponents};
 use crate::libs::types::{Coords2, Coords3, Quaternion};
 use crate::models::{
@@ -118,6 +119,13 @@ impl WsSession {
         });
     }
 
+    fn on_chat_message(&mut self, message: messages::Message) {
+        WsServer::from_registry().do_send(ChatMessage {
+            message: message.message.unwrap(),
+            world_name: self.world_name.to_owned(),
+        });
+    }
+
     fn on_request(&mut self, message: messages::Message) {
         let msg_type = messages::Message::r#type(&message);
 
@@ -126,7 +134,7 @@ impl WsSession {
             MessageType::Config => {}
             MessageType::Update => {}
             MessageType::Peer => self.on_peer(message),
-            MessageType::Message => {}
+            MessageType::Message => self.on_chat_message(message),
             MessageType::Init => {
                 println!("INIT?")
             }
@@ -157,11 +165,13 @@ impl Actor for WsSession {
 impl Handler<message::Message> for WsSession {
     type Result = ();
 
-    fn handle(&mut self, msg: message::Message, ctx: &mut Self::Context) {
+    fn handle(&mut self, msg: message::Message, _ctx: &mut Self::Context) {
         let message::Message(msg) = msg;
-        let encoded = encode_message(&msg);
+        let _encoded = encode_message(&msg);
 
-        ctx.binary(encoded)
+        debug!("Supposedly should send of type {:?}", msg.r#type);
+
+        // ctx.binary(encoded)
     }
 }
 

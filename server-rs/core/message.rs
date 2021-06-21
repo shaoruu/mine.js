@@ -2,10 +2,7 @@ use actix::prelude::*;
 
 use crate::libs::types::{Coords2, Coords3, Quaternion};
 
-use super::{
-    models::{self, ChunkProtocol},
-    world::WorldMetrics,
-};
+use super::models::{self, messages};
 
 /// Base actor message to derive from
 #[derive(Clone, Message)]
@@ -50,6 +47,13 @@ pub struct PlayerUpdate {
     pub position: Option<Coords3<f32>>,
     pub rotation: Option<Quaternion>,
     pub chunk: Option<Coords2<i32>>,
+}
+
+#[derive(Clone, Message, Default)]
+#[rtype(result = "()")]
+pub struct ChatMessage {
+    pub world_name: String,
+    pub message: messages::ChatMessage,
 }
 
 #[derive(Clone, Message)]

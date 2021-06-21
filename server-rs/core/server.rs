@@ -11,8 +11,9 @@ use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
 use super::message::{
-    self, JoinResult, JoinWorld, LeaveWorld, ListWorlds, PlayerUpdate, SendMessage,
+    self, ChatMessage, JoinResult, JoinWorld, LeaveWorld, ListWorlds, PlayerUpdate, SendMessage,
 };
+use super::models::{create_message, messages, MessageComponents};
 use super::registry::Registry;
 use super::world::WorldMetrics;
 
@@ -57,17 +58,21 @@ impl WsServer {
         JoinResult { id }
     }
 
-    fn send_message(
+    fn broadcast(
         &mut self,
         world_name: &str,
         msg: &message::Message,
-        _from: usize,
+        exclude: Vec<usize>,
     ) -> Option<()> {
         let world = self.worlds.get_mut(world_name)?;
 
         let mut resting_clients = vec![];
 
         for (id, client) in world.clients.iter() {
+            if exclude.contains(id) {
+                continue;
+            }
+
             if client.addr.do_send(msg.to_owned()).is_err() {
                 resting_clients.push(*id);
             }
@@ -83,6 +88,8 @@ impl WsServer {
 
     fn tick(&mut self) {
         for world in self.worlds.values_mut() {
+            world.tick();
+
             let WorldMetrics {
                 chunk_size,
                 dimension,
@@ -221,22 +228,42 @@ impl Handler<PlayerUpdate> for WsServer {
     }
 }
 
+impl Handler<ChatMessage> for WsServer {
+    type Result = ();
+
+    fn handle(&mut self, msg: ChatMessage, _ctx: &mut Self::Context) {
+        let ChatMessage {
+            world_name,
+            message,
+        } = msg;
+
+        let mut new_message = create_message(MessageComponents::default_for(
+            messages::message::Type::Message,
+        ));
+
+        new_message.message = Some(message);
+
+        self.broadcast(&world_name, &message::Message(new_message), vec![]);
+    }
+}
+
 impl Handler<SendMessage> for WsServer {
     type Result = ();
 
     fn handle(&mut self, msg: SendMessage, _ctx: &mut Self::Context) {
         let SendMessage {
             world_name,
-            client_id,
             content,
+            ..
         } = msg;
 
-        self.send_message(&world_name, &message::Message(content), client_id);
+        self.broadcast(&world_name, &message::Message(content), vec![]);
     }
 }
 
 impl SystemService for WsServer {
     fn service_started(&mut self, ctx: &mut Context<Self>) {
+        // Loading worlds from `worlds.json`
         let mut worlds: HashMap<String, World> = HashMap::new();
 
         let worlds_json: serde_json::Value =

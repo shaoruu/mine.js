@@ -1,8 +1,8 @@
-use log::info;
+use log::{debug, info};
 
 use actix::prelude::*;
 use std::collections::HashMap;
-use std::time::Instant;
+use std::time::{Instant, SystemTime};
 
 use crate::libs::types::GeneratorType;
 
@@ -22,8 +22,8 @@ pub struct WorldMetrics {
 
 #[derive(Debug)]
 pub struct World {
-    pub time: usize,
-    pub tick_speed: usize,
+    pub time: f32,
+    pub tick_speed: f32,
 
     pub name: String,
     pub save: bool,
@@ -35,6 +35,7 @@ pub struct World {
 
     pub chunks: Chunks,
     pub clients: HashMap<usize, Client>,
+    pub prev_time: SystemTime,
 }
 
 impl World {
@@ -43,10 +44,10 @@ impl World {
         let max_height = json["maxHeight"].as_i64().unwrap() as usize;
         let dimension = json["dimension"].as_i64().unwrap() as usize;
         let max_light_level = json["maxLightLevel"].as_i64().unwrap() as u32;
-        let time = json["time"].as_i64().unwrap() as usize;
+        let time = json["time"].as_f64().unwrap() as f32;
         let name = json["name"].as_str().unwrap().to_owned();
         let save = json["save"].as_bool().unwrap();
-        let tick_speed = json["tickSpeed"].as_i64().unwrap() as usize;
+        let tick_speed = json["tickSpeed"].as_f64().unwrap() as f32;
         let chunk_root = json["chunkRoot"].as_str().unwrap().to_owned();
         let preload = json["preload"].as_i64().unwrap() as i16;
         let render_radius = json["renderRadius"].as_i64().unwrap() as usize;
@@ -73,6 +74,7 @@ impl World {
             description,
             clients: HashMap::new(),
             chunks: Chunks::new(metrics, max_loaded_chunks, registry),
+            prev_time: SystemTime::now(),
         };
 
         new_world
@@ -96,7 +98,17 @@ impl World {
         );
     }
 
-    pub fn add_client(&mut self, id: usize, client: Client) {
-        self.clients.insert(id, client);
+    pub fn tick(&mut self) {
+        let now = SystemTime::now();
+
+        let delta = now
+            .duration_since(self.prev_time)
+            .expect("Clock may have gone backwards")
+            .as_millis() as f32
+            / 1000.0;
+
+        self.time = (self.time + self.tick_speed * delta) % 2400.0;
+
+        self.prev_time = now;
     }
 }
