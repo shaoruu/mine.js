@@ -19,16 +19,16 @@ mod tests {
 
     #[test]
     fn approx_equals_works() {
-        assert_eq!(approx_equals(&0.000001, &0.000002), true);
-        assert_eq!(approx_equals(&0.001, &0.00002), false);
+        assert!(approx_equals(&0.000001, &0.000002),);
+        assert!(!approx_equals(&0.001, &0.00002),);
     }
 
     #[test]
     fn round_works() {
         let number = 10.123123;
 
-        assert_eq!(round(&number, 10), number);
-        assert_eq!(round(&number, 1), 10.1);
+        assert!((round(&number, 10) - number).abs() < f32::EPSILON);
+        assert!((round(&number, 1) - 10.1).abs() < f32::EPSILON);
     }
 
     #[test]

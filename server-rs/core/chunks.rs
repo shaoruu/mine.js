@@ -98,7 +98,7 @@ impl Chunks {
 
         self.remesh_chunk(coords);
 
-        return self.get_chunk(coords);
+        self.get_chunk(coords)
     }
 
     /// To preload chunks surrounding 0,0
@@ -147,12 +147,12 @@ impl Chunks {
                 self.propagate_chunk(&n_coords);
             }
         }
-        debug!("Spent {:?} propagating {:?}", start.elapsed(), coords);
 
         // TODO: MESH HERE (AND SUB MESHES)
 
         let opaque = self.mesh_chunk(coords, false);
         let transparent = self.mesh_chunk(coords, true);
+        debug!("Spent {:?} meshing {:?}", start.elapsed(), coords);
 
         let chunk = self.get_chunk_mut(coords).unwrap();
         chunk.meshes = Meshes {
@@ -225,7 +225,7 @@ impl Chunks {
     fn decorate_chunk(&mut self, coords: &Coords2<i32>) {
         let chunk = self
             .get_chunk_mut(&coords)
-            .expect(format!("Chunk not found {:?}", coords).as_str());
+            .unwrap_or_else(|| panic!("Chunk not found {:?}", coords));
 
         if !chunk.needs_decoration {
             return;
@@ -383,9 +383,9 @@ impl Chunks {
         for vx in start_x..end_x {
             for vz in start_z..end_z {
                 for vy in start_y..end_y {
-                    if vy == 10 {
+                    if vy == 60 {
                         chunk.set_voxel(vx, vy, vz, *dirt);
-                    } else if vy < 10 {
+                    } else if vy < 80 {
                         chunk.set_voxel(vx, vy, vz, *stone)
                     }
                 }
@@ -401,7 +401,7 @@ impl Chunks {
     /// Note: the chunk should already be initialized with voxel data
     fn generate_chunk_height_map(&mut self, coords: &Coords2<i32>) {
         let size = self.metrics.chunk_size;
-        let max_height = self.metrics.chunk_size;
+        let max_height = self.metrics.max_height;
 
         let registry = self.registry.clone(); // there must be better way
         let chunk = self.get_chunk_mut(coords).expect("Chunk not found.");
@@ -414,10 +414,6 @@ impl Chunks {
 
                     // TODO: CHECK FROM REGISTRY &&&&& PLANTS
                     if ly == 0 || (!registry.is_air(id) && !registry.is_plant(id)) {
-                        if chunk.top_y < ly_i32 {
-                            chunk.top_y = ly_i32 + 3;
-                        }
-
                         chunk.height_map[&[lx, lz]] = ly_i32;
                         break;
                     }
@@ -501,7 +497,7 @@ impl Chunks {
         let max_height = self.metrics.max_height as i32;
         let max_light_level = self.metrics.max_light_level;
 
-        while queue.len() != 0 {
+        while !queue.is_empty() {
             let LightNode { voxel, level } = queue.pop_front().unwrap();
             let Coords3(vx, vy, vz) = voxel;
 
@@ -573,7 +569,7 @@ impl Chunks {
 
         self.mark_saving_from_voxel(vx, vy, vz);
 
-        while queue.len() != 0 {
+        while !queue.is_empty() {
             let LightNode { voxel, level } = queue.pop_front().unwrap();
             let Coords3(vx, vy, vz) = voxel;
 
@@ -617,13 +613,11 @@ impl Chunks {
                     }
 
                     self.mark_saving_from_voxel(nvx, nvy, nvz);
-                } else if nl >= level {
-                    if !is_sunlight || *oy != -1 || nl > level {
-                        fill.push_back(LightNode {
-                            voxel: n_voxel,
-                            level: nl,
-                        })
-                    }
+                } else if nl >= level && (!is_sunlight || *oy != -1 || nl > level) {
+                    fill.push_back(LightNode {
+                        voxel: n_voxel,
+                        level: nl,
+                    })
                 }
             }
         }
@@ -695,7 +689,7 @@ impl Chunks {
                 self.set_torch_light(vx, vy, vz, updated_type.light_level);
                 self.flood_light(
                     VecDeque::from(vec![LightNode {
-                        voxel: voxel.clone(),
+                        voxel,
                         level: updated_type.light_level,
                     }]),
                     false,
@@ -754,7 +748,6 @@ impl Chunks {
         let Chunk {
             min,
             max,
-            top_y,
             dimension,
             ..
         } = self.get_chunk(coords).unwrap();
@@ -787,8 +780,9 @@ impl Chunks {
         let plant_shrink = 0.6;
 
         for vx in start_x..end_x {
-            for vy in start_y..(*top_y + 1) {
-                for vz in start_z..end_z {
+            for vz in start_z..end_z {
+                let h = self.get_max_height(vx, vz);
+                for vy in start_y..(h + 1) {
                     let voxel_id = self.get_voxel_by_voxel(vx, vy, vz);
                     let &Block {
                         is_solid,
@@ -1049,8 +1043,9 @@ impl Chunks {
 
         let mut i = 0;
         for vx in start_x..end_x {
-            for vy in start_y..(*top_y + 1) {
-                for vz in start_z..end_z {
+            for vz in start_z..end_z {
+                let h = self.get_max_height(vx, vz);
+                for vy in start_y..(h + 2) {
                     let voxel_id = self.get_voxel_by_voxel(vx, vy, vz);
                     let &Block {
                         is_solid,
@@ -1151,12 +1146,10 @@ impl Chunks {
                                         end_v,
                                     } = if is_mat_1 {
                                         uv_map.get(texture.get("all").unwrap()).unwrap()
+                                    } else if is_mat_3 {
+                                        uv_map.get(texture.get(*mat3).unwrap()).unwrap()
                                     } else {
-                                        if is_mat_3 {
-                                            uv_map.get(texture.get(*mat3).unwrap()).unwrap()
-                                        } else {
-                                            uv_map.get(texture.get(*mat6).unwrap()).unwrap()
-                                        }
+                                        uv_map.get(texture.get(*mat6).unwrap()).unwrap()
                                     };
 
                                     let ndx = (positions.len() / 3) as i32;
@@ -1189,7 +1182,7 @@ impl Chunks {
                                         );
                                     }
 
-                                    let a_t = torch_light_levels[i + 0];
+                                    let a_t = torch_light_levels[i];
                                     let b_t = torch_light_levels[i + 1];
                                     let c_t = torch_light_levels[i + 2];
                                     let d_t = torch_light_levels[i + 3];
@@ -1252,7 +1245,7 @@ impl Chunks {
             }
         }
 
-        if transparent && indices.len() == 0 {
+        if transparent && indices.is_empty() {
             return None;
         }
 

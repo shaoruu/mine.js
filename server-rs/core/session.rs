@@ -70,11 +70,12 @@ impl WsSession {
         let cx = json["x"].as_i64().unwrap() as i32;
         let cz = json["z"].as_i64().unwrap() as i32;
 
-        let mut update = PlayerUpdate::default();
-
-        update.world_name = self.world_name.to_owned();
-        update.client_id = self.id.to_owned();
-        update.chunk = Some(Coords2(cx, cz));
+        let update = PlayerUpdate {
+            client_id: self.id,
+            chunk: Some(Coords2(cx, cz)),
+            world_name: self.world_name.to_owned(),
+            ..Default::default()
+        };
 
         WsServer::from_registry().do_send(update);
     }

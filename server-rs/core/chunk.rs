@@ -35,8 +35,6 @@ pub struct Chunk {
     pub is_empty: bool,
     pub is_dirty: bool,
 
-    pub top_y: i32,
-
     pub size: usize,
     pub dimension: usize,
     pub max_height: usize,
@@ -56,9 +54,8 @@ impl Chunk {
 
         let coords3 = Coords3(cx, 0, cz);
 
-        let min = coords3.clone().scale(size as i32);
+        let min = coords3.scale(size as i32);
         let max = coords3
-            .clone()
             .add(&Coords3(1, 0, 1))
             .scale(size as i32)
             .add(&Coords3(0, max_height as i32, 0));
@@ -80,8 +77,6 @@ impl Chunk {
 
             is_empty: false,
             is_dirty: true,
-
-            top_y: max_height as i32,
 
             size,
             max_height,
@@ -153,10 +148,6 @@ impl Chunk {
 
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
         assert!(self.contains(vx, 0, vz, 0));
-
-        if height > self.top_y {
-            self.top_y = height;
-        }
 
         let Coords3(lx, _, lz) = self.to_local(vx, 0, vz);
         self.height_map[&[lx as usize, lz as usize]] = height;

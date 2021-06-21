@@ -56,14 +56,14 @@ impl World {
         let generation = GeneratorType::parse(json["generation"].as_str().unwrap()).unwrap();
 
         let metrics = WorldMetrics {
-            chunk_size,
             dimension,
+            chunk_size,
             max_height,
-            render_radius,
             max_light_level,
+            render_radius,
         };
 
-        let new_world = World {
+        World {
             time,
             name,
             save,
@@ -75,9 +75,7 @@ impl World {
             clients: HashMap::new(),
             chunks: Chunks::new(metrics, max_loaded_chunks, registry),
             prev_time: SystemTime::now(),
-        };
-
-        new_world
+        }
     }
 
     pub fn preload(&mut self) {

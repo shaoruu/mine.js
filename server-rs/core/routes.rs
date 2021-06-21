@@ -29,9 +29,11 @@ pub async fn ws_route(
         }
     };
 
-    let mut client = session::WsSession::default();
-    client.world_name = world_name;
-    client.render_radius = 12;
+    let client = session::WsSession {
+        world_name,
+        render_radius: 12,
+        ..Default::default()
+    };
 
     ws::start(client, &req, stream)
 }

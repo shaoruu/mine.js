@@ -78,9 +78,10 @@ impl messages::Message {
 }
 
 pub fn create_message(components: MessageComponents) -> messages::Message {
-    let mut message = messages::Message::default();
-
-    message.r#type = components.r#type as i32;
+    let mut message = messages::Message {
+        r#type: components.r#type as i32,
+        ..Default::default()
+    };
 
     if let Some(json) = components.json {
         message.json = json;
@@ -127,30 +128,22 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
                         let transparent = mesh.transparent.as_ref();
 
                         messages::Mesh {
-                            opaque: if let Some(opaque) = opaque {
-                                Some(messages::Geometry {
-                                    aos: opaque.aos.to_owned(),
-                                    indices: opaque.indices.to_owned(),
-                                    positions: opaque.positions.to_owned(),
-                                    sunlights: opaque.sunlights.to_owned(),
-                                    torch_lights: opaque.torch_lights.to_owned(),
-                                    uvs: opaque.uvs.to_owned(),
-                                })
-                            } else {
-                                None
-                            },
-                            transparent: if let Some(transparent) = transparent {
-                                Some(messages::Geometry {
-                                    aos: transparent.aos.to_owned(),
-                                    indices: transparent.indices.to_owned(),
-                                    positions: transparent.positions.to_owned(),
-                                    sunlights: transparent.sunlights.to_owned(),
-                                    torch_lights: transparent.torch_lights.to_owned(),
-                                    uvs: transparent.uvs.to_owned(),
-                                })
-                            } else {
-                                None
-                            },
+                            opaque: opaque.map(|opaque| messages::Geometry {
+                                aos: opaque.aos.to_owned(),
+                                indices: opaque.indices.to_owned(),
+                                positions: opaque.positions.to_owned(),
+                                sunlights: opaque.sunlights.to_owned(),
+                                torch_lights: opaque.torch_lights.to_owned(),
+                                uvs: opaque.uvs.to_owned(),
+                            }),
+                            transparent: transparent.map(|transparent| messages::Geometry {
+                                aos: transparent.aos.to_owned(),
+                                indices: transparent.indices.to_owned(),
+                                positions: transparent.positions.to_owned(),
+                                sunlights: transparent.sunlights.to_owned(),
+                                torch_lights: transparent.torch_lights.to_owned(),
+                                uvs: transparent.uvs.to_owned(),
+                            }),
                         }
                     })
                     .collect(),

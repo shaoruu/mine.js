@@ -40,14 +40,14 @@ impl Registry {
             let base = &block_json["base"];
 
             let base = match base {
-                serde_json::Value::String(base_str) => Some(
-                    base_cache.entry(base_str.to_owned()).or_insert(
+                serde_json::Value::String(base_str) => {
+                    Some(base_cache.entry(base_str.to_owned()).or_insert_with(|| {
                         serde_json::from_reader(
                             File::open(format!("./metadata/blocks/{}", base_str).as_str()).unwrap(),
                         )
-                        .unwrap(),
-                    ),
-                ),
+                        .unwrap()
+                    }))
+                }
                 _ => None,
             }
             .unwrap();
@@ -130,7 +130,7 @@ impl Registry {
         for (key, image) in texture_map_vec {
             if col >= count_per_side {
                 col = 0;
-                row = row + 1;
+                row += 1;
             }
 
             let start_x = col * texture_dim;
@@ -166,7 +166,7 @@ impl Registry {
                 },
             );
 
-            col = col + 1;
+            col += 1;
         }
 
         atlas.save("textures/atlas.png").unwrap();
@@ -243,14 +243,14 @@ impl Registry {
         let id_key = id.to_string();
         self.blocks
             .get(&id_key)
-            .expect(&format!("Block id not found: {}", id))
+            .unwrap_or_else(|| panic!("Block id not found: {}", id))
     }
 
     pub fn get_block_by_name(&self, name: &str) -> &Block {
         let &id = self
             .name_map
             .get(name)
-            .expect(&format!("Block name not found: {}", name));
+            .unwrap_or_else(|| panic!("Block name not found: {}", name));
         self.get_block_by_id(id)
     }
 
@@ -261,7 +261,7 @@ impl Registry {
             let uv = self
                 .ranges
                 .get(source)
-                .expect(&format!("UV range not found: {}", source));
+                .unwrap_or_else(|| panic!("UV range not found: {}", source));
 
             uv_map.insert(source.to_owned(), uv);
         }
@@ -276,7 +276,7 @@ impl Registry {
             let &id = self
                 .name_map
                 .get(block)
-                .expect(&format!("Block name not found: {}", block));
+                .unwrap_or_else(|| panic!("Block name not found: {}", block));
 
             type_map.insert(block.to_owned(), id);
         }

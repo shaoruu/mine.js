@@ -52,14 +52,14 @@ impl<T: Num + Clone> Index<&[usize]> for Ndarray<T> {
     type Output = T;
 
     fn index(&self, index: &[usize]) -> &Self::Output {
-        &self.data[self.index(index)]
+        &self.data.get(self.index(index)).unwrap()
     }
 }
 
 impl<T: Num + Clone> IndexMut<&[usize]> for Ndarray<T> {
     fn index_mut(&mut self, index: &[usize]) -> &mut Self::Output {
         let index = self.index(index);
-        &mut self.data[index]
+        self.data.get_mut(index).unwrap()
     }
 }
 
