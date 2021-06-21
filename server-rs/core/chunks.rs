@@ -135,7 +135,7 @@ impl Chunks {
             return;
         }
 
-        let start = Instant::now();
+        // let start = Instant::now();
         if chunk.needs_propagation {
             self.propagate_chunk(coords);
         }
@@ -152,7 +152,7 @@ impl Chunks {
 
         let opaque = self.mesh_chunk(coords, false);
         let transparent = self.mesh_chunk(coords, true);
-        debug!("Spent {:?} meshing {:?}", start.elapsed(), coords);
+        // debug!("Spent {:?} meshing {:?}", start.elapsed(), coords);
 
         let chunk = self.get_chunk_mut(coords).unwrap();
         chunk.meshes = Meshes {
