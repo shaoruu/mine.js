@@ -474,7 +474,7 @@ class Chunk {
   remesh = () => {
     // rebuild mesh
     // propagate light first
-    // console.time(this.name);
+    console.time(this.name);
     if (this.needsPropagation) this.propagate();
 
     // propagate neighbor chunks
@@ -483,7 +483,7 @@ class Chunk {
         neighbor.propagate();
       }
     });
-    // console.timeEnd(this.name);
+    console.timeEnd(this.name);
 
     // mesh TODO: sub chunk meshes
     this.meshes.opaque = Mesher.meshChunk(this);

@@ -102,10 +102,10 @@ impl WsServer {
                 }
 
                 let current_chunk = client.current_chunk.as_ref();
-                let new_chunk = map_voxel_to_chunk(
-                    &&map_world_to_voxel(&client.position, dimension),
-                    chunk_size,
-                );
+
+                let Coords3(px, py, pz) = client.position;
+                let Coords3(vx, vy, vz) = map_world_to_voxel(px, py, pz, dimension);
+                let new_chunk = map_voxel_to_chunk(vx, vy, vz, chunk_size);
 
                 if current_chunk.is_none()
                     || current_chunk.unwrap().0 != new_chunk.0

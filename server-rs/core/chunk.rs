@@ -48,7 +48,7 @@ impl Chunk {
     pub fn new(coords: Coords2<i32>, size: usize, max_height: usize, dimension: usize) -> Self {
         let Coords2(cx, cz) = coords;
 
-        let name = convert::get_chunk_name(&coords);
+        let name = convert::get_chunk_name(cx, cz);
 
         let voxels = ndarray(vec![size, max_height, size], 0);
         let lights = ndarray(vec![size, max_height, size], 0);

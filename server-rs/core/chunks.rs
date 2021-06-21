@@ -135,6 +135,7 @@ impl Chunks {
             return;
         }
 
+        let start = Instant::now();
         if chunk.needs_propagation {
             self.propagate_chunk(coords);
         }
@@ -146,6 +147,7 @@ impl Chunks {
                 self.propagate_chunk(&n_coords);
             }
         }
+        debug!("Spent {:?} propagating {:?}", start.elapsed(), coords);
 
         // TODO: MESH HERE (AND SUB MESHES)
 
@@ -256,25 +258,25 @@ impl Chunks {
 
     /// Get a chunk reference from a coordinate
     fn get_chunk(&self, coords: &Coords2<i32>) -> Option<&Chunk> {
-        let name = get_chunk_name(&coords);
+        let name = get_chunk_name(coords.0, coords.1);
         self.chunks.get(&name)
     }
 
     /// Get a mutable chunk reference from a coordinate
     fn get_chunk_mut(&mut self, coords: &Coords2<i32>) -> Option<&mut Chunk> {
-        let name = get_chunk_name(&coords);
+        let name = get_chunk_name(coords.0, coords.1);
         self.chunks.get_mut(&name)
     }
 
     /// Get a chunk reference from a voxel coordinate
     fn get_chunk_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> Option<&Chunk> {
-        let coords = map_voxel_to_chunk(&Coords3(vx, vy, vz), self.metrics.chunk_size);
+        let coords = map_voxel_to_chunk(vx, vy, vz, self.metrics.chunk_size);
         self.get_chunk(&coords)
     }
 
     /// Get a mutable chunk reference from a voxel coordinate
     fn get_chunk_by_voxel_mut(&mut self, vx: i32, vy: i32, vz: i32) -> Option<&mut Chunk> {
-        let coords = map_voxel_to_chunk(&Coords3(vx, vy, vz), self.metrics.chunk_size);
+        let coords = map_voxel_to_chunk(vx, vy, vz, self.metrics.chunk_size);
         self.get_chunk_mut(&coords)
     }
 
@@ -288,7 +290,7 @@ impl Chunks {
 
     /// Get the voxel type at a world coordinate
     fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u32 {
-        let Coords3(vx, vy, vz) = map_world_to_voxel(&Coords3(wx, wy, wz), self.metrics.dimension);
+        let Coords3(vx, vy, vz) = map_world_to_voxel(wx, wy, wz, self.metrics.dimension);
         self.get_voxel_by_voxel(vx, vy, vz)
     }
 
@@ -819,11 +821,11 @@ impl Chunks {
                                     let pos_z =
                                         pos[2] as f32 * plant_shrink + offset + (vz + dz) as f32;
 
-                                    let rep = get_position_name(&Coords3(
+                                    let rep = get_position_name(
                                         pos_x * *dimension as f32,
                                         pos_y * *dimension as f32,
                                         pos_z * *dimension as f32,
-                                    ));
+                                    );
 
                                     if vertex_to_light.contains_key(&rep) {
                                         let &VertexLight {
@@ -879,11 +881,11 @@ impl Chunks {
                                         let pos_y = pos[1] + vy;
                                         let pos_z = pos[2] + vz;
 
-                                        let rep = get_voxel_name(&Coords3(
+                                        let rep = get_voxel_name(
                                             pos_x * *dimension as i32,
                                             pos_y * *dimension as i32,
                                             pos_z * *dimension as i32,
-                                        ));
+                                        );
 
                                         if vertex_to_light.contains_key(&rep) {
                                             let &VertexLight {
