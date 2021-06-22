@@ -102,6 +102,7 @@ pub struct ListWorldNames;
 #[derive(MessageResponse, Deserialize, Serialize)]
 pub struct WorldData {
     pub name: String,
+    pub time: f32,
     pub generation: String,
     pub description: String,
     pub players: usize,

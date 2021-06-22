@@ -1,5 +1,17 @@
 #![allow(dead_code)]
 
+pub const LEVEL_SEED: u32 = 1021312;
+
+pub const SCALE: f64 = 0.03;
+pub const OCTAVES: i32 = 3;
+pub const PERSISTENCE: f64 = 0.6;
+pub const LACUNARITY: f64 = 0.8;
+pub const HEIGHT_OFFSET: i32 = 50;
+pub const HEIGHT_SCALE: f64 = 0.05;
+pub const TREE_SCALE: f64 = 0.1;
+pub const PLANT_SCALE: f64 = 0.2;
+pub const AMPLIFIER: f64 = 0.4;
+
 pub struct CornerData {
     pub pos: [i32; 3],
     pub uv: [i32; 2],

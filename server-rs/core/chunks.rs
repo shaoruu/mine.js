@@ -9,7 +9,11 @@ use std::{
 use log::{debug, info};
 
 use crate::{
-    libs::types::{Block, Coords2, Coords3, MeshType, UV},
+    core::constants::HEIGHT_OFFSET,
+    libs::{
+        noise::{Noise, NoiseConfig},
+        types::{Block, Coords2, Coords3, MeshType, UV},
+    },
     utils::convert::{
         get_chunk_name, get_position_name, get_voxel_name, map_voxel_to_chunk,
         map_voxel_to_chunk_local, map_world_to_voxel,
@@ -19,8 +23,9 @@ use crate::{
 use super::{
     chunk::{Chunk, Meshes},
     constants::{
-        BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES,
-        CHUNK_HORIZONTAL_NEIGHBORS, CHUNK_NEIGHBORS, PLANT_FACES, VOXEL_NEIGHBORS,
+        BlockFace, CornerData, CornerSimplified, PlantFace, AMPLIFIER, AO_TABLE, BLOCK_FACES,
+        CHUNK_HORIZONTAL_NEIGHBORS, CHUNK_NEIGHBORS, HEIGHT_SCALE, LACUNARITY, LEVEL_SEED, OCTAVES,
+        PERSISTENCE, PLANT_FACES, SCALE, VOXEL_NEIGHBORS,
     },
     registry::{get_texture_type, Registry},
     world::WorldMetrics,
@@ -49,6 +54,7 @@ pub struct Chunks {
     caching: bool,
     max_loaded_chunks: i32,
     chunks: HashMap<String, Chunk>,
+    noise: Noise,
 }
 
 /**
@@ -64,6 +70,7 @@ impl Chunks {
             max_loaded_chunks,
             chunks: HashMap::new(),
             chunk_cache: HashSet::new(),
+            noise: Noise::new(LEVEL_SEED),
         }
     }
 
@@ -82,7 +89,7 @@ impl Chunks {
     }
 
     /// Return a chunk references only if chunk is fully initialized (generated and decorated)
-    pub fn get(&mut self, coords: &Coords2<i32>) -> Option<&Chunk> {
+    pub fn get(&mut self, coords: &Coords2<i32>, dirty_check: bool) -> Option<&Chunk> {
         let chunk = self.get_chunk(coords);
         let neighbors = self.neighbors(coords);
 
@@ -102,7 +109,9 @@ impl Chunks {
             }
         };
 
-        self.remesh_chunk(coords);
+        if !dirty_check || chunk.unwrap().is_dirty {
+            self.remesh_chunk(coords);
+        }
 
         self.get_chunk(coords)
     }
@@ -149,10 +158,6 @@ impl Chunks {
         // propagate light first
         let chunk = self.get_chunk(coords).unwrap();
 
-        if !chunk.is_dirty {
-            return;
-        }
-
         // let start = Instant::now();
         if chunk.needs_propagation {
             self.propagate_chunk(coords);
@@ -197,6 +202,11 @@ impl Chunks {
         let terrain_radius = render_radius + 4;
         let decorate_radius = render_radius;
 
+        let types = self
+            .registry
+            .get_type_map(vec!["Air", "Stone", "Dirt", "Grass Block"]);
+
+        let start = Instant::now();
         for x in -terrain_radius..=terrain_radius {
             for z in -terrain_radius..=terrain_radius {
                 let dist = x * x + z * z;
@@ -215,7 +225,7 @@ impl Chunks {
                         self.metrics.max_height as usize,
                         self.metrics.dimension,
                     );
-                    self.generate_chunk(&mut new_chunk);
+                    Chunks::generate_chunk(&mut new_chunk, types.clone());
                     to_generate.push(new_chunk);
                 }
 
@@ -224,6 +234,7 @@ impl Chunks {
                 }
             }
         }
+        debug!("Took {:?}", start.elapsed());
 
         for chunk in to_generate {
             self.chunks.insert(chunk.name.to_owned(), chunk);
@@ -561,24 +572,63 @@ impl Chunks {
     }
 
     /// Generate terrain for a chunk
-    fn generate_chunk(&mut self, chunk: &mut Chunk) {
+    fn generate_chunk(chunk: &mut Chunk, types: HashMap<String, u32>) {
         let Coords3(start_x, start_y, start_z) = chunk.min;
         let Coords3(end_x, end_y, end_z) = chunk.max;
 
-        let types = self.registry.get_type_map(vec!["Stone", "Dirt"]);
-        let stone = types.get("Stone").unwrap();
-        let dirt = types.get("Dirt").unwrap();
+        let air = *types.get("Air").unwrap();
+        let grass_block = *types.get("Grass Block").unwrap();
+        let stone = *types.get("Stone").unwrap();
+        let dirt = *types.get("Dirt").unwrap();
 
         let is_empty = true;
+
+        let noise = Noise::new(LEVEL_SEED);
+
+        let is_solid_at = |vx: i32, vy: i32, vz: i32| {
+            noise.octave_perlin3(
+                vx as f64,
+                vy as f64,
+                vz as f64,
+                SCALE,
+                NoiseConfig {
+                    octaves: OCTAVES,
+                    persistence: PERSISTENCE,
+                    lacunarity: LACUNARITY,
+                    height_scale: HEIGHT_SCALE,
+                    amplifier: AMPLIFIER,
+                },
+            ) > -0.2
+        };
 
         for vx in start_x..end_x {
             for vz in start_z..end_z {
                 for vy in start_y..end_y {
-                    if vy == 60 {
-                        chunk.set_voxel(vx, vy, vz, *dirt);
-                    } else if vy < 80 {
-                        chunk.set_voxel(vx, vy, vz, *stone)
+                    let vy_ = vy;
+                    let vy = vy - HEIGHT_OFFSET;
+
+                    let is_solid = is_solid_at(vx, vy, vz);
+                    let is_solid_top = is_solid_at(vx, vy + 1, vz);
+                    let is_solid_top2 = is_solid_at(vx, vy + 2, vz);
+
+                    let mut block_id = air;
+
+                    if is_solid {
+                        if !is_solid_top && !is_solid_top2 {
+                            block_id = grass_block;
+
+                            if noise
+                                .fractal_octave_perlin3(vx as f64, vy as f64, vz as f64, SCALE, 9)
+                                > 0.3
+                            {
+                                block_id = dirt;
+                            }
+                        } else {
+                            block_id = stone;
+                        }
                     }
+
+                    chunk.set_voxel(vx, vy_, vz, block_id);
                 }
             }
         }
@@ -839,9 +889,9 @@ impl Chunks {
         let mut vertex_to_light = HashMap::<String, VertexLight>::new();
 
         let vertex_ao = |side1: u32, side2: u32, corner: u32| -> usize {
-            let num_s1 = self.registry.get_transparency_by_id(side1) as usize;
-            let num_s2 = self.registry.get_transparency_by_id(side2) as usize;
-            let num_c = self.registry.get_transparency_by_id(corner) as usize;
+            let num_s1 = !self.registry.get_transparency_by_id(side1) as usize;
+            let num_s2 = !self.registry.get_transparency_by_id(side2) as usize;
+            let num_c = !self.registry.get_transparency_by_id(corner) as usize;
 
             if num_s1 == 1 && num_s2 == 1 {
                 0

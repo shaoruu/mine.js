@@ -7,7 +7,7 @@ use actix_broker::BrokerIssue;
 use actix_web_actors::ws;
 
 use crate::core::message::ChatMessage;
-use crate::core::models::{create_message, create_of_type, encode_message, MessageComponents};
+use crate::core::models::{create_of_type, encode_message, MessageComponents};
 use crate::libs::types::{Coords2, Coords3, Quaternion};
 use crate::models::{
     self,
@@ -85,8 +85,7 @@ impl WsSession {
                     message.json = data;
                     let encoded = encode_message(&message);
 
-                    // TODO: ACTUALLY SEND!
-                    // ctx.binary(encoded);
+                    ctx.binary(encoded);
                 }
 
                 fut::ready(())
@@ -228,13 +227,11 @@ impl Actor for WsSession {
 impl Handler<message::Message> for WsSession {
     type Result = ();
 
-    fn handle(&mut self, msg: message::Message, _ctx: &mut Self::Context) {
+    fn handle(&mut self, msg: message::Message, ctx: &mut Self::Context) {
         let message::Message(msg) = msg;
-        let _encoded = encode_message(&msg);
+        let encoded = encode_message(&msg);
 
-        // debug!("Supposedly should send of type {:?}", msg.r#type);
-
-        // ctx.binary(encoded)
+        ctx.binary(encoded)
     }
 }
 

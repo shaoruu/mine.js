@@ -3,6 +3,8 @@
 use std::collections::HashMap;
 use std::fs::File;
 
+use log::debug;
+
 use crate::libs::types::{Block, TypeMap, UV};
 use crate::utils::json;
 
@@ -153,18 +155,19 @@ impl Registry {
 
             let start_u = f_start_x / f_atlas_width;
             let end_u = (f_start_x + texture_dim as f32) / f_atlas_width;
-            let start_v = f_start_y / f_atlas_height;
-            let end_v = (f_start_y + texture_dim as f32) / f_atlas_height;
+            let start_v = 1.0 - f_start_y / f_atlas_height;
+            let end_v = 1.0 - (f_start_y + texture_dim as f32) / f_atlas_height;
 
-            ranges.insert(
-                key,
-                UV {
-                    start_u,
-                    end_u,
-                    start_v,
-                    end_v,
-                },
-            );
+            let uv = UV {
+                start_u,
+                end_u,
+                start_v,
+                end_v,
+            };
+
+            debug!("{}, {:?}", key, uv);
+
+            ranges.insert(key, uv);
 
             col += 1;
         }

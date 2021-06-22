@@ -130,7 +130,7 @@ impl WsServer {
                 let requested_chunk = client.requested_chunks.pop_front();
 
                 if let Some(coords) = requested_chunk {
-                    let chunk = world.chunks.get(&coords);
+                    let chunk = world.chunks.get(&coords, true);
 
                     if chunk.is_none() {
                         client.requested_chunks.push_back(coords);
@@ -139,7 +139,7 @@ impl WsServer {
 
                         let mut component =
                             MessageComponents::default_for(messages::message::Type::Update);
-                        component.chunks = Some(vec![chunk.unwrap().get_protocol(false)]);
+                        component.chunks = Some(vec![chunk.unwrap().get_protocol(true)]);
 
                         let new_message = create_message(component);
                         message_queue.push((
@@ -355,7 +355,7 @@ impl Handler<UpdateVoxel> for WsServer {
                 .get_mut(&world_name)
                 .unwrap()
                 .chunks
-                .get(&coords)
+                .get(&coords, false)
                 .unwrap();
 
             let mut component = MessageComponents::default_for(messages::message::Type::Update);
@@ -390,6 +390,7 @@ impl Handler<ListWorlds> for WsServer {
         self.worlds.iter().for_each(|(name, world)| {
             data.push(WorldData {
                 name: name.to_owned(),
+                time: world.time,
                 generation: match world.generation {
                     GeneratorType::FLAT => "flat".to_owned(),
                     GeneratorType::HILLY => "hilly".to_owned(),

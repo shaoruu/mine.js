@@ -6,6 +6,7 @@ use actix_web::{
     Error, HttpRequest, HttpResponse, Result,
 };
 use actix_web_actors::ws;
+use log::debug;
 
 use std::collections::HashMap;
 
@@ -55,4 +56,10 @@ pub async fn worlds() -> Result<HttpResponse> {
         .await
         .unwrap();
     Ok(HttpResponse::Ok().json(worlds_data))
+}
+
+#[get("/time")]
+pub async fn time(params: Query<HashMap<String, String>>) -> Result<HttpResponse> {
+    let world_query = params.get("world");
+    Ok(HttpResponse::Ok().body("0"))
 }

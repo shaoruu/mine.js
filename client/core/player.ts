@@ -242,6 +242,8 @@ class Player {
     this.updateLookBlock();
     this.updatePerspective();
 
+    // console.log(this.engine.world.getSunlight(this.voxel));
+
     this.engine.peers.light(this.own);
   };
 

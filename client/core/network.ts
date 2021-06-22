@@ -20,7 +20,7 @@ type NetworkOptionsType = {
 class Network {
   public server: CustomWebSocket;
 
-  public url = Helper.getServerURL();
+  public url = Helper.getServerURL('/ws/');
   public connected = false;
 
   public worldName: string;
@@ -36,16 +36,6 @@ class Network {
 
   connect = () => {
     const url = this.url.toString();
-
-    this.url.port = '8080';
-    this.url.path = '/ws/';
-    const socket2 = new URL(this.url.toString());
-    socket2.protocol = socket2.protocol.replace(/http/, 'ws');
-    socket2.hash = '';
-    socket2.searchParams.set('world', this.worldName);
-
-    const server2 = new WebSocket(socket2.toString()) as CustomWebSocket;
-    server2.binaryType = 'arraybuffer';
 
     if (this.server) {
       this.server.onclose = null;
@@ -66,7 +56,6 @@ class Network {
     server.sendEvent = (event) => {
       const encoded = Network.encode(event);
       server.send(encoded);
-      server2.send(encoded);
     };
     server.onopen = () => {
       this.engine.emit('connected');
@@ -194,7 +183,8 @@ class Network {
   };
 
   get cleanURL() {
-    return this.url.clearQuery().toString();
+    const url = Helper.getServerURL();
+    return url.clearQuery().toString();
   }
 
   static decode(buffer) {

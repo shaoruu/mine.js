@@ -1,13 +1,11 @@
 use log::{debug, info};
 
-use actix::prelude::*;
 use std::collections::HashMap;
 use std::time::{Instant, SystemTime};
 
 use crate::libs::types::GeneratorType;
 
 use super::chunks::Chunks;
-use super::message;
 use super::registry::Registry;
 use super::server::Client;
 
@@ -62,6 +60,13 @@ impl World {
             max_light_level,
             render_radius,
         };
+
+        debug!(
+            "{:?}, {:?}, {:?}",
+            registry.get_type_map(vec!["Stone", "Dirt"]),
+            registry.get_texture_by_name("Dirt"),
+            registry.get_uv_by_name("Dirt")
+        );
 
         World {
             time,

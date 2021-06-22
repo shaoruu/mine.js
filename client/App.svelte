@@ -31,8 +31,8 @@
     return await response.json();
   })();
 
-  fetchWorlds.then(({ worlds }) => {
-    if (worlds) {
+  fetchWorlds.then((worlds) => {
+    if (Array.isArray(worlds)) {
       selected = worlds[0].name;
     }
   });
@@ -62,7 +62,6 @@
       engine.player.setName(e.target.value);
     }
   };
-
 </script>
 
 <main>
@@ -91,7 +90,7 @@
         {#await fetchWorlds}
           <p>...waiting</p>
         {:then data}
-          {#each data.worlds as { name, generation, description, players }}
+          {#each data as { name, generation, description, players }}
             <li
               id="world-list-item"
               on:click={() => (selected = name)}
@@ -278,5 +277,4 @@
   .selected {
     border-color: rgba(173, 173, 173, 0.74) !important;
   }
-
 </style>
