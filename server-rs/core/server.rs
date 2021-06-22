@@ -7,13 +7,13 @@ use std::time::Duration;
 
 use crate::core::models::create_of_type;
 use crate::core::world::World;
-use crate::libs::types::{Coords2, Coords3, Quaternion};
+use crate::libs::types::{Coords2, Coords3, GeneratorType, Quaternion};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
 use super::message::{
-    self, ChatMessage, ConfigWorld, JoinResult, JoinWorld, LeaveWorld, ListWorlds, PlayerUpdate,
-    SendMessage, UpdateVoxel,
+    self, ChatMessage, ConfigWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds,
+    PlayerUpdate, SendMessage, UpdateVoxel, WorldData,
 };
 use super::models::{create_message, messages, MessageComponents};
 use super::registry::Registry;
@@ -57,7 +57,13 @@ impl WsServer {
 
         world.clients.insert(id, client);
 
-        JoinResult { id }
+        JoinResult {
+            id,
+            time: world.time,
+            tick_speed: world.tick_speed,
+            spawn: [0, world.chunks.get_max_height(0, 0), 0],
+            passables: world.chunks.registry.get_passable_solids(),
+        }
     }
 
     fn broadcast(
@@ -202,10 +208,10 @@ impl Handler<LeaveWorld> for WsServer {
     }
 }
 
-impl Handler<ListWorlds> for WsServer {
-    type Result = MessageResult<ListWorlds>;
+impl Handler<ListWorldNames> for WsServer {
+    type Result = MessageResult<ListWorldNames>;
 
-    fn handle(&mut self, _: ListWorlds, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, _: ListWorldNames, _ctx: &mut Self::Context) -> Self::Result {
         MessageResult(self.worlds.keys().cloned().collect())
     }
 }
@@ -375,6 +381,28 @@ impl Handler<SendMessage> for WsServer {
     }
 }
 
+impl Handler<ListWorlds> for WsServer {
+    type Result = MessageResult<ListWorlds>;
+
+    fn handle(&mut self, _msg: ListWorlds, _ctx: &mut Self::Context) -> Self::Result {
+        let mut data = Vec::new();
+
+        self.worlds.iter().for_each(|(name, world)| {
+            data.push(WorldData {
+                name: name.to_owned(),
+                generation: match world.generation {
+                    GeneratorType::FLAT => "flat".to_owned(),
+                    GeneratorType::HILLY => "hilly".to_owned(),
+                },
+                description: world.description.to_owned(),
+                players: world.clients.len(),
+            })
+        });
+
+        MessageResult(data)
+    }
+}
+
 impl SystemService for WsServer {
     fn service_started(&mut self, ctx: &mut Context<Self>) {
         // Loading worlds from `worlds.json`
@@ -403,4 +431,5 @@ impl SystemService for WsServer {
         });
     }
 }
+
 impl Supervised for WsServer {}

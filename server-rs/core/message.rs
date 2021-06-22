@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use actix::prelude::*;
 
-use crate::libs::types::{Coords2, Coords3, Quaternion};
+use crate::libs::types::{Coords2, Coords3, GeneratorType, Quaternion};
 
 use super::models::{self, messages};
 
@@ -15,6 +17,10 @@ pub struct Message(pub models::messages::Message);
 #[derive(MessageResponse)]
 pub struct JoinResult {
     pub id: usize,
+    pub time: f32,
+    pub tick_speed: f32,
+    pub spawn: [i32; 3],
+    pub passables: Vec<u32>,
 }
 
 #[derive(Clone, Message)]
@@ -86,6 +92,21 @@ pub struct SendMessage {
     pub content: models::messages::Message,
 }
 
+/* -------------------------------------------------------------------------- */
+/*                              Routing Messages                              */
+/* -------------------------------------------------------------------------- */
 #[derive(Clone, Message)]
 #[rtype(result = "Vec<String>")]
+pub struct ListWorldNames;
+
+#[derive(MessageResponse, Deserialize, Serialize)]
+pub struct WorldData {
+    pub name: String,
+    pub generation: String,
+    pub description: String,
+    pub players: usize,
+}
+
+#[derive(Clone, Message)]
+#[rtype(result = "Vec<WorldData>")]
 pub struct ListWorlds;

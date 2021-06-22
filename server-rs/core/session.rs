@@ -7,7 +7,7 @@ use actix_broker::BrokerIssue;
 use actix_web_actors::ws;
 
 use crate::core::message::ChatMessage;
-use crate::core::models::{create_message, encode_message, MessageComponents};
+use crate::core::models::{create_message, create_of_type, encode_message, MessageComponents};
 use crate::libs::types::{Coords2, Coords3, Quaternion};
 use crate::models::{
     self,
@@ -53,10 +53,40 @@ impl WsSession {
         WsServer::from_registry()
             .send(join_msg)
             .into_actor(self)
-            .then(|id, act, _ctx| {
+            .then(|id, act, ctx| {
                 if let Ok(result) = id {
                     act.id = result.id;
                     act.world_name = world_name;
+
+                    // TODO: fix this?
+                    let passables: Vec<String> =
+                        result.passables.iter().map(|&id| id.to_string()).collect();
+                    let passables = passables.join(",");
+                    let data = format!(
+                        r#"
+                    {{
+                        "id": {},
+                        "time": {},
+                        "tickSpeed": {},
+                        "spawn": [{}, {}, {}],
+                        "passables": {}
+                    }}
+                    "#,
+                        result.id,
+                        result.time,
+                        result.tick_speed,
+                        result.spawn[0],
+                        result.spawn[1],
+                        result.spawn[2],
+                        format!("[{}]", passables)
+                    );
+
+                    let mut message = create_of_type(messages::message::Type::Init);
+                    message.json = data;
+                    let encoded = encode_message(&message);
+
+                    // TODO: ACTUALLY SEND!
+                    // ctx.binary(encoded);
                 }
 
                 fut::ready(())
@@ -171,9 +201,6 @@ impl WsSession {
             MessageType::Update => self.on_update(message),
             MessageType::Peer => self.on_peer(message),
             MessageType::Message => self.on_chat_message(message),
-            MessageType::Init => {
-                println!("INIT?")
-            }
             _ => {}
         }
     }

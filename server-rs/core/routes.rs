@@ -21,11 +21,11 @@ pub async fn ws_route(
     let world_name = match world_query {
         Some(name) => name.to_owned(),
         None => {
-            let worlds = WsServer::from_registry()
-                .send(message::ListWorlds)
+            let world_names = WsServer::from_registry()
+                .send(message::ListWorldNames)
                 .await
                 .unwrap();
-            worlds[0].to_owned()
+            world_names[0].to_owned()
         }
     };
 
@@ -46,4 +46,13 @@ pub async fn index() -> Result<fs::NamedFile> {
 #[get("/atlas")]
 pub async fn atlas() -> Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("textures/atlas.png")?)
+}
+
+#[get("/worlds")]
+pub async fn worlds() -> Result<HttpResponse> {
+    let worlds_data = WsServer::from_registry()
+        .send(message::ListWorlds)
+        .await
+        .unwrap();
+    Ok(HttpResponse::Ok().json(worlds_data))
 }

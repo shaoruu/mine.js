@@ -38,6 +38,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(routes::atlas)
             .service(routes::index)
+            .service(routes::worlds)
             .service(web::resource("/ws/").to(routes::ws_route))
             .service(fs::Files::new("/", "public/").show_files_listing())
     })
