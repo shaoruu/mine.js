@@ -152,6 +152,7 @@ class Network {
 
         for (const peer of peersData) {
           const { id, name, px, py, pz, qx, qy, qz, qw } = peer;
+          if (id === player.id) continue;
           peers.update(id, { name, position: [px, py, pz], rotation: [qx, qy, qz, qw] });
         }
         break;

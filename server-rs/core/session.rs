@@ -7,7 +7,7 @@ use actix_broker::BrokerIssue;
 use actix_web_actors::ws;
 
 use crate::core::message::ChatMessage;
-use crate::core::models::{create_of_type, encode_message, MessageComponents};
+use crate::core::models::{create_of_type, encode_message};
 use crate::libs::types::{Coords2, Coords3, Quaternion};
 use crate::models::{
     self,
@@ -65,7 +65,7 @@ impl WsSession {
                     let data = format!(
                         r#"
                     {{
-                        "id": {},
+                        "id": "{}",
                         "time": {},
                         "tickSpeed": {},
                         "spawn": [{}, {}, {}],

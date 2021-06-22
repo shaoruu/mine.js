@@ -1,6 +1,6 @@
 use actix::prelude::*;
 use actix_broker::BrokerSubscribe;
-use log::debug;
+use serde::Serialize;
 
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
@@ -16,7 +16,7 @@ use super::message::{
     self, ChatMessage, ConfigWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds,
     PlayerUpdate, SendMessage, UpdateVoxel, WorldData,
 };
-use super::models::{create_message, messages, MessageComponents};
+use super::models::{create_message, messages, MessageComponents, PeerProtocol};
 use super::registry::Registry;
 use super::world::WorldMetrics;
 
@@ -96,10 +96,35 @@ impl WsServer {
     }
 
     fn tick(&mut self) {
-        let mut message_queue = Vec::new();
+        let mut message_queue = VecDeque::new();
 
         for world in self.worlds.values_mut() {
             world.tick();
+
+            let peers: Vec<PeerProtocol> = world
+                .clients
+                .iter()
+                .map(|(id, c)| PeerProtocol {
+                    id: id.to_string(),
+                    name: c.name.to_owned().unwrap_or_else(|| "lol".to_owned()),
+                    px: c.position.0,
+                    py: c.position.1,
+                    pz: c.position.2,
+                    qx: c.rotation.0,
+                    qy: c.rotation.1,
+                    qz: c.rotation.2,
+                    qw: c.rotation.3,
+                })
+                .collect();
+            let mut peers_components =
+                MessageComponents::default_for(messages::message::Type::Peer);
+            peers_components.peers = Some(peers);
+            let peers_message = create_message(peers_components);
+            message_queue.push_front((
+                world.name.to_owned(),
+                message::Message(peers_message),
+                vec![],
+            ));
 
             let WorldMetrics {
                 chunk_size,
@@ -143,7 +168,7 @@ impl WsServer {
                         component.chunks = Some(vec![chunk.unwrap().get_protocol(true)]);
 
                         let new_message = create_message(component);
-                        message_queue.push((
+                        message_queue.push_back((
                             world.name.to_owned(),
                             message::Message(new_message),
                             vec![],
