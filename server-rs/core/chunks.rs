@@ -8,6 +8,8 @@ use std::{
 
 use log::{debug, info};
 
+use rayon::prelude::*;
+
 use crate::{
     core::constants::HEIGHT_OFFSET,
     libs::{
@@ -32,6 +34,7 @@ use super::{
 };
 
 /// Node of a light propagation queue
+#[derive(Debug)]
 struct LightNode {
     voxel: Coords3<i32>,
     level: u32,
@@ -196,7 +199,7 @@ impl Chunks {
     fn load(&mut self, coords: &Coords2<i32>, render_radius: i16) {
         let Coords2(cx, cz) = coords;
 
-        let mut to_generate: Vec<Chunk> = Vec::new();
+        let mut to_generate: Vec<Coords2<i32>> = Vec::new();
         let mut to_decorate: Vec<Coords2<i32>> = Vec::new();
 
         let terrain_radius = render_radius + 4;
@@ -219,14 +222,7 @@ impl Chunks {
                 let chunk = self.get_chunk(&coords);
 
                 if chunk.is_none() {
-                    let mut new_chunk = Chunk::new(
-                        coords.to_owned(),
-                        self.metrics.chunk_size,
-                        self.metrics.max_height as usize,
-                        self.metrics.dimension,
-                    );
-                    Chunks::generate_chunk(&mut new_chunk, types.clone());
-                    to_generate.push(new_chunk);
+                    to_generate.push(coords.to_owned());
                 }
 
                 if dist <= decorate_radius * decorate_radius {
@@ -234,6 +230,20 @@ impl Chunks {
                 }
             }
         }
+
+        let to_generate: Vec<Chunk> = to_generate
+            .par_iter()
+            .map(|coords| {
+                let mut new_chunk = Chunk::new(
+                    coords.to_owned(),
+                    self.metrics.chunk_size,
+                    self.metrics.max_height as usize,
+                    self.metrics.dimension,
+                );
+                Chunks::generate_chunk(&mut new_chunk, types.clone());
+                new_chunk
+            })
+            .collect();
         debug!("Took {:?}", start.elapsed());
 
         for chunk in to_generate {
@@ -1366,10 +1376,6 @@ impl Chunks {
                     }
                 }
             }
-        }
-
-        if transparent && indices.is_empty() {
-            return None;
         }
 
         Some(MeshType {
