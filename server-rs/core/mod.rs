@@ -1,3 +1,4 @@
+pub mod builder;
 pub mod chunk;
 pub mod chunks;
 pub mod constants;

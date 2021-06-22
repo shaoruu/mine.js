@@ -134,4 +134,75 @@ impl Noise {
 
         total / max_val * amplifier - y * height_scale
     }
+
+    pub fn central_perlin(&self, x: f64, z: f64, scale: f64) -> bool {
+        let mut noise3x3 = vec![];
+
+        for i in -1..=1 {
+            for j in -1..=1 {
+                noise3x3.push(self.perlin2(x + i as f64, z + j as f64, scale));
+            }
+        }
+
+        let mut max = noise3x3[0];
+        let mut maxi = 0;
+
+        for i in 1..noise3x3.len() {
+            if max < noise3x3[i] {
+                max = noise3x3[i];
+                maxi = i;
+            }
+        }
+
+        maxi == 4
+    }
+
+    pub fn central_fractal_perlin(&self, x: f64, z: f64, scale: f64, octaves: i32) -> bool {
+        let mut noise3x3 = vec![];
+
+        for i in -1..=1 {
+            for j in -1..=1 {
+                noise3x3.push(self.fractal_octave_perlin2(
+                    x + i as f64,
+                    z + j as f64,
+                    scale,
+                    octaves,
+                ));
+            }
+        }
+
+        let mut max = noise3x3[0];
+        let mut maxi = 0;
+
+        for i in 1..noise3x3.len() {
+            if max < noise3x3[i] {
+                max = noise3x3[i];
+                maxi = i;
+            }
+        }
+
+        maxi == 4
+    }
+
+    pub fn central_simplex(&self, x: f64, z: f64, scale: f64) -> bool {
+        let mut noise3x3 = vec![];
+
+        for i in -1..=1 {
+            for j in -1..=1 {
+                noise3x3.push(self.simplex2(x + i as f64, z + j as f64, scale));
+            }
+        }
+
+        let mut max = noise3x3[0];
+        let mut maxi = 0;
+
+        for i in 1..noise3x3.len() {
+            if max < noise3x3[i] {
+                max = noise3x3[i];
+                maxi = i;
+            }
+        }
+
+        maxi == 4
+    }
 }

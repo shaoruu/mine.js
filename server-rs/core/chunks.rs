@@ -11,7 +11,7 @@ use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::{
-    core::constants::HEIGHT_OFFSET,
+    core::{builder, constants::HEIGHT_OFFSET},
     libs::{
         noise::{Noise, NoiseConfig},
         types::{Block, Coords2, Coords3, MeshType, UV},
@@ -23,6 +23,7 @@ use crate::{
 };
 
 use super::{
+    builder::Builder,
     chunk::{Chunk, Meshes},
     constants::{
         BlockFace, CornerData, CornerSimplified, PlantFace, AMPLIFIER, AO_TABLE, BLOCK_FACES,
@@ -58,6 +59,7 @@ pub struct Chunks {
     max_loaded_chunks: i32,
     chunks: HashMap<String, Chunk>,
     noise: Noise,
+    builder: Builder,
 }
 
 /**
@@ -68,12 +70,13 @@ impl Chunks {
     pub fn new(metrics: WorldMetrics, max_loaded_chunks: i32, registry: Registry) -> Self {
         Chunks {
             metrics,
-            registry,
+            registry: registry.to_owned(),
             caching: false,
             max_loaded_chunks,
             chunks: HashMap::new(),
             chunk_cache: HashSet::new(),
             noise: Noise::new(LEVEL_SEED),
+            builder: Builder::new(registry, Noise::new(LEVEL_SEED)),
         }
     }
 
@@ -209,7 +212,6 @@ impl Chunks {
             .registry
             .get_type_map(vec!["Air", "Stone", "Dirt", "Grass Block"]);
 
-        let start = Instant::now();
         for x in -terrain_radius..=terrain_radius {
             for z in -terrain_radius..=terrain_radius {
                 let dist = x * x + z * z;
@@ -244,10 +246,11 @@ impl Chunks {
                 new_chunk
             })
             .collect();
-        debug!("Took {:?}", start.elapsed());
 
         for chunk in to_generate {
+            let coords = chunk.coords.to_owned();
             self.chunks.insert(chunk.name.to_owned(), chunk);
+            self.generate_chunk_height_map(&coords);
         }
 
         for coords in to_decorate.iter() {
@@ -272,10 +275,10 @@ impl Chunks {
 
         chunk.needs_decoration = false;
 
-        let Coords3(min_x, min_y, min_z) = chunk.min;
-
-        self.set_voxel_by_voxel(min_x, min_y, min_z, 1);
-        self.set_voxel_by_voxel(min_x - 1, min_y, min_z - 1, 2);
+        let updates = self.builder.build(self.get_chunk(coords).unwrap());
+        updates
+            .iter()
+            .for_each(|u| self.set_voxel_by_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id));
     }
 
     /// Centered around a coordinate, return 3x3 chunks neighboring the coordinate (not inclusive).
@@ -586,10 +589,10 @@ impl Chunks {
         let Coords3(start_x, start_y, start_z) = chunk.min;
         let Coords3(end_x, end_y, end_z) = chunk.max;
 
-        let air = *types.get("Air").unwrap();
-        let grass_block = *types.get("Grass Block").unwrap();
-        let stone = *types.get("Stone").unwrap();
-        let dirt = *types.get("Dirt").unwrap();
+        let air = types["Air"];
+        let grass_block = types["Grass Block"];
+        let stone = types["Stone"];
+        let dirt = types["Dirt"];
 
         let is_empty = true;
 
@@ -915,7 +918,7 @@ impl Chunks {
         for vx in start_x..end_x {
             for vz in start_z..end_z {
                 let h = self.get_max_height(vx, vz);
-                for vy in start_y..(h + 1) {
+                for vy in start_y..(h + 2) {
                     let voxel_id = self.get_voxel_by_voxel(vx, vy, vz);
                     let &Block {
                         is_solid,
