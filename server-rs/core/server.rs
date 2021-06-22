@@ -1,12 +1,13 @@
 use actix::prelude::*;
 use actix_broker::BrokerSubscribe;
+use log::debug;
 use serde::Serialize;
 
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::time::Duration;
 
-use crate::core::models::create_of_type;
+use crate::core::models::{create_chat_message, create_of_type};
 use crate::core::world::World;
 use crate::libs::types::{Coords2, Coords3, GeneratorType, Quaternion};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
@@ -16,7 +17,10 @@ use super::message::{
     self, ChatMessage, ConfigWorld, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames,
     ListWorlds, PlayerUpdate, SendMessage, UpdateVoxel, WorldData,
 };
-use super::models::{create_message, messages, MessageComponents, PeerProtocol};
+use super::models::{
+    create_message, messages, messages::chat_message::Type as ChatType, MessageComponents,
+    PeerProtocol,
+};
 use super::registry::Registry;
 use super::world::WorldMetrics;
 
@@ -218,8 +222,6 @@ impl Handler<JoinWorld> for WsServer {
         };
         let result = self.add_client_to_world(&world_name, None, new_client);
 
-        // TODO: SEND "SOMEONE JOINED" MESSAGE
-
         MessageResult(result)
     }
 }
@@ -265,7 +267,15 @@ impl Handler<PlayerUpdate> for WsServer {
             .get_mut(&client_id)
             .expect("Client not found.");
 
-        client.name = name;
+        let mut newly_joined = false;
+
+        if name.is_some() {
+            if client.name.is_none() {
+                newly_joined = true;
+            }
+
+            client.name = name.clone();
+        }
 
         if let Some(rotation) = rotation {
             client.rotation = rotation;
@@ -277,6 +287,16 @@ impl Handler<PlayerUpdate> for WsServer {
 
         if let Some(chunk) = chunk {
             client.requested_chunks.push_back(chunk);
+        }
+
+        if newly_joined {
+            let new_message = create_chat_message(
+                ChatType::Info,
+                "",
+                format!("{} joined the game", name.unwrap()).as_str(),
+            );
+
+            self.broadcast(&world_name, &message::Message(new_message), vec![]);
         }
     }
 }

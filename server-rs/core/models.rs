@@ -182,6 +182,21 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
     message
 }
 
+pub fn create_chat_message(
+    r#type: messages::chat_message::Type,
+    sender: &str,
+    body: &str,
+) -> messages::Message {
+    let mut components = MessageComponents::default_for(messages::message::Type::Message);
+    components.message = Some(ChatProtocol {
+        r#type,
+        sender: sender.to_owned(),
+        body: body.to_owned(),
+    });
+
+    create_message(components)
+}
+
 pub fn encode_message(message: &messages::Message) -> Vec<u8> {
     let mut buf = Vec::new();
     buf.reserve(message.encoded_len());
