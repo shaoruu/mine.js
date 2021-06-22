@@ -165,8 +165,6 @@ impl Registry {
                 end_v,
             };
 
-            debug!("{}, {:?}", key, uv);
-
             ranges.insert(key, uv);
 
             col += 1;

@@ -61,13 +61,6 @@ impl World {
             render_radius,
         };
 
-        debug!(
-            "{:?}, {:?}, {:?}",
-            registry.get_type_map(vec!["Stone", "Dirt"]),
-            registry.get_texture_by_name("Dirt"),
-            registry.get_uv_by_name("Dirt")
-        );
-
         World {
             time,
             name,

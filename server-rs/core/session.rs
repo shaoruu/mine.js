@@ -212,7 +212,7 @@ impl Actor for WsSession {
         self.join_world(ctx);
     }
 
-    fn stopped(&mut self, _: &mut Self::Context) {
+    fn stopped(&mut self, ctx: &mut Self::Context) {
         let message = format!(
             "{}(id={}) left the world {}",
             self.name.clone().unwrap_or_else(|| "unnamed".to_string()),
@@ -221,6 +221,13 @@ impl Actor for WsSession {
         );
 
         info!("{}", Yellow.bold().paint(message));
+
+        let leave_msg = LeaveWorld {
+            world_name: self.world_name.clone(),
+            client_id: self.id,
+        };
+
+        WsServer::from_registry().do_send(leave_msg);
     }
 }
 

@@ -18,8 +18,8 @@ use super::message::{
     ListWorlds, PlayerUpdate, SendMessage, UpdateVoxel, WorldData,
 };
 use super::models::{
-    create_message, messages, messages::chat_message::Type as ChatType, MessageComponents,
-    PeerProtocol,
+    create_message, messages, messages::chat_message::Type as ChatType,
+    messages::message::Type as MessageType, MessageComponents, PeerProtocol,
 };
 use super::registry::Registry;
 use super::world::WorldMetrics;
@@ -120,8 +120,7 @@ impl WsServer {
                     qw: c.rotation.3,
                 })
                 .collect();
-            let mut peers_components =
-                MessageComponents::default_for(messages::message::Type::Peer);
+            let mut peers_components = MessageComponents::default_for(MessageType::Peer);
             peers_components.peers = Some(peers);
             let peers_message = create_message(peers_components);
             message_queue.push_front((
@@ -167,8 +166,7 @@ impl WsServer {
                     } else {
                         // SEND CHUNK BACK TO CLIENT
 
-                        let mut component =
-                            MessageComponents::default_for(messages::message::Type::Update);
+                        let mut component = MessageComponents::default_for(MessageType::Update);
                         component.chunks = Some(vec![chunk.unwrap().get_protocol(true)]);
 
                         let new_message = create_message(component);
@@ -230,9 +228,30 @@ impl Handler<LeaveWorld> for WsServer {
     type Result = ();
 
     fn handle(&mut self, msg: LeaveWorld, _ctx: &mut Self::Context) {
+        let mut message_queue = Vec::<(String, message::Message)>::new();
+
         if let Some(world) = self.worlds.get_mut(&msg.world_name) {
-            world.clients.remove(&msg.client_id);
+            let client = world.clients.remove(&msg.client_id);
+            if let Some(client) = client {
+                let mut new_message = create_chat_message(
+                    MessageType::Leave,
+                    ChatType::Info,
+                    "",
+                    format!(
+                        "{} left the game",
+                        client.name.unwrap_or_else(|| "Somebody".to_owned())
+                    )
+                    .as_str(),
+                );
+                new_message.text = msg.client_id.to_string();
+
+                message_queue.push((world.name.to_owned(), message::Message(new_message)));
+            }
         }
+
+        message_queue.into_iter().for_each(|(world_name, message)| {
+            self.broadcast(&world_name, &message, vec![]);
+        })
     }
 }
 
@@ -262,41 +281,41 @@ impl Handler<PlayerUpdate> for WsServer {
             .worlds
             .get_mut(world_name.as_str())
             .expect("World not found.");
-        let client = world
-            .clients
-            .get_mut(&client_id)
-            .expect("Client not found.");
+        let client = world.clients.get_mut(&client_id);
 
-        let mut newly_joined = false;
+        if let Some(client) = client {
+            let mut newly_joined = false;
 
-        if name.is_some() {
-            if client.name.is_none() {
-                newly_joined = true;
+            if name.is_some() {
+                if client.name.is_none() {
+                    newly_joined = true;
+                }
+
+                client.name = name.clone();
             }
 
-            client.name = name.clone();
-        }
+            if let Some(rotation) = rotation {
+                client.rotation = rotation;
+            }
 
-        if let Some(rotation) = rotation {
-            client.rotation = rotation;
-        }
+            if let Some(position) = position {
+                client.position = position;
+            }
 
-        if let Some(position) = position {
-            client.position = position;
-        }
+            if let Some(chunk) = chunk {
+                client.requested_chunks.push_back(chunk);
+            }
 
-        if let Some(chunk) = chunk {
-            client.requested_chunks.push_back(chunk);
-        }
+            if newly_joined {
+                let new_message = create_chat_message(
+                    MessageType::Message,
+                    ChatType::Info,
+                    "",
+                    format!("{} joined the game", name.unwrap()).as_str(),
+                );
 
-        if newly_joined {
-            let new_message = create_chat_message(
-                ChatType::Info,
-                "",
-                format!("{} joined the game", name.unwrap()).as_str(),
-            );
-
-            self.broadcast(&world_name, &message::Message(new_message), vec![]);
+                self.broadcast(&world_name, &message::Message(new_message), vec![]);
+            }
         }
     }
 }
@@ -310,7 +329,7 @@ impl Handler<ChatMessage> for WsServer {
             message,
         } = msg;
 
-        let mut new_message = create_of_type(messages::message::Type::Message);
+        let mut new_message = create_of_type(MessageType::Message);
         new_message.message = Some(message);
 
         self.broadcast(&world_name, &message::Message(new_message), vec![]);
@@ -338,7 +357,7 @@ impl Handler<ConfigWorld> for WsServer {
             world.tick_speed = tick_speed as f32;
         }
 
-        let mut new_message = create_of_type(messages::message::Type::Config);
+        let mut new_message = create_of_type(MessageType::Config);
         new_message.json = json.to_string();
 
         self.broadcast(&world_name, &message::Message(new_message), vec![]);
@@ -377,7 +396,7 @@ impl Handler<UpdateVoxel> for WsServer {
         }
 
         // First send the message, so borrow checker doesn't freak out
-        let mut new_message = create_of_type(messages::message::Type::Update);
+        let mut new_message = create_of_type(MessageType::Update);
         new_message.json = format!(
             "{{\"vx\":{},\"vy\":{},\"vz\":{},\"type\":{}}}",
             vx, vy, vz, id
@@ -409,7 +428,7 @@ impl Handler<UpdateVoxel> for WsServer {
                 .get(&coords, false)
                 .unwrap();
 
-            let mut component = MessageComponents::default_for(messages::message::Type::Update);
+            let mut component = MessageComponents::default_for(MessageType::Update);
             component.chunks = Some(vec![chunk.get_protocol(false)]);
 
             let new_message = create_message(component);

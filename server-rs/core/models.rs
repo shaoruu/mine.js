@@ -183,13 +183,14 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
 }
 
 pub fn create_chat_message(
-    r#type: messages::chat_message::Type,
+    message_type: messages::message::Type,
+    chat_type: messages::chat_message::Type,
     sender: &str,
     body: &str,
 ) -> messages::Message {
-    let mut components = MessageComponents::default_for(messages::message::Type::Message);
+    let mut components = MessageComponents::default_for(message_type);
     components.message = Some(ChatProtocol {
-        r#type,
+        r#type: chat_type,
         sender: sender.to_owned(),
         body: body.to_owned(),
     });
