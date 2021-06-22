@@ -140,7 +140,7 @@ class Helper {
     url.path = path;
 
     if (url.host === 'localhost') {
-      url.port = '8080';
+      url.port = '4000';
     }
 
     return url;

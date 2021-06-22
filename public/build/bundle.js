@@ -8762,7 +8762,7 @@ Helper.getServerURL = (path = '/') => {
     const url = new (domurl__WEBPACK_IMPORTED_MODULE_0___default())();
     url.path = path;
     if (url.host === 'localhost') {
-        url.port = '8080';
+        url.port = '4000';
     }
     return url;
 };

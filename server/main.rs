@@ -32,7 +32,7 @@ fn setup_logger() -> Result<(), fern::InitError> {
 async fn main() -> std::io::Result<()> {
     setup_logger().expect("Something went wrong with fern...");
 
-    let addr = "localhost:8080";
+    let addr = "localhost:4000";
 
     let srv = HttpServer::new(move || {
         App::new()

@@ -71,18 +71,12 @@
   "scripts": {
     "client": "webpack",
     "watch": "gulp dev -L",
-    "server": "yarn run testbed",
+    "server": "bash scripts/run.sh",
     "build": "cross-env NODE_ENV=production webpack",
     "compile:ts": "pbts -o protocol/index.d.ts protocol/index.js",
     "compile:js": "pbjs -t static-module -w commonjs -o protocol/index.js protocol/messages.proto",
     "compile": "yarn run compile:js && yarn run compile:ts",
     "dev": "npm-run-all --parallel server client watch",
-    "all": "cross-env WORLDS=* nodemon",
-    "mine": "cross-env WORLDS=mine nodemon",
-    "testbed": "cross-env WORLDS=testbed nodemon",
-    "terrains": "cross-env WORLDS=terrains nodemon",
-    "start": "cross-env NODE_ENV=production WORLDS=testbed,idk nodemon",
-    "rust": "bash scripts/run.sh",
     "validate": "svelte-check"
   },
   "dependencies": {

@@ -3,6 +3,7 @@
 // use rayon::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
+    sync::Arc,
     time::Instant,
 };
 
@@ -11,7 +12,10 @@ use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::{
-    core::{builder, constants::HEIGHT_OFFSET},
+    core::{
+        builder::{self, VoxelUpdate},
+        constants::HEIGHT_OFFSET,
+    },
     libs::{
         noise::{Noise, NoiseConfig},
         types::{Block, Coords2, Coords3, MeshType, UV},
@@ -253,11 +257,45 @@ impl Chunks {
             self.generate_chunk_height_map(&coords);
         }
 
-        for coords in to_decorate.iter() {
-            self.decorate_chunk(coords);
+        let to_decorate: Vec<Chunk> = to_decorate
+            .iter()
+            .map(|coords| {
+                self.chunks
+                    .remove(&get_chunk_name(coords.0, coords.1))
+                    .unwrap()
+            })
+            .collect();
+
+        let builder = Arc::new(&self.builder);
+        let to_decorate_updates: Vec<Vec<VoxelUpdate>> = to_decorate
+            .par_iter()
+            .map(|chunk| {
+                let builder = builder.clone();
+
+                if !chunk.needs_decoration {
+                    return vec![];
+                }
+
+                builder.build(chunk)
+            })
+            .collect();
+
+        let mut to_decorate_coords = Vec::new();
+
+        for mut chunk in to_decorate {
+            let coords = chunk.coords.to_owned();
+            chunk.needs_decoration = false;
+            self.chunks.insert(chunk.name.to_owned(), chunk);
+            to_decorate_coords.push(coords);
         }
 
-        for coords in to_decorate.iter() {
+        for updates in to_decorate_updates {
+            for u in updates {
+                self.set_voxel_by_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
+            }
+        }
+
+        for coords in to_decorate_coords.iter() {
             // ?
             self.generate_chunk_height_map(coords);
         }

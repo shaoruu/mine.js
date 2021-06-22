@@ -1,3 +1,7 @@
+use libflate::zlib::Encoder;
+
+use std::io::Write;
+
 use log::{debug, info};
 
 use ansi_term::Colour::Yellow;
@@ -238,7 +242,14 @@ impl Handler<message::Message> for WsSession {
         let message::Message(msg) = msg;
         let encoded = encode_message(&msg);
 
-        ctx.binary(encoded)
+        if encoded.len() > 1024 {
+            let mut encoder = Encoder::new(Vec::new()).unwrap();
+            encoder.write_all(encoded.as_slice()).unwrap();
+            let encoded = encoder.finish().into_result().unwrap();
+            ctx.binary(encoded)
+        } else {
+            ctx.binary(encoded)
+        }
     }
 }
 
