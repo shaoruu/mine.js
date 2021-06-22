@@ -74,7 +74,7 @@ impl WsServer {
     fn broadcast(
         &mut self,
         world_name: &str,
-        msg: &message::Message,
+        msg: &messages::Message,
         exclude: Vec<usize>,
     ) -> Option<()> {
         let world = self.worlds.get_mut(world_name)?;
@@ -86,7 +86,11 @@ impl WsServer {
                 continue;
             }
 
-            if client.addr.do_send(msg.to_owned()).is_err() {
+            if client
+                .addr
+                .do_send(message::Message(msg.to_owned()))
+                .is_err()
+            {
                 resting_clients.push(*id);
             }
         }
@@ -123,11 +127,7 @@ impl WsServer {
             let mut peers_components = MessageComponents::default_for(MessageType::Peer);
             peers_components.peers = Some(peers);
             let peers_message = create_message(peers_components);
-            message_queue.push_front((
-                world.name.to_owned(),
-                message::Message(peers_message),
-                vec![],
-            ));
+            message_queue.push_front((world.name.to_owned(), peers_message, vec![]));
 
             let WorldMetrics {
                 chunk_size,
@@ -170,11 +170,7 @@ impl WsServer {
                         component.chunks = Some(vec![chunk.unwrap().get_protocol(true)]);
 
                         let new_message = create_message(component);
-                        message_queue.push_back((
-                            world.name.to_owned(),
-                            message::Message(new_message),
-                            vec![],
-                        ));
+                        message_queue.push_back((world.name.to_owned(), new_message, vec![]));
                     }
                 }
             }
@@ -228,7 +224,7 @@ impl Handler<LeaveWorld> for WsServer {
     type Result = ();
 
     fn handle(&mut self, msg: LeaveWorld, _ctx: &mut Self::Context) {
-        let mut message_queue = Vec::<(String, message::Message)>::new();
+        let mut message_queue = Vec::new();
 
         if let Some(world) = self.worlds.get_mut(&msg.world_name) {
             let client = world.clients.remove(&msg.client_id);
@@ -245,7 +241,7 @@ impl Handler<LeaveWorld> for WsServer {
                 );
                 new_message.text = msg.client_id.to_string();
 
-                message_queue.push((world.name.to_owned(), message::Message(new_message)));
+                message_queue.push((world.name.to_owned(), new_message));
             }
         }
 
@@ -314,7 +310,7 @@ impl Handler<PlayerUpdate> for WsServer {
                     format!("{} joined the game", name.unwrap()).as_str(),
                 );
 
-                self.broadcast(&world_name, &message::Message(new_message), vec![]);
+                self.broadcast(&world_name, &new_message, vec![]);
             }
         }
     }
@@ -332,7 +328,7 @@ impl Handler<ChatMessage> for WsServer {
         let mut new_message = create_of_type(MessageType::Message);
         new_message.message = Some(message);
 
-        self.broadcast(&world_name, &message::Message(new_message), vec![]);
+        self.broadcast(&world_name, &new_message, vec![]);
     }
 }
 
@@ -360,7 +356,7 @@ impl Handler<ConfigWorld> for WsServer {
         let mut new_message = create_of_type(MessageType::Config);
         new_message.json = json.to_string();
 
-        self.broadcast(&world_name, &message::Message(new_message), vec![]);
+        self.broadcast(&world_name, &new_message, vec![]);
     }
 }
 
@@ -402,7 +398,7 @@ impl Handler<UpdateVoxel> for WsServer {
             vx, vy, vz, id
         );
 
-        self.broadcast(&world_name, &message::Message(new_message), vec![]);
+        self.broadcast(&world_name, &new_message, vec![]);
 
         // then borrow again
         let world = self.worlds.get_mut(&world_name).expect("World not found.");
@@ -432,7 +428,7 @@ impl Handler<UpdateVoxel> for WsServer {
             component.chunks = Some(vec![chunk.get_protocol(false)]);
 
             let new_message = create_message(component);
-            self.broadcast(&world_name, &message::Message(new_message), vec![]);
+            self.broadcast(&world_name, &new_message, vec![]);
         });
     }
 }
@@ -447,7 +443,7 @@ impl Handler<SendMessage> for WsServer {
             ..
         } = msg;
 
-        self.broadcast(&world_name, &message::Message(content), vec![]);
+        self.broadcast(&world_name, &content, vec![]);
     }
 }
 
@@ -470,7 +466,7 @@ impl Handler<ListWorlds> for WsServer {
     fn handle(&mut self, _msg: ListWorlds, _ctx: &mut Self::Context) -> Self::Result {
         let mut data = Vec::new();
 
-        self.worlds.iter().for_each(|(name, world)| {
+        self.worlds.values().for_each(|world| {
             data.push(make_world_data(world));
         });
 
