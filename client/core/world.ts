@@ -60,7 +60,7 @@ class World extends EventEmitter {
     });
 
     engine.on('focus', async () => {
-      this.setTime(await engine.network.fetchData('/time'), false);
+      this.setTime(JSON.parse(await engine.network.fetchData('/time'))[0], false);
     });
   }
 

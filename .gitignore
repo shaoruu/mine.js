@@ -4,3 +4,4 @@ package-lock.json
 data
 .vscode
 .env
+/target

@@ -1,0 +1,9 @@
+{
+  "base": "base-block.json",
+  "name": "Trunk",
+  "textures": {
+    "top": "trunk_top.png",
+    "side": "trunk_side.png",
+    "bottom": "trunk_top.png"
+  }
+}

@@ -19,15 +19,15 @@ message Chunk {
   int32 x = 1;
   int32 z = 2;
   repeated Mesh meshes = 3;
-  repeated int32 voxels = 4 [packed=true];
-  repeated int32 lights = 5 [packed=true];
+  repeated uint32 voxels = 4 [packed=true];
+  repeated uint32 lights = 5 [packed=true];
 }
 
 message Update {
   int32 vx = 1;
   int32 vy = 2;
   int32 vz = 3;
-  int32 type = 4;
+  uint32 type = 4;
 }
 
 message Peer {
@@ -44,10 +44,10 @@ message Peer {
 
 message ChatMessage {
   enum Type {
-    ERROR = 1;
-    SERVER = 2;
-    PLAYER = 3;
-    INFO = 4;
+    ERROR = 0;
+    SERVER = 1;
+    PLAYER = 2;
+    INFO = 3;
   }
 
   Type type = 1;
@@ -57,19 +57,19 @@ message ChatMessage {
 
 message Message {
   enum Type {
-    ERROR = 1;
-    INIT = 2;
-    JOIN = 3;
-    LEAVE = 4;
-    LOAD = 5;
-    PICK = 6;
-    TELEPORT = 7;
-    UPDATE = 8;
-    REQUEST = 9;
-    CONFIG = 10;
-    PEER = 11;
-    ENTITY = 12;
-    MESSAGE = 13;
+    ERROR = 0;
+    INIT = 1;
+    JOIN = 2;
+    LEAVE = 3;
+    LOAD = 4;
+    PICK = 5;
+    TELEPORT = 6;
+    UPDATE = 7;
+    REQUEST = 8;
+    CONFIG = 9;
+    PEER = 10;
+    ENTITY = 11;
+    MESSAGE = 12;
   }
 
   Type type = 1;

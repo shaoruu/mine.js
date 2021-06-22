@@ -134,8 +134,12 @@ class Sky {
     rendering.scene.add(this.meshGroup);
 
     setInterval(async () => {
-      if (!rendering.engine.network.connected) return;
-      this.newTime = await rendering.engine.network.fetchData('/time');
+      if (!rendering.engine.network.connected || rendering.engine.tickSpeed === 0) return;
+      const sentTime = Date.now();
+      const [, serverReceivedTime] = JSON.parse(await rendering.engine.network.fetchData('/time'));
+      const receivedTime = Date.now();
+      const offset = serverReceivedTime - (sentTime + receivedTime) / 2;
+      this.newTime = this.tracker.time + offset;
     }, checkInterval);
   }
 

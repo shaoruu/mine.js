@@ -1,0 +1,8 @@
+{
+  "base": "base-block.json",
+  "name": "Air",
+  "isEmpty": true,
+  "isSolid": false,
+  "isTransparent": true,
+  "isBlock": false
+}

@@ -135,11 +135,14 @@ class Helper {
     }
   };
 
-  public static getServerURL = () => {
+  public static getServerURL = (path = '/') => {
     const url = new Url();
+    url.path = path;
+
     if (url.host === 'localhost') {
       url.port = '4000';
     }
+
     return url;
   };
 }

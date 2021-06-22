@@ -1,0 +1,12 @@
+{
+  "isEmpty": false,
+  "isSolid": false,
+  "isFluid": false,
+  "isTransparent": true,
+  "isLight": false,
+  "isBlock": false,
+  "isPlant": true,
+  "isPlantable": false,
+  "lightLevel": 0,
+  "transparentStandalone": false
+}

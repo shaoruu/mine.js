@@ -20,7 +20,7 @@ type NetworkOptionsType = {
 class Network {
   public server: CustomWebSocket;
 
-  public url = Helper.getServerURL();
+  public url = Helper.getServerURL('/ws/');
   public connected = false;
 
   public worldName: string;
@@ -54,7 +54,8 @@ class Network {
     const server = new WebSocket(socket.toString()) as CustomWebSocket;
     server.binaryType = 'arraybuffer';
     server.sendEvent = (event) => {
-      server.send(Network.encode(event));
+      const encoded = Network.encode(event);
+      server.send(encoded);
     };
     server.onopen = () => {
       this.engine.emit('connected');
@@ -151,6 +152,7 @@ class Network {
 
         for (const peer of peersData) {
           const { id, name, px, py, pz, qx, qy, qz, qw } = peer;
+          if (id === player.id) continue;
           peers.update(id, { name, position: [px, py, pz], rotation: [qx, qy, qz, qw] });
         }
         break;
@@ -182,7 +184,8 @@ class Network {
   };
 
   get cleanURL() {
-    return this.url.clearQuery().toString();
+    const url = Helper.getServerURL();
+    return url.clearQuery().toString();
   }
 
   static decode(buffer) {
