@@ -7,7 +7,7 @@ use crate::libs::types::{Block, TypeMap, UV};
 use crate::utils::json;
 
 type Ranges = HashMap<String, UV>;
-type Blocks = HashMap<String, Block>;
+type Blocks = HashMap<u32, Block>;
 
 #[derive(Debug, Clone)]
 pub struct Registry {
@@ -105,9 +105,9 @@ impl Registry {
                 transparent_standalone: block_json["transparentStandalone"].as_bool().unwrap(),
             };
 
-            name_map.insert(new_block.name.clone(), id.parse::<u32>().unwrap());
-
-            blocks.insert(id.to_owned(), new_block);
+            let id = id.parse::<u32>().unwrap();
+            name_map.insert(new_block.name.clone(), id);
+            blocks.insert(id, new_block);
         }
 
         // OBTAINED TEXTURE MAP
@@ -240,9 +240,8 @@ impl Registry {
     }
 
     pub fn get_block_by_id(&self, id: u32) -> &Block {
-        let id_key = id.to_string();
         self.blocks
-            .get(&id_key)
+            .get(&id)
             .unwrap_or_else(|| panic!("Block id not found: {}", id))
     }
 
@@ -288,8 +287,12 @@ impl Registry {
         self.blocks
             .iter()
             .filter(|&(_, b)| !b.is_solid && (b.is_block || b.is_plant))
-            .map(|(id, _)| id.parse().unwrap())
+            .map(|(id, _)| *id)
             .collect()
+    }
+
+    pub fn has_type(&self, id: u32) -> bool {
+        self.blocks.contains_key(&id)
     }
 }
 

@@ -56,6 +56,25 @@ pub struct ChatMessage {
     pub message: messages::ChatMessage,
 }
 
+#[derive(Clone, Message, Default)]
+#[rtype(result = "()")]
+pub struct ConfigWorld {
+    pub world_name: String,
+    pub time: f32,
+    pub tick_speed: f32,
+    pub json: serde_json::Value,
+}
+
+#[derive(Clone, Message, Default)]
+#[rtype(result = "()")]
+pub struct UpdateVoxel {
+    pub world_name: String,
+    pub vx: i32,
+    pub vy: i32,
+    pub vz: i32,
+    pub id: u32,
+}
+
 #[derive(Clone, Message)]
 #[rtype(result = "()")]
 pub struct SendMessage {

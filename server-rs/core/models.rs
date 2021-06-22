@@ -77,6 +77,10 @@ impl messages::Message {
     }
 }
 
+pub fn create_of_type(r#type: messages::message::Type) -> messages::Message {
+    create_message(MessageComponents::default_for(r#type))
+}
+
 pub fn create_message(components: MessageComponents) -> messages::Message {
     let mut message = messages::Message {
         r#type: components.r#type as i32,

@@ -14,7 +14,7 @@ use crate::models::{
     messages::{self, message::Type as MessageType},
 };
 
-use super::message::{self, PlayerUpdate};
+use super::message::{self, ConfigWorld, PlayerUpdate, UpdateVoxel};
 use super::message::{JoinWorld, LeaveWorld};
 use super::server::WsServer;
 
@@ -31,7 +31,7 @@ pub struct WsSession {
 }
 
 impl WsSession {
-    pub fn join_world(&mut self, ctx: &mut ws::WebsocketContext<Self>) {
+    pub fn join_world(&self, ctx: &mut ws::WebsocketContext<Self>) {
         let world_name = self.world_name.to_owned();
 
         // First send a leave message for the current room
@@ -64,7 +64,7 @@ impl WsSession {
             .wait(ctx);
     }
 
-    fn on_chunk_request(&mut self, message: messages::Message) {
+    fn on_chunk_request(&self, message: messages::Message) {
         let json = message.parse_json().unwrap();
 
         let cx = json["x"].as_i64().unwrap() as i32;
@@ -75,6 +75,41 @@ impl WsSession {
             chunk: Some(Coords2(cx, cz)),
             world_name: self.world_name.to_owned(),
             ..Default::default()
+        };
+
+        WsServer::from_registry().do_send(update);
+    }
+
+    fn on_config(&self, message: messages::Message) {
+        let json = message.parse_json().unwrap();
+
+        let time = json["time"].as_f64().unwrap() as f32;
+        let tick_speed = json["tickSpeed"].as_f64().unwrap() as f32;
+
+        let config = ConfigWorld {
+            world_name: self.world_name.to_owned(),
+            tick_speed,
+            time,
+            json,
+        };
+
+        WsServer::from_registry().do_send(config);
+    }
+
+    fn on_update(&mut self, message: messages::Message) {
+        let json = message.parse_json().unwrap();
+
+        let vx = json["x"].as_i64().unwrap() as i32;
+        let vy = json["y"].as_i64().unwrap() as i32;
+        let vz = json["z"].as_i64().unwrap() as i32;
+        let vtype = json["type"].as_u64().unwrap() as u32;
+
+        let update = UpdateVoxel {
+            vx,
+            vy,
+            vz,
+            id: vtype,
+            world_name: self.world_name.to_owned(),
         };
 
         WsServer::from_registry().do_send(update);
@@ -120,7 +155,7 @@ impl WsSession {
         });
     }
 
-    fn on_chat_message(&mut self, message: messages::Message) {
+    fn on_chat_message(&self, message: messages::Message) {
         WsServer::from_registry().do_send(ChatMessage {
             message: message.message.unwrap(),
             world_name: self.world_name.to_owned(),
@@ -132,8 +167,8 @@ impl WsSession {
 
         match msg_type {
             MessageType::Request => self.on_chunk_request(message),
-            MessageType::Config => {}
-            MessageType::Update => {}
+            MessageType::Config => self.on_config(message),
+            MessageType::Update => self.on_update(message),
             MessageType::Peer => self.on_peer(message),
             MessageType::Message => self.on_chat_message(message),
             MessageType::Init => {
@@ -170,7 +205,7 @@ impl Handler<message::Message> for WsSession {
         let message::Message(msg) = msg;
         let _encoded = encode_message(&msg);
 
-        debug!("Supposedly should send of type {:?}", msg.r#type);
+        // debug!("Supposedly should send of type {:?}", msg.r#type);
 
         // ctx.binary(encoded)
     }

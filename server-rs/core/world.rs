@@ -15,7 +15,7 @@ use super::server::Client;
 pub struct WorldMetrics {
     pub dimension: usize,
     pub chunk_size: usize,
-    pub max_height: usize,
+    pub max_height: u32,
     pub max_light_level: u32,
     pub render_radius: usize,
 }
@@ -41,8 +41,8 @@ pub struct World {
 impl World {
     pub fn new(json: serde_json::Value, registry: Registry) -> Self {
         let chunk_size = json["chunkSize"].as_i64().unwrap() as usize;
-        let max_height = json["maxHeight"].as_i64().unwrap() as usize;
         let dimension = json["dimension"].as_i64().unwrap() as usize;
+        let max_height = json["maxHeight"].as_i64().unwrap() as u32;
         let max_light_level = json["maxLightLevel"].as_i64().unwrap() as u32;
         let time = json["time"].as_f64().unwrap() as f32;
         let name = json["name"].as_str().unwrap().to_owned();

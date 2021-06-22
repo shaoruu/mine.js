@@ -2,7 +2,7 @@
 
 // use rayon::prelude::*;
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     time::Instant,
 };
 
@@ -11,7 +11,8 @@ use log::{debug, info};
 use crate::{
     libs::types::{Block, Coords2, Coords3, MeshType, UV},
     utils::convert::{
-        get_chunk_name, get_position_name, get_voxel_name, map_voxel_to_chunk, map_world_to_voxel,
+        get_chunk_name, get_position_name, get_voxel_name, map_voxel_to_chunk,
+        map_voxel_to_chunk_local, map_world_to_voxel,
     },
 };
 
@@ -41,10 +42,13 @@ struct VertexLight {
 /// A wrapper around all the chunks
 #[derive(Debug)]
 pub struct Chunks {
+    pub chunk_cache: HashSet<Coords2<i32>>,
     pub metrics: WorldMetrics,
+    pub registry: Registry,
+
+    caching: bool,
     max_loaded_chunks: i32,
     chunks: HashMap<String, Chunk>,
-    registry: Registry,
 }
 
 /**
@@ -55,9 +59,11 @@ impl Chunks {
     pub fn new(metrics: WorldMetrics, max_loaded_chunks: i32, registry: Registry) -> Self {
         Chunks {
             metrics,
+            registry,
+            caching: false,
             max_loaded_chunks,
             chunks: HashMap::new(),
-            registry,
+            chunk_cache: HashSet::new(),
         }
     }
 
@@ -118,6 +124,18 @@ impl Chunks {
             render_radius,
             start.elapsed()
         );
+    }
+
+    pub fn start_caching(&mut self) {
+        self.caching = true;
+    }
+
+    pub fn stop_caching(&mut self) {
+        self.caching = false;
+    }
+
+    pub fn clear_cache(&mut self) {
+        self.chunk_cache.clear();
     }
 
     /// Unload chunks when too many chunks are loaded.
@@ -194,7 +212,7 @@ impl Chunks {
                     let mut new_chunk = Chunk::new(
                         coords.to_owned(),
                         self.metrics.chunk_size,
-                        self.metrics.max_height,
+                        self.metrics.max_height as usize,
                         self.metrics.dimension,
                     );
                     self.generate_chunk(&mut new_chunk);
@@ -257,31 +275,36 @@ impl Chunks {
     }
 
     /// Get a chunk reference from a coordinate
-    fn get_chunk(&self, coords: &Coords2<i32>) -> Option<&Chunk> {
+    pub fn get_chunk(&self, coords: &Coords2<i32>) -> Option<&Chunk> {
         let name = get_chunk_name(coords.0, coords.1);
         self.chunks.get(&name)
     }
 
     /// Get a mutable chunk reference from a coordinate
-    fn get_chunk_mut(&mut self, coords: &Coords2<i32>) -> Option<&mut Chunk> {
+    pub fn get_chunk_mut(&mut self, coords: &Coords2<i32>) -> Option<&mut Chunk> {
         let name = get_chunk_name(coords.0, coords.1);
-        self.chunks.get_mut(&name)
+        let chunk = self.chunks.get_mut(&name);
+        // ? does non-mutable chunks need to be cached?
+        if self.caching && chunk.is_some() {
+            self.chunk_cache.insert(coords.to_owned());
+        }
+        chunk
     }
 
     /// Get a chunk reference from a voxel coordinate
-    fn get_chunk_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> Option<&Chunk> {
+    pub fn get_chunk_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> Option<&Chunk> {
         let coords = map_voxel_to_chunk(vx, vy, vz, self.metrics.chunk_size);
         self.get_chunk(&coords)
     }
 
     /// Get a mutable chunk reference from a voxel coordinate
-    fn get_chunk_by_voxel_mut(&mut self, vx: i32, vy: i32, vz: i32) -> Option<&mut Chunk> {
+    pub fn get_chunk_by_voxel_mut(&mut self, vx: i32, vy: i32, vz: i32) -> Option<&mut Chunk> {
         let coords = map_voxel_to_chunk(vx, vy, vz, self.metrics.chunk_size);
         self.get_chunk_mut(&coords)
     }
 
     /// Get the voxel type at a voxel coordinate
-    fn get_voxel_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+    pub fn get_voxel_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self
             .get_chunk_by_voxel(vx, vy, vz)
             .expect("Chunk not found.");
@@ -289,13 +312,13 @@ impl Chunks {
     }
 
     /// Get the voxel type at a world coordinate
-    fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u32 {
+    pub fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u32 {
         let Coords3(vx, vy, vz) = map_world_to_voxel(wx, wy, wz, self.metrics.dimension);
         self.get_voxel_by_voxel(vx, vy, vz)
     }
 
     /// Set the voxel type for a voxel coordinate
-    fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
+    pub fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
@@ -304,7 +327,7 @@ impl Chunks {
     }
 
     /// Get the sunlight level at a voxel coordinate
-    fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+    pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self
             .get_chunk_by_voxel(vx, vy, vz)
             .expect("Chunk not found.");
@@ -312,7 +335,7 @@ impl Chunks {
     }
 
     /// Set the sunlight level for a voxel coordinate
-    fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
+    pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
@@ -320,7 +343,7 @@ impl Chunks {
     }
 
     /// Get the torch light level at a voxel coordinate
-    fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+    pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self
             .get_chunk_by_voxel(vx, vy, vz)
             .expect("Chunk not found.");
@@ -328,7 +351,7 @@ impl Chunks {
     }
 
     /// Set the torch light level at a voxel coordinate
-    fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
+    pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
@@ -336,18 +359,18 @@ impl Chunks {
     }
 
     /// Get a block type from a voxel coordinate
-    fn get_block_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> &Block {
+    pub fn get_block_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> &Block {
         let voxel = self.get_voxel_by_voxel(vx, vy, vz);
         self.registry.get_block_by_id(voxel)
     }
 
     /// Get a block type from a voxel id
-    fn get_block_by_id(&self, id: u32) -> &Block {
+    pub fn get_block_by_id(&self, id: u32) -> &Block {
         self.registry.get_block_by_id(id)
     }
 
     /// Get the max height at a voxel column coordinate
-    fn get_max_height(&self, vx: i32, vz: i32) -> i32 {
+    pub fn get_max_height(&self, vx: i32, vz: i32) -> i32 {
         let chunk = self
             .get_chunk_by_voxel(vx, 0, vz)
             .expect("Chunk not found.");
@@ -355,11 +378,179 @@ impl Chunks {
     }
 
     /// Set the max height at a voxel column coordinate
-    fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
+    pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, 0, vz)
             .expect("Chunk not found.");
         chunk.set_max_height(vx, vz, height)
+    }
+
+    /// Get neighboring chunks according to a voxel coordinate
+    pub fn get_neighbor_chunk_coords(&self, vx: i32, vy: i32, vz: i32) -> HashSet<Coords2<i32>> {
+        let chunk_size = self.metrics.chunk_size;
+
+        let mut neighbor_chunks = HashSet::new();
+
+        let coords = map_voxel_to_chunk(vx, vy, vz, chunk_size);
+        let Coords3(lx, _, lz) = map_voxel_to_chunk_local(vx, vy, vz, chunk_size);
+
+        let chunk_size = chunk_size as i32;
+        let Coords2(cx, cz) = coords;
+
+        let a = lx <= 0;
+        let b = lz <= 0;
+        let c = lx >= chunk_size - 1;
+        let d = lz >= chunk_size - 1;
+
+        // Direct neighbors
+        if a {
+            neighbor_chunks.insert(Coords2(cx - 1, cz));
+        }
+        if b {
+            neighbor_chunks.insert(Coords2(cx, cz - 1));
+        }
+        if c {
+            neighbor_chunks.insert(Coords2(cx + 1, cz));
+        }
+        if d {
+            neighbor_chunks.insert(Coords2(cx, cz + 1));
+        }
+
+        // Side-to-side diagonals
+        if a && b {
+            neighbor_chunks.insert(Coords2(cx - 1, cz - 1));
+        }
+        if a && d {
+            neighbor_chunks.insert(Coords2(cx - 1, cz + 1));
+        }
+        if b && c {
+            neighbor_chunks.insert(Coords2(cx + 1, cz - 1));
+        }
+        if c && d {
+            neighbor_chunks.insert(Coords2(cx + 1, cz + 1));
+        }
+
+        neighbor_chunks.remove(&coords);
+
+        neighbor_chunks
+    }
+
+    /// Update a voxel to a new type
+    pub fn update(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
+        // TODO: fix this code (might have better way)
+        self.get_chunk_by_voxel_mut(vx, vy, vz)
+            .unwrap()
+            .needs_saving = true;
+        let needs_propagation = self
+            .get_chunk_by_voxel(vx, vy, vz)
+            .unwrap()
+            .needs_propagation;
+
+        let max_height = self.metrics.max_height as i32;
+        let max_light_level = self.metrics.max_light_level;
+
+        let height = self.get_max_height(vx, vz);
+
+        // TODO: better way? RefCell?
+        let current_type = self.get_block_by_voxel(vx, vy, vz).clone();
+        let updated_type = self.get_block_by_id(id).clone();
+
+        let voxel = Coords3(vx, vy, vz);
+
+        // updating the new block
+        self.set_voxel_by_voxel(vx, vy, vz, id);
+
+        // updating the height map
+        if self.registry.is_air(id) {
+            if vy == height {
+                // on max height, should set max height to lower
+                for y in (0..vy).rev() {
+                    if y == 0 || !self.registry.is_air(self.get_voxel_by_voxel(vx, y, vz)) {
+                        self.set_max_height(vx, vz, y);
+                        break;
+                    }
+                }
+            }
+        } else if height < vy {
+            self.set_max_height(vx, vz, vy);
+        }
+
+        // update light levels
+        if !needs_propagation {
+            if current_type.is_light {
+                // remove leftover light
+                self.remove_light(vx, vy, vz, false);
+            } else if current_type.is_transparent && !updated_type.is_transparent {
+                // remove light if solid block is placed
+                [false, true].iter().for_each(|&is_sunlight| {
+                    let level = if is_sunlight {
+                        self.get_sunlight(vx, vy, vz)
+                    } else {
+                        self.get_torch_light(vx, vy, vz)
+                    };
+                    if level != 0 {
+                        self.remove_light(vx, vy, vz, is_sunlight);
+                    }
+                });
+            }
+
+            if updated_type.is_light {
+                // placing a light
+                self.set_torch_light(vx, vy, vz, updated_type.light_level);
+                self.flood_light(
+                    VecDeque::from(vec![LightNode {
+                        voxel,
+                        level: updated_type.light_level,
+                    }]),
+                    false,
+                );
+            } else if updated_type.is_transparent && !current_type.is_transparent {
+                // solid block removed
+                [false, true].iter().for_each(|&is_sunlight| {
+                    let mut queue = VecDeque::<LightNode>::new();
+
+                    if is_sunlight && vy == max_height - 1 {
+                        // propagate sunlight down
+                        self.set_sunlight(vx, vy, vz, max_light_level);
+                        queue.push_back(LightNode {
+                            voxel: voxel.clone(),
+                            level: max_light_level,
+                        })
+                    } else {
+                        for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
+                            let nvy = vy + oy;
+
+                            if nvy < 0 || nvy >= max_height {
+                                return;
+                            }
+
+                            let nvx = vx + ox;
+                            let nvz = vz + oz;
+                            let n_voxel = Coords3(nvx, nvy, nvz);
+                            let &Block {
+                                is_light,
+                                is_transparent,
+                                ..
+                            } = self.get_block_by_voxel(nvx, nvy, nvz);
+
+                            // need propagation after solid block removed
+                            let level = if is_sunlight {
+                                self.get_sunlight(nvx, nvy, nvz)
+                            } else {
+                                self.get_torch_light(nvx, nvy, nvz)
+                            };
+                            if level != 0 && (is_transparent || (is_light && !is_sunlight)) {
+                                queue.push_back(LightNode {
+                                    voxel: n_voxel,
+                                    level,
+                                })
+                            }
+                        }
+                    }
+                    self.flood_light(queue, is_sunlight);
+                })
+            }
+        }
     }
 
     /// Mark a chunk for saving from a voxel coordinate
@@ -408,7 +599,7 @@ impl Chunks {
 
         for lx in 0..size {
             for lz in 0..size {
-                for ly in (0..max_height).rev() {
+                for ly in (0..max_height as usize).rev() {
                     let id = chunk.voxels[&[lx, ly, lz]];
                     let ly_i32 = ly as i32;
 
@@ -623,124 +814,6 @@ impl Chunks {
         }
 
         self.flood_light(fill, is_sunlight);
-    }
-
-    /// Update a voxel to a new type
-    fn update(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
-        // TODO: fix this code (might have better way)
-        self.get_chunk_by_voxel_mut(vx, vy, vz)
-            .unwrap()
-            .needs_saving = true;
-        let needs_propagation = self
-            .get_chunk_by_voxel(vx, vy, vz)
-            .unwrap()
-            .needs_propagation;
-
-        let max_height = self.metrics.max_height as i32;
-        let max_light_level = self.metrics.max_light_level;
-
-        let height = self.get_max_height(vx, vz);
-
-        // TODO: better way? RefCell?
-        let current_type = self.get_block_by_voxel(vx, vy, vz).clone();
-        let updated_type = self.get_block_by_id(id).clone();
-
-        let voxel = Coords3(vx, vy, vz);
-
-        // updating the new block
-        self.set_voxel_by_voxel(vx, vy, vz, id);
-
-        // updating the height map
-        if self.registry.is_air(id) {
-            if vy == height {
-                // on max height, should set max height to lower
-                for y in (0..vy).rev() {
-                    if y == 0 || !self.registry.is_air(self.get_voxel_by_voxel(vx, y, vz)) {
-                        self.set_max_height(vx, vz, y);
-                        break;
-                    }
-                }
-            }
-        } else if height < vy {
-            self.set_max_height(vx, vz, vy);
-        }
-
-        // update light levels
-        if !needs_propagation {
-            if current_type.is_light {
-                // remove leftover light
-                self.remove_light(vx, vy, vz, false);
-            } else if current_type.is_transparent && !updated_type.is_transparent {
-                // remove light if solid block is placed
-                [false, true].iter().for_each(|&is_sunlight| {
-                    let level = if is_sunlight {
-                        self.get_sunlight(vx, vy, vz)
-                    } else {
-                        self.get_torch_light(vx, vy, vz)
-                    };
-                    if level != 0 {
-                        self.remove_light(vx, vy, vz, is_sunlight);
-                    }
-                });
-            }
-
-            if updated_type.is_light {
-                // placing a light
-                self.set_torch_light(vx, vy, vz, updated_type.light_level);
-                self.flood_light(
-                    VecDeque::from(vec![LightNode {
-                        voxel,
-                        level: updated_type.light_level,
-                    }]),
-                    false,
-                );
-            } else if updated_type.is_transparent && !current_type.is_transparent {
-                // solid block removed
-                [false, true].iter().for_each(|&is_sunlight| {
-                    let mut queue = VecDeque::<LightNode>::new();
-
-                    if is_sunlight && vy == max_height - 1 {
-                        // propagate sunlight down
-                        self.set_sunlight(vx, vy, vz, max_light_level);
-                        queue.push_back(LightNode {
-                            voxel: voxel.clone(),
-                            level: max_light_level,
-                        })
-                    } else {
-                        for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
-                            let nvy = vy + oy;
-
-                            if nvy < 0 || nvy >= max_height {
-                                return;
-                            }
-
-                            let nvx = vx + ox;
-                            let nvz = vz + oz;
-                            let n_voxel = Coords3(nvx, nvy, nvz);
-                            let &Block {
-                                is_light,
-                                is_transparent,
-                                ..
-                            } = self.get_block_by_voxel(nvx, nvy, nvz);
-
-                            // need propagation after solid block removed
-                            let level = if is_sunlight {
-                                self.get_sunlight(nvx, nvy, nvz)
-                            } else {
-                                self.get_torch_light(nvx, nvy, nvz)
-                            };
-                            if level != 0 && (is_transparent || (is_light && !is_sunlight)) {
-                                queue.push_back(LightNode {
-                                    voxel: n_voxel,
-                                    level,
-                                })
-                            }
-                        }
-                    }
-                    self.flood_light(queue, is_sunlight);
-                })
-            }
-        }
     }
 
     /// Meshing a chunk. Poorly written. Needs refactor.

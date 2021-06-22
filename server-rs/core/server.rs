@@ -5,13 +5,15 @@ use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::time::Duration;
 
+use crate::core::models::create_of_type;
 use crate::core::world::World;
 use crate::libs::types::{Coords2, Coords3, Quaternion};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
 use super::message::{
-    self, ChatMessage, JoinResult, JoinWorld, LeaveWorld, ListWorlds, PlayerUpdate, SendMessage,
+    self, ChatMessage, ConfigWorld, JoinResult, JoinWorld, LeaveWorld, ListWorlds, PlayerUpdate,
+    SendMessage, UpdateVoxel,
 };
 use super::models::{create_message, messages, MessageComponents};
 use super::registry::Registry;
@@ -87,6 +89,8 @@ impl WsServer {
     }
 
     fn tick(&mut self) {
+        let mut message_queue = Vec::new();
+
         for world in self.worlds.values_mut() {
             world.tick();
 
@@ -126,10 +130,27 @@ impl WsServer {
                         client.requested_chunks.push_back(coords);
                     } else {
                         // SEND CHUNK BACK TO CLIENT
+
+                        let mut component =
+                            MessageComponents::default_for(messages::message::Type::Update);
+                        component.chunks = Some(vec![chunk.unwrap().get_protocol(false)]);
+
+                        let new_message = create_message(component);
+                        message_queue.push((
+                            world.name.to_owned(),
+                            message::Message(new_message),
+                            vec![],
+                        ));
                     }
                 }
             }
         }
+
+        message_queue
+            .into_iter()
+            .for_each(|(world_name, message, exclude)| {
+                self.broadcast(&world_name, &message, exclude);
+            })
     }
 }
 
@@ -237,13 +258,106 @@ impl Handler<ChatMessage> for WsServer {
             message,
         } = msg;
 
-        let mut new_message = create_message(MessageComponents::default_for(
-            messages::message::Type::Message,
-        ));
-
+        let mut new_message = create_of_type(messages::message::Type::Message);
         new_message.message = Some(message);
 
         self.broadcast(&world_name, &message::Message(new_message), vec![]);
+    }
+}
+
+impl Handler<ConfigWorld> for WsServer {
+    type Result = ();
+
+    fn handle(&mut self, msg: ConfigWorld, _ctx: &mut Self::Context) {
+        let ConfigWorld {
+            world_name,
+            time,
+            tick_speed,
+            json,
+        } = msg;
+
+        let world = self.worlds.get_mut(&world_name).expect("World not found.");
+
+        world.time = time;
+        world.tick_speed = tick_speed;
+
+        let mut new_message = create_of_type(messages::message::Type::Config);
+        new_message.json = json.to_string();
+
+        self.broadcast(&world_name, &message::Message(new_message), vec![]);
+    }
+}
+
+impl Handler<UpdateVoxel> for WsServer {
+    type Result = ();
+
+    fn handle(&mut self, msg: UpdateVoxel, _ctx: &mut Self::Context) {
+        let UpdateVoxel {
+            world_name,
+            vx,
+            vy,
+            vz,
+            id,
+        } = msg;
+
+        let world = self.worlds.get_mut(&world_name).expect("World not found.");
+
+        if vy < 0
+            || vy >= world.chunks.metrics.max_height as i32
+            || !world.chunks.registry.has_type(id)
+        {
+            return;
+        }
+
+        let chunk = world.chunks.get_chunk_by_voxel(vx, vy, vz).unwrap();
+        if chunk.needs_propagation {
+            return;
+        }
+
+        let current_id = world.chunks.get_voxel_by_voxel(vx, vy, vz);
+        if world.chunks.registry.is_air(current_id) && world.chunks.registry.is_air(id) {
+            return;
+        }
+
+        // First send the message, so borrow checker doesn't freak out
+        let mut new_message = create_of_type(messages::message::Type::Update);
+        new_message.json = format!(
+            "{{\"vx\":{},\"vy\":{},\"vz\":{},\"type\":{}}}",
+            vx, vy, vz, id
+        );
+
+        self.broadcast(&world_name, &message::Message(new_message), vec![]);
+
+        // then borrow again
+        let world = self.worlds.get_mut(&world_name).expect("World not found.");
+
+        world.chunks.start_caching();
+        world.chunks.update(vx, vy, vz, id);
+        world.chunks.stop_caching();
+
+        let mut cache = world.chunks.chunk_cache.to_owned();
+        world.chunks.clear_cache();
+
+        let neighbor_chunks = world.chunks.get_neighbor_chunk_coords(vx, vy, vz);
+        neighbor_chunks.into_iter().for_each(|c| {
+            cache.insert(c);
+        });
+
+        cache.into_iter().for_each(|coords| {
+            let chunk = self
+                .worlds
+                .get_mut(&world_name)
+                .unwrap()
+                .chunks
+                .get(&coords)
+                .unwrap();
+
+            let mut component = MessageComponents::default_for(messages::message::Type::Update);
+            component.chunks = Some(vec![chunk.get_protocol(false)]);
+
+            let new_message = create_message(component);
+            self.broadcast(&world_name, &message::Message(new_message), vec![]);
+        });
     }
 }
 
