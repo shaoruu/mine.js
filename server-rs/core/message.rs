@@ -66,8 +66,8 @@ pub struct ChatMessage {
 #[rtype(result = "()")]
 pub struct ConfigWorld {
     pub world_name: String,
-    pub time: f32,
-    pub tick_speed: f32,
+    pub time: Option<f64>,
+    pub tick_speed: Option<f64>,
     pub json: serde_json::Value,
 }
 
@@ -111,3 +111,7 @@ pub struct WorldData {
 #[derive(Clone, Message)]
 #[rtype(result = "Vec<WorldData>")]
 pub struct ListWorlds;
+
+#[derive(Clone, Message)]
+#[rtype(result = "WorldData")]
+pub struct GetWorld(pub String);

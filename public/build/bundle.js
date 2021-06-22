@@ -6768,7 +6768,7 @@ class World extends events__WEBPACK_IMPORTED_MODULE_0__.EventEmitter {
             engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
         });
         engine.on('focus', async () => {
-            this.setTime(await engine.network.fetchData('/time'), false);
+            this.setTime(JSON.parse(await engine.network.fetchData('/time'))[0], false);
         });
     }
     get camChunkPosStr() {
@@ -8584,9 +8584,13 @@ class Sky {
         this.createSkyBox();
         rendering.scene.add(this.meshGroup);
         setInterval(async () => {
-            if (!rendering.engine.network.connected)
+            if (!rendering.engine.network.connected || rendering.engine.tickSpeed === 0)
                 return;
-            this.newTime = await rendering.engine.network.fetchData('/time');
+            const sentTime = Date.now();
+            const [, serverReceivedTime] = JSON.parse(await rendering.engine.network.fetchData('/time'));
+            const receivedTime = Date.now();
+            const offset = serverReceivedTime - (sentTime + receivedTime) / 2;
+            this.newTime = this.tracker.time + offset;
         }, checkInterval);
     }
 }

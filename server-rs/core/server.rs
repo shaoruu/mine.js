@@ -13,8 +13,8 @@ use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
 use super::message::{
-    self, ChatMessage, ConfigWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds,
-    PlayerUpdate, SendMessage, UpdateVoxel, WorldData,
+    self, ChatMessage, ConfigWorld, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames,
+    ListWorlds, PlayerUpdate, SendMessage, UpdateVoxel, WorldData,
 };
 use super::models::{create_message, messages, MessageComponents, PeerProtocol};
 use super::registry::Registry;
@@ -310,8 +310,13 @@ impl Handler<ConfigWorld> for WsServer {
 
         let world = self.worlds.get_mut(&world_name).expect("World not found.");
 
-        world.time = time;
-        world.tick_speed = tick_speed;
+        if let Some(time) = time {
+            world.time = time as f32;
+        }
+
+        if let Some(tick_speed) = tick_speed {
+            world.tick_speed = tick_speed as f32;
+        }
 
         let mut new_message = create_of_type(messages::message::Type::Config);
         new_message.json = json.to_string();
@@ -407,6 +412,19 @@ impl Handler<SendMessage> for WsServer {
     }
 }
 
+fn make_world_data(world: &World) -> WorldData {
+    WorldData {
+        name: world.name.to_owned(),
+        time: world.time,
+        generation: match world.generation {
+            GeneratorType::FLAT => "flat".to_owned(),
+            GeneratorType::HILLY => "hilly".to_owned(),
+        },
+        description: world.description.to_owned(),
+        players: world.clients.len(),
+    }
+}
+
 impl Handler<ListWorlds> for WsServer {
     type Result = MessageResult<ListWorlds>;
 
@@ -414,19 +432,20 @@ impl Handler<ListWorlds> for WsServer {
         let mut data = Vec::new();
 
         self.worlds.iter().for_each(|(name, world)| {
-            data.push(WorldData {
-                name: name.to_owned(),
-                time: world.time,
-                generation: match world.generation {
-                    GeneratorType::FLAT => "flat".to_owned(),
-                    GeneratorType::HILLY => "hilly".to_owned(),
-                },
-                description: world.description.to_owned(),
-                players: world.clients.len(),
-            })
+            data.push(make_world_data(world));
         });
 
         MessageResult(data)
+    }
+}
+
+impl Handler<GetWorld> for WsServer {
+    type Result = MessageResult<GetWorld>;
+
+    fn handle(&mut self, msg: GetWorld, _ctx: &mut Self::Context) -> Self::Result {
+        let world = self.worlds.get(&msg.0).expect("World not found.");
+
+        MessageResult(make_world_data(world))
     }
 }
 

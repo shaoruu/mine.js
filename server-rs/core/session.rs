@@ -112,8 +112,8 @@ impl WsSession {
     fn on_config(&self, message: messages::Message) {
         let json = message.parse_json().unwrap();
 
-        let time = json["time"].as_f64().unwrap() as f32;
-        let tick_speed = json["tickSpeed"].as_f64().unwrap() as f32;
+        let time = json["time"].as_f64();
+        let tick_speed = json["tickSpeed"].as_f64();
 
         let config = ConfigWorld {
             world_name: self.world_name.to_owned(),

@@ -8,7 +8,10 @@ use actix_web::{
 use actix_web_actors::ws;
 use log::debug;
 
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use super::{message, server::WsServer, session};
 
@@ -60,6 +63,18 @@ pub async fn worlds() -> Result<HttpResponse> {
 
 #[get("/time")]
 pub async fn time(params: Query<HashMap<String, String>>) -> Result<HttpResponse> {
-    let world_query = params.get("world");
-    Ok(HttpResponse::Ok().body("0"))
+    let world_query = params.get("world").unwrap().to_owned();
+    let world_data = WsServer::from_registry()
+        .send(message::GetWorld(world_query))
+        .await
+        .unwrap();
+
+    Ok(HttpResponse::Ok().json(format!(
+        "[{},{}]",
+        world_data.time,
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards?")
+            .as_millis()
+    )))
 }
