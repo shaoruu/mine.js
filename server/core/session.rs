@@ -247,10 +247,8 @@ impl Handler<message::Message> for WsSession {
             encoder.write_all(encoded.as_slice()).unwrap();
             let encoded = encoder.finish().into_result().unwrap();
             ctx.binary(encoded);
-            debug!("Sending of type {:?} ???", msg.r#type);
         } else {
             ctx.binary(encoded);
-            debug!("Sending of type {:?}", msg.r#type);
         }
     }
 }
