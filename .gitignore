@@ -6,3 +6,4 @@ data
 .env
 /target
 public/build/
+protocol/index.*
