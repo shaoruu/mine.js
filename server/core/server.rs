@@ -293,7 +293,7 @@ impl Handler<PlayerUpdate> for WsServer {
             }
 
             if let Some(position) = position {
-                let rotation = rotation.clone().unwrap().clone();
+                let rotation = rotation.unwrap().clone();
                 let peer = PeerProtocol {
                     id: client_id.to_string(),
                     name: client.name.to_owned().unwrap_or_else(|| "lol".to_owned()),

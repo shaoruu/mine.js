@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use actix::prelude::*;
 
-use crate::libs::types::{Coords2, Coords3, GeneratorType, Quaternion};
+use crate::libs::types::{Coords2, Coords3, Quaternion};
 
 use super::models::{self, messages};
 
