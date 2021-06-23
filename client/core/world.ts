@@ -155,6 +155,8 @@ class World extends EventEmitter {
   };
 
   handleServerChunk = (serverChunk: ServerChunkType, prioritized = false) => {
+    serverChunk.x = serverChunk.x || 0;
+    serverChunk.z = serverChunk.z || 0;
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
     this.requestedChunks.delete(Helper.getChunkName(coords));

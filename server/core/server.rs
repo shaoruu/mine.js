@@ -7,6 +7,7 @@ use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::time::{Duration, Instant};
 
+use crate::core::chunks::MeshLevel;
 use crate::core::models::{create_chat_message, create_of_type};
 use crate::core::world::World;
 use crate::libs::types::{Coords2, Coords3, GeneratorType, Quaternion};
@@ -109,26 +110,6 @@ impl WsServer {
         for world in self.worlds.values_mut() {
             world.tick();
 
-            let peers: Vec<PeerProtocol> = world
-                .clients
-                .iter()
-                .map(|(id, c)| PeerProtocol {
-                    id: id.to_string(),
-                    name: c.name.to_owned().unwrap_or_else(|| "lol".to_owned()),
-                    px: c.position.0,
-                    py: c.position.1,
-                    pz: c.position.2,
-                    qx: c.rotation.0,
-                    qy: c.rotation.1,
-                    qz: c.rotation.2,
-                    qw: c.rotation.3,
-                })
-                .collect();
-            let mut peers_components = MessageComponents::default_for(MessageType::Peer);
-            peers_components.peers = Some(peers);
-            let peers_message = create_message(peers_components);
-            message_queue.push_front((world.name.to_owned(), peers_message, vec![]));
-
             let WorldMetrics {
                 chunk_size,
                 dimension,
@@ -166,15 +147,16 @@ impl WsServer {
 
                     // ? Not sure if this will cause any problems
                     if dist < client.render_radius as f32 {
-                        let chunk = world.chunks.get(&coords, true);
+                        let chunk = world.chunks.get(&coords, true, &MeshLevel::All);
 
                         if chunk.is_none() {
                             client.requested_chunks.push_back(coords);
                         } else {
                             // SEND CHUNK BACK TO CLIENT
 
-                            let mut component = MessageComponents::default_for(MessageType::Update);
-                            component.chunks = Some(vec![chunk.unwrap().get_protocol(true)]);
+                            let mut component = MessageComponents::default_for(MessageType::Load);
+                            component.chunks =
+                                Some(vec![chunk.unwrap().get_protocol(true, MeshLevel::All)]);
 
                             let new_message = create_message(component);
                             message_queue.push_back((world.name.to_owned(), new_message, vec![]));
@@ -298,16 +280,35 @@ impl Handler<PlayerUpdate> for WsServer {
                 client.name = name.clone();
             }
 
-            if let Some(rotation) = rotation {
-                client.rotation = rotation;
+            if let Some(position) = position.clone() {
+                client.position = position.clone();
             }
 
-            if let Some(position) = position {
-                client.position = position;
+            if let Some(rotation) = rotation.clone() {
+                client.rotation = rotation;
             }
 
             if let Some(chunk) = chunk {
                 client.requested_chunks.push_back(chunk);
+            }
+
+            if let Some(position) = position {
+                let rotation = rotation.clone().unwrap().clone();
+                let peer = PeerProtocol {
+                    id: client_id.to_string(),
+                    name: client.name.to_owned().unwrap_or_else(|| "lol".to_owned()),
+                    px: position.0,
+                    py: position.1,
+                    pz: position.2,
+                    qx: rotation.0,
+                    qy: rotation.1,
+                    qz: rotation.2,
+                    qw: rotation.3,
+                };
+                let mut peers_components = MessageComponents::default_for(MessageType::Peer);
+                peers_components.peers = Some(vec![peer]);
+                let peers_message = create_message(peers_components);
+                self.broadcast(&world_name.to_owned(), &peers_message, vec![client_id]);
             }
 
             if newly_joined {
@@ -423,17 +424,38 @@ impl Handler<UpdateVoxel> for WsServer {
             cache.insert(c);
         });
 
+        let WorldMetrics {
+            sub_chunks,
+            max_height,
+            ..
+        } = world.chunks.metrics;
+
+        let sub_chunk_unit = max_height / sub_chunks;
+
         cache.into_iter().for_each(|coords| {
+            // TODO: Fix this monstrosity of logic
+            // essentially, this is fixing sub-chunk edges meshing
+            let levels = if vy as u32 % sub_chunk_unit == 0 && vy != 0 {
+                vec![vy as u32 / sub_chunk_unit, (vy as u32 - 1) / sub_chunk_unit]
+            } else if vy as u32 % sub_chunk_unit == sub_chunk_unit - 1
+                && vy as u32 != max_height - 1
+            {
+                vec![vy as u32 / sub_chunk_unit, (vy as u32 + 1) / sub_chunk_unit]
+            } else {
+                vec![vy as u32 / sub_chunk_unit]
+            };
+            let mesh_level = MeshLevel::Levels(levels);
+
             let chunk = self
                 .worlds
                 .get_mut(&world_name)
                 .unwrap()
                 .chunks
-                .get(&coords, false)
+                .get(&coords, false, &mesh_level)
                 .unwrap();
 
             let mut component = MessageComponents::default_for(MessageType::Update);
-            component.chunks = Some(vec![chunk.get_protocol(false)]);
+            component.chunks = Some(vec![chunk.get_protocol(false, mesh_level)]);
 
             let new_message = create_message(component);
             self.broadcast(&world_name, &new_message, vec![]);

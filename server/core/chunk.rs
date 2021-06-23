@@ -8,10 +8,11 @@ use crate::{
     utils::convert,
 };
 
-use super::models::ChunkProtocol;
+use super::{chunks::MeshLevel, models::ChunkProtocol};
 
 #[derive(Debug, Clone)]
 pub struct Meshes {
+    pub sub_chunk: i32,
     pub opaque: Option<MeshType>,
     pub transparent: Option<MeshType>,
 }
@@ -41,7 +42,7 @@ pub struct Chunk {
     pub dimension: usize,
     pub max_height: usize,
 
-    pub meshes: Meshes,
+    pub meshes: Vec<Meshes>,
 }
 
 impl Chunk {
@@ -84,10 +85,7 @@ impl Chunk {
             max_height,
             dimension,
 
-            meshes: Meshes {
-                opaque: None,
-                transparent: None,
-            },
+            meshes: Vec::new(),
         }
     }
 
@@ -171,12 +169,18 @@ impl Chunk {
         todo!()
     }
 
-    pub fn get_protocol(&self, needs_voxels: bool) -> ChunkProtocol {
+    pub fn get_protocol(&self, needs_voxels: bool, mesh: MeshLevel) -> ChunkProtocol {
         // TODO: clone? idk
         ChunkProtocol {
             x: self.coords.0,
             z: self.coords.1,
-            meshes: [self.meshes.to_owned()],
+            meshes: match mesh {
+                MeshLevel::All => self.meshes.to_owned(),
+                MeshLevel::Levels(ls) => ls
+                    .iter()
+                    .map(|&l| self.meshes[l as usize].to_owned())
+                    .collect(),
+            },
             voxels: if needs_voxels {
                 Some(self.voxels.to_owned())
             } else {

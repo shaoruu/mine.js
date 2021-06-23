@@ -51,7 +51,7 @@ export type MeshResultType = {
   indices: Float32Array;
 };
 
-export type ServerMeshType = { opaque: MeshType; transparent: MeshType };
+export type ServerMeshType = { subChunk: number; opaque: MeshType; transparent: MeshType };
 
 export type ServerChunkType = {
   x: number;

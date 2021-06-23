@@ -11,8 +11,9 @@ message Geometry {
 }
 
 message Mesh {
-  Geometry opaque = 1;
-  Geometry transparent = 2;
+  int32 subChunk = 1;
+  Geometry opaque = 2;
+  Geometry transparent = 3;
 }
 
 message Chunk {

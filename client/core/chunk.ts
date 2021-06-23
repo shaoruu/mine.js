@@ -31,7 +31,7 @@ class Chunk {
   public min: Coords3 = [0, 0, 0];
   public max: Coords3 = [0, 0, 0];
 
-  public geometries: Map<string, BufferGeometry> = new Map();
+  public geometries: Map<string, BufferGeometry[]> = new Map();
   public meshes: Map<string, Mesh[]> = new Map();
   public altMeshes: Map<string, Mesh[]> = new Map();
   public mesh: Group;
@@ -53,10 +53,6 @@ class Chunk {
     this.lights = ndarray(pool.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
 
     this.mesh = new Group();
-
-    MESH_TYPES.forEach((type) => {
-      this.geometries.set(type, new BufferGeometry());
-    });
 
     const [cx, cz] = coords;
     const coords3 = [cx, 0, cz];
@@ -154,7 +150,7 @@ class Chunk {
   };
 
   dispose = () => {
-    this.geometries.forEach((geo) => geo.dispose());
+    this.geometries.forEach((geo) => geo.forEach((g) => g.dispose()));
     pool.free(this.voxels.data);
   };
 
@@ -162,13 +158,17 @@ class Chunk {
     this.isMeshing = true;
 
     meshDataList.forEach((meshData) => {
+      const i = meshData.subChunk || 0;
+
       MESH_TYPES.forEach((type) => {
         if (!meshData[type]) {
           this.altMeshes.set(type, undefined);
           return;
         }
 
-        this.altMeshes.set(type, []);
+        if (!this.altMeshes.has(type)) {
+          this.altMeshes.set(type, []);
+        }
 
         const { positions, indices, uvs, aos, torchLights, sunlights } = meshData[type];
 
@@ -178,9 +178,15 @@ class Chunk {
         const sunlightsNumComponents = 1;
         const torchLightsNumComponents = 1;
 
-        const geometry = this.geometries.get(type);
+        let geometries = this.geometries.get(type);
+        if (!geometries) {
+          this.geometries.set(type, []);
+          geometries = this.geometries.get(type);
+        }
 
-        // geometry.dispose();
+        const geometry = geometries[i] || new BufferGeometry();
+
+        geometry.dispose();
         geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
         geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
         geometry.setAttribute('ao', new Float32BufferAttribute(aos, occlusionNumComponents));
@@ -201,6 +207,8 @@ class Chunk {
 
           this.altMeshes.get(type).push(altMesh);
         });
+
+        geometries[i] = geometry;
       });
     });
 

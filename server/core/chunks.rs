@@ -12,10 +12,7 @@ use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::{
-    core::{
-        builder::{self, VoxelUpdate},
-        constants::HEIGHT_OFFSET,
-    },
+    core::{builder::VoxelUpdate, constants::HEIGHT_OFFSET},
     libs::{
         noise::{Noise, NoiseConfig},
         types::{Block, Coords2, Coords3, MeshType, UV},
@@ -50,6 +47,11 @@ struct VertexLight {
     count: u32,
     torch_light: u32,
     sunlight: u32,
+}
+
+pub enum MeshLevel {
+    All,
+    Levels(Vec<u32>),
 }
 
 /// A wrapper around all the chunks
@@ -99,7 +101,12 @@ impl Chunks {
     }
 
     /// Return a chunk references only if chunk is fully initialized (generated and decorated)
-    pub fn get(&mut self, coords: &Coords2<i32>, dirty_check: bool) -> Option<&Chunk> {
+    pub fn get(
+        &mut self,
+        coords: &Coords2<i32>,
+        dirty_check: bool,
+        remesh_level: &MeshLevel,
+    ) -> Option<&Chunk> {
         let chunk = self.get_chunk(coords);
         let neighbors = self.neighbors(coords);
 
@@ -120,7 +127,7 @@ impl Chunks {
         };
 
         if !dirty_check || chunk.unwrap().is_dirty {
-            self.remesh_chunk(coords);
+            self.remesh_chunk(coords, remesh_level);
         }
 
         self.get_chunk(coords)
@@ -163,7 +170,7 @@ impl Chunks {
     }
 
     /// Remesh a chunk, propagating itself and its neighbors then mesh.
-    pub fn remesh_chunk(&mut self, coords: &Coords2<i32>) {
+    pub fn remesh_chunk(&mut self, coords: &Coords2<i32>, level: &MeshLevel) {
         // let start = Instant::now();
         // propagate light first
         let chunk = self.get_chunk(coords).unwrap();
@@ -183,17 +190,46 @@ impl Chunks {
 
         // TODO: MESH HERE (AND SUB MESHES)
 
-        let opaque = self.mesh_chunk(coords, false);
-        let transparent = self.mesh_chunk(coords, true);
-        // debug!("Spent {:?} meshing {:?}", start.elapsed(), coords);
+        let sub_chunks = self.metrics.sub_chunks;
 
-        let chunk = self.get_chunk_mut(coords).unwrap();
-        chunk.meshes = Meshes {
-            opaque,
-            transparent,
+        match level {
+            MeshLevel::All => {
+                let chunk = self.get_chunk_mut(coords).unwrap();
+                chunk.meshes = Vec::new();
+
+                for sub_chunk in 0..sub_chunks {
+                    let opaque = self.mesh_chunk(coords, false, sub_chunk);
+                    let transparent = self.mesh_chunk(coords, true, sub_chunk);
+
+                    let chunk = self.get_chunk_mut(coords).unwrap();
+
+                    chunk.meshes.push(Meshes {
+                        opaque,
+                        transparent,
+                        sub_chunk: sub_chunk as i32,
+                    });
+
+                    chunk.is_dirty = false;
+                }
+            }
+            MeshLevel::Levels(ls) => {
+                for &sub_chunk in ls {
+                    let opaque = self.mesh_chunk(coords, false, sub_chunk);
+                    let transparent = self.mesh_chunk(coords, true, sub_chunk);
+
+                    let chunk = self.get_chunk_mut(coords).unwrap();
+
+                    chunk.meshes[sub_chunk as usize] = Meshes {
+                        opaque,
+                        transparent,
+                        sub_chunk: sub_chunk as i32,
+                    };
+
+                    chunk.is_dirty = false;
+                }
+            }
         };
 
-        chunk.is_dirty = false;
         // debug!("Meshing took a total of {:?}", start.elapsed());
     }
 
@@ -918,13 +954,24 @@ impl Chunks {
     }
 
     /// Meshing a chunk. Poorly written. Needs refactor.
-    fn mesh_chunk(&self, coords: &Coords2<i32>, transparent: bool) -> Option<MeshType> {
+    fn mesh_chunk(
+        &self,
+        coords: &Coords2<i32>,
+        transparent: bool,
+        sub_chunk: u32,
+    ) -> Option<MeshType> {
         let Chunk {
             min,
             max,
             dimension,
             ..
         } = self.get_chunk(coords).unwrap();
+
+        let WorldMetrics {
+            max_height,
+            sub_chunks,
+            ..
+        } = self.metrics;
 
         let mut positions = Vec::<f32>::new();
         let mut indices = Vec::<i32>::new();
@@ -953,10 +1000,13 @@ impl Chunks {
 
         let plant_shrink = 0.6;
 
+        let sub_chunk_unit = max_height / sub_chunks;
+
         for vx in start_x..end_x {
             for vz in start_z..end_z {
-                let h = self.get_max_height(vx, vz);
-                for vy in start_y..(h + 2) {
+                for vy in
+                    (sub_chunk * sub_chunk_unit) as i32..((sub_chunk + 1) * sub_chunk_unit) as i32
+                {
                     let voxel_id = self.get_voxel_by_voxel(vx, vy, vz);
                     let &Block {
                         is_solid,
@@ -1218,8 +1268,9 @@ impl Chunks {
         let mut i = 0;
         for vx in start_x..end_x {
             for vz in start_z..end_z {
-                let h = self.get_max_height(vx, vz);
-                for vy in start_y..(h + 2) {
+                for vy in
+                    (sub_chunk * sub_chunk_unit) as i32..((sub_chunk + 1) * sub_chunk_unit) as i32
+                {
                     let voxel_id = self.get_voxel_by_voxel(vx, vy, vz);
                     let &Block {
                         is_solid,

@@ -10,7 +10,7 @@ use super::chunk::Meshes;
 pub struct ChunkProtocol {
     pub x: i32,
     pub z: i32,
-    pub meshes: [Meshes; 1],
+    pub meshes: Vec<Meshes>,
     pub voxels: Option<Ndarray<u32>>,
     pub lights: Option<Ndarray<u32>>,
 }
@@ -43,6 +43,7 @@ pub struct ChatProtocol {
     pub body: String,
 }
 
+#[derive(Debug)]
 pub struct MessageComponents {
     pub r#type: messages::message::Type,
     pub json: Option<String>,
@@ -132,6 +133,7 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
                         let transparent = mesh.transparent.as_ref();
 
                         messages::Mesh {
+                            sub_chunk: mesh.sub_chunk,
                             opaque: opaque.map(|opaque| messages::Geometry {
                                 aos: opaque.aos.to_owned(),
                                 indices: opaque.indices.to_owned(),

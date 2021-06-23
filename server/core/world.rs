@@ -14,6 +14,7 @@ pub struct WorldMetrics {
     pub dimension: usize,
     pub chunk_size: usize,
     pub max_height: u32,
+    pub sub_chunks: u32,
     pub max_light_level: u32,
     pub render_radius: usize,
 }
@@ -50,6 +51,7 @@ impl World {
         let preload = json["preload"].as_i64().unwrap() as i16;
         let render_radius = json["renderRadius"].as_i64().unwrap() as usize;
         let max_loaded_chunks = json["maxLoadedChunks"].as_i64().unwrap() as i32;
+        let sub_chunks = json["subChunks"].as_i64().unwrap() as u32;
         let description = json["description"].as_str().unwrap().to_owned();
         let generation = GeneratorType::parse(json["generation"].as_str().unwrap()).unwrap();
 
@@ -57,6 +59,7 @@ impl World {
             dimension,
             chunk_size,
             max_height,
+            sub_chunks,
             max_light_level,
             render_radius,
         };

@@ -14,7 +14,8 @@
     "maxLightLevel": 15,
     "pingInterval": 50000,
     "maxLoadedChunks": 2000,
-    "description": "a testbed world"
+    "description": "a testbed world",
+    "subChunks": 4
   },
   "worlds": [
     {
