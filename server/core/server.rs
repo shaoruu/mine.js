@@ -5,7 +5,7 @@ use serde::Serialize;
 
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::core::models::{create_chat_message, create_of_type};
 use crate::core::world::World;
@@ -159,18 +159,26 @@ impl WsServer {
                 let requested_chunk = client.requested_chunks.pop_front();
 
                 if let Some(coords) = requested_chunk {
-                    let chunk = world.chunks.get(&coords, true);
+                    let current_chunk = client.current_chunk.clone().unwrap();
+                    let dist = ((coords.0 - current_chunk.0).pow(2) as f32
+                        + (coords.1 - current_chunk.1).pow(2) as f32)
+                        .sqrt();
 
-                    if chunk.is_none() {
-                        client.requested_chunks.push_back(coords);
-                    } else {
-                        // SEND CHUNK BACK TO CLIENT
+                    // ? Not sure if this will cause any problems
+                    if dist < client.render_radius as f32 {
+                        let chunk = world.chunks.get(&coords, true);
 
-                        let mut component = MessageComponents::default_for(MessageType::Update);
-                        component.chunks = Some(vec![chunk.unwrap().get_protocol(true)]);
+                        if chunk.is_none() {
+                            client.requested_chunks.push_back(coords);
+                        } else {
+                            // SEND CHUNK BACK TO CLIENT
 
-                        let new_message = create_message(component);
-                        message_queue.push_back((world.name.to_owned(), new_message, vec![]));
+                            let mut component = MessageComponents::default_for(MessageType::Update);
+                            component.chunks = Some(vec![chunk.unwrap().get_protocol(true)]);
+
+                            let new_message = create_message(component);
+                            message_queue.push_back((world.name.to_owned(), new_message, vec![]));
+                        }
                     }
                 }
             }

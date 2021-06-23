@@ -168,6 +168,7 @@ class Network {
   onMessage = ({ data }) => {
     let event;
     try {
+      // console.log('RECEIVED');
       event = Network.decode(new Uint8Array(data));
     } catch (e) {
       return;

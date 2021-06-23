@@ -87,7 +87,7 @@ const defaultConfig: ConfigType = {
     chunkSize: 8,
     dimension: 1,
     // maximum amount of chunks to process per frame tick
-    maxChunkProcessPerFrame: 8,
+    maxChunkProcessPerFrame: 16,
     maxBlockPerFrame: 500,
     chunkAnimation: true,
     animationTime: 500,

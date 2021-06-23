@@ -5,3 +5,4 @@ data
 .vscode
 .env
 /target
+public/build/
