@@ -1,3 +1,4 @@
+pub mod biomes;
 pub mod builder;
 pub mod chunk;
 pub mod chunks;

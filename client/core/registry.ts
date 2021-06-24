@@ -73,7 +73,8 @@ varying float vTorchLight;
           '#include <envmap_fragment>',
           `
 #include <envmap_fragment>
-outgoingLight *= min(vTorchLight + (vSunlight + 0.1) * uSunlightIntensity, 1.0) * 0.58 * vAO;
+outgoingLight *= min(vTorchLight + (vSunlight + 0.1) * uSunlightIntensity, 1.0);
+outgoingLight *= 0.58 * vAO;
 `,
         )
         .replace(

@@ -22,6 +22,7 @@ pub struct WorldMetrics {
 #[derive(Debug)]
 pub struct World {
     pub time: f32,
+    pub tick: i32,
     pub tick_speed: f32,
 
     pub name: String,
@@ -69,6 +70,7 @@ impl World {
             name,
             save,
             preload,
+            tick: 0,
             tick_speed,
             chunk_root,
             generation,
@@ -107,6 +109,7 @@ impl World {
             / 1000.0;
 
         self.time = (self.time + self.tick_speed * delta) % 2400.0;
+        self.tick += 1;
 
         self.prev_time = now;
     }

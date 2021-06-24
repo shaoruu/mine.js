@@ -108,12 +108,12 @@ class Chunk {
     return Math.sqrt((mx + this.size / 2 - vx) ** 2 + (mz + this.size / 2 - vz) ** 2);
   };
 
-  animate = () => {
+  animate = (inverse = false) => {
     // chunk floating upwards animation
     const { chunkAnimation, animationTime } = this.engine.world.options;
     if (!chunkAnimation) return;
-    this.mesh.position.y = -10;
-    new TWEEN.Tween(this.mesh.position).to({ y: 0 }, animationTime).start();
+    this.mesh.position.y = inverse ? 0 : -10;
+    return new TWEEN.Tween(this.mesh.position).to({ y: inverse ? -10 : 0 }, animationTime).start();
   };
 
   addToScene = () => {
@@ -138,15 +138,17 @@ class Chunk {
   removeFromScene = () => {
     const { rendering } = this.engine;
 
-    rendering.scene.remove(this.mesh);
+    this.animate(true).onComplete(() => {
+      rendering.scene.remove(this.mesh);
 
-    if (this.isAdded) {
-      MESH_TYPES.forEach((type) => {
-        const mesh = this.meshes.get(type);
-        if (mesh && mesh.length) this.mesh.remove(...mesh);
-      });
-      this.isAdded = false;
-    }
+      if (this.isAdded) {
+        MESH_TYPES.forEach((type) => {
+          const mesh = this.meshes.get(type);
+          if (mesh && mesh.length) this.mesh.remove(...mesh);
+        });
+        this.isAdded = false;
+      }
+    });
   };
 
   dispose = () => {

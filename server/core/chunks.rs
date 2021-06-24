@@ -12,7 +12,7 @@ use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::{
-    core::{builder::VoxelUpdate, constants::HEIGHT_OFFSET},
+    core::builder::VoxelUpdate,
     libs::{
         noise::{Noise, NoiseConfig},
         types::{Block, Coords2, Coords3, MeshType, UV},
@@ -24,12 +24,12 @@ use crate::{
 };
 
 use super::{
+    biomes::{get_biome_config, get_height_within, BiomeConfig, CAVE_SCALE},
     builder::Builder,
     chunk::{Chunk, Meshes},
     constants::{
-        BlockFace, CornerData, CornerSimplified, PlantFace, AMPLIFIER, AO_TABLE, BLOCK_FACES,
-        CHUNK_HORIZONTAL_NEIGHBORS, CHUNK_NEIGHBORS, HEIGHT_SCALE, LACUNARITY, LEVEL_SEED, OCTAVES,
-        PERSISTENCE, PLANT_FACES, SCALE, VOXEL_NEIGHBORS,
+        BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES,
+        CHUNK_HORIZONTAL_NEIGHBORS, CHUNK_NEIGHBORS, LEVEL_SEED, PLANT_FACES, VOXEL_NEIGHBORS,
     },
     registry::{get_texture_type, Registry},
     world::WorldMetrics,
@@ -282,7 +282,7 @@ impl Chunks {
                     self.metrics.max_height as usize,
                     self.metrics.dimension,
                 );
-                Chunks::generate_chunk(&mut new_chunk, types.clone());
+                Chunks::generate_chunk(&mut new_chunk, types.clone(), self.metrics.clone());
                 new_chunk
             })
             .collect();
@@ -659,7 +659,7 @@ impl Chunks {
     }
 
     /// Generate terrain for a chunk
-    fn generate_chunk(chunk: &mut Chunk, types: HashMap<String, u32>) {
+    fn generate_chunk(chunk: &mut Chunk, types: HashMap<String, u32>, metrics: WorldMetrics) {
         let Coords3(start_x, start_y, start_z) = chunk.min;
         let Coords3(end_x, end_y, end_z) = chunk.max;
 
@@ -673,30 +673,50 @@ impl Chunks {
         let noise = Noise::new(LEVEL_SEED);
 
         let is_solid_at = |vx: i32, vy: i32, vz: i32| {
+            let BiomeConfig {
+                scale,
+                octaves,
+                persistence,
+                lacunarity,
+                height_scale,
+                amplifier,
+                ..
+            } = get_biome_config(vx, vz, &noise);
+
             noise.octave_perlin3(
                 vx as f64,
                 vy as f64,
                 vz as f64,
-                SCALE,
+                scale,
                 NoiseConfig {
-                    octaves: OCTAVES,
-                    persistence: PERSISTENCE,
-                    lacunarity: LACUNARITY,
-                    height_scale: HEIGHT_SCALE,
-                    amplifier: AMPLIFIER,
+                    octaves,
+                    persistence,
+                    lacunarity,
+                    height_scale,
+                    amplifier,
                 },
             ) > -0.2
         };
 
+        let height_map = get_height_within(start_x, start_z, end_x, end_z, &noise);
+
         for vx in start_x..end_x {
             for vz in start_z..end_z {
+                let BiomeConfig { scale, .. } = get_biome_config(vx, vz, &noise);
+
                 for vy in start_y..end_y {
                     let vy_ = vy;
-                    let vy = vy - HEIGHT_OFFSET;
+                    let vy = vy - height_map[&[(vx - start_x) as usize, (vz - start_z) as usize]];
 
                     let is_solid = is_solid_at(vx, vy, vz);
                     let is_solid_top = is_solid_at(vx, vy + 1, vz);
                     let is_solid_top2 = is_solid_at(vx, vy + 2, vz);
+
+                    let vx = vx as f64;
+                    let vy = vy as f64;
+                    let vz = vz as f64;
+
+                    let y_prop = vy / metrics.max_height as f64;
 
                     let mut block_id = air;
 
@@ -704,10 +724,7 @@ impl Chunks {
                         if !is_solid_top && !is_solid_top2 {
                             block_id = grass_block;
 
-                            if noise
-                                .fractal_octave_perlin3(vx as f64, vy as f64, vz as f64, SCALE, 9)
-                                > 0.3
-                            {
+                            if noise.fractal_octave_perlin3(vx, vy, vz, scale, 9) > 0.3 {
                                 block_id = dirt;
                             }
                         } else {
@@ -715,7 +732,18 @@ impl Chunks {
                         }
                     }
 
-                    chunk.set_voxel(vx, vy_, vz, block_id);
+                    // the y_prop is to force the caves lower in the y-axis
+                    // the lower the scale, the bigger the caves
+                    let cave_scale = 0.6;
+                    if noise.worley3(vx, vy * 0.8, vz, CAVE_SCALE * cave_scale) * 1.0
+                        / y_prop.powi(3)
+                        > 0.2
+                        && noise.ridged3(vx, vy, vz, CAVE_SCALE * cave_scale * 2.0) > 0.4
+                    {
+                        block_id = air;
+                    }
+
+                    chunk.set_voxel(vx as i32, vy_, vz as i32, block_id);
                 }
             }
         }

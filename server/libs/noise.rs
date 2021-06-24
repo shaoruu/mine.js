@@ -1,4 +1,4 @@
-use noise::{utils::*, NoiseFn, OpenSimplex, Perlin, Seedable};
+use noise::{utils::*, NoiseFn, OpenSimplex, Perlin, RidgedMulti, Seedable, Worley};
 
 pub struct NoiseConfig {
     pub octaves: i32,
@@ -13,6 +13,8 @@ pub struct Noise {
     seed: u32,
     perlin: Perlin,
     simplex: OpenSimplex,
+    ridged: RidgedMulti,
+    worley: Worley,
 }
 
 impl Noise {
@@ -21,6 +23,8 @@ impl Noise {
             seed,
             perlin: Perlin::new().set_seed(seed),
             simplex: OpenSimplex::new().set_seed(seed),
+            ridged: RidgedMulti::new().set_seed(seed),
+            worley: Worley::new().set_seed(seed),
         }
     }
 
@@ -38,6 +42,22 @@ impl Noise {
 
     pub fn simplex3(&self, x: f64, y: f64, z: f64, scale: f64) -> f64 {
         self.simplex.get([x * scale, y * scale, z * scale])
+    }
+
+    pub fn ridged2(&self, x: f64, z: f64, scale: f64) -> f64 {
+        self.ridged.get([x * scale, z * scale])
+    }
+
+    pub fn ridged3(&self, x: f64, y: f64, z: f64, scale: f64) -> f64 {
+        self.ridged.get([x * scale, y * scale, z * scale])
+    }
+
+    pub fn worley2(&self, x: f64, z: f64, scale: f64) -> f64 {
+        self.worley.get([x * scale, z * scale])
+    }
+
+    pub fn worley3(&self, x: f64, y: f64, z: f64, scale: f64) -> f64 {
+        self.worley.get([x * scale, y * scale, z * scale])
     }
 
     pub fn fractal_octave_perlin2(&self, x: f64, z: f64, scale: f64, octaves: i32) -> f64 {

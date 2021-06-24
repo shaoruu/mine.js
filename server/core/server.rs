@@ -26,6 +26,7 @@ use super::registry::Registry;
 use super::world::WorldMetrics;
 
 const SERVER_TICK: Duration = Duration::from_millis(16);
+const CHUNKING_TICK: Duration = Duration::from_millis(18);
 
 #[derive(Debug)]
 pub struct Client {
@@ -105,8 +106,6 @@ impl WsServer {
     }
 
     fn tick(&mut self) {
-        let mut message_queue = VecDeque::new();
-
         for world in self.worlds.values_mut() {
             world.tick();
 
@@ -136,31 +135,35 @@ impl WsServer {
                     // tell world to regenerate
                     world.chunks.generate(&new_chunk, client.render_radius);
                 }
+            }
+        }
+    }
+
+    fn chunking(&mut self) {
+        let mut message_queue = VecDeque::new();
+
+        for world in self.worlds.values_mut() {
+            for client in world.clients.values_mut() {
+                if client.name.is_none() {
+                    continue;
+                }
 
                 let requested_chunk = client.requested_chunks.pop_front();
 
                 if let Some(coords) = requested_chunk {
-                    let current_chunk = client.current_chunk.clone().unwrap();
-                    let dist = ((coords.0 - current_chunk.0).pow(2) as f32
-                        + (coords.1 - current_chunk.1).pow(2) as f32)
-                        .sqrt();
+                    let chunk = world.chunks.get(&coords, true, &MeshLevel::All);
 
-                    // ? Not sure if this will cause any problems
-                    if dist < client.render_radius as f32 {
-                        let chunk = world.chunks.get(&coords, true, &MeshLevel::All);
+                    if chunk.is_none() {
+                        client.requested_chunks.push_back(coords);
+                    } else {
+                        // SEND CHUNK BACK TO CLIENT
 
-                        if chunk.is_none() {
-                            client.requested_chunks.push_back(coords);
-                        } else {
-                            // SEND CHUNK BACK TO CLIENT
+                        let mut component = MessageComponents::default_for(MessageType::Load);
+                        component.chunks =
+                            Some(vec![chunk.unwrap().get_protocol(true, MeshLevel::All)]);
 
-                            let mut component = MessageComponents::default_for(MessageType::Load);
-                            component.chunks =
-                                Some(vec![chunk.unwrap().get_protocol(true, MeshLevel::All)]);
-
-                            let new_message = create_message(component);
-                            message_queue.push_back((world.name.to_owned(), new_message, vec![]));
-                        }
+                        let new_message = create_message(component);
+                        message_queue.push_back((world.name.to_owned(), new_message, vec![]));
                     }
                 }
             }
@@ -539,6 +542,10 @@ impl SystemService for WsServer {
 
         ctx.run_interval(SERVER_TICK, |act, _ctx| {
             act.tick();
+        });
+
+        ctx.run_interval(CHUNKING_TICK, |act, _ctx| {
+            act.chunking();
         });
     }
 }

@@ -68,7 +68,7 @@ const defaultConfig: ConfigType = {
     disappearTimeout: 2000,
   },
   player: {
-    acceleration: 1,
+    acceleration: 0.6,
     flyingInertia: 3,
     reachDistance: 32,
     lookBlockScale: 1.002,
@@ -82,9 +82,9 @@ const defaultConfig: ConfigType = {
   },
   world: {
     maxHeight: 128,
-    renderRadius: 12,
-    requestRadius: 14,
-    chunkSize: 8,
+    renderRadius: 6,
+    requestRadius: 8,
+    chunkSize: 16,
     dimension: 1,
     // maximum amount of chunks to process per frame tick
     maxChunkProcessPerFrame: 16,

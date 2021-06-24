@@ -47,14 +47,14 @@ class World extends EventEmitter {
     this.clouds = new Clouds(engine.rendering);
 
     engine.on('ready', () => {
-      const { hardwareConcurrency } = window.navigator;
-      const renderRadius = Math.min(Math.max(hardwareConcurrency + 2, 6), 8);
+      // const { hardwareConcurrency } = window.navigator;
+      // const renderRadius = Math.min(Math.max(hardwareConcurrency + 2, 6), 8);
 
-      this.options.renderRadius = renderRadius;
-      this.options.requestRadius = renderRadius + 2;
-      this.options.maxChunkProcessPerFrame = Math.max(hardwareConcurrency, 3);
+      // this.options.renderRadius = renderRadius;
+      // this.options.requestRadius = renderRadius + 2;
+      // this.options.maxChunkProcessPerFrame = Math.max(hardwareConcurrency, 3);
 
-      this.updateRenderRadius(renderRadius);
+      this.updateRenderRadius(this.options.renderRadius);
 
       engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
     });
