@@ -1005,14 +1005,11 @@ impl Chunks {
         let mut indices = Vec::<i32>::new();
         let mut uvs = Vec::<f32>::new();
         let mut aos = Vec::<f32>::new();
-
-        let mut smooth_sunlights_reps = Vec::<String>::new();
-        let mut smooth_torch_light_reps = Vec::<String>::new();
+        let mut torch_lights = Vec::<i32>::new();
+        let mut sunlights = Vec::<i32>::new();
 
         let &Coords3(start_x, start_y, start_z) = min;
         let &Coords3(end_x, end_y, end_z) = max;
-
-        let mut vertex_to_light = HashMap::<String, VertexLight>::new();
 
         let vertex_ao = |side1: u32, side2: u32, corner: u32| -> usize {
             let num_s1 = !self.registry.get_transparency_by_id(side1) as usize;
@@ -1029,269 +1026,6 @@ impl Chunks {
         let plant_shrink = 0.6;
 
         let sub_chunk_unit = max_height / sub_chunks;
-
-        for vx in start_x..end_x {
-            for vz in start_z..end_z {
-                for vy in
-                    (sub_chunk * sub_chunk_unit) as i32..((sub_chunk + 1) * sub_chunk_unit) as i32
-                {
-                    let voxel_id = self.get_voxel_by_voxel(vx, vy, vz);
-                    let &Block {
-                        is_solid,
-                        is_transparent,
-                        is_block,
-                        is_plant,
-                        ..
-                    } = self.get_block_by_id(voxel_id);
-
-                    // TODO: simplify this logic
-                    if (is_solid || is_plant)
-                        && (if transparent {
-                            is_transparent
-                        } else {
-                            !is_transparent
-                        })
-                    {
-                        if is_plant {
-                            let [dx, dz] = [0, 0];
-
-                            let torch_light_level = self.get_torch_light(vx, vy, vz);
-                            let sunlight_level = self.get_sunlight(vx, vy, vz);
-
-                            for PlantFace { corners, .. } in PLANT_FACES.iter() {
-                                for &CornerSimplified { pos, .. } in corners.iter() {
-                                    let offset = (1.0 - plant_shrink) / 2.0;
-                                    let pos_x =
-                                        pos[0] as f32 * plant_shrink + offset + (vx + dx) as f32;
-                                    let pos_y = (pos[1] + vy) as f32;
-                                    let pos_z =
-                                        pos[2] as f32 * plant_shrink + offset + (vz + dz) as f32;
-
-                                    let rep = get_position_name(
-                                        pos_x * *dimension as f32,
-                                        pos_y * *dimension as f32,
-                                        pos_z * *dimension as f32,
-                                    );
-
-                                    if vertex_to_light.contains_key(&rep) {
-                                        let &VertexLight {
-                                            count,
-                                            torch_light,
-                                            sunlight,
-                                        } = vertex_to_light.get(&rep).unwrap();
-
-                                        vertex_to_light.insert(
-                                            rep.to_owned(),
-                                            VertexLight {
-                                                count: count + 1,
-                                                torch_light: torch_light + torch_light_level,
-                                                sunlight: sunlight + sunlight_level,
-                                            },
-                                        );
-                                    } else {
-                                        vertex_to_light.insert(
-                                            rep.to_owned(),
-                                            VertexLight {
-                                                count: 1,
-                                                torch_light: torch_light_level,
-                                                sunlight: sunlight_level,
-                                            },
-                                        );
-                                    }
-
-                                    smooth_sunlights_reps.push(rep.to_owned());
-                                    smooth_torch_light_reps.push(rep.to_owned());
-                                }
-                            }
-                        } else if is_block {
-                            for BlockFace { dir, corners, .. } in BLOCK_FACES.iter() {
-                                let nvx = vx + dir[0];
-                                let nvy = vy + dir[1];
-                                let nvz = vz + dir[2];
-
-                                let neighbor_id = self.get_voxel_by_voxel(nvx, nvy, nvz);
-                                let n_block_type = self.get_block_by_id(neighbor_id);
-
-                                if n_block_type.is_transparent
-                                    && (!transparent
-                                        || n_block_type.is_empty
-                                        || neighbor_id != voxel_id
-                                        || (n_block_type.transparent_standalone
-                                            && dir[0] + dir[1] + dir[2] >= 1))
-                                {
-                                    let torch_light_level = self.get_torch_light(nvx, nvy, nvz);
-                                    let sunlight_level = self.get_sunlight(nvx, nvy, nvz);
-
-                                    for CornerData { pos, .. } in corners {
-                                        let pos_x = pos[0] + vx;
-                                        let pos_y = pos[1] + vy;
-                                        let pos_z = pos[2] + vz;
-
-                                        let rep = get_voxel_name(
-                                            pos_x * *dimension as i32,
-                                            pos_y * *dimension as i32,
-                                            pos_z * *dimension as i32,
-                                        );
-
-                                        if vertex_to_light.contains_key(&rep) {
-                                            let &VertexLight {
-                                                count,
-                                                torch_light,
-                                                sunlight,
-                                            } = vertex_to_light.get(&rep).unwrap();
-
-                                            vertex_to_light.insert(
-                                                rep.to_owned(),
-                                                VertexLight {
-                                                    count: count + 1,
-                                                    torch_light: torch_light + torch_light_level,
-                                                    sunlight: sunlight + sunlight_level,
-                                                },
-                                            );
-                                        } else {
-                                            vertex_to_light.insert(
-                                                rep.to_owned(),
-                                                VertexLight {
-                                                    count: 1,
-                                                    torch_light: torch_light_level,
-                                                    sunlight: sunlight_level,
-                                                },
-                                            );
-                                        }
-
-                                        let test_conditions = [
-                                            pos_x == start_x,
-                                            pos_y == start_y,
-                                            pos_z == start_z,
-                                            // position can be voxel + 1, thus can reach end
-                                            pos_x == end_x,
-                                            pos_y == end_y,
-                                            pos_z == end_z,
-                                            // edges
-                                            pos_x == start_x && pos_y == start_y,
-                                            pos_x == start_x && pos_z == start_z,
-                                            pos_x == start_x && pos_y == end_y,
-                                            pos_x == start_x && pos_z == end_z,
-                                            pos_x == end_x && pos_y == start_y,
-                                            pos_x == end_x && pos_z == start_z,
-                                            pos_x == end_x && pos_y == end_y,
-                                            pos_x == end_x && pos_z == end_z,
-                                            pos_y == start_y && pos_z == start_z,
-                                            pos_y == end_y && pos_z == start_z,
-                                            pos_y == start_y && pos_z == end_z,
-                                            pos_y == end_y && pos_z == end_z,
-                                            // corners
-                                            pos_x == start_x
-                                                && pos_y == start_y
-                                                && pos_z == start_z,
-                                            pos_x == start_x && pos_y == start_y && pos_z == end_z,
-                                            pos_x == start_x && pos_y == end_y && pos_z == start_z,
-                                            pos_x == start_x && pos_y == end_y && pos_z == end_z,
-                                            pos_x == end_x && pos_y == start_y && pos_z == start_z,
-                                            pos_x == end_x && pos_y == start_y && pos_z == end_z,
-                                            pos_x == end_x && pos_y == end_y && pos_z == start_z,
-                                            pos_x == end_x && pos_y == end_y && pos_z == end_z,
-                                        ];
-
-                                        let test_offsets = [
-                                            [-1, 0, 0],
-                                            [0, -1, 0],
-                                            [0, 0, -1],
-                                            // position can be voxel + 1, thus can reach end
-                                            [1, 0, 0],
-                                            [0, 1, 0],
-                                            [0, 0, 1],
-                                            // edges
-                                            [-1, -1, 0],
-                                            [-1, 0, -1],
-                                            [-1, 1, 0],
-                                            [-1, 0, 1],
-                                            [1, -1, 0],
-                                            [1, 0, -1],
-                                            [1, 1, 0],
-                                            [1, 0, 1],
-                                            [0, -1, -1],
-                                            [0, 1, -1],
-                                            [0, -1, 1],
-                                            [0, 1, 1],
-                                            // corners
-                                            [-1, -1, -1],
-                                            [-1, -1, 1],
-                                            [-1, 1, -1],
-                                            [-1, 1, 1],
-                                            [1, -1, -1],
-                                            [1, -1, 1],
-                                            [1, 1, -1],
-                                            [1, 1, 1],
-                                        ];
-
-                                        for (&check, [a, b, c]) in
-                                            test_conditions.iter().zip(test_offsets.iter())
-                                        {
-                                            if check
-                                                && self
-                                                    .get_block_by_voxel(
-                                                        nvx + *a,
-                                                        nvy + *b,
-                                                        nvz + *c,
-                                                    )
-                                                    .is_transparent
-                                            {
-                                                let torch_light_level_n = self.get_torch_light(
-                                                    nvx + *a,
-                                                    nvy + *b,
-                                                    nvz + *c,
-                                                );
-                                                let sunlight_level_n =
-                                                    self.get_sunlight(nvx + *a, nvy + *b, nvz + *c);
-                                                let VertexLight {
-                                                    count,
-                                                    torch_light,
-                                                    sunlight,
-                                                } = vertex_to_light.remove(&rep).unwrap();
-
-                                                vertex_to_light.insert(
-                                                    rep.to_owned(),
-                                                    VertexLight {
-                                                        count: count + 1,
-                                                        torch_light: torch_light
-                                                            + torch_light_level_n,
-                                                        sunlight: sunlight + sunlight_level_n,
-                                                    },
-                                                );
-                                            }
-                                        }
-
-                                        smooth_sunlights_reps.push(rep.to_owned());
-                                        smooth_torch_light_reps.push(rep.to_owned());
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        let sunlight_levels: Vec<i32> = smooth_sunlights_reps
-            .iter()
-            .map(|rep| {
-                let VertexLight {
-                    sunlight, count, ..
-                } = vertex_to_light.get(rep).unwrap();
-                (*sunlight as f32 / *count as f32) as i32
-            })
-            .collect();
-
-        let torch_light_levels: Vec<i32> = smooth_torch_light_reps
-            .iter()
-            .map(|rep| {
-                let VertexLight {
-                    torch_light, count, ..
-                } = vertex_to_light.get(rep).unwrap();
-                (*torch_light as f32 / *count as f32) as i32
-            })
-            .collect();
 
         let mut i = 0;
         for vx in start_x..end_x {
@@ -1346,6 +1080,9 @@ impl Chunks {
 
                                     uvs.push(uv[0] as f32 * (end_u - start_u) + start_u);
                                     uvs.push(uv[1] as f32 * (start_v - end_v) + end_v);
+
+                                    sunlights.push(self.get_sunlight(vx, vy, vz) as i32);
+                                    torch_lights.push(self.get_torch_light(vx, vy, vz) as i32);
 
                                     aos.push(1.0);
                                 }
@@ -1408,6 +1145,9 @@ impl Chunks {
                                     let ndx = (positions.len() / 3) as i32;
                                     let mut face_aos = vec![];
 
+                                    let mut four_sunlights = vec![];
+                                    let mut four_torch_lights = vec![];
+
                                     for CornerData {
                                         pos,
                                         uv,
@@ -1433,12 +1173,132 @@ impl Chunks {
                                                 near_voxels[*corner as usize],
                                             )] / 255.0,
                                         );
+
+                                        // calculating the 8 voxels around this vertex
+                                        let dx = pos[0];
+                                        let dy = pos[1];
+                                        let dz = pos[2];
+
+                                        let dx = if dx == 0 { -1 } else { 1 };
+                                        let dy = if dy == 0 { -1 } else { 1 };
+                                        let dz = if dz == 0 { -1 } else { 1 };
+
+                                        let mut sum_sunlight = vec![];
+                                        let mut sum_torch_light = vec![];
+
+                                        if self.get_block_by_voxel(vx, vy, vz).is_transparent {
+                                            sum_sunlight.push(self.get_sunlight(vx, vy, vz));
+                                            sum_torch_light.push(self.get_torch_light(vx, vy, vz));
+                                        }
+
+                                        if self.get_block_by_voxel(vx, vy, vz + dz).is_transparent {
+                                            sum_sunlight.push(self.get_sunlight(vx, vy, vz + dz));
+                                            sum_torch_light.push(self.get_torch_light(
+                                                vx,
+                                                vy,
+                                                vz + dz,
+                                            ));
+                                        }
+
+                                        if self.get_block_by_voxel(vx, vy + dy, vz).is_transparent {
+                                            sum_sunlight.push(self.get_sunlight(vx, vy + dy, vz));
+                                            sum_torch_light.push(self.get_torch_light(
+                                                vx,
+                                                vy + dy,
+                                                vz,
+                                            ));
+                                        }
+
+                                        if self
+                                            .get_block_by_voxel(vx, vy + dy, vz + dz)
+                                            .is_transparent
+                                        {
+                                            sum_sunlight.push(self.get_sunlight(
+                                                vx,
+                                                vy + dy,
+                                                vz + dz,
+                                            ));
+                                            sum_torch_light.push(self.get_torch_light(
+                                                vx,
+                                                vy + dy,
+                                                vz + dz,
+                                            ));
+                                        }
+
+                                        if self.get_block_by_voxel(vx + dx, vy, vz).is_transparent {
+                                            sum_sunlight.push(self.get_sunlight(vx + dx, vy, vz));
+                                            sum_torch_light.push(self.get_torch_light(
+                                                vx + dx,
+                                                vy,
+                                                vz,
+                                            ));
+                                        }
+
+                                        if self
+                                            .get_block_by_voxel(vx + dx, vy, vz + dz)
+                                            .is_transparent
+                                        {
+                                            sum_sunlight.push(self.get_sunlight(
+                                                vx + dx,
+                                                vy,
+                                                vz + dz,
+                                            ));
+                                            sum_torch_light.push(self.get_torch_light(
+                                                vx + dx,
+                                                vy,
+                                                vz + dz,
+                                            ));
+                                        }
+
+                                        if self
+                                            .get_block_by_voxel(vx + dx, vy + dy, vz)
+                                            .is_transparent
+                                        {
+                                            sum_sunlight.push(self.get_sunlight(
+                                                vx + dx,
+                                                vy + dy,
+                                                vz,
+                                            ));
+                                            sum_torch_light.push(self.get_torch_light(
+                                                vx + dx,
+                                                vy + dy,
+                                                vz,
+                                            ));
+                                        }
+
+                                        if self
+                                            .get_block_by_voxel(vx + dx, vy + dy, vz + dz)
+                                            .is_transparent
+                                        {
+                                            sum_sunlight.push(self.get_sunlight(
+                                                vx + dx,
+                                                vy + dy,
+                                                vz + dz,
+                                            ));
+                                            sum_torch_light.push(self.get_torch_light(
+                                                vx + dx,
+                                                vy + dy,
+                                                vz + dz,
+                                            ));
+                                        }
+
+                                        four_sunlights.push(
+                                            (sum_sunlight.iter().sum::<u32>() as f32
+                                                / sum_sunlight.len() as f32)
+                                                as i32,
+                                        );
+
+                                        four_torch_lights.push(
+                                            (sum_torch_light.iter().sum::<u32>() as f32
+                                                / sum_torch_light.len() as f32)
+                                                as i32,
+                                        );
                                     }
 
-                                    let a_t = torch_light_levels[i];
-                                    let b_t = torch_light_levels[i + 1];
-                                    let c_t = torch_light_levels[i + 2];
-                                    let d_t = torch_light_levels[i + 3];
+                                    let a_t = four_torch_lights[0];
+                                    let b_t = four_torch_lights[1];
+                                    let c_t = four_torch_lights[2];
+                                    let d_t = four_torch_lights[3];
 
                                     let threshold = 0;
 
@@ -1486,10 +1346,9 @@ impl Chunks {
 
                                     i += 4;
 
-                                    aos.push(face_aos[0]);
-                                    aos.push(face_aos[1]);
-                                    aos.push(face_aos[2]);
-                                    aos.push(face_aos[3]);
+                                    aos.append(&mut face_aos);
+                                    sunlights.append(&mut four_sunlights);
+                                    torch_lights.append(&mut &mut four_torch_lights);
                                 }
                             }
                         }
@@ -1502,8 +1361,8 @@ impl Chunks {
             aos,
             indices,
             positions,
-            sunlights: sunlight_levels,
-            torch_lights: torch_light_levels,
+            sunlights,
+            torch_lights,
             uvs,
         })
     }
