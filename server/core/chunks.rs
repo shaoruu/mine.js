@@ -4,6 +4,7 @@
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     sync::Arc,
+    thread,
     time::Instant,
 };
 
@@ -325,11 +326,14 @@ impl Chunks {
             to_decorate_coords.push(coords);
         }
 
-        for updates in to_decorate_updates {
+        for updates in to_decorate_updates.iter() {
             for u in updates {
                 self.set_voxel_by_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
             }
         }
+
+        // dropping in another thread to speed up the process
+        thread::spawn(move || drop(to_decorate_updates));
 
         for coords in to_decorate_coords.iter() {
             // ?
