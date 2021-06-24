@@ -16,7 +16,7 @@ use crate::utils::json;
 
 use super::message::{
     self, ChatMessage, ConfigWorld, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames,
-    ListWorlds, PlayerUpdate, SendMessage, UpdateVoxel, WorldData,
+    ListWorlds, Noop, PlayerUpdate, SendMessage, UpdateVoxel, WorldData,
 };
 use super::models::{
     create_message, messages, messages::chat_message::Type as ChatType,
@@ -478,6 +478,12 @@ impl Handler<SendMessage> for WsServer {
 
         self.broadcast(&world_name, &content, vec![]);
     }
+}
+
+impl Handler<Noop> for WsServer {
+    type Result = ();
+
+    fn handle(&mut self, _msg: Noop, _ctx: &mut Self::Context) {}
 }
 
 fn make_world_data(world: &World) -> WorldData {

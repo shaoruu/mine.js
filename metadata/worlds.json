@@ -15,7 +15,7 @@
     "pingInterval": 50000,
     "maxLoadedChunks": 2000,
     "description": "a testbed world",
-    "subChunks": 4
+    "subChunks": 8
   },
   "worlds": [
     {

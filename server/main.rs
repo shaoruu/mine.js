@@ -1,3 +1,4 @@
+use actix::SystemService;
 use log::info;
 
 use actix_files as fs;
@@ -7,7 +8,7 @@ mod core;
 mod libs;
 mod utils;
 
-use crate::core::{models, routes};
+use crate::core::{message, models, routes, server::WsServer};
 
 fn setup_logger() -> Result<(), fern::InitError> {
     fern::Dispatch::new()
@@ -46,6 +47,9 @@ async fn main() -> std::io::Result<()> {
     .bind(&addr)?;
 
     info!("🚀  MineJS running on http://{}", &addr);
+
+    // Wake up the sever
+    WsServer::from_registry().do_send(message::Noop);
 
     srv.run().await
 }

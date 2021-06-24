@@ -155,6 +155,73 @@ impl Noise {
         total / max_val * amplifier - y * height_scale
     }
 
+    pub fn octave_simplex2(
+        &self,
+        x: f64,
+        z: f64,
+        scale: f64,
+        NoiseConfig {
+            octaves,
+            persistence,
+            lacunarity,
+            //     height_scale,
+            amplifier,
+            ..
+        }: NoiseConfig,
+    ) -> f64 {
+        let mut total = 0.0;
+        let mut frequency = 1.0;
+        let mut amplitude = 1.0;
+        let mut max_val = 0.0;
+
+        for _ in 0..octaves {
+            total += self.simplex2(x * frequency * scale, z * frequency * scale, 1.0) * amplitude;
+
+            max_val += amplitude;
+
+            amplitude *= persistence;
+            frequency *= lacunarity;
+        }
+
+        total / max_val * amplifier
+    }
+
+    pub fn octave_simplex3(
+        &self,
+        x: f64,
+        y: f64,
+        z: f64,
+        scale: f64,
+        NoiseConfig {
+            octaves,
+            persistence,
+            lacunarity,
+            height_scale,
+            amplifier,
+        }: NoiseConfig,
+    ) -> f64 {
+        let mut total = 0.0;
+        let mut frequency = 1.0;
+        let mut amplitude = 1.0;
+        let mut max_val = 0.0;
+
+        for _ in 0..octaves {
+            total += self.simplex3(
+                x * frequency * scale,
+                y * frequency * scale,
+                z * frequency * scale,
+                1.0,
+            ) * amplitude;
+
+            max_val += amplitude;
+
+            amplitude *= persistence;
+            frequency *= lacunarity;
+        }
+
+        total / max_val * amplifier - y * height_scale
+    }
+
     pub fn central_perlin(&self, x: f64, z: f64, scale: f64) -> bool {
         let mut noise3x3 = vec![];
 

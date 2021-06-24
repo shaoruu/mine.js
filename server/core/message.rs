@@ -92,6 +92,10 @@ pub struct SendMessage {
     pub content: models::messages::Message,
 }
 
+#[derive(Clone, Message)]
+#[rtype(result = "()")]
+pub struct Noop;
+
 /* -------------------------------------------------------------------------- */
 /*                              Routing Messages                              */
 /* -------------------------------------------------------------------------- */

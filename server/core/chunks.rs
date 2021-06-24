@@ -243,15 +243,19 @@ impl Chunks {
     fn load(&mut self, coords: &Coords2<i32>, render_radius: i16) {
         let Coords2(cx, cz) = coords;
 
-        let mut to_generate: Vec<Coords2<i32>> = Vec::new();
+        let de = true;
+
+        let mut to_generate: Vec<Chunk> = Vec::new();
         let mut to_decorate: Vec<Coords2<i32>> = Vec::new();
 
-        let terrain_radius = render_radius + 4;
+        let terrain_radius = render_radius + 2;
         let decorate_radius = render_radius;
 
         let types = self
             .registry
             .get_type_map(vec!["Air", "Stone", "Dirt", "Grass Block"]);
+
+        let start = Instant::now();
 
         for x in -terrain_radius..=terrain_radius {
             for z in -terrain_radius..=terrain_radius {
@@ -265,7 +269,13 @@ impl Chunks {
                 let chunk = self.get_chunk(&coords);
 
                 if chunk.is_none() {
-                    to_generate.push(coords.to_owned());
+                    let new_chunk = Chunk::new(
+                        coords.to_owned(),
+                        self.metrics.chunk_size,
+                        self.metrics.max_height as usize,
+                        self.metrics.dimension,
+                    );
+                    to_generate.push(new_chunk);
                 }
 
                 if dist <= decorate_radius * decorate_radius {
@@ -274,26 +284,40 @@ impl Chunks {
             }
         }
 
-        let to_generate: Vec<Chunk> = to_generate
-            .par_iter()
-            .map(|coords| {
-                let mut new_chunk = Chunk::new(
-                    coords.to_owned(),
-                    self.metrics.chunk_size,
-                    self.metrics.max_height as usize,
-                    self.metrics.dimension,
-                );
-                Chunks::generate_chunk(&mut new_chunk, types.clone(), self.metrics.clone());
-                new_chunk
-            })
-            .collect();
-
-        for chunk in to_generate {
-            let coords = chunk.coords.to_owned();
-            self.chunks.insert(chunk.name.to_owned(), chunk);
-            self.generate_chunk_height_map(&coords);
+        if de {
+            debug!("Calculating chunks took {:?}", start.elapsed());
         }
 
+        let start = Instant::now();
+        to_generate.par_iter_mut().for_each(|new_chunk| {
+            Chunks::generate_chunk(new_chunk, types.clone(), self.metrics.clone());
+        });
+        if de {
+            debug!("Generating took {:?}", start.elapsed());
+        }
+
+        let start = Instant::now();
+
+        let metrics = Arc::new(&self.metrics);
+        let registry = Arc::new(&self.registry);
+
+        to_generate.par_iter_mut().for_each(|chunk| {
+            let metrics = metrics.clone();
+            let &metrics = metrics.as_ref();
+            let registry = registry.clone();
+            let &registry = registry.as_ref();
+
+            Chunks::generate_chunk_height_map(chunk, metrics, registry);
+        });
+
+        for chunk in to_generate {
+            self.chunks.insert(chunk.name.to_owned(), chunk);
+        }
+        if de {
+            debug!("Inserting took {:?}", start.elapsed());
+        }
+
+        let start = Instant::now();
         let to_decorate: Vec<Chunk> = to_decorate
             .iter()
             .map(|coords| {
@@ -316,7 +340,11 @@ impl Chunks {
                 builder.build(chunk)
             })
             .collect();
+        if de {
+            debug!("Calculating decoration took {:?}", start.elapsed());
+        }
 
+        let start = Instant::now();
         let mut to_decorate_coords = Vec::new();
 
         for mut chunk in to_decorate {
@@ -331,13 +359,45 @@ impl Chunks {
                 self.set_voxel_by_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
             }
         }
+        if de {
+            debug!("Actually decorating took {:?}", start.elapsed());
+        }
 
+        let start = Instant::now();
         // dropping in another thread to speed up the process
         thread::spawn(move || drop(to_decorate_updates));
+        if de {
+            debug!("Dropping in another thread took {:?}", start.elapsed());
+        }
 
-        for coords in to_decorate_coords.iter() {
-            // ?
-            self.generate_chunk_height_map(coords);
+        let mut to_decorate: Vec<Chunk> = to_decorate_coords
+            .iter()
+            .map(|coords| {
+                self.chunks
+                    .remove(&get_chunk_name(coords.0, coords.1))
+                    .unwrap()
+            })
+            .collect();
+
+        let metrics = Arc::new(&self.metrics);
+        let registry = Arc::new(&self.registry);
+
+        to_decorate.par_iter_mut().for_each(|chunk| {
+            let metrics = metrics.clone();
+            let &metrics = metrics.as_ref();
+            let registry = registry.clone();
+            let &registry = registry.as_ref();
+
+            Chunks::generate_chunk_height_map(chunk, metrics, registry);
+        });
+
+        for mut chunk in to_decorate {
+            self.chunks.insert(chunk.name.to_owned(), chunk);
+        }
+
+        if de {
+            debug!("Generating height map again took {:?}", start.elapsed());
+            debug!("");
         }
     }
 
@@ -676,81 +736,109 @@ impl Chunks {
 
         let noise = Noise::new(LEVEL_SEED);
 
-        let is_solid_at = |vx: i32, vy: i32, vz: i32| {
-            let BiomeConfig {
-                scale,
-                octaves,
-                persistence,
-                lacunarity,
-                height_scale,
-                amplifier,
-                ..
-            } = get_biome_config(vx, vz, &noise);
-
+        let is_solid_at = |vx: i32, vy: i32, vz: i32, biome: &BiomeConfig| {
             noise.octave_perlin3(
                 vx as f64,
                 vy as f64,
                 vz as f64,
-                scale,
+                biome.scale,
                 NoiseConfig {
-                    octaves,
-                    persistence,
-                    lacunarity,
-                    height_scale,
-                    amplifier,
+                    octaves: biome.octaves,
+                    persistence: biome.persistence,
+                    lacunarity: biome.lacunarity,
+                    height_scale: biome.height_scale,
+                    amplifier: biome.amplifier,
                 },
             ) > -0.2
         };
 
-        let height_map = get_height_within(start_x, start_z, end_x, end_z, &noise);
+        let unit = (metrics.max_height / metrics.sub_chunks) as i32;
 
-        for vx in start_x..end_x {
-            for vz in start_z..end_z {
-                let BiomeConfig { scale, .. } = get_biome_config(vx, vz, &noise);
+        let mut pairs = vec![];
+        for i in 0..metrics.sub_chunks as i32 {
+            pairs.push((
+                Coords3(start_x, unit * i, start_z),
+                Coords3(end_x, unit * (i + 1), end_z),
+            ));
+        }
 
-                for vy in start_y..end_y {
-                    let vy_ = vy;
-                    let vy = vy - height_map[&[(vx - start_x) as usize, (vz - start_z) as usize]];
+        let updates: Vec<Vec<VoxelUpdate>> = pairs
+            .par_iter()
+            .map(|(start, end)| {
+                let mut updates = vec![];
 
-                    let is_solid = is_solid_at(vx, vy, vz);
-                    let is_solid_top = is_solid_at(vx, vy + 1, vz);
-                    let is_solid_top2 = is_solid_at(vx, vy + 2, vz);
+                let &Coords3(start_x, start_y, start_z) = start;
+                let &Coords3(end_x, end_y, end_z) = end;
 
-                    let vx = vx as f64;
-                    let vy = vy as f64;
-                    let vz = vz as f64;
+                let noise = Noise::new(LEVEL_SEED);
+                let height_map = get_height_within(start_x, start_z, end_x, end_z, &noise);
 
-                    let y_prop = vy / metrics.max_height as f64;
+                for vx in start_x..end_x {
+                    for vz in start_z..end_z {
+                        let biome_config = get_biome_config(vx, vz, &noise);
 
-                    let mut block_id = air;
+                        for vy in start_y..end_y {
+                            let vy_ = vy;
+                            let vy = vy
+                                - height_map[&[(vx - start_x) as usize, (vz - start_z) as usize]];
 
-                    if is_solid {
-                        if !is_solid_top && !is_solid_top2 {
-                            block_id = grass_block;
+                            let is_solid = is_solid_at(vx, vy, vz, &biome_config);
 
-                            if noise.fractal_octave_perlin3(vx, vy, vz, scale, 9) > 0.3 {
-                                block_id = dirt;
+                            if !(is_solid) {
+                                continue;
                             }
-                        } else {
-                            block_id = stone;
+
+                            let is_solid_top = is_solid_at(vx, vy + 1, vz, &biome_config);
+                            let is_solid_top2 = is_solid_at(vx, vy + 2, vz, &biome_config);
+
+                            let vx = vx as f64;
+                            let vy = vy as f64;
+                            let vz = vz as f64;
+
+                            let y_prop = vy / metrics.max_height as f64;
+
+                            let mut block_id = air;
+
+                            if !is_solid_top && !is_solid_top2 {
+                                block_id = grass_block;
+
+                                if noise.fractal_octave_perlin3(vx, vy, vz, biome_config.scale, 3)
+                                    > 0.3
+                                {
+                                    block_id = dirt;
+                                }
+                            } else {
+                                block_id = stone;
+                            }
+
+                            // the y_prop is to force the caves lower in the y-axis
+                            // the lower the scale, the bigger the caves
+                            let cave_scale = 0.6;
+                            if noise.simplex3(vx, vy * 0.8, vz, CAVE_SCALE * cave_scale) * 1.0
+                                / y_prop.powi(3)
+                                > 0.2
+                                && noise.ridged3(vx, vy, vz, CAVE_SCALE * cave_scale * 2.0) > 0.4
+                            {
+                                block_id = air;
+                            }
+
+                            updates.push(VoxelUpdate {
+                                voxel: Coords3(vx as i32, vy_ as i32, vz as i32),
+                                id: block_id,
+                            });
                         }
                     }
-
-                    // the y_prop is to force the caves lower in the y-axis
-                    // the lower the scale, the bigger the caves
-                    let cave_scale = 0.6;
-                    if noise.worley3(vx, vy * 0.8, vz, CAVE_SCALE * cave_scale) * 1.0
-                        / y_prop.powi(3)
-                        > 0.2
-                        && noise.ridged3(vx, vy, vz, CAVE_SCALE * cave_scale * 2.0) > 0.4
-                    {
-                        block_id = air;
-                    }
-
-                    chunk.set_voxel(vx as i32, vy_, vz as i32, block_id);
                 }
-            }
-        }
+
+                updates
+            })
+            .collect();
+
+        updates.iter().for_each(|updates| {
+            updates.iter().for_each(|u| {
+                chunk.set_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
+            })
+        });
 
         chunk.is_empty = is_empty;
         chunk.needs_terrain = false;
@@ -759,12 +847,9 @@ impl Chunks {
     /// Generate chunk's height map
     ///
     /// Note: the chunk should already be initialized with voxel data
-    fn generate_chunk_height_map(&mut self, coords: &Coords2<i32>) {
-        let size = self.metrics.chunk_size;
-        let max_height = self.metrics.max_height;
-
-        let registry = self.registry.clone(); // there must be better way
-        let chunk = self.get_chunk_mut(coords).expect("Chunk not found.");
+    fn generate_chunk_height_map(chunk: &mut Chunk, metrics: &WorldMetrics, registry: &Registry) {
+        let size = metrics.chunk_size;
+        let max_height = metrics.max_height;
 
         for lx in 0..size {
             for lz in 0..size {

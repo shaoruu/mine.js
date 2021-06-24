@@ -21,7 +21,7 @@ ansi_term = "0.12.1"
 awc = "2.0.3"
 bytes = "1.0.1"
 chrono = "0.4.19"
-crossbeam-channel = "0.5.1"
+crossbeam = "0.8.1"
 env_logger = "0.8.3"
 fern = { version="0.6.0", features=["colored"] }
 futures = "0.3.15"
