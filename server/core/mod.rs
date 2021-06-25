@@ -3,6 +3,7 @@ pub mod builder;
 pub mod chunk;
 pub mod chunks;
 pub mod constants;
+pub mod generator;
 pub mod message;
 pub mod models;
 pub mod registry;

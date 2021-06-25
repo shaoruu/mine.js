@@ -66,13 +66,13 @@ pub struct Block {
     pub transparent_standalone: bool,
 }
 
-#[derive(Debug)]
-pub enum GeneratorType {
+#[derive(Debug, Clone)]
+pub enum GenerationType {
     FLAT,
     HILLY,
 }
 
-impl GeneratorType {
+impl GenerationType {
     pub fn parse(name: &str) -> Option<Self> {
         let lower = name.to_lowercase();
         if lower == "flat" {

@@ -13,14 +13,13 @@ use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::{
-    core::builder::VoxelUpdate,
+    core::{builder::VoxelUpdate, generator::Generator},
     libs::{
         noise::{Noise, NoiseConfig},
-        types::{Block, Coords2, Coords3, MeshType, UV},
+        types::{Block, Coords2, Coords3, GenerationType, MeshType, UV},
     },
     utils::convert::{
-        get_chunk_name, get_position_name, get_voxel_name, map_voxel_to_chunk,
-        map_voxel_to_chunk_local, map_world_to_voxel,
+        get_chunk_name, map_voxel_to_chunk, map_voxel_to_chunk_local, map_world_to_voxel,
     },
 };
 
@@ -59,6 +58,7 @@ pub enum MeshLevel {
 #[derive(Debug)]
 pub struct Chunks {
     pub chunk_cache: HashSet<Coords2<i32>>,
+    pub generation: GenerationType,
     pub metrics: WorldMetrics,
     pub registry: Registry,
 
@@ -74,9 +74,15 @@ pub struct Chunks {
  * NEED REFACTOR ASAP
  */
 impl Chunks {
-    pub fn new(metrics: WorldMetrics, max_loaded_chunks: i32, registry: Registry) -> Self {
+    pub fn new(
+        metrics: WorldMetrics,
+        generation: GenerationType,
+        max_loaded_chunks: i32,
+        registry: Registry,
+    ) -> Self {
         Chunks {
             metrics,
+            generation,
             registry: registry.to_owned(),
             caching: false,
             max_loaded_chunks,
@@ -251,10 +257,6 @@ impl Chunks {
         let terrain_radius = render_radius + 2;
         let decorate_radius = render_radius;
 
-        let types = self
-            .registry
-            .get_type_map(vec!["Air", "Stone", "Dirt", "Grass Block"]);
-
         let start = Instant::now();
 
         for x in -terrain_radius..=terrain_radius {
@@ -288,9 +290,13 @@ impl Chunks {
             debug!("Calculating chunks took {:?}", start.elapsed());
         }
 
+        let metrics = Arc::new(&self.metrics);
+        let registry = Arc::new(&self.registry);
+
         let start = Instant::now();
         to_generate.par_iter_mut().for_each(|new_chunk| {
-            Chunks::generate_chunk(new_chunk, types.clone(), self.metrics.clone());
+            let generation = self.generation.clone();
+            Generator::generate_chunk(new_chunk, generation, &registry, &metrics);
         });
         if de {
             debug!("Generating took {:?}", start.elapsed());
@@ -298,16 +304,8 @@ impl Chunks {
 
         let start = Instant::now();
 
-        let metrics = Arc::new(&self.metrics);
-        let registry = Arc::new(&self.registry);
-
         to_generate.par_iter_mut().for_each(|chunk| {
-            let metrics = metrics.clone();
-            let &metrics = metrics.as_ref();
-            let registry = registry.clone();
-            let &registry = registry.as_ref();
-
-            Chunks::generate_chunk_height_map(chunk, metrics, registry);
+            Chunks::generate_chunk_height_map(chunk, &metrics, &registry);
         });
 
         for chunk in to_generate {

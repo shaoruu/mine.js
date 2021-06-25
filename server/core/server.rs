@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 use crate::core::chunks::MeshLevel;
 use crate::core::models::{create_chat_message, create_of_type};
 use crate::core::world::World;
-use crate::libs::types::{Coords2, Coords3, GeneratorType, Quaternion};
+use crate::libs::types::{Coords2, Coords3, GenerationType, Quaternion};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
@@ -490,9 +490,9 @@ fn make_world_data(world: &World) -> WorldData {
     WorldData {
         name: world.name.to_owned(),
         time: world.time,
-        generation: match world.generation {
-            GeneratorType::FLAT => "flat".to_owned(),
-            GeneratorType::HILLY => "hilly".to_owned(),
+        generation: match world.chunks.generation {
+            GenerationType::FLAT => "flat".to_owned(),
+            GenerationType::HILLY => "hilly".to_owned(),
         },
         description: world.description.to_owned(),
         players: world.clients.len(),

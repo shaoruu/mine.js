@@ -3,7 +3,7 @@ use log::{debug, info};
 use std::collections::HashMap;
 use std::time::{Instant, SystemTime};
 
-use crate::libs::types::GeneratorType;
+use crate::libs::types::GenerationType;
 
 use super::chunks::Chunks;
 use super::registry::Registry;
@@ -31,8 +31,6 @@ pub struct World {
     pub chunk_root: String,
     pub description: String,
 
-    pub generation: GeneratorType,
-
     pub chunks: Chunks,
     pub clients: HashMap<usize, Client>,
     pub prev_time: SystemTime,
@@ -54,7 +52,7 @@ impl World {
         let max_loaded_chunks = json["maxLoadedChunks"].as_i64().unwrap() as i32;
         let sub_chunks = json["subChunks"].as_i64().unwrap() as u32;
         let description = json["description"].as_str().unwrap().to_owned();
-        let generation = GeneratorType::parse(json["generation"].as_str().unwrap()).unwrap();
+        let generation = GenerationType::parse(json["generation"].as_str().unwrap()).unwrap();
 
         let metrics = WorldMetrics {
             dimension,
@@ -73,10 +71,9 @@ impl World {
             tick: 0,
             tick_speed,
             chunk_root,
-            generation,
             description,
             clients: HashMap::new(),
-            chunks: Chunks::new(metrics, max_loaded_chunks, registry),
+            chunks: Chunks::new(metrics, generation, max_loaded_chunks, registry),
             prev_time: SystemTime::now(),
         }
     }
