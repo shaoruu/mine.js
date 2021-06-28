@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use log::debug;
 
 use crate::{
-    core::constants::CHUNK_HORIZONTAL_NEIGHBORS,
+    core::constants::{CHUNK_HORIZONTAL_NEIGHBORS, DATA_PADDING},
     libs::{
         ndarray::{ndarray, Ndarray},
         types::{Block, Coords2, Coords3},
@@ -18,8 +18,8 @@ use super::{
 /// Node of a light propagation queue
 #[derive(Debug)]
 pub struct LightNode {
-    voxel: Coords3<i32>,
-    level: u32,
+    pub voxel: Coords3<i32>,
+    pub level: u32,
 }
 
 pub struct Lights;
@@ -73,6 +73,143 @@ impl Lights {
         }
 
         lights[&[x, y, z]] = (lights[&[x, y, z]] & 0xf0) | level;
+    }
+
+    /// Remove a light source. Steps:
+    ///
+    /// 1. Remove the existing lights in a flood-fill fashion
+    /// 2. If external light source exists, flood fill them back
+    pub fn global_remove_light(chunks: &mut Chunks, vx: i32, vy: i32, vz: i32, is_sunlight: bool) {
+        let max_height = chunks.metrics.max_height as i32;
+        let max_light_level = chunks.metrics.max_light_level;
+
+        let mut fill = VecDeque::<LightNode>::new();
+        let mut queue = VecDeque::<LightNode>::new();
+
+        queue.push_back(LightNode {
+            voxel: Coords3(vx, vy, vz),
+            level: if is_sunlight {
+                chunks.get_sunlight(vx, vy, vz)
+            } else {
+                chunks.get_torch_light(vx, vy, vz)
+            },
+        });
+
+        if is_sunlight {
+            chunks.set_sunlight(vx, vy, vz, 0);
+        } else {
+            chunks.set_torch_light(vx, vy, vz, 0);
+        }
+
+        chunks.mark_saving_from_voxel(vx, vy, vz);
+
+        while !queue.is_empty() {
+            let LightNode { voxel, level } = queue.pop_front().unwrap();
+            let Coords3(vx, vy, vz) = voxel;
+
+            for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
+                let nvy = vy + oy;
+
+                if nvy < 0 || nvy >= max_height {
+                    continue;
+                }
+
+                let nvx = vx + ox;
+                let nvz = vz + oz;
+                let n_voxel = Coords3(nvx, nvy, nvz);
+
+                let nl = if is_sunlight {
+                    chunks.get_sunlight(nvx, nvy, nvz)
+                } else {
+                    chunks.get_torch_light(nvx, nvy, nvz)
+                };
+
+                if nl == 0 {
+                    continue;
+                }
+
+                // if level is less, or if sunlight is propagating downwards without stopping
+                if nl < level
+                    || (is_sunlight
+                        && *oy == -1
+                        && level == max_light_level
+                        && nl == max_light_level)
+                {
+                    queue.push_back(LightNode {
+                        voxel: n_voxel,
+                        level: nl,
+                    });
+
+                    if is_sunlight {
+                        chunks.set_sunlight(nvx, nvy, nvz, 0);
+                    } else {
+                        chunks.set_torch_light(nvx, nvy, nvz, 0);
+                    }
+
+                    chunks.mark_saving_from_voxel(nvx, nvy, nvz);
+                } else if nl >= level && (!is_sunlight || *oy != -1 || nl > level) {
+                    fill.push_back(LightNode {
+                        voxel: n_voxel,
+                        level: nl,
+                    })
+                }
+            }
+        }
+
+        Lights::global_flood_light(chunks, fill, is_sunlight);
+    }
+
+    /// Flood fill light from a queue
+    pub fn global_flood_light(
+        chunks: &mut Chunks,
+        mut queue: VecDeque<LightNode>,
+        is_sunlight: bool,
+    ) {
+        let max_height = chunks.metrics.max_height as i32;
+        let max_light_level = chunks.metrics.max_light_level;
+
+        while !queue.is_empty() {
+            let LightNode { voxel, level } = queue.pop_front().unwrap();
+            let Coords3(vx, vy, vz) = voxel;
+
+            for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
+                let nvy = vy + oy;
+
+                if nvy < 0 || nvy > max_height {
+                    continue;
+                }
+
+                let nvx = vx + ox;
+                let nvz = vz + oz;
+                let sd = is_sunlight && *oy == -1 && level == max_light_level;
+                let nl = level - if sd { 0 } else { 1 };
+                let n_voxel = Coords3(nvx, nvy, nvz);
+                let block_type = chunks.get_block_by_voxel(nvx, nvy, nvz);
+
+                if !block_type.is_transparent
+                    || (if is_sunlight {
+                        chunks.get_sunlight(nvx, nvy, nvz)
+                    } else {
+                        chunks.get_torch_light(nvx, nvy, nvz)
+                    } >= nl)
+                {
+                    continue;
+                }
+
+                if is_sunlight {
+                    chunks.set_sunlight(nvx, nvy, nvz, nl);
+                } else {
+                    chunks.set_torch_light(nvx, nvy, nvz, nl);
+                }
+
+                chunks.mark_saving_from_voxel(nvx, nvy, nvz);
+
+                queue.push_back(LightNode {
+                    voxel: n_voxel,
+                    level: nl,
+                })
+            }
+        }
     }
 
     pub fn flood_light(
@@ -138,14 +275,7 @@ impl Lights {
         }
     }
 
-    pub fn propagate(
-        space: &Space,
-        registry: &Registry,
-        metrics: &WorldMetrics,
-        // by how much should the returned data contain other than
-        // the chunk's own lighting data.
-        padding: usize,
-    ) -> Ndarray<u32> {
+    pub fn propagate(space: &Space, registry: &Registry, metrics: &WorldMetrics) -> Ndarray<u32> {
         let Space {
             width,
             voxels,
@@ -227,19 +357,19 @@ impl Lights {
 
         let mut chunk_lights = ndarray(
             vec![
-                chunk_size + padding * 2,
+                chunk_size + DATA_PADDING * 2,
                 max_height as usize,
-                chunk_size + padding * 2,
+                chunk_size + DATA_PADDING * 2,
             ],
             0,
         );
 
         let margin = (width - chunk_size) / 2;
-        for x in (margin - padding)..(margin + chunk_size + padding) {
-            for z in (margin - padding)..(margin + chunk_size + padding) {
+        for x in (margin - DATA_PADDING)..(margin + chunk_size + DATA_PADDING) {
+            for z in (margin - DATA_PADDING)..(margin + chunk_size + DATA_PADDING) {
                 for cy in 0..max_height as usize {
-                    let cx = x - margin + padding;
-                    let cz = z - margin + padding;
+                    let cx = x - margin + DATA_PADDING;
+                    let cz = z - margin + DATA_PADDING;
 
                     chunk_lights[&[cx, cy, cz]] = lights[&[x, cy, z]];
                 }
@@ -253,11 +383,10 @@ impl Lights {
         chunks: &Chunks,
         center: &Coords2<i32>,
         margin: usize,
-        padding: usize,
         registry: &Registry,
         metrics: &WorldMetrics,
     ) -> Ndarray<u32> {
         let space = Space::new(chunks, center, margin);
-        Lights::propagate(&space, registry, metrics, padding)
+        Lights::propagate(&space, registry, metrics)
     }
 }

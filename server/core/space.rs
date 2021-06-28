@@ -28,16 +28,16 @@ impl Space {
         let mut height_map = ndarray(vec![width, width], 0);
 
         let center_chunk = chunks.get_chunk(&center).unwrap();
-        let min = center_chunk.min.clone();
+        let min_inner = center_chunk.min_inner.clone();
 
         for dx in 0..width {
             for dz in 0..width {
                 let mut h = 0;
                 for dy in 0..max_height as usize {
                     let voxel = chunks.get_voxel_by_voxel(
-                        (min.0 as usize - margin + dx) as i32,
+                        (min_inner.0 as usize - margin + dx) as i32,
                         dy as i32,
-                        (min.2 as usize - margin + dz) as i32,
+                        (min_inner.2 as usize - margin + dz) as i32,
                     );
 
                     if dy > h

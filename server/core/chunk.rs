@@ -30,6 +30,8 @@ pub struct Chunk {
 
     pub min: Coords3<i32>,
     pub max: Coords3<i32>,
+    pub min_inner: Coords3<i32>,
+    pub max_inner: Coords3<i32>,
 
     pub needs_saving: bool,
     pub needs_propagation: bool,
@@ -64,11 +66,15 @@ impl Chunk {
 
         let coords3 = Coords3(cx, 0, cz);
 
-        let min = coords3.scale(size as i32);
-        let max = coords3
+        let paddings = Coords3(DATA_PADDING as i32, 0, DATA_PADDING as i32);
+
+        let min_inner = coords3.scale(size as i32);
+        let min = min_inner.sub(&paddings);
+        let max_inner = coords3
             .add(&Coords3(1, 0, 1))
             .scale(size as i32)
             .add(&Coords3(0, max_height as i32, 0));
+        let max = max_inner.add(&paddings);
 
         Self {
             name,
@@ -77,8 +83,11 @@ impl Chunk {
             voxels,
             lights,
             height_map,
+
             min,
             max,
+            min_inner,
+            max_inner,
 
             needs_saving: false,
             needs_propagation: true,
@@ -97,7 +106,7 @@ impl Chunk {
     }
 
     pub fn get_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
-        if !self.contains(vx, vy, vz, DATA_PADDING) {
+        if !self.contains(vx, vy, vz) {
             return 0;
         }
 
@@ -106,14 +115,14 @@ impl Chunk {
     }
 
     pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
-        assert!(self.contains(vx, vy, vz, DATA_PADDING));
+        assert!(self.contains(vx, vy, vz,));
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.voxels[&[lx as usize, ly as usize, lz as usize]] = id;
     }
 
     pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
-        if !self.contains(vx, vy, vz, DATA_PADDING) {
+        if !self.contains(vx, vy, vz) {
             return 0;
         }
 
@@ -122,14 +131,14 @@ impl Chunk {
     }
 
     pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
-        assert!(self.contains(vx, vy, vz, DATA_PADDING));
+        assert!(self.contains(vx, vy, vz,));
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.set_local_torch_light(lx as usize, ly as usize, lz as usize, level)
     }
 
     pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
-        if !self.contains(vx, vy, vz, DATA_PADDING) {
+        if !self.contains(vx, vy, vz) {
             return 0;
         }
 
@@ -138,14 +147,14 @@ impl Chunk {
     }
 
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
-        assert!(self.contains(vx, vy, vz, DATA_PADDING));
+        assert!(self.contains(vx, vy, vz,));
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.set_local_sunlight(lx as usize, ly as usize, lz as usize, level)
     }
 
     pub fn get_max_height(&self, vx: i32, vz: i32) -> i32 {
-        if !self.contains(vx, 0, vz, DATA_PADDING) {
+        if !self.contains(vx, 0, vz) {
             return self.max_height as i32;
         }
 
@@ -154,7 +163,7 @@ impl Chunk {
     }
 
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
-        assert!(self.contains(vx, 0, vz, DATA_PADDING));
+        assert!(self.contains(vx, 0, vz,));
 
         let Coords3(lx, _, lz) = self.to_local(vx, 0, vz);
         self.height_map[&[lx as usize, lz as usize]] = height;
@@ -222,24 +231,20 @@ impl Chunk {
     }
 
     fn to_local(&self, vx: i32, vy: i32, vz: i32) -> Coords3<i32> {
-        Coords3(vx, vy, vz).sub(&self.min).add(&Coords3(
-            DATA_PADDING as i32,
-            0,
-            DATA_PADDING as i32,
-        ))
+        Coords3(vx, vy, vz).sub(&self.min)
     }
 
-    fn contains(&self, vx: i32, vy: i32, vz: i32, padding: usize) -> bool {
+    fn contains(&self, vx: i32, vy: i32, vz: i32) -> bool {
         let size = self.size as i32;
         let max_height = self.max_height as i32;
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
 
-        lx >= -(padding as i32)
-            && lx < size + padding as i32
+        lx >= 0
+            && lx < size + DATA_PADDING as i32 * 2
             && ly >= 0
             && ly < max_height
-            && lz >= -(padding as i32)
-            && lz < size + padding as i32
+            && lz >= 0
+            && lz < size + DATA_PADDING as i32 * 2
     }
 }

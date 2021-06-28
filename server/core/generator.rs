@@ -25,8 +25,8 @@ impl Generator {
         registry: &Registry,
         metrics: &WorldMetrics,
     ) {
-        let Coords3(start_x, start_y, start_z) = chunk.min;
-        let Coords3(end_x, _, end_z) = chunk.max;
+        let Coords3(start_x, start_y, start_z) = chunk.min_inner;
+        let Coords3(end_x, _, end_z) = chunk.max_inner;
 
         match generation {
             GenerationType::FLAT => {

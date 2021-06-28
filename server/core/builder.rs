@@ -2,10 +2,7 @@ use std::f32::consts::PI;
 
 use log::debug;
 
-use crate::{
-    core::builder,
-    libs::{noise::Noise, types::Coords3},
-};
+use crate::libs::{noise::Noise, types::Coords3};
 
 use super::{
     biomes::{get_biome_config, BiomeConfig},

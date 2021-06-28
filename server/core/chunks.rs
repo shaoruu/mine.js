@@ -13,7 +13,7 @@ use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::{
-    core::{builder::VoxelUpdate, generator::Generator},
+    core::{builder::VoxelUpdate, generator::Generator, lights::LightNode},
     libs::{
         noise::{Noise, NoiseConfig},
         types::{Block, Coords2, Coords3, GenerationType, MeshType, UV},
@@ -28,22 +28,14 @@ use super::{
     builder::Builder,
     chunk::{Chunk, Meshes},
     constants::{
-        BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES,
-        CHUNK_HORIZONTAL_NEIGHBORS, CHUNK_NEIGHBORS, DATA_PADDING, LEVEL_SEED, PLANT_FACES,
-        VOXEL_NEIGHBORS,
+        BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES, CHUNK_NEIGHBORS,
+        DATA_PADDING, LEVEL_SEED, PLANT_FACES, VOXEL_NEIGHBORS,
     },
     lights::Lights,
     registry::{get_texture_type, Registry},
     space::Space,
     world::WorldMetrics,
 };
-
-/// Node of a light propagation queue
-#[derive(Debug)]
-struct LightNode {
-    voxel: Coords3<i32>,
-    level: u32,
-}
 
 /// Light data of a single vertex
 struct VertexLight {
@@ -642,7 +634,7 @@ impl Chunks {
         if !needs_propagation {
             if current_type.is_light {
                 // remove leftover light
-                self.remove_light(vx, vy, vz, false);
+                Lights::global_remove_light(self, vx, vy, vz, false);
             } else if current_type.is_transparent && !updated_type.is_transparent {
                 // remove light if solid block is placed
                 [false, true].iter().for_each(|&is_sunlight| {
@@ -652,7 +644,7 @@ impl Chunks {
                         self.get_torch_light(vx, vy, vz)
                     };
                     if level != 0 {
-                        self.remove_light(vx, vy, vz, is_sunlight);
+                        Lights::global_remove_light(self, vx, vy, vz, is_sunlight);
                     }
                 });
             }
@@ -660,7 +652,8 @@ impl Chunks {
             if updated_type.is_light {
                 // placing a light
                 self.set_torch_light(vx, vy, vz, updated_type.light_level);
-                self.flood_light(
+                Lights::global_flood_light(
+                    self,
                     VecDeque::from(vec![LightNode {
                         voxel,
                         level: updated_type.light_level,
@@ -710,14 +703,14 @@ impl Chunks {
                             }
                         }
                     }
-                    self.flood_light(queue, is_sunlight);
+                    Lights::global_flood_light(self, queue, is_sunlight);
                 })
             }
         }
     }
 
     /// Mark a chunk for saving from a voxel coordinate
-    fn mark_saving_from_voxel(&mut self, vx: i32, vy: i32, vz: i32) {
+    pub fn mark_saving_from_voxel(&mut self, vx: i32, vy: i32, vz: i32) {
         self.get_chunk_by_voxel_mut(vx, vy, vz)
             .unwrap()
             .needs_saving = true;
@@ -879,7 +872,6 @@ impl Chunks {
             self,
             &coords,
             max_light_level,
-            DATA_PADDING,
             &self.registry,
             &self.metrics,
         );
@@ -891,139 +883,6 @@ impl Chunks {
         chunk.set_lights(lights);
     }
 
-    /// Flood fill light from a queue
-    fn flood_light(&mut self, mut queue: VecDeque<LightNode>, is_sunlight: bool) {
-        let max_height = self.metrics.max_height as i32;
-        let max_light_level = self.metrics.max_light_level;
-
-        while !queue.is_empty() {
-            let LightNode { voxel, level } = queue.pop_front().unwrap();
-            let Coords3(vx, vy, vz) = voxel;
-
-            for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
-                let nvy = vy + oy;
-
-                if nvy < 0 || nvy > max_height {
-                    continue;
-                }
-
-                let nvx = vx + ox;
-                let nvz = vz + oz;
-                let sd = is_sunlight && *oy == -1 && level == max_light_level;
-                let nl = level - if sd { 0 } else { 1 };
-                let n_voxel = Coords3(nvx, nvy, nvz);
-                let block_type = self.get_block_by_voxel(nvx, nvy, nvz);
-
-                if !block_type.is_transparent
-                    || (if is_sunlight {
-                        self.get_sunlight(nvx, nvy, nvz)
-                    } else {
-                        self.get_torch_light(nvx, nvy, nvz)
-                    } >= nl)
-                {
-                    continue;
-                }
-
-                if is_sunlight {
-                    self.set_sunlight(nvx, nvy, nvz, nl);
-                } else {
-                    self.set_torch_light(nvx, nvy, nvz, nl);
-                }
-
-                self.mark_saving_from_voxel(nvx, nvy, nvz);
-
-                queue.push_back(LightNode {
-                    voxel: n_voxel,
-                    level: nl,
-                })
-            }
-        }
-    }
-
-    /// Remove a light source. Steps:
-    ///
-    /// 1. Remove the existing lights in a flood-fill fashion
-    /// 2. If external light source exists, flood fill them back
-    fn remove_light(&mut self, vx: i32, vy: i32, vz: i32, is_sunlight: bool) {
-        let max_height = self.metrics.max_height as i32;
-        let max_light_level = self.metrics.max_light_level;
-
-        let mut fill = VecDeque::<LightNode>::new();
-        let mut queue = VecDeque::<LightNode>::new();
-
-        queue.push_back(LightNode {
-            voxel: Coords3(vx, vy, vz),
-            level: if is_sunlight {
-                self.get_sunlight(vx, vy, vz)
-            } else {
-                self.get_torch_light(vx, vy, vz)
-            },
-        });
-
-        if is_sunlight {
-            self.set_sunlight(vx, vy, vz, 0);
-        } else {
-            self.set_torch_light(vx, vy, vz, 0);
-        }
-
-        self.mark_saving_from_voxel(vx, vy, vz);
-
-        while !queue.is_empty() {
-            let LightNode { voxel, level } = queue.pop_front().unwrap();
-            let Coords3(vx, vy, vz) = voxel;
-
-            for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
-                let nvy = vy + oy;
-
-                if nvy < 0 || nvy >= max_height {
-                    continue;
-                }
-
-                let nvx = vx + ox;
-                let nvz = vz + oz;
-                let n_voxel = Coords3(nvx, nvy, nvz);
-
-                let nl = if is_sunlight {
-                    self.get_sunlight(nvx, nvy, nvz)
-                } else {
-                    self.get_torch_light(nvx, nvy, nvz)
-                };
-
-                if nl == 0 {
-                    continue;
-                }
-
-                // if level is less, or if sunlight is propagating downwards without stopping
-                if nl < level
-                    || (is_sunlight
-                        && *oy == -1
-                        && level == max_light_level
-                        && nl == max_light_level)
-                {
-                    queue.push_back(LightNode {
-                        voxel: n_voxel,
-                        level: nl,
-                    });
-
-                    if is_sunlight {
-                        self.set_sunlight(nvx, nvy, nvz, 0);
-                    } else {
-                        self.set_torch_light(nvx, nvy, nvz, 0);
-                    }
-
-                    self.mark_saving_from_voxel(nvx, nvy, nvz);
-                } else if nl >= level && (!is_sunlight || *oy != -1 || nl > level) {
-                    fill.push_back(LightNode {
-                        voxel: n_voxel,
-                        level: nl,
-                    })
-                }
-            }
-        }
-
-        self.flood_light(fill, is_sunlight);
-    }
-
     /// Meshing a chunk. Poorly written. Needs refactor.
     fn mesh_chunk(
         &self,
@@ -1032,8 +891,8 @@ impl Chunks {
         sub_chunk: u32,
     ) -> Option<MeshType> {
         let Chunk {
-            min,
-            max,
+            min_inner,
+            max_inner,
             dimension,
             ..
         } = self.get_chunk(coords).unwrap();
@@ -1051,8 +910,8 @@ impl Chunks {
         let mut torch_lights = Vec::<i32>::new();
         let mut sunlights = Vec::<i32>::new();
 
-        let &Coords3(start_x, start_y, start_z) = min;
-        let &Coords3(end_x, end_y, end_z) = max;
+        let &Coords3(start_x, _, start_z) = min_inner;
+        let &Coords3(end_x, _, end_z) = max_inner;
 
         let vertex_ao = |side1: u32, side2: u32, corner: u32| -> usize {
             let num_s1 = !self.registry.get_transparency_by_id(side1) as usize;
@@ -1401,12 +1260,12 @@ impl Chunks {
         }
 
         Some(MeshType {
-            aos,
-            indices,
             positions,
+            indices,
+            uvs,
+            aos,
             sunlights,
             torch_lights,
-            uvs,
         })
     }
 }
