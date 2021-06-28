@@ -61,7 +61,7 @@ impl Builder {
             for vz in min.2..max.2 {
                 let vy = chunk.get_max_height(vx, vz);
 
-                let BiomeConfig { plant_scale, .. } = get_biome_config(vx, vz, &self.noise);
+                let BiomeConfig { plant_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
 
                 if self.registry.is_plantable(chunk.get_voxel(vx, vy, vz))
                     && self
@@ -96,7 +96,7 @@ impl Builder {
 
             let mut id = types["Grass"];
 
-            let BiomeConfig { plant_scale, .. } = get_biome_config(vx, vz, &self.noise);
+            let BiomeConfig { plant_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
 
             let vx = vx as f64;
             let vy = vy as f64;
@@ -152,7 +152,7 @@ impl Builder {
         for vx in min.0..max.0 {
             for vz in min.2..max.2 {
                 let vy = chunk.get_max_height(vx, vz);
-                let BiomeConfig { tree_scale, .. } = get_biome_config(vx, vz, &self.noise);
+                let BiomeConfig { tree_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
 
                 if self.registry.is_plantable(chunk.get_voxel(vx, vy, vz))
                     && self.noise.central_perlin(vx as f64, vz as f64, tree_scale)
@@ -176,7 +176,7 @@ impl Builder {
         for location in locations.into_iter() {
             let Coords3(vx, vy, vz) = location;
 
-            let BiomeConfig { tree_scale, .. } = get_biome_config(vx, vz, &self.noise);
+            let BiomeConfig { tree_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
 
             let test = tree_scale * 4.124;
             let test2 = tree_scale * 1.424;

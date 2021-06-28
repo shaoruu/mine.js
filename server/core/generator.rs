@@ -25,8 +25,8 @@ impl Generator {
         registry: &Registry,
         metrics: &WorldMetrics,
     ) {
-        let Coords3(start_x, start_y, start_z) = chunk.min_inner;
-        let Coords3(end_x, _, end_z) = chunk.max_inner;
+        let Coords3(start_x, start_y, start_z) = chunk.min;
+        let Coords3(end_x, _, end_z) = chunk.max;
 
         match generation {
             GenerationType::FLAT => {
@@ -97,17 +97,18 @@ impl Generator {
                         let &Coords3(end_x, end_y, end_z) = end;
 
                         let noise = Noise::new(LEVEL_SEED);
-                        let height_map = get_height_within(start_x, start_z, end_x, end_z, &noise);
+                        // let height_map = get_height_within(start_x, start_z, end_x, end_z, &noise);
 
                         for vx in start_x..end_x {
                             for vz in start_z..end_z {
-                                let biome_config = get_biome_config(vx, vz, &noise);
+                                let (height_offset, biome_config) =
+                                    get_biome_config(vx, vz, &noise);
 
                                 for vy in start_y..end_y {
                                     let vy_ = vy;
-                                    let vy = vy
-                                        - height_map
-                                            [&[(vx - start_x) as usize, (vz - start_z) as usize]];
+                                    let vy = vy - height_offset;
+                                    // - height_map
+                                    //     [&[(vx - start_x) as usize, (vz - start_z) as usize]];
 
                                     let is_solid = is_solid_at(vx, vy, vz, &biome_config);
 

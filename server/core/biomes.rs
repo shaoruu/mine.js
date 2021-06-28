@@ -47,7 +47,7 @@ const PLAIN_BIOME_CONFIG: BiomeConfig = BiomeConfig {
 
 pub const CAVE_SCALE: f64 = 0.03;
 
-pub fn get_biome_config(vx: i32, vz: i32, noise: &Noise) -> BiomeConfig {
+pub fn get_biome_config(vx: i32, vz: i32, noise: &Noise) -> (i32, BiomeConfig) {
     let vx = vx as f64;
     let vz = vz as f64;
 
@@ -55,10 +55,10 @@ pub fn get_biome_config(vx: i32, vz: i32, noise: &Noise) -> BiomeConfig {
     let humidity = noise.perlin2(vx, vz, HUMIDITY_SCALE).abs();
 
     if temp < 0.23 && humidity < 0.23 {
-        return HILL_BIOME_CONFIG;
+        return (50, HILL_BIOME_CONFIG);
     }
 
-    PLAIN_BIOME_CONFIG
+    (50, PLAIN_BIOME_CONFIG)
 }
 
 pub fn get_height_within(
@@ -70,10 +70,10 @@ pub fn get_height_within(
 ) -> Ndarray<i32> {
     let mut height_map = ndarray(vec![(x_max - x_min) as usize, (z_max - z_min) as usize], 0);
 
-    let bottom_left = get_biome_config(x_min, z_min, noise).height_offset as f64;
-    let bottom_right = get_biome_config(x_max, z_min, noise).height_offset as f64;
-    let top_left = get_biome_config(x_min, z_max, noise).height_offset as f64;
-    let top_right = get_biome_config(x_max, z_max, noise).height_offset as f64;
+    let bottom_left = get_biome_config(x_min, z_min, noise).1.height_offset as f64;
+    let bottom_right = get_biome_config(x_max, z_min, noise).1.height_offset as f64;
+    let top_left = get_biome_config(x_min, z_max, noise).1.height_offset as f64;
+    let top_right = get_biome_config(x_max, z_max, noise).1.height_offset as f64;
 
     for x in x_min..x_max {
         for z in z_min..z_max {

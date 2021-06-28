@@ -121,7 +121,7 @@ class Debug {
 
   setupAll = () => {
     // RENDERING
-    const { rendering, registry, player, world } = this.engine;
+    const { rendering, registry, player, world, camera } = this.engine;
 
     // ENGINE
     const engineFolder = this.gui.addFolder('Engine');
@@ -156,6 +156,13 @@ class Debug {
     const playerFolder = this.gui.addFolder('Player');
     playerFolder.add(player.options, 'acceleration', 0, 5, 0.01).name('Acceleration');
     playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01).name('Flying inertia');
+
+    // CAMERA
+    const cameraFolder = this.gui.addFolder('Camera');
+    cameraFolder
+      .add(camera.threeCamera, 'fov', 40, 120, 0.01)
+      .name('FOV')
+      .onChange(() => camera.threeCamera.updateProjectionMatrix());
 
     // const cameraFolder = this.gui.addFolder('camera');
     this.registerDisplay('FPS', this, 'fps');

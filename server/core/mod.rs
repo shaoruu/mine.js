@@ -5,6 +5,7 @@ pub mod chunks;
 pub mod constants;
 pub mod generator;
 pub mod lights;
+pub mod mesher;
 pub mod message;
 pub mod models;
 pub mod registry;

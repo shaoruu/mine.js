@@ -1,0 +1,7 @@
+{
+  "base": "base-block.json",
+  "name": "Test",
+  "textures": {
+    "all": "test.json"
+  }
+}
