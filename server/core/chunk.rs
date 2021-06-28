@@ -1,6 +1,7 @@
 use log::debug;
 
 use crate::{
+    core::constants::DATA_PADDING,
     libs::{
         ndarray::{ndarray, Ndarray},
         types::{Coords2, Coords3, MeshType},
@@ -16,8 +17,6 @@ pub struct Meshes {
     pub opaque: Option<MeshType>,
     pub transparent: Option<MeshType>,
 }
-
-const DATA_PADDING: usize = 1;
 
 #[derive(Debug)]
 pub struct Chunk {
@@ -159,6 +158,10 @@ impl Chunk {
 
         let Coords3(lx, _, lz) = self.to_local(vx, 0, vz);
         self.height_map[&[lx as usize, lz as usize]] = height;
+    }
+
+    pub fn set_lights(&mut self, data: Ndarray<u32>) {
+        self.lights = data;
     }
 
     pub fn dist_sqr_to_chunk(&self, coords: &Coords2<i32>) -> i32 {

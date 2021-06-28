@@ -29,7 +29,8 @@ use super::{
     chunk::{Chunk, Meshes},
     constants::{
         BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES,
-        CHUNK_HORIZONTAL_NEIGHBORS, CHUNK_NEIGHBORS, LEVEL_SEED, PLANT_FACES, VOXEL_NEIGHBORS,
+        CHUNK_HORIZONTAL_NEIGHBORS, CHUNK_NEIGHBORS, DATA_PADDING, LEVEL_SEED, PLANT_FACES,
+        VOXEL_NEIGHBORS,
     },
     lights::Lights,
     registry::{get_texture_type, Registry},
@@ -399,16 +400,6 @@ impl Chunks {
             debug!("Generating height map again took {:?}", start.elapsed());
             debug!("");
         }
-
-        // let start = Instant::now();
-
-        // let propagated =
-        //     Lights::calc_light(self, Coords2(0, 0), 8, 1, &self.registry, &self.metrics);
-
-        // if de {
-        //     debug!("Propagated {:?}", propagated.data.len());
-        //     debug!("Creating space and propagating took {:?}", start.elapsed());
-        // }
     }
 
     /// Populate a chunk with preset decorations.
@@ -882,69 +873,22 @@ impl Chunks {
     /// 1. Spread sunlight from the very top of the chunk
     /// 2. Recognize the torch lights and flood-fill them as well
     fn propagate_chunk(&mut self, coords: &Coords2<i32>) {
-        let chunk = self.get_chunk_mut(coords).expect("Chunk not found");
+        let max_light_level = ((self.metrics.max_light_level as f32) / 2.0).ceil() as usize;
 
-        let Coords3(start_x, start_y, start_z) = chunk.min;
-        let Coords3(end_x, end_y, end_z) = chunk.max;
+        let lights = Lights::calc_light(
+            self,
+            &coords,
+            max_light_level,
+            DATA_PADDING,
+            &self.registry,
+            &self.metrics,
+        );
+
+        let chunk = self.get_chunk_mut(coords).expect("Chunk not found");
 
         chunk.needs_propagation = false;
         chunk.needs_saving = true;
-
-        let max_light_level = self.metrics.max_light_level;
-
-        let mut light_queue = VecDeque::<LightNode>::new();
-        let mut sunlight_queue = VecDeque::<LightNode>::new();
-
-        for vz in start_z..end_z {
-            for vx in start_x..end_x {
-                let h = self.get_max_height(vx, vz);
-
-                for vy in (start_y..end_y).rev() {
-                    let &Block {
-                        is_transparent,
-                        is_light,
-                        light_level,
-                        ..
-                    } = self.get_block_by_voxel(vx, vy, vz);
-
-                    if vy > h && is_transparent {
-                        self.set_sunlight(vx, vy, vz, max_light_level);
-
-                        for [ox, oz] in CHUNK_HORIZONTAL_NEIGHBORS.iter() {
-                            let neighbor_block = self.get_block_by_voxel(vx + ox, vy, vz + oz);
-
-                            if !neighbor_block.is_transparent {
-                                continue;
-                            }
-
-                            if self.get_max_height(vx + ox, vz + oz) > vy {
-                                // means sunlight should propagate here horizontally
-                                if !sunlight_queue.iter().any(|LightNode { voxel, .. }| {
-                                    voxel.0 == vx && voxel.1 == vy && voxel.2 == vz
-                                }) {
-                                    sunlight_queue.push_back(LightNode {
-                                        level: max_light_level,
-                                        voxel: Coords3(vx, vy, vz),
-                                    })
-                                }
-                            }
-                        }
-                    }
-
-                    // ? might be erroneous here, but this is for lights on voxels like plants
-                    if is_light {
-                        self.set_torch_light(vx, vy, vz, light_level);
-                        light_queue.push_back(LightNode {
-                            level: light_level,
-                            voxel: Coords3(vx, vy, vz),
-                        })
-                    }
-                }
-            }
-        }
-
-        self.flood_light(light_queue, false);
-        self.flood_light(sunlight_queue, true);
+        chunk.set_lights(lights);
     }
 
     /// Flood fill light from a queue

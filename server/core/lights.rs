@@ -202,14 +202,14 @@ impl Lights {
                                 }
                             }
                         }
+                    }
 
-                        if is_light {
-                            Lights::set_torch_light(&mut lights, x, y, z, light_level);
-                            light_queue.push_back(LightNode {
-                                level: light_level,
-                                voxel: Coords3(x, y, z),
-                            });
-                        }
+                    if is_light {
+                        Lights::set_torch_light(&mut lights, x, y, z, light_level);
+                        light_queue.push_back(LightNode {
+                            level: light_level,
+                            voxel: Coords3(x, y, z),
+                        });
                     }
                 }
             }
@@ -251,7 +251,7 @@ impl Lights {
 
     pub fn calc_light(
         chunks: &Chunks,
-        center: Coords2<i32>,
+        center: &Coords2<i32>,
         margin: usize,
         padding: usize,
         registry: &Registry,

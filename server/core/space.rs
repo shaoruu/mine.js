@@ -14,7 +14,7 @@ pub struct Space {
 }
 
 impl Space {
-    pub fn new(chunks: &Chunks, center: Coords2<i32>, margin: usize) -> Self {
+    pub fn new(chunks: &Chunks, center: &Coords2<i32>, margin: usize) -> Self {
         let WorldMetrics {
             chunk_size,
             max_height,
