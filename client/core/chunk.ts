@@ -17,6 +17,8 @@ type ChunkOptions = {
 };
 const MESH_TYPES = ['transparent', 'opaque'];
 
+const DATA_PADDING = 1;
+
 class Chunk {
   public voxels: ndarray;
   public lights: ndarray;
@@ -49,8 +51,16 @@ class Chunk {
     this.dimension = dimension;
     this.name = Helper.getChunkName(this.coords);
 
-    this.voxels = ndarray(pool.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
-    this.lights = ndarray(pool.mallocUint8(size * maxHeight * size), [size, maxHeight, size]);
+    this.voxels = ndarray(pool.mallocUint8((size + DATA_PADDING * 2) * maxHeight * (size + DATA_PADDING * 2)), [
+      size + DATA_PADDING * 2,
+      maxHeight,
+      size + DATA_PADDING * 2,
+    ]);
+    this.lights = ndarray(pool.mallocUint8((size + DATA_PADDING * 2) * maxHeight * (size + DATA_PADDING * 2)), [
+      size + DATA_PADDING * 2,
+      maxHeight,
+      size + DATA_PADDING * 2,
+    ]);
 
     this.mesh = new Group();
 
@@ -73,7 +83,7 @@ class Chunk {
   };
 
   getVoxel = (vx: number, vy: number, vz: number) => {
-    if (!this.contains(vx, vy, vz)) return;
+    if (!this.contains(vx, vy, vz)) return 1;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
     return this.voxels.get(lx, ly, lz);
   };
@@ -96,7 +106,7 @@ class Chunk {
     return this.getLocalSunlight(...lCoords);
   }
 
-  contains = (vx: number, vy: number, vz: number, padding = 0) => {
+  contains = (vx: number, vy: number, vz: number, padding = DATA_PADDING) => {
     const { size, maxHeight } = this;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
 
@@ -219,7 +229,7 @@ class Chunk {
   };
 
   private toLocal = (vx: number, vy: number, vz: number) => {
-    return <Coords3>vec3.sub([0, 0, 0], [vx, vy, vz], this.min);
+    return <Coords3>vec3.add([0, 0, 0], vec3.sub([0, 0, 0], [vx, vy, vz], this.min), [DATA_PADDING, 0, DATA_PADDING]);
   };
 }
 

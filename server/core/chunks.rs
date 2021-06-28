@@ -402,11 +402,10 @@ impl Chunks {
 
         // let start = Instant::now();
 
-        // let space = Space::new(self, Coords2(0, 0), 8);
-        // let propagated = Lights::propagate(&space, &self.registry, &self.metrics);
+        // let propagated =
+        //     Lights::calc_light(self, Coords2(0, 0), 8, 1, &self.registry, &self.metrics);
 
         // if de {
-        //     debug!("Space {:?}", space.voxels.data.len());
         //     debug!("Propagated {:?}", propagated.data.len());
         //     debug!("Creating space and propagating took {:?}", start.elapsed());
         // }
@@ -859,18 +858,18 @@ impl Chunks {
     ///
     /// Note: the chunk should already be initialized with voxel data
     fn generate_chunk_height_map(chunk: &mut Chunk, metrics: &WorldMetrics, registry: &Registry) {
-        let size = metrics.chunk_size;
         let max_height = metrics.max_height;
+        let min = chunk.min.to_owned();
+        let max = chunk.max.to_owned();
 
-        for lx in 0..size {
-            for lz in 0..size {
-                for ly in (0..max_height as usize).rev() {
-                    let id = chunk.voxels[&[lx, ly, lz]];
-                    let ly_i32 = ly as i32;
+        for vx in min.0..max.0 {
+            for vz in min.2..max.2 {
+                for vy in (0..max_height as i32).rev() {
+                    let id = chunk.get_voxel(vx, vy, vz);
 
                     // TODO: CHECK FROM REGISTRY &&&&& PLANTS
-                    if ly == 0 || (!registry.is_air(id) && !registry.is_plant(id)) {
-                        chunk.height_map[&[lx, lz]] = ly_i32;
+                    if vy == 0 || (!registry.is_air(id) && !registry.is_plant(id)) {
+                        chunk.set_max_height(vx, vz, vy);
                         break;
                     }
                 }

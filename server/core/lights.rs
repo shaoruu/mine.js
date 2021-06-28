@@ -6,11 +6,14 @@ use crate::{
     core::constants::CHUNK_HORIZONTAL_NEIGHBORS,
     libs::{
         ndarray::{ndarray, Ndarray},
-        types::{Block, Coords3},
+        types::{Block, Coords2, Coords3},
     },
 };
 
-use super::{constants::VOXEL_NEIGHBORS, registry::Registry, space::Space, world::WorldMetrics};
+use super::{
+    chunks::Chunks, constants::VOXEL_NEIGHBORS, registry::Registry, space::Space,
+    world::WorldMetrics,
+};
 
 /// Node of a light propagation queue
 #[derive(Debug)]
@@ -135,7 +138,14 @@ impl Lights {
         }
     }
 
-    pub fn propagate(space: &Space, registry: &Registry, metrics: &WorldMetrics) -> Ndarray<u32> {
+    pub fn propagate(
+        space: &Space,
+        registry: &Registry,
+        metrics: &WorldMetrics,
+        // by how much should the returned data contain other than
+        // the chunk's own lighting data.
+        padding: usize,
+    ) -> Ndarray<u32> {
         let Space {
             width,
             voxels,
@@ -215,14 +225,21 @@ impl Lights {
             metrics,
         );
 
-        let mut chunk_lights = ndarray(vec![chunk_size, max_height as usize, chunk_size], 0);
+        let mut chunk_lights = ndarray(
+            vec![
+                chunk_size + padding * 2,
+                max_height as usize,
+                chunk_size + padding * 2,
+            ],
+            0,
+        );
 
         let margin = (width - chunk_size) / 2;
-        for x in margin..(margin + chunk_size) {
-            for z in margin..(margin + chunk_size) {
+        for x in (margin - padding)..(margin + chunk_size + padding) {
+            for z in (margin - padding)..(margin + chunk_size + padding) {
                 for cy in 0..max_height as usize {
-                    let cx = x - margin;
-                    let cz = z - margin;
+                    let cx = x - margin + padding;
+                    let cz = z - margin + padding;
 
                     chunk_lights[&[cx, cy, cz]] = lights[&[x, cy, z]];
                 }
@@ -230,5 +247,17 @@ impl Lights {
         }
 
         chunk_lights
+    }
+
+    pub fn calc_light(
+        chunks: &Chunks,
+        center: Coords2<i32>,
+        margin: usize,
+        padding: usize,
+        registry: &Registry,
+        metrics: &WorldMetrics,
+    ) -> Ndarray<u32> {
+        let space = Space::new(chunks, center, margin);
+        Lights::propagate(&space, registry, metrics, padding)
     }
 }

@@ -21,6 +21,8 @@ impl Space {
             ..
         } = chunks.metrics;
 
+        assert!(margin > 0, "Margin of 0 on Space is wasteful");
+
         let width = chunk_size + margin * 2;
         let mut voxels = ndarray(vec![width, max_height as usize, width], 0);
         let mut height_map = ndarray(vec![width, width], 0);
