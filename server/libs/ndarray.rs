@@ -8,8 +8,8 @@ where
     T: Num + Clone,
 {
     pub data: Vec<T>,
-    shape: Vec<usize>,
-    stride: Vec<usize>,
+    pub shape: Vec<usize>,
+    pub stride: Vec<usize>,
 }
 
 impl<T> Ndarray<T>
@@ -45,6 +45,10 @@ where
             .zip(self.stride.iter())
             .map(|(a, b)| a * b)
             .sum()
+    }
+
+    pub fn contains(&self, coords: &[usize]) -> bool {
+        !coords.iter().zip(self.shape.iter()).any(|(&a, &b)| a >= b)
     }
 }
 

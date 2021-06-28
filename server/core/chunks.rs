@@ -31,7 +31,9 @@ use super::{
         BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES,
         CHUNK_HORIZONTAL_NEIGHBORS, CHUNK_NEIGHBORS, LEVEL_SEED, PLANT_FACES, VOXEL_NEIGHBORS,
     },
+    lights::Lights,
     registry::{get_texture_type, Registry},
+    space::Space,
     world::WorldMetrics,
 };
 
@@ -389,7 +391,7 @@ impl Chunks {
             Chunks::generate_chunk_height_map(chunk, metrics, registry);
         });
 
-        for mut chunk in to_decorate {
+        for chunk in to_decorate {
             self.chunks.insert(chunk.name.to_owned(), chunk);
         }
 
@@ -397,6 +399,17 @@ impl Chunks {
             debug!("Generating height map again took {:?}", start.elapsed());
             debug!("");
         }
+
+        // let start = Instant::now();
+
+        // let space = Space::new(self, Coords2(0, 0), 8);
+        // let propagated = Lights::propagate(&space, &self.registry, &self.metrics);
+
+        // if de {
+        //     debug!("Space {:?}", space.voxels.data.len());
+        //     debug!("Propagated {:?}", propagated.data.len());
+        //     debug!("Creating space and propagating took {:?}", start.elapsed());
+        // }
     }
 
     /// Populate a chunk with preset decorations.
