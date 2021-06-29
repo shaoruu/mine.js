@@ -41,7 +41,7 @@ pub struct Client {
     pub render_radius: i16,
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct WsServer {
     worlds: HashMap<String, World>,
 }
@@ -274,7 +274,7 @@ fn make_world_data(world: &World) -> WorldData {
     WorldData {
         name: world.name.to_owned(),
         time: world.time,
-        generation: match world.chunks.generation {
+        generation: match world.chunks.config.generation {
             GenerationType::FLAT => "flat".to_owned(),
             GenerationType::HILLY => "hilly".to_owned(),
         },

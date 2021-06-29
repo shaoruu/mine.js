@@ -51,7 +51,6 @@ pub enum MeshLevel {
 #[derive(Debug)]
 pub struct Chunks {
     pub chunk_cache: HashSet<Coords2<i32>>,
-    pub generation: GenerationType,
     pub config: WorldConfig,
     pub registry: Registry,
 
@@ -67,15 +66,9 @@ pub struct Chunks {
  * NEED REFACTOR ASAP
  */
 impl Chunks {
-    pub fn new(
-        config: WorldConfig,
-        generation: GenerationType,
-        max_loaded_chunks: i32,
-        registry: Registry,
-    ) -> Self {
+    pub fn new(config: WorldConfig, max_loaded_chunks: i32, registry: Registry) -> Self {
         Chunks {
             config,
-            generation,
             registry: registry.to_owned(),
             caching: false,
             max_loaded_chunks,
@@ -180,16 +173,6 @@ impl Chunks {
             self.propagate_chunk(coords);
         }
 
-        // propagate neighboring chunks too
-        for [ox, oz] in CHUNK_NEIGHBORS.iter() {
-            let n_coords = Coords2(coords.0 + ox, coords.1 + oz);
-            if self.get_chunk(&n_coords).unwrap().needs_propagation {
-                self.propagate_chunk(&n_coords);
-            }
-        }
-
-        // TODO: MESH HERE (AND SUB MESHES)
-
         let sub_chunks = self.config.sub_chunks;
 
         // TODO: fix this cloning monstrosity
@@ -237,6 +220,7 @@ impl Chunks {
                     };
 
                     chunk.is_dirty = false;
+                    chunk.is_meshed = true;
                 }
             }
         };
@@ -299,7 +283,7 @@ impl Chunks {
 
         let start = Instant::now();
         to_generate.par_iter_mut().for_each(|new_chunk| {
-            let generation = self.generation.clone();
+            let generation = self.config.generation.clone();
             Generator::generate_chunk(new_chunk, generation, &registry, &metrics);
         });
         if de {

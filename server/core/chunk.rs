@@ -40,6 +40,7 @@ pub struct Chunk {
 
     pub is_empty: bool,
     pub is_dirty: bool,
+    pub is_meshed: bool,
 
     pub size: usize,
     pub dimension: usize,
@@ -96,6 +97,9 @@ impl Chunk {
 
             is_empty: false,
             is_dirty: true,
+
+            // has mesh ever been initialized on this chunk
+            is_meshed: false,
 
             size,
             max_height,

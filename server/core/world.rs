@@ -20,29 +20,32 @@ use super::server::Client;
 
 #[derive(Debug, Clone)]
 pub struct WorldConfig {
-    pub dimension: usize,
     pub chunk_size: usize,
+    pub dimension: usize,
     pub max_height: u32,
-    pub sub_chunks: u32,
     pub max_light_level: u32,
+    pub save: bool,
+    pub chunk_root: String,
     pub render_radius: usize,
+    pub max_loaded_chunks: i32,
+    pub sub_chunks: u32,
+    pub generation: GenerationType,
 }
 
-#[derive(Debug)]
 pub struct World {
     pub time: f32,
     pub tick: i32,
     pub tick_speed: f32,
 
     pub name: String,
-    pub save: bool,
     pub preload: i16,
-    pub chunk_root: String,
     pub description: String,
 
     pub chunks: Chunks,
     pub clients: HashMap<usize, Client>,
     pub prev_time: SystemTime,
+
+    pub pool: rayon::ThreadPool,
 }
 
 impl World {
@@ -64,26 +67,35 @@ impl World {
         let generation = GenerationType::parse(json["generation"].as_str().unwrap()).unwrap();
 
         let config = WorldConfig {
-            dimension,
             chunk_size,
+            dimension,
             max_height,
-            sub_chunks,
             max_light_level,
+            save,
+            chunk_root,
             render_radius,
+            max_loaded_chunks,
+            sub_chunks,
+            generation,
         };
 
         World {
             time,
-            name,
-            save,
-            preload,
             tick: 0,
             tick_speed,
-            chunk_root,
+
+            name,
+            preload,
             description,
+
             clients: HashMap::new(),
-            chunks: Chunks::new(config, generation, max_loaded_chunks, registry),
+            chunks: Chunks::new(config, max_loaded_chunks, registry),
             prev_time: SystemTime::now(),
+
+            pool: rayon::ThreadPoolBuilder::new()
+                .num_threads(16)
+                .build()
+                .unwrap(),
         }
     }
 
