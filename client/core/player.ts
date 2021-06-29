@@ -71,6 +71,7 @@ class Player {
 
     inputs.click('left', () => world.breakVoxel(), 'in-game');
     inputs.click('right', () => world.placeVoxel(type), 'in-game');
+    inputs.click('middle', () => (type = engine.world.getVoxelByVoxel(this.lookBlock)), 'in-game');
     inputs.bind('f', () => this.toggleGodMode(), 'in-game');
     inputs.bind('c', () => this.togglePerspective(), 'in-game');
 
