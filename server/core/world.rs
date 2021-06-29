@@ -19,7 +19,7 @@ use super::registry::Registry;
 use super::server::Client;
 
 #[derive(Debug, Clone)]
-pub struct WorldMetrics {
+pub struct WorldConfig {
     pub dimension: usize,
     pub chunk_size: usize,
     pub max_height: u32,
@@ -63,7 +63,7 @@ impl World {
         let description = json["description"].as_str().unwrap().to_owned();
         let generation = GenerationType::parse(json["generation"].as_str().unwrap()).unwrap();
 
-        let metrics = WorldMetrics {
+        let config = WorldConfig {
             dimension,
             chunk_size,
             max_height,
@@ -82,7 +82,7 @@ impl World {
             chunk_root,
             description,
             clients: HashMap::new(),
-            chunks: Chunks::new(metrics, generation, max_loaded_chunks, registry),
+            chunks: Chunks::new(config, generation, max_loaded_chunks, registry),
             prev_time: SystemTime::now(),
         }
     }
@@ -166,7 +166,7 @@ impl World {
         let id = json["type"].as_u64().unwrap() as u32;
 
         if vy < 0
-            || vy >= self.chunks.metrics.max_height as i32
+            || vy >= self.chunks.config.max_height as i32
             || !self.chunks.registry.has_type(id)
         {
             return;
@@ -203,11 +203,11 @@ impl World {
             cache.insert(c);
         });
 
-        let WorldMetrics {
+        let WorldConfig {
             sub_chunks,
             max_height,
             ..
-        } = self.chunks.metrics;
+        } = self.chunks.config;
 
         let sub_chunk_unit = max_height / sub_chunks;
 

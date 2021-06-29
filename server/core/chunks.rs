@@ -32,7 +32,7 @@ use super::{
     mesher::Mesher,
     registry::Registry,
     space::Space,
-    world::WorldMetrics,
+    world::WorldConfig,
 };
 
 /// Light data of a single vertex
@@ -52,7 +52,7 @@ pub enum MeshLevel {
 pub struct Chunks {
     pub chunk_cache: HashSet<Coords2<i32>>,
     pub generation: GenerationType,
-    pub metrics: WorldMetrics,
+    pub config: WorldConfig,
     pub registry: Registry,
 
     caching: bool,
@@ -68,13 +68,13 @@ pub struct Chunks {
  */
 impl Chunks {
     pub fn new(
-        metrics: WorldMetrics,
+        config: WorldConfig,
         generation: GenerationType,
         max_loaded_chunks: i32,
         registry: Registry,
     ) -> Self {
         Chunks {
-            metrics,
+            config,
             generation,
             registry: registry.to_owned(),
             caching: false,
@@ -190,10 +190,10 @@ impl Chunks {
 
         // TODO: MESH HERE (AND SUB MESHES)
 
-        let sub_chunks = self.metrics.sub_chunks;
+        let sub_chunks = self.config.sub_chunks;
 
         // TODO: fix this cloning monstrosity
-        let metrics = self.metrics.clone();
+        let metrics = self.config.clone();
         let registry = self.registry.clone();
 
         match level {
@@ -277,9 +277,9 @@ impl Chunks {
                 if chunk.is_none() {
                     let new_chunk = Chunk::new(
                         coords.to_owned(),
-                        self.metrics.chunk_size,
-                        self.metrics.max_height as usize,
-                        self.metrics.dimension,
+                        self.config.chunk_size,
+                        self.config.max_height as usize,
+                        self.config.dimension,
                     );
                     to_generate.push(new_chunk);
                 }
@@ -294,7 +294,7 @@ impl Chunks {
             debug!("Calculating chunks took {:?}", start.elapsed());
         }
 
-        let metrics = Arc::new(&self.metrics);
+        let metrics = Arc::new(&self.config);
         let registry = Arc::new(&self.registry);
 
         let start = Instant::now();
@@ -381,7 +381,7 @@ impl Chunks {
             })
             .collect();
 
-        let metrics = Arc::new(&self.metrics);
+        let metrics = Arc::new(&self.config);
         let registry = Arc::new(&self.registry);
 
         to_decorate.par_iter_mut().for_each(|chunk| {
@@ -457,13 +457,13 @@ impl Chunks {
 
     /// Get a chunk reference from a voxel coordinate
     pub fn get_chunk_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> Option<&Chunk> {
-        let coords = map_voxel_to_chunk(vx, vy, vz, self.metrics.chunk_size);
+        let coords = map_voxel_to_chunk(vx, vy, vz, self.config.chunk_size);
         self.get_chunk(&coords)
     }
 
     /// Get a mutable chunk reference from a voxel coordinate
     pub fn get_chunk_by_voxel_mut(&mut self, vx: i32, vy: i32, vz: i32) -> Option<&mut Chunk> {
-        let coords = map_voxel_to_chunk(vx, vy, vz, self.metrics.chunk_size);
+        let coords = map_voxel_to_chunk(vx, vy, vz, self.config.chunk_size);
         self.get_chunk_mut(&coords)
     }
 
@@ -477,7 +477,7 @@ impl Chunks {
 
     /// Get the voxel type at a world coordinate
     pub fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u32 {
-        let Coords3(vx, vy, vz) = map_world_to_voxel(wx, wy, wz, self.metrics.dimension);
+        let Coords3(vx, vy, vz) = map_world_to_voxel(wx, wy, wz, self.config.dimension);
         self.get_voxel_by_voxel(vx, vy, vz)
     }
 
@@ -577,7 +577,7 @@ impl Chunks {
 
     /// Get neighboring chunks according to a voxel coordinate
     pub fn get_neighbor_chunk_coords(&self, vx: i32, vy: i32, vz: i32) -> HashSet<Coords2<i32>> {
-        let chunk_size = self.metrics.chunk_size;
+        let chunk_size = self.config.chunk_size;
 
         let mut neighbor_chunks = HashSet::new();
 
@@ -636,8 +636,8 @@ impl Chunks {
             .unwrap()
             .needs_propagation;
 
-        let max_height = self.metrics.max_height as i32;
-        let max_light_level = self.metrics.max_light_level;
+        let max_height = self.config.max_height as i32;
+        let max_light_level = self.config.max_light_level;
 
         let height = self.get_max_height(vx, vz);
 
@@ -751,133 +751,11 @@ impl Chunks {
             .needs_saving = true;
     }
 
-    /// Generate terrain for a chunk
-    fn generate_chunk(chunk: &mut Chunk, types: HashMap<String, u32>, metrics: WorldMetrics) {
-        let Coords3(start_x, start_y, start_z) = chunk.min;
-        let Coords3(end_x, end_y, end_z) = chunk.max;
-
-        let air = types["Air"];
-        let grass_block = types["Grass Block"];
-        let stone = types["Stone"];
-        let dirt = types["Dirt"];
-
-        let is_empty = true;
-
-        let noise = Noise::new(LEVEL_SEED);
-
-        let is_solid_at = |vx: i32, vy: i32, vz: i32, biome: &BiomeConfig| {
-            noise.octave_perlin3(
-                vx as f64,
-                vy as f64,
-                vz as f64,
-                biome.scale,
-                NoiseConfig {
-                    octaves: biome.octaves,
-                    persistence: biome.persistence,
-                    lacunarity: biome.lacunarity,
-                    height_scale: biome.height_scale,
-                    amplifier: biome.amplifier,
-                },
-            ) > -0.2
-        };
-
-        let unit = (metrics.max_height / metrics.sub_chunks) as i32;
-
-        let mut pairs = vec![];
-        for i in 0..metrics.sub_chunks as i32 {
-            pairs.push((
-                Coords3(start_x, unit * i, start_z),
-                Coords3(end_x, unit * (i + 1), end_z),
-            ));
-        }
-
-        let updates: Vec<Vec<VoxelUpdate>> = pairs
-            .par_iter()
-            .map(|(start, end)| {
-                let mut updates = vec![];
-
-                let &Coords3(start_x, start_y, start_z) = start;
-                let &Coords3(end_x, end_y, end_z) = end;
-
-                let noise = Noise::new(LEVEL_SEED);
-                let height_map = get_height_within(start_x, start_z, end_x, end_z, &noise);
-
-                for vx in start_x..end_x {
-                    for vz in start_z..end_z {
-                        let biome_config = get_biome_config(vx, vz, &noise).1;
-
-                        for vy in start_y..end_y {
-                            let vy_ = vy;
-                            let vy = vy
-                                - height_map[&[(vx - start_x) as usize, (vz - start_z) as usize]];
-
-                            let is_solid = is_solid_at(vx, vy, vz, &biome_config);
-
-                            if !(is_solid) {
-                                continue;
-                            }
-
-                            let is_solid_top = is_solid_at(vx, vy + 1, vz, &biome_config);
-                            let is_solid_top2 = is_solid_at(vx, vy + 2, vz, &biome_config);
-
-                            let vx = vx as f64;
-                            let vy = vy as f64;
-                            let vz = vz as f64;
-
-                            let y_prop = vy / metrics.max_height as f64;
-
-                            let mut block_id = air;
-
-                            if !is_solid_top && !is_solid_top2 {
-                                block_id = grass_block;
-
-                                if noise.fractal_octave_perlin3(vx, vy, vz, biome_config.scale, 3)
-                                    > 0.3
-                                {
-                                    block_id = dirt;
-                                }
-                            } else {
-                                block_id = stone;
-                            }
-
-                            // the y_prop is to force the caves lower in the y-axis
-                            // the lower the scale, the bigger the caves
-                            let cave_scale = 0.6;
-                            if noise.simplex3(vx, vy * 0.8, vz, CAVE_SCALE * cave_scale) * 1.0
-                                / y_prop.powi(3)
-                                > 0.2
-                                && noise.ridged3(vx, vy, vz, CAVE_SCALE * cave_scale * 2.0) > 0.4
-                            {
-                                block_id = air;
-                            }
-
-                            updates.push(VoxelUpdate {
-                                voxel: Coords3(vx as i32, vy_ as i32, vz as i32),
-                                id: block_id,
-                            });
-                        }
-                    }
-                }
-
-                updates
-            })
-            .collect();
-
-        updates.iter().for_each(|updates| {
-            updates.iter().for_each(|u| {
-                chunk.set_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
-            })
-        });
-
-        chunk.is_empty = is_empty;
-        chunk.needs_terrain = false;
-    }
-
     /// Generate chunk's height map
     ///
     /// Note: the chunk should already be initialized with voxel data
-    fn generate_chunk_height_map(chunk: &mut Chunk, metrics: &WorldMetrics, registry: &Registry) {
-        let max_height = metrics.max_height;
+    fn generate_chunk_height_map(chunk: &mut Chunk, config: &WorldConfig, registry: &Registry) {
+        let max_height = config.max_height;
         let min = chunk.min.to_owned();
         let max = chunk.max.to_owned();
 
@@ -901,10 +779,10 @@ impl Chunks {
     /// 1. Spread sunlight from the very top of the chunk
     /// 2. Recognize the torch lights and flood-fill them as well
     fn propagate_chunk(&mut self, coords: &Coords2<i32>) {
-        let max_light_flood = ((self.metrics.max_light_level as f32) / 2.0).ceil() as usize;
+        let max_light_flood = ((self.config.max_light_level as f32) / 2.0).ceil() as usize;
 
         let space = Space::new(self, coords, max_light_flood);
-        let lights = Lights::calc_light(&space, &self.registry, &self.metrics);
+        let lights = Lights::calc_light(&space, &self.registry, &self.config);
 
         let chunk = self.get_chunk_mut(coords).expect("Chunk not found");
 

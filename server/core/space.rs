@@ -3,7 +3,7 @@ use crate::libs::{
     types::Coords2,
 };
 
-use super::{chunks::Chunks, world::WorldMetrics};
+use super::{chunks::Chunks, world::WorldConfig};
 
 /// A data access model that samples a 3D space of voxels in the world.
 /// Used for reference in other threads.
@@ -15,11 +15,11 @@ pub struct Space {
 
 impl Space {
     pub fn new(chunks: &Chunks, center: &Coords2<i32>, margin: usize) -> Self {
-        let WorldMetrics {
+        let WorldConfig {
             chunk_size,
             max_height,
             ..
-        } = chunks.metrics;
+        } = chunks.config;
 
         assert!(margin > 0, "Margin of 0 on Space is wasteful");
 

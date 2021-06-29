@@ -7,7 +7,7 @@ use super::{
     chunk::Chunk,
     constants::{BlockFace, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES, PLANT_FACES},
     registry::{get_texture_type, Registry},
-    world::WorldMetrics,
+    world::WorldConfig,
 };
 
 pub struct Mesher;
@@ -28,7 +28,7 @@ impl Mesher {
         chunk: &Chunk,
         transparent: bool,
         sub_chunk: u32,
-        metrics: &WorldMetrics,
+        metrics: &WorldConfig,
         registry: &Registry,
     ) -> Option<MeshType> {
         let Chunk {
@@ -38,7 +38,7 @@ impl Mesher {
             ..
         } = chunk;
 
-        let WorldMetrics {
+        let WorldConfig {
             max_height,
             sub_chunks,
             ..

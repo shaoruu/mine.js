@@ -25,7 +25,7 @@ use super::models::{
     messages::message::Type as MessageType, MessageComponents,
 };
 use super::registry::Registry;
-use super::world::WorldMetrics;
+use super::world::WorldConfig;
 
 const SERVER_TICK: Duration = Duration::from_millis(16);
 const CHUNKING_TICK: Duration = Duration::from_millis(18);
@@ -92,11 +92,11 @@ impl WsServer {
         for world in self.worlds.values_mut() {
             world.tick();
 
-            let WorldMetrics {
+            let WorldConfig {
                 chunk_size,
                 dimension,
                 ..
-            } = world.chunks.metrics;
+            } = world.chunks.config;
 
             for client in world.clients.values_mut() {
                 if client.name.is_none() {

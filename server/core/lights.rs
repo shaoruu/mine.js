@@ -12,7 +12,7 @@ use crate::{
 
 use super::{
     chunks::Chunks, constants::VOXEL_NEIGHBORS, registry::Registry, space::Space,
-    world::WorldMetrics,
+    world::WorldConfig,
 };
 
 /// Node of a light propagation queue
@@ -80,8 +80,8 @@ impl Lights {
     /// 1. Remove the existing lights in a flood-fill fashion
     /// 2. If external light source exists, flood fill them back
     pub fn global_remove_light(chunks: &mut Chunks, vx: i32, vy: i32, vz: i32, is_sunlight: bool) {
-        let max_height = chunks.metrics.max_height as i32;
-        let max_light_level = chunks.metrics.max_light_level;
+        let max_height = chunks.config.max_height as i32;
+        let max_light_level = chunks.config.max_light_level;
 
         let mut fill = VecDeque::<LightNode>::new();
         let mut queue = VecDeque::<LightNode>::new();
@@ -165,8 +165,8 @@ impl Lights {
         mut queue: VecDeque<LightNode>,
         is_sunlight: bool,
     ) {
-        let max_height = chunks.metrics.max_height as i32;
-        let max_light_level = chunks.metrics.max_light_level;
+        let max_height = chunks.config.max_height as i32;
+        let max_light_level = chunks.config.max_light_level;
 
         while !queue.is_empty() {
             let LightNode { voxel, level } = queue.pop_front().unwrap();
@@ -218,7 +218,7 @@ impl Lights {
         voxels: &Ndarray<u32>,
         lights: &mut Ndarray<u32>,
         registry: &Registry,
-        metrics: &WorldMetrics,
+        metrics: &WorldConfig,
     ) {
         let max_height = metrics.max_height as i32;
         let max_light_level = metrics.max_light_level;
@@ -275,7 +275,7 @@ impl Lights {
         }
     }
 
-    pub fn propagate(space: &Space, registry: &Registry, metrics: &WorldMetrics) -> Ndarray<u32> {
+    pub fn propagate(space: &Space, registry: &Registry, config: &WorldConfig) -> Ndarray<u32> {
         let Space {
             width,
             voxels,
@@ -283,12 +283,12 @@ impl Lights {
         } = space;
         let width = *width;
 
-        let &WorldMetrics {
+        let &WorldConfig {
             chunk_size,
             max_height,
             max_light_level,
             ..
-        } = metrics;
+        } = config;
 
         let mut lights = ndarray(voxels.shape.clone(), 0);
 
@@ -345,15 +345,8 @@ impl Lights {
             }
         }
 
-        Lights::flood_light(light_queue, false, &voxels, &mut lights, registry, metrics);
-        Lights::flood_light(
-            sunlight_queue,
-            true,
-            &voxels,
-            &mut lights,
-            registry,
-            metrics,
-        );
+        Lights::flood_light(light_queue, false, &voxels, &mut lights, registry, config);
+        Lights::flood_light(sunlight_queue, true, &voxels, &mut lights, registry, config);
 
         let mut chunk_lights = ndarray(
             vec![
@@ -379,7 +372,7 @@ impl Lights {
         chunk_lights
     }
 
-    pub fn calc_light(space: &Space, registry: &Registry, metrics: &WorldMetrics) -> Ndarray<u32> {
-        Lights::propagate(&space, registry, metrics)
+    pub fn calc_light(space: &Space, registry: &Registry, config: &WorldConfig) -> Ndarray<u32> {
+        Lights::propagate(&space, registry, config)
     }
 }
