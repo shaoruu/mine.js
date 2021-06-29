@@ -423,7 +423,6 @@ impl Handler<UpdateVoxel> for WsServer {
         world.chunks.clear_cache();
 
         let neighbor_chunks = world.chunks.get_neighbor_chunk_coords(vx, vy, vz);
-        debug!("{:?}", neighbor_chunks);
         neighbor_chunks.into_iter().for_each(|c| {
             cache.insert(c);
         });
