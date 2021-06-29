@@ -28,7 +28,7 @@ impl Mesher {
         chunk: &Chunk,
         transparent: bool,
         sub_chunk: u32,
-        metrics: &WorldConfig,
+        config: &WorldConfig,
         registry: &Registry,
     ) -> Option<MeshType> {
         let Chunk {
@@ -42,7 +42,7 @@ impl Mesher {
             max_height,
             sub_chunks,
             ..
-        } = metrics;
+        } = config;
 
         let mut positions = Vec::<f32>::new();
         let mut indices = Vec::<i32>::new();

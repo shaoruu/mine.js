@@ -19,7 +19,7 @@ impl Space {
             chunk_size,
             max_height,
             ..
-        } = chunks.config;
+        } = *chunks.config;
 
         assert!(margin > 0, "Margin of 0 on Space is wasteful");
 

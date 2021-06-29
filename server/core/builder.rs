@@ -10,7 +10,7 @@ use super::{
     registry::Registry,
 };
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct VoxelUpdate {
     pub voxel: Coords3<i32>,
     pub id: u32,

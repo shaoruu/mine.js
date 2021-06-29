@@ -18,7 +18,7 @@ pub struct Meshes {
     pub transparent: Option<MeshType>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Chunk {
     pub name: String,
 

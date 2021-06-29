@@ -1,4 +1,4 @@
-use rayon::prelude::*;
+use log::debug;
 
 use crate::{
     core::builder::VoxelUpdate,
@@ -19,16 +19,11 @@ use super::{
 pub struct Generator;
 
 impl Generator {
-    pub fn generate_chunk(
-        chunk: &mut Chunk,
-        generation: GenerationType,
-        registry: &Registry,
-        metrics: &WorldConfig,
-    ) {
+    pub fn generate_chunk(chunk: &mut Chunk, registry: &Registry, config: &WorldConfig) {
         let Coords3(start_x, start_y, start_z) = chunk.min;
         let Coords3(end_x, _, end_z) = chunk.max;
 
-        match generation {
+        match config.generation {
             GenerationType::FLAT => {
                 let types = registry.get_type_map(vec!["Stone", "Stone Brick"]);
 
@@ -78,10 +73,10 @@ impl Generator {
                     ) > -0.2
                 };
 
-                let unit = (metrics.max_height / metrics.sub_chunks) as i32;
+                let unit = (config.max_height / config.sub_chunks) as i32;
 
                 let mut pairs = vec![];
-                for i in 0..metrics.sub_chunks as i32 {
+                for i in 0..config.sub_chunks as i32 {
                     pairs.push((
                         Coords3(start_x, unit * i, start_z),
                         Coords3(end_x, unit * (i + 1), end_z),
@@ -89,7 +84,7 @@ impl Generator {
                 }
 
                 let updates: Vec<Vec<VoxelUpdate>> = pairs
-                    .par_iter()
+                    .iter()
                     .map(|(start, end)| {
                         let mut updates = vec![];
 
@@ -123,7 +118,7 @@ impl Generator {
                                     let vy = vy as f64;
                                     let vz = vz as f64;
 
-                                    let y_prop = vy / metrics.max_height as f64;
+                                    let y_prop = vy / config.max_height as f64;
 
                                     let mut block_id = air;
 
@@ -180,5 +175,28 @@ impl Generator {
         }
 
         chunk.needs_terrain = false;
+    }
+
+    /// Generate chunk's height map
+    ///
+    /// Note: the chunk should already be initialized with voxel data
+    pub fn generate_chunk_height_map(chunk: &mut Chunk, registry: &Registry, config: &WorldConfig) {
+        let max_height = config.max_height;
+        let min = chunk.min.to_owned();
+        let max = chunk.max.to_owned();
+
+        for vx in min.0..max.0 {
+            for vz in min.2..max.2 {
+                for vy in (0..max_height as i32).rev() {
+                    let id = chunk.get_voxel(vx, vy, vz);
+
+                    // TODO: CHECK FROM REGISTRY &&&&& PLANTS
+                    if vy == 0 || (!registry.is_air(id) && !registry.is_plant(id)) {
+                        chunk.set_max_height(vx, vz, vy);
+                        break;
+                    }
+                }
+            }
+        }
     }
 }

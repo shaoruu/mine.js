@@ -51,14 +51,17 @@ pub enum MeshLevel {
 #[derive(Debug)]
 pub struct Chunks {
     pub chunk_cache: HashSet<Coords2<i32>>,
-    pub config: WorldConfig,
-    pub registry: Registry,
+    pub to_generate: Vec<Chunk>,
+
+    pub config: Arc<WorldConfig>,
+    pub registry: Arc<Registry>,
+    pub builder: Arc<Builder>,
 
     caching: bool,
     max_loaded_chunks: i32,
     chunks: HashMap<String, Chunk>,
+    update_queue: HashMap<Coords2<i32>, Vec<VoxelUpdate>>,
     noise: Noise,
-    builder: Builder,
 }
 
 /**
@@ -68,14 +71,19 @@ pub struct Chunks {
 impl Chunks {
     pub fn new(config: WorldConfig, max_loaded_chunks: i32, registry: Registry) -> Self {
         Chunks {
-            config,
-            registry: registry.to_owned(),
+            chunk_cache: HashSet::new(),
+
+            config: Arc::new(config),
+            registry: Arc::new(registry.to_owned()),
+            builder: Arc::new(Builder::new(registry, Noise::new(LEVEL_SEED))),
+
+            to_generate: vec![],
+
             caching: false,
             max_loaded_chunks,
             chunks: HashMap::new(),
-            chunk_cache: HashSet::new(),
+            update_queue: HashMap::new(),
             noise: Noise::new(LEVEL_SEED),
-            builder: Builder::new(registry, Noise::new(LEVEL_SEED)),
         }
     }
 
@@ -128,14 +136,14 @@ impl Chunks {
 
     /// To preload chunks surrounding 0,0
     pub fn preload(&mut self, width: i16) {
-        self.load(&Coords2(0, 0), width);
+        self.load(&Coords2(0, 0), width, true);
     }
 
     /// Generate chunks around a certain coordinate
     pub fn generate(&mut self, coords: &Coords2<i32>, render_radius: i16) {
         let start = Instant::now();
 
-        self.load(coords, render_radius);
+        self.load(coords, render_radius, false);
 
         info!(
             "Generated chunks surrounding {:?} with radius {} in {:?}",
@@ -234,15 +242,15 @@ impl Chunks {
     /// 2. Populate the terrains within `decorate_radius` with decoration
     ///
     /// Note: `decorate_radius` should always be less than `terrain_radius`
-    fn load(&mut self, coords: &Coords2<i32>, render_radius: i16) {
+    fn load(&mut self, coords: &Coords2<i32>, render_radius: i16, is_preload: bool) {
         let Coords2(cx, cz) = coords;
 
-        let de = true;
+        let de = false;
 
         let mut to_generate: Vec<Chunk> = Vec::new();
         let mut to_decorate: Vec<Coords2<i32>> = Vec::new();
 
-        let terrain_radius = render_radius + 2;
+        let terrain_radius = render_radius + 3;
         let decorate_radius = render_radius;
 
         let start = Instant::now();
@@ -259,12 +267,19 @@ impl Chunks {
                 let chunk = self.get_chunk(&coords);
 
                 if chunk.is_none() {
-                    let new_chunk = Chunk::new(
+                    let mut new_chunk = Chunk::new(
                         coords.to_owned(),
                         self.config.chunk_size,
                         self.config.max_height as usize,
                         self.config.dimension,
                     );
+
+                    if let Some(updates) = self.update_queue.remove(&coords) {
+                        for u in updates {
+                            new_chunk.set_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
+                        }
+                    }
+
                     to_generate.push(new_chunk);
                 }
 
@@ -274,50 +289,47 @@ impl Chunks {
             }
         }
 
-        if de {
-            debug!("Calculating chunks took {:?}", start.elapsed());
-        }
+        if !is_preload {
+            // let the multithreading begin!
+            self.to_generate.append(&mut to_generate);
+        } else {
+            if de {
+                debug!("Calculating chunks took {:?}", start.elapsed());
+            }
 
-        let metrics = Arc::new(&self.config);
-        let registry = Arc::new(&self.registry);
+            let start = Instant::now();
+            to_generate.par_iter_mut().for_each(|new_chunk| {
+                Generator::generate_chunk(new_chunk, &self.registry, &self.config);
+            });
+            if de {
+                debug!("Generating took {:?}", start.elapsed());
+            }
 
-        let start = Instant::now();
-        to_generate.par_iter_mut().for_each(|new_chunk| {
-            let generation = self.config.generation.clone();
-            Generator::generate_chunk(new_chunk, generation, &registry, &metrics);
-        });
-        if de {
-            debug!("Generating took {:?}", start.elapsed());
-        }
+            let start = Instant::now();
 
-        let start = Instant::now();
+            to_generate.par_iter_mut().for_each(|chunk| {
+                Generator::generate_chunk_height_map(chunk, &self.registry, &self.config);
+            });
 
-        to_generate.par_iter_mut().for_each(|chunk| {
-            Chunks::generate_chunk_height_map(chunk, &metrics, &registry);
-        });
-
-        for chunk in to_generate {
-            self.chunks.insert(chunk.name.to_owned(), chunk);
-        }
-        if de {
-            debug!("Inserting took {:?}", start.elapsed());
+            for chunk in to_generate {
+                self.chunks.insert(chunk.name.to_owned(), chunk);
+            }
+            if de {
+                debug!("Inserting took {:?}", start.elapsed());
+            }
         }
 
         let start = Instant::now();
         let to_decorate: Vec<Chunk> = to_decorate
             .iter()
-            .map(|coords| {
-                self.chunks
-                    .remove(&get_chunk_name(coords.0, coords.1))
-                    .unwrap()
-            })
+            .map(|coords| self.chunks.remove(&get_chunk_name(coords.0, coords.1)))
+            .flatten()
             .collect();
 
-        let builder = Arc::new(&self.builder);
         let to_decorate_updates: Vec<Vec<VoxelUpdate>> = to_decorate
             .par_iter()
             .map(|chunk| {
-                let builder = builder.clone();
+                let builder = self.builder.clone();
 
                 if !chunk.needs_decoration {
                     return vec![];
@@ -358,23 +370,12 @@ impl Chunks {
 
         let mut to_decorate: Vec<Chunk> = to_decorate_coords
             .iter()
-            .map(|coords| {
-                self.chunks
-                    .remove(&get_chunk_name(coords.0, coords.1))
-                    .unwrap()
-            })
+            .map(|coords| self.chunks.remove(&get_chunk_name(coords.0, coords.1)))
+            .flatten()
             .collect();
 
-        let metrics = Arc::new(&self.config);
-        let registry = Arc::new(&self.registry);
-
         to_decorate.par_iter_mut().for_each(|chunk| {
-            let metrics = metrics.clone();
-            let &metrics = metrics.as_ref();
-            let registry = registry.clone();
-            let &registry = registry.as_ref();
-
-            Chunks::generate_chunk_height_map(chunk, metrics, registry);
+            Generator::generate_chunk_height_map(chunk, &self.registry, &self.config);
         });
 
         for chunk in to_decorate {
@@ -453,10 +454,12 @@ impl Chunks {
 
     /// Get the voxel type at a voxel coordinate
     pub fn get_voxel_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
-        let chunk = self
-            .get_chunk_by_voxel(vx, vy, vz)
-            .expect("Chunk not found.");
-        chunk.get_voxel(vx, vy, vz)
+        let chunk = self.get_chunk_by_voxel(vx, vy, vz);
+        if let Some(chunk) = chunk {
+            chunk.get_voxel(vx, vy, vz)
+        } else {
+            0
+        }
     }
 
     /// Get the voxel type at a world coordinate
@@ -467,26 +470,50 @@ impl Chunks {
 
     /// Set the voxel type for a voxel coordinate
     pub fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
-        let chunk = self
-            .get_chunk_by_voxel_mut(vx, vy, vz)
-            .expect("Chunk not found.");
-        chunk.set_voxel(vx, vy, vz, id);
-        chunk.is_dirty = true;
+        let chunk = self.get_chunk_by_voxel_mut(vx, vy, vz);
+
+        if let Some(chunk) = chunk {
+            chunk.set_voxel(vx, vy, vz, id);
+            chunk.is_dirty = true;
+        } else {
+            let updates = self
+                .update_queue
+                .entry(map_voxel_to_chunk(vx, vy, vz, self.config.chunk_size))
+                .or_insert_with(Vec::new);
+            updates.push(VoxelUpdate {
+                voxel: Coords3(vx, vy, vz),
+                id,
+            });
+        }
 
         let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
         neighbors.iter().for_each(|c| {
-            let n_chunk = self.get_chunk_mut(c).unwrap();
-            n_chunk.set_voxel(vx, vy, vz, id);
-            n_chunk.is_dirty = true;
+            let n_chunk = self.get_chunk_mut(c);
+
+            if let Some(n_chunk) = n_chunk {
+                n_chunk.set_voxel(vx, vy, vz, id);
+                n_chunk.is_dirty = true;
+            } else {
+                let updates = self
+                    .update_queue
+                    .entry(c.to_owned())
+                    .or_insert_with(Vec::new);
+                updates.push(VoxelUpdate {
+                    voxel: Coords3(vx, vy, vz),
+                    id,
+                });
+            }
         })
     }
 
     /// Get the sunlight level at a voxel coordinate
     pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
-        let chunk = self
-            .get_chunk_by_voxel(vx, vy, vz)
-            .expect("Chunk not found.");
-        chunk.get_sunlight(vx, vy, vz)
+        let chunk = self.get_chunk_by_voxel(vx, vy, vz);
+        if let Some(chunk) = chunk {
+            chunk.get_sunlight(vx, vy, vz)
+        } else {
+            0
+        }
     }
 
     /// Set the sunlight level for a voxel coordinate
@@ -505,10 +532,12 @@ impl Chunks {
 
     /// Get the torch light level at a voxel coordinate
     pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
-        let chunk = self
-            .get_chunk_by_voxel(vx, vy, vz)
-            .expect("Chunk not found.");
-        chunk.get_torch_light(vx, vy, vz)
+        let chunk = self.get_chunk_by_voxel(vx, vy, vz);
+        if let Some(chunk) = chunk {
+            chunk.get_torch_light(vx, vy, vz)
+        } else {
+            0
+        }
     }
 
     /// Set the torch light level at a voxel coordinate
@@ -607,6 +636,10 @@ impl Chunks {
         neighbor_chunks.remove(&coords);
 
         neighbor_chunks
+    }
+
+    pub fn add_chunk(&mut self, chunk: Chunk) {
+        self.chunks.insert(chunk.name.to_owned(), chunk);
     }
 
     /// Update a voxel to a new type
@@ -733,29 +766,6 @@ impl Chunks {
         self.get_chunk_by_voxel_mut(vx, vy, vz)
             .unwrap()
             .needs_saving = true;
-    }
-
-    /// Generate chunk's height map
-    ///
-    /// Note: the chunk should already be initialized with voxel data
-    fn generate_chunk_height_map(chunk: &mut Chunk, config: &WorldConfig, registry: &Registry) {
-        let max_height = config.max_height;
-        let min = chunk.min.to_owned();
-        let max = chunk.max.to_owned();
-
-        for vx in min.0..max.0 {
-            for vz in min.2..max.2 {
-                for vy in (0..max_height as i32).rev() {
-                    let id = chunk.get_voxel(vx, vy, vz);
-
-                    // TODO: CHECK FROM REGISTRY &&&&& PLANTS
-                    if vy == 0 || (!registry.is_air(id) && !registry.is_plant(id)) {
-                        chunk.set_max_height(vx, vz, vy);
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     /// Propagate light on a chunk. Things this function does:

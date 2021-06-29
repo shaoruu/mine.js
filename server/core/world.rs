@@ -1,8 +1,12 @@
 use log::{debug, info};
 
+use crossbeam_channel::{unbounded, Receiver, Sender};
+
 use ansi_term::Colour::Yellow;
 
 use std::collections::HashMap;
+use std::mem;
+use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 
 use crate::core::chunks::MeshLevel;
@@ -13,8 +17,13 @@ use crate::core::models::{
     MessageComponents,
 };
 use crate::libs::types::{Coords2, Coords3, GenerationType, Quaternion};
+use crate::utils::convert::map_voxel_to_chunk;
 
+use super::builder::{Builder, VoxelUpdate};
+use super::chunk::{Chunk, Meshes};
 use super::chunks::Chunks;
+use super::generator::Generator;
+use super::mesher::Mesher;
 use super::registry::Registry;
 use super::server::Client;
 
@@ -32,6 +41,8 @@ pub struct WorldConfig {
     pub generation: GenerationType,
 }
 
+pub type BatchedUpdates = Vec<VoxelUpdate>;
+
 pub struct World {
     pub time: f32,
     pub tick: i32,
@@ -45,7 +56,10 @@ pub struct World {
     pub clients: HashMap<usize, Client>,
     pub prev_time: SystemTime,
 
+    // multithread stuff
     pub pool: rayon::ThreadPool,
+    pub gen_sender: Arc<Sender<Vec<Chunk>>>,
+    pub gen_receiver: Arc<Receiver<Vec<Chunk>>>,
 }
 
 impl World {
@@ -79,6 +93,19 @@ impl World {
             generation,
         };
 
+        let clients = HashMap::new();
+        let chunks = Chunks::new(config, max_loaded_chunks, registry.clone());
+        let prev_time = SystemTime::now();
+
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(16)
+            .build()
+            .unwrap();
+
+        let (gen_sender, gen_receiver) = unbounded();
+        let gen_sender = Arc::new(gen_sender);
+        let gen_receiver = Arc::new(gen_receiver);
+
         World {
             time,
             tick: 0,
@@ -88,14 +115,13 @@ impl World {
             preload,
             description,
 
-            clients: HashMap::new(),
-            chunks: Chunks::new(config, max_loaded_chunks, registry),
-            prev_time: SystemTime::now(),
+            clients,
+            chunks,
+            prev_time,
 
-            pool: rayon::ThreadPoolBuilder::new()
-                .num_threads(16)
-                .build()
-                .unwrap(),
+            pool,
+            gen_sender,
+            gen_receiver,
         }
     }
 
@@ -145,8 +171,9 @@ impl World {
         let cx = json["x"].as_i64().unwrap() as i32;
         let cz = json["z"].as_i64().unwrap() as i32;
 
-        let client = self.clients.get_mut(&client_id).unwrap();
-        client.requested_chunks.push_back(Coords2(cx, cz));
+        if let Some(client) = self.clients.get_mut(&client_id) {
+            client.requested_chunks.push_back(Coords2(cx, cz));
+        }
     }
 
     pub fn on_config(&mut self, _client_id: usize, msg: messages::Message) {
@@ -219,7 +246,7 @@ impl World {
             sub_chunks,
             max_height,
             ..
-        } = self.chunks.config;
+        } = *self.chunks.config;
 
         let sub_chunk_unit = max_height / sub_chunks;
 
@@ -313,5 +340,32 @@ impl World {
         self.tick += 1;
 
         self.prev_time = now;
+
+        if !self.chunks.to_generate.is_empty() {
+            let chunks = self.chunks.to_generate.clone();
+            self.chunks.to_generate.clear();
+
+            let sender = self.gen_sender.clone();
+            let config = self.chunks.config.clone();
+            let registry = self.chunks.registry.clone();
+
+            rayon::spawn(move || {
+                let chunks: Vec<Chunk> = chunks
+                    .into_iter()
+                    .map(|mut chunk| {
+                        Generator::generate_chunk(&mut chunk, &registry, &config);
+                        Generator::generate_chunk_height_map(&mut chunk, &registry, &config);
+                        chunk
+                    })
+                    .collect();
+                sender.send(chunks).unwrap();
+            });
+        }
+
+        if let Ok(chunks) = self.gen_receiver.try_recv() {
+            chunks.into_iter().for_each(|c| {
+                self.chunks.add_chunk(c);
+            })
+        }
     }
 }

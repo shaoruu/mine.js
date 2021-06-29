@@ -96,7 +96,7 @@ impl WsServer {
                 chunk_size,
                 dimension,
                 ..
-            } = world.chunks.config;
+            } = *world.chunks.config;
 
             for client in world.clients.values_mut() {
                 if client.name.is_none() {

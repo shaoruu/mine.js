@@ -1676,6 +1676,7 @@ dependencies = [
  "bytes 1.0.1",
  "chrono",
  "crossbeam",
+ "crossbeam-channel 0.5.1",
  "fern",
  "image",
  "libflate",
