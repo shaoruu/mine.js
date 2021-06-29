@@ -260,7 +260,14 @@ impl World {
             ..
         } = &msg.peers[0];
 
-        let client = self.clients.get(&client_id).unwrap();
+        let client = self.clients.get(&client_id);
+
+        if client.is_none() {
+            self.clients.remove(&client_id);
+            return;
+        }
+
+        let client = client.unwrap();
 
         // TODO: fix this ambiguous logic
         // means this client just joined.
