@@ -1,26 +1,28 @@
 use actix::prelude::*;
 use actix_broker::BrokerSubscribe;
-use log::debug;
-use serde::Serialize;
+
+use log::{debug, info};
+
+use ansi_term::Colour::Yellow;
 
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use crate::core::chunks::MeshLevel;
-use crate::core::models::{create_chat_message, create_of_type};
+use crate::core::models::create_chat_message;
 use crate::core::world::World;
 use crate::libs::types::{Coords2, Coords3, GenerationType, Quaternion};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
 use super::message::{
-    self, ChatMessage, ConfigWorld, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames,
-    ListWorlds, Noop, PlayerUpdate, SendMessage, UpdateVoxel, WorldData,
+    self, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds, Noop,
+    PlayerMessage, WorldData,
 };
 use super::models::{
     create_message, messages, messages::chat_message::Type as ChatType,
-    messages::message::Type as MessageType, MessageComponents, PeerProtocol,
+    messages::message::Type as MessageType, MessageComponents,
 };
 use super::registry::Registry;
 use super::world::WorldMetrics;
@@ -81,26 +83,7 @@ impl WsServer {
     ) -> Option<()> {
         let world = self.worlds.get_mut(world_name)?;
 
-        let mut resting_clients = vec![];
-
-        for (id, client) in world.clients.iter() {
-            if exclude.contains(id) {
-                continue;
-            }
-
-            if client
-                .addr
-                .do_send(message::Message(msg.to_owned()))
-                .is_err()
-            {
-                resting_clients.push(*id);
-            }
-        }
-
-        // remove the clients that aren't responding
-        resting_clients.iter().for_each(|id| {
-            world.clients.remove(id);
-        });
+        world.broadcast(msg, exclude);
 
         Some(())
     }
@@ -182,8 +165,8 @@ impl Actor for WsServer {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         ctx.set_mailbox_capacity(usize::MAX);
+
         self.subscribe_system_async::<LeaveWorld>(ctx);
-        self.subscribe_system_async::<SendMessage>(ctx);
     }
 }
 
@@ -222,17 +205,22 @@ impl Handler<LeaveWorld> for WsServer {
         if let Some(world) = self.worlds.get_mut(&msg.world_name) {
             let client = world.clients.remove(&msg.client_id);
             if let Some(client) = client {
+                let client_name = client.name.clone().unwrap_or_else(|| "Somebody".to_owned());
+
                 let mut new_message = create_chat_message(
                     MessageType::Leave,
                     ChatType::Info,
                     "",
-                    format!(
-                        "{} left the game",
-                        client.name.unwrap_or_else(|| "Somebody".to_owned())
-                    )
-                    .as_str(),
+                    format!("{} left the game", client_name).as_str(),
                 );
                 new_message.text = msg.client_id.to_string();
+
+                let message = format!(
+                    "{}(id={}) left the world {}",
+                    client_name, msg.client_id, msg.world_name
+                );
+
+                info!("{}", Yellow.bold().paint(message));
 
                 message_queue.push((world.name.to_owned(), new_message));
             }
@@ -252,231 +240,27 @@ impl Handler<ListWorldNames> for WsServer {
     }
 }
 
-impl Handler<PlayerUpdate> for WsServer {
+impl Handler<PlayerMessage> for WsServer {
     type Result = ();
 
-    fn handle(&mut self, msg: PlayerUpdate, _ctx: &mut Self::Context) -> Self::Result {
-        let PlayerUpdate {
+    fn handle(&mut self, msg: PlayerMessage, _ctx: &mut Self::Context) {
+        let PlayerMessage {
             world_name,
             client_id,
-
-            name,
-            position,
-            rotation,
-            chunk,
+            raw,
         } = msg;
 
-        let world = self
-            .worlds
-            .get_mut(world_name.as_str())
-            .expect("World not found.");
-        let client = world.clients.get_mut(&client_id);
+        let msg_type = messages::Message::r#type(&raw);
+        let world = self.worlds.get_mut(&world_name).unwrap();
 
-        if let Some(client) = client {
-            let mut newly_joined = false;
-
-            if name.is_some() {
-                if client.name.is_none() {
-                    newly_joined = true;
-                }
-
-                client.name = name.clone();
-            }
-
-            if let Some(position) = position.clone() {
-                client.position = position.clone();
-            }
-
-            if let Some(rotation) = rotation.clone() {
-                client.rotation = rotation;
-            }
-
-            if let Some(chunk) = chunk {
-                client.requested_chunks.push_back(chunk);
-            }
-
-            if let Some(position) = position {
-                let rotation = rotation.unwrap().clone();
-                let peer = PeerProtocol {
-                    id: client_id.to_string(),
-                    name: client.name.to_owned().unwrap_or_else(|| "lol".to_owned()),
-                    px: position.0,
-                    py: position.1,
-                    pz: position.2,
-                    qx: rotation.0,
-                    qy: rotation.1,
-                    qz: rotation.2,
-                    qw: rotation.3,
-                };
-                let mut peers_components = MessageComponents::default_for(MessageType::Peer);
-                peers_components.peers = Some(vec![peer]);
-                let peers_message = create_message(peers_components);
-                self.broadcast(&world_name.to_owned(), &peers_message, vec![client_id]);
-            }
-
-            if newly_joined {
-                let new_message = create_chat_message(
-                    MessageType::Message,
-                    ChatType::Info,
-                    "",
-                    format!("{} joined the game", name.unwrap()).as_str(),
-                );
-
-                self.broadcast(&world_name, &new_message, vec![]);
-            }
+        match msg_type {
+            MessageType::Request => world.on_chunk_request(client_id, raw),
+            MessageType::Config => world.on_config(client_id, raw),
+            MessageType::Update => world.on_update(client_id, raw),
+            MessageType::Peer => world.on_peer(client_id, raw),
+            MessageType::Message => world.on_chat_message(client_id, raw),
+            _ => {}
         }
-    }
-}
-
-impl Handler<ChatMessage> for WsServer {
-    type Result = ();
-
-    fn handle(&mut self, msg: ChatMessage, _ctx: &mut Self::Context) {
-        let ChatMessage {
-            world_name,
-            message,
-        } = msg;
-
-        let mut new_message = create_of_type(MessageType::Message);
-        new_message.message = Some(message);
-
-        self.broadcast(&world_name, &new_message, vec![]);
-    }
-}
-
-impl Handler<ConfigWorld> for WsServer {
-    type Result = ();
-
-    fn handle(&mut self, msg: ConfigWorld, _ctx: &mut Self::Context) {
-        let ConfigWorld {
-            world_name,
-            time,
-            tick_speed,
-            json,
-        } = msg;
-
-        let world = self.worlds.get_mut(&world_name).expect("World not found.");
-
-        if let Some(time) = time {
-            world.time = time as f32;
-        }
-
-        if let Some(tick_speed) = tick_speed {
-            world.tick_speed = tick_speed as f32;
-        }
-
-        let mut new_message = create_of_type(MessageType::Config);
-        new_message.json = json.to_string();
-
-        self.broadcast(&world_name, &new_message, vec![]);
-    }
-}
-
-impl Handler<UpdateVoxel> for WsServer {
-    type Result = ();
-
-    fn handle(&mut self, msg: UpdateVoxel, _ctx: &mut Self::Context) {
-        let UpdateVoxel {
-            world_name,
-            vx,
-            vy,
-            vz,
-            id,
-        } = msg;
-
-        let world = self.worlds.get_mut(&world_name).expect("World not found.");
-
-        if vy < 0
-            || vy >= world.chunks.metrics.max_height as i32
-            || !world.chunks.registry.has_type(id)
-        {
-            return;
-        }
-
-        let chunk = world.chunks.get_chunk_by_voxel(vx, vy, vz).unwrap();
-        if chunk.needs_propagation {
-            return;
-        }
-
-        let current_id = world.chunks.get_voxel_by_voxel(vx, vy, vz);
-        if world.chunks.registry.is_air(current_id) && world.chunks.registry.is_air(id) {
-            return;
-        }
-
-        // First send the message, so borrow checker doesn't freak out
-        let mut new_message = create_of_type(MessageType::Update);
-        new_message.json = format!(
-            "{{\"vx\":{},\"vy\":{},\"vz\":{},\"type\":{}}}",
-            vx, vy, vz, id
-        );
-
-        self.broadcast(&world_name, &new_message, vec![]);
-
-        // then borrow again
-        let world = self.worlds.get_mut(&world_name).expect("World not found.");
-
-        world.chunks.start_caching();
-        world.chunks.update(vx, vy, vz, id);
-        world.chunks.stop_caching();
-
-        let mut cache = world.chunks.chunk_cache.to_owned();
-        world.chunks.clear_cache();
-
-        let neighbor_chunks = world.chunks.get_neighbor_chunk_coords(vx, vy, vz);
-        neighbor_chunks.into_iter().for_each(|c| {
-            cache.insert(c);
-        });
-
-        let WorldMetrics {
-            sub_chunks,
-            max_height,
-            ..
-        } = world.chunks.metrics;
-
-        let sub_chunk_unit = max_height / sub_chunks;
-
-        cache.into_iter().for_each(|coords| {
-            // TODO: Fix this monstrosity of logic
-            // essentially, this is fixing sub-chunk edges meshing
-            let levels = if vy as u32 % sub_chunk_unit == 0 && vy != 0 {
-                vec![vy as u32 / sub_chunk_unit, (vy as u32 - 1) / sub_chunk_unit]
-            } else if vy as u32 % sub_chunk_unit == sub_chunk_unit - 1
-                && vy as u32 != max_height - 1
-            {
-                vec![vy as u32 / sub_chunk_unit, (vy as u32 + 1) / sub_chunk_unit]
-            } else {
-                vec![vy as u32 / sub_chunk_unit]
-            };
-            let mesh_level = MeshLevel::Levels(levels);
-
-            let chunk = self
-                .worlds
-                .get_mut(&world_name)
-                .unwrap()
-                .chunks
-                .get(&coords, false, &mesh_level)
-                .unwrap();
-
-            let mut component = MessageComponents::default_for(MessageType::Update);
-            component.chunks = Some(vec![chunk.get_protocol(false, mesh_level)]);
-
-            let new_message = create_message(component);
-            self.broadcast(&world_name, &new_message, vec![]);
-        });
-    }
-}
-
-impl Handler<SendMessage> for WsServer {
-    type Result = ();
-
-    fn handle(&mut self, msg: SendMessage, _ctx: &mut Self::Context) {
-        let SendMessage {
-            world_name,
-            content,
-            ..
-        } = msg;
-
-        self.broadcast(&world_name, &content, vec![]);
     }
 }
 

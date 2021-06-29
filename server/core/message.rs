@@ -42,54 +42,15 @@ pub struct LeaveWorld {
 /* -------------------------------------------------------------------------- */
 /*                             Game Play Messages                             */
 /* -------------------------------------------------------------------------- */
+
+/// Whenever a protobuf message is received, player will send the message to server
 #[derive(Clone, Message, Default)]
 #[rtype(result = "()")]
-pub struct PlayerUpdate {
+pub struct PlayerMessage {
     pub world_name: String,
     pub client_id: usize,
 
-    // Client attributes below
-    pub name: Option<String>,
-    pub position: Option<Coords3<f32>>,
-    pub rotation: Option<Quaternion>,
-    pub chunk: Option<Coords2<i32>>,
-}
-
-#[derive(Clone, Message, Default)]
-#[rtype(result = "()")]
-pub struct ChatMessage {
-    pub world_name: String,
-    pub message: messages::ChatMessage,
-}
-
-#[derive(Clone, Message, Default)]
-#[rtype(result = "()")]
-pub struct ConfigWorld {
-    pub world_name: String,
-    pub time: Option<f64>,
-    pub tick_speed: Option<f64>,
-    pub json: serde_json::Value,
-}
-
-#[derive(Clone, Message, Default)]
-#[rtype(result = "()")]
-pub struct UpdateVoxel {
-    pub world_name: String,
-    pub vx: i32,
-    pub vy: i32,
-    pub vz: i32,
-    pub id: u32,
-}
-
-#[derive(Clone, Message)]
-#[rtype(result = "()")]
-pub struct SendMessage {
-    // World name
-    pub world_name: String,
-    // id of client session
-    pub client_id: usize,
-    // Peer message
-    pub content: models::messages::Message,
+    pub raw: models::messages::Message,
 }
 
 #[derive(Clone, Message)]

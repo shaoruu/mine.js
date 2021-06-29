@@ -1,9 +1,18 @@
 use log::{debug, info};
 
+use ansi_term::Colour::Yellow;
+
 use std::collections::HashMap;
 use std::time::{Instant, SystemTime};
 
-use crate::libs::types::GenerationType;
+use crate::core::chunks::MeshLevel;
+use crate::core::message;
+use crate::core::models::{
+    create_chat_message, create_message, create_of_type, messages,
+    messages::chat_message::Type as ChatType, messages::message::Type as MessageType,
+    MessageComponents,
+};
+use crate::libs::types::{Coords2, Coords3, GenerationType, Quaternion};
 
 use super::chunks::Chunks;
 use super::registry::Registry;
@@ -94,6 +103,182 @@ impl World {
             self.name,
             duration
         );
+    }
+
+    pub fn broadcast(&mut self, msg: &messages::Message, exclude: Vec<usize>) {
+        let mut resting_clients = vec![];
+
+        for (id, client) in self.clients.iter() {
+            if exclude.contains(id) {
+                continue;
+            }
+
+            if client
+                .addr
+                .do_send(message::Message(msg.to_owned()))
+                .is_err()
+            {
+                resting_clients.push(*id);
+            }
+        }
+
+        resting_clients.iter().for_each(|id| {
+            self.clients.remove(id);
+        })
+    }
+
+    pub fn on_chunk_request(&mut self, client_id: usize, msg: messages::Message) {
+        let json = msg.parse_json().unwrap();
+
+        let cx = json["x"].as_i64().unwrap() as i32;
+        let cz = json["z"].as_i64().unwrap() as i32;
+
+        let client = self.clients.get_mut(&client_id).unwrap();
+        client.requested_chunks.push_back(Coords2(cx, cz));
+    }
+
+    pub fn on_config(&mut self, _client_id: usize, msg: messages::Message) {
+        let json = msg.parse_json().unwrap();
+
+        let time = json["time"].as_f64();
+        let tick_speed = json["tickSpeed"].as_f64();
+
+        if let Some(time) = time {
+            self.time = time as f32;
+        }
+
+        if let Some(tick_speed) = tick_speed {
+            self.tick_speed = tick_speed as f32;
+        }
+
+        let mut new_message = create_of_type(MessageType::Config);
+        new_message.json = json.to_string();
+
+        self.broadcast(&new_message, vec![]);
+    }
+
+    pub fn on_update(&mut self, _client_id: usize, msg: messages::Message) {
+        let json = msg.parse_json().unwrap();
+
+        let vx = json["x"].as_i64().unwrap() as i32;
+        let vy = json["y"].as_i64().unwrap() as i32;
+        let vz = json["z"].as_i64().unwrap() as i32;
+        let id = json["type"].as_u64().unwrap() as u32;
+
+        if vy < 0
+            || vy >= self.chunks.metrics.max_height as i32
+            || !self.chunks.registry.has_type(id)
+        {
+            return;
+        }
+
+        let chunk = self.chunks.get_chunk_by_voxel(vx, vy, vz).unwrap();
+        if chunk.needs_propagation {
+            return;
+        }
+
+        let current_id = self.chunks.get_voxel_by_voxel(vx, vy, vz);
+        if self.chunks.registry.is_air(current_id) && self.chunks.registry.is_air(id) {
+            return;
+        }
+
+        // First send the message, so borrow checker doesn't freak out
+        let mut new_message = create_of_type(MessageType::Update);
+        new_message.json = format!(
+            "{{\"vx\":{},\"vy\":{},\"vz\":{},\"type\":{}}}",
+            vx, vy, vz, id
+        );
+
+        self.broadcast(&new_message, vec![]);
+
+        self.chunks.start_caching();
+        self.chunks.update(vx, vy, vz, id);
+        self.chunks.stop_caching();
+
+        let mut cache = self.chunks.chunk_cache.to_owned();
+        self.chunks.clear_cache();
+
+        let neighbor_chunks = self.chunks.get_neighbor_chunk_coords(vx, vy, vz);
+        neighbor_chunks.into_iter().for_each(|c| {
+            cache.insert(c);
+        });
+
+        let WorldMetrics {
+            sub_chunks,
+            max_height,
+            ..
+        } = self.chunks.metrics;
+
+        let sub_chunk_unit = max_height / sub_chunks;
+
+        cache.into_iter().for_each(|coords| {
+            // TODO: Fix this monstrosity of logic
+            // essentially, this is fixing sub-chunk edges meshing
+            let levels = if vy as u32 % sub_chunk_unit == 0 && vy != 0 {
+                vec![vy as u32 / sub_chunk_unit, (vy as u32 - 1) / sub_chunk_unit]
+            } else if vy as u32 % sub_chunk_unit == sub_chunk_unit - 1
+                && vy as u32 != max_height - 1
+            {
+                vec![vy as u32 / sub_chunk_unit, (vy as u32 + 1) / sub_chunk_unit]
+            } else {
+                vec![vy as u32 / sub_chunk_unit]
+            };
+            let mesh_level = MeshLevel::Levels(levels);
+
+            let chunk = self.chunks.get(&coords, false, &mesh_level).unwrap();
+
+            let mut component = MessageComponents::default_for(MessageType::Update);
+            component.chunks = Some(vec![chunk.get_protocol(false, mesh_level)]);
+
+            let new_message = create_message(component);
+            self.broadcast(&new_message, vec![]);
+        });
+    }
+
+    pub fn on_peer(&mut self, client_id: usize, msg: messages::Message) {
+        let messages::Peer {
+            name,
+            px,
+            py,
+            pz,
+            qx,
+            qy,
+            qz,
+            qw,
+            ..
+        } = &msg.peers[0];
+
+        let client = self.clients.get(&client_id).unwrap();
+
+        // TODO: fix this ambiguous logic
+        // means this client just joined.
+        if client.name.is_none() {
+            let message = format!("{}(id={}) joined the world {}", name, client_id, self.name);
+
+            info!("{}", Yellow.bold().paint(message));
+
+            let new_message = create_chat_message(
+                MessageType::Message,
+                ChatType::Info,
+                "",
+                format!("{} joined the game", name).as_str(),
+            );
+
+            self.broadcast(&new_message, vec![]);
+        }
+
+        // borrow the client again.
+        let client = self.clients.get_mut(&client_id).unwrap();
+
+        client.name = Some(name.to_owned());
+        client.position = Coords3(*px, *py, *pz);
+        client.rotation = Quaternion(*qx, *qy, *qz, *qw);
+
+        self.broadcast(&msg, vec![client_id]);
+    }
+
+    pub fn on_chat_message(&mut self, _client_id: usize, msg: messages::Message) {
+        self.broadcast(&msg, vec![]);
     }
 
     pub fn tick(&mut self) {
