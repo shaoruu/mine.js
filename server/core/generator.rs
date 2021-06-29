@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::{
-    biomes::{get_biome_config, get_height_within, BiomeConfig, CAVE_SCALE},
+    biomes::{get_biome_config, BiomeConfig, CAVE_SCALE},
     chunk::Chunk,
     constants::LEVEL_SEED,
     registry::Registry,

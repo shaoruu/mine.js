@@ -178,7 +178,6 @@ impl Builder {
 
             let BiomeConfig { tree_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
 
-            let test = tree_scale * 4.124;
             let test2 = tree_scale * 1.424;
             let test3 = tree_scale * 2.41;
             let test4 = tree_scale * 5.3425;

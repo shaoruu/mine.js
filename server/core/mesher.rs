@@ -1,6 +1,6 @@
 use crate::{
     core::constants::CornerData,
-    libs::types::{Block, Coords2, Coords3, MeshType, UV},
+    libs::types::{Block, Coords3, MeshType, UV},
 };
 
 use super::{

@@ -379,14 +379,7 @@ impl Lights {
         chunk_lights
     }
 
-    pub fn calc_light(
-        chunks: &Chunks,
-        center: &Coords2<i32>,
-        margin: usize,
-        registry: &Registry,
-        metrics: &WorldMetrics,
-    ) -> Ndarray<u32> {
-        let space = Space::new(chunks, center, margin);
+    pub fn calc_light(space: &Space, registry: &Registry, metrics: &WorldMetrics) -> Ndarray<u32> {
         Lights::propagate(&space, registry, metrics)
     }
 }

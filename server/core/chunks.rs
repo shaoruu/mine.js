@@ -16,7 +16,7 @@ use crate::{
     core::{builder::VoxelUpdate, generator::Generator, lights::LightNode},
     libs::{
         noise::{Noise, NoiseConfig},
-        types::{Block, Coords2, Coords3, GenerationType, MeshType, UV},
+        types::{Block, Coords2, Coords3, GenerationType},
     },
     utils::convert::{
         get_chunk_name, map_voxel_to_chunk, map_voxel_to_chunk_local, map_world_to_voxel,
@@ -27,13 +27,10 @@ use super::{
     biomes::{get_biome_config, get_height_within, BiomeConfig, CAVE_SCALE},
     builder::Builder,
     chunk::{Chunk, Meshes},
-    constants::{
-        BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES, CHUNK_NEIGHBORS,
-        DATA_PADDING, LEVEL_SEED, PLANT_FACES, VOXEL_NEIGHBORS,
-    },
+    constants::{CHUNK_NEIGHBORS, LEVEL_SEED, VOXEL_NEIGHBORS},
     lights::Lights,
     mesher::Mesher,
-    registry::{get_texture_type, Registry},
+    registry::Registry,
     space::Space,
     world::WorldMetrics,
 };
@@ -491,6 +488,13 @@ impl Chunks {
             .expect("Chunk not found.");
         chunk.set_voxel(vx, vy, vz, id);
         chunk.is_dirty = true;
+
+        let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
+        neighbors.iter().for_each(|c| {
+            let n_chunk = self.get_chunk_mut(c).unwrap();
+            n_chunk.set_voxel(vx, vy, vz, id);
+            n_chunk.is_dirty = true;
+        })
     }
 
     /// Get the sunlight level at a voxel coordinate
@@ -507,6 +511,12 @@ impl Chunks {
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
         chunk.set_sunlight(vx, vy, vz, level);
+
+        let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
+        neighbors.iter().for_each(|c| {
+            let n_chunk = self.get_chunk_mut(c).unwrap();
+            n_chunk.set_sunlight(vx, vy, vz, level);
+        })
     }
 
     /// Get the torch light level at a voxel coordinate
@@ -523,6 +533,12 @@ impl Chunks {
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
         chunk.set_torch_light(vx, vy, vz, level);
+
+        let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
+        neighbors.iter().for_each(|c| {
+            let n_chunk = self.get_chunk_mut(c).unwrap();
+            n_chunk.set_torch_light(vx, vy, vz, level);
+        })
     }
 
     /// Get a block type from a voxel coordinate
@@ -549,7 +565,14 @@ impl Chunks {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, 0, vz)
             .expect("Chunk not found.");
-        chunk.set_max_height(vx, vz, height)
+        chunk.set_max_height(vx, vz, height);
+
+        let neighbors = self.get_neighbor_chunk_coords(vx, 0, vz);
+        neighbors.iter().for_each(|c| {
+            let n_chunk = self.get_chunk_mut(c).unwrap();
+            n_chunk.set_max_height(vx, vz, height);
+            n_chunk.is_dirty = true;
+        })
     }
 
     /// Get neighboring chunks according to a voxel coordinate
@@ -878,15 +901,10 @@ impl Chunks {
     /// 1. Spread sunlight from the very top of the chunk
     /// 2. Recognize the torch lights and flood-fill them as well
     fn propagate_chunk(&mut self, coords: &Coords2<i32>) {
-        let max_light_level = ((self.metrics.max_light_level as f32) / 2.0).ceil() as usize;
+        let max_light_flood = ((self.metrics.max_light_level as f32) / 2.0).ceil() as usize;
 
-        let lights = Lights::calc_light(
-            self,
-            &coords,
-            max_light_level,
-            &self.registry,
-            &self.metrics,
-        );
+        let space = Space::new(self, coords, max_light_flood);
+        let lights = Lights::calc_light(&space, &self.registry, &self.metrics);
 
         let chunk = self.get_chunk_mut(coords).expect("Chunk not found");
 
