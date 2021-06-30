@@ -206,7 +206,7 @@ impl World {
 
         let sub_chunk_unit = max_height / sub_chunks;
 
-        for update in updates {
+        for update in updates.iter() {
             let vx = update.vx;
             let vy = update.vy;
             let vz = update.vz;
@@ -229,18 +229,6 @@ impl World {
                 continue;
             }
 
-            // First send the message, so borrow checker doesn't freak out
-            let mut new_update = MessageComponents::default_for(MessageType::Update);
-            new_update.updates = Some(vec![UpdateProtocol {
-                r#type: id,
-                vx,
-                vy,
-                vz,
-            }]);
-            let new_message = create_message(new_update);
-
-            self.broadcast(&new_message, vec![]);
-
             self.chunks.start_caching();
             self.chunks.update(vx, vy, vz, id);
             self.chunks.stop_caching();
@@ -253,6 +241,14 @@ impl World {
             // TODO: Fix this monstrosity of logic
             // essentially, this is fixing sub-chunk edges meshing
             let mut levels = HashSet::new();
+
+            // from vy to column_height, need remesh.
+            let column_height = self.chunks.get_max_height(vx, vz);
+
+            for h in column_height..vy {
+                levels.insert(h as u32 / sub_chunk_unit);
+            }
+
             levels.insert(vy as u32 / sub_chunk_unit);
 
             if vy as u32 % sub_chunk_unit == 0 && vy != 0 {
@@ -263,6 +259,7 @@ impl World {
                 levels.insert((vy as u32 + 1) / sub_chunk_unit);
             }
 
+            // TODO: sunlight propagation results in missing mesh levels to be remesh-ed.
             self.chunks.chunk_cache.iter().for_each(|c| {
                 if let Some(existing) = cache.iter_mut().find(|(co, _)| co == c) {
                     match &mut existing.1 {
@@ -288,6 +285,11 @@ impl World {
             let new_message = create_message(component);
             self.broadcast(&new_message, vec![]);
         });
+
+        // First send the message, so borrow checker doesn't freak out
+        let mut new_message = create_of_type(MessageType::Update);
+        new_message.updates = updates;
+        self.broadcast(&new_message, vec![]);
     }
 
     pub fn on_peer(&mut self, client_id: usize, msg: messages::Message) {

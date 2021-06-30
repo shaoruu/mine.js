@@ -76,28 +76,6 @@ class Player {
     inputs.bind('f', () => this.toggleGodMode(), 'in-game');
     inputs.bind('c', () => this.togglePerspective(), 'in-game');
 
-    // !!! TEMPORARY TEST
-    inputs.bind(
-      'r',
-      () => {
-        const updates = [];
-        const r = 5;
-        const [vx, vy, vz] = this.lookBlock;
-
-        for (let x = -r; x <= r; x++) {
-          for (let y = -r; y <= r; y++) {
-            for (let z = -r; z <= r; z++) {
-              if (x ** 2 + y ** 2 + z ** 2 > r * r) continue;
-              updates.push({ voxel: [vx + x, vy + y, vz + z], type: 0 });
-            }
-          }
-        }
-
-        engine.world.setManyVoxels(updates);
-      },
-      'in-game',
-    );
-
     for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
       inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]), 'in-game');
     }

@@ -22,6 +22,12 @@ class Debug {
   public chunkHighlight: Mesh;
   public atlasTest: Mesh;
 
+  public inputOptions = {
+    changeRadius: 3,
+    minChangeRadius: 1,
+    maxChangeRadius: 6,
+  };
+
   constructor(public engine: Engine) {
     // dat.gui
     this.gui = new GUI({
@@ -48,6 +54,7 @@ class Debug {
     engine.on('ready', () => {
       this.makeDOM();
       this.setupAll();
+      this.setupInputs();
       this.mount();
 
       this.chunkHighlight.visible = false;
@@ -205,6 +212,54 @@ class Debug {
         },
       },
       'Toggle chunk highlight',
+    );
+  };
+
+  setupInputs = () => {
+    const { inputs, player, world } = this.engine;
+
+    inputs.bind(
+      'r',
+      () => {
+        const updates = [];
+
+        const r = this.inputOptions.changeRadius;
+        const type = 0;
+
+        if (!player.lookBlock) return;
+        const [vx, vy, vz] = player.lookBlock;
+
+        for (let x = -r; x <= r; x++) {
+          for (let y = -r; y <= r; y++) {
+            for (let z = -r; z <= r; z++) {
+              if (x ** 2 + y ** 2 + z ** 2 > r * r) continue;
+              if (world.getVoxelByVoxel([vx + x, vy + y, vz + z]) === type) continue;
+              updates.push({ voxel: [vx + x, vy + y, vz + z], type: 0 });
+            }
+          }
+        }
+
+        world.setManyVoxels(updates);
+      },
+      'in-game',
+    );
+
+    const { maxChangeRadius, minChangeRadius } = this.inputOptions;
+
+    inputs.scroll(
+      () =>
+        (this.inputOptions.changeRadius = Helper.clamp(
+          this.inputOptions.changeRadius + 1,
+          minChangeRadius,
+          maxChangeRadius,
+        )),
+      () =>
+        (this.inputOptions.changeRadius = Helper.clamp(
+          this.inputOptions.changeRadius - 1,
+          minChangeRadius,
+          maxChangeRadius,
+        )),
+      'in-game',
     );
   };
 

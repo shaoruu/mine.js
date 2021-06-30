@@ -5,13 +5,15 @@ import { Engine } from './engine';
 type ClickType = 'left' | 'middle' | 'right';
 type InputNamespace = 'in-game' | 'chat' | 'menu' | '*';
 type InputOccasion = 'keydown' | 'keypress' | 'keyup';
-type ClickCallbacksType = { callback: () => void; namespace: InputNamespace }[];
+type ClickCallbacks = { callback: () => void; namespace: InputNamespace }[];
+type ScrollCallbacks = { up: (delta?: number) => void; down: (delta?: number) => void; namespace: InputNamespace }[];
 
 class Inputs {
   public namespace: InputNamespace = 'menu';
   public combos: Map<string, string> = new Map();
   public callbacks: Map<string, () => void> = new Map();
-  public clickCallbacks: Map<ClickType, ClickCallbacksType> = new Map();
+  public clickCallbacks: Map<ClickType, ClickCallbacks> = new Map();
+  public scrollCallbacks: ScrollCallbacks = [];
 
   constructor(public engine: Engine) {
     this.add('forward', 'w');
@@ -27,6 +29,7 @@ class Inputs {
     this.add('tab', 'tab');
 
     this.initClickListener();
+    this.initScrollListener();
   }
 
   initClickListener = () => {
@@ -37,7 +40,7 @@ class Inputs {
       ({ button }) => {
         if (!this.engine.locked) return;
 
-        let callbacks: ClickCallbacksType = [];
+        let callbacks: ClickCallbacks = [];
 
         if (button === 0) callbacks = this.clickCallbacks.get('left');
         else if (button === 1) callbacks = this.clickCallbacks.get('middle');
@@ -51,8 +54,25 @@ class Inputs {
     );
   };
 
+  initScrollListener = () => {
+    document.addEventListener('wheel', ({ deltaY }) => {
+      if (!this.engine.locked) return;
+
+      this.scrollCallbacks.forEach(({ up, down, namespace }) => {
+        if (this.namespace === namespace) {
+          if (deltaY > 0) up(deltaY);
+          else if (deltaY < 0) down(deltaY);
+        }
+      });
+    });
+  };
+
   click = (type: ClickType, callback: () => void, namespace: InputNamespace) => {
     this.clickCallbacks.get(type).push({ namespace, callback });
+  };
+
+  scroll = (up: (delta?: number) => void, down: (delta?: number) => void, namespace: InputNamespace) => {
+    this.scrollCallbacks.push({ up, down, namespace });
   };
 
   add = (name: string, combo: string) => {

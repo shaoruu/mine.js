@@ -183,7 +183,8 @@ class World extends EventEmitter {
 
   setManyVoxels = (voxels: { voxel: Coords3; type: number }[], sideEffects = true) => {
     if (voxels.length > this.options.maxBlockPerFrame) {
-      console.warn('Changing more voxels than recommended...');
+      // console.warn('Changing more voxels than recommended...');
+      // TODO: maybe split the whole thing into chunks of updates?
     }
 
     voxels.forEach(({ voxel: [vx, vy, vz], type }) => {
