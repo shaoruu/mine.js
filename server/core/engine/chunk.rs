@@ -109,6 +109,7 @@ impl Chunk {
         }
     }
 
+    #[inline]
     pub fn get_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
@@ -118,6 +119,7 @@ impl Chunk {
         self.voxels[&[lx as usize, ly as usize, lz as usize]]
     }
 
+    #[inline]
     pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         assert!(self.contains(vx, vy, vz,));
 
@@ -125,6 +127,7 @@ impl Chunk {
         self.voxels[&[lx as usize, ly as usize, lz as usize]] = id;
     }
 
+    #[inline]
     pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
@@ -134,6 +137,7 @@ impl Chunk {
         self.get_local_torch_light(lx as usize, ly as usize, lz as usize)
     }
 
+    #[inline]
     pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
@@ -141,6 +145,7 @@ impl Chunk {
         self.set_local_torch_light(lx as usize, ly as usize, lz as usize, level)
     }
 
+    #[inline]
     pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
@@ -150,6 +155,7 @@ impl Chunk {
         self.get_local_sunlight(lx as usize, ly as usize, lz as usize)
     }
 
+    #[inline]
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
@@ -157,6 +163,7 @@ impl Chunk {
         self.set_local_sunlight(lx as usize, ly as usize, lz as usize, level)
     }
 
+    #[inline]
     pub fn get_max_height(&self, vx: i32, vz: i32) -> i32 {
         if !self.contains(vx, 0, vz) {
             return self.max_height as i32;
@@ -166,6 +173,7 @@ impl Chunk {
         self.height_map[&[lx as usize, lz as usize]]
     }
 
+    #[inline]
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
         assert!(self.contains(vx, 0, vz,));
 
@@ -173,6 +181,7 @@ impl Chunk {
         self.height_map[&[lx as usize, lz as usize]] = height;
     }
 
+    #[inline]
     pub fn set_lights(&mut self, data: Ndarray<u32>) {
         self.lights = data;
     }
@@ -218,26 +227,32 @@ impl Chunk {
         }
     }
 
+    #[inline]
     fn get_local_torch_light(&self, lx: usize, ly: usize, lz: usize) -> u32 {
         self.lights[&[lx, ly, lz]] & 0xf
     }
 
+    #[inline]
     fn set_local_torch_light(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
         self.lights[&[lx, ly, lz]] = (self.lights[&[lx, ly, lz]] & 0xf0) | level;
     }
 
+    #[inline]
     fn get_local_sunlight(&self, lx: usize, ly: usize, lz: usize) -> u32 {
         (self.lights[&[lx, ly, lz]] >> 4) & 0xf
     }
 
+    #[inline]
     fn set_local_sunlight(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
         self.lights[&[lx, ly, lz]] = (self.lights[&[lx, ly, lz]] & 0xf) | (level << 4);
     }
 
+    #[inline]
     fn to_local(&self, vx: i32, vy: i32, vz: i32) -> Coords3<i32> {
         Coords3(vx, vy, vz).sub(&self.min)
     }
 
+    #[inline]
     fn contains(&self, vx: i32, vy: i32, vz: i32) -> bool {
         let size = self.size as i32;
         let max_height = self.max_height as i32;

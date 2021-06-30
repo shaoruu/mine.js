@@ -176,7 +176,29 @@ class World extends EventEmitter {
     if (sideEffects) {
       this.engine.network.server.sendEvent({
         type: 'UPDATE',
-        json: { x: vx, y: vy, z: vz, type },
+        updates: [{ vx, vy, vz, type }],
+      });
+    }
+  };
+
+  setManyVoxels = (voxels: { voxel: Coords3; type: number }[], sideEffects = true) => {
+    if (voxels.length > this.options.maxBlockPerFrame) {
+      console.warn('Changing more voxels than recommended...');
+    }
+
+    voxels.forEach(({ voxel: [vx, vy, vz], type }) => {
+      this.getChunkByVoxel([vx, vy, vz])?.setVoxel(vx, vy, vz, type);
+    });
+
+    if (sideEffects) {
+      this.engine.network.server.sendEvent({
+        type: 'UPDATE',
+        updates: voxels.map(({ voxel: [vx, vy, vz], type }) => ({
+          vx,
+          vy,
+          vz,
+          type,
+        })),
       });
     }
   };

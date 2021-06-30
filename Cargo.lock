@@ -639,20 +639,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crossbeam"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ae5588f6b3c3cb05239e90bd110f257254aecd01e4635400391aeae07497845"
-dependencies = [
- "cfg-if 1.0.0",
- "crossbeam-channel 0.5.1",
- "crossbeam-deque",
- "crossbeam-epoch",
- "crossbeam-queue",
- "crossbeam-utils 0.8.5",
-]
-
-[[package]]
 name = "crossbeam-channel"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -694,16 +680,6 @@ dependencies = [
  "lazy_static",
  "memoffset",
  "scopeguard",
-]
-
-[[package]]
-name = "crossbeam-queue"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b10ddc024425c88c2ad148c1b0fd53f4c6d38db9697c9f1588381212fa657c9"
-dependencies = [
- "cfg-if 1.0.0",
- "crossbeam-utils 0.8.5",
 ]
 
 [[package]]
@@ -1281,6 +1257,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "minejs"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-broker",
+ "actix-cors",
+ "actix-files",
+ "actix-web",
+ "actix-web-actors",
+ "ansi_term",
+ "bytes 1.0.1",
+ "chrono",
+ "crossbeam-channel 0.5.1",
+ "fern",
+ "image",
+ "libflate",
+ "log",
+ "noise",
+ "num",
+ "prost",
+ "prost-build",
+ "rand 0.8.3",
+ "rayon",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "miniz_oxide"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1675,35 +1679,6 @@ checksum = "b518d7cdd93dab1d1122cf07fa9a60771836c668dde9d9e2a139f957f0d9f1bb"
 dependencies = [
  "bytes 1.0.1",
  "prost",
-]
-
-[[package]]
-name = "protobuf-test"
-version = "0.1.0"
-dependencies = [
- "actix",
- "actix-broker",
- "actix-cors",
- "actix-files",
- "actix-web",
- "actix-web-actors",
- "ansi_term",
- "bytes 1.0.1",
- "chrono",
- "crossbeam",
- "crossbeam-channel 0.5.1",
- "fern",
- "image",
- "libflate",
- "log",
- "noise",
- "num",
- "prost",
- "prost-build",
- "rand 0.8.3",
- "rayon",
- "serde",
- "serde_json",
 ]
 
 [[package]]

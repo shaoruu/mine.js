@@ -71,7 +71,8 @@
   "scripts": {
     "client": "webpack",
     "watch": "gulp dev -L",
-    "server": "RUST_BACKTRACE=1 cargo watch -x 'run --release' -i assets -i client -i public -i textures",
+    "server": "RUST_BACKTRACE=1 cargo watch -c -x 'run --release' -i assets -i client -i public -i textures",
+    "server:udeps": "cargo +nightly udeps",
     "build": "cross-env NODE_ENV=production webpack",
     "compile:ts": "pbts -o protocol/index.d.ts protocol/index.js",
     "compile:js": "pbjs -t static-module -w commonjs -o protocol/index.js protocol/messages.proto",

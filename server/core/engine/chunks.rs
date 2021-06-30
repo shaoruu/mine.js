@@ -44,9 +44,10 @@ struct VertexLight {
     sunlight: u32,
 }
 
+#[derive(Clone, Debug)]
 pub enum MeshLevel {
     All,
-    Levels(Vec<u32>),
+    Levels(HashSet<u32>),
 }
 
 /// A wrapper around all the chunks
@@ -186,7 +187,7 @@ impl Chunks {
         let sub_chunks = self.config.sub_chunks;
 
         // TODO: fix this cloning monstrosity
-        let metrics = self.config.clone();
+        let config = self.config.clone();
         let registry = self.registry.clone();
 
         match level {
@@ -197,9 +198,9 @@ impl Chunks {
                 for sub_chunk in 0..sub_chunks {
                     let chunk = self.get_chunk(coords).unwrap();
 
-                    let opaque = Mesher::mesh_chunk(chunk, false, sub_chunk, &metrics, &registry);
+                    let opaque = Mesher::mesh_chunk(chunk, false, sub_chunk, &config, &registry);
                     let transparent =
-                        Mesher::mesh_chunk(chunk, true, sub_chunk, &metrics, &registry);
+                        Mesher::mesh_chunk(chunk, true, sub_chunk, &config, &registry);
 
                     // borrow again in mutable form
                     let chunk = self.get_chunk_mut(coords).unwrap();
@@ -217,9 +218,9 @@ impl Chunks {
                 for &sub_chunk in ls {
                     let chunk = self.get_chunk_mut(coords).unwrap();
 
-                    let opaque = Mesher::mesh_chunk(chunk, false, sub_chunk, &metrics, &registry);
+                    let opaque = Mesher::mesh_chunk(chunk, false, sub_chunk, &config, &registry);
                     let transparent =
-                        Mesher::mesh_chunk(chunk, true, sub_chunk, &metrics, &registry);
+                        Mesher::mesh_chunk(chunk, true, sub_chunk, &config, &registry);
 
                     let chunk = self.get_chunk_mut(coords).unwrap();
 
@@ -247,7 +248,7 @@ impl Chunks {
     fn load(&mut self, coords: &Coords2<i32>, render_radius: i16, is_preload: bool) {
         let Coords2(cx, cz) = coords;
 
-        let de = false;
+        let de = true;
 
         let mut to_generate: Vec<Chunk> = Vec::new();
         let mut to_decorate: Vec<Coords2<i32>> = Vec::new();
@@ -426,12 +427,14 @@ impl Chunks {
     }
 
     /// Get a chunk reference from a coordinate
+    #[inline]
     pub fn get_chunk(&self, coords: &Coords2<i32>) -> Option<&Chunk> {
         let name = get_chunk_name(coords.0, coords.1);
         self.chunks.get(&name)
     }
 
     /// Get a mutable chunk reference from a coordinate
+    #[inline]
     pub fn get_chunk_mut(&mut self, coords: &Coords2<i32>) -> Option<&mut Chunk> {
         let name = get_chunk_name(coords.0, coords.1);
         let chunk = self.chunks.get_mut(&name);
@@ -443,18 +446,21 @@ impl Chunks {
     }
 
     /// Get a chunk reference from a voxel coordinate
+    #[inline]
     pub fn get_chunk_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> Option<&Chunk> {
         let coords = map_voxel_to_chunk(vx, vy, vz, self.config.chunk_size);
         self.get_chunk(&coords)
     }
 
     /// Get a mutable chunk reference from a voxel coordinate
+    #[inline]
     pub fn get_chunk_by_voxel_mut(&mut self, vx: i32, vy: i32, vz: i32) -> Option<&mut Chunk> {
         let coords = map_voxel_to_chunk(vx, vy, vz, self.config.chunk_size);
         self.get_chunk_mut(&coords)
     }
 
     /// Get the voxel type at a voxel coordinate
+    #[inline]
     pub fn get_voxel_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
         if let Some(chunk) = chunk {
@@ -465,12 +471,14 @@ impl Chunks {
     }
 
     /// Get the voxel type at a world coordinate
+    #[inline]
     pub fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u32 {
         let Coords3(vx, vy, vz) = map_world_to_voxel(wx, wy, wz, self.config.dimension);
         self.get_voxel_by_voxel(vx, vy, vz)
     }
 
     /// Set the voxel type for a voxel coordinate
+    #[inline]
     pub fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         let chunk = self.get_chunk_by_voxel_mut(vx, vy, vz);
 
@@ -509,6 +517,7 @@ impl Chunks {
     }
 
     /// Get the sunlight level at a voxel coordinate
+    #[inline]
     pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
         if let Some(chunk) = chunk {
@@ -519,6 +528,7 @@ impl Chunks {
     }
 
     /// Set the sunlight level for a voxel coordinate
+    #[inline]
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
@@ -533,6 +543,7 @@ impl Chunks {
     }
 
     /// Get the torch light level at a voxel coordinate
+    #[inline]
     pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
         if let Some(chunk) = chunk {
@@ -543,6 +554,7 @@ impl Chunks {
     }
 
     /// Set the torch light level at a voxel coordinate
+    #[inline]
     pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
@@ -557,17 +569,20 @@ impl Chunks {
     }
 
     /// Get a block type from a voxel coordinate
+    #[inline]
     pub fn get_block_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> &Block {
         let voxel = self.get_voxel_by_voxel(vx, vy, vz);
         self.registry.get_block_by_id(voxel)
     }
 
     /// Get a block type from a voxel id
+    #[inline]
     pub fn get_block_by_id(&self, id: u32) -> &Block {
         self.registry.get_block_by_id(id)
     }
 
     /// Get the max height at a voxel column coordinate
+    #[inline]
     pub fn get_max_height(&self, vx: i32, vz: i32) -> i32 {
         let chunk = self
             .get_chunk_by_voxel(vx, 0, vz)
@@ -576,6 +591,7 @@ impl Chunks {
     }
 
     /// Set the max height at a voxel column coordinate
+    #[inline]
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
         let chunk = self
             .get_chunk_by_voxel_mut(vx, 0, vz)

@@ -84,7 +84,7 @@ const defaultConfig: ConfigType = {
     maxHeight: 128,
     renderRadius: 6,
     requestRadius: 8,
-    chunkSize: 16,
+    chunkSize: 12,
     dimension: 1,
     // maximum amount of chunks to process per frame tick
     maxChunkProcessPerFrame: 16,

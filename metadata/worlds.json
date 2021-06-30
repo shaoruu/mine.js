@@ -3,11 +3,11 @@
     "time": 0,
     "save": true,
     "dimension": 1,
-    "chunkSize": 16,
+    "chunkSize": 12,
     "tickSpeed": 3,
     "maxClients": 10,
     "maxHeight": 128,
-    "renderRadius": 6,
+    "renderRadius": 8,
     "preload": 12,
     "name": "testbed",
     "chunkRoot": "data",
@@ -15,7 +15,7 @@
     "pingInterval": 50000,
     "maxLoadedChunks": 2000,
     "description": "a testbed world",
-    "subChunks": 4
+    "subChunks": 8
   },
   "worlds": [
     {

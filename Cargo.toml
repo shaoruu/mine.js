@@ -1,14 +1,14 @@
 [package]
-name = "protobuf-test"
+name = "minejs"
 version = "0.1.0"
-authors = ["ian13456 <21ianh1@students.tas.tw>"]
+authors = ["ian13456 <ian1314159@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
 name = "main"
 path = "server/main.rs"
+
 
 [dependencies]
 actix = "0.10.0"
@@ -20,7 +20,6 @@ actix-web-actors = "3.0.0"
 ansi_term = "0.12.1"
 bytes = "1.0.1"
 chrono = "0.4.19"
-crossbeam = "0.8.1"
 crossbeam-channel = "0.5.1"
 fern = { version="0.6.0", features=["colored"] }
 image = "0.23.14"
@@ -38,6 +37,11 @@ serde_json = "1.0"
 [build-dependencies]
 prost-build = "0.7.0"
 
+
 [profile.release]
 # lto = "fat"
 # codegen-units = 1
+
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]

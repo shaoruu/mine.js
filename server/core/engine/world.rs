@@ -1,10 +1,10 @@
-use log::info;
+use log::{debug, info};
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 
 use ansi_term::Colour::Yellow;
 
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 
@@ -16,7 +16,7 @@ use crate::core::network::models::messages::{
     self, chat_message::Type as ChatType, message::Type as MessageType,
 };
 use crate::core::network::models::{
-    create_chat_message, create_message, create_of_type, MessageComponents,
+    create_chat_message, create_message, create_of_type, MessageComponents, UpdateProtocol,
 };
 use crate::core::network::server::Client;
 use crate::libs::types::GenerationType;
@@ -91,7 +91,7 @@ impl World {
         };
 
         let clients = HashMap::new();
-        let chunks = Chunks::new(config, max_loaded_chunks, registry.clone());
+        let chunks = Chunks::new(config, max_loaded_chunks, registry);
         let prev_time = SystemTime::now();
 
         let pool = rayon::ThreadPoolBuilder::new()
@@ -194,50 +194,9 @@ impl World {
     }
 
     pub fn on_update(&mut self, _client_id: usize, msg: messages::Message) {
-        let json = msg.parse_json().unwrap();
+        let updates = msg.updates;
 
-        let vx = json["x"].as_i64().unwrap() as i32;
-        let vy = json["y"].as_i64().unwrap() as i32;
-        let vz = json["z"].as_i64().unwrap() as i32;
-        let id = json["type"].as_u64().unwrap() as u32;
-
-        if vy < 0
-            || vy >= self.chunks.config.max_height as i32
-            || !self.chunks.registry.has_type(id)
-        {
-            return;
-        }
-
-        let chunk = self.chunks.get_chunk_by_voxel(vx, vy, vz).unwrap();
-        if chunk.needs_propagation {
-            return;
-        }
-
-        let current_id = self.chunks.get_voxel_by_voxel(vx, vy, vz);
-        if self.chunks.registry.is_air(current_id) && self.chunks.registry.is_air(id) {
-            return;
-        }
-
-        // First send the message, so borrow checker doesn't freak out
-        let mut new_message = create_of_type(MessageType::Update);
-        new_message.json = format!(
-            "{{\"vx\":{},\"vy\":{},\"vz\":{},\"type\":{}}}",
-            vx, vy, vz, id
-        );
-
-        self.broadcast(&new_message, vec![]);
-
-        self.chunks.start_caching();
-        self.chunks.update(vx, vy, vz, id);
-        self.chunks.stop_caching();
-
-        let mut cache = self.chunks.chunk_cache.to_owned();
-        self.chunks.clear_cache();
-
-        let neighbor_chunks = self.chunks.get_neighbor_chunk_coords(vx, vy, vz);
-        neighbor_chunks.into_iter().for_each(|c| {
-            cache.insert(c);
-        });
+        let mut cache: Vec<(Coords2<i32>, MeshLevel)> = vec![];
 
         let WorldConfig {
             sub_chunks,
@@ -247,20 +206,87 @@ impl World {
 
         let sub_chunk_unit = max_height / sub_chunks;
 
-        cache.into_iter().for_each(|coords| {
+        for update in updates {
+            let vx = update.vx;
+            let vy = update.vy;
+            let vz = update.vz;
+            let id = update.r#type;
+
+            if vy < 0
+                || vy >= self.chunks.config.max_height as i32
+                || !self.chunks.registry.has_type(id)
+            {
+                continue;
+            }
+
+            let chunk = self.chunks.get_chunk_by_voxel(vx, vy, vz).unwrap();
+            if chunk.needs_propagation {
+                continue;
+            }
+
+            let current_id = self.chunks.get_voxel_by_voxel(vx, vy, vz);
+            if self.chunks.registry.is_air(current_id) && self.chunks.registry.is_air(id) {
+                continue;
+            }
+
+            // First send the message, so borrow checker doesn't freak out
+            let mut new_update = MessageComponents::default_for(MessageType::Update);
+            new_update.updates = Some(vec![UpdateProtocol {
+                r#type: id,
+                vx,
+                vy,
+                vz,
+            }]);
+            let new_message = create_message(new_update);
+
+            self.broadcast(&new_message, vec![]);
+
+            self.chunks.start_caching();
+            self.chunks.update(vx, vy, vz, id);
+            self.chunks.stop_caching();
+
+            let neighbor_chunks = self.chunks.get_neighbor_chunk_coords(vx, vy, vz);
+            neighbor_chunks.into_iter().for_each(|c| {
+                self.chunks.chunk_cache.insert(c);
+            });
+
             // TODO: Fix this monstrosity of logic
             // essentially, this is fixing sub-chunk edges meshing
-            let levels = if vy as u32 % sub_chunk_unit == 0 && vy != 0 {
-                vec![vy as u32 / sub_chunk_unit, (vy as u32 - 1) / sub_chunk_unit]
+            let mut levels = HashSet::new();
+            levels.insert(vy as u32 / sub_chunk_unit);
+
+            if vy as u32 % sub_chunk_unit == 0 && vy != 0 {
+                levels.insert((vy as u32 - 1) / sub_chunk_unit);
             } else if vy as u32 % sub_chunk_unit == sub_chunk_unit - 1
                 && vy as u32 != max_height - 1
             {
-                vec![vy as u32 / sub_chunk_unit, (vy as u32 + 1) / sub_chunk_unit]
-            } else {
-                vec![vy as u32 / sub_chunk_unit]
-            };
-            let mesh_level = MeshLevel::Levels(levels);
+                levels.insert((vy as u32 + 1) / sub_chunk_unit);
+            }
 
+            debug!(
+                "{:?} {:?} {} {} {} {}",
+                self.chunks.chunk_cache, levels, vx, vy, vz, id
+            );
+
+            self.chunks.chunk_cache.iter().for_each(|c| {
+                if let Some(existing) = cache.iter_mut().find(|(co, _)| co == c) {
+                    match &mut existing.1 {
+                        MeshLevel::Levels(ls) => levels.iter().for_each(|l| {
+                            ls.insert(*l);
+                        }),
+                        MeshLevel::All => todo!(),
+                    }
+                } else {
+                    cache.push((c.to_owned(), MeshLevel::Levels(levels.clone())));
+                }
+            });
+
+            self.chunks.chunk_cache.clear();
+        }
+
+        debug!("{:?}", cache);
+
+        cache.into_iter().for_each(|(coords, mesh_level)| {
             let chunk = self.chunks.get(&coords, false, &mesh_level).unwrap();
 
             let mut component = MessageComponents::default_for(MessageType::Update);
