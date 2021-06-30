@@ -1,7 +1,5 @@
 import { Object3D } from 'three';
 
-import { Coords3, MeshType } from '../../shared';
-
 import { AABB } from './aabb';
 import { Brain } from './brain';
 import { RigidBody } from './rigid-body';
@@ -61,3 +59,19 @@ export type ServerChunkType = {
   lights: Uint8Array;
   json: { voxel: Coords3; type: number };
 };
+
+export type Coords2 = [x: number, z: number];
+export type Coords3 = [x: number, y: number, z: number];
+
+export type TypeMap = { [key: string]: number };
+
+export type MeshType = {
+  positions: Float32Array;
+  indices: Float32Array;
+  uvs: Float32Array;
+  aos: Float32Array;
+  sunlights: Int32Array;
+  torchLights: Int32Array;
+};
+
+export type MESSAGE_TYPE = 'ERROR' | 'SERVER' | 'PLAYER' | 'INFO';

@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
 
-import { Coords3 } from '../../shared/types';
 import { Peer } from '../libs';
+import { Coords3 } from '../libs/types';
 import { Helper } from '../utils';
 
 import { Engine } from '.';

@@ -11,13 +11,13 @@ import {
 } from 'three';
 import pool from 'typedarray-pool';
 
-import { Coords3 } from '../../shared';
 import { Rendering } from '../core';
 import { Helper } from '../utils';
 
 import CloudsFragmentShader from './shaders/clouds/fragment.glsl';
 import CloudsVertexShader from './shaders/clouds/vertex.glsl';
 import { simpleCull } from './simple-cull';
+import { Coords3 } from './types';
 
 import workerSrc from '!raw-loader!./workers/generate-clouds.worker';
 

@@ -1,7 +1,6 @@
 import Pako from 'pako';
 
 import { protocol } from '../../protocol';
-import { Helper as SharedHelper } from '../../shared';
 import { Helper } from '../utils';
 
 import { Engine } from './engine';
@@ -104,8 +103,8 @@ class Network {
         const {
           json: { time, tickSpeed },
         } = event;
-        if (SharedHelper.isNumber(time)) world.setTime(time, false);
-        if (SharedHelper.isNumber(tickSpeed)) engine.setTick(tickSpeed, false);
+        if (Helper.isNumber(time)) world.setTime(time, false);
+        if (Helper.isNumber(tickSpeed)) engine.setTick(tickSpeed, false);
         break;
       }
 

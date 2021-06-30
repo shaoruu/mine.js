@@ -1,5 +1,5 @@
-import { MESSAGE_TYPE } from '../../shared';
 import { ChatHistory, Message } from '../libs';
+import { MESSAGE_TYPE } from '../libs/types';
 import { Helper } from '../utils';
 
 import { Engine } from '.';
@@ -105,6 +105,7 @@ class Chat {
     this.gui.input.type = 'text';
     this.gui.input.autocapitalize = 'off';
     this.gui.input.autocomplete = 'off';
+    // @ts-ignore
     this.gui.input.autofocus = false;
     this.gui.input.spellcheck = false;
     this.gui.input.maxLength = 256;

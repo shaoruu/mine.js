@@ -4,8 +4,8 @@ import ndarray from 'ndarray';
 import { BufferGeometry, Float32BufferAttribute, Mesh, Group, Int32BufferAttribute } from 'three';
 import pool from 'typedarray-pool';
 
-import { Coords2, Coords3 } from '../../shared';
 import { ServerMeshType } from '../libs';
+import { Coords3, Coords2 } from '../libs/types';
 import { Helper } from '../utils';
 
 import { Engine } from '.';
@@ -201,7 +201,7 @@ class Chunk {
         geometry.dispose();
         geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
         geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
-        geometry.setAttribute('ao', new Float32BufferAttribute(aos, occlusionNumComponents));
+        geometry.setAttribute('ao', new Int32BufferAttribute(aos, occlusionNumComponents));
         geometry.setAttribute('sunlight', new Int32BufferAttribute(sunlights, sunlightsNumComponents));
         geometry.setAttribute('torchLight', new Int32BufferAttribute(torchLights, torchLightsNumComponents));
         geometry.setIndex(Array.from(indices));

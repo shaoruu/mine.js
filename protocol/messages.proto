@@ -7,7 +7,7 @@ message Geometry {
   repeated int32 indices = 3 [packed=true];
   repeated float positions = 4 [packed=true];
   repeated float uvs = 6 [packed=true];
-  repeated float aos = 7 [packed=true];
+  repeated int32 aos = 7 [packed=true];
 }
 
 message Mesh {

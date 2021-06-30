@@ -89,7 +89,7 @@ pub struct MeshType {
     pub positions: Vec<f32>,
     pub indices: Vec<i32>,
     pub uvs: Vec<f32>,
-    pub aos: Vec<f32>,
+    pub aos: Vec<i32>,
     pub sunlights: Vec<i32>,
     pub torch_lights: Vec<i32>,
 }

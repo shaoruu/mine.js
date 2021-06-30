@@ -1,9 +1,8 @@
 import ndarray from 'ndarray';
 
-import { Coords3 } from '../../shared';
 import { Helper } from '../utils';
 
-import { MeshResultType } from './types';
+import { MeshResultType, Coords3 } from './types';
 
 import workerSrc from '!raw-loader!./workers/simple-cull.worker';
 

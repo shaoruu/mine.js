@@ -49,17 +49,17 @@ impl Mesher {
         let mut positions = Vec::<f32>::new();
         let mut indices = Vec::<i32>::new();
         let mut uvs = Vec::<f32>::new();
-        let mut aos = Vec::<f32>::new();
+        let mut aos = Vec::<i32>::new();
         let mut torch_lights = Vec::<i32>::new();
         let mut sunlights = Vec::<i32>::new();
 
         let &Coords3(start_x, _, start_z) = min_inner;
         let &Coords3(end_x, _, end_z) = max_inner;
 
-        let vertex_ao = |side1: u32, side2: u32, corner: u32| -> usize {
-            let num_s1 = !registry.get_transparency_by_id(side1) as usize;
-            let num_s2 = !registry.get_transparency_by_id(side2) as usize;
-            let num_c = !registry.get_transparency_by_id(corner) as usize;
+        let vertex_ao = |side1: u32, side2: u32, corner: u32| -> i32 {
+            let num_s1 = !registry.get_transparency_by_id(side1) as i32;
+            let num_s2 = !registry.get_transparency_by_id(side2) as i32;
+            let num_c = !registry.get_transparency_by_id(corner) as i32;
 
             if num_s1 == 1 && num_s2 == 1 {
                 0
@@ -128,7 +128,7 @@ impl Mesher {
                                     sunlights.push(chunk.get_sunlight(vx, vy, vz) as i32);
                                     torch_lights.push(chunk.get_torch_light(vx, vy, vz) as i32);
 
-                                    aos.push(1.0);
+                                    aos.push(3);
                                 }
 
                                 indices.push(ndx);
@@ -206,13 +206,11 @@ impl Mesher {
 
                                         uvs.push(uv[0] as f32 * (end_u - start_u) + start_u);
                                         uvs.push(uv[1] as f32 * (start_v - end_v) + end_v);
-                                        face_aos.push(
-                                            AO_TABLE[vertex_ao(
-                                                near_voxels[*side1 as usize],
-                                                near_voxels[*side2 as usize],
-                                                near_voxels[*corner as usize],
-                                            )] / 255.0,
-                                        );
+                                        face_aos.push(vertex_ao(
+                                            near_voxels[*side1 as usize],
+                                            near_voxels[*side2 as usize],
+                                            near_voxels[*corner as usize],
+                                        ));
 
                                         // calculating the 8 voxels around this vertex
                                         let dx = pos[0];
@@ -387,9 +385,7 @@ impl Mesher {
                                     // one is zero, and ao rule, but only for zero AO's
                                     let ozao = a_t + d_t < b_t + c_t
                                         && ((face_aos[0] + face_aos[3])
-                                            - (face_aos[1] + face_aos[2]))
-                                            .abs()
-                                            < f32::EPSILON;
+                                            == (face_aos[1] + face_aos[2]));
                                     // all not zero, 4 parts
                                     let anzp1 = (b_t as f32 > (a_t + d_t) as f32 / 2.0
                                         && (a_t + d_t) as f32 / 2.0 > c_t as f32)

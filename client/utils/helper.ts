@@ -1,8 +1,8 @@
 import Url from 'domurl';
 import vec3 from 'gl-vec3';
 
-import { Coords2, Coords3 } from '../../shared';
 import { AABB } from '../libs';
+import { Coords2, Coords3 } from '../libs/types';
 
 class Helper {
   /**
@@ -144,6 +144,18 @@ class Helper {
     }
 
     return url;
+  };
+
+  public static round = (n: number, digits: number) => {
+    return Math.round(n * 10 ** digits) / 10 ** digits;
+  };
+
+  public static clamp = (n: number, min: number, max: number) => {
+    return Math.min(Math.max(n, min), max);
+  };
+
+  public static isNumber = (value: unknown) => {
+    return typeof value === 'number' && isFinite(value);
   };
 }
 

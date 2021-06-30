@@ -1,8 +1,9 @@
 import raycast from 'fast-voxel-raycast';
 import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3, Group, Color } from 'three';
 
-import { Coords3, Helper } from '../../shared';
 import { EntityType, Peer, PointerLockControls } from '../libs';
+import { Coords3 } from '../libs/types';
+import { Helper } from '../utils';
 
 import { Engine } from '.';
 

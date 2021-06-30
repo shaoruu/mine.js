@@ -1,5 +1,6 @@
-import { MESSAGE_TYPE } from '../../shared';
 import { Helper } from '../utils';
+
+import { MESSAGE_TYPE } from './types';
 
 class Message {
   public wrapper = document.createElement('li');

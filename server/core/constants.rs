@@ -408,7 +408,7 @@ pub const PLANT_FACES: [PlantFace; 2] = [
     },
 ];
 
-pub const AO_TABLE: [f32; 4] = [100.0, 170.0, 210.0, 255.0];
+pub const AO_TABLE: [i32; 4] = [100, 170, 210, 255];
 
 pub const VOXEL_NEIGHBORS: [[i32; 3]; 6] = [
     [1, 0, 0],

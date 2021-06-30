@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 
-import { Coords2, Coords3 } from '../../shared';
 import { AABB, Clouds, ServerChunkType, Sky } from '../libs';
+import { Coords3, Coords2 } from '../libs/types';
 import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
