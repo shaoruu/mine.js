@@ -40,8 +40,6 @@ pub struct WorldConfig {
     pub generation: GenerationType,
 }
 
-pub type BatchedUpdates = Vec<VoxelUpdate>;
-
 pub struct World {
     pub time: f32,
     pub tick: i32,
