@@ -196,8 +196,6 @@ impl World {
     pub fn on_update(&mut self, _client_id: usize, msg: messages::Message) {
         let updates = msg.updates;
 
-        let mut cache: Vec<(Coords2<i32>, MeshLevel)> = vec![];
-
         let WorldConfig {
             sub_chunks,
             max_height,
@@ -240,51 +238,27 @@ impl World {
 
             // TODO: Fix this monstrosity of logic
             // essentially, this is fixing sub-chunk edges meshing
-            let mut levels = HashSet::new();
-
-            // from vy to column_height, need remesh.
-            let column_height = self.chunks.get_max_height(vx, vz);
-
-            for h in column_height..vy {
-                levels.insert(h as u32 / sub_chunk_unit);
-            }
-
-            levels.insert(vy as u32 / sub_chunk_unit);
-
-            if vy as u32 % sub_chunk_unit == 0 && vy != 0 {
-                levels.insert((vy as u32 - 1) / sub_chunk_unit);
-            } else if vy as u32 % sub_chunk_unit == sub_chunk_unit - 1
-                && vy as u32 != max_height - 1
-            {
-                levels.insert((vy as u32 + 1) / sub_chunk_unit);
-            }
-
             // TODO: sunlight propagation results in missing mesh levels to be remesh-ed.
-            self.chunks.chunk_cache.iter().for_each(|c| {
-                if let Some(existing) = cache.iter_mut().find(|(co, _)| co == c) {
-                    match &mut existing.1 {
-                        MeshLevel::Levels(ls) => levels.iter().for_each(|l| {
-                            ls.insert(*l);
-                        }),
-                        MeshLevel::All => todo!(),
-                    }
-                } else {
-                    cache.push((c.to_owned(), MeshLevel::Levels(levels.clone())));
-                }
-            });
-
-            self.chunks.chunk_cache.clear();
         }
 
-        cache.into_iter().for_each(|(coords, mesh_level)| {
-            let chunk = self.chunks.get(&coords, false, &mesh_level).unwrap();
+        self.chunks
+            .chunk_cache
+            .clone()
+            .into_iter()
+            .for_each(|coords| {
+                let levels = self.chunks.raw(&coords).unwrap().dirty_levels.clone();
+                let mesh_level = MeshLevel::Levels(levels);
 
-            let mut component = MessageComponents::default_for(MessageType::Update);
-            component.chunks = Some(vec![chunk.get_protocol(false, mesh_level)]);
+                let chunk = self.chunks.get(&coords, false, &mesh_level).unwrap();
 
-            let new_message = create_message(component);
-            self.broadcast(&new_message, vec![]);
-        });
+                let mut component = MessageComponents::default_for(MessageType::Update);
+                component.chunks = Some(vec![chunk.get_protocol(false, mesh_level)]);
+
+                let new_message = create_message(component);
+                self.broadcast(&new_message, vec![]);
+            });
+
+        self.chunks.clear_cache();
 
         // First send the message, so borrow checker doesn't freak out
         let mut new_message = create_of_type(MessageType::Update);

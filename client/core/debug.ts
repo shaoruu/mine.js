@@ -218,13 +218,12 @@ class Debug {
   setupInputs = () => {
     const { inputs, player, world } = this.engine;
 
-    inputs.bind(
-      'r',
-      () => {
+    const bulkPlace = (type?: number) => {
+      return () => {
         const updates = [];
 
+        const t = type === undefined ? player.handType : 0;
         const r = this.inputOptions.changeRadius;
-        const type = 0;
 
         if (!player.lookBlock) return;
         const [vx, vy, vz] = player.lookBlock;
@@ -233,16 +232,18 @@ class Debug {
           for (let y = -r; y <= r; y++) {
             for (let z = -r; z <= r; z++) {
               if (x ** 2 + y ** 2 + z ** 2 > r * r) continue;
-              if (world.getVoxelByVoxel([vx + x, vy + y, vz + z]) === type) continue;
-              updates.push({ voxel: [vx + x, vy + y, vz + z], type: 0 });
+              if (world.getVoxelByVoxel([vx + x, vy + y, vz + z]) === t) continue;
+              updates.push({ voxel: [vx + x, vy + y, vz + z], type: t });
             }
           }
         }
 
         world.setManyVoxels(updates);
-      },
-      'in-game',
-    );
+      };
+    };
+
+    inputs.bind('x', bulkPlace(0), 'in-game');
+    inputs.bind('z', bulkPlace(), 'in-game');
 
     const { maxChangeRadius, minChangeRadius } = this.inputOptions;
 

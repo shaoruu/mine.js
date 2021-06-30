@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{
     core::network::models::ChunkProtocol,
     libs::{
@@ -40,7 +42,7 @@ pub struct Chunk {
 
     pub is_empty: bool,
     pub is_dirty: bool,
-    pub is_meshed: bool,
+    pub dirty_levels: HashSet<u32>,
 
     pub size: usize,
     pub dimension: usize,
@@ -97,9 +99,7 @@ impl Chunk {
 
             is_empty: false,
             is_dirty: true,
-
-            // has mesh ever been initialized on this chunk
-            is_meshed: false,
+            dirty_levels: HashSet::new(),
 
             size,
             max_height,

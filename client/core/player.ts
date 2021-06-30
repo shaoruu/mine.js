@@ -24,7 +24,6 @@ type PlayerOptionsType = {
 type PerspectiveType = 'first' | 'second' | 'third';
 
 const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 56, 13];
-let type = 1;
 
 const LOCAL_STORAGE_PLAYER_NAME = 'mine.js-player';
 const DEFAULT_PLAYER_NAME = 'naenaebaby';
@@ -42,6 +41,9 @@ class Player {
   public perspective: PerspectiveType = 'first';
 
   public own: Peer;
+
+  // TODO: extract this logic into Inventory
+  public handType = 1;
 
   private acc = new Vector3();
   private vel = new Vector3();
@@ -71,13 +73,20 @@ class Player {
     const { config, rendering, inputs, world } = engine;
 
     inputs.click('left', () => world.breakVoxel(), 'in-game');
-    inputs.click('right', () => world.placeVoxel(type), 'in-game');
-    inputs.click('middle', () => (type = engine.world.getVoxelByVoxel(this.lookBlock)), 'in-game');
+    inputs.click('right', () => world.placeVoxel(this.handType), 'in-game');
+    inputs.click(
+      'middle',
+      () => {
+        if (this.lookBlock) this.handType = engine.world.getVoxelByVoxel(this.lookBlock);
+      },
+      'in-game',
+    );
+
     inputs.bind('f', () => this.toggleGodMode(), 'in-game');
     inputs.bind('c', () => this.togglePerspective(), 'in-game');
 
     for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
-      inputs.bind(i.toString(), () => (type = TEMP_BLOCK_MAP[i]), 'in-game');
+      inputs.bind(i.toString(), () => (this.handType = TEMP_BLOCK_MAP[i]), 'in-game');
     }
 
     this.controls.addEventListener('lock', () => {

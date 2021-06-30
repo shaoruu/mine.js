@@ -100,8 +100,8 @@ impl Chunks {
     }
 
     /// Return a mutable chunk regardless initialization
-    pub fn raw(&mut self, coords: &Coords2<i32>) -> Option<&mut Chunk> {
-        self.get_chunk_mut(coords)
+    pub fn raw(&self, coords: &Coords2<i32>) -> Option<&Chunk> {
+        self.get_chunk(coords)
     }
 
     /// Return a chunk references only if chunk is fully initialized (generated and decorated)
@@ -231,7 +231,6 @@ impl Chunks {
                     };
 
                     chunk.is_dirty = false;
-                    chunk.is_meshed = true;
                 }
             }
         };
@@ -480,10 +479,12 @@ impl Chunks {
     /// Set the voxel type for a voxel coordinate
     #[inline]
     pub fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
+        let sub_chunk_unit = self.config.max_height / self.config.sub_chunks;
         let chunk = self.get_chunk_by_voxel_mut(vx, vy, vz);
 
         if let Some(chunk) = chunk {
             chunk.set_voxel(vx, vy, vz, id);
+            chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
             chunk.is_dirty = true;
         } else {
             let updates = self
@@ -502,6 +503,7 @@ impl Chunks {
 
             if let Some(n_chunk) = n_chunk {
                 n_chunk.set_voxel(vx, vy, vz, id);
+                n_chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
                 n_chunk.is_dirty = true;
             } else {
                 let updates = self
@@ -530,15 +532,23 @@ impl Chunks {
     /// Set the sunlight level for a voxel coordinate
     #[inline]
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
+        let sub_chunk_unit = self.config.max_height / self.config.sub_chunks;
+
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
+
         chunk.set_sunlight(vx, vy, vz, level);
+        chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+        chunk.is_dirty = true;
 
         let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
         neighbors.iter().for_each(|c| {
             let n_chunk = self.get_chunk_mut(c).unwrap();
+
             n_chunk.set_sunlight(vx, vy, vz, level);
+            n_chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+            n_chunk.is_dirty = true;
         })
     }
 
@@ -556,15 +566,23 @@ impl Chunks {
     /// Set the torch light level at a voxel coordinate
     #[inline]
     pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
+        let sub_chunk_unit = self.config.max_height / self.config.sub_chunks;
+
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
+
         chunk.set_torch_light(vx, vy, vz, level);
+        chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+        chunk.is_dirty = true;
 
         let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
         neighbors.iter().for_each(|c| {
             let n_chunk = self.get_chunk_mut(c).unwrap();
+
             n_chunk.set_torch_light(vx, vy, vz, level);
+            n_chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+            n_chunk.is_dirty = true;
         })
     }
 

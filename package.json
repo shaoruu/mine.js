@@ -71,7 +71,8 @@
   "scripts": {
     "client": "webpack",
     "watch": "gulp dev -L",
-    "server": "RUST_BACKTRACE=1 cargo watch -c -x 'run --release' -i assets -i client -i public -i textures",
+    "server": "RUST_BACKTRACE=1 cargo watch -c -w server -w metadata -x 'run --release'",
+    "server:kill": "kill $(lsof -ti:4000)",
     "server:udeps": "cargo +nightly udeps",
     "build": "cross-env NODE_ENV=production webpack",
     "compile:ts": "pbts -o protocol/index.d.ts protocol/index.js",
@@ -97,6 +98,7 @@
     "pako": "^2.0.3",
     "postprocessing": "^6.21.4",
     "query-string": "^7.0.0",
+    "random-name": "^0.1.2",
     "raw-loader": "^4.0.2",
     "stats.js": "^0.17.0",
     "three": "^0.127.0",
