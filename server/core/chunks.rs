@@ -137,6 +137,14 @@ impl Chunks {
     /// To preload chunks surrounding 0,0
     pub fn preload(&mut self, width: i16) {
         self.load(&Coords2(0, 0), width, true);
+
+        let remesh_radius = width.min(5) as i32;
+
+        for x in -remesh_radius..(remesh_radius + 1) {
+            for z in -remesh_radius..(remesh_radius + 1) {
+                self.remesh_chunk(&Coords2(x, z), &MeshLevel::All);
+            }
+        }
     }
 
     /// Generate chunks around a certain coordinate
