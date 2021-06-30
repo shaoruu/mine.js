@@ -226,16 +226,58 @@ impl Mesher {
                                         let mut sum_sunlight = vec![];
                                         let mut sum_torch_light = vec![];
 
-                                        if get_block_by_voxel(vx, vy, vz, chunk, registry)
-                                            .is_transparent
-                                        {
+                                        let b000 = get_block_by_voxel(vx, vy, vz, chunk, registry)
+                                            .is_transparent;
+                                        let b001 =
+                                            get_block_by_voxel(vx, vy, vz + dz, chunk, registry)
+                                                .is_transparent;
+                                        let b010 =
+                                            get_block_by_voxel(vx, vy + dy, vz, chunk, registry)
+                                                .is_transparent;
+                                        let b011 = get_block_by_voxel(
+                                            vx,
+                                            vy + dy,
+                                            vz + dz,
+                                            chunk,
+                                            registry,
+                                        )
+                                        .is_transparent;
+                                        let b100 =
+                                            get_block_by_voxel(vx + dx, vy, vz, chunk, registry)
+                                                .is_transparent;
+                                        let b101 = get_block_by_voxel(
+                                            vx + dx,
+                                            vy,
+                                            vz + dz,
+                                            chunk,
+                                            registry,
+                                        )
+                                        .is_transparent;
+                                        let b110 = get_block_by_voxel(
+                                            vx + dx,
+                                            vy + dy,
+                                            vz,
+                                            chunk,
+                                            registry,
+                                        )
+                                        .is_transparent;
+                                        let b111 = get_block_by_voxel(
+                                            vx + dx,
+                                            vy + dy,
+                                            vz + dz,
+                                            chunk,
+                                            registry,
+                                        )
+                                        .is_transparent;
+
+                                        // TODO: light be leaking
+
+                                        if b000 {
                                             sum_sunlight.push(chunk.get_sunlight(vx, vy, vz));
                                             sum_torch_light.push(chunk.get_torch_light(vx, vy, vz));
                                         }
 
-                                        if get_block_by_voxel(vx, vy, vz + dz, chunk, registry)
-                                            .is_transparent
-                                        {
+                                        if b001 {
                                             sum_sunlight.push(chunk.get_sunlight(vx, vy, vz + dz));
                                             sum_torch_light.push(chunk.get_torch_light(
                                                 vx,
@@ -244,9 +286,7 @@ impl Mesher {
                                             ));
                                         }
 
-                                        if get_block_by_voxel(vx, vy + dy, vz, chunk, registry)
-                                            .is_transparent
-                                        {
+                                        if b010 {
                                             sum_sunlight.push(chunk.get_sunlight(vx, vy + dy, vz));
                                             sum_torch_light.push(chunk.get_torch_light(
                                                 vx,
@@ -255,9 +295,7 @@ impl Mesher {
                                             ));
                                         }
 
-                                        if get_block_by_voxel(vx, vy + dy, vz + dz, chunk, registry)
-                                            .is_transparent
-                                        {
+                                        if b011 {
                                             sum_sunlight.push(chunk.get_sunlight(
                                                 vx,
                                                 vy + dy,
@@ -270,9 +308,7 @@ impl Mesher {
                                             ));
                                         }
 
-                                        if get_block_by_voxel(vx + dx, vy, vz, chunk, registry)
-                                            .is_transparent
-                                        {
+                                        if b100 {
                                             sum_sunlight.push(chunk.get_sunlight(vx + dx, vy, vz));
                                             sum_torch_light.push(chunk.get_torch_light(
                                                 vx + dx,
@@ -281,9 +317,7 @@ impl Mesher {
                                             ));
                                         }
 
-                                        if get_block_by_voxel(vx + dx, vy, vz + dz, chunk, registry)
-                                            .is_transparent
-                                        {
+                                        if b101 {
                                             sum_sunlight.push(chunk.get_sunlight(
                                                 vx + dx,
                                                 vy,
@@ -296,9 +330,7 @@ impl Mesher {
                                             ));
                                         }
 
-                                        if get_block_by_voxel(vx + dx, vy + dy, vz, chunk, registry)
-                                            .is_transparent
-                                        {
+                                        if b110 {
                                             sum_sunlight.push(chunk.get_sunlight(
                                                 vx + dx,
                                                 vy + dy,
@@ -311,15 +343,7 @@ impl Mesher {
                                             ));
                                         }
 
-                                        if get_block_by_voxel(
-                                            vx + dx,
-                                            vy + dy,
-                                            vz + dz,
-                                            chunk,
-                                            registry,
-                                        )
-                                        .is_transparent
-                                        {
+                                        if b111 {
                                             sum_sunlight.push(chunk.get_sunlight(
                                                 vx + dx,
                                                 vy + dy,
