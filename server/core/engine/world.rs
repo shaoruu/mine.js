@@ -194,17 +194,14 @@ impl World {
     }
 
     pub fn on_update(&mut self, _client_id: usize, msg: messages::Message) {
-        let updates = msg.updates;
+        let air = *self.chunks.registry.get_id_by_name("Air");
 
-        let WorldConfig {
-            sub_chunks,
-            max_height,
-            ..
-        } = *self.chunks.config;
+        let mut updates = msg.updates;
+        let mut results = vec![];
 
-        let sub_chunk_unit = max_height / sub_chunks;
+        while !updates.is_empty() {
+            let update = updates.pop().unwrap();
 
-        for update in updates.iter() {
             let vx = update.vx;
             let vy = update.vy;
             let vz = update.vz;
@@ -236,9 +233,20 @@ impl World {
                 self.chunks.chunk_cache.insert(c);
             });
 
-            // TODO: Fix this monstrosity of logic
-            // essentially, this is fixing sub-chunk edges meshing
-            // TODO: sunlight propagation results in missing mesh levels to be remesh-ed.
+            if self
+                .chunks
+                .registry
+                .is_plant(self.chunks.get_voxel_by_voxel(vx, vy + 1, vz))
+            {
+                updates.push(messages::Update {
+                    vx,
+                    vy: vy + 1,
+                    vz,
+                    r#type: air,
+                });
+            }
+
+            results.push(update);
         }
 
         self.chunks
@@ -262,7 +270,7 @@ impl World {
 
         // First send the message, so borrow checker doesn't freak out
         let mut new_message = create_of_type(MessageType::Update);
-        new_message.updates = updates;
+        new_message.updates = results;
         self.broadcast(&new_message, vec![]);
     }
 

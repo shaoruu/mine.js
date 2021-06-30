@@ -178,78 +178,101 @@ impl Registry {
         }
     }
 
+    #[inline]
     pub fn get_transparency_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_transparent
     }
 
+    #[inline]
     pub fn get_transparency_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_transparent
     }
 
+    #[inline]
     pub fn get_fluiditiy_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_fluid
     }
 
+    #[inline]
     pub fn get_fluiditiy_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_fluid
     }
 
+    #[inline]
     pub fn get_solidity_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_solid
     }
 
+    #[inline]
     pub fn get_solidity_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_solid
     }
 
+    #[inline]
     pub fn get_emptiness_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_empty
     }
 
+    #[inline]
     pub fn get_emptiness_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_empty
     }
 
+    #[inline]
     pub fn get_texture_by_id(&self, id: u32) -> &HashMap<String, String> {
         &self.get_block_by_id(id).textures
     }
 
+    #[inline]
     pub fn get_texture_by_name(&self, name: &str) -> &HashMap<String, String> {
         &self.get_block_by_name(name).textures
     }
 
+    #[inline]
     pub fn get_uv_by_id(&self, id: u32) -> HashMap<String, &UV> {
         self.get_uv_map(self.get_block_by_id(id))
     }
 
+    #[inline]
     pub fn get_uv_by_name(&self, name: &str) -> HashMap<String, &UV> {
         self.get_uv_map(self.get_block_by_name(name))
     }
 
+    #[inline]
     pub fn is_air(&self, id: u32) -> bool {
         self.get_block_by_id(id).name == "Air"
     }
 
+    #[inline]
     pub fn is_plant(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_plant
     }
 
+    #[inline]
     pub fn is_plantable(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_plantable
     }
 
+    #[inline]
     pub fn get_block_by_id(&self, id: u32) -> &Block {
         self.blocks
             .get(&id)
             .unwrap_or_else(|| panic!("Block id not found: {}", id))
     }
 
+    #[inline]
     pub fn get_block_by_name(&self, name: &str) -> &Block {
         let &id = self
             .name_map
             .get(name)
             .unwrap_or_else(|| panic!("Block name not found: {}", name));
         self.get_block_by_id(id)
+    }
+
+    pub fn get_id_by_name(&self, name: &str) -> &u32 {
+        self.name_map
+            .get(name)
+            .unwrap_or_else(|| panic!("Type name not found: {}", name))
     }
 
     pub fn get_uv_map(&self, block: &Block) -> HashMap<String, &UV> {
