@@ -151,6 +151,11 @@ class Debug {
       .add(worldDebugConfigs, 'time', 0, 2400, 10)
       .onFinishChange((value) => world.setTime(value))
       .name('Time value');
+    const aoFolder = worldFolder.addFolder('AO');
+    aoFolder.add(registry.aoUniform.value, 'x', 0, 255, 1).name('Level 0');
+    aoFolder.add(registry.aoUniform.value, 'y', 0, 255, 1).name('Level 1');
+    aoFolder.add(registry.aoUniform.value, 'z', 0, 255, 1).name('Level 2');
+    aoFolder.add(registry.aoUniform.value, 'w', 0, 255, 1).name('Level 3');
 
     // PLAYER
     const playerFolder = this.gui.addFolder('Player');

@@ -8,6 +8,7 @@ import {
   ShaderLib,
   UniformsUtils,
   BackSide,
+  Vector4,
 } from 'three';
 
 import { Engine } from './engine';
@@ -20,12 +21,15 @@ const TRANSPARENT_SIDES = [FrontSide, BackSide];
 
 class Registry {
   public atlasUniform: { value: Texture | null };
+  public aoUniform: { value: Vector4 };
 
   public opaqueChunkMaterial: ShaderMaterial;
 
   public transparentChunkMaterials: ShaderMaterial[];
 
   constructor(public engine: Engine, public options: RegistryOptionsType) {
+    this.aoUniform = { value: new Vector4(100.0, 170.0, 210.0, 255.0) };
+
     engine.on('ready', () => {
       this.atlasUniform = {
         value: new TextureLoader().load(`${engine.network.cleanURL}atlas`),
@@ -97,6 +101,8 @@ varying float vAO;
 varying float vSunlight;
 varying float vTorchLight;
 
+uniform vec4 uAOTable;
+
 #include <common>
 `,
         )
@@ -105,10 +111,9 @@ varying float vTorchLight;
           `
 #include <color_vertex>
 
-vec4 aoTable = vec4(100.0, 170.0, 210.0, 255.0);
-vAO = ((ao == 0) ? aoTable.x :
-    (ao == 1) ? aoTable.y :
-    (ao == 2) ? aoTable.z : aoTable.w) / 255.0; 
+vAO = ((ao == 0) ? uAOTable.x :
+    (ao == 1) ? uAOTable.y :
+    (ao == 2) ? uAOTable.z : uAOTable.w) / 255.0; 
 float s = float(sunlight);
 float t = float(torchLight);
 vSunlight = s / 15.0;
@@ -120,6 +125,7 @@ vTorchLight = t / 15.0;
         ...UniformsUtils.clone(ShaderLib.basic.uniforms),
         map: this.atlasUniform,
         uSunlightIntensity: this.engine.world.uSunlightIntensity,
+        uAOTable: this.aoUniform,
         ...this.engine.rendering.fogUniforms,
       },
     });
