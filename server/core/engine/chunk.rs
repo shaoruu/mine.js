@@ -186,6 +186,18 @@ impl Chunk {
         self.lights = data;
     }
 
+    pub fn calc_dirty_levels(&mut self, vy: i32, max_height: u32, sub_chunks: u32) {
+        let vy = vy as u32;
+        let unit = max_height / sub_chunks;
+
+        self.dirty_levels.insert(vy / unit);
+        if vy % sub_chunks == 0 {
+            self.dirty_levels.insert((vy - 1) / unit);
+        } else if vy % sub_chunks == sub_chunks - 1 {
+            self.dirty_levels.insert((vy + 1) / unit);
+        }
+    }
+
     pub fn dist_sqr_to_chunk(&self, coords: &Coords2<i32>) -> i32 {
         let Coords2(cx, cz) = self.coords;
         let Coords2(ox, oz) = coords;

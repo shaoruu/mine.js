@@ -356,7 +356,11 @@ impl Chunks {
 
         for updates in to_decorate_updates.iter() {
             for u in updates {
+                let h = self.get_max_height(u.voxel.0, u.voxel.2);
                 self.set_voxel_by_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
+                if u.voxel.1 > h && (!self.registry.is_air(u.id) && !self.registry.is_plant(u.id)) {
+                    self.set_max_height(u.voxel.0, u.voxel.2, u.voxel.1);
+                }
             }
         }
         if de {
@@ -368,25 +372,6 @@ impl Chunks {
         thread::spawn(move || drop(to_decorate_updates));
         if de {
             debug!("Dropping in another thread took {:?}", start.elapsed());
-        }
-
-        let mut to_decorate: Vec<Chunk> = to_decorate_coords
-            .iter()
-            .map(|coords| self.chunks.remove(&get_chunk_name(coords.0, coords.1)))
-            .flatten()
-            .collect();
-
-        to_decorate.par_iter_mut().for_each(|chunk| {
-            Generator::generate_chunk_height_map(chunk, &self.registry, &self.config);
-        });
-
-        for chunk in to_decorate {
-            self.chunks.insert(chunk.name.to_owned(), chunk);
-        }
-
-        if de {
-            debug!("Generating height map again took {:?}", start.elapsed());
-            debug!("");
         }
     }
 
@@ -411,10 +396,15 @@ impl Chunks {
     /// Centered around a coordinate, return 3x3 chunks neighboring the coordinate (not inclusive).
     fn neighbors(&self, Coords2(cx, cz): &Coords2<i32>) -> Vec<Option<&Chunk>> {
         let mut neighbors = Vec::new();
+        let r = (self.config.max_light_level as f32 / self.config.chunk_size as f32).ceil() as i32;
 
-        for x in -1..=1 {
-            for z in -1..1 {
+        for x in -r..=r {
+            for z in -r..r {
                 if x == 0 && z == 0 {
+                    continue;
+                }
+
+                if x * x + z * z >= r * r {
                     continue;
                 }
 
@@ -479,12 +469,17 @@ impl Chunks {
     /// Set the voxel type for a voxel coordinate
     #[inline]
     pub fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
-        let sub_chunk_unit = self.config.max_height / self.config.sub_chunks;
+        let max_height = self.config.max_height;
+        if vy as u32 >= max_height {
+            return;
+        }
+
+        let sub_chunks = self.config.sub_chunks;
         let chunk = self.get_chunk_by_voxel_mut(vx, vy, vz);
 
         if let Some(chunk) = chunk {
             chunk.set_voxel(vx, vy, vz, id);
-            chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+            chunk.calc_dirty_levels(vy, max_height, sub_chunks);
             chunk.is_dirty = true;
         } else {
             let updates = self
@@ -503,7 +498,7 @@ impl Chunks {
 
             if let Some(n_chunk) = n_chunk {
                 n_chunk.set_voxel(vx, vy, vz, id);
-                n_chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+                n_chunk.calc_dirty_levels(vy, max_height, sub_chunks);
                 n_chunk.is_dirty = true;
             } else {
                 let updates = self
@@ -532,14 +527,19 @@ impl Chunks {
     /// Set the sunlight level for a voxel coordinate
     #[inline]
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
-        let sub_chunk_unit = self.config.max_height / self.config.sub_chunks;
+        let max_height = self.config.max_height;
+        if vy as u32 >= max_height {
+            return;
+        }
+
+        let sub_chunks = self.config.sub_chunks;
 
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
 
         chunk.set_sunlight(vx, vy, vz, level);
-        chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+        chunk.calc_dirty_levels(vy, max_height, sub_chunks);
         chunk.is_dirty = true;
 
         let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
@@ -547,7 +547,7 @@ impl Chunks {
             let n_chunk = self.get_chunk_mut(c).unwrap();
 
             n_chunk.set_sunlight(vx, vy, vz, level);
-            n_chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+            n_chunk.calc_dirty_levels(vy, max_height, sub_chunks);
             n_chunk.is_dirty = true;
         })
     }
@@ -566,14 +566,19 @@ impl Chunks {
     /// Set the torch light level at a voxel coordinate
     #[inline]
     pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
-        let sub_chunk_unit = self.config.max_height / self.config.sub_chunks;
+        let max_height = self.config.max_height;
+        if vy as u32 >= max_height {
+            return;
+        }
+
+        let sub_chunks = self.config.sub_chunks;
 
         let chunk = self
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
 
         chunk.set_torch_light(vx, vy, vz, level);
-        chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+        chunk.calc_dirty_levels(vy, max_height, sub_chunks);
         chunk.is_dirty = true;
 
         let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
@@ -581,7 +586,7 @@ impl Chunks {
             let n_chunk = self.get_chunk_mut(c).unwrap();
 
             n_chunk.set_torch_light(vx, vy, vz, level);
-            n_chunk.dirty_levels.insert(vy as u32 / sub_chunk_unit);
+            n_chunk.calc_dirty_levels(vy, max_height, sub_chunks);
             n_chunk.is_dirty = true;
         })
     }
@@ -602,25 +607,28 @@ impl Chunks {
     /// Get the max height at a voxel column coordinate
     #[inline]
     pub fn get_max_height(&self, vx: i32, vz: i32) -> i32 {
-        let chunk = self
-            .get_chunk_by_voxel(vx, 0, vz)
-            .expect("Chunk not found.");
-        chunk.get_max_height(vx, vz)
+        if let Some(chunk) = self.get_chunk_by_voxel(vx, 0, vz) {
+            chunk.get_max_height(vx, vz)
+        } else {
+            0
+        }
     }
 
     /// Set the max height at a voxel column coordinate
     #[inline]
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
-        let chunk = self
-            .get_chunk_by_voxel_mut(vx, 0, vz)
-            .expect("Chunk not found.");
-        chunk.set_max_height(vx, vz, height);
+        // this is reasonable because if a chunk DNE, and gets instantiated later on,
+        // max height will be generated on instantiation too.
+        if let Some(chunk) = self.get_chunk_by_voxel_mut(vx, 0, vz) {
+            chunk.set_max_height(vx, vz, height);
+        }
 
         let neighbors = self.get_neighbor_chunk_coords(vx, 0, vz);
         neighbors.iter().for_each(|c| {
-            let n_chunk = self.get_chunk_mut(c).unwrap();
-            n_chunk.set_max_height(vx, vz, height);
-            n_chunk.is_dirty = true;
+            if let Some(n_chunk) = self.get_chunk_mut(c) {
+                n_chunk.set_max_height(vx, vz, height);
+                n_chunk.is_dirty = true;
+            }
         })
     }
 
@@ -809,7 +817,7 @@ impl Chunks {
     /// 1. Spread sunlight from the very top of the chunk
     /// 2. Recognize the torch lights and flood-fill them as well
     fn propagate_chunk(&mut self, coords: &Coords2<i32>) {
-        let max_light_flood = ((self.config.max_light_level as f32) / 2.0).ceil() as usize;
+        let max_light_flood = self.config.max_light_level as usize;
 
         let space = Space::new(self, coords, max_light_flood);
         let lights = Lights::calc_light(&space, &self.registry, &self.config);
