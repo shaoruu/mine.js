@@ -263,11 +263,6 @@ impl World {
                 levels.insert((vy as u32 + 1) / sub_chunk_unit);
             }
 
-            debug!(
-                "{:?} {:?} {} {} {} {}",
-                self.chunks.chunk_cache, levels, vx, vy, vz, id
-            );
-
             self.chunks.chunk_cache.iter().for_each(|c| {
                 if let Some(existing) = cache.iter_mut().find(|(co, _)| co == c) {
                     match &mut existing.1 {
@@ -283,8 +278,6 @@ impl World {
 
             self.chunks.chunk_cache.clear();
         }
-
-        debug!("{:?}", cache);
 
         cache.into_iter().for_each(|(coords, mesh_level)| {
             let chunk = self.chunks.get(&coords, false, &mesh_level).unwrap();
