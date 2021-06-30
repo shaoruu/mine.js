@@ -8,8 +8,8 @@ export type MeshType = {
   indices: Float32Array;
   uvs: Float32Array;
   aos: Float32Array;
-  sunlights: Float32Array;
-  torchLights: Float32Array;
+  sunlights: Int32Array;
+  torchLights: Int32Array;
 };
 
 export type MESSAGE_TYPE = 'ERROR' | 'SERVER' | 'PLAYER' | 'INFO';

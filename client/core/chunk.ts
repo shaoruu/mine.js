@@ -1,7 +1,7 @@
 import TWEEN from '@tweenjs/tween.js';
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
-import { BufferGeometry, Float32BufferAttribute, Mesh, Group } from 'three';
+import { BufferGeometry, Float32BufferAttribute, Mesh, Group, Int32BufferAttribute } from 'three';
 import pool from 'typedarray-pool';
 
 import { Coords2, Coords3 } from '../../shared';
@@ -202,8 +202,8 @@ class Chunk {
         geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
         geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
         geometry.setAttribute('ao', new Float32BufferAttribute(aos, occlusionNumComponents));
-        geometry.setAttribute('sunlight', new Float32BufferAttribute(sunlights, sunlightsNumComponents));
-        geometry.setAttribute('torchLight', new Float32BufferAttribute(torchLights, torchLightsNumComponents));
+        geometry.setAttribute('sunlight', new Int32BufferAttribute(sunlights, sunlightsNumComponents));
+        geometry.setAttribute('torchLight', new Int32BufferAttribute(torchLights, torchLightsNumComponents));
         geometry.setIndex(Array.from(indices));
 
         const materials =

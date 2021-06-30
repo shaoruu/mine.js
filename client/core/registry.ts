@@ -90,8 +90,8 @@ gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor
           '#include <common>',
           `
 attribute float ao;
-attribute float sunlight;
-attribute float torchLight;
+attribute int sunlight;
+attribute int torchLight;
 
 varying float vAO;
 varying float vSunlight;
@@ -106,8 +106,10 @@ varying float vTorchLight;
 #include <color_vertex>
 
 vAO = ao;
-vSunlight = sunlight / 15.0;
-vTorchLight = torchLight / 15.0;
+float s = float(sunlight);
+float t = float(torchLight);
+vSunlight = s / 15.0;
+vTorchLight = t / 15.0;
 `,
         ),
 
