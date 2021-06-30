@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use actix_broker::BrokerSubscribe;
 
-use log::{debug, info};
+use log::info;
 
 use ansi_term::Colour::Yellow;
 

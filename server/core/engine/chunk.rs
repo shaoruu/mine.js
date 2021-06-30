@@ -1,5 +1,3 @@
-use log::debug;
-
 use crate::{
     core::network::models::ChunkProtocol,
     libs::{

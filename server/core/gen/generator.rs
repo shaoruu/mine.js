@@ -1,5 +1,3 @@
-use log::debug;
-
 use crate::{
     core::{
         constants::LEVEL_SEED,

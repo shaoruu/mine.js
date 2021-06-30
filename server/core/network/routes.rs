@@ -6,7 +6,6 @@ use actix_web::{
     Error, HttpRequest, HttpResponse, Result,
 };
 use actix_web_actors::ws;
-use log::debug;
 
 use std::{
     collections::HashMap,

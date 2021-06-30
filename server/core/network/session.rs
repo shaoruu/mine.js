@@ -2,8 +2,6 @@ use libflate::zlib::Encoder;
 
 use std::io::Write;
 
-use log::{debug, info};
-
 use actix::prelude::*;
 use actix_broker::BrokerIssue;
 use actix_web_actors::ws;

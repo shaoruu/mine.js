@@ -408,8 +408,6 @@ pub const PLANT_FACES: [PlantFace; 2] = [
     },
 ];
 
-pub const AO_TABLE: [i32; 4] = [100, 170, 210, 255];
-
 pub const VOXEL_NEIGHBORS: [[i32; 3]; 6] = [
     [1, 0, 0],
     [-1, 0, 0],

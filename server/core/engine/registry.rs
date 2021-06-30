@@ -3,8 +3,6 @@
 use std::collections::HashMap;
 use std::fs::File;
 
-use log::debug;
-
 use crate::libs::types::{Block, TypeMap, UV};
 use crate::utils::json;
 

@@ -1,7 +1,5 @@
 use std::collections::VecDeque;
 
-use log::debug;
-
 use crate::{
     core::{
         constants::{CHUNK_HORIZONTAL_NEIGHBORS, DATA_PADDING, VOXEL_NEIGHBORS},
@@ -9,7 +7,7 @@ use crate::{
     },
     libs::{
         ndarray::{ndarray, Ndarray},
-        types::{Block, Coords2, Coords3},
+        types::{Block, Coords3},
     },
 };
 

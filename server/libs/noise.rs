@@ -1,4 +1,4 @@
-use noise::{utils::*, NoiseFn, OpenSimplex, Perlin, RidgedMulti, Seedable, Worley};
+use noise::{NoiseFn, OpenSimplex, Perlin, RidgedMulti, Seedable, Worley};
 
 pub struct NoiseConfig {
     pub octaves: i32,

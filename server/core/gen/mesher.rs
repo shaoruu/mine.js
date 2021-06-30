@@ -1,8 +1,6 @@
 use crate::{
     core::{
-        constants::{
-            BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES, PLANT_FACES,
-        },
+        constants::{BlockFace, CornerData, CornerSimplified, PlantFace, BLOCK_FACES, PLANT_FACES},
         engine::{
             chunk::Chunk,
             registry::{get_texture_type, Registry},
