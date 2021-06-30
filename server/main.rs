@@ -1,8 +1,9 @@
 use actix::SystemService;
 use log::info;
 
+use actix_cors::Cors;
 use actix_files as fs;
-use actix_web::{web, App, HttpServer};
+use actix_web::{http, web, App, HttpServer};
 
 mod core;
 mod libs;
@@ -36,7 +37,10 @@ async fn main() -> std::io::Result<()> {
     let addr = "localhost:4000";
 
     let srv = HttpServer::new(move || {
+        let cors = Cors::permissive();
+
         App::new()
+            .wrap(cors)
             .service(routes::atlas)
             .service(routes::index)
             .service(routes::worlds)
