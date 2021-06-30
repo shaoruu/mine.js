@@ -13,26 +13,28 @@ use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::{
-    core::{builder::VoxelUpdate, generator::Generator, lights::LightNode},
+    core::{
+        constants::{LEVEL_SEED, VOXEL_NEIGHBORS},
+        engine::{
+            chunk::{Chunk, Meshes},
+            registry::Registry,
+            space::Space,
+            world::WorldConfig,
+        },
+        gen::{
+            builder::{Builder, VoxelUpdate},
+            generator::Generator,
+            lights::{LightNode, Lights},
+            mesher::Mesher,
+        },
+    },
     libs::{
-        noise::{Noise, NoiseConfig},
-        types::{Block, Coords2, Coords3, GenerationType},
+        noise::Noise,
+        types::{Block, Coords2, Coords3},
     },
     utils::convert::{
         get_chunk_name, map_voxel_to_chunk, map_voxel_to_chunk_local, map_world_to_voxel,
     },
-};
-
-use super::{
-    biomes::{get_biome_config, get_height_within, BiomeConfig, CAVE_SCALE},
-    builder::Builder,
-    chunk::{Chunk, Meshes},
-    constants::{CHUNK_NEIGHBORS, LEVEL_SEED, VOXEL_NEIGHBORS},
-    lights::Lights,
-    mesher::Mesher,
-    registry::Registry,
-    space::Space,
-    world::WorldConfig,
 };
 
 /// Light data of a single vertex

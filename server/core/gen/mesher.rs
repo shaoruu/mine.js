@@ -1,13 +1,15 @@
 use crate::{
-    core::constants::CornerData,
+    core::{
+        constants::{
+            BlockFace, CornerData, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES, PLANT_FACES,
+        },
+        engine::{
+            chunk::Chunk,
+            registry::{get_texture_type, Registry},
+            world::WorldConfig,
+        },
+    },
     libs::types::{Block, Coords3, MeshType, UV},
-};
-
-use super::{
-    chunk::Chunk,
-    constants::{BlockFace, CornerSimplified, PlantFace, AO_TABLE, BLOCK_FACES, PLANT_FACES},
-    registry::{get_texture_type, Registry},
-    world::WorldConfig,
 };
 
 pub struct Mesher;

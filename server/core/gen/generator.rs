@@ -1,20 +1,18 @@
 use log::debug;
 
 use crate::{
-    core::builder::VoxelUpdate,
+    core::{
+        constants::LEVEL_SEED,
+        engine::{chunk::Chunk, registry::Registry, world::WorldConfig},
+        gen::builder::VoxelUpdate,
+    },
     libs::{
         noise::{Noise, NoiseConfig},
         types::{Coords3, GenerationType},
     },
 };
 
-use super::{
-    biomes::{get_biome_config, BiomeConfig, CAVE_SCALE},
-    chunk::Chunk,
-    constants::LEVEL_SEED,
-    registry::Registry,
-    world::WorldConfig,
-};
+use super::biomes::{get_biome_config, BiomeConfig, CAVE_SCALE};
 
 pub struct Generator;
 

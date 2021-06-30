@@ -2,9 +2,7 @@ use prost::Message;
 
 use std::io::Cursor;
 
-use crate::libs::ndarray::Ndarray;
-
-use super::chunk::Meshes;
+use crate::{core::engine::chunk::Meshes, libs::ndarray::Ndarray};
 
 #[derive(Debug)]
 pub struct ChunkProtocol {

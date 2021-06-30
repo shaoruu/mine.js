@@ -5,27 +5,26 @@ use crossbeam_channel::{unbounded, Receiver, Sender};
 use ansi_term::Colour::Yellow;
 
 use std::collections::HashMap;
-use std::mem;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 
-use crate::core::chunks::MeshLevel;
-use crate::core::message;
-use crate::core::models::{
-    create_chat_message, create_message, create_of_type, messages,
-    messages::chat_message::Type as ChatType, messages::message::Type as MessageType,
-    MessageComponents,
+use crate::core::engine::chunks::MeshLevel;
+use crate::core::gen::builder::VoxelUpdate;
+use crate::core::gen::generator::Generator;
+use crate::core::network::message;
+use crate::core::network::models::messages::{
+    self, chat_message::Type as ChatType, message::Type as MessageType,
 };
-use crate::libs::types::{Coords2, Coords3, GenerationType, Quaternion};
-use crate::utils::convert::map_voxel_to_chunk;
+use crate::core::network::models::{
+    create_chat_message, create_message, create_of_type, MessageComponents,
+};
+use crate::core::network::server::Client;
+use crate::libs::types::GenerationType;
+use crate::libs::types::{Coords2, Coords3, Quaternion};
 
-use super::builder::{Builder, VoxelUpdate};
-use super::chunk::{Chunk, Meshes};
+use super::chunk::Chunk;
 use super::chunks::Chunks;
-use super::generator::Generator;
-use super::mesher::Mesher;
 use super::registry::Registry;
-use super::server::Client;
 
 #[derive(Debug, Clone)]
 pub struct WorldConfig {

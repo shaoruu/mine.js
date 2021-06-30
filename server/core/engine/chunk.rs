@@ -1,7 +1,7 @@
 use log::debug;
 
 use crate::{
-    core::constants::DATA_PADDING,
+    core::network::models::ChunkProtocol,
     libs::{
         ndarray::{ndarray, Ndarray},
         types::{Coords2, Coords3, MeshType},
@@ -9,7 +9,9 @@ use crate::{
     utils::convert,
 };
 
-use super::{chunks::MeshLevel, models::ChunkProtocol};
+use super::super::constants::DATA_PADDING;
+
+use super::chunks::MeshLevel;
 
 #[derive(Debug, Clone)]
 pub struct Meshes {

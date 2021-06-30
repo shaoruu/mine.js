@@ -8,11 +8,11 @@ use actix::prelude::*;
 use actix_broker::BrokerIssue;
 use actix_web_actors::ws;
 
-use crate::core::models::{create_of_type, encode_message};
-use crate::models::{self, messages};
+use crate::core::network::models::{create_of_type, encode_message, messages};
 
 use super::message::{self, PlayerMessage};
 use super::message::{JoinWorld, LeaveWorld};
+use super::models;
 use super::server::WsServer;
 
 #[derive(Debug, Default)]

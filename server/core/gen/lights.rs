@@ -3,16 +3,14 @@ use std::collections::VecDeque;
 use log::debug;
 
 use crate::{
-    core::constants::{CHUNK_HORIZONTAL_NEIGHBORS, DATA_PADDING},
+    core::{
+        constants::{CHUNK_HORIZONTAL_NEIGHBORS, DATA_PADDING, VOXEL_NEIGHBORS},
+        engine::{chunks::Chunks, registry::Registry, space::Space, world::WorldConfig},
+    },
     libs::{
         ndarray::{ndarray, Ndarray},
         types::{Block, Coords2, Coords3},
     },
-};
-
-use super::{
-    chunks::Chunks, constants::VOXEL_NEIGHBORS, registry::Registry, space::Space,
-    world::WorldConfig,
 };
 
 /// Node of a light propagation queue

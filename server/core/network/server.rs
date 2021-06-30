@@ -9,9 +9,10 @@ use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::time::Duration;
 
-use crate::core::chunks::MeshLevel;
-use crate::core::models::create_chat_message;
-use crate::core::world::World;
+use crate::core::engine::chunks::MeshLevel;
+use crate::core::engine::registry::Registry;
+use crate::core::engine::world::{World, WorldConfig};
+use crate::core::network::models::create_chat_message;
 use crate::libs::types::{Coords2, Coords3, GenerationType, Quaternion};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
@@ -24,8 +25,6 @@ use super::models::{
     create_message, messages, messages::chat_message::Type as ChatType,
     messages::message::Type as MessageType, MessageComponents,
 };
-use super::registry::Registry;
-use super::world::WorldConfig;
 
 const SERVER_TICK: Duration = Duration::from_millis(16);
 const CHUNKING_TICK: Duration = Duration::from_millis(18);

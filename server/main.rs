@@ -8,7 +8,7 @@ mod core;
 mod libs;
 mod utils;
 
-use crate::core::{message, models, routes, server::WsServer};
+use crate::core::network::{message, routes, server::WsServer};
 
 fn setup_logger() -> Result<(), fern::InitError> {
     fern::Dispatch::new()
