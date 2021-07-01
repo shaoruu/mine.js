@@ -276,8 +276,10 @@ impl Chunks {
                     to_generate.push(new_chunk);
                 }
 
-                if dist <= decorate_radius * decorate_radius {
-                    to_decorate.push(coords.to_owned());
+                if let Some(chunk) = self.get_chunk(&coords) {
+                    if chunk.needs_decoration && dist <= decorate_radius * decorate_radius {
+                        to_decorate.push(coords.to_owned());
+                    }
                 }
             }
         }

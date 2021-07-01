@@ -7,9 +7,11 @@ import SkyFragmentShader from './shaders/sky/fragment.glsl';
 import SkyVertexShader from './shaders/sky/vertex.glsl';
 
 type SkyOptionsType = {
-  domeOffset: number;
+  skyOffset: number;
+  voidOffset: number;
   dimension: number;
   topColor: string;
+  middleColor: string;
   bottomColor: string;
   lerpFactor: number;
   starsCount: number;
@@ -21,12 +23,14 @@ type SkyOptionsType = {
 };
 
 const defaultSkyOptions: SkyOptionsType = {
-  domeOffset: 0,
+  skyOffset: 0,
+  voidOffset: 0,
   dimension: 6000,
   // topColor: '#74B3FF',
   // bottomColor: '#ffffff',
-  topColor: '#000',
-  bottomColor: '#000',
+  topColor: '#222',
+  middleColor: '#222',
+  bottomColor: '#222',
   lerpFactor: 0.2,
   starsCount: 300,
   moonRadius: 20,
@@ -51,46 +55,58 @@ const STAR_COLORS = [
   '#FF8585',
 ];
 
+const VOID_OFFSET = 1200;
+
 const SKY_CONFIGS = {
   hours: {
     0: {
       color: {
         top: new Color('#000'),
+        middle: new Color('#000'),
         bottom: new Color('#000'),
       },
-      offset: 200,
+      skyOffset: 200,
+      voidOffset: VOID_OFFSET,
     },
     // start of sunrise
     600: {
       color: {
         top: new Color('#7694CF'),
-        bottom: new Color('#B0483A'),
+        middle: new Color('#B0483A'),
+        bottom: new Color('#222'),
       },
-      offset: 100,
+      skyOffset: 100,
+      voidOffset: VOID_OFFSET,
     },
     // end of sunrise, start of day
     700: {
       color: {
         top: new Color('#73A3FB'),
-        bottom: new Color('#B1CCFD'),
+        middle: new Color('#B1CCFD'),
+        bottom: new Color('#222'),
       },
-      offset: 0,
+      skyOffset: 0,
+      voidOffset: VOID_OFFSET,
     },
     // start of sunset
     1700: {
       color: {
         top: new Color('#A57A59'),
-        bottom: new Color('#FC5935'),
+        middle: new Color('#FC5935'),
+        bottom: new Color('#222'),
       },
-      offset: 100,
+      skyOffset: 100,
+      voidOffset: VOID_OFFSET,
     },
     // end of sunset, back to night
     1800: {
       color: {
         top: new Color('#000'),
+        middle: new Color('#000'),
         bottom: new Color('#000'),
       },
-      offset: 200,
+      skyOffset: 200,
+      voidOffset: VOID_OFFSET,
     },
   },
 };
@@ -111,12 +127,15 @@ class Sky {
     until: 0,
     initialized: false,
     sunlight: 0.1,
-    offset: 0,
+    skyOffset: 0,
+    voidOffset: 0,
   };
 
   private topColor: Color;
+  private middleColor: Color;
   private bottomColor: Color;
   private newTopColor: Color;
+  private newMiddleColor: Color;
   private newBottomColor: Color;
   private newTime = -1;
 
@@ -151,16 +170,20 @@ class Sky {
   };
 
   createSkyShading = () => {
-    const { dimension, topColor, bottomColor, domeOffset } = this.options;
+    const { dimension, topColor, middleColor, bottomColor, skyOffset, voidOffset } = this.options;
 
     this.topColor = new Color(topColor);
+    this.middleColor = new Color(middleColor);
     this.bottomColor = new Color(bottomColor);
 
     const uniforms = {
       topColor: { value: this.topColor },
+      middleColor: { value: this.middleColor },
       bottomColor: { value: this.bottomColor },
-      offset: { value: domeOffset },
+      skyOffset: { value: skyOffset },
+      voidOffset: { value: voidOffset },
       exponent: { value: 0.6 },
+      exponent2: { value: 1.2 },
     };
 
     this.shadingGeometry = new SphereGeometry(dimension);
@@ -364,11 +387,13 @@ class Sky {
     return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`;
   };
 
-  spin = (rotation: number) => {
-    this.skyBox.mesh.rotation.z = MathUtils.lerp(this.skyBox.mesh.rotation.z, rotation, this.options.lerpFactor);
+  spin = (rotation: number, isFastForward: boolean) => {
+    this.skyBox.mesh.rotation.z = isFastForward
+      ? rotation
+      : MathUtils.lerp(this.skyBox.mesh.rotation.z, rotation, this.options.lerpFactor);
   };
 
-  tick = (delta = 0) => {
+  tick = (delta = 0, isFastForward = false) => {
     const { tracker } = this;
 
     if (!tracker.initialized) {
@@ -388,21 +413,24 @@ class Sky {
 
     tracker.time = tracker.time % 2400;
 
-    this.spin(Math.PI * 2 * (tracker.time / 2400));
+    this.spin(Math.PI * 2 * (tracker.time / 2400), isFastForward);
 
     const hour = Math.round(tracker.time / 100) * 100;
     tracker.last = tracker.time;
 
     if (SKY_CONFIGS.hours[hour]) {
       if (!tracker.until) {
-        const { color, offset } = SKY_CONFIGS.hours[hour];
+        const { color, skyOffset, voidOffset } = SKY_CONFIGS.hours[hour];
         this.newTopColor = new Color();
+        this.newMiddleColor = new Color();
         this.newBottomColor = new Color();
 
         this.newTopColor.copy(color.top);
+        this.newMiddleColor.copy(color.middle);
         this.newBottomColor.copy(color.bottom);
 
-        tracker.offset = offset;
+        tracker.skyOffset = skyOffset;
+        tracker.voidOffset = voidOffset;
         tracker.until = hour + 100;
       }
     }
@@ -438,8 +466,9 @@ class Sky {
     const cloudColorHSL = cloudColor.getHSL({});
     cloudColor.setHSL(cloudColorHSL.h, cloudColorHSL.s, MathUtils.clamp(uSunlightIntensity.value, 0, 1));
 
-    const { offset } = this.shadingMaterial.uniforms;
-    offset.value = MathUtils.lerp(offset.value, tracker.offset, sunlightLerpFactor);
+    const { skyOffset, voidOffset } = this.shadingMaterial.uniforms;
+    skyOffset.value = MathUtils.lerp(skyOffset.value, tracker.skyOffset, sunlightLerpFactor);
+    voidOffset.value = MathUtils.lerp(voidOffset.value, tracker.voidOffset, sunlightLerpFactor);
 
     // lerp sky colors
     ['top', 'right', 'left', 'front', 'back'].forEach((face) => {
@@ -455,10 +484,10 @@ class Sky {
       this.topColor.lerp(this.newTopColor, colorLerpFactor);
     }
 
-    if (this.newBottomColor) {
-      this.bottomColor.lerp(this.newBottomColor, colorLerpFactor);
-      this.rendering.fogNearColor.lerp(this.newBottomColor, colorLerpFactor);
-      this.rendering.fogFarColor.lerp(this.newBottomColor, colorLerpFactor);
+    if (this.newMiddleColor) {
+      this.middleColor.lerp(this.newMiddleColor, colorLerpFactor);
+      this.rendering.fogNearColor.lerp(this.newMiddleColor, colorLerpFactor);
+      this.rendering.fogFarColor.lerp(this.newMiddleColor, colorLerpFactor);
     }
 
     // reposition sky box to player position

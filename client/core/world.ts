@@ -60,7 +60,9 @@ class World extends EventEmitter {
     });
 
     engine.on('focus', async () => {
-      this.setTime(JSON.parse(await engine.network.fetchData('/time'))[0], false);
+      const [time, processed] = JSON.parse(await engine.network.fetchData('/time'));
+      const received = Date.now();
+      this.setTime(time + (received - processed) / this.engine.tickSpeed, false);
     });
   }
 
@@ -251,7 +253,7 @@ class World extends EventEmitter {
     // full cycle to sync up the colors
     if (this.engine.tickSpeed !== 0)
       for (let i = 0; i < 2400; i++) {
-        this.sky.tick(1 / this.engine.tickSpeed);
+        this.sky.tick(1 / this.engine.tickSpeed, true);
       }
 
     if (sideEffect) {
