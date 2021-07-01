@@ -406,8 +406,6 @@ impl World {
                     })
                     .collect();
 
-                debug!("{:?}", meshed);
-
                 sender.send(meshed).unwrap();
             });
 
