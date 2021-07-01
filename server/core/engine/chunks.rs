@@ -55,6 +55,7 @@ pub enum MeshLevel {
 pub struct Chunks {
     pub chunk_cache: HashSet<Coords2<i32>>,
     pub to_generate: Vec<Chunk>,
+    pub to_mesh: VecDeque<Coords2<i32>>,
 
     pub config: Arc<WorldConfig>,
     pub registry: Arc<Registry>,
@@ -81,6 +82,7 @@ impl Chunks {
             builder: Arc::new(Builder::new(registry, Noise::new(LEVEL_SEED))),
 
             to_generate: vec![],
+            to_mesh: VecDeque::new(),
 
             caching: false,
             max_loaded_chunks,
@@ -108,8 +110,9 @@ impl Chunks {
     pub fn get(
         &mut self,
         coords: &Coords2<i32>,
-        dirty_check: bool,
         remesh_level: &MeshLevel,
+        // if it's not urgent, then will be sent to other thread to mesh
+        urgent: bool,
     ) -> Option<&Chunk> {
         let chunk = self.get_chunk(coords);
         let neighbors = self.neighbors(coords);
@@ -130,8 +133,17 @@ impl Chunks {
             }
         };
 
-        if !dirty_check || chunk.unwrap().is_dirty {
+        if urgent {
             self.remesh_chunk(coords, remesh_level);
+        } else {
+            let chunk = chunk.unwrap();
+            if chunk.is_dirty {
+                let coords = chunk.coords.to_owned();
+                if !self.to_mesh.contains(&coords) {
+                    self.to_mesh.push_back(coords);
+                }
+                return None;
+            }
         }
 
         self.get_chunk(coords)
@@ -683,6 +695,7 @@ impl Chunks {
     }
 
     pub fn add_chunk(&mut self, chunk: Chunk) {
+        self.chunks.remove(&chunk.name);
         self.chunks.insert(chunk.name.to_owned(), chunk);
     }
 

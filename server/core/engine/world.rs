@@ -4,13 +4,14 @@ use crossbeam_channel::{unbounded, Receiver, Sender};
 
 use ansi_term::Colour::Yellow;
 
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 
 use crate::core::engine::chunks::MeshLevel;
-use crate::core::gen::builder::VoxelUpdate;
 use crate::core::gen::generator::Generator;
+use crate::core::gen::lights::Lights;
+use crate::core::gen::mesher::Mesher;
 use crate::core::network::message;
 use crate::core::network::models::messages::{
     self, chat_message::Type as ChatType, message::Type as MessageType,
@@ -22,9 +23,10 @@ use crate::core::network::server::Client;
 use crate::libs::types::GenerationType;
 use crate::libs::types::{Coords2, Coords3, Quaternion};
 
-use super::chunk::Chunk;
+use super::chunk::{Chunk, Meshes};
 use super::chunks::Chunks;
 use super::registry::Registry;
+use super::space::Space;
 
 #[derive(Debug, Clone)]
 pub struct WorldConfig {
@@ -57,6 +59,8 @@ pub struct World {
     pub pool: rayon::ThreadPool,
     pub gen_sender: Arc<Sender<Vec<Chunk>>>,
     pub gen_receiver: Arc<Receiver<Vec<Chunk>>>,
+    pub mesh_sender: Arc<Sender<Vec<Chunk>>>,
+    pub mesh_receiver: Arc<Receiver<Vec<Chunk>>>,
 }
 
 impl World {
@@ -103,6 +107,10 @@ impl World {
         let gen_sender = Arc::new(gen_sender);
         let gen_receiver = Arc::new(gen_receiver);
 
+        let (mesh_sender, mesh_receiver) = unbounded();
+        let mesh_sender = Arc::new(mesh_sender);
+        let mesh_receiver = Arc::new(mesh_receiver);
+
         World {
             time,
             tick: 0,
@@ -119,6 +127,8 @@ impl World {
             pool,
             gen_sender,
             gen_receiver,
+            mesh_sender,
+            mesh_receiver,
         }
     }
 
@@ -257,7 +267,7 @@ impl World {
                 let levels = self.chunks.raw(&coords).unwrap().dirty_levels.clone();
                 let mesh_level = MeshLevel::Levels(levels);
 
-                let chunk = self.chunks.get(&coords, false, &mesh_level).unwrap();
+                let chunk = self.chunks.get(&coords, &mesh_level, true).unwrap();
 
                 let mut component = MessageComponents::default_for(MessageType::Update);
                 component.chunks = Some(vec![chunk.get_protocol(false, mesh_level)]);
@@ -341,6 +351,69 @@ impl World {
 
         self.prev_time = now;
 
+        if !self.chunks.to_mesh.is_empty() {
+            let to_mesh: Vec<(Chunk, Space)> = self
+                .chunks
+                .to_mesh
+                .iter()
+                .map(|coords| {
+                    (
+                        self.chunks.get_chunk(coords).unwrap().clone(),
+                        Space::new(
+                            &self.chunks,
+                            &coords,
+                            self.chunks.config.max_light_level as usize,
+                        ),
+                    )
+                })
+                .collect();
+
+            let sender = self.mesh_sender.clone();
+            let config = self.chunks.config.clone();
+            let registry = self.chunks.registry.clone();
+
+            rayon::spawn(move || {
+                let meshed = to_mesh
+                    .into_iter()
+                    .map(|(mut chunk, space)| {
+                        if chunk.needs_propagation {
+                            let lights = Lights::calc_light(&space, &registry, &config);
+                            chunk.needs_propagation = false;
+                            chunk.needs_saving = true;
+                            chunk.set_lights(lights);
+                        }
+
+                        let sub_chunks = config.sub_chunks;
+
+                        chunk.meshes = Vec::new();
+
+                        for sub_chunk in 0..sub_chunks {
+                            let opaque =
+                                Mesher::mesh_chunk(&chunk, false, sub_chunk, &config, &registry);
+                            let transparent =
+                                Mesher::mesh_chunk(&chunk, true, sub_chunk, &config, &registry);
+
+                            chunk.meshes.push(Meshes {
+                                opaque,
+                                transparent,
+                                sub_chunk: sub_chunk as i32,
+                            });
+
+                            chunk.is_dirty = false;
+                        }
+
+                        chunk
+                    })
+                    .collect();
+
+                debug!("{:?}", meshed);
+
+                sender.send(meshed).unwrap();
+            });
+
+            self.chunks.to_mesh.clear();
+        }
+
         if !self.chunks.to_generate.is_empty() {
             let chunks = self.chunks.to_generate.clone();
             self.chunks.to_generate.clear();
@@ -360,6 +433,12 @@ impl World {
                     .collect();
                 sender.send(chunks).unwrap();
             });
+        }
+
+        if let Ok(chunks) = self.mesh_receiver.try_recv() {
+            chunks.into_iter().for_each(|c| {
+                self.chunks.add_chunk(c);
+            })
         }
 
         if let Ok(chunks) = self.gen_receiver.try_recv() {

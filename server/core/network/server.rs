@@ -133,7 +133,7 @@ impl WsServer {
                 let requested_chunk = client.requested_chunks.pop_front();
 
                 if let Some(coords) = requested_chunk {
-                    let chunk = world.chunks.get(&coords, true, &MeshLevel::All);
+                    let chunk = world.chunks.get(&coords, &MeshLevel::All, false);
 
                     if chunk.is_none() {
                         client.requested_chunks.push_back(coords);
