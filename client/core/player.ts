@@ -23,7 +23,7 @@ type PlayerOptionsType = {
 
 type PerspectiveType = 'first' | 'second' | 'third';
 
-const TEMP_BLOCK_MAP = [1, 2, 3, 4, 5, 6, 7, 10, 56, 13];
+const TEMP_BLOCK_MAP = [1, 2, 3, 4, 100, 10, 12, 13, 14, 15];
 
 const LOCAL_STORAGE_PLAYER_NAME = 'mine.js-player';
 const DEFAULT_PLAYER_NAME = 'naenaebaby';

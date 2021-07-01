@@ -61,6 +61,7 @@ pub fn get_biome_config(vx: i32, vz: i32, noise: &Noise) -> (i32, BiomeConfig) {
     (50, PLAIN_BIOME_CONFIG)
 }
 
+#[allow(dead_code)]
 pub fn get_height_within(
     x_min: i32,
     z_min: i32,

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use num::{cast, Num};
 
 use std::collections::HashMap;
@@ -60,7 +62,9 @@ pub struct Block {
     pub is_plant: bool,
     pub is_solid: bool,
     pub is_transparent: bool,
-    pub light_level: u32,
+    pub red_light_level: u32,
+    pub green_light_level: u32,
+    pub blue_light_level: u32,
     pub is_plantable: bool,
     pub textures: HashMap<String, String>,
     pub transparent_standalone: bool,
@@ -90,6 +94,5 @@ pub struct MeshType {
     pub indices: Vec<i32>,
     pub uvs: Vec<f32>,
     pub aos: Vec<i32>,
-    pub sunlights: Vec<i32>,
-    pub torch_lights: Vec<i32>,
+    pub lights: Vec<i32>,
 }

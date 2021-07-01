@@ -4,7 +4,7 @@ use crossbeam_channel::{unbounded, Receiver, Sender};
 
 use ansi_term::Colour::Yellow;
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 
@@ -17,7 +17,7 @@ use crate::core::network::models::messages::{
     self, chat_message::Type as ChatType, message::Type as MessageType,
 };
 use crate::core::network::models::{
-    create_chat_message, create_message, create_of_type, MessageComponents, UpdateProtocol,
+    create_chat_message, create_message, create_of_type, MessageComponents,
 };
 use crate::core::network::server::Client;
 use crate::libs::types::GenerationType;
@@ -133,11 +133,6 @@ impl World {
     }
 
     pub fn preload(&mut self) {
-        info!(
-            "Preloading world \"{}\" with radius {}...",
-            self.name, self.preload
-        );
-
         let start = Instant::now();
         self.chunks.preload(self.preload);
         let duration = start.elapsed();

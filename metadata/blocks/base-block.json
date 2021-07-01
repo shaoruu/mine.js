@@ -7,6 +7,8 @@
   "isBlock": true,
   "isPlant": false,
   "isPlantable": false,
-  "lightLevel": 0,
+  "redLightLevel": 0,
+  "greenLightLevel": 0,
+  "blueLightLevel": 0,
   "transparentStandalone": false
 }

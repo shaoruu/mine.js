@@ -69,15 +69,15 @@ uniform float uFogFar;
 uniform float uSunlightIntensity;
 
 varying float vAO;
-varying float vSunlight;
-varying float vTorchLight;
+varying vec4 vLight; 
 `,
         )
         .replace(
           '#include <envmap_fragment>',
           `
 #include <envmap_fragment>
-outgoingLight *= min(vTorchLight + (vSunlight + 0.1) * uSunlightIntensity, 1.0);
+float s = (vLight.a + 0.1) * uSunlightIntensity;
+outgoingLight.rgb *= vec3(min(s + vLight.r, 1.0), min(s + vLight.g, 1.0), min(s + vLight.b, 1.0));
 outgoingLight *= 0.58 * vAO;
 `,
         )
@@ -94,14 +94,20 @@ gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uFogNearColor, uFogColor, fogFactor
           '#include <common>',
           `
 attribute int ao;
-attribute int sunlight;
-attribute int torchLight;
+attribute int light;
 
 varying float vAO;
-varying float vSunlight;
-varying float vTorchLight;
+varying vec4 vLight;
 
 uniform vec4 uAOTable;
+
+vec4 unpackLight(int l) {
+  float r = float((l >> 8) & 0xF) / 15.0;
+  float g = float((l >> 4) & 0xF) / 15.0;
+  float b = float(l & 0xF) / 15.0;
+  float s = float((l >> 12) & 0xF) / 15.0;
+  return vec4(r, g, b, s);
+}
 
 #include <common>
 `,
@@ -114,10 +120,7 @@ uniform vec4 uAOTable;
 vAO = ((ao == 0) ? uAOTable.x :
     (ao == 1) ? uAOTable.y :
     (ao == 2) ? uAOTable.z : uAOTable.w) / 255.0; 
-float s = float(sunlight);
-float t = float(torchLight);
-vSunlight = s / 15.0;
-vTorchLight = t / 15.0;
+vLight = unpackLight(light);
 `,
         ),
 

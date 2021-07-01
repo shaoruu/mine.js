@@ -1,5 +1,7 @@
 use std::collections::VecDeque;
 
+use log::debug;
+
 use crate::{
     core::{
         constants::{CHUNK_HORIZONTAL_NEIGHBORS, DATA_PADDING, VOXEL_NEIGHBORS},
@@ -18,11 +20,57 @@ pub struct LightNode {
     pub level: u32,
 }
 
+pub enum LightColor {
+    None,
+    Red,
+    Green,
+    Blue,
+}
+
 pub struct Lights;
 
 impl Lights {
-    // TODO: CHANGE THIS CASTING?
+    #[inline]
+    pub fn extract_sunlight(light: u32) -> u32 {
+        (light >> 12) & 0xF
+    }
 
+    #[inline]
+    pub fn insert_sunlight(light: u32, level: u32) -> u32 {
+        (light & 0xFFF) | (level << 12)
+    }
+
+    #[inline]
+    pub fn extract_red_light(light: u32) -> u32 {
+        (light >> 8) & 0xF
+    }
+
+    #[inline]
+    pub fn insert_red_light(light: u32, level: u32) -> u32 {
+        (light & 0xF0FF) | (level << 8)
+    }
+
+    #[inline]
+    pub fn extract_green_light(light: u32) -> u32 {
+        (light >> 4) & 0xF
+    }
+
+    #[inline]
+    pub fn insert_green_light(light: u32, level: u32) -> u32 {
+        (light & 0xFF0F) | (level << 4)
+    }
+
+    #[inline]
+    pub fn extract_blue_light(light: u32) -> u32 {
+        light & 0xF
+    }
+
+    #[inline]
+    pub fn insert_blue_light(light: u32, level: u32) -> u32 {
+        (light & 0xFFF0) | (level)
+    }
+
+    // TODO: CHANGE THIS CASTING?
     fn get_sunlight(lights: &Ndarray<u32>, x: i32, y: i32, z: i32) -> u32 {
         let x = x as usize;
         let y = y as usize;
@@ -32,7 +80,7 @@ impl Lights {
             return 0;
         }
 
-        (lights[&[x, y, z]] >> 4) & 0xf
+        Lights::extract_sunlight(lights[&[x, y, z]])
     }
 
     fn set_sunlight(lights: &mut Ndarray<u32>, x: i32, y: i32, z: i32, level: u32) {
@@ -44,10 +92,10 @@ impl Lights {
             return;
         }
 
-        lights[&[x, y, z]] = (lights[&[x, y, z]] & 0xf) | (level << 4)
+        lights[&[x, y, z]] = Lights::insert_sunlight(lights[&[x, y, z]], level);
     }
 
-    fn get_torch_light(lights: &Ndarray<u32>, x: i32, y: i32, z: i32) -> u32 {
+    fn get_red_light(lights: &Ndarray<u32>, x: i32, y: i32, z: i32) -> u32 {
         let x = x as usize;
         let y = y as usize;
         let z = z as usize;
@@ -56,10 +104,10 @@ impl Lights {
             return 0;
         }
 
-        lights[&[x, y, z]] & 0xf
+        Lights::extract_red_light(lights[&[x, y, z]])
     }
 
-    fn set_torch_light(lights: &mut Ndarray<u32>, x: i32, y: i32, z: i32, level: u32) {
+    fn set_red_light(lights: &mut Ndarray<u32>, x: i32, y: i32, z: i32, level: u32) {
         let x = x as usize;
         let y = y as usize;
         let z = z as usize;
@@ -68,14 +116,102 @@ impl Lights {
             return;
         }
 
-        lights[&[x, y, z]] = (lights[&[x, y, z]] & 0xf0) | level;
+        lights[&[x, y, z]] = Lights::insert_red_light(lights[&[x, y, z]], level);
+    }
+
+    fn get_green_light(lights: &Ndarray<u32>, x: i32, y: i32, z: i32) -> u32 {
+        let x = x as usize;
+        let y = y as usize;
+        let z = z as usize;
+
+        if !lights.contains(&[x, y, z]) {
+            return 0;
+        }
+
+        Lights::extract_green_light(lights[&[x, y, z]])
+    }
+
+    fn set_green_light(lights: &mut Ndarray<u32>, x: i32, y: i32, z: i32, level: u32) {
+        let x = x as usize;
+        let y = y as usize;
+        let z = z as usize;
+
+        if !lights.contains(&[x, y, z]) {
+            return;
+        }
+
+        lights[&[x, y, z]] = Lights::insert_green_light(lights[&[x, y, z]], level);
+    }
+
+    fn get_blue_light(lights: &Ndarray<u32>, x: i32, y: i32, z: i32) -> u32 {
+        let x = x as usize;
+        let y = y as usize;
+        let z = z as usize;
+
+        if !lights.contains(&[x, y, z]) {
+            return 0;
+        }
+
+        Lights::extract_blue_light(lights[&[x, y, z]])
+    }
+
+    fn set_blue_light(lights: &mut Ndarray<u32>, x: i32, y: i32, z: i32, level: u32) {
+        let x = x as usize;
+        let y = y as usize;
+        let z = z as usize;
+
+        if !lights.contains(&[x, y, z]) {
+            return;
+        }
+
+        lights[&[x, y, z]] = Lights::insert_blue_light(lights[&[x, y, z]], level);
+    }
+
+    #[inline]
+    fn get_torch_light(
+        lights: &Ndarray<u32>,
+        vx: i32,
+        vy: i32,
+        vz: i32,
+        color: &LightColor,
+    ) -> u32 {
+        match color {
+            LightColor::Red => Lights::get_red_light(lights, vx, vy, vz),
+            LightColor::Green => Lights::get_green_light(lights, vx, vy, vz),
+            LightColor::Blue => Lights::get_blue_light(lights, vx, vy, vz),
+            LightColor::None => panic!("Getting light of None"),
+        }
+    }
+
+    #[inline]
+    fn set_torch_light(
+        lights: &mut Ndarray<u32>,
+        vx: i32,
+        vy: i32,
+        vz: i32,
+        level: u32,
+        color: &LightColor,
+    ) {
+        match color {
+            LightColor::Red => Lights::set_red_light(lights, vx, vy, vz, level),
+            LightColor::Green => Lights::set_green_light(lights, vx, vy, vz, level),
+            LightColor::Blue => Lights::set_blue_light(lights, vx, vy, vz, level),
+            LightColor::None => panic!("Setting light of None"),
+        }
     }
 
     /// Remove a light source. Steps:
     ///
     /// 1. Remove the existing lights in a flood-fill fashion
     /// 2. If external light source exists, flood fill them back
-    pub fn global_remove_light(chunks: &mut Chunks, vx: i32, vy: i32, vz: i32, is_sunlight: bool) {
+    pub fn global_remove_light(
+        chunks: &mut Chunks,
+        vx: i32,
+        vy: i32,
+        vz: i32,
+        is_sunlight: bool,
+        color: &LightColor,
+    ) {
         let max_height = chunks.config.max_height as i32;
         let max_light_level = chunks.config.max_light_level;
 
@@ -87,14 +223,14 @@ impl Lights {
             level: if is_sunlight {
                 chunks.get_sunlight(vx, vy, vz)
             } else {
-                chunks.get_torch_light(vx, vy, vz)
+                chunks.get_torch_light(vx, vy, vz, color)
             },
         });
 
         if is_sunlight {
             chunks.set_sunlight(vx, vy, vz, 0);
         } else {
-            chunks.set_torch_light(vx, vy, vz, 0);
+            chunks.set_torch_light(vx, vy, vz, 0, color);
         }
 
         chunks.mark_saving_from_voxel(vx, vy, vz);
@@ -117,7 +253,7 @@ impl Lights {
                 let nl = if is_sunlight {
                     chunks.get_sunlight(nvx, nvy, nvz)
                 } else {
-                    chunks.get_torch_light(nvx, nvy, nvz)
+                    chunks.get_torch_light(nvx, nvy, nvz, color)
                 };
 
                 if nl == 0 {
@@ -139,7 +275,7 @@ impl Lights {
                     if is_sunlight {
                         chunks.set_sunlight(nvx, nvy, nvz, 0);
                     } else {
-                        chunks.set_torch_light(nvx, nvy, nvz, 0);
+                        chunks.set_torch_light(nvx, nvy, nvz, 0, color);
                     }
 
                     chunks.mark_saving_from_voxel(nvx, nvy, nvz);
@@ -152,7 +288,7 @@ impl Lights {
             }
         }
 
-        Lights::global_flood_light(chunks, fill, is_sunlight);
+        Lights::global_flood_light(chunks, fill, is_sunlight, color);
     }
 
     /// Flood fill light from a queue
@@ -160,6 +296,7 @@ impl Lights {
         chunks: &mut Chunks,
         mut queue: VecDeque<LightNode>,
         is_sunlight: bool,
+        color: &LightColor,
     ) {
         let max_height = chunks.config.max_height as i32;
         let max_light_level = chunks.config.max_light_level;
@@ -186,7 +323,7 @@ impl Lights {
                     || (if is_sunlight {
                         chunks.get_sunlight(nvx, nvy, nvz)
                     } else {
-                        chunks.get_torch_light(nvx, nvy, nvz)
+                        chunks.get_torch_light(nvx, nvy, nvz, color)
                     } >= nl)
                 {
                     continue;
@@ -195,7 +332,7 @@ impl Lights {
                 if is_sunlight {
                     chunks.set_sunlight(nvx, nvy, nvz, nl);
                 } else {
-                    chunks.set_torch_light(nvx, nvy, nvz, nl);
+                    chunks.set_torch_light(nvx, nvy, nvz, nl, color);
                 }
 
                 chunks.mark_saving_from_voxel(nvx, nvy, nvz);
@@ -211,13 +348,14 @@ impl Lights {
     pub fn flood_light(
         mut queue: VecDeque<LightNode>,
         is_sunlight: bool,
+        color: &LightColor,
         voxels: &Ndarray<u32>,
         lights: &mut Ndarray<u32>,
         registry: &Registry,
-        metrics: &WorldConfig,
+        config: &WorldConfig,
     ) {
-        let max_height = metrics.max_height as i32;
-        let max_light_level = metrics.max_light_level;
+        let max_height = config.max_height as i32;
+        let max_light_level = config.max_light_level;
 
         // i heard .get() is faster than []
         let shape0 = *voxels.shape.get(0).unwrap() as i32;
@@ -251,7 +389,7 @@ impl Lights {
                     || (if is_sunlight {
                         Lights::get_sunlight(&lights, nvx, nvy, nvz)
                     } else {
-                        Lights::get_torch_light(&lights, nvx, nvy, nvz)
+                        Lights::get_torch_light(&lights, nvx, nvy, nvz, color)
                     } >= nl)
                 {
                     continue;
@@ -260,7 +398,7 @@ impl Lights {
                 if is_sunlight {
                     Lights::set_sunlight(lights, nvx, nvy, nvz, nl);
                 } else {
-                    Lights::set_torch_light(lights, nvx, nvy, nvz, nl);
+                    Lights::set_torch_light(lights, nvx, nvy, nvz, nl, color);
                 }
 
                 queue.push_back(LightNode {
@@ -288,8 +426,15 @@ impl Lights {
 
         let mut lights = ndarray(voxels.shape.clone(), 0);
 
-        let mut light_queue = VecDeque::<LightNode>::new();
+        let mut red_light_queue = VecDeque::<LightNode>::new();
+        let mut green_light_queue = VecDeque::<LightNode>::new();
+        let mut blue_light_queue = VecDeque::<LightNode>::new();
         let mut sunlight_queue = VecDeque::<LightNode>::new();
+
+        const RED: LightColor = LightColor::Red;
+        const GREEN: LightColor = LightColor::Green;
+        const BLUE: LightColor = LightColor::Blue;
+        const NONE: LightColor = LightColor::None;
 
         for z in 1..(width - 1) as i32 {
             for x in 1..(width - 1) as i32 {
@@ -300,7 +445,9 @@ impl Lights {
                     let &Block {
                         is_transparent,
                         is_light,
-                        light_level,
+                        red_light_level,
+                        green_light_level,
+                        blue_light_level,
                         ..
                     } = registry.get_block_by_id(id);
 
@@ -331,18 +478,73 @@ impl Lights {
                     }
 
                     if is_light {
-                        Lights::set_torch_light(&mut lights, x, y, z, light_level);
-                        light_queue.push_back(LightNode {
-                            level: light_level,
-                            voxel: Coords3(x, y, z),
-                        });
+                        if red_light_level > 0 {
+                            Lights::set_red_light(&mut lights, x, y, z, red_light_level);
+
+                            red_light_queue.push_back(LightNode {
+                                level: red_light_level,
+                                voxel: Coords3(x, y, z),
+                            });
+                        }
+
+                        if green_light_level > 0 {
+                            Lights::set_green_light(&mut lights, x, y, z, green_light_level);
+
+                            green_light_queue.push_back(LightNode {
+                                level: green_light_level,
+                                voxel: Coords3(x, y, z),
+                            });
+                        }
+
+                        if blue_light_level > 0 {
+                            Lights::set_blue_light(&mut lights, x, y, z, blue_light_level);
+
+                            blue_light_queue.push_back(LightNode {
+                                level: blue_light_level,
+                                voxel: Coords3(x, y, z),
+                            });
+                        }
                     }
                 }
             }
         }
 
-        Lights::flood_light(light_queue, false, &voxels, &mut lights, registry, config);
-        Lights::flood_light(sunlight_queue, true, &voxels, &mut lights, registry, config);
+        Lights::flood_light(
+            red_light_queue,
+            false,
+            &RED,
+            &voxels,
+            &mut lights,
+            registry,
+            config,
+        );
+        Lights::flood_light(
+            green_light_queue,
+            false,
+            &GREEN,
+            &voxels,
+            &mut lights,
+            registry,
+            config,
+        );
+        Lights::flood_light(
+            blue_light_queue,
+            false,
+            &BLUE,
+            &voxels,
+            &mut lights,
+            registry,
+            config,
+        );
+        Lights::flood_light(
+            sunlight_queue,
+            true,
+            &NONE,
+            &voxels,
+            &mut lights,
+            registry,
+            config,
+        );
 
         let mut chunk_lights = ndarray(
             vec![

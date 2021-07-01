@@ -100,7 +100,9 @@ impl Registry {
                 is_solid: block_json["isSolid"].as_bool().unwrap(),
                 is_transparent: block_json["isTransparent"].as_bool().unwrap(),
                 is_plantable: block_json["isPlantable"].as_bool().unwrap(),
-                light_level: block_json["lightLevel"].as_i64().unwrap() as u32,
+                red_light_level: block_json["redLightLevel"].as_i64().unwrap() as u32,
+                green_light_level: block_json["greenLightLevel"].as_i64().unwrap() as u32,
+                blue_light_level: block_json["blueLightLevel"].as_i64().unwrap() as u32,
                 textures: textures_hash,
                 transparent_standalone: block_json["transparentStandalone"].as_bool().unwrap(),
             };

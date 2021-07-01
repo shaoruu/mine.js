@@ -71,7 +71,9 @@ export type MeshType = {
   uvs: Float32Array;
   aos: Float32Array;
   sunlights: Int32Array;
-  torchLights: Int32Array;
+  redLights: Int32Array;
+  greenLights: Int32Array;
+  blueLights: Int32Array;
 };
 
 export type MESSAGE_TYPE = 'ERROR' | 'SERVER' | 'PLAYER' | 'INFO';

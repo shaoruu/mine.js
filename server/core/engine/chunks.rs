@@ -5,11 +5,9 @@ use std::{
     collections::{HashMap, HashSet, VecDeque},
     sync::Arc,
     thread,
-    time::Instant,
 };
 
-use log::{debug, info};
-
+use log::debug;
 use rayon::prelude::*;
 
 use crate::{
@@ -24,7 +22,7 @@ use crate::{
         gen::{
             builder::{Builder, VoxelUpdate},
             generator::Generator,
-            lights::{LightNode, Lights},
+            lights::{LightColor, LightNode, Lights},
             mesher::Mesher,
         },
     },
@@ -151,21 +149,7 @@ impl Chunks {
 
     /// To preload chunks surrounding 0,0
     pub fn preload(&mut self, width: i16) {
-        self.load(&Coords2(0, 0), width, true);
-    }
-
-    /// Generate chunks around a certain coordinate
-    pub fn generate(&mut self, coords: &Coords2<i32>, render_radius: i16) {
-        let start = Instant::now();
-
-        self.load(coords, render_radius, false);
-
-        info!(
-            "Generated chunks surrounding {:?} with radius {} in {:?}",
-            coords,
-            render_radius,
-            start.elapsed()
-        );
+        self.generate(&Coords2(0, 0), width, true);
     }
 
     pub fn start_caching(&mut self) {
@@ -198,7 +182,6 @@ impl Chunks {
 
         let sub_chunks = self.config.sub_chunks;
 
-        // TODO: fix this cloning monstrosity
         let config = self.config.clone();
         let registry = self.registry.clone();
 
@@ -256,18 +239,14 @@ impl Chunks {
     /// 2. Populate the terrains within `decorate_radius` with decoration
     ///
     /// Note: `decorate_radius` should always be less than `terrain_radius`
-    fn load(&mut self, coords: &Coords2<i32>, render_radius: i16, is_preload: bool) {
+    pub fn generate(&mut self, coords: &Coords2<i32>, render_radius: i16, is_preload: bool) {
         let Coords2(cx, cz) = coords;
-
-        let de = true;
 
         let mut to_generate: Vec<Chunk> = Vec::new();
         let mut to_decorate: Vec<Coords2<i32>> = Vec::new();
 
         let terrain_radius = render_radius + 3;
         let decorate_radius = render_radius;
-
-        let start = Instant::now();
 
         for x in -terrain_radius..=terrain_radius {
             for z in -terrain_radius..=terrain_radius {
@@ -307,19 +286,9 @@ impl Chunks {
             // let the multithreading begin!
             self.to_generate.append(&mut to_generate);
         } else {
-            if de {
-                debug!("Calculating chunks took {:?}", start.elapsed());
-            }
-
-            let start = Instant::now();
             to_generate.par_iter_mut().for_each(|new_chunk| {
                 Generator::generate_chunk(new_chunk, &self.registry, &self.config);
             });
-            if de {
-                debug!("Generating took {:?}", start.elapsed());
-            }
-
-            let start = Instant::now();
 
             to_generate.par_iter_mut().for_each(|chunk| {
                 Generator::generate_chunk_height_map(chunk, &self.registry, &self.config);
@@ -328,12 +297,8 @@ impl Chunks {
             for chunk in to_generate {
                 self.chunks.insert(chunk.name.to_owned(), chunk);
             }
-            if de {
-                debug!("Inserting took {:?}", start.elapsed());
-            }
         }
 
-        let start = Instant::now();
         let to_decorate: Vec<Chunk> = to_decorate
             .iter()
             .map(|coords| self.chunks.remove(&get_chunk_name(coords.0, coords.1)))
@@ -352,11 +317,7 @@ impl Chunks {
                 builder.build(chunk)
             })
             .collect();
-        if de {
-            debug!("Calculating decoration took {:?}", start.elapsed());
-        }
 
-        let start = Instant::now();
         let mut to_decorate_coords = Vec::new();
 
         for mut chunk in to_decorate {
@@ -375,16 +336,9 @@ impl Chunks {
                 }
             }
         }
-        if de {
-            debug!("Actually decorating took {:?}", start.elapsed());
-        }
 
-        let start = Instant::now();
         // dropping in another thread to speed up the process
         thread::spawn(move || drop(to_decorate_updates));
-        if de {
-            debug!("Dropping in another thread took {:?}", start.elapsed());
-        }
     }
 
     /// Populate a chunk with preset decorations.
@@ -564,20 +518,18 @@ impl Chunks {
         })
     }
 
-    /// Get the torch light level at a voxel coordinate
     #[inline]
-    pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+    pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32, color: &LightColor) -> u32 {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
         if let Some(chunk) = chunk {
-            chunk.get_torch_light(vx, vy, vz)
+            chunk.get_torch_light(vx, vy, vz, color)
         } else {
             0
         }
     }
 
-    /// Set the torch light level at a voxel coordinate
     #[inline]
-    pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
+    pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32, color: &LightColor) {
         let max_height = self.config.max_height;
         if vy as u32 >= max_height {
             return;
@@ -589,7 +541,7 @@ impl Chunks {
             .get_chunk_by_voxel_mut(vx, vy, vz)
             .expect("Chunk not found.");
 
-        chunk.set_torch_light(vx, vy, vz, level);
+        chunk.set_torch_light(vx, vy, vz, level, color);
         chunk.calc_dirty_levels(vy, max_height, sub_chunks);
         chunk.is_dirty = true;
 
@@ -597,7 +549,7 @@ impl Chunks {
         neighbors.iter().for_each(|c| {
             let n_chunk = self.get_chunk_mut(c).unwrap();
 
-            n_chunk.set_torch_light(vx, vy, vz, level);
+            n_chunk.set_torch_light(vx, vy, vz, level, color);
             n_chunk.calc_dirty_levels(vy, max_height, sub_chunks);
             n_chunk.is_dirty = true;
         })
@@ -739,40 +691,90 @@ impl Chunks {
             self.set_max_height(vx, vz, vy);
         }
 
+        const RED: LightColor = LightColor::Red;
+        const GREEN: LightColor = LightColor::Green;
+        const BLUE: LightColor = LightColor::Blue;
+        const NONE: LightColor = LightColor::None;
+
         // update light levels
         if !needs_propagation {
             if current_type.is_light {
                 // remove leftover light
-                Lights::global_remove_light(self, vx, vy, vz, false);
+                Lights::global_remove_light(self, vx, vy, vz, false, &RED);
+                Lights::global_remove_light(self, vx, vy, vz, false, &GREEN);
+                Lights::global_remove_light(self, vx, vy, vz, false, &BLUE);
             } else if current_type.is_transparent && !updated_type.is_transparent {
                 // remove light if solid block is placed
                 [false, true].iter().for_each(|&is_sunlight| {
-                    let level = if is_sunlight {
-                        self.get_sunlight(vx, vy, vz)
+                    if is_sunlight {
+                        if self.get_sunlight(vx, vy, vz) != 0 {
+                            Lights::global_remove_light(self, vx, vy, vz, is_sunlight, &NONE);
+                        }
                     } else {
-                        self.get_torch_light(vx, vy, vz)
+                        if self.get_torch_light(vx, vy, vz, &RED) != 0 {
+                            Lights::global_remove_light(self, vx, vy, vz, is_sunlight, &RED);
+                        }
+                        if self.get_torch_light(vx, vy, vz, &GREEN) != 0 {
+                            Lights::global_remove_light(self, vx, vy, vz, is_sunlight, &GREEN);
+                        }
+                        if self.get_torch_light(vx, vy, vz, &BLUE) != 0 {
+                            Lights::global_remove_light(self, vx, vy, vz, is_sunlight, &BLUE);
+                        }
                     };
-                    if level != 0 {
-                        Lights::global_remove_light(self, vx, vy, vz, is_sunlight);
-                    }
                 });
             }
 
             if updated_type.is_light {
                 // placing a light
-                self.set_torch_light(vx, vy, vz, updated_type.light_level);
-                Lights::global_flood_light(
-                    self,
-                    VecDeque::from(vec![LightNode {
-                        voxel,
-                        level: updated_type.light_level,
-                    }]),
-                    false,
-                );
+
+                if updated_type.red_light_level > 0 {
+                    self.set_torch_light(vx, vy, vz, updated_type.red_light_level, &RED);
+
+                    Lights::global_flood_light(
+                        self,
+                        VecDeque::from(vec![LightNode {
+                            voxel: voxel.clone(),
+                            level: updated_type.red_light_level,
+                        }]),
+                        false,
+                        &RED,
+                    );
+                }
+
+                if updated_type.green_light_level > 0 {
+                    self.set_torch_light(vx, vy, vz, updated_type.green_light_level, &GREEN);
+
+                    Lights::global_flood_light(
+                        self,
+                        VecDeque::from(vec![LightNode {
+                            voxel: voxel.clone(),
+                            level: updated_type.green_light_level,
+                        }]),
+                        false,
+                        &GREEN,
+                    );
+                }
+
+                if updated_type.blue_light_level > 0 {
+                    self.set_torch_light(vx, vy, vz, updated_type.blue_light_level, &BLUE);
+
+                    Lights::global_flood_light(
+                        self,
+                        VecDeque::from(vec![LightNode {
+                            voxel,
+                            level: updated_type.blue_light_level,
+                        }]),
+                        false,
+                        &BLUE,
+                    );
+                }
             } else if updated_type.is_transparent && !current_type.is_transparent {
                 // solid block removed
                 [false, true].iter().for_each(|&is_sunlight| {
                     let mut queue = VecDeque::<LightNode>::new();
+                    let mut red_queue = VecDeque::<LightNode>::new();
+                    let mut green_queue = VecDeque::<LightNode>::new();
+                    let mut blue_queue = VecDeque::<LightNode>::new();
 
                     if is_sunlight && vy == max_height - 1 {
                         // propagate sunlight down
@@ -799,20 +801,49 @@ impl Chunks {
                             } = self.get_block_by_voxel(nvx, nvy, nvz);
 
                             // need propagation after solid block removed
-                            let level = if is_sunlight {
-                                self.get_sunlight(nvx, nvy, nvz)
+                            if is_sunlight {
+                                let level = self.get_sunlight(nvx, nvy, nvz);
+                                if level != 0 && is_transparent {
+                                    queue.push_back(LightNode {
+                                        voxel: n_voxel,
+                                        level,
+                                    })
+                                }
                             } else {
-                                self.get_torch_light(nvx, nvy, nvz)
-                            };
-                            if level != 0 && (is_transparent || (is_light && !is_sunlight)) {
-                                queue.push_back(LightNode {
-                                    voxel: n_voxel,
-                                    level,
-                                })
+                                let red_level = self.get_torch_light(nvx, nvy, nvz, &RED);
+                                if red_level != 0 && (is_transparent || is_light) {
+                                    red_queue.push_back(LightNode {
+                                        voxel: n_voxel.clone(),
+                                        level: red_level,
+                                    })
+                                }
+
+                                let green_level = self.get_torch_light(nvx, nvy, nvz, &GREEN);
+                                if green_level != 0 && (is_transparent || is_light) {
+                                    green_queue.push_back(LightNode {
+                                        voxel: n_voxel.clone(),
+                                        level: green_level,
+                                    })
+                                }
+
+                                let blue_level = self.get_torch_light(nvx, nvy, nvz, &BLUE);
+                                if blue_level != 0 && (is_transparent || is_light) {
+                                    blue_queue.push_back(LightNode {
+                                        voxel: n_voxel,
+                                        level: blue_level,
+                                    })
+                                }
                             }
                         }
                     }
-                    Lights::global_flood_light(self, queue, is_sunlight);
+
+                    if is_sunlight {
+                        Lights::global_flood_light(self, queue, is_sunlight, &NONE);
+                    } else {
+                        Lights::global_flood_light(self, red_queue, is_sunlight, &RED);
+                        Lights::global_flood_light(self, green_queue, is_sunlight, &GREEN);
+                        Lights::global_flood_light(self, blue_queue, is_sunlight, &BLUE);
+                    }
                 })
             }
         }

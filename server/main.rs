@@ -3,7 +3,7 @@ use log::info;
 
 use actix_cors::Cors;
 use actix_files as fs;
-use actix_web::{http, web, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 
 mod core;
 mod libs;

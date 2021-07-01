@@ -89,8 +89,6 @@ impl WsSession {
     }
 
     fn on_request(&mut self, message: messages::Message) {
-        let msg_type = messages::Message::r#type(&message);
-
         WsServer::from_registry().do_send(PlayerMessage {
             client_id: self.id,
             world_name: self.world_name.to_owned(),

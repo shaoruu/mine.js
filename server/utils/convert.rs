@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::libs::types::{Coords2, Coords3};
 
 const CONCAT: &str = "_";
@@ -14,18 +16,18 @@ pub fn get_position_name(x: f32, y: f32, z: f32) -> String {
     format!("{}{}{}{}{}", x, CONCAT, y, CONCAT, z)
 }
 
-pub fn parse_chunk_name(name: &String) -> Coords2<i32> {
+pub fn parse_chunk_name(name: &str) -> Coords2<i32> {
     let vec = name.split(CONCAT).collect::<Vec<&str>>();
-    return Coords2(vec[0].parse().unwrap(), vec[1].parse().unwrap());
+    Coords2(vec[0].parse().unwrap(), vec[1].parse().unwrap())
 }
 
-pub fn parse_voxel_name(name: &String) -> Coords3<i32> {
+pub fn parse_voxel_name(name: &str) -> Coords3<i32> {
     let vec = name.split(CONCAT).collect::<Vec<&str>>();
-    return Coords3(
+    Coords3(
         vec[0].parse().unwrap(),
         vec[1].parse().unwrap(),
         vec[2].parse().unwrap(),
-    );
+    )
 }
 
 fn floor_scale_coords(x: f32, y: f32, z: f32, factor: f32) -> Coords3<f32> {

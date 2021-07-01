@@ -1,3 +1,6 @@
+use itertools::izip;
+use log::debug;
+
 use crate::{
     core::{
         constants::{BlockFace, CornerData, CornerSimplified, PlantFace, BLOCK_FACES, PLANT_FACES},
@@ -6,8 +9,9 @@ use crate::{
             registry::{get_texture_type, Registry},
             world::WorldConfig,
         },
+        gen::lights::Lights,
     },
-    libs::types::{Block, Coords3, MeshType, UV},
+    libs::types::{Block, Coords2, Coords3, MeshType, UV},
 };
 
 pub struct Mesher;
@@ -48,7 +52,9 @@ impl Mesher {
         let mut indices = Vec::<i32>::new();
         let mut uvs = Vec::<f32>::new();
         let mut aos = Vec::<i32>::new();
-        let mut torch_lights = Vec::<i32>::new();
+        let mut red_lights = Vec::<i32>::new();
+        let mut green_lights = Vec::<i32>::new();
+        let mut blue_lights = Vec::<i32>::new();
         let mut sunlights = Vec::<i32>::new();
 
         let &Coords3(start_x, _, start_z) = min_inner;
@@ -124,7 +130,9 @@ impl Mesher {
                                     uvs.push(uv[1] as f32 * (start_v - end_v) + end_v);
 
                                     sunlights.push(chunk.get_sunlight(vx, vy, vz) as i32);
-                                    torch_lights.push(chunk.get_torch_light(vx, vy, vz) as i32);
+                                    red_lights.push(chunk.get_red_light(vx, vy, vz) as i32);
+                                    green_lights.push(chunk.get_green_light(vx, vy, vz) as i32);
+                                    blue_lights.push(chunk.get_blue_light(vx, vy, vz) as i32);
 
                                     aos.push(3);
                                 }
@@ -184,7 +192,9 @@ impl Mesher {
                                     let mut face_aos = vec![];
 
                                     let mut four_sunlights = vec![];
-                                    let mut four_torch_lights = vec![];
+                                    let mut four_red_lights = vec![];
+                                    let mut four_green_lights = vec![];
+                                    let mut four_blue_lights = vec![];
 
                                     for CornerData {
                                         pos,
@@ -220,7 +230,9 @@ impl Mesher {
                                         let dz = if dz == 0 { -1 } else { 1 };
 
                                         let mut sum_sunlight = vec![];
-                                        let mut sum_torch_light = vec![];
+                                        let mut sum_red_lights = vec![];
+                                        let mut sum_green_lights = vec![];
+                                        let mut sum_blue_lights = vec![];
 
                                         let b000 = get_block_by_voxel(vx, vy, vz, chunk, registry)
                                             .is_transparent;
@@ -270,12 +282,25 @@ impl Mesher {
 
                                         if b000 {
                                             sum_sunlight.push(chunk.get_sunlight(vx, vy, vz));
-                                            sum_torch_light.push(chunk.get_torch_light(vx, vy, vz));
+                                            sum_red_lights.push(chunk.get_red_light(vx, vy, vz));
+                                            sum_green_lights
+                                                .push(chunk.get_green_light(vx, vy, vz));
+                                            sum_blue_lights.push(chunk.get_blue_light(vx, vy, vz));
                                         }
 
                                         if b001 {
                                             sum_sunlight.push(chunk.get_sunlight(vx, vy, vz + dz));
-                                            sum_torch_light.push(chunk.get_torch_light(
+                                            sum_red_lights.push(chunk.get_red_light(
+                                                vx,
+                                                vy,
+                                                vz + dz,
+                                            ));
+                                            sum_green_lights.push(chunk.get_green_light(
+                                                vx,
+                                                vy,
+                                                vz + dz,
+                                            ));
+                                            sum_blue_lights.push(chunk.get_blue_light(
                                                 vx,
                                                 vy,
                                                 vz + dz,
@@ -284,7 +309,17 @@ impl Mesher {
 
                                         if b010 {
                                             sum_sunlight.push(chunk.get_sunlight(vx, vy + dy, vz));
-                                            sum_torch_light.push(chunk.get_torch_light(
+                                            sum_red_lights.push(chunk.get_red_light(
+                                                vx,
+                                                vy + dy,
+                                                vz,
+                                            ));
+                                            sum_green_lights.push(chunk.get_green_light(
+                                                vx,
+                                                vy + dy,
+                                                vz,
+                                            ));
+                                            sum_blue_lights.push(chunk.get_blue_light(
                                                 vx,
                                                 vy + dy,
                                                 vz,
@@ -297,7 +332,17 @@ impl Mesher {
                                                 vy + dy,
                                                 vz + dz,
                                             ));
-                                            sum_torch_light.push(chunk.get_torch_light(
+                                            sum_red_lights.push(chunk.get_red_light(
+                                                vx,
+                                                vy + dy,
+                                                vz + dz,
+                                            ));
+                                            sum_green_lights.push(chunk.get_green_light(
+                                                vx,
+                                                vy + dy,
+                                                vz + dz,
+                                            ));
+                                            sum_blue_lights.push(chunk.get_blue_light(
                                                 vx,
                                                 vy + dy,
                                                 vz + dz,
@@ -306,7 +351,17 @@ impl Mesher {
 
                                         if b100 {
                                             sum_sunlight.push(chunk.get_sunlight(vx + dx, vy, vz));
-                                            sum_torch_light.push(chunk.get_torch_light(
+                                            sum_red_lights.push(chunk.get_red_light(
+                                                vx + dx,
+                                                vy,
+                                                vz,
+                                            ));
+                                            sum_green_lights.push(chunk.get_green_light(
+                                                vx + dx,
+                                                vy,
+                                                vz,
+                                            ));
+                                            sum_blue_lights.push(chunk.get_blue_light(
                                                 vx + dx,
                                                 vy,
                                                 vz,
@@ -319,7 +374,17 @@ impl Mesher {
                                                 vy,
                                                 vz + dz,
                                             ));
-                                            sum_torch_light.push(chunk.get_torch_light(
+                                            sum_red_lights.push(chunk.get_red_light(
+                                                vx + dx,
+                                                vy,
+                                                vz + dz,
+                                            ));
+                                            sum_green_lights.push(chunk.get_green_light(
+                                                vx + dx,
+                                                vy,
+                                                vz + dz,
+                                            ));
+                                            sum_blue_lights.push(chunk.get_blue_light(
                                                 vx + dx,
                                                 vy,
                                                 vz + dz,
@@ -332,7 +397,17 @@ impl Mesher {
                                                 vy + dy,
                                                 vz,
                                             ));
-                                            sum_torch_light.push(chunk.get_torch_light(
+                                            sum_red_lights.push(chunk.get_red_light(
+                                                vx + dx,
+                                                vy + dy,
+                                                vz,
+                                            ));
+                                            sum_green_lights.push(chunk.get_green_light(
+                                                vx + dx,
+                                                vy + dy,
+                                                vz,
+                                            ));
+                                            sum_blue_lights.push(chunk.get_blue_light(
                                                 vx + dx,
                                                 vy + dy,
                                                 vz,
@@ -345,7 +420,17 @@ impl Mesher {
                                                 vy + dy,
                                                 vz + dz,
                                             ));
-                                            sum_torch_light.push(chunk.get_torch_light(
+                                            sum_red_lights.push(chunk.get_red_light(
+                                                vx + dx,
+                                                vy + dy,
+                                                vz + dz,
+                                            ));
+                                            sum_green_lights.push(chunk.get_green_light(
+                                                vx + dx,
+                                                vy + dy,
+                                                vz + dz,
+                                            ));
+                                            sum_blue_lights.push(chunk.get_blue_light(
                                                 vx + dx,
                                                 vy + dy,
                                                 vz + dz,
@@ -358,17 +443,39 @@ impl Mesher {
                                                 as i32,
                                         );
 
-                                        four_torch_lights.push(
-                                            (sum_torch_light.iter().sum::<u32>() as f32
-                                                / sum_torch_light.len() as f32)
+                                        four_red_lights.push(
+                                            (sum_red_lights.iter().sum::<u32>() as f32
+                                                / sum_red_lights.len() as f32)
+                                                as i32,
+                                        );
+
+                                        four_green_lights.push(
+                                            (sum_green_lights.iter().sum::<u32>() as f32
+                                                / sum_green_lights.len() as f32)
+                                                as i32,
+                                        );
+
+                                        four_blue_lights.push(
+                                            (sum_blue_lights.iter().sum::<u32>() as f32
+                                                / sum_blue_lights.len() as f32)
                                                 as i32,
                                         );
                                     }
 
-                                    let a_t = four_torch_lights[0];
-                                    let b_t = four_torch_lights[1];
-                                    let c_t = four_torch_lights[2];
-                                    let d_t = four_torch_lights[3];
+                                    let a_rt = four_red_lights[0];
+                                    let b_rt = four_red_lights[1];
+                                    let c_rt = four_red_lights[2];
+                                    let d_rt = four_red_lights[3];
+
+                                    let a_gt = four_green_lights[0];
+                                    let b_gt = four_green_lights[1];
+                                    let c_gt = four_green_lights[2];
+                                    let d_gt = four_green_lights[3];
+
+                                    let a_bt = four_blue_lights[0];
+                                    let b_bt = four_blue_lights[1];
+                                    let c_bt = four_blue_lights[2];
+                                    let d_bt = four_blue_lights[3];
 
                                     let threshold = 0;
 
@@ -376,29 +483,49 @@ impl Mesher {
                                     /*                     I KNOW THIS IS UGLY, BUT IT WORKS!                     */
                                     /* -------------------------------------------------------------------------- */
                                     // at least one zero
-                                    let one_t0 = a_t <= threshold
-                                        || b_t <= threshold
-                                        || c_t <= threshold
-                                        || d_t <= threshold;
+                                    let one_tr0 = a_rt <= threshold
+                                        || b_rt <= threshold
+                                        || c_rt <= threshold
+                                        || d_rt <= threshold;
+                                    let one_tg0 = a_gt <= threshold
+                                        || b_gt <= threshold
+                                        || c_gt <= threshold
+                                        || d_gt <= threshold;
+                                    let one_tb0 = a_bt <= threshold
+                                        || b_bt <= threshold
+                                        || c_bt <= threshold
+                                        || d_bt <= threshold;
                                     // one is zero, and ao rule, but only for zero AO's
-                                    let ozao = a_t + d_t < b_t + c_t
-                                        && ((face_aos[0] + face_aos[3])
-                                            == (face_aos[1] + face_aos[2]));
+                                    let fequals =
+                                        (face_aos[0] + face_aos[3]) == (face_aos[1] + face_aos[2]);
+                                    let ozao_r = a_rt + d_rt < b_rt + c_rt && fequals;
+                                    let ozao_g = a_gt + d_gt < b_gt + c_gt && fequals;
+                                    let ozao_b = a_bt + d_bt < b_bt + c_bt && fequals;
                                     // all not zero, 4 parts
-                                    let anzp1 = (b_t as f32 > (a_t + d_t) as f32 / 2.0
-                                        && (a_t + d_t) as f32 / 2.0 > c_t as f32)
-                                        || (c_t as f32 > (a_t + d_t) as f32 / 2.0
-                                            && (a_t + d_t) as f32 / 2.0 > b_t as f32);
+                                    let anzp1_r = (b_rt as f32 > (a_rt + d_rt) as f32 / 2.0
+                                        && (a_rt + d_rt) as f32 / 2.0 > c_rt as f32)
+                                        || (c_rt as f32 > (a_rt + d_rt) as f32 / 2.0
+                                            && (a_rt + d_rt) as f32 / 2.0 > b_rt as f32);
+                                    let anzp1_g = (b_gt as f32 > (a_gt + d_gt) as f32 / 2.0
+                                        && (a_gt + d_gt) as f32 / 2.0 > c_gt as f32)
+                                        || (c_gt as f32 > (a_gt + d_gt) as f32 / 2.0
+                                            && (a_gt + d_gt) as f32 / 2.0 > b_gt as f32);
+                                    let anzp1_b = (b_bt as f32 > (a_bt + d_bt) as f32 / 2.0
+                                        && (a_bt + d_bt) as f32 / 2.0 > c_bt as f32)
+                                        || (c_bt as f32 > (a_bt + d_bt) as f32 / 2.0
+                                            && (a_bt + d_bt) as f32 / 2.0 > b_bt as f32);
                                     // fixed two light sources colliding
-                                    let anz = one_t0 && anzp1;
+                                    let anz_r = one_tr0 && anzp1_r;
+                                    let anz_g = one_tg0 && anzp1_g;
+                                    let anz_b = one_tb0 && anzp1_b;
 
                                     // common starting indices
                                     indices.push(ndx);
                                     indices.push(ndx + 1);
 
                                     if face_aos[0] + face_aos[3] > face_aos[1] + face_aos[2]
-                                        || ozao
-                                        || anz
+                                        || (ozao_r || ozao_g || ozao_b)
+                                        || (anz_r || anz_g || anz_b)
                                     {
                                         // generate flipped quad
                                         indices.push(ndx + 3);
@@ -414,7 +541,9 @@ impl Mesher {
 
                                     aos.append(&mut face_aos);
                                     sunlights.append(&mut four_sunlights);
-                                    torch_lights.append(&mut &mut four_torch_lights);
+                                    red_lights.append(&mut four_red_lights);
+                                    green_lights.append(&mut four_green_lights);
+                                    blue_lights.append(&mut four_blue_lights);
                                 }
                             }
                         }
@@ -423,13 +552,23 @@ impl Mesher {
             }
         }
 
+        let mut lights = vec![];
+
+        for (s, r, g, b) in izip!(&sunlights, &red_lights, &green_lights, &blue_lights) {
+            let mut light = 0;
+            light = Lights::insert_red_light(light, *r as u32);
+            light = Lights::insert_green_light(light, *g as u32);
+            light = Lights::insert_blue_light(light, *b as u32);
+            light = Lights::insert_sunlight(light, *s as u32);
+            lights.push(light as i32);
+        }
+
         Some(MeshType {
             positions,
             indices,
             uvs,
             aos,
-            sunlights,
-            torch_lights,
+            lights,
         })
     }
 }

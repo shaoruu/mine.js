@@ -1,11 +1,11 @@
 {
   "base": "base-block.json",
-  "name": "Yellow",
+  "name": "Red",
   "isLight": true,
-  "redLightLevel": 4,
-  "greenLightLevel": 4,
+  "redLightLevel": 8,
+  "greenLightLevel": 0,
   "blueLightLevel": 0,
   "textures": {
-    "all": "yellow.json"
+    "all": "red.json"
   }
 }

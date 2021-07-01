@@ -1,7 +1,10 @@
 use std::collections::HashSet;
 
 use crate::{
-    core::network::models::ChunkProtocol,
+    core::{
+        gen::lights::{LightColor, Lights},
+        network::models::ChunkProtocol,
+    },
     libs::{
         ndarray::{ndarray, Ndarray},
         types::{Coords2, Coords3, MeshType},
@@ -128,21 +131,77 @@ impl Chunk {
     }
 
     #[inline]
-    pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+    pub fn get_red_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
         }
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
-        self.get_local_torch_light(lx as usize, ly as usize, lz as usize)
+        self.get_local_red_light(lx as usize, ly as usize, lz as usize)
     }
 
     #[inline]
-    pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
+    pub fn set_red_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
         let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
-        self.set_local_torch_light(lx as usize, ly as usize, lz as usize, level)
+        self.set_local_red_light(lx as usize, ly as usize, lz as usize, level);
+    }
+
+    #[inline]
+    pub fn get_blue_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+        if !self.contains(vx, vy, vz) {
+            return 0;
+        }
+
+        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        self.get_local_blue_light(lx as usize, ly as usize, lz as usize)
+    }
+
+    #[inline]
+    pub fn set_blue_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
+        assert!(self.contains(vx, vy, vz,));
+
+        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        self.set_local_blue_light(lx as usize, ly as usize, lz as usize, level);
+    }
+
+    #[inline]
+    pub fn get_green_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+        if !self.contains(vx, vy, vz) {
+            return 0;
+        }
+
+        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        self.get_local_green_light(lx as usize, ly as usize, lz as usize)
+    }
+
+    #[inline]
+    pub fn set_green_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
+        assert!(self.contains(vx, vy, vz,));
+
+        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        self.set_local_green_light(lx as usize, ly as usize, lz as usize, level);
+    }
+
+    #[inline]
+    pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32, color: &LightColor) -> u32 {
+        match color {
+            LightColor::Red => self.get_red_light(vx, vy, vz),
+            LightColor::Green => self.get_green_light(vx, vy, vz),
+            LightColor::Blue => self.get_blue_light(vx, vy, vz),
+            LightColor::None => panic!("Getting light of None"),
+        }
+    }
+
+    #[inline]
+    pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32, color: &LightColor) {
+        match color {
+            LightColor::Red => self.set_red_light(vx, vy, vz, level),
+            LightColor::Green => self.set_green_light(vx, vy, vz, level),
+            LightColor::Blue => self.set_blue_light(vx, vy, vz, level),
+            LightColor::None => panic!("Setting light of None"),
+        }
     }
 
     #[inline]
@@ -199,18 +258,12 @@ impl Chunk {
         }
     }
 
-    pub fn dist_sqr_to_chunk(&self, coords: &Coords2<i32>) -> i32 {
-        let Coords2(cx, cz) = self.coords;
-        let Coords2(ox, oz) = coords;
-        let dx = cx - *ox;
-        let dz = cz - *oz;
-        dx * dx + dz * dz
-    }
-
+    #[allow(dead_code)]
     pub fn load(&mut self) {
         todo!()
     }
 
+    #[allow(dead_code)]
     pub fn save(&mut self) {
         todo!()
     }
@@ -241,23 +294,43 @@ impl Chunk {
     }
 
     #[inline]
-    fn get_local_torch_light(&self, lx: usize, ly: usize, lz: usize) -> u32 {
-        self.lights[&[lx, ly, lz]] & 0xf
+    fn get_local_red_light(&self, lx: usize, ly: usize, lz: usize) -> u32 {
+        Lights::extract_red_light(self.lights[&[lx, ly, lz]])
     }
 
     #[inline]
-    fn set_local_torch_light(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
-        self.lights[&[lx, ly, lz]] = (self.lights[&[lx, ly, lz]] & 0xf0) | level;
+    fn set_local_red_light(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
+        self.lights[&[lx, ly, lz]] = Lights::insert_red_light(self.lights[&[lx, ly, lz]], level);
+    }
+
+    #[inline]
+    fn get_local_green_light(&self, lx: usize, ly: usize, lz: usize) -> u32 {
+        Lights::extract_green_light(self.lights[&[lx, ly, lz]])
+    }
+
+    #[inline]
+    fn set_local_green_light(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
+        self.lights[&[lx, ly, lz]] = Lights::insert_green_light(self.lights[&[lx, ly, lz]], level);
+    }
+
+    #[inline]
+    fn get_local_blue_light(&self, lx: usize, ly: usize, lz: usize) -> u32 {
+        Lights::extract_blue_light(self.lights[&[lx, ly, lz]])
+    }
+
+    #[inline]
+    fn set_local_blue_light(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
+        self.lights[&[lx, ly, lz]] = Lights::insert_blue_light(self.lights[&[lx, ly, lz]], level);
     }
 
     #[inline]
     fn get_local_sunlight(&self, lx: usize, ly: usize, lz: usize) -> u32 {
-        (self.lights[&[lx, ly, lz]] >> 4) & 0xf
+        Lights::extract_sunlight(self.lights[&[lx, ly, lz]])
     }
 
     #[inline]
     fn set_local_sunlight(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
-        self.lights[&[lx, ly, lz]] = (self.lights[&[lx, ly, lz]] & 0xf) | (level << 4);
+        self.lights[&[lx, ly, lz]] = Lights::insert_sunlight(self.lights[&[lx, ly, lz]], level);
     }
 
     #[inline]

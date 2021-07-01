@@ -23,6 +23,7 @@ chrono = "0.4.19"
 crossbeam-channel = "0.5.1"
 fern = { version="0.6.0", features=["colored"] }
 image = "0.23.14"
+itertools = "0.10.1"
 libflate = "1.1.0"
 log = "0.4"
 noise = "0.7.0"
@@ -41,7 +42,3 @@ prost-build = "0.7.0"
 [profile.release]
 # lto = "fat"
 # codegen-units = 1
-
-
-[target.x86_64-unknown-linux-gnu]
-rustflags = ["-C", "link-arg=-fuse-ld=lld"]

@@ -115,7 +115,9 @@ impl WsServer {
                     client.current_chunk = Some(new_chunk.clone());
 
                     // tell world to regenerate
-                    world.chunks.generate(&new_chunk, client.render_radius);
+                    world
+                        .chunks
+                        .generate(&new_chunk, client.render_radius, false);
                 }
             }
         }

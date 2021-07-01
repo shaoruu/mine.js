@@ -182,13 +182,12 @@ class Chunk {
           this.altMeshes.set(type, []);
         }
 
-        const { positions, indices, uvs, aos, torchLights, sunlights } = meshData[type];
+        const { positions, indices, uvs, aos, lights } = meshData[type];
 
         const positionNumComponents = 3;
         const uvNumComponents = 2;
         const occlusionNumComponents = 1;
-        const sunlightsNumComponents = 1;
-        const torchLightsNumComponents = 1;
+        const lightNumComponents = 1;
 
         let geometries = this.geometries.get(type);
         if (!geometries) {
@@ -197,13 +196,18 @@ class Chunk {
         }
 
         const geometry = geometries[i] || new BufferGeometry();
+        // console.log(
+        //   lights
+        //     .map((e) => (e >> 8) & 0xf)
+        //     .filter((e) => !!e)
+        //     .sort((a, b) => a - b),
+        // );
 
         geometry.dispose();
         geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));
         geometry.setAttribute('uv', new Float32BufferAttribute(uvs, uvNumComponents));
         geometry.setAttribute('ao', new Int32BufferAttribute(aos, occlusionNumComponents));
-        geometry.setAttribute('sunlight', new Int32BufferAttribute(sunlights, sunlightsNumComponents));
-        geometry.setAttribute('torchLight', new Int32BufferAttribute(torchLights, torchLightsNumComponents));
+        geometry.setAttribute('light', new Int32BufferAttribute(lights, lightNumComponents));
         geometry.setIndex(Array.from(indices));
 
         const materials =

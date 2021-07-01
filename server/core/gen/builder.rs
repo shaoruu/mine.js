@@ -1,7 +1,5 @@
 use std::f32::consts::PI;
 
-use log::debug;
-
 use crate::{
     core::engine::{chunk::Chunk, registry::Registry},
     libs::{noise::Noise, types::Coords3},

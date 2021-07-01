@@ -1,7 +1,9 @@
+#![allow(dead_code)]
+
 const TEN: f32 = 10.0;
 
 pub fn approx_equals(a: &f32, b: &f32) -> bool {
-    (a - b).abs() < TEN.powi(-5)
+    (a - b).abs() < f32::EPSILON
 }
 
 pub fn round(n: &f32, digits: i32) -> f32 {

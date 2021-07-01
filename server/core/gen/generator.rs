@@ -118,7 +118,7 @@ impl Generator {
 
                                     let y_prop = vy / config.max_height as f64;
 
-                                    let mut block_id = air;
+                                    let mut block_id: u32;
 
                                     if !is_solid_top && !is_solid_top2 {
                                         block_id = grass_block;

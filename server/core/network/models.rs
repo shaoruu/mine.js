@@ -136,16 +136,14 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
                                 aos: opaque.aos.to_owned(),
                                 indices: opaque.indices.to_owned(),
                                 positions: opaque.positions.to_owned(),
-                                sunlights: opaque.sunlights.to_owned(),
-                                torch_lights: opaque.torch_lights.to_owned(),
+                                lights: opaque.lights.to_owned(),
                                 uvs: opaque.uvs.to_owned(),
                             }),
                             transparent: transparent.map(|transparent| messages::Geometry {
                                 aos: transparent.aos.to_owned(),
                                 indices: transparent.indices.to_owned(),
                                 positions: transparent.positions.to_owned(),
-                                sunlights: transparent.sunlights.to_owned(),
-                                torch_lights: transparent.torch_lights.to_owned(),
+                                lights: transparent.lights.to_owned(),
                                 uvs: transparent.uvs.to_owned(),
                             }),
                         }

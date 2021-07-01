@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use noise::{NoiseFn, OpenSimplex, Perlin, RidgedMulti, Seedable, Worley};
 
 pub struct NoiseConfig {
