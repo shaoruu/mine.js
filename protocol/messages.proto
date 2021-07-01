@@ -2,11 +2,11 @@ syntax = "proto3";
 package protocol;
 
 message Geometry {
-  repeated int32 indices = 5 [packed=true];
-  repeated float positions = 6 [packed=true];
-  repeated float uvs = 7 [packed=true];
-  repeated int32 aos = 8 [packed=true];
-  repeated int32 lights = 9 [packed=true];
+  repeated float positions = 1 [packed=true];
+  repeated float uvs = 2 [packed=true];
+  repeated int32 aos = 3 [packed=true];
+  repeated int32 indices = 4 [packed=true];
+  repeated int32 lights = 5 [packed=true];
 }
 
 message Mesh {

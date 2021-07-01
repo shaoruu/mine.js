@@ -365,7 +365,7 @@ class Sky {
   };
 
   spin = (rotation: number) => {
-    this.skyBox.mesh.rotation.z = rotation;
+    this.skyBox.mesh.rotation.z = MathUtils.lerp(this.skyBox.mesh.rotation.z, rotation, this.options.lerpFactor);
   };
 
   tick = (delta = 0) => {
