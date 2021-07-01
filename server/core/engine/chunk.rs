@@ -189,12 +189,13 @@ impl Chunk {
     pub fn calc_dirty_levels(&mut self, vy: i32, max_height: u32, sub_chunks: u32) {
         let vy = vy as u32;
         let unit = max_height / sub_chunks;
+        let level = vy / unit;
 
-        self.dirty_levels.insert(vy / unit);
-        if vy % sub_chunks == 0 {
-            self.dirty_levels.insert((vy - 1) / unit);
-        } else if vy % sub_chunks == sub_chunks - 1 {
-            self.dirty_levels.insert((vy + 1) / unit);
+        self.dirty_levels.insert(level);
+        if vy % sub_chunks == 0 && level >= 1 {
+            self.dirty_levels.insert(level - 1);
+        } else if vy % sub_chunks == sub_chunks - 1 && level < sub_chunks - 1 {
+            self.dirty_levels.insert(level + 1);
         }
     }
 
