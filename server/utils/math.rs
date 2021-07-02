@@ -3,7 +3,7 @@
 const TEN: f32 = 10.0;
 
 pub fn approx_equals(a: &f32, b: &f32) -> bool {
-    (a - b).abs() < f32::EPSILON
+    (a - b).abs() < TEN.powi(-5)
 }
 
 pub fn round(n: &f32, digits: i32) -> f32 {
@@ -22,6 +22,7 @@ pub fn smoothstep(edge0: f64, edge1: f64, x: f64) -> f64 {
     (edge0 * x) + (edge1 * (1.0 - x))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn smooth_interpolation(
     bottom_left: f64,
     top_left: f64,

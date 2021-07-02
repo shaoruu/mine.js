@@ -1,5 +1,4 @@
 use itertools::izip;
-use log::debug;
 
 use crate::{
     core::{
