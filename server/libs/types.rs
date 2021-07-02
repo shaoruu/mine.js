@@ -1,8 +1,11 @@
 #![allow(dead_code)]
 
-use num::{cast, Num};
+use num::{cast, Float, Num};
 
-use std::collections::HashMap;
+use std::{
+    cmp::{max, min},
+    collections::HashMap,
+};
 
 pub type TypeMap = HashMap<String, u32>;
 
@@ -38,6 +41,27 @@ where
 
     pub fn scale(&self, scale: T) -> Self {
         Coords3(self.0 * scale, self.1 * scale, self.2 * scale)
+    }
+}
+
+impl<T> Coords3<T>
+where
+    T: Float,
+{
+    pub fn max(&self, other: &Self) -> Self {
+        Coords3(
+            Float::max(self.0, other.0),
+            Float::max(self.1, other.1),
+            Float::max(self.2, other.2),
+        )
+    }
+
+    pub fn min(&self, other: &Self) -> Self {
+        Coords3(
+            Float::min(self.0, other.0),
+            Float::min(self.1, other.1),
+            Float::min(self.2, other.2),
+        )
     }
 }
 
