@@ -21,7 +21,7 @@ use crate::core::network::models::{
 };
 use crate::core::network::server::Client;
 use crate::libs::types::GenerationType;
-use crate::libs::types::{Coords2, Coords3, Quaternion};
+use crate::libs::types::{Quaternion, Vec2, Vec3};
 
 use super::chunk::{Chunk, Meshes};
 use super::chunks::Chunks;
@@ -174,7 +174,7 @@ impl World {
         let cz = json["z"].as_i64().unwrap() as i32;
 
         if let Some(client) = self.clients.get_mut(&client_id) {
-            client.requested_chunks.push_back(Coords2(cx, cz));
+            client.requested_chunks.push_back(Vec2(cx, cz));
         }
     }
 
@@ -322,7 +322,7 @@ impl World {
         let client = self.clients.get_mut(&client_id).unwrap();
 
         client.name = Some(name.to_owned());
-        client.position = Coords3(*px, *py, *pz);
+        client.position = Vec3(*px, *py, *pz);
         client.rotation = Quaternion(*qx, *qy, *qz, *qw);
 
         self.broadcast(&msg, vec![client_id]);

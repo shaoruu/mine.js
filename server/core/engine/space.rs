@@ -1,6 +1,6 @@
 use crate::libs::{
     ndarray::{ndarray, Ndarray},
-    types::Coords2,
+    types::Vec2,
 };
 
 use super::{chunks::Chunks, world::WorldConfig};
@@ -14,7 +14,7 @@ pub struct Space {
 }
 
 impl Space {
-    pub fn new(chunks: &Chunks, center: &Coords2<i32>, margin: usize) -> Self {
+    pub fn new(chunks: &Chunks, center: &Vec2<i32>, margin: usize) -> Self {
         let WorldConfig {
             chunk_size,
             max_height,

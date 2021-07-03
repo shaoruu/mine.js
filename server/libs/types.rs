@@ -10,46 +10,46 @@ use std::{
 pub type TypeMap = HashMap<String, u32>;
 
 #[derive(Debug, Eq, PartialEq, Clone, Default, Hash)]
-pub struct Coords2<T>(pub T, pub T);
+pub struct Vec2<T>(pub T, pub T);
 
-impl<T: Copy + 'static> Coords2<T> {
-    pub fn from<U: cast::AsPrimitive<T>>(other: &Coords2<U>) -> Coords2<T> {
-        Coords2(other.0.as_(), other.1.as_())
+impl<T: Copy + 'static> Vec2<T> {
+    pub fn from<U: cast::AsPrimitive<T>>(other: &Vec2<U>) -> Vec2<T> {
+        Vec2(other.0.as_(), other.1.as_())
     }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Default, Hash)]
-pub struct Coords3<T>(pub T, pub T, pub T);
+pub struct Vec3<T>(pub T, pub T, pub T);
 
-impl<T: Copy + 'static> Coords3<T> {
-    pub fn from<U: cast::AsPrimitive<T>>(other: &Coords3<U>) -> Coords3<T> {
-        Coords3(other.0.as_(), other.1.as_(), other.2.as_())
+impl<T: Copy + 'static> Vec3<T> {
+    pub fn from<U: cast::AsPrimitive<T>>(other: &Vec3<U>) -> Vec3<T> {
+        Vec3(other.0.as_(), other.1.as_(), other.2.as_())
     }
 }
 
-impl<T> Coords3<T>
+impl<T> Vec3<T>
 where
     T: Num + Copy,
 {
     pub fn add(&self, other: &Self) -> Self {
-        Coords3(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+        Vec3(self.0 + other.0, self.1 + other.1, self.2 + other.2)
     }
 
     pub fn sub(&self, other: &Self) -> Self {
-        Coords3(self.0 - other.0, self.1 - other.1, self.2 - other.2)
+        Vec3(self.0 - other.0, self.1 - other.1, self.2 - other.2)
     }
 
     pub fn scale(&self, scale: T) -> Self {
-        Coords3(self.0 * scale, self.1 * scale, self.2 * scale)
+        Vec3(self.0 * scale, self.1 * scale, self.2 * scale)
     }
 }
 
-impl<T> Coords3<T>
+impl<T> Vec3<T>
 where
     T: Float,
 {
     pub fn max(&self, other: &Self) -> Self {
-        Coords3(
+        Vec3(
             Float::max(self.0, other.0),
             Float::max(self.1, other.1),
             Float::max(self.2, other.2),
@@ -57,7 +57,7 @@ where
     }
 
     pub fn min(&self, other: &Self) -> Self {
-        Coords3(
+        Vec3(
             Float::min(self.0, other.0),
             Float::min(self.1, other.1),
             Float::min(self.2, other.2),
@@ -65,7 +65,7 @@ where
     }
 }
 
-impl<T: Num + Clone> Index<usize> for Coords3<T> {
+impl<T: Num + Clone> Index<usize> for Vec3<T> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -76,12 +76,12 @@ impl<T: Num + Clone> Index<usize> for Coords3<T> {
         } else if index == 2 {
             &self.2
         } else {
-            panic!("Index out of bounds for accessing Coords3.");
+            panic!("Index out of bounds for accessing Vec3.");
         }
     }
 }
 
-impl<T: Num + Clone> IndexMut<usize> for Coords3<T> {
+impl<T: Num + Clone> IndexMut<usize> for Vec3<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         if index == 0 {
             &mut self.0
@@ -90,7 +90,7 @@ impl<T: Num + Clone> IndexMut<usize> for Coords3<T> {
         } else if index == 2 {
             &mut self.2
         } else {
-            panic!("Index out of bounds for accessing Coords3.");
+            panic!("Index out of bounds for accessing Vec3.");
         }
     }
 }

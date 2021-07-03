@@ -1,18 +1,18 @@
 use crate::utils::math::approx_equals;
 
-use super::types::Coords3;
+use super::types::Vec3;
 
 #[derive(Debug, Clone)]
 pub struct Aabb {
-    pub base: Coords3<f32>,
-    pub vec: Coords3<f32>,
-    pub max: Coords3<f32>,
+    pub base: Vec3<f32>,
+    pub vec: Vec3<f32>,
+    pub max: Vec3<f32>,
 
     pub mag: f32,
 }
 
 impl Aabb {
-    pub fn new(base: &Coords3<f32>, vec: &Coords3<f32>) -> Self {
+    pub fn new(base: &Vec3<f32>, vec: &Vec3<f32>) -> Self {
         let base = base.clone();
         let vec = vec.clone();
         let max = base.add(&vec);
@@ -62,13 +62,13 @@ impl Aabb {
         self.max.2
     }
 
-    pub fn translate(&mut self, by: &Coords3<f32>) -> &Self {
+    pub fn translate(&mut self, by: &Vec3<f32>) -> &Self {
         self.max.add(by);
         self.base.add(by);
         self
     }
 
-    pub fn set_position(&mut self, pos: &Coords3<f32>) -> &Self {
+    pub fn set_position(&mut self, pos: &Vec3<f32>) -> &Self {
         self.max = pos.add(&self.vec);
         self.base = pos.clone();
         self
@@ -130,8 +130,8 @@ impl Aabb {
         let max_z = aabb.max.2.min(self.max.2);
 
         Some(Aabb::new(
-            &Coords3(base_x, base_y, base_z),
-            &Coords3(max_x - base_x, max_y - base_y, max_z - base_z),
+            &Vec3(base_x, base_y, base_z),
+            &Vec3(max_x - base_x, max_y - base_y, max_z - base_z),
         ))
     }
 }

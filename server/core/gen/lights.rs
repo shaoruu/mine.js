@@ -9,14 +9,14 @@ use crate::{
     },
     libs::{
         ndarray::{ndarray, Ndarray},
-        types::{Block, Coords3},
+        types::{Block, Vec3},
     },
 };
 
 /// Node of a light propagation queue
 #[derive(Debug)]
 pub struct LightNode {
-    pub voxel: Coords3<i32>,
+    pub voxel: Vec3<i32>,
     pub level: u32,
 }
 
@@ -219,7 +219,7 @@ impl Lights {
         let mut queue = VecDeque::<LightNode>::new();
 
         queue.push_back(LightNode {
-            voxel: Coords3(vx, vy, vz),
+            voxel: Vec3(vx, vy, vz),
             level: if is_sunlight {
                 chunks.get_sunlight(vx, vy, vz)
             } else {
@@ -237,7 +237,7 @@ impl Lights {
 
         while !queue.is_empty() {
             let LightNode { voxel, level } = queue.pop_front().unwrap();
-            let Coords3(vx, vy, vz) = voxel;
+            let Vec3(vx, vy, vz) = voxel;
 
             for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
                 let nvy = vy + oy;
@@ -248,7 +248,7 @@ impl Lights {
 
                 let nvx = vx + ox;
                 let nvz = vz + oz;
-                let n_voxel = Coords3(nvx, nvy, nvz);
+                let n_voxel = Vec3(nvx, nvy, nvz);
 
                 let nl = if is_sunlight {
                     chunks.get_sunlight(nvx, nvy, nvz)
@@ -303,7 +303,7 @@ impl Lights {
 
         while !queue.is_empty() {
             let LightNode { voxel, level } = queue.pop_front().unwrap();
-            let Coords3(vx, vy, vz) = voxel;
+            let Vec3(vx, vy, vz) = voxel;
 
             for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
                 let nvy = vy + oy;
@@ -316,7 +316,7 @@ impl Lights {
                 let nvz = vz + oz;
                 let sd = is_sunlight && *oy == -1 && level == max_light_level;
                 let nl = level - if sd { 0 } else { 1 };
-                let n_voxel = Coords3(nvx, nvy, nvz);
+                let n_voxel = Vec3(nvx, nvy, nvz);
                 let block_type = chunks.get_block_by_voxel(nvx, nvy, nvz);
 
                 if !block_type.is_transparent
@@ -363,7 +363,7 @@ impl Lights {
 
         while !queue.is_empty() {
             let LightNode { voxel, level } = queue.pop_front().unwrap();
-            let Coords3(vx, vy, vz) = voxel;
+            let Vec3(vx, vy, vz) = voxel;
 
             for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
                 let nvy = vy + oy;
@@ -381,7 +381,7 @@ impl Lights {
 
                 let sd = is_sunlight && *oy == -1 && level == max_light_level;
                 let nl = level - if sd { 0 } else { 1 };
-                let n_voxel = Coords3(nvx, nvy, nvz);
+                let n_voxel = Vec3(nvx, nvy, nvz);
                 let block_type =
                     registry.get_block_by_id(voxels[&[nvx as usize, nvy as usize, nvz as usize]]);
 
@@ -470,7 +470,7 @@ impl Lights {
                                 }) {
                                     sunlight_queue.push_back(LightNode {
                                         level: max_light_level,
-                                        voxel: Coords3(x, y, z),
+                                        voxel: Vec3(x, y, z),
                                     })
                                 }
                             }
@@ -483,7 +483,7 @@ impl Lights {
 
                             red_light_queue.push_back(LightNode {
                                 level: red_light_level,
-                                voxel: Coords3(x, y, z),
+                                voxel: Vec3(x, y, z),
                             });
                         }
 
@@ -492,7 +492,7 @@ impl Lights {
 
                             green_light_queue.push_back(LightNode {
                                 level: green_light_level,
-                                voxel: Coords3(x, y, z),
+                                voxel: Vec3(x, y, z),
                             });
                         }
 
@@ -501,7 +501,7 @@ impl Lights {
 
                             blue_light_queue.push_back(LightNode {
                                 level: blue_light_level,
-                                voxel: Coords3(x, y, z),
+                                voxel: Vec3(x, y, z),
                             });
                         }
                     }

@@ -1,6 +1,6 @@
 // HELP FROM https://github.com/andyhall/fast-voxel-raycast/blob/master/index.js
 
-use crate::libs::types::{Coords3, GetVoxel};
+use crate::libs::types::{Vec3, GetVoxel};
 
 use super::math::approx_equals;
 
@@ -14,8 +14,8 @@ fn trace_ray(
     dy: f32,
     dz: f32,
     max_d: f32,
-    hit_pos: &mut Coords3<f32>,
-    hit_norm: &mut Coords3<i32>,
+    hit_pos: &mut Vec3<f32>,
+    hit_norm: &mut Vec3<i32>,
 ) -> u32 {
     let mut t = 0.0;
 
@@ -131,13 +131,13 @@ fn trace_ray(
 pub fn trace(
     max_d: f32,
     get_voxel: &GetVoxel,
-    origin: &mut Coords3<f32>,
-    direction: &mut Coords3<f32>,
-    hit_pos: &mut Coords3<f32>,
-    hit_norm: &mut Coords3<i32>,
+    origin: &mut Vec3<f32>,
+    direction: &mut Vec3<f32>,
+    hit_pos: &mut Vec3<f32>,
+    hit_norm: &mut Vec3<i32>,
 ) -> u32 {
-    let Coords3(px, py, pz) = origin;
-    let Coords3(dx, dy, dz) = direction;
+    let Vec3(px, py, pz) = origin;
+    let Vec3(dx, dy, dz) = direction;
     let ds = (*dx * *dx + *dy * *dy + *dz * *dz).sqrt();
 
     if approx_equals(&ds, &0.0) {
@@ -170,15 +170,15 @@ mod tests {
             }
         };
 
-        let mut hit_position = Coords3::default();
-        let mut hit_normal = Coords3::default();
+        let mut hit_position = Vec3::default();
+        let mut hit_normal = Vec3::default();
 
         // 2 * PI
         for t100 in (0..628).step_by(25) {
             let theta = t100 as f32 / 100.0;
             for p100 in (0..628).step_by(25) {
                 let phi = p100 as f32 / 100.0;
-                let mut dir = Coords3(theta.cos() * phi.cos(), theta.sin() * phi.cos(), phi.sin());
+                let mut dir = Vec3(theta.cos() * phi.cos(), theta.sin() * phi.cos(), phi.sin());
                 for x1000 in (1..1000).step_by(250) {
                     let x = x1000 as f32 / 1000.0;
                     for y1000 in (1..1000).step_by(250) {
@@ -186,7 +186,7 @@ mod tests {
                         for z1000 in (1..1000).step_by(250) {
                             let z = z1000 as f32 / 1000.0;
                             let mut pos =
-                                Coords3(x - 2.0 * dir.0, y - 2.0 * dir.1, z - 2.0 * dir.2);
+                                Vec3(x - 2.0 * dir.0, y - 2.0 * dir.1, z - 2.0 * dir.2);
                             let b = trace(
                                 10.0,
                                 &voxel,

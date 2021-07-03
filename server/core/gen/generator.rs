@@ -6,7 +6,7 @@ use crate::{
     },
     libs::{
         noise::{Noise, NoiseConfig},
-        types::{Coords3, GenerationType},
+        types::{Vec3, GenerationType},
     },
 };
 
@@ -16,8 +16,8 @@ pub struct Generator;
 
 impl Generator {
     pub fn generate_chunk(chunk: &mut Chunk, registry: &Registry, config: &WorldConfig) {
-        let Coords3(start_x, start_y, start_z) = chunk.min;
-        let Coords3(end_x, _, end_z) = chunk.max;
+        let Vec3(start_x, start_y, start_z) = chunk.min;
+        let Vec3(end_x, _, end_z) = chunk.max;
 
         match config.generation {
             GenerationType::FLAT => {
@@ -74,8 +74,8 @@ impl Generator {
                 let mut pairs = vec![];
                 for i in 0..config.sub_chunks as i32 {
                     pairs.push((
-                        Coords3(start_x, unit * i, start_z),
-                        Coords3(end_x, unit * (i + 1), end_z),
+                        Vec3(start_x, unit * i, start_z),
+                        Vec3(end_x, unit * (i + 1), end_z),
                     ));
                 }
 
@@ -84,8 +84,8 @@ impl Generator {
                     .map(|(start, end)| {
                         let mut updates = vec![];
 
-                        let &Coords3(start_x, start_y, start_z) = start;
-                        let &Coords3(end_x, end_y, end_z) = end;
+                        let &Vec3(start_x, start_y, start_z) = start;
+                        let &Vec3(end_x, end_y, end_z) = end;
 
                         let noise = Noise::new(LEVEL_SEED);
 
@@ -151,7 +151,7 @@ impl Generator {
                                     }
 
                                     updates.push(VoxelUpdate {
-                                        voxel: Coords3(vx as i32, vy_ as i32, vz as i32),
+                                        voxel: Vec3(vx as i32, vy_ as i32, vz as i32),
                                         id: block_id,
                                     });
                                 }

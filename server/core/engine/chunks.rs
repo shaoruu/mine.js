@@ -28,7 +28,7 @@ use crate::{
     },
     libs::{
         noise::Noise,
-        types::{Block, Coords2, Coords3},
+        types::{Block, Vec2, Vec3},
     },
     utils::convert::{
         get_chunk_name, map_voxel_to_chunk, map_voxel_to_chunk_local, map_world_to_voxel,
@@ -51,9 +51,9 @@ pub enum MeshLevel {
 /// A wrapper around all the chunks
 #[derive(Debug)]
 pub struct Chunks {
-    pub chunk_cache: HashSet<Coords2<i32>>,
+    pub chunk_cache: HashSet<Vec2<i32>>,
     pub to_generate: Vec<Chunk>,
-    pub to_mesh: VecDeque<Coords2<i32>>,
+    pub to_mesh: VecDeque<Vec2<i32>>,
 
     pub config: Arc<WorldConfig>,
     pub registry: Arc<Registry>,
@@ -62,7 +62,7 @@ pub struct Chunks {
     caching: bool,
     max_loaded_chunks: i32,
     chunks: HashMap<String, Chunk>,
-    update_queue: HashMap<Coords2<i32>, Vec<VoxelUpdate>>,
+    update_queue: HashMap<Vec2<i32>, Vec<VoxelUpdate>>,
     noise: Noise,
 }
 
@@ -100,14 +100,14 @@ impl Chunks {
     }
 
     /// Return a mutable chunk regardless initialization
-    pub fn raw(&self, coords: &Coords2<i32>) -> Option<&Chunk> {
+    pub fn raw(&self, coords: &Vec2<i32>) -> Option<&Chunk> {
         self.get_chunk(coords)
     }
 
     /// Return a chunk references only if chunk is fully initialized (generated and decorated)
     pub fn get(
         &mut self,
-        coords: &Coords2<i32>,
+        coords: &Vec2<i32>,
         remesh_level: &MeshLevel,
         // if it's not urgent, then will be sent to other thread to mesh
         urgent: bool,
@@ -149,7 +149,7 @@ impl Chunks {
 
     /// To preload chunks surrounding 0,0
     pub fn preload(&mut self, width: i16) {
-        self.generate(&Coords2(0, 0), width, true);
+        self.generate(&Vec2(0, 0), width, true);
     }
 
     pub fn start_caching(&mut self) {
@@ -170,7 +170,7 @@ impl Chunks {
     }
 
     /// Remesh a chunk, propagating itself and its neighbors then mesh.
-    pub fn remesh_chunk(&mut self, coords: &Coords2<i32>, level: &MeshLevel) {
+    pub fn remesh_chunk(&mut self, coords: &Vec2<i32>, level: &MeshLevel) {
         // let start = Instant::now();
         // propagate light first
         let chunk = self.get_chunk(coords).unwrap();
@@ -239,11 +239,11 @@ impl Chunks {
     /// 2. Populate the terrains within `decorate_radius` with decoration
     ///
     /// Note: `decorate_radius` should always be less than `terrain_radius`
-    pub fn generate(&mut self, coords: &Coords2<i32>, render_radius: i16, is_preload: bool) {
-        let Coords2(cx, cz) = coords;
+    pub fn generate(&mut self, coords: &Vec2<i32>, render_radius: i16, is_preload: bool) {
+        let Vec2(cx, cz) = coords;
 
         let mut to_generate: Vec<Chunk> = Vec::new();
-        let mut to_decorate: Vec<Coords2<i32>> = Vec::new();
+        let mut to_decorate: Vec<Vec2<i32>> = Vec::new();
 
         let terrain_radius = render_radius + 3;
         let decorate_radius = render_radius;
@@ -256,7 +256,7 @@ impl Chunks {
                     continue;
                 }
 
-                let coords = Coords2(cx + x as i32, cz + z as i32);
+                let coords = Vec2(cx + x as i32, cz + z as i32);
                 let chunk = self.get_chunk(&coords);
 
                 if chunk.is_none() {
@@ -344,7 +344,7 @@ impl Chunks {
     }
 
     /// Populate a chunk with preset decorations.
-    fn decorate_chunk(&mut self, coords: &Coords2<i32>) {
+    fn decorate_chunk(&mut self, coords: &Vec2<i32>) {
         let chunk = self
             .get_chunk_mut(&coords)
             .unwrap_or_else(|| panic!("Chunk not found {:?}", coords));
@@ -362,7 +362,7 @@ impl Chunks {
     }
 
     /// Centered around a coordinate, return 3x3 chunks neighboring the coordinate (not inclusive).
-    fn neighbors(&self, Coords2(cx, cz): &Coords2<i32>) -> Vec<Option<&Chunk>> {
+    fn neighbors(&self, Vec2(cx, cz): &Vec2<i32>) -> Vec<Option<&Chunk>> {
         let mut neighbors = Vec::new();
         let r = (self.config.max_light_level as f32 / self.config.chunk_size as f32).ceil() as i32;
 
@@ -376,7 +376,7 @@ impl Chunks {
                     continue;
                 }
 
-                neighbors.push(self.get_chunk(&Coords2(cx + x, cz + z)));
+                neighbors.push(self.get_chunk(&Vec2(cx + x, cz + z)));
             }
         }
 
@@ -385,14 +385,14 @@ impl Chunks {
 
     /// Get a chunk reference from a coordinate
     #[inline]
-    pub fn get_chunk(&self, coords: &Coords2<i32>) -> Option<&Chunk> {
+    pub fn get_chunk(&self, coords: &Vec2<i32>) -> Option<&Chunk> {
         let name = get_chunk_name(coords.0, coords.1);
         self.chunks.get(&name)
     }
 
     /// Get a mutable chunk reference from a coordinate
     #[inline]
-    pub fn get_chunk_mut(&mut self, coords: &Coords2<i32>) -> Option<&mut Chunk> {
+    pub fn get_chunk_mut(&mut self, coords: &Vec2<i32>) -> Option<&mut Chunk> {
         let name = get_chunk_name(coords.0, coords.1);
         let chunk = self.chunks.get_mut(&name);
         // ? does non-mutable chunks need to be cached?
@@ -430,7 +430,7 @@ impl Chunks {
     /// Get the voxel type at a world coordinate
     #[inline]
     pub fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u32 {
-        let Coords3(vx, vy, vz) = map_world_to_voxel(wx, wy, wz, self.config.dimension);
+        let Vec3(vx, vy, vz) = map_world_to_voxel(wx, wy, wz, self.config.dimension);
         self.get_voxel_by_voxel(vx, vy, vz)
     }
 
@@ -455,7 +455,7 @@ impl Chunks {
                 .entry(map_voxel_to_chunk(vx, vy, vz, self.config.chunk_size))
                 .or_insert_with(Vec::new);
             updates.push(VoxelUpdate {
-                voxel: Coords3(vx, vy, vz),
+                voxel: Vec3(vx, vy, vz),
                 id,
             });
         }
@@ -474,7 +474,7 @@ impl Chunks {
                     .entry(c.to_owned())
                     .or_insert_with(Vec::new);
                 updates.push(VoxelUpdate {
-                    voxel: Coords3(vx, vy, vz),
+                    voxel: Vec3(vx, vy, vz),
                     id,
                 });
             }
@@ -599,16 +599,16 @@ impl Chunks {
     }
 
     /// Get neighboring chunks according to a voxel coordinate
-    pub fn get_neighbor_chunk_coords(&self, vx: i32, vy: i32, vz: i32) -> HashSet<Coords2<i32>> {
+    pub fn get_neighbor_chunk_coords(&self, vx: i32, vy: i32, vz: i32) -> HashSet<Vec2<i32>> {
         let chunk_size = self.config.chunk_size;
 
         let mut neighbor_chunks = HashSet::new();
 
         let coords = map_voxel_to_chunk(vx, vy, vz, chunk_size);
-        let Coords3(lx, _, lz) = map_voxel_to_chunk_local(vx, vy, vz, chunk_size);
+        let Vec3(lx, _, lz) = map_voxel_to_chunk_local(vx, vy, vz, chunk_size);
 
         let chunk_size = chunk_size as i32;
-        let Coords2(cx, cz) = coords;
+        let Vec2(cx, cz) = coords;
 
         let a = lx <= 0;
         let b = lz <= 0;
@@ -617,30 +617,30 @@ impl Chunks {
 
         // Direct neighbors
         if a {
-            neighbor_chunks.insert(Coords2(cx - 1, cz));
+            neighbor_chunks.insert(Vec2(cx - 1, cz));
         }
         if b {
-            neighbor_chunks.insert(Coords2(cx, cz - 1));
+            neighbor_chunks.insert(Vec2(cx, cz - 1));
         }
         if c {
-            neighbor_chunks.insert(Coords2(cx + 1, cz));
+            neighbor_chunks.insert(Vec2(cx + 1, cz));
         }
         if d {
-            neighbor_chunks.insert(Coords2(cx, cz + 1));
+            neighbor_chunks.insert(Vec2(cx, cz + 1));
         }
 
         // Side-to-side diagonals
         if a && b {
-            neighbor_chunks.insert(Coords2(cx - 1, cz - 1));
+            neighbor_chunks.insert(Vec2(cx - 1, cz - 1));
         }
         if a && d {
-            neighbor_chunks.insert(Coords2(cx - 1, cz + 1));
+            neighbor_chunks.insert(Vec2(cx - 1, cz + 1));
         }
         if b && c {
-            neighbor_chunks.insert(Coords2(cx + 1, cz - 1));
+            neighbor_chunks.insert(Vec2(cx + 1, cz - 1));
         }
         if c && d {
-            neighbor_chunks.insert(Coords2(cx + 1, cz + 1));
+            neighbor_chunks.insert(Vec2(cx + 1, cz + 1));
         }
 
         neighbor_chunks.remove(&coords);
@@ -673,7 +673,7 @@ impl Chunks {
         let current_type = self.get_block_by_voxel(vx, vy, vz).clone();
         let updated_type = self.get_block_by_id(id).clone();
 
-        let voxel = Coords3(vx, vy, vz);
+        let voxel = Vec3(vx, vy, vz);
 
         // updating the new block
         self.set_voxel_by_voxel(vx, vy, vz, id);
@@ -795,7 +795,7 @@ impl Chunks {
 
                             let nvx = vx + ox;
                             let nvz = vz + oz;
-                            let n_voxel = Coords3(nvx, nvy, nvz);
+                            let n_voxel = Vec3(nvx, nvy, nvz);
                             let &Block {
                                 is_light,
                                 is_transparent,
@@ -862,7 +862,7 @@ impl Chunks {
     ///
     /// 1. Spread sunlight from the very top of the chunk
     /// 2. Recognize the torch lights and flood-fill them as well
-    fn propagate_chunk(&mut self, coords: &Coords2<i32>) {
+    fn propagate_chunk(&mut self, coords: &Vec2<i32>) {
         let max_light_flood = self.config.max_light_level as usize;
 
         let space = Space::new(self, coords, max_light_flood);

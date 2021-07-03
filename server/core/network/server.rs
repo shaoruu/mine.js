@@ -13,7 +13,7 @@ use crate::core::engine::chunks::MeshLevel;
 use crate::core::engine::registry::Registry;
 use crate::core::engine::world::{World, WorldConfig};
 use crate::core::network::models::create_chat_message;
-use crate::libs::types::{Coords2, Coords3, GenerationType, Quaternion};
+use crate::libs::types::{GenerationType, Quaternion, Vec2, Vec3};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
@@ -33,10 +33,10 @@ const CHUNKING_TICK: Duration = Duration::from_millis(18);
 pub struct Client {
     pub name: Option<String>,
     pub addr: Recipient<message::Message>,
-    pub position: Coords3<f32>,
+    pub position: Vec3<f32>,
     pub rotation: Quaternion,
-    pub current_chunk: Option<Coords2<i32>>,
-    pub requested_chunks: VecDeque<Coords2<i32>>,
+    pub current_chunk: Option<Vec2<i32>>,
+    pub requested_chunks: VecDeque<Vec2<i32>>,
     pub render_radius: i16,
 }
 
@@ -104,8 +104,8 @@ impl WsServer {
 
                 let current_chunk = client.current_chunk.as_ref();
 
-                let Coords3(px, py, pz) = client.position;
-                let Coords3(vx, vy, vz) = map_world_to_voxel(px, py, pz, dimension);
+                let Vec3(px, py, pz) = client.position;
+                let Vec3(vx, vy, vz) = map_world_to_voxel(px, py, pz, dimension);
                 let new_chunk = map_voxel_to_chunk(vx, vy, vz, chunk_size);
 
                 if current_chunk.is_none()
@@ -186,7 +186,7 @@ impl Handler<JoinWorld> for WsServer {
             name: client_name,
             addr: client_addr,
             current_chunk: None,
-            position: Coords3::default(),
+            position: Vec3::default(),
             rotation: Quaternion::default(),
             requested_chunks: VecDeque::default(),
             render_radius,

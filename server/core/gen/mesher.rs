@@ -10,7 +10,7 @@ use crate::{
         },
         gen::lights::Lights,
     },
-    libs::types::{Block, Coords2, Coords3, MeshType, UV},
+    libs::types::{Block, MeshType, Vec2, Vec3, UV},
 };
 
 pub struct Mesher;
@@ -56,8 +56,8 @@ impl Mesher {
         let mut blue_lights = Vec::<i32>::new();
         let mut sunlights = Vec::<i32>::new();
 
-        let &Coords3(start_x, _, start_z) = min_inner;
-        let &Coords3(end_x, _, end_z) = max_inner;
+        let &Vec3(start_x, _, start_z) = min_inner;
+        let &Vec3(end_x, _, end_z) = max_inner;
 
         let vertex_ao = |side1: u32, side2: u32, corner: u32| -> i32 {
             let num_s1 = !registry.get_transparency_by_id(side1) as i32;

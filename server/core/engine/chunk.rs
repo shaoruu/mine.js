@@ -7,7 +7,7 @@ use crate::{
     },
     libs::{
         ndarray::{ndarray, Ndarray},
-        types::{Coords2, Coords3, MeshType},
+        types::{MeshType, Vec2, Vec3},
     },
     utils::convert,
 };
@@ -27,16 +27,16 @@ pub struct Meshes {
 pub struct Chunk {
     pub name: String,
 
-    pub coords: Coords2<i32>,
+    pub coords: Vec2<i32>,
 
     voxels: Ndarray<u32>,
     lights: Ndarray<u32>,
     height_map: Ndarray<i32>,
 
-    pub min: Coords3<i32>,
-    pub max: Coords3<i32>,
-    pub min_inner: Coords3<i32>,
-    pub max_inner: Coords3<i32>,
+    pub min: Vec3<i32>,
+    pub max: Vec3<i32>,
+    pub min_inner: Vec3<i32>,
+    pub max_inner: Vec3<i32>,
 
     pub needs_saving: bool,
     pub needs_propagation: bool,
@@ -55,8 +55,8 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn new(coords: Coords2<i32>, size: usize, max_height: usize, dimension: usize) -> Self {
-        let Coords2(cx, cz) = coords;
+    pub fn new(coords: Vec2<i32>, size: usize, max_height: usize, dimension: usize) -> Self {
+        let Vec2(cx, cz) = coords;
 
         let name = convert::get_chunk_name(cx, cz);
 
@@ -70,16 +70,17 @@ impl Chunk {
         );
         let height_map = ndarray(vec![size + DATA_PADDING * 2, size + DATA_PADDING * 2], 0);
 
-        let coords3 = Coords3(cx, 0, cz);
+        let coords3 = Vec3(cx, 0, cz);
 
-        let paddings = Coords3(DATA_PADDING as i32, 0, DATA_PADDING as i32);
+        let paddings = Vec3(DATA_PADDING as i32, 0, DATA_PADDING as i32);
 
         let min_inner = coords3.scale(size as i32);
         let min = min_inner.sub(&paddings);
-        let max_inner = coords3
-            .add(&Coords3(1, 0, 1))
-            .scale(size as i32)
-            .add(&Coords3(0, max_height as i32, 0));
+        let max_inner =
+            coords3
+                .add(&Vec3(1, 0, 1))
+                .scale(size as i32)
+                .add(&Vec3(0, max_height as i32, 0));
         let max = max_inner.add(&paddings);
 
         Self {
@@ -118,7 +119,7 @@ impl Chunk {
             return 0;
         }
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.voxels[&[lx as usize, ly as usize, lz as usize]]
     }
 
@@ -126,7 +127,7 @@ impl Chunk {
     pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         assert!(self.contains(vx, vy, vz,));
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.voxels[&[lx as usize, ly as usize, lz as usize]] = id;
     }
 
@@ -136,7 +137,7 @@ impl Chunk {
             return 0;
         }
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.get_local_red_light(lx as usize, ly as usize, lz as usize)
     }
 
@@ -144,7 +145,7 @@ impl Chunk {
     pub fn set_red_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.set_local_red_light(lx as usize, ly as usize, lz as usize, level);
     }
 
@@ -154,7 +155,7 @@ impl Chunk {
             return 0;
         }
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.get_local_blue_light(lx as usize, ly as usize, lz as usize)
     }
 
@@ -162,7 +163,7 @@ impl Chunk {
     pub fn set_blue_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.set_local_blue_light(lx as usize, ly as usize, lz as usize, level);
     }
 
@@ -172,7 +173,7 @@ impl Chunk {
             return 0;
         }
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.get_local_green_light(lx as usize, ly as usize, lz as usize)
     }
 
@@ -180,7 +181,7 @@ impl Chunk {
     pub fn set_green_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.set_local_green_light(lx as usize, ly as usize, lz as usize, level);
     }
 
@@ -210,7 +211,7 @@ impl Chunk {
             return 0;
         }
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.get_local_sunlight(lx as usize, ly as usize, lz as usize)
     }
 
@@ -218,7 +219,7 @@ impl Chunk {
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.set_local_sunlight(lx as usize, ly as usize, lz as usize, level)
     }
 
@@ -228,7 +229,7 @@ impl Chunk {
             return self.max_height as i32;
         }
 
-        let Coords3(lx, _, lz) = self.to_local(vx, 0, vz);
+        let Vec3(lx, _, lz) = self.to_local(vx, 0, vz);
         self.height_map[&[lx as usize, lz as usize]]
     }
 
@@ -236,7 +237,7 @@ impl Chunk {
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
         assert!(self.contains(vx, 0, vz,));
 
-        let Coords3(lx, _, lz) = self.to_local(vx, 0, vz);
+        let Vec3(lx, _, lz) = self.to_local(vx, 0, vz);
         self.height_map[&[lx as usize, lz as usize]] = height;
     }
 
@@ -334,8 +335,8 @@ impl Chunk {
     }
 
     #[inline]
-    fn to_local(&self, vx: i32, vy: i32, vz: i32) -> Coords3<i32> {
-        Coords3(vx, vy, vz).sub(&self.min)
+    fn to_local(&self, vx: i32, vy: i32, vz: i32) -> Vec3<i32> {
+        Vec3(vx, vy, vz).sub(&self.min)
     }
 
     #[inline]
@@ -343,7 +344,7 @@ impl Chunk {
         let size = self.size as i32;
         let max_height = self.max_height as i32;
 
-        let Coords3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
 
         lx >= 0
             && lx < size + DATA_PADDING as i32 * 2

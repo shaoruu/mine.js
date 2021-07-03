@@ -2,14 +2,14 @@ use std::f32::consts::PI;
 
 use crate::{
     core::engine::{chunk::Chunk, registry::Registry},
-    libs::{noise::Noise, types::Coords3},
+    libs::{noise::Noise, types::Vec3},
 };
 
 use super::biomes::{get_biome_config, BiomeConfig};
 
 #[derive(Clone, Debug)]
 pub struct VoxelUpdate {
-    pub voxel: Coords3<i32>,
+    pub voxel: Vec3<i32>,
     pub id: u32,
 }
 
@@ -39,7 +39,7 @@ impl Builder {
             if sx != new_x || sz != new_z {
                 updates.push(VoxelUpdate {
                     id,
-                    voxel: Coords3(x + new_x, y, z + new_z),
+                    voxel: Vec3(x + new_x, y, z + new_z),
                 });
 
                 sx = new_x;
@@ -50,7 +50,7 @@ impl Builder {
         updates
     }
 
-    fn sample_plants(&self, chunk: &Chunk) -> Vec<Coords3<i32>> {
+    fn sample_plants(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
 
@@ -65,7 +65,7 @@ impl Builder {
                         .noise
                         .central_fractal_perlin(vx as f64, vz as f64, plant_scale, 5)
                 {
-                    locations.push(Coords3(vx, vy + 1, vz));
+                    locations.push(Vec3(vx, vy + 1, vz));
                 }
             }
         }
@@ -88,7 +88,7 @@ impl Builder {
         let mut updates = Vec::new();
 
         for location in locations.into_iter() {
-            let Coords3(vx, vy, vz) = location;
+            let Vec3(vx, vy, vz) = location;
             let stand = chunk.get_voxel(vx, vy - 1, vz);
 
             let mut id = types["Grass"];
@@ -142,7 +142,7 @@ impl Builder {
         updates
     }
 
-    fn sample_trees(&self, chunk: &Chunk) -> Vec<Coords3<i32>> {
+    fn sample_trees(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
 
@@ -154,7 +154,7 @@ impl Builder {
                 if self.registry.is_plantable(chunk.get_voxel(vx, vy, vz))
                     && self.noise.central_perlin(vx as f64, vz as f64, tree_scale)
                 {
-                    locations.push(Coords3(vx, vy, vz));
+                    locations.push(Vec3(vx, vy, vz));
                 }
             }
         }
@@ -171,7 +171,7 @@ impl Builder {
         let mut updates = Vec::new();
 
         for location in locations.into_iter() {
-            let Coords3(vx, vy, vz) = location;
+            let Vec3(vx, vy, vz) = location;
 
             let BiomeConfig { tree_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
 
@@ -207,12 +207,12 @@ impl Builder {
 
             for i in 0..height {
                 updates.push(VoxelUpdate {
-                    voxel: Coords3(vx as i32, vy as i32 + i, vz as i32),
+                    voxel: Vec3(vx as i32, vy as i32 + i, vz as i32),
                     id: types["Trunk"],
                 })
             }
 
-            let Coords3(tbx, tby, tbz) = Coords3(vx as i32, vy as i32 + height, vz as i32);
+            let Vec3(tbx, tby, tbz) = Vec3(vx as i32, vy as i32 + height, vz as i32);
 
             let bush_size = 1;
             let bush_big_size = 2;
@@ -252,7 +252,7 @@ impl Builder {
                         }
 
                         updates.push(VoxelUpdate {
-                            voxel: Coords3(tbx + i, tby + j, tbz + k),
+                            voxel: Vec3(tbx + i, tby + j, tbz + k),
                             id: mf,
                         });
                     }
@@ -263,7 +263,7 @@ impl Builder {
         updates
     }
 
-    fn sample_lamps(&self, chunk: &Chunk) -> Vec<Coords3<i32>> {
+    fn sample_lamps(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
 
@@ -271,7 +271,7 @@ impl Builder {
             for vz in min.2..max.2 {
                 let vy = chunk.get_max_height(vx, vz);
                 if self.noise.central_perlin(vx as f64, vz as f64, 0.02) {
-                    locations.push(Coords3(vx, vy, vz));
+                    locations.push(Vec3(vx, vy, vz));
                 }
             }
         }
@@ -295,7 +295,7 @@ impl Builder {
         updates
     }
 
-    fn sample_stone_structure(&self, chunk: &Chunk) -> Vec<Coords3<i32>> {
+    fn sample_stone_structure(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
 
@@ -303,7 +303,7 @@ impl Builder {
             for vz in min.2..max.2 {
                 let vy = chunk.get_max_height(vx, vz);
                 if self.noise.central_perlin(vx as f64, vz as f64, 0.008) {
-                    locations.push(Coords3(vx, vy + 1, vz));
+                    locations.push(Vec3(vx, vy + 1, vz));
                 }
             }
         }
@@ -318,7 +318,7 @@ impl Builder {
         let mut updates = Vec::new();
 
         for location in locations.into_iter() {
-            let Coords3(vx, vy, vz) = location;
+            let Vec3(vx, vy, vz) = location;
 
             for i in 0..6 {
                 updates.append(&mut Builder::draw_circle(
@@ -332,7 +332,7 @@ impl Builder {
 
             for i in 0..4 {
                 updates.push(VoxelUpdate {
-                    voxel: Coords3(vx, vy + i, vz),
+                    voxel: Vec3(vx, vy + i, vz),
                     id: types["Yellow"],
                 });
             }

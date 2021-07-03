@@ -2,14 +2,14 @@
 
 use crate::libs::{
     aabb::Aabb,
-    types::{Coords3, GetVoxel},
+    types::{GetVoxel, Vec3},
 };
 
 use super::math::approx_equals;
 
 const EPSILON: f32 = 1e-10;
 
-type SweepCallback = dyn Fn(f32, usize, i32, Coords3<f32>) -> bool;
+type SweepCallback = dyn Fn(f32, usize, i32, Vec3<f32>) -> bool;
 
 fn lead_edge_to_int(coord: f32, step: i32) -> i32 {
     (coord - step as f32 * EPSILON).floor() as i32
@@ -23,16 +23,16 @@ fn trail_edge_to_int(coord: f32, step: i32) -> i32 {
 fn init_sweep(
     t: &mut f32,
     max_t: &mut f32,
-    vec: &mut Coords3<f32>,
-    step: &mut Coords3<i32>,
-    max: &Coords3<f32>,
-    base: &Coords3<f32>,
-    tr: &mut Coords3<f32>,
-    ldi: &mut Coords3<i32>,
-    tri: &mut Coords3<i32>,
-    normed: &mut Coords3<f32>,
-    t_delta: &mut Coords3<f32>,
-    t_next: &mut Coords3<f32>,
+    vec: &mut Vec3<f32>,
+    step: &mut Vec3<i32>,
+    max: &Vec3<f32>,
+    base: &Vec3<f32>,
+    tr: &mut Vec3<f32>,
+    ldi: &mut Vec3<i32>,
+    tri: &mut Vec3<i32>,
+    normed: &mut Vec3<f32>,
+    t_delta: &mut Vec3<f32>,
+    t_next: &mut Vec3<f32>,
 ) {
     // parametrization t along raycast
     *t = 0.0;
@@ -73,9 +73,9 @@ fn check_collisions(
     i_axis: usize,
     get_voxel: &GetVoxel,
 
-    step: &Coords3<i32>,
-    ldi: &Coords3<i32>,
-    tri: &Coords3<i32>,
+    step: &Vec3<i32>,
+    ldi: &Vec3<i32>,
+    tri: &Vec3<i32>,
 ) -> bool {
     let step_x = step[0];
     let x0 = if i_axis == 0 { ldi[0] } else { tri[0] };
@@ -108,16 +108,16 @@ fn handle_collision(
     callback: &SweepCallback,
     t: &mut f32,
     max_t: &mut f32,
-    vec: &mut Coords3<f32>,
-    step: &mut Coords3<i32>,
-    max: &mut Coords3<f32>,
-    base: &mut Coords3<f32>,
-    tr: &mut Coords3<f32>,
-    ldi: &mut Coords3<i32>,
-    tri: &mut Coords3<i32>,
-    normed: &mut Coords3<f32>,
-    t_delta: &mut Coords3<f32>,
-    t_next: &mut Coords3<f32>,
+    vec: &mut Vec3<f32>,
+    step: &mut Vec3<i32>,
+    max: &mut Vec3<f32>,
+    base: &mut Vec3<f32>,
+    tr: &mut Vec3<f32>,
+    ldi: &mut Vec3<i32>,
+    tri: &mut Vec3<i32>,
+    normed: &mut Vec3<f32>,
+    t_delta: &mut Vec3<f32>,
+    t_next: &mut Vec3<f32>,
 ) -> bool {
     // setup for callback
     *cumulative_t += *t;
@@ -125,7 +125,7 @@ fn handle_collision(
 
     // vector moved so far, and left to move
     let done = *t / *max_t;
-    let mut left = Coords3::default();
+    let mut left = Vec3::default();
     for i in 0..3 {
         let dv = vec[i] * done;
         base[i] += dv;
@@ -165,13 +165,13 @@ fn handle_collision(
 
 fn step_forward(
     t: &mut f32,
-    step: &mut Coords3<i32>,
-    tr: &mut Coords3<f32>,
-    ldi: &mut Coords3<i32>,
-    tri: &mut Coords3<i32>,
-    normed: &mut Coords3<f32>,
-    t_delta: &mut Coords3<f32>,
-    t_next: &mut Coords3<f32>,
+    step: &mut Vec3<i32>,
+    tr: &mut Vec3<f32>,
+    ldi: &mut Vec3<i32>,
+    tri: &mut Vec3<i32>,
+    normed: &mut Vec3<f32>,
+    t_delta: &mut Vec3<f32>,
+    t_next: &mut Vec3<f32>,
 ) -> usize {
     let axis = if t_next[0] < t_next[1] {
         if t_next[0] < t_next[2] {
@@ -201,17 +201,17 @@ fn step_forward(
 fn do_sweep(
     get_voxel: &GetVoxel,
     callback: &SweepCallback,
-    vec: &mut Coords3<f32>,
-    base: &mut Coords3<f32>,
-    max: &mut Coords3<f32>,
+    vec: &mut Vec3<f32>,
+    base: &mut Vec3<f32>,
+    max: &mut Vec3<f32>,
 ) -> f32 {
-    let mut tr = Coords3::default();
-    let mut ldi = Coords3::default();
-    let mut tri = Coords3::default();
-    let mut step = Coords3::default();
-    let mut t_delta = Coords3::default();
-    let mut t_next = Coords3::default();
-    let mut normed = Coords3::default();
+    let mut tr = Vec3::default();
+    let mut ldi = Vec3::default();
+    let mut tri = Vec3::default();
+    let mut step = Vec3::default();
+    let mut t_delta = Vec3::default();
+    let mut t_next = Vec3::default();
+    let mut normed = Vec3::default();
 
     let mut cumulative_t = 0.0;
     let mut t = 0.0;
@@ -297,14 +297,14 @@ fn do_sweep(
 pub fn sweep(
     get_voxel: &GetVoxel,
     aabb: &mut Aabb,
-    dir: &Coords3<f32>,
+    dir: &Vec3<f32>,
     callback: &SweepCallback,
     no_translate: bool,
 ) -> f32 {
     let mut vec = dir.clone();
     let mut max = aabb.max.clone();
     let mut base = aabb.base.clone();
-    let mut result = Coords3::default();
+    let mut result = Vec3::default();
 
     let dist = do_sweep(get_voxel, callback, &mut vec, &mut base, &mut max);
 
@@ -330,6 +330,6 @@ mod tests {
     #[test]
     fn basics() {
         let get_voxels = |_: i32, _: i32, _: i32| 0;
-        let aabb = Aabb::new(&Coords3(0.25, 0.25, 0.25), &Coords3(0.75, 0.75, 0.75));
+        let aabb = Aabb::new(&Vec3(0.25, 0.25, 0.25), &Vec3(0.75, 0.75, 0.75));
     }
 }
