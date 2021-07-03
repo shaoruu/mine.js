@@ -1,8 +1,8 @@
 Arguments: 
-  /usr/local/bin/node /usr/share/yarn/bin/yarn.js add @types/three-spritetext
+  /usr/local/bin/node /usr/share/yarn/bin/yarn.js add -D @types/voxel-aabb-sweep
 
 PATH: 
-  /home/owner/anaconda3/bin:/home/owner/anaconda3/condabin:/home/owner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/owner/.yarn/bin
+  /home/owner/.local/bin:/home/owner/anaconda3/bin:/home/owner/anaconda3/condabin:/home/owner/.cargo/bin:/home/owner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/owner/.yarn/bin:/usr/local/go/bin
 
 Yarn version: 
   1.22.5
@@ -14,7 +14,7 @@ Platform:
   linux x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2fthree-spritetext: Not found
+  Error: https://registry.yarnpkg.com/@types%2fvoxel-aabb-sweep: Not found
       at Request.params.callback [as _callback] (/usr/share/yarn/lib/cli.js:66988:18)
       at Request.self.callback (/usr/share/yarn/lib/cli.js:140749:22)
       at Request.emit (node:events:369:20)
@@ -94,27 +94,26 @@ npm manifest:
       "webpack": "^5.16.0",
       "webpack-cli": "^4.4.0",
       "webpack-dev-server": "^3.11.2",
-      "ws": "^7.4.5",
+      "ws": "^7.4.6",
       "zlib": "^1.0.5"
     },
     "scripts": {
       "client": "webpack",
       "watch": "gulp dev -L",
-      "server": "yarn run testbed",
+      "server": "RUST_BACKTRACE=1 cargo watch -c -w server -w metadata -x 'run --release'",
+      "server:kill": "kill $(lsof -ti:4000)",
+      "server:udeps": "cargo +nightly udeps",
       "build": "cross-env NODE_ENV=production webpack",
       "compile:ts": "pbts -o protocol/index.d.ts protocol/index.js",
       "compile:js": "pbjs -t static-module -w commonjs -o protocol/index.js protocol/messages.proto",
       "compile": "yarn run compile:js && yarn run compile:ts",
+      "test": "RUST_BACKTRACE=1 cargo test -- --nocapture",
       "dev": "npm-run-all --parallel server client watch",
-      "all": "cross-env WORLDS=* nodemon",
-      "mine": "cross-env WORLDS=mine nodemon",
-      "testbed": "cross-env WORLDS=testbed nodemon",
-      "terrains": "cross-env WORLDS=terrains nodemon",
-      "start": "cross-env NODE_ENV=production WORLDS=testbed,idk nodemon",
       "validate": "svelte-check"
     },
     "dependencies": {
       "@mapbox/node-pre-gyp": "^1.0.3",
+      "@tweenjs/tween.js": "^18",
       "@types/query-string": "^6.3.0",
       "@types/three": "^0.127.1",
       "buffer": "^6.0.3",
@@ -129,6 +128,7 @@ npm manifest:
       "pako": "^2.0.3",
       "postprocessing": "^6.21.4",
       "query-string": "^7.0.0",
+      "random-name": "^0.1.2",
       "raw-loader": "^4.0.2",
       "stats.js": "^0.17.0",
       "three": "^0.127.0",
@@ -325,6 +325,11 @@ Lockfile:
     version "1.0.10"
     resolved "https://registry.npmjs.org/@tsconfig/svelte/-/svelte-1.0.10.tgz"
     integrity sha512-EBrpH2iXXfaf/9z81koiDYkp2mlwW2XzFcAqn6qh7VKyP8zBvHHAQzNhY+W9vH5arAjmGAm5g8ElWq6YmXm3ig==
+  
+  "@tweenjs/tween.js@^18":
+    version "18.6.4"
+    resolved "https://registry.yarnpkg.com/@tweenjs/tween.js/-/tween.js-18.6.4.tgz#40a3d0a93647124872dec8e0fd1bd5926695b6ca"
+    integrity sha512-lB9lMjuqjtuJrx7/kOkqQBtllspPIN+96OvTCeJ2j5FEzinoAXTdAMFnDAQT1KVPRlnYfBrqxtqP66vDM40xxQ==
   
   "@types/browser-sync@^2.26.1":
     version "2.26.1"
@@ -1409,13 +1414,13 @@ Lockfile:
       yargs "^15.4.1"
   
   browserslist@^4.14.5:
-    version "4.16.4"
-    resolved "https://registry.npmjs.org/browserslist/-/browserslist-4.16.4.tgz"
-    integrity sha512-d7rCxYV8I9kj41RH8UKYnvDYCRENUlHRgyXy/Rhr/1BaeLGfiCptEdFE8MIrvGfWbBFNjVYx76SQWvNX1j+/cQ==
+    version "4.16.6"
+    resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.16.6.tgz#d7901277a5a88e554ed305b183ec9b0c08f66fa2"
+    integrity sha512-Wspk/PqO+4W9qp5iUTJsa1B/QrYn1keNCcEP5OvP7WBwT4KaDly0uONYmC6Xa3Z5IqnUgS0KcgLYu1l74x0ZXQ==
     dependencies:
-      caniuse-lite "^1.0.30001208"
+      caniuse-lite "^1.0.30001219"
       colorette "^1.2.2"
-      electron-to-chromium "^1.3.712"
+      electron-to-chromium "^1.3.723"
       escalade "^3.1.1"
       node-releases "^1.1.71"
   
@@ -1548,10 +1553,10 @@ Lockfile:
     resolved "https://registry.npmjs.org/camelcase/-/camelcase-6.2.0.tgz"
     integrity sha512-c7wVvbw3f37nuobQNtgsgG9POC9qMbNuMQmTCqZv23b6MIz0fcYpBiOlv9gEN/hdLdnZTDQhg6e9Dq5M1vKvfg==
   
-  caniuse-lite@^1.0.30001208:
-    version "1.0.30001208"
-    resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001208.tgz"
-    integrity sha512-OE5UE4+nBOro8Dyvv0lfx+SRtfVIOM9uhKqFmJeUbGriqhhStgp1A0OyBpgy3OUF8AhYCT+PVwPC1gMl2ZcQMA==
+  caniuse-lite@^1.0.30001219:
+    version "1.0.30001230"
+    resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001230.tgz#8135c57459854b2240b57a4a6786044bdc5a9f71"
+    integrity sha512-5yBd5nWCBS+jWKTcHOzXwo5xzcj4ePE/yjtkZyUV1BTUmrBaA9MRGC+e7mxnqXSA90CmCA8L3eKLaSUkt099IQ==
   
   canvas@^2.8.0:
     version "2.8.0"
@@ -1798,7 +1803,7 @@ Lockfile:
   
   colorette@^1.2.1, colorette@^1.2.2:
     version "1.2.2"
-    resolved "https://registry.npmjs.org/colorette/-/colorette-1.2.2.tgz"
+    resolved "https://registry.yarnpkg.com/colorette/-/colorette-1.2.2.tgz#cbcc79d5e99caea2dbf10eb3a26fd8b3e6acfa94"
     integrity sha512-MKGMzyfeuutC/ZJ1cba9NqcNpfeqMUcYmyF1ZFY6/Cn7CNSAKx6a+s48sqLqyAiZuaP2TcqMhoo+dlwFnVxT9w==
   
   commander@^2.2.0, commander@^2.20.0:
@@ -2264,9 +2269,9 @@ Lockfile:
     integrity sha1-s55/HabrCnW6nBcySzR1PEfgZU0=
   
   dns-packet@^1.3.1:
-    version "1.3.1"
-    resolved "https://registry.npmjs.org/dns-packet/-/dns-packet-1.3.1.tgz"
-    integrity sha512-0UxfQkMhYAUaZI+xrNZOz/as5KgDU0M/fQ9b6SpkyLbk3GEswDi6PADJVaYJradtRVsRIlF1zLyOodbcTCDzUg==
+    version "1.3.4"
+    resolved "https://registry.yarnpkg.com/dns-packet/-/dns-packet-1.3.4.tgz#e3455065824a2507ba886c55a89963bb107dec6f"
+    integrity sha512-BQ6F4vycLXBvdrJZ6S3gZewt6rcrks9KBgM9vrhW+knGRqc8uEdT7fuCwloc7nny5xNoMJ17HGH0R/6fpo8ECA==
     dependencies:
       ip "^1.1.0"
       safe-buffer "^5.0.1"
@@ -2359,10 +2364,10 @@ Lockfile:
     resolved "https://registry.npmjs.org/ee-first/-/ee-first-1.1.1.tgz"
     integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
   
-  electron-to-chromium@^1.3.712:
-    version "1.3.715"
-    resolved "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.715.tgz"
-    integrity sha512-VCWxo9RqTYhcCsHtG+l0TEOS6H5QmO1JyVCQB9nv8fllmAzj1VcCYH3qBCXP75/En6FeoepefnogLPE+5W7OiQ==
+  electron-to-chromium@^1.3.723:
+    version "1.3.738"
+    resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.738.tgz#aec24b091c82acbfabbdcce08076a703941d17ca"
+    integrity sha512-vCMf4gDOpEylPSLPLSwAEsz+R3ShP02Y3cAKMZvTqule3XcPp7tgc/0ESI7IS6ZeyBlGClE50N53fIOkcIVnpw==
   
   emoji-regex@^7.0.1:
     version "7.0.3"
@@ -2558,7 +2563,7 @@ Lockfile:
   
   escalade@^3.1.1:
     version "3.1.1"
-    resolved "https://registry.npmjs.org/escalade/-/escalade-3.1.1.tgz"
+    resolved "https://registry.yarnpkg.com/escalade/-/escalade-3.1.1.tgz#d8cfdc7000965c5a0174b4a82eaa5c0552742e40"
     integrity sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==
   
   escape-goat@^2.0.0:
@@ -5175,9 +5180,9 @@ Lockfile:
     integrity sha512-PPmu8eEeG9saEUvI97fm4OYxXVB6bFvyNTyiUOBichBpFG8A1Ljw3bY62+5oOjDEMHRnd0Y7HQ+x7uzxOzC6JA==
   
   node-releases@^1.1.71:
-    version "1.1.71"
-    resolved "https://registry.npmjs.org/node-releases/-/node-releases-1.1.71.tgz"
-    integrity sha512-zR6HoT6LrLCRBwukmrVbHv0EpEQjksO6GmFcZQQuCAy139BEsoVKPYnf3jongYW83fAa1torLGYwxxky/p28sg==
+    version "1.1.72"
+    resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-1.1.72.tgz#14802ab6b1039a79a0c7d662b610a5bbd76eacbe"
+    integrity sha512-LLUo+PpH3dU6XizX3iVoubUNheF/owjXCZZ5yACDxNnPtgFuludV1ZL3ayK1kVep42Rmm0+R9/Y60NQbZ2bifw==
   
   nodemon@^2.0.7:
     version "2.0.7"
@@ -5237,9 +5242,9 @@ Lockfile:
     integrity sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==
   
   normalize-url@^4.1.0:
-    version "4.5.0"
-    resolved "https://registry.npmjs.org/normalize-url/-/normalize-url-4.5.0.tgz"
-    integrity sha512-2s47yzUxdexf1OhyRi4Em83iQk0aPvwTddtFz4hnSSw9dCEsLEGf6SwIO8ss/19S9iBb5sJaOuTvTGDeZI00BQ==
+    version "4.5.1"
+    resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-4.5.1.tgz#0dd90cf1288ee1d1313b87081c9a5932ee48518a"
+    integrity sha512-9UZCFRHQdNrfTpGg8+1INIg93B6zE0aXMVFkw1WFwvO4SlZywU6aLg5Of0Ap/PgcbSw4LNxvMWXMeugwMCX0AA==
   
   now-and-later@^2.0.0:
     version "2.0.1"
@@ -6050,6 +6055,11 @@ Lockfile:
     version "4.0.3"
     resolved "https://registry.yarnpkg.com/quick-format-unescaped/-/quick-format-unescaped-4.0.3.tgz#6d6b66b8207aa2b35eef12be1421bb24c428f652"
     integrity sha512-MaL/oqh02mhEo5m5J2rwsVL23Iw2PEaGVHgT2vFt8AAsr0lfvQA5dpXo9TPu0rz7tSBdUPgkbam0j/fj5ZM8yg==
+  
+  random-name@^0.1.2:
+    version "0.1.2"
+    resolved "https://registry.yarnpkg.com/random-name/-/random-name-0.1.2.tgz#20a1ad0efce9976764c5dd3c418c7018b57e816d"
+    integrity sha1-IKGtDvzpl2dkxd08QYxwGLV+gW0=
   
   randombytes@^2.1.0:
     version "2.1.0"
@@ -8208,15 +8218,10 @@ Lockfile:
     dependencies:
       async-limiter "~1.0.0"
   
-  ws@^7.4.2, ws@^7.4.5:
-    version "7.4.5"
-    resolved "https://registry.npmjs.org/ws/-/ws-7.4.5.tgz"
-    integrity sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==
-  
-  ws@~7.4.2:
-    version "7.4.4"
-    resolved "https://registry.npmjs.org/ws/-/ws-7.4.4.tgz"
-    integrity sha512-Qm8k8ojNQIMx7S+Zp8u/uHOx7Qazv3Yv4q68MiWWWOJhiwG5W3x7iqmRtJo8xxrciZUY4vRxUTJCKuRnF28ZZw==
+  ws@^7.4.2, ws@^7.4.6, ws@~7.4.2:
+    version "7.4.6"
+    resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.6.tgz#5654ca8ecdeee47c33a9a4bf6d28e2be2980377c"
+    integrity sha512-YmhHDO4MzaDLB+M9ym/mDA5z0naX8j7SIlT8f8z+I0VtzsRbekxEutHSme7NPS2qE8StCYQNUnfWdXta/Yu85A==
   
   xdg-basedir@^4.0.0:
     version "4.0.0"

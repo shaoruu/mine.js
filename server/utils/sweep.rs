@@ -89,14 +89,20 @@ fn check_collisions(
     let z0 = if i_axis == 2 { ldi[2] } else { tri[2] };
     let z1 = ldi[2] + step_z;
 
-    for x in (x0..x1).step_by(step_x as usize) {
-        for y in (y0..y1).step_by(step_y as usize) {
-            for z in (z0..z1).step_by(step_z as usize) {
+    let mut x = x0;
+    while x != x1 {
+        let mut y = y0;
+        while y != y1 {
+            let mut z = z0;
+            while z != z1 {
                 if get_voxel(x, y, z) != 0 {
                     return true;
                 }
+                z += step_z;
             }
+            y += step_y;
         }
+        x += step_x;
     }
 
     false
@@ -136,13 +142,13 @@ fn handle_collision(
     // set leading edge of stepped axis exactly to voxel boundary
     // else we'll sometimes rounding error beyond it
     if dir > 0 {
-        max[axis as usize] = max[axis as usize].round();
+        max[axis] = max[axis].round();
     } else {
-        base[axis as usize] = base[axis as usize].round();
+        base[axis] = base[axis].round();
     }
 
     // call back to let client update the "left to go" vector
-    let res = callback(*cumulative_t, axis as usize, dir, left.clone());
+    let res = callback(*cumulative_t, axis, dir, left.clone());
 
     if res {
         return true;
@@ -267,6 +273,7 @@ fn do_sweep(
                 &mut t_delta,
                 &mut t_next,
             );
+
             if done {
                 return cumulative_t;
             }
@@ -285,9 +292,10 @@ fn do_sweep(
     }
 
     cumulative_t += max_t;
+
     for i in 0..3 {
-        base[i] = vec[i];
-        max[i] = vec[i];
+        base[i] += vec[i];
+        max[i] += vec[i];
     }
 
     cumulative_t
@@ -315,9 +323,12 @@ pub fn sweep(
                 base[i] - aabb.base[i]
             };
         }
+        println!("{:?} {:?}", aabb, result);
 
         aabb.translate(&result);
     }
+
+    println!("dist {}", dist);
 
     dist
 }
@@ -343,6 +354,67 @@ mod tests {
 
         let res = sweep(&get_voxels, &mut aabb, &dir, &mut callback, false);
         assert!(!*collided.lock().unwrap());
-        // assert_eq!((res - 0.0), f32::EPSILON, "No movement with empty vector");
+        assert!(
+            (res - 0.0).abs() < f32::EPSILON,
+            "No movement with empty vector 1"
+        );
+        assert!(
+            (aabb.base[0] - 0.25).abs() < f32::EPSILON,
+            "No movement with empty vector 2"
+        );
+        assert!(
+            (aabb.base[1] - 0.25).abs() < f32::EPSILON,
+            "No movement with empty vector 3"
+        );
+        assert!(
+            (aabb.base[2] - 0.25).abs() < f32::EPSILON,
+            "No movement with empty vector 4"
+        );
+
+        let dir = Vec3(10.0, -5.0, -15.0);
+        aabb.set_position(&Vec3(0.25, 0.25, 0.25));
+        *collided.lock().unwrap() = false;
+        let res = sweep(&get_voxels, &mut aabb, &dir, &mut callback, false);
+        assert!(!*collided.lock().unwrap());
+        assert!(
+            (res - ((100.0 + 25.0 + 225.0) as f32).sqrt()).abs() < f32::EPSILON,
+            "Full movement through empty voxels 1"
+        );
+        assert!(
+            (aabb.base[0] - 0.25 - dir[0]).abs() < f32::EPSILON,
+            "Full movement through empty voxels 2"
+        );
+        assert!(
+            (aabb.base[1] - 0.25 - dir[1]).abs() < f32::EPSILON,
+            "Full movement through empty voxels 3"
+        );
+        assert!(
+            (aabb.base[2] - 0.25 - dir[2]).abs() < f32::EPSILON,
+            "Full movement through empty voxels 4"
+        );
+
+        let get_voxels = |_: i32, _: i32, _: i32| 1;
+        let dir = Vec3(0.0, 0.0, 0.0);
+        aabb.set_position(&Vec3(0.25, 0.25, 0.25));
+        *collided.lock().unwrap() = false;
+        let res = sweep(&get_voxels, &mut aabb, &dir, &mut callback, false);
+        assert!(
+            !*collided.lock().unwrap(),
+            "No collision not moving through full voxels 1"
+        );
+        assert!(
+            (res - 0.0).abs() < f32::EPSILON,
+            "No collision not moving through full voxels 2"
+        );
+
+        let dir = Vec3(1.0, 0.0, 0.0);
+        aabb.set_position(&Vec3(0.25, 0.25, 0.25));
+        *collided.lock().unwrap() = false;
+        let res = sweep(&get_voxels, &mut aabb, &dir, &mut callback, false);
+        assert!(*collided.lock().unwrap());
+        assert!(
+            (res - 0.25).abs() < f32::EPSILON,
+            "Collision moving through full voxels 1"
+        );
     }
 }

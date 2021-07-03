@@ -63,8 +63,8 @@ impl Aabb {
     }
 
     pub fn translate(&mut self, by: &Vec3<f32>) -> &Self {
-        self.max.add(by);
-        self.base.add(by);
+        self.max = self.max.add(by);
+        self.base = self.base.add(by);
         self
     }
 

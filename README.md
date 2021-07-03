@@ -1,15 +1,34 @@
 # MineJS
 
 ```bash
-# to run server, you need cargo watch
+# go to the folder you save ur projects
+cd path/to/folder
+
+# clone the repository
+git clone https://github.com/ian13456/mine.js
+
+# cd into mine.js
+cd mine.js
+
+# you need yarn for this project
+# somewhere here https://classic.yarnpkg.com/en/docs/install/#debian-stable
+# after you install yarn, install the dependencies needed
+yarn
+
+# next you need cargo watch
 cargo install cargo-watch
 
-# run server
+# next compile protobuf
+yarn compile
+
+# next run server
 yarn server
 
-# to run udeps, you need nightly
-rustup toolchain install nightly
+# next listen on client changes (separate terminal)
+yarn client
 
-# run udeps
-yarn server::udeps
+# OPEN ANOTHER TERMINAL
+yarn watch
+
+# visit localhost:3000
 ```

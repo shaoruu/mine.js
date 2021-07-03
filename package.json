@@ -78,7 +78,7 @@
     "compile:ts": "pbts -o protocol/index.d.ts protocol/index.js",
     "compile:js": "pbjs -t static-module -w commonjs -o protocol/index.js protocol/messages.proto",
     "compile": "yarn run compile:js && yarn run compile:ts",
-    "test": "cargo test -- --nocapture",
+    "test": "RUST_BACKTRACE=1 cargo test -- --nocapture",
     "dev": "npm-run-all --parallel server client watch",
     "validate": "svelte-check"
   },
