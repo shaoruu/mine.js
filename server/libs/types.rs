@@ -3,8 +3,8 @@
 use num::{cast, Float, Num};
 
 use std::{
-    cmp::{max, min},
     collections::HashMap,
+    ops::{Index, IndexMut},
 };
 
 pub type TypeMap = HashMap<String, u32>;
@@ -65,6 +65,36 @@ where
     }
 }
 
+impl<T: Num + Clone> Index<usize> for Coords3<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        if index == 0 {
+            &self.0
+        } else if index == 1 {
+            &self.1
+        } else if index == 2 {
+            &self.2
+        } else {
+            panic!("Index out of bounds for accessing Coords3.");
+        }
+    }
+}
+
+impl<T: Num + Clone> IndexMut<usize> for Coords3<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        if index == 0 {
+            &mut self.0
+        } else if index == 1 {
+            &mut self.1
+        } else if index == 2 {
+            &mut self.2
+        } else {
+            panic!("Index out of bounds for accessing Coords3.");
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Default, Clone)]
 pub struct Quaternion(pub f32, pub f32, pub f32, pub f32);
 
@@ -120,3 +150,5 @@ pub struct MeshType {
     pub aos: Vec<i32>,
     pub lights: Vec<i32>,
 }
+
+pub type GetVoxel = dyn Fn(i32, i32, i32) -> u32;

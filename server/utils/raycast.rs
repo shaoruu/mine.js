@@ -1,10 +1,8 @@
 // HELP FROM https://github.com/andyhall/fast-voxel-raycast/blob/master/index.js
 
-use crate::libs::types::Coords3;
+use crate::libs::types::{Coords3, GetVoxel};
 
 use super::math::approx_equals;
-
-type GetVoxel = dyn Fn(i32, i32, i32) -> u32;
 
 #[allow(clippy::too_many_arguments)]
 fn trace_ray(

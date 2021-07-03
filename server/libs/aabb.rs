@@ -3,7 +3,7 @@ use crate::utils::math::approx_equals;
 use super::types::Coords3;
 
 #[derive(Debug, Clone)]
-struct Aabb {
+pub struct Aabb {
     pub base: Coords3<f32>,
     pub vec: Coords3<f32>,
     pub max: Coords3<f32>,
