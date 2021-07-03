@@ -1,5 +1,21 @@
 # MineJS
 
+:warning: Project is not done yet! Any PR is welcomed.
+
+Here's the quick TODO list that we're following: [Link](https://www.notion.so/f61d8c4ce1e245b6aba980adf0f1ea7c?v=77f64c4f1ed342a1b25d8af524cb9da0)
+
+![](https://i.imgur.com/WMrPzFI.png)
+
+![](https://i.imgur.com/bUm6ph2.png)
+
+![](https://i.imgur.com/52BTtya.png)
+
+![](https://i.imgur.com/IupfBVF.png)
+
+![](https://i.imgur.com/5kGNmdL.png)
+
+## Installation
+
 ```bash
 # go to the folder you save ur projects
 cd path/to/folder
