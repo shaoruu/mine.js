@@ -1,6 +1,6 @@
 # MineJS
 
-:warning: Project is not done yet! Any PR is welcomed.
+:snowman: still working on the project daily. Any PRs are welcomed.
 
 Here's the quick TODO list that we're following: [Link](https://www.notion.so/f61d8c4ce1e245b6aba980adf0f1ea7c?v=77f64c4f1ed342a1b25d8af524cb9da0)
 
