@@ -9,7 +9,7 @@ use super::math::approx_equals;
 
 const EPSILON: f32 = 1e-10;
 
-type SweepCallback = dyn Fn(f32, usize, i32, Vec3<f32>) -> bool;
+type SweepCallback = dyn FnMut(f32, usize, i32, Vec3<f32>) -> bool;
 
 fn lead_edge_to_int(coord: f32, step: i32) -> i32 {
     (coord - step as f32 * EPSILON).floor() as i32
@@ -105,7 +105,7 @@ fn check_collisions(
 fn handle_collision(
     axis: usize,
     cumulative_t: &mut f32,
-    callback: &SweepCallback,
+    callback: &mut SweepCallback,
     t: &mut f32,
     max_t: &mut f32,
     vec: &mut Vec3<f32>,
@@ -200,7 +200,7 @@ fn step_forward(
 
 fn do_sweep(
     get_voxel: &GetVoxel,
-    callback: &SweepCallback,
+    callback: &mut SweepCallback,
     vec: &mut Vec3<f32>,
     base: &mut Vec3<f32>,
     max: &mut Vec3<f32>,
@@ -217,7 +217,6 @@ fn do_sweep(
     let mut t = 0.0;
     let mut max_t = 0.0;
     let mut axis: usize = 0;
-    let i = 0.0;
 
     init_sweep(
         &mut t,
@@ -298,7 +297,7 @@ pub fn sweep(
     get_voxel: &GetVoxel,
     aabb: &mut Aabb,
     dir: &Vec3<f32>,
-    callback: &SweepCallback,
+    callback: &mut SweepCallback,
     no_translate: bool,
 ) -> f32 {
     let mut vec = dir.clone();
@@ -325,11 +324,25 @@ pub fn sweep(
 
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex};
+
     use super::*;
 
     #[test]
     fn basics() {
         let get_voxels = |_: i32, _: i32, _: i32| 0;
-        let aabb = Aabb::new(&Vec3(0.25, 0.25, 0.25), &Vec3(0.75, 0.75, 0.75));
+        let mut aabb = Aabb::new(&Vec3(0.25, 0.25, 0.25), &Vec3(0.75, 0.75, 0.75));
+        let dir = Vec3(0.0, 0.0, 0.0);
+        let collided = Arc::new(Mutex::new(false));
+        let test = collided.clone();
+
+        let mut callback = move |t: f32, axis: usize, dir: i32, vec: Vec3<f32>| {
+            *test.lock().unwrap() = true;
+            true
+        };
+
+        let res = sweep(&get_voxels, &mut aabb, &dir, &mut callback, false);
+        assert!(!*collided.lock().unwrap());
+        // assert_eq!((res - 0.0), f32::EPSILON, "No movement with empty vector");
     }
 }
