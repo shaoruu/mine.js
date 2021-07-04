@@ -56,7 +56,6 @@ pub struct World {
     pub prev_time: SystemTime,
 
     // multithread stuff
-    pub pool: rayon::ThreadPool,
     pub gen_sender: Arc<Sender<Vec<Chunk>>>,
     pub gen_receiver: Arc<Receiver<Vec<Chunk>>>,
     pub mesh_sender: Arc<Sender<Vec<Chunk>>>,
@@ -98,11 +97,6 @@ impl World {
         let chunks = Chunks::new(config, max_loaded_chunks, registry);
         let prev_time = SystemTime::now();
 
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(16)
-            .build()
-            .unwrap();
-
         let (gen_sender, gen_receiver) = unbounded();
         let gen_sender = Arc::new(gen_sender);
         let gen_receiver = Arc::new(gen_receiver);
@@ -124,7 +118,6 @@ impl World {
             chunks,
             prev_time,
 
-            pool,
             gen_sender,
             gen_receiver,
             mesh_sender,
