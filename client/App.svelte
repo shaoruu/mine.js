@@ -39,6 +39,11 @@
   });
 
   onMount(async () => {
+    if (wrapper) {
+      document.body.style.background = document.documentElement.style.background = wrapper.style.background =
+        BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
+    }
+
     if (world) {
       const response = await fetch(
         Helper.getServerURL({
@@ -58,10 +63,6 @@
       engine.on('unlock', () => (locked = false));
       engine.on('chat-enabled', () => (chatEnabled = true));
       engine.on('chat-disabled', () => (chatEnabled = false));
-    }
-
-    if (wrapper) {
-      wrapper.style.background = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
     }
   });
 

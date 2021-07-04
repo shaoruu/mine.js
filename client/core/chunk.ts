@@ -1,7 +1,7 @@
 import TWEEN from '@tweenjs/tween.js';
 import vec3 from 'gl-vec3';
 import ndarray from 'ndarray';
-import { BufferGeometry, Float32BufferAttribute, Mesh, Group, Int32BufferAttribute } from 'three';
+import { BufferGeometry, Float32BufferAttribute, Mesh, Group, Int32BufferAttribute, Box3, Vector3 } from 'three';
 import pool from 'typedarray-pool';
 
 import { ServerMeshType } from '../libs';
@@ -12,11 +12,16 @@ import { Engine } from '.';
 
 type ChunkOptions = {
   size: number;
+  subChunks: number;
   maxHeight: number;
   dimension: number;
 };
-const MESH_TYPES = ['transparent', 'opaque'];
 
+type ChunkMesh = Mesh & {
+  isAdded?: boolean;
+};
+
+const MESH_TYPES = ['transparent', 'opaque'];
 const DATA_PADDING = 1;
 
 class Chunk {
@@ -25,6 +30,7 @@ class Chunk {
 
   public name: string;
   public size: number;
+  public subChunks: number;
   public maxHeight: number;
   public dimension: number;
   public width: number;
@@ -34,8 +40,8 @@ class Chunk {
   public max: Coords3 = [0, 0, 0];
 
   public geometries: Map<string, BufferGeometry[]> = new Map();
-  public meshes: Map<string, Mesh[]> = new Map();
-  public altMeshes: Map<string, Mesh[]> = new Map();
+  public meshes: Map<string, ChunkMesh[]> = new Map();
+  public altMeshes: Map<string, ChunkMesh[]> = new Map();
   public mesh: Group;
 
   public isEmpty = true;
@@ -45,8 +51,9 @@ class Chunk {
   public isInitialized = false; // is populated with terrain info
   public isPending = false; // pending for client-side terrain generation
 
-  constructor(public engine: Engine, public coords: Coords2, { size, dimension, maxHeight }: ChunkOptions) {
+  constructor(public engine: Engine, public coords: Coords2, { size, dimension, maxHeight, subChunks }: ChunkOptions) {
     this.size = size;
+    this.subChunks = subChunks;
     this.maxHeight = maxHeight;
     this.dimension = dimension;
     this.name = Helper.getChunkName(this.coords);
@@ -126,22 +133,29 @@ class Chunk {
     return new TWEEN.Tween(this.mesh.position).to({ y: inverse ? -10 : 0 }, animationTime).start();
   };
 
-  addToScene = () => {
+  addToScene = (check = false) => {
     const { rendering } = this.engine;
 
     rendering.scene.add(this.mesh);
 
-    if (!this.isAdded) {
+    if (!this.isAdded || check) {
       MESH_TYPES.forEach((type) => {
         const altMesh = this.altMeshes.get(type);
         if (altMesh && altMesh.length) {
-          this.mesh.add(...altMesh);
+          altMesh.forEach((subMesh) => {
+            if (subMesh && !subMesh.isAdded) {
+              subMesh.isAdded = true;
+              this.mesh.add(subMesh);
+            }
+          });
           this.meshes.set(type, altMesh);
         }
       });
       this.isAdded = true;
 
-      this.animate();
+      if (!check) {
+        this.animate();
+      }
     }
   };
 
@@ -154,7 +168,14 @@ class Chunk {
       if (this.isAdded) {
         MESH_TYPES.forEach((type) => {
           const mesh = this.meshes.get(type);
-          if (mesh && mesh.length) this.mesh.remove(...mesh);
+          if (mesh && mesh.length) {
+            mesh.forEach((subMesh) => {
+              if (subMesh && subMesh.isAdded) {
+                this.mesh.remove(subMesh);
+                subMesh.isAdded = false;
+              }
+            });
+          }
         });
         this.isAdded = false;
       }
@@ -164,20 +185,18 @@ class Chunk {
   dispose = () => {
     this.geometries.forEach((geo) => geo.forEach((g) => g.dispose()));
     pool.free(this.voxels.data);
+    pool.free(this.lights.data);
   };
 
   setupMesh = (meshDataList: ServerMeshType[]) => {
     this.isMeshing = true;
 
+    const subChunkUnit = this.maxHeight / this.subChunks;
+
     meshDataList.forEach((meshData) => {
       const i = meshData.subChunk || 0;
 
       MESH_TYPES.forEach((type) => {
-        if (!meshData[type]) {
-          this.altMeshes.set(type, undefined);
-          return;
-        }
-
         if (!this.altMeshes.has(type)) {
           this.altMeshes.set(type, []);
         }
@@ -204,18 +223,35 @@ class Chunk {
         geometry.setAttribute('light', new Int32BufferAttribute(lights, lightNumComponents));
         geometry.setIndex(Array.from(indices));
 
+        const min = new Vector3(
+          this.min[0] * this.dimension,
+          subChunkUnit * i * this.dimension,
+          this.min[2] * this.dimension,
+        );
+        const max = new Vector3(
+          this.max[0] * this.dimension,
+          subChunkUnit * (i + 1) * this.dimension,
+          this.max[2] * this.dimension,
+        );
+
+        geometry.boundingBox = new Box3(min, max);
+
         const materials =
           type === 'opaque'
             ? [this.engine.registry.opaqueChunkMaterial]
             : this.engine.registry.transparentChunkMaterials;
 
-        materials.forEach((material) => {
-          const altMesh = new Mesh(geometry, material);
+        materials.forEach((material, j) => {
+          const altMesh = new Mesh(geometry, material) as ChunkMesh;
           altMesh.name = this.name;
           altMesh.frustumCulled = false;
           altMesh.renderOrder = type === 'opaque' ? 1000 : 100;
 
-          this.altMeshes.get(type).push(altMesh);
+          // for transparent meshes, the altMesh array goes something like:
+          // [F, B, F, B, F, B, ...] 8 * 2 = 16 (front: F, back: B)
+          // opaque arr looks like:
+          // [F, F, F, F, F, F, ...] 8 * 1 = 8
+          this.altMeshes.get(type)[i * (type === 'opaque' ? 1 : 2) + j] = altMesh;
         });
 
         geometries[i] = geometry;

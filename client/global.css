@@ -9,13 +9,13 @@
 
 html,
 body {
+  background: #333;
   position: relative;
   width: 100%;
   height: 100%;
 }
 
 body {
-  color: #333;
   margin: 0;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',

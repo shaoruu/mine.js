@@ -60,6 +60,7 @@ class World extends EventEmitter {
     });
 
     engine.on('focus', async () => {
+      if (this.engine.tickSpeed === 0) return;
       const [time, processed] = JSON.parse(await engine.network.fetchData('/time'));
       const received = Date.now();
       this.setTime(time + (received - processed) / this.engine.tickSpeed, false);
@@ -300,7 +301,7 @@ class World extends EventEmitter {
 
     this.chunks.forEach((chunk) => {
       chunk.meshes.forEach((subMeshes) => {
-        meshes.push(...subMeshes);
+        meshes.push(...subMeshes.filter((e) => !!e));
       });
     });
 
@@ -422,14 +423,18 @@ class World extends EventEmitter {
       let chunk = this.getChunkByCPos(coords);
 
       if (!chunk) {
-        const { chunkSize, dimension, maxHeight } = this.options;
-        chunk = new Chunk(this.engine, coords, { size: chunkSize, dimension, maxHeight });
+        const { chunkSize, subChunks, dimension, maxHeight } = this.options;
+        chunk = new Chunk(this.engine, coords, { size: chunkSize, subChunks, dimension, maxHeight });
         this.setChunk(chunk);
       }
 
       const { meshes, voxels, lights } = serverChunk;
 
       chunk.setupMesh(meshes);
+
+      if (chunk.isAdded) {
+        chunk.addToScene(true);
+      }
 
       if (voxels.length) chunk.voxels.data = serverChunk.voxels;
       if (lights.length) chunk.lights.data = serverChunk.lights;
