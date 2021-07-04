@@ -196,12 +196,6 @@ class Chunk {
         }
 
         const geometry = geometries[i] || new BufferGeometry();
-        // console.log(
-        //   lights
-        //     .map((e) => (e >> 8) & 0xf)
-        //     .filter((e) => !!e)
-        //     .sort((a, b) => a - b),
-        // );
 
         geometry.dispose();
         geometry.setAttribute('position', new Float32BufferAttribute(positions, positionNumComponents));

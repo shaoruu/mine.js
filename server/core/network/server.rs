@@ -18,8 +18,8 @@ use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
 use super::message::{
-    self, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds, Noop,
-    PlayerMessage, WorldData,
+    self, FullWorldData, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds,
+    Noop, PlayerMessage, SimpleWorldData,
 };
 use super::models::{
     create_message, messages, messages::chat_message::Type as ChatType,
@@ -271,19 +271,6 @@ impl Handler<Noop> for WsServer {
     fn handle(&mut self, _msg: Noop, _ctx: &mut Self::Context) {}
 }
 
-fn make_world_data(world: &World) -> WorldData {
-    WorldData {
-        name: world.name.to_owned(),
-        time: world.time,
-        generation: match world.chunks.config.generation {
-            GenerationType::FLAT => "flat".to_owned(),
-            GenerationType::HILLY => "hilly".to_owned(),
-        },
-        description: world.description.to_owned(),
-        players: world.clients.len(),
-    }
-}
-
 impl Handler<ListWorlds> for WsServer {
     type Result = MessageResult<ListWorlds>;
 
@@ -291,7 +278,16 @@ impl Handler<ListWorlds> for WsServer {
         let mut data = Vec::new();
 
         self.worlds.values().for_each(|world| {
-            data.push(make_world_data(world));
+            data.push(SimpleWorldData {
+                name: world.name.to_owned(),
+                time: world.time,
+                generation: match world.chunks.config.generation {
+                    GenerationType::FLAT => "flat".to_owned(),
+                    GenerationType::HILLY => "hilly".to_owned(),
+                },
+                description: world.description.to_owned(),
+                players: world.clients.len(),
+            });
         });
 
         MessageResult(data)
@@ -303,8 +299,20 @@ impl Handler<GetWorld> for WsServer {
 
     fn handle(&mut self, msg: GetWorld, _ctx: &mut Self::Context) -> Self::Result {
         let world = self.worlds.get(&msg.0).expect("World not found.");
+        let config = world.chunks.config.clone();
 
-        MessageResult(make_world_data(world))
+        MessageResult(FullWorldData {
+            chunk_size: config.chunk_size,
+            dimension: config.dimension,
+            max_height: config.max_height,
+            max_light_level: config.max_light_level,
+            name: world.name.to_owned(),
+            render_radius: config.render_radius,
+            save: config.save,
+            sub_chunks: config.sub_chunks,
+            tick_speed: world.tick_speed,
+            time: world.time,
+        })
     }
 }
 

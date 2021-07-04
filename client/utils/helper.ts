@@ -4,6 +4,11 @@ import vec3 from 'gl-vec3';
 import { AABB } from '../libs';
 import { Coords2, Coords3 } from '../libs/types';
 
+type ServerUrlOptions = {
+  path?: string;
+  params?: { [key: string]: any };
+};
+
 class Helper {
   /**
    * Given a coordinate of a chunk, return the chunk representation.
@@ -135,9 +140,20 @@ class Helper {
     }
   };
 
-  public static getServerURL = (path = '/') => {
+  public static getServerURL = (options: ServerUrlOptions = {}) => {
+    const { path, params } = {
+      path: '/',
+      params: {},
+      ...options,
+    };
+
     const url = new Url();
     url.path = path;
+
+    Object.keys(params).forEach((key) => {
+      const value = params[key];
+      url.query[key] = value;
+    });
 
     if (url.host === 'localhost') {
       url.port = '4000';

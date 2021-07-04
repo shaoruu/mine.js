@@ -62,8 +62,8 @@ pub struct Noop;
 #[rtype(result = "Vec<String>")]
 pub struct ListWorldNames;
 
-#[derive(MessageResponse, Deserialize, Serialize)]
-pub struct WorldData {
+#[derive(MessageResponse, Deserialize, Serialize, Debug)]
+pub struct SimpleWorldData {
     pub name: String,
     pub time: f32,
     pub generation: String,
@@ -71,10 +71,24 @@ pub struct WorldData {
     pub players: usize,
 }
 
+#[derive(MessageResponse, Deserialize, Serialize, Debug)]
+pub struct FullWorldData {
+    pub chunk_size: usize,
+    pub dimension: usize,
+    pub max_height: u32,
+    pub max_light_level: u32,
+    pub time: f32,
+    pub name: String,
+    pub save: bool,
+    pub tick_speed: f32,
+    pub render_radius: usize,
+    pub sub_chunks: u32,
+}
+
 #[derive(Clone, Message)]
-#[rtype(result = "Vec<WorldData>")]
+#[rtype(result = "Vec<SimpleWorldData>")]
 pub struct ListWorlds;
 
 #[derive(Clone, Message)]
-#[rtype(result = "WorldData")]
+#[rtype(result = "FullWorldData")]
 pub struct GetWorld(pub String);

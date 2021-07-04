@@ -8,9 +8,11 @@ import { Chunk } from './chunk';
 import { Engine } from './engine';
 
 type WorldOptionsType = {
-  maxHeight: number;
-  chunkSize: number;
-  dimension: number;
+  name?: string;
+  maxHeight?: number;
+  chunkSize?: number;
+  subChunks?: number;
+  dimension?: number;
   renderRadius: number;
   requestRadius: number;
   maxChunkProcessPerFrame: number;
@@ -20,6 +22,8 @@ type WorldOptionsType = {
 };
 
 class World extends EventEmitter {
+  public name: string;
+  // has all chunks been generated within render radius at start
   public isReady = false;
 
   public sky: Sky;
@@ -46,14 +50,10 @@ class World extends EventEmitter {
     this.sky = new Sky(engine.rendering);
     this.clouds = new Clouds(engine.rendering);
 
-    engine.on('ready', () => {
-      // const { hardwareConcurrency } = window.navigator;
-      // const renderRadius = Math.min(Math.max(hardwareConcurrency + 2, 6), 8);
+    // kinda ugly
+    this.name = options.name;
 
-      // this.options.renderRadius = renderRadius;
-      // this.options.requestRadius = renderRadius + 2;
-      // this.options.maxChunkProcessPerFrame = Math.max(hardwareConcurrency, 3);
-
+    engine.on('start', () => {
       this.updateRenderRadius(this.options.renderRadius);
 
       engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
@@ -65,6 +65,15 @@ class World extends EventEmitter {
       this.setTime(time + (received - processed) / this.engine.tickSpeed, false);
     });
   }
+
+  setup = (worldData: any) => {
+    const { chunk_size, dimension, max_height, sub_chunks } = worldData;
+
+    this.options.chunkSize = chunk_size;
+    this.options.dimension = dimension;
+    this.options.maxHeight = max_height;
+    this.options.subChunks = sub_chunks;
+  };
 
   tick = () => {
     this.checkCamChunk();
@@ -286,6 +295,18 @@ class World extends EventEmitter {
     return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
   }
 
+  get chunkMeshes() {
+    const meshes = [];
+
+    this.chunks.forEach((chunk) => {
+      chunk.meshes.forEach((subMeshes) => {
+        meshes.push(...subMeshes);
+      });
+    });
+
+    return meshes;
+  }
+
   private checkCamChunk = () => {
     const { chunkSize, renderRadius } = this.options;
 
@@ -309,7 +330,7 @@ class World extends EventEmitter {
         const dx = x - cx;
         const dz = z - cz;
 
-        // sphere of chunks around camera effect
+        // circle of chunks around camera effect
         if (dx * dx + dz * dz > renderRadius * renderRadius) continue;
 
         const chunk = this.getChunkByCPos([x, z]);

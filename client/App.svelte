@@ -17,16 +17,17 @@
   const { world } = QS.parse(window.location.search);
 
   const BACKGROUNDS = ['#02475e', '#0a1931', '#5b6d5b', '#374045'];
+  const COMMON_HEADERS = {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  };
 
   const fetchWorlds = (async () => {
     if (world) return {};
 
-    const response = await fetch(Helper.getServerURL().toString() + 'worlds', {
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    });
+    const response = await fetch(Helper.getServerURL({ path: '/worlds' }).toString(), COMMON_HEADERS);
 
     return await response.json();
   })();
@@ -37,12 +38,20 @@
     }
   });
 
-  onMount(() => {
+  onMount(async () => {
     if (world) {
-      const worldName = typeof world === 'string' ? world : world.join('');
-      engine = new Engine();
+      const response = await fetch(
+        Helper.getServerURL({
+          path: '/world',
+          params: {
+            world,
+          },
+        }).toString(),
+        COMMON_HEADERS,
+      );
+      const worldData = await response.json();
 
-      engine.join(worldName);
+      engine = new Engine(worldData);
       engine.start();
 
       engine.on('lock', () => (locked = true));

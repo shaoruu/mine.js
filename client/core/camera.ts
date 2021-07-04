@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Vector3 } from 'three';
+import { Frustum, Matrix4, PerspectiveCamera, Vector3 } from 'three';
 
 import { Engine } from './engine';
 
@@ -11,20 +11,20 @@ type CameraOptionsType = {
 };
 
 class Camera {
-  public engine: Engine;
   public threeCamera: PerspectiveCamera;
+  public frustum: Frustum;
 
-  public options: CameraOptionsType;
-
-  constructor(engine: Engine, options: CameraOptionsType) {
-    this.engine = engine;
-    const { fov, near, far } = (this.options = options);
+  constructor(public engine: Engine, public options: CameraOptionsType) {
+    const { fov, near, far } = this.options;
 
     // three.js camera
     this.threeCamera = new PerspectiveCamera(fov, this.engine.rendering.aspectRatio, near, far);
 
     // initialize camera position
     this.threeCamera.lookAt(new Vector3(0, 0, 0));
+
+    // initialize the three.js frustum
+    this.frustum = new Frustum();
 
     // listen to resize, and adjust accordingly
     // ? should move to it's own logic for all event listeners?
@@ -36,6 +36,18 @@ class Camera {
       this.threeCamera.updateProjectionMatrix();
     });
   }
+
+  tick = () => {
+    const projectionMatrix = new Matrix4().multiplyMatrices(
+      this.threeCamera.projectionMatrix,
+      this.threeCamera.matrixWorldInverse,
+    );
+    this.frustum.setFromProjectionMatrix(projectionMatrix);
+    this.engine.world.chunkMeshes.forEach((mesh) => {
+      // if (this.frustum.intersectsBox(mesh.boundingBox))
+    });
+    // console.log(this.engine.world.chunkMeshes);
+  };
 }
 
 export { Camera, CameraOptionsType };

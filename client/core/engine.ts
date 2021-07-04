@@ -81,11 +81,8 @@ const defaultConfig: ConfigType = {
     bodyWidth: 0.6,
   },
   world: {
-    maxHeight: 128,
     renderRadius: 6,
     requestRadius: 8,
-    chunkSize: 12,
-    dimension: 1,
     // maximum amount of chunks to process per frame tick
     maxChunkProcessPerFrame: 16,
     maxBlockPerFrame: 500,
@@ -146,9 +143,14 @@ class Engine extends EventEmitter {
 
   public paused = true;
   public tickSpeed = 0.1;
+  public started = false;
 
-  constructor(params: DeepPartial<ConfigType> = {}) {
+  constructor(worldData, params: DeepPartial<ConfigType> = {}) {
     super();
+
+    this.config = merge(defaultConfig, params);
+
+    this.load(worldData);
 
     const {
       camera,
@@ -164,7 +166,7 @@ class Engine extends EventEmitter {
       rendering,
       network,
       world,
-    } = (this.config = merge(defaultConfig, params));
+    } = this.config;
 
     // debug
     if (debug) {
@@ -218,9 +220,15 @@ class Engine extends EventEmitter {
     this.emit('ready');
   }
 
-  join = (worldName: string) => {
-    this.network.join(worldName);
-    this.start();
+  load = (worldData) => {
+    const { world } = this.config;
+    const { chunk_size, dimension, max_height, sub_chunks, name } = worldData;
+
+    world.name = name;
+    world.chunkSize = chunk_size;
+    world.dimension = dimension;
+    world.maxHeight = max_height;
+    world.subChunks = sub_chunks;
   };
 
   boot = () => {
@@ -235,7 +243,7 @@ class Engine extends EventEmitter {
   };
 
   tick = () => {
-    if (this.paused || !this.network.connected) return;
+    if (this.paused || !this.network.connected || !this.started) return;
 
     this.emit('tick-begin');
 
@@ -245,6 +253,7 @@ class Engine extends EventEmitter {
     this.entities.preTick();
 
     this.clock.tick();
+    this.camera.tick();
     this.player.tick();
     this.physics.tick();
     this.entities.tick();
@@ -262,11 +271,14 @@ class Engine extends EventEmitter {
   };
 
   render = () => {
+    if (!this.started) return;
+
     this.rendering.render();
   };
 
   start = () => {
     this.paused = false;
+    this.started = true;
     this.emit('start');
   };
 

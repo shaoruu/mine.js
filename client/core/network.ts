@@ -19,19 +19,16 @@ type NetworkOptionsType = {
 class Network {
   public server: CustomWebSocket;
 
-  public url = Helper.getServerURL('/ws/');
+  public url = Helper.getServerURL({ path: '/ws/' });
   public connected = false;
-
-  public worldName: string;
 
   private reconnection: NodeJS.Timeout;
 
-  constructor(public engine: Engine, public options: NetworkOptionsType) {}
-
-  join = (worldName: string) => {
-    this.worldName = worldName;
-    this.connect();
-  };
+  constructor(public engine: Engine, public options: NetworkOptionsType) {
+    engine.on('ready', () => {
+      this.connect();
+    });
+  }
 
   connect = () => {
     const url = this.url.toString();
@@ -48,7 +45,7 @@ class Network {
     const socket = new URL(url);
     socket.protocol = socket.protocol.replace(/http/, 'ws');
     socket.hash = '';
-    socket.searchParams.set('world', this.worldName);
+    socket.searchParams.set('world', this.engine.world.name);
 
     const server = new WebSocket(socket.toString()) as CustomWebSocket;
     server.binaryType = 'arraybuffer';
