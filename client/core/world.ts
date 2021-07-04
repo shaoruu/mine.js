@@ -138,7 +138,7 @@ class World extends EventEmitter {
 
   getSolidityByVoxel = (vCoords: Coords3) => {
     const type = this.getVoxelByVoxel(vCoords);
-    return type !== 0 && !this.blockData.passables.includes(type);
+    return vCoords[1] < this.options.maxHeight && type !== 0 && !this.blockData.passables.includes(type);
   };
 
   getFluidityByVoxel = (vCoords: Coords3) => {
@@ -431,10 +431,6 @@ class World extends EventEmitter {
       const { meshes, voxels, lights } = serverChunk;
 
       chunk.setupMesh(meshes);
-
-      if (chunk.isAdded) {
-        chunk.addToScene(true);
-      }
 
       if (voxels.length) chunk.voxels.data = serverChunk.voxels;
       if (lights.length) chunk.lights.data = serverChunk.lights;

@@ -44,12 +44,23 @@ class Rendering extends EventEmitter {
     // three.js scene
     this.scene = new Scene();
 
+    const canvas = this.engine.container.canvas;
+    let context: WebGLRenderingContext | WebGL2RenderingContext;
+    try {
+      if (window.WebGL2RenderingContext) {
+        context = canvas.getContext('webgl2');
+      }
+    } catch (e) {
+      context = canvas.getContext('webgl');
+    }
+
     // renderer
     this.renderer = new WebGLRenderer({
       powerPreference: 'high-performance',
       stencil: false,
       depth: false,
-      canvas: this.engine.container.canvas,
+      context,
+      canvas,
     });
     this.renderer.setClearColor(new Color(clearColor));
     this.renderer.sortObjects = false;

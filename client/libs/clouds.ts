@@ -1,4 +1,4 @@
-import ndarray from 'ndarray';
+import ndarray, { NdArray } from 'ndarray';
 import {
   BufferGeometry,
   Color,
@@ -52,7 +52,7 @@ const defaultCloudsOptions: CloudsOptionsType = {
 };
 
 class Clouds {
-  public array: ndarray;
+  public array: NdArray;
   public meshes: Mesh[] = [];
   public material: ShaderMaterial;
 

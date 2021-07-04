@@ -182,6 +182,7 @@ class Debug {
     this.registerDisplay('chunk', world, 'camChunkPosStr');
     this.registerDisplay('looking at', player, 'lookBlockStr');
     this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
+    this.registerDisplay('memory used', this, 'memoryUsage');
 
     // REGISTRY
     const registryFolder = this.gui.addFolder('Registry');
@@ -270,14 +271,16 @@ class Debug {
       ele.innerHTML = `${name}: ${formatter(newValue)}`;
     }
 
-    const { camChunkPosStr } = this.engine.world;
-    const [cx, cz] = Helper.parseChunkName(camChunkPosStr, ' ');
-    const { chunkSize, maxHeight, dimension } = this.engine.world.options;
-    this.chunkHighlight.position.set(
-      (cx + 0.5) * chunkSize * dimension,
-      0.5 * maxHeight * dimension,
-      (cz + 0.5) * chunkSize * dimension,
-    );
+    if (this.chunkHighlight.visible) {
+      const { camChunkPosStr } = this.engine.world;
+      const [cx, cz] = Helper.parseChunkName(camChunkPosStr, ' ');
+      const { chunkSize, maxHeight, dimension } = this.engine.world.options;
+      this.chunkHighlight.position.set(
+        (cx + 0.5) * chunkSize * dimension,
+        0.5 * maxHeight * dimension,
+        (cz + 0.5) * chunkSize * dimension,
+      );
+    }
   };
 
   toggle = () => {
@@ -345,6 +348,14 @@ class Debug {
 
   get fps() {
     return this.calculateFPS();
+  }
+
+  get memoryUsage() {
+    // @ts-ignore
+    const info = window.performance.memory;
+    if (!info) return 'unknown';
+    const { usedJSHeapSize, jsHeapSizeLimit } = info;
+    return `${Helper.round(usedJSHeapSize / jsHeapSizeLimit, 2)}%`;
   }
 }
 

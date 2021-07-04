@@ -197,6 +197,11 @@ class Chunk {
       const i = meshData.subChunk || 0;
 
       MESH_TYPES.forEach((type) => {
+        if (!meshData[type]) {
+          this.altMeshes.set(type, undefined);
+          return;
+        }
+
         if (!this.altMeshes.has(type)) {
           this.altMeshes.set(type, []);
         }
@@ -251,6 +256,11 @@ class Chunk {
           // [F, B, F, B, F, B, ...] 8 * 2 = 16 (front: F, back: B)
           // opaque arr looks like:
           // [F, F, F, F, F, F, ...] 8 * 1 = 8
+          const temp = this.altMeshes.get(type)[i * (type === 'opaque' ? 1 : 2) + j];
+          if (this.isAdded) {
+            this.engine.rendering.scene.add(altMesh);
+          }
+          this.engine.rendering.scene.remove(temp);
           this.altMeshes.get(type)[i * (type === 'opaque' ? 1 : 2) + j] = altMesh;
         });
 

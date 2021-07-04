@@ -464,7 +464,7 @@ class Player {
 
   private updateLookBlock = () => {
     const { world, camera } = this.engine;
-    const { dimension } = world.options;
+    const { dimension, maxHeight } = world.options;
     const { reachDistance, lookBlockLerp } = this.options;
 
     const camDir = new Vector3();
@@ -476,7 +476,8 @@ class Player {
     const normal: number[] = [];
 
     const result = raycast(
-      (x, y, z) => Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])),
+      (x, y, z) =>
+        y < maxHeight * dimension && Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])),
       [camPos.x, camPos.y, camPos.z],
       [camDir.x, camDir.y, camDir.z],
       reachDistance * dimension,
