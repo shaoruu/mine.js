@@ -10,7 +10,7 @@
     "@types/events": "^3.0.0",
     "@types/gl-vec3": "^1.1.0",
     "@types/mousetrap": "^1.6.6",
-    "@types/ndarray": "^1.0.8",
+    "@types/ndarray": "^1.0.9",
     "@types/node": "^15.0.2",
     "@types/pako": "^1.0.1",
     "@types/stats.js": "^0.17.0",

@@ -1,6 +1,6 @@
 import TWEEN from '@tweenjs/tween.js';
 import vec3 from 'gl-vec3';
-import ndarray from 'ndarray';
+import ndarray, { NdArray } from 'ndarray';
 import { BufferGeometry, Float32BufferAttribute, Mesh, Group, Int32BufferAttribute, Box3, Vector3 } from 'three';
 import pool from 'typedarray-pool';
 
@@ -25,8 +25,8 @@ const MESH_TYPES = ['transparent', 'opaque'];
 const DATA_PADDING = 1;
 
 class Chunk {
-  public voxels: ndarray;
-  public lights: ndarray;
+  public voxels: NdArray;
+  public lights: NdArray;
 
   public name: string;
   public size: number;
