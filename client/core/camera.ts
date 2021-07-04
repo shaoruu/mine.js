@@ -43,12 +43,9 @@ class Camera {
       this.threeCamera.matrixWorldInverse,
     );
     this.frustum.setFromProjectionMatrix(projectionMatrix);
-    const arr = [];
     this.engine.world.chunkMeshes.forEach((mesh) => {
       mesh.visible = this.frustum.intersectsBox(mesh.geometry.boundingBox);
-      if (!mesh.visible) arr.push(1);
     });
-    // console.log(arr.length);
   };
 }
 
