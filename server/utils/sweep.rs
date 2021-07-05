@@ -72,7 +72,6 @@ fn init_sweep(
 fn check_collisions(
     i_axis: usize,
     get_voxel: &GetVoxel,
-
     step: &Vec3<i32>,
     ldi: &Vec3<i32>,
     tri: &Vec3<i32>,

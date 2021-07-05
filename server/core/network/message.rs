@@ -1,6 +1,13 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use actix::prelude::*;
+
+use crate::{
+    core::engine::registry::{Blocks, Ranges},
+    libs::types::Block,
+};
 
 use super::models;
 
@@ -72,6 +79,7 @@ pub struct SimpleWorldData {
 }
 
 #[derive(MessageResponse, Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct FullWorldData {
     pub chunk_size: usize,
     pub dimension: usize,
@@ -83,6 +91,8 @@ pub struct FullWorldData {
     pub tick_speed: f32,
     pub render_radius: usize,
     pub sub_chunks: u32,
+    pub blocks: Blocks,
+    pub ranges: Ranges,
 }
 
 #[derive(Clone, Message)]

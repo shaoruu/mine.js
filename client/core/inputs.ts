@@ -3,7 +3,7 @@ import Mousetrap from 'mousetrap';
 import { Engine } from './engine';
 
 type ClickType = 'left' | 'middle' | 'right';
-type InputNamespace = 'in-game' | 'chat' | 'menu' | '*';
+type InputNamespace = 'in-game' | 'chat' | 'inventory' | 'menu' | '*';
 type InputOccasion = 'keydown' | 'keypress' | 'keyup';
 type ClickCallbacks = { callback: () => void; namespace: InputNamespace }[];
 type ScrollCallbacks = { up: (delta?: number) => void; down: (delta?: number) => void; namespace: InputNamespace }[];

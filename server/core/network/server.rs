@@ -300,6 +300,7 @@ impl Handler<GetWorld> for WsServer {
     fn handle(&mut self, msg: GetWorld, _ctx: &mut Self::Context) -> Self::Result {
         let world = self.worlds.get(&msg.0).expect("World not found.");
         let config = world.chunks.config.clone();
+        let registry = world.chunks.registry.clone();
 
         MessageResult(FullWorldData {
             chunk_size: config.chunk_size,
@@ -312,6 +313,8 @@ impl Handler<GetWorld> for WsServer {
             sub_chunks: config.sub_chunks,
             tick_speed: world.tick_speed,
             time: world.time,
+            blocks: registry.blocks.to_owned(),
+            ranges: registry.ranges.to_owned(),
         })
     }
 }

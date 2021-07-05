@@ -6,8 +6,8 @@ use std::fs::File;
 use crate::libs::types::{Block, TypeMap, UV};
 use crate::utils::json;
 
-type Ranges = HashMap<String, UV>;
-type Blocks = HashMap<u32, Block>;
+pub type Ranges = HashMap<String, UV>;
+pub type Blocks = HashMap<u32, Block>;
 
 #[derive(Debug, Clone)]
 pub struct Registry {

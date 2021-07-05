@@ -173,6 +173,10 @@ class Helper {
   public static isNumber = (value: unknown) => {
     return typeof value === 'number' && isFinite(value);
   };
+
+  public static flatten = (arr: any[][]) => {
+    return arr.reduce((acc, val) => acc.concat(val), []);
+  };
 }
 
 export { Helper };

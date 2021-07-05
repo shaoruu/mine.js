@@ -7,7 +7,6 @@ use std::{
     thread,
 };
 
-use log::debug;
 use rayon::prelude::*;
 
 use crate::{

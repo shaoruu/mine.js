@@ -2,6 +2,8 @@
 
 use num::{cast, Float, Num};
 
+use serde::{Deserialize, Serialize};
+
 use std::{
     collections::HashMap,
     ops::{Index, IndexMut},
@@ -98,7 +100,8 @@ impl<T: Num + Clone> IndexMut<usize> for Vec3<T> {
 #[derive(Debug, PartialEq, Default, Clone)]
 pub struct Quaternion(pub f32, pub f32, pub f32, pub f32);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UV {
     pub start_u: f32,
     pub end_u: f32,
@@ -106,7 +109,8 @@ pub struct UV {
     pub end_v: f32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Block {
     pub name: String,
     pub is_block: bool,

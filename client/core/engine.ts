@@ -17,6 +17,8 @@ import {
   Entities,
   EntitiesOptionsType,
   Inputs,
+  Inventory,
+  InventoryOptionsType,
   Network,
   Particles,
   ParticlesOptionsType,
@@ -40,6 +42,7 @@ type ConfigType = {
   camera: CameraOptionsType;
   chat: ChatOptionsType;
   player: PlayerOptionsType;
+  inventory: InventoryOptionsType;
   world: WorldOptionsType;
   entities: EntitiesOptionsType;
   physics: PhysicsOptionsType;
@@ -80,6 +83,11 @@ const defaultConfig: ConfigType = {
     distToTop: 0.2,
     bodyWidth: 0.6,
   },
+  inventory: {
+    backpackColumns: 10,
+    backpackRows: 5,
+    hotbarSlots: 10,
+  },
   world: {
     renderRadius: 6,
     requestRadius: 8,
@@ -102,7 +110,10 @@ const defaultConfig: ConfigType = {
     fluidDensity: 2.0,
   },
   registry: {
-    textureWidth: 32,
+    resolution: 500,
+    focusDist: 5,
+    focusBlockSize: 5.5,
+    focusPlantSize: 8,
   },
   rendering: {
     // fogColor: '#fff',
@@ -136,6 +147,7 @@ class Engine extends EventEmitter {
   public registry: Registry;
   public world: World;
   public player: Player;
+  public inventory: Inventory;
   public peers: Peers;
   public physics: Physics;
   public entities: Entities;
@@ -162,6 +174,7 @@ class Engine extends EventEmitter {
       peers,
       physics,
       player,
+      inventory,
       registry,
       rendering,
       network,
@@ -200,6 +213,9 @@ class Engine extends EventEmitter {
     // player
     this.player = new Player(this, player);
 
+    // inventory
+    this.inventory = new Inventory(this, inventory);
+
     // physics
     this.physics = new Physics(this, physics);
 
@@ -221,14 +237,17 @@ class Engine extends EventEmitter {
   }
 
   load = (worldData) => {
-    const { world } = this.config;
-    const { chunk_size, dimension, max_height, sub_chunks, name } = worldData;
+    const { world, registry } = this.config;
+    const { chunkSize, dimension, maxHeight, subChunks, name, blocks, ranges } = worldData;
+
+    registry.blocks = blocks;
+    registry.ranges = ranges;
 
     world.name = name;
-    world.chunkSize = chunk_size;
+    world.chunkSize = chunkSize;
     world.dimension = dimension;
-    world.maxHeight = max_height;
-    world.subChunks = sub_chunks;
+    world.maxHeight = maxHeight;
+    world.subChunks = subChunks;
   };
 
   boot = () => {
