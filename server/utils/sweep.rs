@@ -149,10 +149,12 @@ fn handle_collision(
     // call back to let client update the "left to go" vector
     let res = callback(*cumulative_t, axis, dir, left.clone());
 
+    // bail out on truthy response
     if res {
         return true;
     }
 
+    // init for new sweep along vec
     for i in 0..3 {
         vec[i] = left[i];
     }
@@ -162,6 +164,7 @@ fn handle_collision(
     );
 
     if *max_t == 0.0 {
+        // no vector left
         return true;
     }
 
@@ -221,7 +224,7 @@ fn do_sweep(
     let mut cumulative_t = 0.0;
     let mut t = 0.0;
     let mut max_t = 0.0;
-    let mut axis: usize = 0;
+    let mut axis: usize;
 
     init_sweep(
         &mut t,
@@ -322,12 +325,9 @@ pub fn sweep(
                 base[i] - aabb.base[i]
             };
         }
-        println!("{:?} {:?}", aabb, result);
 
         aabb.translate(&result);
     }
-
-    println!("dist {}", dist);
 
     dist
 }
@@ -341,7 +341,7 @@ mod tests {
     #[test]
     fn basics() {
         let get_voxels = |_: i32, _: i32, _: i32| 0;
-        let mut aabb = Aabb::new(&Vec3(0.25, 0.25, 0.25), &Vec3(0.75, 0.75, 0.75));
+        let mut aabb = Aabb::new(&Vec3(0.25, 0.25, 0.25), &Vec3(0.5, 0.5, 0.5));
         let dir = Vec3(0.0, 0.0, 0.0);
         let collided = Arc::new(Mutex::new(false));
         let test = collided.clone();
@@ -414,6 +414,47 @@ mod tests {
         assert!(
             (res - 0.25).abs() < f32::EPSILON,
             "Collision moving through full voxels 1"
+        );
+        assert!(
+            (aabb.base[0] - 0.5).abs() < f32::EPSILON,
+            "Collision moving through full voxels 2"
+        );
+        assert!(
+            (aabb.base[1] - 0.25).abs() < f32::EPSILON,
+            "Collision moving through full voxels 3"
+        );
+        assert!(
+            (aabb.base[2] - 0.25).abs() < f32::EPSILON,
+            "Collision moving through full voxels 3"
+        );
+
+        let mut aabb = Aabb::new(&Vec3(0.0, 0.0, 0.0), &Vec3(10.0, 10.0, 10.0));
+        let dir = Vec3(0.0, 5.0, 0.0);
+        let get_voxels = |x: i32, y: i32, z: i32| {
+            if x == 8 && z == 8 && y == 13 {
+                1
+            } else {
+                0
+            }
+        };
+        *collided.lock().unwrap() = false;
+        let res = sweep(&get_voxels, &mut aabb, &dir, &mut callback, false);
+        assert!(*collided.lock().unwrap());
+        assert!(
+            (res - 3.0).abs() < f32::EPSILON,
+            "Big box collides with single voxel 1"
+        );
+        assert!(
+            (aabb.base[0] - 0.0).abs() < f32::EPSILON,
+            "Big box collides with single voxel 2"
+        );
+        assert!(
+            (aabb.base[1] - 3.0).abs() < f32::EPSILON,
+            "Big box collides with single voxel 3"
+        );
+        assert!(
+            (aabb.base[2] - 0.0).abs() < f32::EPSILON,
+            "Big box collides with single voxel 4"
         );
     }
 }
