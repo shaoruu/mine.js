@@ -25,6 +25,7 @@ pub struct RigidBody<'a> {
 }
 
 impl<'a> RigidBody<'a> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: usize,
         aabb: Aabb,

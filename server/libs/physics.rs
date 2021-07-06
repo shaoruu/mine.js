@@ -113,7 +113,15 @@ impl<'a> Physics<'a> {
         self.bodies.remove(&b.id);
     }
 
-    pub fn tick(dt: f32) {}
+    pub fn tick(&mut self, dt: f32) {
+        let no_gravity = approx_equals(&0.0, &self.options.gravity.len().powi(2));
+
+        for i in 0..self.bodies.len() {
+            let mut body = self.bodies.remove(&i).unwrap();
+            self.iterate_body(&mut body, dt, no_gravity);
+            self.bodies.insert(i, body);
+        }
+    }
 
     fn iterate_body(&mut self, b: &mut RigidBody, dt: f32, no_gravity: bool) {
         self.old_resting.copy(&b.resting);
@@ -128,7 +136,7 @@ impl<'a> Physics<'a> {
 
         // skip bodies if static or no velocity/forces/impulses
         let local_no_grav = no_gravity || approx_equals(&b.gravity_multiplier, &0.0);
-        if self.body_asleep(b, &dt, &no_gravity) {
+        if self.body_asleep(b, &dt, &local_no_grav) {
             return;
         }
         b.sleep_frame_count -= 1;
