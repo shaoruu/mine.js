@@ -7,6 +7,7 @@ use std::{
     thread,
 };
 
+use crossbeam_channel::{unbounded, Receiver, Sender};
 use rayon::prelude::*;
 
 use crate::{
@@ -63,6 +64,12 @@ pub struct Chunks {
     chunks: HashMap<String, Chunk>,
     update_queue: HashMap<Vec2<i32>, Vec<VoxelUpdate>>,
     noise: Noise,
+
+    // multithread stuff
+    gen_sender: Arc<Sender<Vec<Chunk>>>,
+    gen_receiver: Arc<Receiver<Vec<Chunk>>>,
+    mesh_sender: Arc<Sender<Vec<Chunk>>>,
+    mesh_receiver: Arc<Receiver<Vec<Chunk>>>,
 }
 
 /**
@@ -71,6 +78,14 @@ pub struct Chunks {
  */
 impl Chunks {
     pub fn new(config: WorldConfig, max_loaded_chunks: i32, registry: Registry) -> Self {
+        let (gen_sender, gen_receiver) = unbounded();
+        let gen_sender = Arc::new(gen_sender);
+        let gen_receiver = Arc::new(gen_receiver);
+
+        let (mesh_sender, mesh_receiver) = unbounded();
+        let mesh_sender = Arc::new(mesh_sender);
+        let mesh_receiver = Arc::new(mesh_receiver);
+
         Chunks {
             chunk_cache: HashSet::new(),
 
@@ -86,6 +101,102 @@ impl Chunks {
             chunks: HashMap::new(),
             update_queue: HashMap::new(),
             noise: Noise::new(LEVEL_SEED),
+
+            gen_sender,
+            gen_receiver,
+            mesh_sender,
+            mesh_receiver,
+        }
+    }
+
+    pub fn tick(&mut self) {
+        if !self.to_mesh.is_empty() {
+            let to_mesh: Vec<(Chunk, Space)> = self
+                .to_mesh
+                .iter()
+                .map(|coords| {
+                    (
+                        self.get_chunk(coords).unwrap().clone(),
+                        Space::new(self, &coords, self.config.max_light_level as usize),
+                    )
+                })
+                .collect();
+
+            let sender = self.mesh_sender.clone();
+            let config = self.config.clone();
+            let registry = self.registry.clone();
+
+            rayon::spawn(move || {
+                let meshed = to_mesh
+                    .into_iter()
+                    .map(|(mut chunk, space)| {
+                        if chunk.needs_propagation {
+                            let lights = Lights::calc_light(&space, &registry, &config);
+                            chunk.needs_propagation = false;
+                            chunk.needs_saving = true;
+                            chunk.set_lights(lights);
+                        }
+
+                        let sub_chunks = config.sub_chunks;
+
+                        chunk.meshes = Vec::new();
+
+                        for sub_chunk in 0..sub_chunks {
+                            let opaque =
+                                Mesher::mesh_chunk(&chunk, false, sub_chunk, &config, &registry);
+                            let transparent =
+                                Mesher::mesh_chunk(&chunk, true, sub_chunk, &config, &registry);
+
+                            chunk.meshes.push(Meshes {
+                                opaque,
+                                transparent,
+                                sub_chunk: sub_chunk as i32,
+                            });
+
+                            chunk.is_dirty = false;
+                        }
+
+                        chunk
+                    })
+                    .collect();
+
+                sender.send(meshed).unwrap();
+            });
+
+            self.to_mesh.clear();
+        }
+
+        if !self.to_generate.is_empty() {
+            let chunks = self.to_generate.clone();
+            self.to_generate.clear();
+
+            let sender = self.gen_sender.clone();
+            let config = self.config.clone();
+            let registry = self.registry.clone();
+
+            rayon::spawn(move || {
+                let chunks: Vec<Chunk> = chunks
+                    .into_iter()
+                    .map(|mut chunk| {
+                        Generator::generate_chunk(&mut chunk, &registry, &config);
+                        Generator::generate_chunk_height_map(&mut chunk, &registry, &config);
+                        chunk
+                    })
+                    .collect();
+                sender.send(chunks).unwrap();
+            });
+        }
+
+        if let Ok(chunks) = self.mesh_receiver.try_recv() {
+            chunks.into_iter().for_each(|c| {
+                self.add_chunk(c);
+            })
+        }
+
+        if let Ok(chunks) = self.gen_receiver.try_recv() {
+            chunks.into_iter().for_each(|c| {
+                self.add_chunk(c);
+            })
         }
     }
 
