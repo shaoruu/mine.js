@@ -2,7 +2,7 @@ use crate::utils::math::approx_equals;
 
 use super::types::Vec3;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Aabb {
     pub base: Vec3<f32>,
     pub vec: Vec3<f32>,
@@ -133,5 +133,14 @@ impl Aabb {
             &Vec3(base_x, base_y, base_z),
             &Vec3(max_x - base_x, max_y - base_y, max_z - base_z),
         ))
+    }
+
+    pub fn copy(&mut self, other: &Aabb) -> &Self {
+        for i in 0..3 {
+            self.base[i] = other.base[i];
+            self.max[i] = other.max[i];
+            self.vec[i] = other.vec[i];
+        }
+        self
     }
 }

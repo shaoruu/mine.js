@@ -41,8 +41,30 @@ where
         Vec3(self.0 - other.0, self.1 - other.1, self.2 - other.2)
     }
 
+    pub fn copy(&mut self, other: &Self) -> &Self {
+        self.0 = other.0;
+        self.1 = other.1;
+        self.2 = other.2;
+        self
+    }
+
+    pub fn set(&mut self, x: T, y: T, z: T) -> &Self {
+        self.0 = x;
+        self.1 = y;
+        self.2 = z;
+        self
+    }
+
     pub fn scale(&self, scale: T) -> Self {
         Vec3(self.0 * scale, self.1 * scale, self.2 * scale)
+    }
+
+    pub fn scale_and_add(&self, other: &Self, scale: T) -> Self {
+        Vec3(
+            self.0 + other.0 * scale,
+            self.1 + other.1 * scale,
+            self.2 + other.2 * scale,
+        )
     }
 }
 
@@ -50,6 +72,10 @@ impl<T> Vec3<T>
 where
     T: Float,
 {
+    pub fn len(&self) -> T {
+        (self.0 * self.0 + self.1 * self.1 + self.2 * self.2).sqrt()
+    }
+
     pub fn max(&self, other: &Self) -> Self {
         Vec3(
             Float::max(self.0, other.0),
@@ -155,4 +181,4 @@ pub struct MeshType {
     pub lights: Vec<i32>,
 }
 
-pub type GetVoxel = dyn Fn(i32, i32, i32) -> u32;
+pub type GetVoxel = dyn Fn(i32, i32, i32) -> bool;

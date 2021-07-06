@@ -1,17 +1,19 @@
 use super::{aabb::Aabb, types::Vec3};
 
 pub struct RigidBody<'a> {
+    pub id: usize,
+
     pub aabb: Aabb,
     pub mass: f32,
     pub friction: f32,
     pub restitution: f32,
     pub gravity_multiplier: f32,
-    pub on_collide: &'a dyn FnMut(Vec<f32>),
+    pub on_collide: Option<&'a mut dyn FnMut(Vec3<f32>)>,
     pub auto_step: bool,
 
     pub air_drag: f32,
     pub fluid_drag: f32,
-    pub on_step: Option<&'a dyn FnMut()>,
+    pub on_step: Option<&'a mut dyn FnMut()>,
 
     pub resting: Vec3<f32>,
     pub velocity: Vec3<f32>,
@@ -24,15 +26,18 @@ pub struct RigidBody<'a> {
 
 impl<'a> RigidBody<'a> {
     pub fn new(
+        id: usize,
         aabb: Aabb,
         mass: f32,
         friction: f32,
         restitution: f32,
         gravity_multiplier: f32,
-        on_collide: &'a dyn FnMut(Vec<f32>),
+        on_collide: Option<&'a mut dyn FnMut(Vec3<f32>)>,
         auto_step: bool,
     ) -> Self {
-        RigidBody {
+        Self {
+            id,
+
             aabb,
             mass,
             friction,
@@ -87,7 +92,7 @@ impl<'a> RigidBody<'a> {
         self.resting[2]
     }
 
-    fn mark_active(&mut self) {
+    pub fn mark_active(&mut self) {
         self.sleep_frame_count = 10 | 0;
     }
 }

@@ -9,7 +9,7 @@ use super::math::approx_equals;
 
 const EPSILON: f32 = 1e-10;
 
-type SweepCallback = dyn FnMut(f32, usize, i32, Vec3<f32>) -> bool;
+type SweepCallback = dyn FnMut(f32, usize, i32, &mut Vec3<f32>) -> bool;
 
 fn lead_edge_to_int(coord: f32, step: i32) -> i32 {
     (coord - step as f32 * EPSILON).floor() as i32
@@ -94,7 +94,7 @@ fn check_collisions(
         while y != y1 {
             let mut z = z0;
             while z != z1 {
-                if get_voxel(x, y, z) != 0 {
+                if get_voxel(x, y, z) {
                     return true;
                 }
                 z += step_z;
@@ -147,7 +147,7 @@ fn handle_collision(
     }
 
     // call back to let client update the "left to go" vector
-    let res = callback(*cumulative_t, axis, dir, left.clone());
+    let res = callback(*cumulative_t, axis, dir, &mut left);
 
     // bail out on truthy response
     if res {
@@ -340,13 +340,13 @@ mod tests {
 
     #[test]
     fn basics() {
-        let get_voxels = |_: i32, _: i32, _: i32| 0;
+        let get_voxels = |_: i32, _: i32, _: i32| false;
         let mut aabb = Aabb::new(&Vec3(0.25, 0.25, 0.25), &Vec3(0.5, 0.5, 0.5));
         let dir = Vec3(0.0, 0.0, 0.0);
         let collided = Arc::new(Mutex::new(false));
         let test = collided.clone();
 
-        let mut callback = move |t: f32, axis: usize, dir: i32, vec: Vec3<f32>| {
+        let mut callback = move |t: f32, axis: usize, dir: i32, vec: &mut Vec3<f32>| {
             *test.lock().unwrap() = true;
             true
         };
@@ -392,7 +392,7 @@ mod tests {
             "Full movement through empty voxels 4"
         );
 
-        let get_voxels = |_: i32, _: i32, _: i32| 1;
+        let get_voxels = |_: i32, _: i32, _: i32| true;
         let dir = Vec3(0.0, 0.0, 0.0);
         aabb.set_position(&Vec3(0.25, 0.25, 0.25));
         *collided.lock().unwrap() = false;
@@ -430,13 +430,7 @@ mod tests {
 
         let mut aabb = Aabb::new(&Vec3(0.0, 0.0, 0.0), &Vec3(10.0, 10.0, 10.0));
         let dir = Vec3(0.0, 5.0, 0.0);
-        let get_voxels = |x: i32, y: i32, z: i32| {
-            if x == 8 && z == 8 && y == 13 {
-                1
-            } else {
-                0
-            }
-        };
+        let get_voxels = |x: i32, y: i32, z: i32| x == 8 && z == 8 && y == 13;
         *collided.lock().unwrap() = false;
         let res = sweep(&get_voxels, &mut aabb, &dir, &mut callback, false);
         assert!(*collided.lock().unwrap());

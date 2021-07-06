@@ -1,6 +1,6 @@
 // HELP FROM https://github.com/andyhall/fast-voxel-raycast/blob/master/index.js
 
-use crate::libs::types::{Vec3, GetVoxel};
+use crate::libs::types::{GetVoxel, Vec3};
 
 use super::math::approx_equals;
 
@@ -16,7 +16,7 @@ fn trace_ray(
     max_d: f32,
     hit_pos: &mut Vec3<f32>,
     hit_norm: &mut Vec3<i32>,
-) -> u32 {
+) -> bool {
     let mut t = 0.0;
 
     let mut ix = px.floor() as i32;
@@ -69,7 +69,7 @@ fn trace_ray(
     while t <= max_d {
         // exit check
         let v = get_voxel(ix, iy, iz);
-        if v != 0 {
+        if v {
             hit_pos.0 = px + t as f32 * dx;
             hit_pos.1 = py + t as f32 * dy;
             hit_pos.2 = pz + t as f32 * dz;
@@ -125,7 +125,7 @@ fn trace_ray(
     hit_norm.1 = 0;
     hit_norm.2 = 0;
 
-    0
+    false
 }
 
 pub fn trace(
@@ -135,7 +135,7 @@ pub fn trace(
     direction: &mut Vec3<f32>,
     hit_pos: &mut Vec3<f32>,
     hit_norm: &mut Vec3<i32>,
-) -> u32 {
+) -> bool {
     let Vec3(px, py, pz) = origin;
     let Vec3(dx, dy, dz) = direction;
     let ds = (*dx * *dx + *dy * *dy + *dz * *dz).sqrt();
@@ -164,9 +164,9 @@ mod tests {
     fn sphere_test() {
         let voxel = |x: i32, y: i32, z: i32| {
             if x == 0 && y == 0 && z == 0 {
-                1
+                true
             } else {
-                0
+                false
             }
         };
 
@@ -185,8 +185,7 @@ mod tests {
                         let y = y1000 as f32 / 1000.0;
                         for z1000 in (1..1000).step_by(250) {
                             let z = z1000 as f32 / 1000.0;
-                            let mut pos =
-                                Vec3(x - 2.0 * dir.0, y - 2.0 * dir.1, z - 2.0 * dir.2);
+                            let mut pos = Vec3(x - 2.0 * dir.0, y - 2.0 * dir.1, z - 2.0 * dir.2);
                             let b = trace(
                                 10.0,
                                 &voxel,
@@ -195,7 +194,7 @@ mod tests {
                                 &mut hit_position,
                                 &mut hit_normal,
                             );
-                            assert_eq!(b, 1);
+                            assert_eq!(b, true);
                         }
                     }
                 }
