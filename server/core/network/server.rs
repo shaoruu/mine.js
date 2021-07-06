@@ -9,9 +9,10 @@ use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::time::Duration;
 
-use crate::core::engine::chunks::MeshLevel;
+use crate::core::engine::chunks::{Chunks, MeshLevel};
+use crate::core::engine::clock::Clock;
 use crate::core::engine::registry::Registry;
-use crate::core::engine::world::{World, WorldConfig};
+use crate::core::engine::world::{Clients, World, WorldConfig};
 use crate::core::network::models::create_chat_message;
 use crate::libs::types::{GenerationType, Quaternion, Vec2, Vec3};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
@@ -55,22 +56,29 @@ impl WsServer {
         let mut id = id.unwrap_or_else(rand::random::<usize>);
         let world = self.worlds.get_mut(world_name).expect("World not found.");
 
+        let mut clients = world.write_resource::<Clients>();
+
         loop {
-            if world.clients.contains_key(&id) {
+            if clients.contains_key(&id) {
                 id = rand::random::<usize>();
             } else {
                 break;
             }
         }
 
-        world.clients.insert(id, client);
+        clients.insert(id, client);
+
+        drop(clients);
+
+        let clock = world.read_resource::<Clock>();
+        let chunks = world.read_resource::<Chunks>();
 
         JoinResult {
             id,
-            time: world.time,
-            tick_speed: world.tick_speed,
-            spawn: [0, world.chunks.get_max_height(0, 0), 0],
-            passables: world.chunks.registry.get_passable_solids(),
+            time: clock.time,
+            tick_speed: clock.tick_speed,
+            spawn: [0, chunks.get_max_height(0, 0), 0],
+            passables: chunks.registry.get_passable_solids(),
         }
     }
 
@@ -88,16 +96,24 @@ impl WsServer {
     }
 
     fn tick(&mut self) {
+        let mut to_generate = vec![];
+
         for world in self.worlds.values_mut() {
             world.tick();
+
+            let chunks = world.read_resource::<Chunks>();
 
             let WorldConfig {
                 chunk_size,
                 dimension,
                 ..
-            } = *world.chunks.config;
+            } = *chunks.config;
 
-            for client in world.clients.values_mut() {
+            drop(chunks);
+
+            let mut clients = world.write_resource::<Clients>();
+
+            for client in clients.values_mut() {
                 if client.name.is_none() {
                     continue;
                 }
@@ -114,44 +130,70 @@ impl WsServer {
                 {
                     client.current_chunk = Some(new_chunk.clone());
 
-                    // tell world to regenerate
-                    world
-                        .chunks
-                        .generate(&new_chunk, client.render_radius, false);
+                    to_generate.push((new_chunk, client.render_radius));
                 }
             }
+
+            drop(clients);
+
+            to_generate.iter().for_each(|(coords, r)| {
+                world.write_resource::<Chunks>().generate(coords, *r, false)
+            });
         }
     }
 
     fn chunking(&mut self) {
+        let mut request_queue = vec![];
         let mut message_queue = VecDeque::new();
 
         for world in self.worlds.values_mut() {
-            for client in world.clients.values_mut() {
+            let world_name = world.name.to_owned();
+            let mut clients = world.write_resource::<Clients>();
+
+            clients.iter_mut().for_each(|(id, client)| {
                 if client.name.is_none() {
-                    continue;
+                    return;
                 }
 
                 let requested_chunk = client.requested_chunks.pop_front();
+                request_queue.push((
+                    requested_chunk.to_owned(),
+                    world_name.to_owned(),
+                    id.to_owned(),
+                ));
+            });
+        }
 
-                if let Some(coords) = requested_chunk {
-                    let chunk = world.chunks.get(&coords, &MeshLevel::All, false);
-
-                    if chunk.is_none() {
-                        client.requested_chunks.push_back(coords);
-                    } else {
+        request_queue
+            .into_iter()
+            .for_each(|(coords, world_name, client_id)| {
+                if let Some(coords) = coords {
+                    let mut chunks = self
+                        .worlds
+                        .get_mut(&world_name)
+                        .unwrap()
+                        .write_resource::<Chunks>();
+                    if let Some(chunk) = chunks.get(&coords, &MeshLevel::All, false) {
                         // SEND CHUNK BACK TO CLIENT
 
                         let mut component = MessageComponents::default_for(MessageType::Load);
-                        component.chunks =
-                            Some(vec![chunk.unwrap().get_protocol(true, MeshLevel::All)]);
+                        component.chunks = Some(vec![chunk.get_protocol(true, MeshLevel::All)]);
 
                         let new_message = create_message(component);
-                        message_queue.push_back((world.name.to_owned(), new_message, vec![]));
+                        message_queue.push_back((world_name.to_owned(), new_message, vec![]));
+                    } else {
+                        drop(chunks);
+                        self.worlds
+                            .get_mut(&world_name)
+                            .unwrap()
+                            .write_resource::<Clients>()
+                            .get_mut(&client_id)
+                            .unwrap()
+                            .requested_chunks
+                            .push_back(coords);
                     }
                 }
-            }
-        }
+            });
 
         message_queue
             .into_iter()
@@ -204,7 +246,10 @@ impl Handler<LeaveWorld> for WsServer {
         let mut message_queue = Vec::new();
 
         if let Some(world) = self.worlds.get_mut(&msg.world_name) {
-            let client = world.clients.remove(&msg.client_id);
+            let world_name = world.name.to_owned();
+            let mut clients = world.write_resource::<Clients>();
+
+            let client = clients.remove(&msg.client_id);
             if let Some(client) = client {
                 let client_name = client.name.clone().unwrap_or_else(|| "Somebody".to_owned());
 
@@ -223,7 +268,7 @@ impl Handler<LeaveWorld> for WsServer {
 
                 info!("{}", Yellow.bold().paint(message));
 
-                message_queue.push((world.name.to_owned(), new_message));
+                message_queue.push((world_name, new_message));
             }
         }
 
@@ -278,15 +323,19 @@ impl Handler<ListWorlds> for WsServer {
         let mut data = Vec::new();
 
         self.worlds.values().for_each(|world| {
+            let clock = world.read_resource::<Clock>();
+            let chunks = world.read_resource::<Chunks>();
+            let clients = world.read_resource::<Clients>();
+
             data.push(SimpleWorldData {
                 name: world.name.to_owned(),
-                time: world.time,
-                generation: match world.chunks.config.generation {
+                time: clock.time,
+                generation: match chunks.config.generation {
                     GenerationType::FLAT => "flat".to_owned(),
                     GenerationType::HILLY => "hilly".to_owned(),
                 },
                 description: world.description.to_owned(),
-                players: world.clients.len(),
+                players: clients.len(),
             });
         });
 
@@ -299,8 +348,12 @@ impl Handler<GetWorld> for WsServer {
 
     fn handle(&mut self, msg: GetWorld, _ctx: &mut Self::Context) -> Self::Result {
         let world = self.worlds.get(&msg.0).expect("World not found.");
-        let config = world.chunks.config.clone();
-        let registry = world.chunks.registry.clone();
+
+        let clock = world.read_resource::<Clock>();
+        let chunks = world.read_resource::<Chunks>();
+
+        let config = chunks.config.clone();
+        let registry = chunks.registry.clone();
 
         MessageResult(FullWorldData {
             chunk_size: config.chunk_size,
@@ -311,8 +364,8 @@ impl Handler<GetWorld> for WsServer {
             render_radius: config.render_radius,
             save: config.save,
             sub_chunks: config.sub_chunks,
-            tick_speed: world.tick_speed,
-            time: world.time,
+            tick_speed: clock.tick_speed,
+            time: clock.time,
             blocks: registry.blocks.to_owned(),
             ranges: registry.ranges.to_owned(),
         })

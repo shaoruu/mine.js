@@ -1,19 +1,21 @@
 use super::{aabb::Aabb, types::Vec3};
 
-pub struct RigidBody<'a> {
+pub struct RigidBody {
     pub id: usize,
+
+    // flags for test
+    pub collided: Option<Vec3<f32>>,
+    pub stepped: bool,
 
     pub aabb: Aabb,
     pub mass: f32,
     pub friction: f32,
     pub restitution: f32,
     pub gravity_multiplier: f32,
-    pub on_collide: Option<&'a mut dyn FnMut(Vec3<f32>)>,
     pub auto_step: bool,
 
     pub air_drag: f32,
     pub fluid_drag: f32,
-    pub on_step: Option<&'a mut dyn FnMut()>,
 
     pub resting: Vec3<f32>,
     pub velocity: Vec3<f32>,
@@ -24,7 +26,7 @@ pub struct RigidBody<'a> {
     pub sleep_frame_count: i32,
 }
 
-impl<'a> RigidBody<'a> {
+impl RigidBody {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: usize,
@@ -33,23 +35,23 @@ impl<'a> RigidBody<'a> {
         friction: f32,
         restitution: f32,
         gravity_multiplier: f32,
-        on_collide: Option<&'a mut dyn FnMut(Vec3<f32>)>,
         auto_step: bool,
     ) -> Self {
         Self {
             id,
+
+            collided: None,
+            stepped: false,
 
             aabb,
             mass,
             friction,
             restitution,
             gravity_multiplier,
-            on_collide,
             auto_step,
 
             air_drag: -1.0,
             fluid_drag: -1.0,
-            on_step: None,
 
             resting: Vec3::default(),
             velocity: Vec3::default(),

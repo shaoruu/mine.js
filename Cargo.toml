@@ -33,6 +33,7 @@ rand = "0.8.3"
 rayon = "1.5.1"
 serde = "1.0.126"
 serde_json = "1.0"
+specs = "0.17.0"
 
 
 [build-dependencies]

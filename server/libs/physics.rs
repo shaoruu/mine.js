@@ -28,11 +28,8 @@ pub struct PhysicsOptions {
     pub fluid_density: f32,
 }
 
-pub struct Physics<'a> {
-    pub bodies: HashMap<usize, RigidBody<'a>>,
-
-    test_solid: &'a TestFunction,
-    test_fluid: &'a TestFunction,
+pub struct Physics {
+    pub bodies: HashMap<usize, RigidBody>,
 
     options: PhysicsOptions,
 
@@ -51,24 +48,16 @@ pub struct Physics<'a> {
     leftover: Vec3<f32>,
 }
 
-impl<'a> Physics<'a> {
-    pub fn new(
-        test_solid: &'a TestFunction,
-        test_fluid: &'a TestFunction,
-        options: &PhysicsOptions,
-    ) -> Self {
+impl Physics {
+    pub fn new(options: PhysicsOptions) -> Self {
         Self {
-            bodies: HashMap::default(),
-
-            test_solid,
-            test_fluid,
-
-            options: options.clone(),
+            options,
 
             a: Vec3::default(),
             dv: Vec3::default(),
             dx: Vec3::default(),
             impacts: Vec3::default(),
+            bodies: HashMap::default(),
             old_resting: Vec3::default(),
             sleep_vec: Vec3::default(),
             fluid_vec: Vec3::default(),
@@ -81,14 +70,13 @@ impl<'a> Physics<'a> {
         }
     }
 
-    pub fn add_body(&mut self, options: BodyOptions<'a>) -> &'a RigidBody {
+    pub fn add_body(&mut self, options: BodyOptions) -> &RigidBody {
         let BodyOptions {
             mass,
             friction,
             restitution,
             gravity_multiplier,
             auto_step,
-            on_collide,
             ..
         } = options;
 
@@ -101,7 +89,6 @@ impl<'a> Physics<'a> {
             friction,
             restitution,
             gravity_multiplier,
-            on_collide,
             auto_step,
         );
 
@@ -109,21 +96,37 @@ impl<'a> Physics<'a> {
         self.bodies.get(&id).unwrap()
     }
 
-    pub fn remove_body(&mut self, b: &'a RigidBody) {
+    pub fn remove_body(&mut self, b: &RigidBody) {
         self.bodies.remove(&b.id);
     }
 
-    pub fn tick(&mut self, dt: f32) {
+    pub fn tick<'a>(
+        &mut self,
+        test_solid: &'a TestFunction,
+        test_fluid: &'a TestFunction,
+        dt: f32,
+    ) {
         let no_gravity = approx_equals(&0.0, &self.options.gravity.len().powi(2));
 
         for i in 0..self.bodies.len() {
             let mut body = self.bodies.remove(&i).unwrap();
-            self.iterate_body(&mut body, dt, no_gravity);
+            self.iterate_body(&mut body, dt, no_gravity, test_solid, test_fluid);
             self.bodies.insert(i, body);
         }
     }
 
-    fn iterate_body(&mut self, b: &mut RigidBody, dt: f32, no_gravity: bool) {
+    fn iterate_body(
+        &mut self,
+        b: &mut RigidBody,
+        dt: f32,
+        no_gravity: bool,
+        test_solid: &TestFunction,
+        test_fluid: &TestFunction,
+    ) {
+        // reset flags
+        b.collided = None;
+        b.stepped = false;
+
         self.old_resting.copy(&b.resting);
 
         // treat bodies with <= 0 mass as static
@@ -136,13 +139,13 @@ impl<'a> Physics<'a> {
 
         // skip bodies if static or no velocity/forces/impulses
         let local_no_grav = no_gravity || approx_equals(&b.gravity_multiplier, &0.0);
-        if self.body_asleep(b, &dt, &local_no_grav) {
+        if self.body_asleep(b, &dt, &local_no_grav, test_solid) {
             return;
         }
         b.sleep_frame_count -= 1;
 
         // check if under water, if so apply buoyancy and drag forces
-        self.apply_fluid_forces(b);
+        self.apply_fluid_forces(b, test_fluid);
 
         // semi-implicit Euler integration
 
@@ -197,12 +200,12 @@ impl<'a> Physics<'a> {
         }
 
         // sweeps aabb along dx and accounts for collisions
-        self.process_collisions(&mut b.aabb, &self.dx.clone(), &mut b.resting);
+        self.process_collisions(&mut b.aabb, &self.dx.clone(), &mut b.resting, test_solid);
 
         // if autostep, and on ground, run collisions again with stepped up aabb
         if b.auto_step {
             let mut tmp_box = self.tmp_box.clone();
-            self.try_auto_stepping(b, &mut tmp_box, &self.dx.clone());
+            self.try_auto_stepping(b, &mut tmp_box, &self.dx.clone(), test_solid);
             self.tmp_box = tmp_box;
         }
 
@@ -225,9 +228,7 @@ impl<'a> Physics<'a> {
             // body's restitution depending on what terrain it hit
             // event argument is impulse J = m * dv
             self.impacts = self.impacts.scale(b.mass);
-            if let Some(on_collide) = &mut b.on_collide {
-                on_collide(self.impacts.clone());
-            }
+            b.collided = Some(self.impacts.clone());
 
             // bounce depending on restitution and min_bounce_impulse
             if b.restitution > 0.0 && mag > self.options.min_bounce_impulse {
@@ -243,14 +244,14 @@ impl<'a> Physics<'a> {
         }
     }
 
-    fn apply_fluid_forces(&mut self, body: &mut RigidBody) {
+    fn apply_fluid_forces(&mut self, body: &mut RigidBody, test_fluid: &TestFunction) {
         let aabb = &body.aabb;
         let cx = aabb.base[0].floor() as i32;
         let cz = aabb.base[2].floor() as i32;
         let y0 = aabb.base[1].floor() as i32;
         let y1 = aabb.max[1].floor() as i32;
 
-        if !(self.test_fluid)(cx, y0, cz) {
+        if !test_fluid(cx, y0, cz) {
             body.in_fluid = false;
             body.ratio_in_fluid = 0.0;
             return;
@@ -259,7 +260,7 @@ impl<'a> Physics<'a> {
         // body is in fluid - find out how much of body is submerged
         let mut submerged = 1;
         let mut cy = y0 + 1;
-        while cy <= y1 && (self.test_fluid)(cx, cy, cz) {
+        while cy <= y1 && test_fluid(cx, cy, cz) {
             submerged += 1;
             cy += 1;
         }
@@ -325,6 +326,7 @@ impl<'a> Physics<'a> {
         aabb: &mut Aabb,
         velocity: &Vec3<f32>,
         resting: &mut Vec3<f32>,
+        test_solid: &TestFunction,
     ) -> f32 {
         resting.set(0.0, 0.0, 0.0);
 
@@ -333,7 +335,7 @@ impl<'a> Physics<'a> {
         let temp = d.clone();
 
         let dist = sweep(
-            &(*self.test_solid),
+            test_solid,
             aabb,
             velocity,
             &mut move |_, axis: usize, dir: i32, vec: &mut Vec3<f32>| {
@@ -352,7 +354,13 @@ impl<'a> Physics<'a> {
         dist
     }
 
-    fn try_auto_stepping(&mut self, b: &mut RigidBody, old_aabb: &mut Aabb, dx: &Vec3<f32>) {
+    fn try_auto_stepping(
+        &mut self,
+        b: &mut RigidBody,
+        old_aabb: &mut Aabb,
+        dx: &Vec3<f32>,
+        test_solid: &TestFunction,
+    ) {
         // in the air
         if b.resting[1] >= 0.0 && !b.in_fluid {
             return;
@@ -376,9 +384,8 @@ impl<'a> Physics<'a> {
         self.target_pos = old_aabb.base.add(&dx);
 
         // move towards the target until the first x/z collision
-        let get_voxels = self.test_solid;
         sweep(
-            get_voxels,
+            test_solid,
             old_aabb,
             dx,
             &mut move |_, axis, _, vec| {
@@ -397,7 +404,7 @@ impl<'a> Physics<'a> {
         let collided = Arc::new(Mutex::new(false));
         let temp = collided.clone();
         sweep(
-            get_voxels,
+            test_solid,
             old_aabb,
             dx,
             &mut move |_, _, _, _| {
@@ -414,7 +421,12 @@ impl<'a> Physics<'a> {
         self.leftover = self.target_pos.sub(&old_aabb.base);
         self.leftover[1] = 0.0;
         let mut tmp_resting = self.tmp_resting.clone();
-        self.process_collisions(old_aabb, &self.leftover.clone(), &mut tmp_resting);
+        self.process_collisions(
+            old_aabb,
+            &self.leftover.clone(),
+            &mut tmp_resting,
+            test_solid,
+        );
         self.tmp_resting = tmp_resting;
 
         // bail if no movement happened in the originally blocked direction
@@ -429,12 +441,16 @@ impl<'a> Physics<'a> {
         b.aabb.copy(old_aabb);
         b.resting[0] = self.tmp_resting[0];
         b.resting[2] = self.tmp_resting[2];
-        if let Some(on_step) = &mut b.on_step {
-            on_step();
-        }
+        b.stepped = true;
     }
 
-    fn body_asleep(&mut self, body: &mut RigidBody, dt: &f32, no_gravity: &bool) -> bool {
+    fn body_asleep(
+        &mut self,
+        body: &mut RigidBody,
+        dt: &f32,
+        no_gravity: &bool,
+        test_solid: &TestFunction,
+    ) -> bool {
         if body.sleep_frame_count > 0 {
             return false;
         }
@@ -454,7 +470,7 @@ impl<'a> Physics<'a> {
         let temp = is_resting.clone();
 
         sweep(
-            &(*self.test_solid),
+            test_solid,
             &mut body.aabb,
             &self.sleep_vec,
             &mut move |_, _, _, _| {
