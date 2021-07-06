@@ -1,7 +1,5 @@
 use std::collections::VecDeque;
 
-use log::debug;
-
 use crate::{
     core::{
         constants::{CHUNK_HORIZONTAL_NEIGHBORS, DATA_PADDING, VOXEL_NEIGHBORS},

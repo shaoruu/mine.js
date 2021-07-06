@@ -1,13 +1,8 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 
 use actix::prelude::*;
 
-use crate::{
-    core::engine::registry::{Blocks, Ranges},
-    libs::types::Block,
-};
+use crate::core::engine::registry::{Blocks, Ranges};
 
 use super::models;
 

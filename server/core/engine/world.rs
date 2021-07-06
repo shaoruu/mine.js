@@ -4,7 +4,7 @@ use ansi_term::Colour::Yellow;
 use specs::shred::{Fetch, FetchMut, Resource};
 
 use std::collections::HashMap;
-use std::time::{Instant, SystemTime};
+use std::time::Instant;
 
 use specs::{World as ECSWorld, WorldExt};
 
