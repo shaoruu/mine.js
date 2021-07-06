@@ -1,17 +1,11 @@
 use log::{debug, info};
 
-use crossbeam_channel::{unbounded, Receiver, Sender};
-
 use ansi_term::Colour::Yellow;
 
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 
 use crate::core::engine::chunks::MeshLevel;
-use crate::core::gen::generator::Generator;
-use crate::core::gen::lights::Lights;
-use crate::core::gen::mesher::Mesher;
 use crate::core::network::message;
 use crate::core::network::models::messages::{
     self, chat_message::Type as ChatType, message::Type as MessageType,
@@ -23,10 +17,9 @@ use crate::core::network::server::Client;
 use crate::libs::types::GenerationType;
 use crate::libs::types::{Quaternion, Vec2, Vec3};
 
-use super::chunk::{Chunk, Meshes};
 use super::chunks::Chunks;
+use super::clock::Clock;
 use super::registry::Registry;
-use super::space::Space;
 
 #[derive(Debug, Clone)]
 pub struct WorldConfig {
@@ -43,8 +36,8 @@ pub struct WorldConfig {
 }
 
 pub struct World {
-    pub time: f32,
     pub tick: i32,
+    pub time: f32,
     pub tick_speed: f32,
 
     pub name: String,
@@ -52,8 +45,8 @@ pub struct World {
     pub description: String,
 
     pub chunks: Chunks,
+    pub clock: Clock,
     pub clients: HashMap<usize, Client>,
-    pub prev_time: SystemTime,
 }
 
 impl World {
@@ -89,7 +82,7 @@ impl World {
 
         let clients = HashMap::new();
         let chunks = Chunks::new(config, max_loaded_chunks, registry);
-        let prev_time = SystemTime::now();
+        let clock = Clock::new();
 
         World {
             time,
@@ -102,7 +95,7 @@ impl World {
 
             clients,
             chunks,
-            prev_time,
+            clock,
         }
     }
 
@@ -307,19 +300,13 @@ impl World {
     }
 
     pub fn tick(&mut self) {
-        let now = SystemTime::now();
-
-        let delta = now
-            .duration_since(self.prev_time)
-            .expect("Clock may have gone backwards")
-            .as_millis() as f32
-            / 1000.0;
-
-        self.time = (self.time + self.tick_speed * delta) % 2400.0;
+        // change time + tick
+        self.time = (self.time + self.tick_speed * self.clock.delta) % 2400.0;
         self.tick += 1;
 
-        self.prev_time = now;
-
+        // handle chunk generation
         self.chunks.tick();
+
+        // handle physics
     }
 }

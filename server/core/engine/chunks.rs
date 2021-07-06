@@ -260,6 +260,12 @@ impl Chunks {
     /// To preload chunks surrounding 0,0
     pub fn preload(&mut self, width: i16) {
         self.generate(&Vec2(0, 0), width, true);
+
+        for x in -3..4 {
+            for z in -3..4 {
+                self.remesh_chunk(&Vec2(x, z), &MeshLevel::All);
+            }
+        }
     }
 
     pub fn start_caching(&mut self) {
