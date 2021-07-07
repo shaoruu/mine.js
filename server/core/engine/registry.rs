@@ -90,23 +90,8 @@ impl Registry {
                 }
             }
 
-            let new_block = Block {
-                name: block_json["name"].as_str().unwrap().to_owned(),
-                is_block: block_json["isBlock"].as_bool().unwrap(),
-                is_empty: block_json["isEmpty"].as_bool().unwrap(),
-                is_fluid: block_json["isFluid"].as_bool().unwrap(),
-                is_light: block_json["isLight"].as_bool().unwrap(),
-                is_plant: block_json["isPlant"].as_bool().unwrap(),
-                is_solid: block_json["isSolid"].as_bool().unwrap(),
-                is_transparent: block_json["isTransparent"].as_bool().unwrap(),
-                is_plantable: block_json["isPlantable"].as_bool().unwrap(),
-                red_light_level: block_json["redLightLevel"].as_i64().unwrap() as u32,
-                green_light_level: block_json["greenLightLevel"].as_i64().unwrap() as u32,
-                blue_light_level: block_json["blueLightLevel"].as_i64().unwrap() as u32,
-                textures: textures_hash,
-                transparent_standalone: block_json["transparentStandalone"].as_bool().unwrap(),
-            };
-
+            let mut new_block: Block = serde_json::from_value(block_json).unwrap();
+            new_block.textures = textures_hash;
             let id = id.parse::<u32>().unwrap();
             name_map.insert(new_block.name.clone(), id);
             blocks.insert(id, new_block);

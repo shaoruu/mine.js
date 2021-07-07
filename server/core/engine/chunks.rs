@@ -60,7 +60,6 @@ pub struct Chunks {
     pub builder: Arc<Builder>,
 
     caching: bool,
-    max_loaded_chunks: i32,
     chunks: HashMap<String, Chunk>,
     update_queue: HashMap<Vec2<i32>, Vec<VoxelUpdate>>,
     noise: Noise,
@@ -77,7 +76,7 @@ pub struct Chunks {
  * NEED REFACTOR ASAP
  */
 impl Chunks {
-    pub fn new(config: WorldConfig, max_loaded_chunks: i32, registry: Registry) -> Self {
+    pub fn new(config: WorldConfig, registry: Registry) -> Self {
         let (gen_sender, gen_receiver) = unbounded();
         let gen_sender = Arc::new(gen_sender);
         let gen_receiver = Arc::new(gen_receiver);
@@ -97,7 +96,6 @@ impl Chunks {
             to_mesh: VecDeque::new(),
 
             caching: false,
-            max_loaded_chunks,
             chunks: HashMap::new(),
             update_queue: HashMap::new(),
             noise: Noise::new(LEVEL_SEED),

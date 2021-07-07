@@ -2,7 +2,7 @@
 
 use num::{cast, Float, Num};
 
-use serde::{Deserialize, Serialize};
+use serde::{de::Visitor, Deserialize, Deserializer, Serialize};
 
 use std::{
     collections::HashMap,
@@ -150,26 +150,10 @@ pub struct Block {
     pub green_light_level: u32,
     pub blue_light_level: u32,
     pub is_plantable: bool,
-    pub textures: HashMap<String, String>,
     pub transparent_standalone: bool,
-}
 
-#[derive(Debug, Clone)]
-pub enum GenerationType {
-    FLAT,
-    HILLY,
-}
-
-impl GenerationType {
-    pub fn parse(name: &str) -> Option<Self> {
-        let lower = name.to_lowercase();
-        if lower == "flat" {
-            return Some(Self::FLAT);
-        } else if lower == "hilly" {
-            return Some(Self::HILLY);
-        }
-        None
-    }
+    #[serde(default)]
+    pub textures: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone)]

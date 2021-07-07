@@ -8,6 +8,8 @@ use std::time::Instant;
 
 use specs::{World as ECSWorld, WorldExt};
 
+use serde::Deserialize;
+
 use crate::core::engine::chunks::MeshLevel;
 use crate::core::network::message;
 use crate::core::network::models::messages::{
@@ -17,7 +19,6 @@ use crate::core::network::models::{
     create_chat_message, create_message, create_of_type, MessageComponents,
 };
 use crate::core::network::server::Client;
-use crate::libs::types::GenerationType;
 use crate::libs::types::{Quaternion, Vec2, Vec3};
 
 use super::chunks::Chunks;
@@ -26,7 +27,8 @@ use super::registry::Registry;
 
 pub type Clients = HashMap<usize, Client>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WorldConfig {
     pub chunk_size: usize,
     pub dimension: usize,
@@ -37,7 +39,17 @@ pub struct WorldConfig {
     pub render_radius: usize,
     pub max_loaded_chunks: i32,
     pub sub_chunks: u32,
-    pub generation: GenerationType,
+    pub generation: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldMeta {
+    name: String,
+    description: String,
+    preload: i16,
+    tick_speed: f32,
+    time: f32,
 }
 
 pub struct World {
@@ -50,37 +62,17 @@ pub struct World {
 
 impl World {
     pub fn new(json: serde_json::Value, registry: Registry) -> Self {
-        let chunk_size = json["chunkSize"].as_i64().unwrap() as usize;
-        let dimension = json["dimension"].as_i64().unwrap() as usize;
-        let max_height = json["maxHeight"].as_i64().unwrap() as u32;
-        let max_light_level = json["maxLightLevel"].as_i64().unwrap() as u32;
-        let time = json["time"].as_f64().unwrap() as f32;
-        let name = json["name"].as_str().unwrap().to_owned();
-        let save = json["save"].as_bool().unwrap();
-        let tick_speed = json["tickSpeed"].as_f64().unwrap() as f32;
-        let chunk_root = json["chunkRoot"].as_str().unwrap().to_owned();
-        let preload = json["preload"].as_i64().unwrap() as i16;
-        let render_radius = json["renderRadius"].as_i64().unwrap() as usize;
-        let max_loaded_chunks = json["maxLoadedChunks"].as_i64().unwrap() as i32;
-        let sub_chunks = json["subChunks"].as_i64().unwrap() as u32;
-        let description = json["description"].as_str().unwrap().to_owned();
-        let generation = GenerationType::parse(json["generation"].as_str().unwrap()).unwrap();
-
-        let config = WorldConfig {
-            chunk_size,
-            dimension,
-            max_height,
-            max_light_level,
-            save,
-            chunk_root,
-            render_radius,
-            max_loaded_chunks,
-            sub_chunks,
-            generation,
-        };
+        let WorldMeta {
+            name,
+            description,
+            preload,
+            tick_speed,
+            time,
+        } = serde_json::from_value(json.clone()).unwrap();
+        let config: WorldConfig = serde_json::from_value(json).unwrap();
 
         let mut ecs = ECSWorld::new();
-        ecs.insert(Chunks::new(config, max_loaded_chunks, registry));
+        ecs.insert(Chunks::new(config, registry));
         ecs.insert(Clock::new(time, tick_speed));
         ecs.insert(Clients::new());
 

@@ -14,7 +14,7 @@ use crate::core::engine::clock::Clock;
 use crate::core::engine::registry::Registry;
 use crate::core::engine::world::{Clients, World, WorldConfig};
 use crate::core::network::models::create_chat_message;
-use crate::libs::types::{GenerationType, Quaternion, Vec2, Vec3};
+use crate::libs::types::{Quaternion, Vec2, Vec3};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
@@ -330,10 +330,7 @@ impl Handler<ListWorlds> for WsServer {
             data.push(SimpleWorldData {
                 name: world.name.to_owned(),
                 time: clock.time,
-                generation: match chunks.config.generation {
-                    GenerationType::FLAT => "flat".to_owned(),
-                    GenerationType::HILLY => "hilly".to_owned(),
-                },
+                generation: chunks.config.generation.to_owned(),
                 description: world.description.to_owned(),
                 players: clients.len(),
             });

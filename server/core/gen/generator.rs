@@ -6,7 +6,7 @@ use crate::{
     },
     libs::{
         noise::{Noise, NoiseConfig},
-        types::{Vec3, GenerationType},
+        types::Vec3,
     },
 };
 
@@ -19,8 +19,8 @@ impl Generator {
         let Vec3(start_x, start_y, start_z) = chunk.min;
         let Vec3(end_x, _, end_z) = chunk.max;
 
-        match config.generation {
-            GenerationType::FLAT => {
+        match config.generation.as_str() {
+            "flat" => {
                 let types = registry.get_type_map(vec!["Stone", "Stone Brick"]);
 
                 let is_empty = true;
@@ -41,7 +41,7 @@ impl Generator {
 
                 chunk.is_empty = is_empty;
             }
-            GenerationType::HILLY => {
+            "hilly" => {
                 let types = registry.get_type_map(vec!["Air", "Grass Block", "Stone", "Dirt"]);
 
                 let air = types["Air"];
@@ -170,6 +170,7 @@ impl Generator {
 
                 chunk.is_empty = is_empty;
             }
+            _ => panic!("Generation type not found."),
         }
 
         chunk.needs_terrain = false;
