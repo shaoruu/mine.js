@@ -25,7 +25,7 @@ use crate::libs::types::{Quaternion, Vec2, Vec3};
 
 use super::chunks::Chunks;
 use super::clock::Clock;
-use super::player::Players;
+use super::player::{BroadcastExt, Players};
 use super::registry::Registry;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -134,27 +134,7 @@ impl World {
     }
 
     pub fn broadcast(&mut self, msg: &messages::Message, exclude: Vec<usize>) {
-        let mut players = self.write_resource::<Players>();
-
-        let mut resting_players = vec![];
-
-        for (id, player) in players.iter() {
-            if exclude.contains(id) {
-                continue;
-            }
-
-            if player
-                .addr
-                .do_send(message::Message(msg.to_owned()))
-                .is_err()
-            {
-                resting_players.push(*id);
-            }
-        }
-
-        resting_players.iter().for_each(|id| {
-            players.remove(id);
-        })
+        self.write_resource::<Players>().broadcast(msg, exclude);
     }
 
     pub fn on_chunk_request(&mut self, player_id: usize, msg: messages::Message) {
