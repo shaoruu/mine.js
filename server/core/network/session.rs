@@ -32,7 +32,7 @@ impl WsSession {
         // First send a leave message for the current room
         let leave_msg = LeaveWorld {
             world_name: self.world_name.clone(),
-            client_id: self.id,
+            player_id: self.id,
         };
 
         // issue_sync comes from having the `BrokerIssue` trait in scope
@@ -40,8 +40,8 @@ impl WsSession {
 
         let join_msg = JoinWorld {
             world_name: world_name.to_owned(),
-            client_name: self.name.clone(),
-            client_addr: ctx.address().recipient(),
+            player_name: self.name.clone(),
+            player_addr: ctx.address().recipient(),
             render_radius: self.render_radius,
         };
 
@@ -90,7 +90,7 @@ impl WsSession {
 
     fn on_request(&mut self, message: messages::Message) {
         WsServer::from_registry().do_send(PlayerMessage {
-            client_id: self.id,
+            player_id: self.id,
             world_name: self.world_name.to_owned(),
             raw: message,
         });
@@ -107,7 +107,7 @@ impl Actor for WsSession {
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         WsServer::from_registry().do_send(LeaveWorld {
             world_name: self.world_name.clone(),
-            client_id: self.id,
+            player_id: self.id,
         });
     }
 }

@@ -146,7 +146,7 @@ fn handle_collision(
         base[axis] = base[axis].round();
     }
 
-    // call back to let client update the "left to go" vector
+    // call back to let player update the "left to go" vector
     let res = callback(*cumulative_t, axis, dir, &mut left);
 
     // bail out on truthy response

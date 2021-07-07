@@ -11,16 +11,17 @@ use std::time::Duration;
 
 use crate::core::engine::chunks::{Chunks, MeshLevel};
 use crate::core::engine::clock::Clock;
+use crate::core::engine::player::{Player, Players};
 use crate::core::engine::registry::Registry;
-use crate::core::engine::world::{Clients, World, WorldConfig};
+use crate::core::engine::world::{World, WorldConfig};
 use crate::core::network::models::create_chat_message;
-use crate::libs::types::{Quaternion, Vec2, Vec3};
+use crate::libs::types::{Quaternion, Vec3};
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 
 use super::message::{
-    self, FullWorldData, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds,
-    Noop, PlayerMessage, SimpleWorldData,
+    FullWorldData, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds, Noop,
+    PlayerMessage, SimpleWorldData,
 };
 use super::models::{
     create_message, messages, messages::chat_message::Type as ChatType,
@@ -30,45 +31,34 @@ use super::models::{
 const SERVER_TICK: Duration = Duration::from_millis(16);
 const CHUNKING_TICK: Duration = Duration::from_millis(18);
 
-#[derive(Debug)]
-pub struct Client {
-    pub name: Option<String>,
-    pub addr: Recipient<message::Message>,
-    pub position: Vec3<f32>,
-    pub rotation: Quaternion,
-    pub current_chunk: Option<Vec2<i32>>,
-    pub requested_chunks: VecDeque<Vec2<i32>>,
-    pub render_radius: i16,
-}
-
 #[derive(Default)]
 pub struct WsServer {
     worlds: HashMap<String, World>,
 }
 
 impl WsServer {
-    fn add_client_to_world(
+    fn add_player_to_world(
         &mut self,
         world_name: &str,
         id: Option<usize>,
-        client: Client,
+        player: Player,
     ) -> JoinResult {
         let mut id = id.unwrap_or_else(rand::random::<usize>);
         let world = self.worlds.get_mut(world_name).expect("World not found.");
 
-        let mut clients = world.write_resource::<Clients>();
+        let mut players = world.write_resource::<Players>();
 
         loop {
-            if clients.contains_key(&id) {
+            if players.contains_key(&id) {
                 id = rand::random::<usize>();
             } else {
                 break;
             }
         }
 
-        clients.insert(id, client);
+        players.insert(id, player);
 
-        drop(clients);
+        drop(players);
 
         let clock = world.read_resource::<Clock>();
         let chunks = world.read_resource::<Chunks>();
@@ -111,16 +101,16 @@ impl WsServer {
 
             drop(chunks);
 
-            let mut clients = world.write_resource::<Clients>();
+            let mut players = world.write_resource::<Players>();
 
-            for client in clients.values_mut() {
-                if client.name.is_none() {
+            for player in players.values_mut() {
+                if player.name.is_none() {
                     continue;
                 }
 
-                let current_chunk = client.current_chunk.as_ref();
+                let current_chunk = player.current_chunk.as_ref();
 
-                let Vec3(px, py, pz) = client.position;
+                let Vec3(px, py, pz) = player.position;
                 let Vec3(vx, vy, vz) = map_world_to_voxel(px, py, pz, dimension);
                 let new_chunk = map_voxel_to_chunk(vx, vy, vz, chunk_size);
 
@@ -128,13 +118,13 @@ impl WsServer {
                     || current_chunk.unwrap().0 != new_chunk.0
                     || current_chunk.unwrap().1 != new_chunk.1
                 {
-                    client.current_chunk = Some(new_chunk.clone());
+                    player.current_chunk = Some(new_chunk.clone());
 
-                    to_generate.push((new_chunk, client.render_radius));
+                    to_generate.push((new_chunk, player.render_radius));
                 }
             }
 
-            drop(clients);
+            drop(players);
 
             to_generate.iter().for_each(|(coords, r)| {
                 world.write_resource::<Chunks>().generate(coords, *r, false)
@@ -148,14 +138,14 @@ impl WsServer {
 
         for world in self.worlds.values_mut() {
             let world_name = world.name.to_owned();
-            let mut clients = world.write_resource::<Clients>();
+            let mut players = world.write_resource::<Players>();
 
-            clients.iter_mut().for_each(|(id, client)| {
-                if client.name.is_none() {
+            players.iter_mut().for_each(|(id, player)| {
+                if player.name.is_none() {
                     return;
                 }
 
-                let requested_chunk = client.requested_chunks.pop_front();
+                let requested_chunk = player.requested_chunks.pop_front();
                 request_queue.push((
                     requested_chunk.to_owned(),
                     world_name.to_owned(),
@@ -166,7 +156,7 @@ impl WsServer {
 
         request_queue
             .into_iter()
-            .for_each(|(coords, world_name, client_id)| {
+            .for_each(|(coords, world_name, player_id)| {
                 if let Some(coords) = coords {
                     let mut chunks = self
                         .worlds
@@ -174,7 +164,7 @@ impl WsServer {
                         .unwrap()
                         .write_resource::<Chunks>();
                     if let Some(chunk) = chunks.get(&coords, &MeshLevel::All, false) {
-                        // SEND CHUNK BACK TO CLIENT
+                        // SEND CHUNK BACK TO PLAYER
 
                         let mut component = MessageComponents::default_for(MessageType::Load);
                         component.chunks = Some(vec![chunk.get_protocol(true, MeshLevel::All)]);
@@ -186,8 +176,8 @@ impl WsServer {
                         self.worlds
                             .get_mut(&world_name)
                             .unwrap()
-                            .write_resource::<Clients>()
-                            .get_mut(&client_id)
+                            .write_resource::<Players>()
+                            .get_mut(&player_id)
                             .unwrap()
                             .requested_chunks
                             .push_back(coords);
@@ -219,21 +209,21 @@ impl Handler<JoinWorld> for WsServer {
     fn handle(&mut self, msg: JoinWorld, _ctx: &mut Self::Context) -> Self::Result {
         let JoinWorld {
             world_name,
-            client_name,
-            client_addr,
+            player_name,
+            player_addr,
             render_radius,
         } = msg;
 
-        let new_client = Client {
-            name: client_name,
-            addr: client_addr,
+        let new_player = Player {
+            name: player_name,
+            addr: player_addr,
             current_chunk: None,
             position: Vec3::default(),
             rotation: Quaternion::default(),
             requested_chunks: VecDeque::default(),
             render_radius,
         };
-        let result = self.add_client_to_world(&world_name, None, new_client);
+        let result = self.add_player_to_world(&world_name, None, new_player);
 
         MessageResult(result)
     }
@@ -247,23 +237,22 @@ impl Handler<LeaveWorld> for WsServer {
 
         if let Some(world) = self.worlds.get_mut(&msg.world_name) {
             let world_name = world.name.to_owned();
-            let mut clients = world.write_resource::<Clients>();
+            let mut players = world.write_resource::<Players>();
 
-            let client = clients.remove(&msg.client_id);
-            if let Some(client) = client {
-                let client_name = client.name.clone().unwrap_or_else(|| "Somebody".to_owned());
+            if let Some(player) = players.remove(&msg.player_id) {
+                let player_name = player.name.clone().unwrap_or_else(|| "Somebody".to_owned());
 
                 let mut new_message = create_chat_message(
                     MessageType::Leave,
                     ChatType::Info,
                     "",
-                    format!("{} left the game", client_name).as_str(),
+                    format!("{} left the game", player_name).as_str(),
                 );
-                new_message.text = msg.client_id.to_string();
+                new_message.text = msg.player_id.to_string();
 
                 let message = format!(
                     "{}(id={}) left the world {}",
-                    client_name, msg.client_id, msg.world_name
+                    player_name, msg.player_id, msg.world_name
                 );
 
                 info!("{}", Yellow.bold().paint(message));
@@ -292,7 +281,7 @@ impl Handler<PlayerMessage> for WsServer {
     fn handle(&mut self, msg: PlayerMessage, _ctx: &mut Self::Context) {
         let PlayerMessage {
             world_name,
-            client_id,
+            player_id,
             raw,
         } = msg;
 
@@ -300,11 +289,11 @@ impl Handler<PlayerMessage> for WsServer {
         let world = self.worlds.get_mut(&world_name).unwrap();
 
         match msg_type {
-            MessageType::Request => world.on_chunk_request(client_id, raw),
-            MessageType::Config => world.on_config(client_id, raw),
-            MessageType::Update => world.on_update(client_id, raw),
-            MessageType::Peer => world.on_peer(client_id, raw),
-            MessageType::Message => world.on_chat_message(client_id, raw),
+            MessageType::Request => world.on_chunk_request(player_id, raw),
+            MessageType::Config => world.on_config(player_id, raw),
+            MessageType::Update => world.on_update(player_id, raw),
+            MessageType::Peer => world.on_peer(player_id, raw),
+            MessageType::Message => world.on_chat_message(player_id, raw),
             _ => {}
         }
     }
@@ -325,14 +314,14 @@ impl Handler<ListWorlds> for WsServer {
         self.worlds.values().for_each(|world| {
             let clock = world.read_resource::<Clock>();
             let chunks = world.read_resource::<Chunks>();
-            let clients = world.read_resource::<Clients>();
+            let players = world.read_resource::<Players>();
 
             data.push(SimpleWorldData {
                 name: world.name.to_owned(),
                 time: clock.time,
                 generation: chunks.config.generation.to_owned(),
                 description: world.description.to_owned(),
-                players: clients.len(),
+                players: players.len(),
             });
         });
 

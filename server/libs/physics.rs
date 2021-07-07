@@ -224,7 +224,7 @@ impl Physics {
         let mag = self.impacts.len();
         if mag > 0.001 {
             // epsilon
-            // send collision event - allow client to optionally change
+            // send collision event - allow player to optionally change
             // body's restitution depending on what terrain it hit
             // event argument is impulse J = m * dv
             self.impacts = self.impacts.scale(b.mass);

@@ -27,8 +27,8 @@ pub struct JoinResult {
 #[rtype(result = "JoinResult")]
 pub struct JoinWorld {
     pub world_name: String,
-    pub client_name: Option<String>,
-    pub client_addr: Recipient<Message>,
+    pub player_name: Option<String>,
+    pub player_addr: Recipient<Message>,
     pub render_radius: i16,
 }
 
@@ -36,7 +36,7 @@ pub struct JoinWorld {
 #[rtype(result = "()")]
 pub struct LeaveWorld {
     pub world_name: String,
-    pub client_id: usize,
+    pub player_id: usize,
 }
 
 /* -------------------------------------------------------------------------- */
@@ -48,7 +48,7 @@ pub struct LeaveWorld {
 #[rtype(result = "()")]
 pub struct PlayerMessage {
     pub world_name: String,
-    pub client_id: usize,
+    pub player_id: usize,
 
     pub raw: models::messages::Message,
 }

@@ -18,14 +18,12 @@ use crate::core::network::models::messages::{
 use crate::core::network::models::{
     create_chat_message, create_message, create_of_type, MessageComponents,
 };
-use crate::core::network::server::Client;
 use crate::libs::types::{Quaternion, Vec2, Vec3};
 
 use super::chunks::Chunks;
 use super::clock::Clock;
+use super::player::Players;
 use super::registry::Registry;
-
-pub type Clients = HashMap<usize, Client>;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -74,7 +72,7 @@ impl World {
         let mut ecs = ECSWorld::new();
         ecs.insert(Chunks::new(config, registry));
         ecs.insert(Clock::new(time, tick_speed));
-        ecs.insert(Clients::new());
+        ecs.insert(Players::new());
 
         World {
             ecs,
@@ -121,43 +119,43 @@ impl World {
     }
 
     pub fn broadcast(&mut self, msg: &messages::Message, exclude: Vec<usize>) {
-        let mut clients = self.write_resource::<Clients>();
+        let mut players = self.write_resource::<Players>();
 
-        let mut resting_clients = vec![];
+        let mut resting_players = vec![];
 
-        for (id, client) in clients.iter() {
+        for (id, player) in players.iter() {
             if exclude.contains(id) {
                 continue;
             }
 
-            if client
+            if player
                 .addr
                 .do_send(message::Message(msg.to_owned()))
                 .is_err()
             {
-                resting_clients.push(*id);
+                resting_players.push(*id);
             }
         }
 
-        resting_clients.iter().for_each(|id| {
-            clients.remove(id);
+        resting_players.iter().for_each(|id| {
+            players.remove(id);
         })
     }
 
-    pub fn on_chunk_request(&mut self, client_id: usize, msg: messages::Message) {
-        let mut clients = self.write_resource::<Clients>();
+    pub fn on_chunk_request(&mut self, player_id: usize, msg: messages::Message) {
+        let mut players = self.write_resource::<Players>();
 
         let json = msg.parse_json().unwrap();
 
         let cx = json["x"].as_i64().unwrap() as i32;
         let cz = json["z"].as_i64().unwrap() as i32;
 
-        if let Some(client) = clients.get_mut(&client_id) {
-            client.requested_chunks.push_back(Vec2(cx, cz));
+        if let Some(player) = players.get_mut(&player_id) {
+            player.requested_chunks.push_back(Vec2(cx, cz));
         }
     }
 
-    pub fn on_config(&mut self, _client_id: usize, msg: messages::Message) {
+    pub fn on_config(&mut self, _player_id: usize, msg: messages::Message) {
         let mut clock = self.write_resource::<Clock>();
 
         let json = msg.parse_json().unwrap();
@@ -182,7 +180,7 @@ impl World {
         self.broadcast(&new_message, vec![]);
     }
 
-    pub fn on_update(&mut self, _client_id: usize, msg: messages::Message) {
+    pub fn on_update(&mut self, _player_id: usize, msg: messages::Message) {
         let mut chunks = self.write_resource::<Chunks>();
 
         let &air = chunks.registry.get_id_by_name("Air");
@@ -264,9 +262,9 @@ impl World {
         self.broadcast(&new_message, vec![]);
     }
 
-    pub fn on_peer(&mut self, client_id: usize, msg: messages::Message) {
+    pub fn on_peer(&mut self, player_id: usize, msg: messages::Message) {
         let world_name = self.name.to_owned();
-        let mut clients = self.write_resource::<Clients>();
+        let mut players = self.write_resource::<Players>();
 
         let messages::Peer {
             name,
@@ -280,35 +278,35 @@ impl World {
             ..
         } = &msg.peers[0];
 
-        let client = clients.get(&client_id);
+        let player = players.get(&player_id);
 
-        if client.is_none() {
-            clients.remove(&client_id);
+        if player.is_none() {
+            players.remove(&player_id);
             return;
         }
 
-        let client = client.unwrap();
+        let player = player.unwrap();
 
         let mut freshly_joined = false;
 
         // TODO: fix this ambiguous logic
-        // means this client just joined.
-        if client.name.is_none() {
+        // means this player just joined.
+        if player.name.is_none() {
             freshly_joined = true;
         }
 
-        // borrow the client again.
-        let client = clients.get_mut(&client_id).unwrap();
+        // borrow the player again.
+        let player = players.get_mut(&player_id).unwrap();
 
-        client.name = Some(name.to_owned());
-        client.position = Vec3(*px, *py, *pz);
-        client.rotation = Quaternion(*qx, *qy, *qz, *qw);
+        player.name = Some(name.to_owned());
+        player.position = Vec3(*px, *py, *pz);
+        player.rotation = Quaternion(*qx, *qy, *qz, *qw);
 
         // ! will dropping be erroneous?
-        drop(clients);
+        drop(players);
 
         if freshly_joined {
-            let message = format!("{}(id={}) joined the world {}", name, client_id, world_name);
+            let message = format!("{}(id={}) joined the world {}", name, player_id, world_name);
 
             info!("{}", Yellow.bold().paint(message));
 
@@ -322,10 +320,10 @@ impl World {
             self.broadcast(&new_message, vec![]);
         }
 
-        self.broadcast(&msg, vec![client_id]);
+        self.broadcast(&msg, vec![player_id]);
     }
 
-    pub fn on_chat_message(&mut self, _client_id: usize, msg: messages::Message) {
+    pub fn on_chat_message(&mut self, _player_id: usize, msg: messages::Message) {
         self.broadcast(&msg, vec![]);
     }
 
