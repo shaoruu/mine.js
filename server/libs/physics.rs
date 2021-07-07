@@ -3,11 +3,14 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::utils::{math::approx_equals, sweep::sweep};
+use crate::{
+    core::engine::chunks::Chunks,
+    utils::{math::approx_equals, sweep::sweep},
+};
 
 use super::{aabb::Aabb, rigidbody::RigidBody, types::Vec3};
 
-type TestFunction = dyn Fn(i32, i32, i32) -> bool;
+type TestFunction<'a> = &'a dyn Fn(i32, i32, i32) -> bool;
 
 pub struct BodyOptions<'a> {
     pub aabb: Aabb,
@@ -19,7 +22,7 @@ pub struct BodyOptions<'a> {
     pub auto_step: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct PhysicsOptions {
     pub gravity: Vec3<f32>,
     pub min_bounce_impulse: f32,
@@ -28,6 +31,7 @@ pub struct PhysicsOptions {
     pub fluid_density: f32,
 }
 
+#[derive(Default)]
 pub struct Physics {
     pub bodies: HashMap<usize, RigidBody>,
 
@@ -100,29 +104,12 @@ impl Physics {
         self.bodies.remove(&b.id);
     }
 
-    pub fn tick<'a>(
-        &mut self,
-        test_solid: &'a TestFunction,
-        test_fluid: &'a TestFunction,
-        dt: f32,
-    ) {
+    pub fn iterate_body(&mut self, b: &mut RigidBody, dt: f32, chunks: &Chunks) {
+        let test_solid = |x: i32, y: i32, z: i32| -> bool { chunks.get_solidity_by_voxel(x, y, z) };
+        let test_fluid = |_, _, _| false;
+
         let no_gravity = approx_equals(&0.0, &self.options.gravity.len().powi(2));
 
-        for i in 0..self.bodies.len() {
-            let mut body = self.bodies.remove(&i).unwrap();
-            self.iterate_body(&mut body, dt, no_gravity, test_solid, test_fluid);
-            self.bodies.insert(i, body);
-        }
-    }
-
-    fn iterate_body(
-        &mut self,
-        b: &mut RigidBody,
-        dt: f32,
-        no_gravity: bool,
-        test_solid: &TestFunction,
-        test_fluid: &TestFunction,
-    ) {
         // reset flags
         b.collided = None;
         b.stepped = false;
@@ -139,13 +126,13 @@ impl Physics {
 
         // skip bodies if static or no velocity/forces/impulses
         let local_no_grav = no_gravity || approx_equals(&b.gravity_multiplier, &0.0);
-        if self.body_asleep(b, &dt, &local_no_grav, test_solid) {
+        if self.body_asleep(b, &dt, &local_no_grav, &test_solid) {
             return;
         }
         b.sleep_frame_count -= 1;
 
         // check if under water, if so apply buoyancy and drag forces
-        self.apply_fluid_forces(b, test_fluid);
+        self.apply_fluid_forces(b, &test_fluid);
 
         // semi-implicit Euler integration
 
@@ -200,12 +187,12 @@ impl Physics {
         }
 
         // sweeps aabb along dx and accounts for collisions
-        self.process_collisions(&mut b.aabb, &self.dx.clone(), &mut b.resting, test_solid);
+        self.process_collisions(&mut b.aabb, &self.dx.clone(), &mut b.resting, &test_solid);
 
         // if autostep, and on ground, run collisions again with stepped up aabb
         if b.auto_step {
             let mut tmp_box = self.tmp_box.clone();
-            self.try_auto_stepping(b, &mut tmp_box, &self.dx.clone(), test_solid);
+            self.try_auto_stepping(b, &mut tmp_box, &self.dx.clone(), &test_solid);
             self.tmp_box = tmp_box;
         }
 
@@ -244,7 +231,7 @@ impl Physics {
         }
     }
 
-    fn apply_fluid_forces(&mut self, body: &mut RigidBody, test_fluid: &TestFunction) {
+    fn apply_fluid_forces(&mut self, body: &mut RigidBody, test_fluid: TestFunction) {
         let aabb = &body.aabb;
         let cx = aabb.base[0].floor() as i32;
         let cz = aabb.base[2].floor() as i32;
@@ -326,7 +313,7 @@ impl Physics {
         aabb: &mut Aabb,
         velocity: &Vec3<f32>,
         resting: &mut Vec3<f32>,
-        test_solid: &TestFunction,
+        test_solid: TestFunction,
     ) -> f32 {
         resting.set(0.0, 0.0, 0.0);
 
@@ -359,7 +346,7 @@ impl Physics {
         b: &mut RigidBody,
         old_aabb: &mut Aabb,
         dx: &Vec3<f32>,
-        test_solid: &TestFunction,
+        test_solid: TestFunction,
     ) {
         // in the air
         if b.resting[1] >= 0.0 && !b.in_fluid {
@@ -449,7 +436,7 @@ impl Physics {
         body: &mut RigidBody,
         dt: &f32,
         no_gravity: &bool,
-        test_solid: &TestFunction,
+        test_solid: TestFunction,
     ) -> bool {
         if body.sleep_frame_count > 0 {
             return false;

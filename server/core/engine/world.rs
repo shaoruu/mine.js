@@ -6,10 +6,11 @@ use specs::shred::{Fetch, FetchMut, Resource};
 use std::collections::HashMap;
 use std::time::Instant;
 
-use specs::{World as ECSWorld, WorldExt};
+use specs::{DispatcherBuilder, World as ECSWorld, WorldExt};
 
 use serde::Deserialize;
 
+use crate::core::comp::phys::Phys;
 use crate::core::engine::chunks::MeshLevel;
 use crate::core::network::message;
 use crate::core::network::models::messages::{
@@ -18,6 +19,8 @@ use crate::core::network::models::messages::{
 use crate::core::network::models::{
     create_chat_message, create_message, create_of_type, MessageComponents,
 };
+use crate::core::sys::PhysicsSystem;
+use crate::libs::physics::{Physics, PhysicsOptions};
 use crate::libs::types::{Quaternion, Vec2, Vec3};
 
 use super::chunks::Chunks;
@@ -70,9 +73,21 @@ impl World {
         let config: WorldConfig = serde_json::from_value(json).unwrap();
 
         let mut ecs = ECSWorld::new();
+
+        // ECS Components
+        ecs.register::<Phys>();
+
+        // ECS Resources
         ecs.insert(Chunks::new(config, registry));
         ecs.insert(Clock::new(time, tick_speed));
         ecs.insert(Players::new());
+        ecs.insert(Physics::new(PhysicsOptions {
+            gravity: Vec3(0.0, -24.0, 0.0),
+            min_bounce_impulse: 0.1,
+            air_drag: 0.1,
+            fluid_drag: 0.4,
+            fluid_density: 2.0,
+        }));
 
         World {
             ecs,
@@ -336,12 +351,11 @@ impl World {
         // handle chunk generation
         self.write_resource::<Chunks>().tick();
 
-        // handle physics
+        let mut dispatcher = DispatcherBuilder::new()
+            .with(PhysicsSystem, "physics", &[])
+            .build();
 
-        // self.physics.tick(
-        //     &|x: i32, y: i32, z: i32| self.chunks.get_voxel_by_voxel(x, y, z) == 0,
-        //     &|_: i32, _: i32, _: i32| false,
-        //     self.clock.delta,
-        // );
+        dispatcher.dispatch(&self.ecs);
+        self.ecs.maintain();
     }
 }

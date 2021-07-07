@@ -6,7 +6,7 @@ use super::math::approx_equals;
 
 #[allow(clippy::too_many_arguments)]
 fn trace_ray(
-    get_voxel: &GetVoxel,
+    get_voxel: GetVoxel,
     px: f32,
     py: f32,
     pz: f32,
@@ -130,7 +130,7 @@ fn trace_ray(
 
 pub fn trace(
     max_d: f32,
-    get_voxel: &GetVoxel,
+    get_voxel: GetVoxel,
     origin: &mut Vec3<f32>,
     direction: &mut Vec3<f32>,
     hit_pos: &mut Vec3<f32>,

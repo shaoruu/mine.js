@@ -165,4 +165,4 @@ pub struct MeshType {
     pub lights: Vec<i32>,
 }
 
-pub type GetVoxel = dyn Fn(i32, i32, i32) -> bool;
+pub type GetVoxel<'a> = &'a dyn Fn(i32, i32, i32) -> bool;

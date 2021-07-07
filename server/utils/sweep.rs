@@ -71,7 +71,7 @@ fn init_sweep(
 
 fn check_collisions(
     i_axis: usize,
-    get_voxel: &GetVoxel,
+    get_voxel: GetVoxel,
     step: &Vec3<i32>,
     ldi: &Vec3<i32>,
     tri: &Vec3<i32>,
@@ -207,7 +207,7 @@ fn step_forward(
 }
 
 fn do_sweep(
-    get_voxel: &GetVoxel,
+    get_voxel: GetVoxel,
     callback: &mut SweepCallback,
     vec: &mut Vec3<f32>,
     base: &mut Vec3<f32>,
@@ -304,7 +304,7 @@ fn do_sweep(
 }
 
 pub fn sweep(
-    get_voxel: &GetVoxel,
+    get_voxel: GetVoxel,
     aabb: &mut Aabb,
     dir: &Vec3<f32>,
     callback: &mut SweepCallback,
