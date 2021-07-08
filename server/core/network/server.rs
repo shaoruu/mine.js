@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use crate::core::engine::chunks::{Chunks, MeshLevel};
 use crate::core::engine::clock::Clock;
-use crate::core::engine::player::{Player, Players};
+use crate::core::engine::players::{Player, Players};
 use crate::core::engine::registry::Registry;
 use crate::core::engine::world::{World, WorldConfig};
 use crate::core::network::models::create_chat_message;

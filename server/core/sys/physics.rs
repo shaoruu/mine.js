@@ -1,3 +1,5 @@
+use log::debug;
+
 use specs::{ReadExpect, System, WriteExpect, WriteStorage};
 
 use crate::{
@@ -12,7 +14,7 @@ pub struct PhysicsSystem;
 
 impl<'a> System<'a> for PhysicsSystem {
     type SystemData = (
-        WriteExpect<'a, Physics>,
+        ReadExpect<'a, Physics>,
         ReadExpect<'a, Clock>,
         ReadExpect<'a, Chunks>,
         WriteStorage<'a, Phys>,
@@ -21,10 +23,10 @@ impl<'a> System<'a> for PhysicsSystem {
     fn run(&mut self, data: Self::SystemData) {
         use specs::Join;
 
-        let (mut core, clock, chunks, mut phys) = data;
+        let (core, clock, chunks, mut phys) = data;
 
-        for p in &mut (&mut phys).join() {
-            core.iterate_body(&mut p.body, clock.delta, &chunks)
+        for p in (&mut phys).join() {
+            core.iterate_body(&mut p.body, clock.delta_secs(), &chunks);
         }
     }
 }

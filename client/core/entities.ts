@@ -1,4 +1,4 @@
-import { Object3D, Vector3 } from 'three';
+import { Object3D, Vector3, Mesh, ObjectLoader, BoxBufferGeometry } from 'three';
 
 import { AABB, Brain, EntityType, BodyOptionsType } from '../libs';
 
@@ -13,7 +13,13 @@ type EntitiesOptionsType = {
 class Entities {
   public list: Map<string, EntityType> = new Map();
 
-  constructor(public engine: Engine, public options: EntitiesOptionsType) {}
+  constructor(public engine: Engine, public options: EntitiesOptionsType) {
+    // const geo = new BoxBufferGeometry(0.8, 2.0, 0.8);
+    // const mesh = new Mesh(geo);
+    // mesh.position.set(0, 80, 0);
+    // this.addEntity('bruh', mesh, [0.8, 2.0, 0.8], [0, 0, 0]);
+    // engine.rendering.scene.add(mesh);
+  }
 
   addEntity = (
     name: string,

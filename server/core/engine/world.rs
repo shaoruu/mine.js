@@ -3,16 +3,14 @@ use log::{debug, info};
 use ansi_term::Colour::Yellow;
 use specs::shred::{Fetch, FetchMut, Resource};
 
-use std::collections::HashMap;
 use std::time::Instant;
 
-use specs::{DispatcherBuilder, World as ECSWorld, WorldExt};
+use specs::{Builder, DispatcherBuilder, World as ECSWorld, WorldExt};
 
 use serde::Deserialize;
 
 use crate::core::comp::phys::Phys;
 use crate::core::engine::chunks::MeshLevel;
-use crate::core::network::message;
 use crate::core::network::models::messages::{
     self, chat_message::Type as ChatType, message::Type as MessageType,
 };
@@ -20,12 +18,14 @@ use crate::core::network::models::{
     create_chat_message, create_message, create_of_type, MessageComponents,
 };
 use crate::core::sys::PhysicsSystem;
+use crate::libs::aabb::Aabb;
 use crate::libs::physics::{Physics, PhysicsOptions};
+use crate::libs::rigidbody::RigidBody;
 use crate::libs::types::{Quaternion, Vec2, Vec3};
 
 use super::chunks::Chunks;
 use super::clock::Clock;
-use super::player::{BroadcastExt, Players};
+use super::players::{BroadcastExt, Players};
 use super::registry::Registry;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -88,6 +88,19 @@ impl World {
             fluid_drag: 0.4,
             fluid_density: 2.0,
         }));
+
+        ecs.create_entity()
+            .with(Phys {
+                body: RigidBody::new(
+                    Aabb::new(&Vec3(0.0, 80.0, 0.0), &Vec3(0.8, 2.0, 0.8)),
+                    1.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                    false,
+                ),
+            })
+            .build();
 
         World {
             ecs,

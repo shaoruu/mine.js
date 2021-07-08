@@ -21,14 +21,23 @@ impl Clock {
         }
     }
 
+    pub fn delta_secs(&self) -> f32 {
+        self.delta
+    }
+
+    pub fn delta_milli(&self) -> f32 {
+        self.delta * 1000.0
+    }
+
     pub fn tick(&mut self) {
         let now = SystemTime::now();
 
-        self.delta = now
+        self.delta = (now
             .duration_since(self.prev_time)
             .expect("Clock may have gone backwards")
             .as_millis() as f32
-            / 1000.0;
+            / 1000.0)
+            .min(0.020);
 
         self.prev_time = now;
 

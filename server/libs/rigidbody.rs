@@ -1,8 +1,6 @@
 use super::{aabb::Aabb, types::Vec3};
 
 pub struct RigidBody {
-    pub id: usize,
-
     // flags for test
     pub collided: Option<Vec3<f32>>,
     pub stepped: bool,
@@ -29,7 +27,6 @@ pub struct RigidBody {
 impl RigidBody {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        id: usize,
         aabb: Aabb,
         mass: f32,
         friction: f32,
@@ -38,8 +35,6 @@ impl RigidBody {
         auto_step: bool,
     ) -> Self {
         Self {
-            id,
-
             collided: None,
             stepped: false,
 

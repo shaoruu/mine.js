@@ -3,6 +3,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use log::debug;
+
 use crate::{
     core::engine::chunks::Chunks,
     utils::{math::approx_equals, sweep::sweep},
@@ -33,78 +35,15 @@ pub struct PhysicsOptions {
 
 #[derive(Default)]
 pub struct Physics {
-    pub bodies: HashMap<usize, RigidBody>,
-
     options: PhysicsOptions,
-
-    a: Vec3<f32>,
-    dv: Vec3<f32>,
-    dx: Vec3<f32>,
-    impacts: Vec3<f32>,
-    old_resting: Vec3<f32>,
-    sleep_vec: Vec3<f32>,
-    fluid_vec: Vec3<f32>,
-    lateral_vel: Vec3<f32>,
-    tmp_box: Aabb,
-    tmp_resting: Vec3<f32>,
-    target_pos: Vec3<f32>,
-    upvec: Vec3<f32>,
-    leftover: Vec3<f32>,
 }
 
 impl Physics {
     pub fn new(options: PhysicsOptions) -> Self {
-        Self {
-            options,
-
-            a: Vec3::default(),
-            dv: Vec3::default(),
-            dx: Vec3::default(),
-            impacts: Vec3::default(),
-            bodies: HashMap::default(),
-            old_resting: Vec3::default(),
-            sleep_vec: Vec3::default(),
-            fluid_vec: Vec3::default(),
-            lateral_vel: Vec3::default(),
-            tmp_box: Aabb::new(&Vec3::default(), &Vec3::default()),
-            tmp_resting: Vec3::default(),
-            target_pos: Vec3::default(),
-            upvec: Vec3::default(),
-            leftover: Vec3::default(),
-        }
+        Self { options }
     }
 
-    pub fn add_body(&mut self, options: BodyOptions) -> &RigidBody {
-        let BodyOptions {
-            mass,
-            friction,
-            restitution,
-            gravity_multiplier,
-            auto_step,
-            ..
-        } = options;
-
-        let id = rand::random::<usize>();
-
-        let b = RigidBody::new(
-            id.to_owned(),
-            options.aabb.clone(),
-            mass,
-            friction,
-            restitution,
-            gravity_multiplier,
-            auto_step,
-        );
-
-        self.bodies.insert(id, b);
-        self.bodies.get(&id).unwrap()
-    }
-
-    pub fn remove_body(&mut self, b: &RigidBody) {
-        self.bodies.remove(&b.id);
-    }
-
-    pub fn iterate_body(&mut self, b: &mut RigidBody, dt: f32, chunks: &Chunks) {
+    pub fn iterate_body(&self, b: &mut RigidBody, dt: f32, chunks: &Chunks) {
         let test_solid = |x: i32, y: i32, z: i32| -> bool { chunks.get_solidity_by_voxel(x, y, z) };
         let test_fluid = |_, _, _| false;
 
@@ -114,7 +53,7 @@ impl Physics {
         b.collided = None;
         b.stepped = false;
 
-        self.old_resting.copy(&b.resting);
+        let old_resting = &b.resting.clone();
 
         // treat bodies with <= 0 mass as static
         if b.mass <= 0.0 {
@@ -137,20 +76,19 @@ impl Physics {
         // semi-implicit Euler integration
 
         // a = f/m + gravity * gravity_multiplier
-        self.a = b.forces.scale(1.0 / b.mass);
-        self.a = self
-            .a
+        let a = b
+            .forces
+            .scale(1.0 / b.mass)
             .scale_and_add(&self.options.gravity, b.gravity_multiplier);
 
         // dv = i/m + a*dt
         // v1 = v0 + dv
-        self.dv = b.impulses.scale(1.0 / b.mass);
-        self.dv = self.dv.scale_and_add(&self.a, dt);
-        b.velocity = b.velocity.add(&self.dv);
+        let dv = b.impulses.scale(1.0 / b.mass);
+        let dv = dv.scale_and_add(&a, dt);
+        b.velocity = b.velocity.add(&dv);
 
         // apply friction based on change in velocity this frame
         if !approx_equals(&b.friction, &0.0) {
-            let dv = self.dv.clone();
             self.apply_friction_by_axis(0, b, &dv);
             self.apply_friction_by_axis(1, b, &dv);
             self.apply_friction_by_axis(2, b, &dv);
@@ -175,52 +113,55 @@ impl Physics {
         b.velocity = b.velocity.scale(mult);
 
         // x1-x0 = v1*dt
-        self.dx = b.velocity.scale(dt);
+        let dx = b.velocity.scale(dt);
 
         // clear forces and impulses for next timestep
         b.forces.set(0.0, 0.0, 0.0);
         b.impulses.set(0.0, 0.0, 0.0);
 
         // cache old position for use in autostepping
-        if b.auto_step {
-            self.tmp_box.copy(&b.aabb);
-        }
+        let tmp_box = if b.auto_step {
+            Some(b.aabb.clone())
+        } else {
+            None
+        };
 
         // sweeps aabb along dx and accounts for collisions
-        self.process_collisions(&mut b.aabb, &self.dx.clone(), &mut b.resting, &test_solid);
+        self.process_collisions(&mut b.aabb, &dx, &mut b.resting, &test_solid);
 
         // if autostep, and on ground, run collisions again with stepped up aabb
         if b.auto_step {
-            let mut tmp_box = self.tmp_box.clone();
-            self.try_auto_stepping(b, &mut tmp_box, &self.dx.clone(), &test_solid);
-            self.tmp_box = tmp_box;
+            let mut tmp_box = tmp_box.unwrap();
+            self.try_auto_stepping(b, &mut tmp_box, &dx, &test_solid);
         }
+
+        let mut impacts = Vec3::default();
 
         // collision impacts. b.resting shows which axes had collisions
         for i in 0..3 {
-            self.impacts[i] = 0.0;
+            impacts[i] = 0.0;
             if !approx_equals(&b.resting[i], &0.0) {
                 // count impact only if wasn't collided last frame
-                if approx_equals(&self.old_resting[i], &0.0) {
-                    self.impacts[i] = -b.velocity[i];
+                if approx_equals(&old_resting[i], &0.0) {
+                    impacts[i] = -b.velocity[i];
                 }
                 b.velocity[i] = 0.0;
             }
         }
 
-        let mag = self.impacts.len();
+        let mag = impacts.len();
         if mag > 0.001 {
             // epsilon
             // send collision event - allow player to optionally change
             // body's restitution depending on what terrain it hit
             // event argument is impulse J = m * dv
-            self.impacts = self.impacts.scale(b.mass);
-            b.collided = Some(self.impacts.clone());
+            impacts = impacts.scale(b.mass);
+            b.collided = Some(impacts.clone());
 
             // bounce depending on restitution and min_bounce_impulse
             if b.restitution > 0.0 && mag > self.options.min_bounce_impulse {
-                self.impacts = self.impacts.scale(b.restitution);
-                b.apply_impulse(&self.impacts);
+                impacts = impacts.scale(b.restitution);
+                b.apply_impulse(&impacts);
             }
         }
 
@@ -231,7 +172,7 @@ impl Physics {
         }
     }
 
-    fn apply_fluid_forces(&mut self, body: &mut RigidBody, test_fluid: TestFunction) {
+    fn apply_fluid_forces(&self, body: &mut RigidBody, test_fluid: TestFunction) {
         let aabb = &body.aabb;
         let cx = aabb.base[0].floor() as i32;
         let cz = aabb.base[2].floor() as i32;
@@ -260,17 +201,17 @@ impl Physics {
         let vol = aabb.vec[0] * aabb.vec[1] * aabb.vec[2];
         let displaced = vol * ratio_in_fluid;
         // buoyant force = -gravity * fluid_density * volume_displaced
-        self.fluid_vec = self
+        let fluid_vec = self
             .options
             .gravity
             .scale(-self.options.fluid_density * displaced);
-        body.apply_force(&self.fluid_vec);
+        body.apply_force(&fluid_vec);
 
         body.in_fluid = true;
         body.ratio_in_fluid = ratio_in_fluid;
     }
 
-    fn apply_friction_by_axis(&mut self, axis: usize, body: &mut RigidBody, dvel: &Vec3<f32>) {
+    fn apply_friction_by_axis(&self, axis: usize, body: &mut RigidBody, dvel: &Vec3<f32>) {
         // friction applies only if moving into a touched surface
         let rest_dir = body.resting[axis];
         let v_normal = dvel[axis];
@@ -279,9 +220,9 @@ impl Physics {
         }
 
         // current vel lateral to friction axis
-        self.lateral_vel.copy(&body.velocity);
-        self.lateral_vel[axis] = 0.0;
-        let v_curr = self.lateral_vel.len();
+        let mut lateral_vel = body.velocity.clone();
+        lateral_vel[axis] = 0.0;
+        let v_curr = lateral_vel.len();
         if approx_equals(&v_curr, &0.0) {
             return;
         }
@@ -309,7 +250,7 @@ impl Physics {
     }
 
     fn process_collisions(
-        &mut self,
+        &self,
         aabb: &mut Aabb,
         velocity: &Vec3<f32>,
         resting: &mut Vec3<f32>,
@@ -342,7 +283,7 @@ impl Physics {
     }
 
     fn try_auto_stepping(
-        &mut self,
+        &self,
         b: &mut RigidBody,
         old_aabb: &mut Aabb,
         dx: &Vec3<f32>,
@@ -368,7 +309,7 @@ impl Physics {
         }
 
         // original target position before being obstructed
-        self.target_pos = old_aabb.base.add(&dx);
+        let target_pos = old_aabb.base.add(&dx);
 
         // move towards the target until the first x/z collision
         sweep(
@@ -387,7 +328,7 @@ impl Physics {
 
         let y = b.aabb.base[1];
         let y_dist = (y + 1.001).floor() - y;
-        self.upvec.set(0.0, y_dist, 0.0);
+        let upvec = Vec3(0.0, y_dist, 0.0);
         let collided = Arc::new(Mutex::new(false));
         let temp = collided.clone();
         sweep(
@@ -405,34 +346,28 @@ impl Physics {
         }
 
         // now move in x/z however far was left over before hitting the obstruction
-        self.leftover = self.target_pos.sub(&old_aabb.base);
-        self.leftover[1] = 0.0;
-        let mut tmp_resting = self.tmp_resting.clone();
-        self.process_collisions(
-            old_aabb,
-            &self.leftover.clone(),
-            &mut tmp_resting,
-            test_solid,
-        );
-        self.tmp_resting = tmp_resting;
+        let mut leftover = target_pos.sub(&old_aabb.base);
+        leftover[1] = 0.0;
+        let mut tmp_resting = Vec3::default();
+        self.process_collisions(old_aabb, &leftover, &mut tmp_resting, test_solid);
 
         // bail if no movement happened in the originally blocked direction
-        if x_blocked && !approx_equals(&old_aabb.base[0], &self.target_pos[0]) {
+        if x_blocked && !approx_equals(&old_aabb.base[0], &target_pos[0]) {
             return;
         }
-        if z_blocked && !approx_equals(&old_aabb.base[2], &self.target_pos[2]) {
+        if z_blocked && !approx_equals(&old_aabb.base[2], &target_pos[2]) {
             return;
         }
 
         // done - oldBox is now at the target auto-stepped position
         b.aabb.copy(old_aabb);
-        b.resting[0] = self.tmp_resting[0];
-        b.resting[2] = self.tmp_resting[2];
+        b.resting[0] = tmp_resting[0];
+        b.resting[2] = tmp_resting[2];
         b.stepped = true;
     }
 
     fn body_asleep(
-        &mut self,
+        &self,
         body: &mut RigidBody,
         dt: &f32,
         no_gravity: &bool,
@@ -451,7 +386,7 @@ impl Physics {
         // i.e. sweep along by distance d = 1/2 g*t^2
         // and check there's still collision
         let g_mult = 0.5 * dt * dt * body.gravity_multiplier;
-        self.sleep_vec = self.options.gravity.scale(g_mult);
+        let sleep_vec = self.options.gravity.scale(g_mult);
 
         let is_resting = Arc::new(Mutex::new(false));
         let temp = is_resting.clone();
@@ -459,7 +394,7 @@ impl Physics {
         sweep(
             test_solid,
             &mut body.aabb,
-            &self.sleep_vec,
+            &sleep_vec,
             &mut move |_, _, _, _| {
                 *temp.lock().unwrap() = true;
                 true

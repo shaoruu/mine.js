@@ -713,7 +713,7 @@ impl Chunks {
     }
 
     pub fn get_solidity_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> bool {
-        self.get_voxel_by_voxel(vx, vy, vz) == 0
+        self.get_voxel_by_voxel(vx, vy, vz) != 0
     }
 
     pub fn get_fluidity_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> bool {
