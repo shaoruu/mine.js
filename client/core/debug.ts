@@ -99,7 +99,6 @@ class Debug {
     this.dataWrapper = document.createElement('div');
     Helper.applyStyle(this.dataWrapper, {
       position: 'absolute',
-      width: '180px',
       top: '0',
       left: '0',
       background: '#00000022',
