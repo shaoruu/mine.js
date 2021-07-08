@@ -93,7 +93,7 @@ class Debug {
       top: '0',
       width: '100%',
       position: 'fixed',
-      zIndex: '10000',
+      zIndex: '10000000',
     });
 
     this.dataWrapper = document.createElement('div');
@@ -111,7 +111,6 @@ class Debug {
     });
 
     Helper.applyStyle(this.gui.domElement, {
-      zIndex: '10000',
       position: 'absolute',
       top: '0',
       right: '0',

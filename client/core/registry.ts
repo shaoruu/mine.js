@@ -1,19 +1,14 @@
 import {
   BackSide,
   BufferGeometry,
-  DepthFormat,
-  DepthTexture,
   DoubleSide,
   Float32BufferAttribute,
-  FloatType,
   FrontSide,
-  LinearFilter,
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
   OrthographicCamera,
   PlaneBufferGeometry,
-  RGBAFormat,
   Scene,
   ShaderLib,
   ShaderMaterial,
@@ -21,12 +16,9 @@ import {
   Texture,
   TextureLoader,
   UniformsUtils,
-  UnsignedIntType,
   Vector4,
   WebGLRenderer,
-  WebGLRenderTarget,
 } from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 
 import { Helper } from '../utils';
 
@@ -108,7 +100,7 @@ class Registry {
       depth: false,
     });
     this.renderer.setSize(resolution, resolution);
-    this.renderer.outputEncoding = sRGBEncoding;
+    // this.renderer.outputEncoding = sRGBEncoding;
 
     this.blockGeometry = new BufferGeometry();
     this.plantGeometry = new PlaneBufferGeometry(focusPlantSize, focusPlantSize);
@@ -355,6 +347,14 @@ class Registry {
     return this.focuses[id.toString()];
   };
 
+  getBlock = (id) => {
+    return this.options.blocks[id];
+  };
+
+  isPlant = (id: number) => {
+    return this.getBlock(id) && this.getBlock(id).isPlant;
+  };
+
   hasBlock = (id: number) => {
     return !!this.options.blocks[id];
   };
@@ -384,7 +384,7 @@ varying vec4 vLight;
 float s = max(vLight.a * uSunlightIntensity * 0.8, 0.02);
 float scale = 1.0;
 outgoingLight.rgb *= vec3(s + pow(vLight.r, scale), s + pow(vLight.g, scale), s + pow(vLight.b, scale));
-outgoingLight *= 0.58 * vAO;
+outgoingLight *= 0.88 * vAO;
 `,
         )
         .replace(
