@@ -111,9 +111,9 @@ class Inventory {
         borderRadius: `${SLOT_SIZE * 0.1}px`,
         width: `${SLOT_SIZE}px`,
         height: `${SLOT_SIZE}px`,
-        background: 'rgba(180,132,108,0.)',
-        border: `${SLOT_SIZE * 0.08}px solid #835151`,
-        boxShadow: `inset 0 0 ${SLOT_SIZE * 0.1}px #000000`,
+        background: 'rgba(84, 140, 168, 0.4)',
+        border: `${SLOT_SIZE * 0.08}px solid #334257`,
+        boxShadow: `inset 0 0 ${SLOT_SIZE * 0.1}px #334257`,
       });
 
       hotbar.appendChild(slot);

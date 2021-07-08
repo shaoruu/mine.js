@@ -177,11 +177,12 @@ class Debug {
 
     // const cameraFolder = this.gui.addFolder('camera');
     this.registerDisplay('FPS', this, 'fps');
-    this.registerDisplay('position', player, 'voxelPositionStr');
     this.registerDisplay('chunk', world, 'camChunkPosStr');
+    this.registerDisplay('chunks loaded', world, 'chunksLoaded');
+    this.registerDisplay('position', player, 'voxelPositionStr');
     this.registerDisplay('looking at', player, 'lookBlockStr');
-    this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
     this.registerDisplay('memory used', this, 'memoryUsage');
+    this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
 
     // REGISTRY
     const registryFolder = this.gui.addFolder('Registry');

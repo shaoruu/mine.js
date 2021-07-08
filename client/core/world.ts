@@ -306,6 +306,10 @@ class World extends EventEmitter {
     this.sortPendingChunks();
   };
 
+  get chunksLoaded() {
+    return this.chunks.size;
+  }
+
   get camChunkPosStr() {
     return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
   }
