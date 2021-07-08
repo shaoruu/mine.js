@@ -2,7 +2,6 @@
 
 <style>
   .button {
-    font-family: 'Alata', sans-serif;
     border: none;
     border-bottom: 3px solid #35425f;
     border-right: 2px solid #35425f;

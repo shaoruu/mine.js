@@ -13,7 +13,7 @@ class Message {
     Helper.applyStyle(this.wrapper, {
       display: 'flex',
       alignItems: 'flex-start',
-      padding: '0 5px 5px 5px',
+      padding: '5px',
     });
 
     Helper.applyStyle([this.sender, this.body], {

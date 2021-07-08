@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Alata&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oxygen+Mono&display=swap');
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Alata', sans-serif;
+  font-family: 'Oxygen Mono', monospace;
 }
 
 html,

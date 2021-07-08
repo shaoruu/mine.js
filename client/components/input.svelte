@@ -1,7 +1,6 @@
 <script lang="typescript">
   export let title: string = '';
   export let value: string;
-
 </script>
 
 <div class="inputField">
@@ -34,7 +33,6 @@
     line-height: 24px;
     background: black;
     color: white;
-    font-family: 'Alata', sans-serif;
     padding: 5px;
     border: 2px solid #566da1;
     border-radius: 10px;
@@ -47,5 +45,4 @@
   .inputField input:focus {
     outline: none;
   }
-
 </style>
