@@ -174,12 +174,10 @@ class Registry {
     });
 
     engine.on('texture-loaded', () => {
-      console.time('WTF');
       Object.keys(options.blocks).forEach((idStr) => {
         const id = +idStr;
         this.focuses[idStr] = this.focus(id);
       });
-      console.timeEnd('WTF');
 
       engine.emit('focus-loaded');
     });
