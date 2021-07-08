@@ -1,14 +1,19 @@
 import {
   BackSide,
   BufferGeometry,
+  DepthFormat,
+  DepthTexture,
   DoubleSide,
   Float32BufferAttribute,
+  FloatType,
   FrontSide,
+  LinearFilter,
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
   OrthographicCamera,
   PlaneBufferGeometry,
+  RGBAFormat,
   Scene,
   ShaderLib,
   ShaderMaterial,
@@ -16,9 +21,12 @@ import {
   Texture,
   TextureLoader,
   UniformsUtils,
+  UnsignedIntType,
   Vector4,
   WebGLRenderer,
+  WebGLRenderTarget,
 } from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 
 import { Helper } from '../utils';
 
@@ -87,12 +95,20 @@ class Registry {
     // set near to -10 to render the whole block without cutting the edge
     this.camera = new OrthographicCamera(-focusDist, focusDist, focusDist, -focusDist, -focusPlantSize);
     this.bufferScene = new Scene();
-    this.canvas = document.createElement('canvas');
-    this.renderer = new WebGLRenderer({ canvas: this.canvas, alpha: true });
-    this.renderer.setSize(resolution, resolution);
 
+    this.canvas = document.createElement('canvas');
     this.canvas.width = resolution;
     this.canvas.height = resolution;
+
+    this.renderer = new WebGLRenderer({
+      powerPreference: 'high-performance',
+      canvas: this.canvas,
+      alpha: true,
+      // stencil: false,
+      depth: false,
+    });
+    this.renderer.setSize(resolution, resolution);
+    this.renderer.outputEncoding = sRGBEncoding;
 
     this.blockGeometry = new BufferGeometry();
     this.plantGeometry = new PlaneBufferGeometry(focusPlantSize, focusPlantSize);

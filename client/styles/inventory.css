@@ -1,3 +1,5 @@
 .selected {
-  border-color: #476072 !important;
+  box-shadow: none !important;
+  border-color: #8d93ab !important;
+  transform: scale(1.06);
 }

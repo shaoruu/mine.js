@@ -23,6 +23,7 @@ class Slot extends HTMLDivElement {
 
 const TEMP_BLOCK_MAP = [1, 2, 3, 4, 100, 10, 12, 13, 14, 15];
 const SLOT_SIZE = 40; // px
+const BORDER_COLOR = '#393B44';
 
 class Inventory {
   // NOTE: should be within [0, hotbarSlots]
@@ -107,13 +108,13 @@ class Inventory {
         alignItems: 'center',
         justifyContent: 'center',
         padding: `${SLOT_SIZE * 0.1}px`,
-        margin: `${SLOT_SIZE * 0.01}px`,
+        margin: `${SLOT_SIZE * 0.02}px`,
         borderRadius: `${SLOT_SIZE * 0.1}px`,
         width: `${SLOT_SIZE}px`,
         height: `${SLOT_SIZE}px`,
         background: 'rgba(84, 140, 168, 0.05)',
-        border: `${SLOT_SIZE * 0.08}px solid #334257`,
-        boxShadow: `inset 0 0 ${SLOT_SIZE * 0.1}px #334257`,
+        border: `${SLOT_SIZE * 0.08}px solid ${BORDER_COLOR}`,
+        boxShadow: `inset 0 0 ${SLOT_SIZE * 0.1}px ${BORDER_COLOR}`,
       });
 
       hotbar.appendChild(slot);
