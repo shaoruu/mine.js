@@ -73,11 +73,11 @@ class Player {
     const { config, rendering, inputs, world } = engine;
 
     inputs.click('left', () => world.breakVoxel(), 'in-game');
-    inputs.click('right', () => world.placeVoxel(this.handType), 'in-game');
+    inputs.click('right', () => world.placeVoxel(this.engine.inventory.hand), 'in-game');
     inputs.click(
       'middle',
       () => {
-        if (this.lookBlock) this.handType = engine.world.getVoxelByVoxel(this.lookBlock);
+        if (this.lookBlock) this.engine.inventory.setHand(engine.world.getVoxelByVoxel(this.lookBlock));
       },
       'in-game',
     );

@@ -69,22 +69,30 @@ class Registry {
   public opaqueChunkMaterial: ShaderMaterial;
   public transparentChunkMaterials: ShaderMaterial[];
 
-  public focuses: { [id: string]: HTMLCanvasElement } = {};
+  public focuses: { [id: string]: string } = {};
 
+  private canvas: HTMLCanvasElement;
   private camera: OrthographicCamera;
   private bufferScene: Scene;
   private material: MeshBasicMaterial;
+  private renderer: WebGLRenderer;
   private blockGeometry: BufferGeometry;
   private plantGeometry: BufferGeometry;
 
   constructor(public engine: Engine, public options: RegistryOptionsType) {
-    const { focusDist, focusBlockSize, focusPlantSize } = options;
+    const { focusDist, focusBlockSize, focusPlantSize, resolution } = options;
 
     this.aoUniform = { value: new Vector4(100.0, 170.0, 210.0, 255.0) };
 
     // set near to -10 to render the whole block without cutting the edge
     this.camera = new OrthographicCamera(-focusDist, focusDist, focusDist, -focusDist, -focusPlantSize);
     this.bufferScene = new Scene();
+    this.canvas = document.createElement('canvas');
+    this.renderer = new WebGLRenderer({ canvas: this.canvas, alpha: true });
+    this.renderer.setSize(resolution, resolution);
+
+    this.canvas.width = resolution;
+    this.canvas.height = resolution;
 
     this.blockGeometry = new BufferGeometry();
     this.plantGeometry = new PlaneBufferGeometry(focusPlantSize, focusPlantSize);
@@ -166,11 +174,14 @@ class Registry {
     });
 
     engine.on('texture-loaded', () => {
-      // console.log(this.focus(2).toDataURL());
-      // Object.keys(options.blocks).forEach((idStr) => {
-      //   const id = +idStr;
-      //   this.focuses[idStr] = this.focus(id);
-      // });
+      console.time('WTF');
+      Object.keys(options.blocks).forEach((idStr) => {
+        const id = +idStr;
+        this.focuses[idStr] = this.focus(id);
+      });
+      console.timeEnd('WTF');
+
+      engine.emit('focus-loaded');
     });
   }
 
@@ -184,7 +195,7 @@ class Registry {
   };
 
   focusBlock = (id: number) => {
-    const { focusDist, resolution } = this.options;
+    const { focusDist } = this.options;
 
     this.camera.position.set(focusDist, focusDist, focusDist);
     this.camera.lookAt(0, 0, 0);
@@ -200,21 +211,15 @@ class Registry {
       this.bufferScene.remove(this.bufferScene.children[0]);
     }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = resolution;
-    canvas.height = resolution;
-
-    const renderer = new WebGLRenderer({ canvas, alpha: true });
-
     this.bufferScene.add(mesh);
-    renderer.render(this.bufferScene, this.camera);
+    this.renderer.render(this.bufferScene, this.camera);
     this.engine.rendering.scene.add(mesh);
 
-    return canvas;
+    return this.canvas.toDataURL();
   };
 
   focusPlant = (id: number) => {
-    const { focusDist, resolution } = this.options;
+    const { focusDist } = this.options;
 
     this.camera.position.set(0, 0, -focusDist);
     this.camera.lookAt(0, 1, 0);
@@ -231,16 +236,10 @@ class Registry {
       this.bufferScene.remove(this.bufferScene.children[0]);
     }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = resolution;
-    canvas.height = resolution;
-
-    const renderer = new WebGLRenderer({ canvas, alpha: true });
-
     this.bufferScene.add(mesh);
-    renderer.render(this.bufferScene, this.camera);
+    this.renderer.render(this.bufferScene, this.camera);
 
-    return canvas;
+    return this.canvas.toDataURL();
   };
 
   getUV = (id: number): { [key: string]: [any[][], number] } => {
@@ -336,6 +335,10 @@ class Registry {
       return { one: [oneUVs, 1] };
     }
     return {};
+  };
+
+  getFocus = (id: number) => {
+    return this.focuses[id.toString()];
   };
 
   private makeShaderMaterial = () => {

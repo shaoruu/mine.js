@@ -93,7 +93,7 @@ class Debug {
       top: '0',
       width: '100%',
       position: 'fixed',
-      zIndex: '10000000000',
+      zIndex: '10000',
     });
 
     this.dataWrapper = document.createElement('div');
@@ -103,7 +103,6 @@ class Debug {
       left: '0',
       background: '#00000022',
       color: 'white',
-      fontFamily: `'Trebuchet MS', sans-serif`,
       padding: '4px',
       display: 'flex',
       flexDirection: 'column-reverse',
@@ -112,6 +111,7 @@ class Debug {
     });
 
     Helper.applyStyle(this.gui.domElement, {
+      zIndex: '10000',
       position: 'absolute',
       top: '0',
       right: '0',
@@ -244,24 +244,6 @@ class Debug {
 
     inputs.bind('x', bulkPlace(0), 'in-game');
     inputs.bind('z', bulkPlace(), 'in-game');
-
-    const { maxChangeRadius, minChangeRadius } = this.inputOptions;
-
-    inputs.scroll(
-      () =>
-        (this.inputOptions.changeRadius = Helper.clamp(
-          this.inputOptions.changeRadius + 1,
-          minChangeRadius,
-          maxChangeRadius,
-        )),
-      () =>
-        (this.inputOptions.changeRadius = Helper.clamp(
-          this.inputOptions.changeRadius - 1,
-          minChangeRadius,
-          maxChangeRadius,
-        )),
-      'in-game',
-    );
   };
 
   tick = () => {

@@ -10,6 +10,7 @@ type ContainerOptionsType = {
 };
 
 class Container extends EventEmitter {
+  public loading: HTMLDivElement;
   public domElement: HTMLElement = document.body;
   public canvas: HTMLCanvasElement;
 

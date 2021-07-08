@@ -28,9 +28,17 @@ class Inputs {
     this.add('enter', 'enter');
     this.add('tab', 'tab');
 
+    this.initEventPrevents();
     this.initClickListener();
     this.initScrollListener();
   }
+
+  initEventPrevents = () => {
+    // window.addEventListener('beforeunload', (e) => {
+    //   e.preventDefault();
+    //   return (e.returnValue = 'Are you sure you want to exit?');
+    // });
+  };
 
   initClickListener = () => {
     (['left', 'middle', 'right'] as ClickType[]).forEach((type) => this.clickCallbacks.set(type, []));

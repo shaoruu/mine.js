@@ -86,7 +86,7 @@ const defaultConfig: ConfigType = {
   inventory: {
     backpackColumns: 10,
     backpackRows: 5,
-    hotbarSlots: 10,
+    hotbarSlots: 6,
   },
   world: {
     renderRadius: 6,
@@ -335,6 +335,10 @@ class Engine extends EventEmitter {
 
   get connected() {
     return this.network.connected;
+  }
+
+  get loadPercentage() {
+    return Object.keys(this.registry.focuses).length / this.registry.options.blocks.length;
   }
 }
 

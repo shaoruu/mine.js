@@ -13,6 +13,7 @@
 
   let locked = false;
   let chatEnabled = false;
+  let loading = false;
 
   const { world } = QS.parse(window.location.search);
 
@@ -40,11 +41,15 @@
 
   onMount(async () => {
     if (wrapper) {
-      document.body.style.background = document.documentElement.style.background = wrapper.style.background =
-        BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
+      document.body.style.background =
+        document.documentElement.style.background =
+        wrapper.style.background =
+          BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
     }
 
     if (world) {
+      loading = true;
+
       const response = await fetch(
         Helper.getServerURL({
           path: '/world',
@@ -63,6 +68,7 @@
       engine.on('unlock', () => (locked = false));
       engine.on('chat-enabled', () => (chatEnabled = true));
       engine.on('chat-disabled', () => (chatEnabled = false));
+      engine.on('focus-loaded', () => (loading = false));
     }
   });
 
@@ -73,6 +79,13 @@
     }
   };
 </script>
+
+{#if loading}
+  <div id="loading">
+    <p>loading...</p>
+    <div><div /></div>
+  </div>
+{/if}
 
 <main>
   {#if world}
@@ -282,6 +295,47 @@
   #world-list-item > div > ul > li:nth-child(3) {
     /* background: linear-gradient(0deg, green 0%, green 80%, gray 81%, gray 100%); */
     background: green;
+  }
+
+  #loading {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: 10000000000000000;
+    background: #334257;
+    top: 0;
+    left: 0;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  #loading > div {
+    margin: 20px;
+    width: 200px;
+    height: 5px;
+    background: gray;
+  }
+
+  #loading > div > div {
+    height: 100%;
+    background: green;
+    animation: test 0.1s forwards;
+  }
+
+  @keyframes test {
+    0% {
+      width: 20%;
+    }
+    49% {
+      width: 50%;
+    }
+    50% {
+      width: 50%;
+    }
   }
 
   .selected {

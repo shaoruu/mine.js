@@ -86,7 +86,7 @@ class Particles {
           [0.1, 0.1, 0.1],
           [0, 0.1, 0],
           false,
-          { gravityMultiplier: gravity ? 1 : 0 },
+          { gravityMultiplier: gravity ? 1 : 0, restitution: 0.3 },
         );
         entity.body.applyImpulse(impulseFunc(force));
         particles.push(entity);
