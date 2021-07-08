@@ -111,7 +111,7 @@ class Inventory {
         borderRadius: `${SLOT_SIZE * 0.1}px`,
         width: `${SLOT_SIZE}px`,
         height: `${SLOT_SIZE}px`,
-        background: 'rgba(84, 140, 168, 0.4)',
+        background: 'rgba(84, 140, 168, 0.05)',
         border: `${SLOT_SIZE * 0.08}px solid #334257`,
         boxShadow: `inset 0 0 ${SLOT_SIZE * 0.1}px #334257`,
       });
