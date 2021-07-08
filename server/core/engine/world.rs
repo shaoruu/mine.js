@@ -15,7 +15,7 @@ use crate::core::network::models::messages::{
     self, chat_message::Type as ChatType, message::Type as MessageType,
 };
 use crate::core::network::models::{
-    create_chat_message, create_message, create_of_type, MessageComponents,
+    create_chat_message, create_message, create_of_type, ChunkProtocol, MessageComponents,
 };
 use crate::core::sys::PhysicsSystem;
 use crate::libs::aabb::Aabb;
@@ -247,7 +247,7 @@ impl World {
 
         drop(chunks);
 
-        cache.clone().into_iter().for_each(|coords| {
+        cache.iter().for_each(|coords| {
             let mut chunks = self.write_resource::<Chunks>();
 
             let levels = chunks.raw(&coords).unwrap().dirty_levels.clone();
@@ -256,7 +256,7 @@ impl World {
             let chunk = chunks.get(&coords, &mesh_level, true).unwrap();
 
             let mut component = MessageComponents::default_for(MessageType::Update);
-            component.chunks = Some(vec![chunk.get_protocol(false, mesh_level)]);
+            component.chunks = Some(vec![chunk.get_protocol(true, false, false, mesh_level)]);
 
             drop(chunks);
 
@@ -264,9 +264,25 @@ impl World {
             self.broadcast(&new_message, vec![]);
         });
 
+        let chunks = self.read_resource::<Chunks>();
+
         // First send the message, so borrow checker doesn't freak out
-        let mut new_message = create_of_type(MessageType::Update);
+        let mut components = MessageComponents::default_for(MessageType::Update);
+        let chunk_protocols: Vec<ChunkProtocol> = cache
+            .iter()
+            .map(|coords| {
+                chunks
+                    .get_chunk(coords)
+                    .unwrap()
+                    .get_protocol(false, false, true, MeshLevel::None)
+            })
+            .collect();
+        components.chunks = Some(chunk_protocols);
+        let mut new_message = create_message(components);
         new_message.updates = results;
+
+        drop(chunks);
+
         self.broadcast(&new_message, vec![]);
     }
 

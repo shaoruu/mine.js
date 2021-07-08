@@ -167,7 +167,8 @@ impl WsServer {
                         // SEND CHUNK BACK TO PLAYER
 
                         let mut component = MessageComponents::default_for(MessageType::Load);
-                        component.chunks = Some(vec![chunk.get_protocol(true, MeshLevel::All)]);
+                        component.chunks =
+                            Some(vec![chunk.get_protocol(true, true, true, MeshLevel::All)]);
 
                         let new_message = create_message(component);
                         message_queue.push_back((world_name.to_owned(), new_message, vec![]));
@@ -354,6 +355,7 @@ impl Handler<GetWorld> for WsServer {
             time: clock.time,
             blocks: registry.blocks.to_owned(),
             ranges: registry.ranges.to_owned(),
+            uv_side_count: registry.uv_side_count,
         })
     }
 }

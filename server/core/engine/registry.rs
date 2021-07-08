@@ -14,6 +14,7 @@ pub struct Registry {
     pub atlas: image::RgbaImage,
     pub ranges: Ranges,
     pub blocks: Blocks,
+    pub uv_side_count: u32,
 
     name_map: HashMap<String, u32>,
 }
@@ -161,6 +162,7 @@ impl Registry {
             atlas,
             ranges,
             blocks,
+            uv_side_count: count_per_side,
             name_map,
         }
     }

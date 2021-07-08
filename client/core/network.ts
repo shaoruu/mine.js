@@ -106,19 +106,27 @@ class Network {
       }
 
       case 'UPDATE': {
-        const { updates } = event;
+        const { updates, chunks } = event;
 
-        for (const { vx, vy, vz, type } of updates) {
-          world.setVoxel([vx, vy, vz], type, false);
+        for (const chunkData of chunks) {
+          world.handleServerChunk(chunkData, type === 'UPDATE');
         }
 
-        // purposely did not break, so i can load afterwards
+        if (updates.length === 1) {
+          const update = updates[0];
+          world.setVoxel([update.vx, update.vy, update.vz], update.type, false);
+        } else {
+          const mapped = updates.map((u) => ({ voxel: [u.vx, u.vy, u.vz], type: u.type }));
+          world.setManyVoxels(mapped, false);
+        }
+
+        break;
       }
 
       case 'LOAD': {
         const { chunks } = event;
         for (const chunkData of chunks) {
-          world.handleServerChunk(chunkData, type === 'UPDATE');
+          world.handleServerChunk(chunkData, false);
         }
         break;
       }

@@ -8,7 +8,7 @@ use crate::{core::engine::chunk::Meshes, libs::ndarray::Ndarray};
 pub struct ChunkProtocol {
     pub x: i32,
     pub z: i32,
-    pub meshes: Vec<Meshes>,
+    pub meshes: Option<Vec<Meshes>>,
     pub voxels: Option<Ndarray<u32>>,
     pub lights: Option<Ndarray<u32>>,
 }
@@ -123,32 +123,35 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
         message.chunks = chunks
             .into_iter()
             .map(|chunk| messages::Chunk {
-                meshes: chunk
-                    .meshes
-                    .iter()
-                    .map(|mesh| {
-                        let opaque = mesh.opaque.as_ref();
-                        let transparent = mesh.transparent.as_ref();
+                meshes: if let Some(meshes) = chunk.meshes {
+                    meshes
+                        .iter()
+                        .map(|mesh| {
+                            let opaque = mesh.opaque.as_ref();
+                            let transparent = mesh.transparent.as_ref();
 
-                        messages::Mesh {
-                            sub_chunk: mesh.sub_chunk,
-                            opaque: opaque.map(|opaque| messages::Geometry {
-                                aos: opaque.aos.to_owned(),
-                                indices: opaque.indices.to_owned(),
-                                positions: opaque.positions.to_owned(),
-                                lights: opaque.lights.to_owned(),
-                                uvs: opaque.uvs.to_owned(),
-                            }),
-                            transparent: transparent.map(|transparent| messages::Geometry {
-                                aos: transparent.aos.to_owned(),
-                                indices: transparent.indices.to_owned(),
-                                positions: transparent.positions.to_owned(),
-                                lights: transparent.lights.to_owned(),
-                                uvs: transparent.uvs.to_owned(),
-                            }),
-                        }
-                    })
-                    .collect(),
+                            messages::Mesh {
+                                sub_chunk: mesh.sub_chunk,
+                                opaque: opaque.map(|opaque| messages::Geometry {
+                                    aos: opaque.aos.to_owned(),
+                                    indices: opaque.indices.to_owned(),
+                                    positions: opaque.positions.to_owned(),
+                                    lights: opaque.lights.to_owned(),
+                                    uvs: opaque.uvs.to_owned(),
+                                }),
+                                transparent: transparent.map(|transparent| messages::Geometry {
+                                    aos: transparent.aos.to_owned(),
+                                    indices: transparent.indices.to_owned(),
+                                    positions: transparent.positions.to_owned(),
+                                    lights: transparent.lights.to_owned(),
+                                    uvs: transparent.uvs.to_owned(),
+                                }),
+                            }
+                        })
+                        .collect()
+                } else {
+                    vec![]
+                },
                 lights: if let Some(l) = chunk.lights {
                     l.data
                 } else {

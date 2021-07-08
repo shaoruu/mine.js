@@ -269,24 +269,35 @@ impl Chunk {
         todo!()
     }
 
-    pub fn get_protocol(&self, needs_voxels: bool, mesh: MeshLevel) -> ChunkProtocol {
+    pub fn get_protocol(
+        &self,
+        needs_meshes: bool,
+        needs_voxels: bool,
+        needs_lights: bool,
+        mesh: MeshLevel,
+    ) -> ChunkProtocol {
         // TODO: clone? idk
         ChunkProtocol {
             x: self.coords.0,
             z: self.coords.1,
-            meshes: match mesh {
-                MeshLevel::All => self.meshes.to_owned(),
-                MeshLevel::Levels(ls) => ls
-                    .iter()
-                    .map(|&l| self.meshes[l as usize].to_owned())
-                    .collect(),
+            meshes: if needs_meshes {
+                Some(match mesh {
+                    MeshLevel::All => self.meshes.to_owned(),
+                    MeshLevel::Levels(ls) => ls
+                        .iter()
+                        .map(|&l| self.meshes[l as usize].to_owned())
+                        .collect(),
+                    _ => panic!("Mismatch of need"),
+                })
+            } else {
+                None
             },
             voxels: if needs_voxels {
                 Some(self.voxels.to_owned())
             } else {
                 None
             },
-            lights: if needs_voxels {
+            lights: if needs_lights {
                 Some(self.lights.to_owned())
             } else {
                 None

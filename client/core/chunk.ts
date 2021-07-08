@@ -95,23 +95,41 @@ class Chunk {
     return this.voxels.get(lx, ly, lz);
   };
 
-  getLocalTorchLight(lx: number, ly: number, lz: number) {
-    return this.lights.get(lx, ly, lz) & 0xf;
-  }
+  getLocalRedLight = (lx: number, ly: number, lz: number) => {
+    return (this.lights.get(lx, ly, lz) >> 8) & 0xf;
+  };
 
-  getLocalSunlight(lx: number, ly: number, lz: number) {
+  getLocalGreenLight = (lx: number, ly: number, lz: number) => {
     return (this.lights.get(lx, ly, lz) >> 4) & 0xf;
-  }
+  };
 
-  getTorchLight(vx: number, vy: number, vz: number) {
+  getLocalBlueLight = (lx: number, ly: number, lz: number) => {
+    return this.lights.get(lx, ly, lz) & 0xf;
+  };
+
+  getLocalSunlight = (lx: number, ly: number, lz: number) => {
+    return (this.lights.get(lx, ly, lz) >> 12) & 0xf;
+  };
+
+  getRedLight = (vx: number, vy: number, vz: number) => {
     const lCoords = this.toLocal(vx, vy, vz);
-    return this.getLocalTorchLight(...lCoords);
-  }
+    return this.getLocalRedLight(...lCoords);
+  };
 
-  getSunlight(vx: number, vy: number, vz: number) {
+  getGreenLight = (vx: number, vy: number, vz: number) => {
+    const lCoords = this.toLocal(vx, vy, vz);
+    return this.getLocalGreenLight(...lCoords);
+  };
+
+  getBlueLight = (vx: number, vy: number, vz: number) => {
+    const lCoords = this.toLocal(vx, vy, vz);
+    return this.getLocalBlueLight(...lCoords);
+  };
+
+  getSunlight = (vx: number, vy: number, vz: number) => {
     const lCoords = this.toLocal(vx, vy, vz);
     return this.getLocalSunlight(...lCoords);
-  }
+  };
 
   contains = (vx: number, vy: number, vz: number, padding = DATA_PADDING) => {
     const { size, maxHeight } = this;

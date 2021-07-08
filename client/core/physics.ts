@@ -26,11 +26,8 @@ class Physics {
   }
 
   tick = () => {
-    const { world, clock } = this.engine;
-    if (!world.isReady) return;
-
-    const { delta } = clock;
-    this.core.tick(delta);
+    const { clock } = this.engine;
+    this.core.tick(clock.delta);
   };
 
   getPositionFromRB = (rigidBody: RigidBody) => {

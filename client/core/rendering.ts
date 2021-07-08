@@ -63,7 +63,7 @@ class Rendering extends EventEmitter {
       canvas,
     });
     this.renderer.setClearColor(new Color(clearColor));
-    this.renderer.sortObjects = false;
+    this.renderer.sortObjects = true;
     this.renderer.extensions.get('EXT_color_buffer_float');
 
     // composer

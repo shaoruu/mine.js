@@ -88,6 +88,7 @@ pub struct FullWorldData {
     pub sub_chunks: u32,
     pub blocks: Blocks,
     pub ranges: Ranges,
+    pub uv_side_count: u32,
 }
 
 #[derive(Clone, Message)]

@@ -100,7 +100,7 @@ const defaultConfig: ConfigType = {
   entities: {
     movementLerp: true,
     movementLerpFactor: 0.4,
-    maxEntities: 1000,
+    maxEntities: 1000000,
   },
   physics: {
     gravity: [0, -24, 0],
@@ -238,10 +238,11 @@ class Engine extends EventEmitter {
 
   load = (worldData) => {
     const { world, registry } = this.config;
-    const { chunkSize, dimension, maxHeight, subChunks, name, blocks, ranges } = worldData;
+    const { chunkSize, dimension, maxHeight, subChunks, name, blocks, ranges, uvSideCount } = worldData;
 
     registry.blocks = blocks;
     registry.ranges = ranges;
+    registry.countPerSide = uvSideCount;
 
     world.name = name;
     world.chunkSize = chunkSize;
@@ -276,6 +277,7 @@ class Engine extends EventEmitter {
     this.player.tick();
     this.physics.tick();
     this.entities.tick();
+    this.particles.tick();
     this.peers.tick();
     this.world.tick();
     this.rendering.tick();

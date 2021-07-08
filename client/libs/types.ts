@@ -37,6 +37,7 @@ export type DeepPartial<T> = {
 };
 
 export type EntityType = {
+  name: string;
   body: RigidBody;
   brain: Brain;
   offsets: [number, number, number];

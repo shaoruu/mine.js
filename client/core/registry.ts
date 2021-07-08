@@ -8,7 +8,6 @@ import {
   MeshBasicMaterial,
   NearestFilter,
   OrthographicCamera,
-  PerspectiveCamera,
   PlaneBufferGeometry,
   Scene,
   ShaderLib,
@@ -56,6 +55,7 @@ type RegistryOptionsType = {
   focusBlockSize: number;
   focusPlantSize: number;
   resolution: number;
+  countPerSide?: number;
   blocks?: Block[];
   ranges?: Range[];
 };
@@ -185,72 +185,12 @@ class Registry {
 
   focusBlock = (id: number) => {
     const { focusDist, resolution } = this.options;
-    const { textures } = this.options.blocks[id];
 
     this.camera.position.set(focusDist, focusDist, focusDist);
     this.camera.lookAt(0, 0, 0);
 
-    // ny
-    const bottomUVs = [
-      [1, 0],
-      [0, 0],
-      [1, 1],
-      [0, 1],
-    ].map((uv) =>
-      this.getUV(textures['all'] ? textures['all'] : textures['bottom'] ? textures['bottom'] : textures['ny'], uv),
-    );
-
-    // py
-    const topUVs = [
-      [1, 1],
-      [0, 1],
-      [1, 0],
-      [0, 0],
-    ].map((uv) =>
-      this.getUV(textures['all'] ? textures['all'] : textures['top'] ? textures['top'] : textures['py'], uv),
-    );
-
-    // nx
-    const side1UVs = [
-      [0, 1],
-      [0, 0],
-      [1, 1],
-      [1, 0],
-    ].map((uv) =>
-      this.getUV(textures['all'] ? textures['all'] : textures['side'] ? textures['side'] : textures['nx'], uv),
-    );
-
-    // px
-    const side2UVs = [
-      [0, 1],
-      [0, 0],
-      [1, 1],
-      [1, 0],
-    ].map((uv) =>
-      this.getUV(textures['all'] ? textures['all'] : textures['side'] ? textures['side'] : textures['px'], uv),
-    );
-
-    // nz
-    const side3UVs = [
-      [0, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ].map((uv) =>
-      this.getUV(textures['all'] ? textures['all'] : textures['side'] ? textures['side'] : textures['nz'], uv),
-    );
-
-    // pz
-    const side4UVs = [
-      [0, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ].map((uv) =>
-      this.getUV(textures['all'] ? textures['all'] : textures['side'] ? textures['side'] : textures['pz'], uv),
-    );
-
-    const uvs = Helper.flatten([...side1UVs, ...side2UVs, ...bottomUVs, ...topUVs, ...side3UVs, ...side4UVs]);
+    const { px, py, pz, nx, ny, nz } = this.getUV(id);
+    const uvs = Helper.flatten([...nx[0], ...px[0], ...ny[0], ...py[0], ...nz[0], ...pz[0]]);
     this.blockGeometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
 
     const mesh = new Mesh(this.blockGeometry, this.material);
@@ -275,19 +215,13 @@ class Registry {
 
   focusPlant = (id: number) => {
     const { focusDist, resolution } = this.options;
-    const { textures } = this.options.blocks[id];
 
     this.camera.position.set(0, 0, -focusDist);
     this.camera.lookAt(0, 1, 0);
 
-    const oneUVs = [
-      [0, 1],
-      [0, 0],
-      [1, 1],
-      [1, 0],
-    ].map((uv) => this.getUV(textures['one'], uv));
+    const { one } = this.getUV(id);
 
-    const uvs = Helper.flatten(oneUVs);
+    const uvs = Helper.flatten(one[0]);
     this.plantGeometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
 
     const mesh = new Mesh(this.plantGeometry, this.material);
@@ -309,15 +243,99 @@ class Registry {
     return canvas;
   };
 
-  getUV = (file: string, uv: number[]) => {
-    const range = this.options.ranges[file];
-    if (!range) {
-      console.error(`Range not found for: ${file}`);
-      return;
-    }
+  getUV = (id: number): { [key: string]: [any[][], number] } => {
+    const getUVInner = (file: string, uv: number[]): number[] => {
+      const range = this.options.ranges[file];
+      if (!range) {
+        console.error(`Range not found for: ${file}`);
+        return;
+      }
 
-    const { startU, endU, startV, endV } = range;
-    return [uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV];
+      const { startU, endU, startV, endV } = range;
+      return [uv[0] * (endU - startU) + startU, uv[1] * (startV - endV) + endV];
+    };
+
+    const { isBlock, isPlant, textures } = this.options.blocks[id];
+
+    if (isBlock) {
+      // ny
+      const bottomUVs = [
+        [1, 0],
+        [0, 0],
+        [1, 1],
+        [0, 1],
+      ].map((uv) =>
+        getUVInner(textures['all'] ? textures['all'] : textures['bottom'] ? textures['bottom'] : textures['ny'], uv),
+      );
+
+      // py
+      const topUVs = [
+        [1, 1],
+        [0, 1],
+        [1, 0],
+        [0, 0],
+      ].map((uv) =>
+        getUVInner(textures['all'] ? textures['all'] : textures['top'] ? textures['top'] : textures['py'], uv),
+      );
+
+      // nx
+      const side1UVs = [
+        [0, 1],
+        [0, 0],
+        [1, 1],
+        [1, 0],
+      ].map((uv) =>
+        getUVInner(textures['all'] ? textures['all'] : textures['side'] ? textures['side'] : textures['nx'], uv),
+      );
+
+      // px
+      const side2UVs = [
+        [0, 1],
+        [0, 0],
+        [1, 1],
+        [1, 0],
+      ].map((uv) =>
+        getUVInner(textures['all'] ? textures['all'] : textures['side'] ? textures['side'] : textures['px'], uv),
+      );
+
+      // nz
+      const side3UVs = [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ].map((uv) =>
+        getUVInner(textures['all'] ? textures['all'] : textures['side'] ? textures['side'] : textures['nz'], uv),
+      );
+
+      // pz
+      const side4UVs = [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ].map((uv) =>
+        getUVInner(textures['all'] ? textures['all'] : textures['side'] ? textures['side'] : textures['pz'], uv),
+      );
+
+      return {
+        px: [side2UVs, 1],
+        py: [topUVs, 3],
+        pz: [side4UVs, 0],
+        nx: [side1UVs, 1],
+        ny: [bottomUVs, 1],
+        nz: [side3UVs, 0],
+      };
+    } else if (isPlant) {
+      const oneUVs = [
+        [0, 1],
+        [0, 0],
+        [1, 1],
+        [1, 0],
+      ].map((uv) => getUVInner(textures['one'], uv));
+      return { one: [oneUVs, 1] };
+    }
+    return {};
   };
 
   private makeShaderMaterial = () => {

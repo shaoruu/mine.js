@@ -45,6 +45,7 @@ struct VertexLight {
 #[derive(Clone, Debug)]
 pub enum MeshLevel {
     All,
+    None,
     Levels(HashSet<u32>),
 }
 
@@ -336,6 +337,7 @@ impl Chunks {
                     chunk.is_dirty = false;
                 }
             }
+            _ => {}
         };
 
         // debug!("Meshing took a total of {:?}", start.elapsed());

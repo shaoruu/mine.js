@@ -1,4 +1,4 @@
-import { Object3D, Vector3, Mesh, ObjectLoader, BoxBufferGeometry } from 'three';
+import { Object3D, Vector3 } from 'three';
 
 import { AABB, Brain, EntityType, BodyOptionsType } from '../libs';
 
@@ -26,6 +26,7 @@ class Entities {
     object: Object3D,
     size: [number, number, number],
     offsets: [number, number, number] = [0, 0, 0],
+    needsBrain = true,
     options: Partial<BodyOptionsType> = {},
   ) => {
     if (this.list.size >= this.options.maxEntities)
@@ -39,9 +40,11 @@ class Entities {
 
     const aabb = new AABB([x - sx / 2 - ox, y - sy / 2 - oy, z - sz / 2 - oz], size);
     const rigidBody = physics.core.addBody({ aabb, ...options });
-    const brain = new Brain(rigidBody);
+
+    const brain = needsBrain ? new Brain(rigidBody) : null;
 
     const newEntity = {
+      name,
       brain,
       object,
       offsets,
@@ -62,7 +65,9 @@ class Entities {
 
   preTick = () => {
     this.list.forEach((entity) => {
-      entity.brain.tick(this.engine.clock.delta);
+      if (entity.brain) {
+        entity.brain.tick(this.engine.clock.delta);
+      }
     });
   };
 

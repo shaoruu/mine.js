@@ -156,9 +156,19 @@ class World extends EventEmitter {
     return this.getFluidityByVoxel(vCoords);
   };
 
-  getTorchLight = (vCoords: Coords3) => {
+  getRedLight = (vCoords: Coords3) => {
     const chunk = this.getChunkByVoxel(vCoords);
-    return chunk?.getTorchLight(...vCoords) || 0;
+    return chunk?.getRedLight(...vCoords) || 0;
+  };
+
+  getGreenLight = (vCoords: Coords3) => {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk?.getGreenLight(...vCoords) || 0;
+  };
+
+  getBlueLight = (vCoords: Coords3) => {
+    const chunk = this.getChunkByVoxel(vCoords);
+    return chunk?.getBlueLight(...vCoords) || 0;
   };
 
   getSunlight = (vCoords: Coords3) => {
@@ -172,7 +182,7 @@ class World extends EventEmitter {
     const { x: cx, z: cz } = serverChunk;
     const coords = [cx, cz] as Coords2;
     this.requestedChunks.delete(Helper.getChunkName(coords));
-    if (prioritized) this.receivedChunks.unshift(serverChunk);
+    if (prioritized) this.meshChunk(serverChunk);
     else this.receivedChunks.push(serverChunk);
   };
 
@@ -183,13 +193,21 @@ class World extends EventEmitter {
 
   setVoxel = (voxel: Coords3, type: number, sideEffects = true) => {
     const [vx, vy, vz] = voxel;
-    this.getChunkByVoxel([vx, vy, vz])?.setVoxel(vx, vy, vz, type);
 
     if (sideEffects) {
       this.engine.network.server.sendEvent({
         type: 'UPDATE',
         updates: [{ vx, vy, vz, type }],
       });
+    } else {
+      const chunk = this.getChunkByVoxel(voxel);
+      if (chunk) {
+        const original = chunk.getVoxel(vx, vy, vz);
+        chunk.setVoxel(vx, vy, vz, type);
+        if (type === 0 && original !== 0) {
+          this.engine.particles.addBreakParticles(original, voxel);
+        }
+      }
     }
   };
 
@@ -198,10 +216,6 @@ class World extends EventEmitter {
       // console.warn('Changing more voxels than recommended...');
       // TODO: maybe split the whole thing into chunks of updates?
     }
-
-    voxels.forEach(({ voxel: [vx, vy, vz], type }) => {
-      this.getChunkByVoxel([vx, vy, vz])?.setVoxel(vx, vy, vz, type);
-    });
 
     if (sideEffects) {
       this.engine.network.server.sendEvent({
@@ -213,13 +227,26 @@ class World extends EventEmitter {
           type,
         })),
       });
+    } else {
+      voxels.forEach(({ voxel, type }) => {
+        const [vx, vy, vz] = voxel;
+        const chunk = this.getChunkByVoxel(voxel);
+        if (chunk) {
+          const original = chunk.getVoxel(vx, vy, vz);
+          chunk.setVoxel(vx, vy, vz, type);
+          if (type === 0 && original !== 0) {
+            this.engine.particles.addBreakParticles(original, voxel, { count: 1 });
+          }
+        }
+      });
     }
   };
 
   breakVoxel = () => {
-    if (this.engine.player.lookBlock) {
+    const voxel = this.engine.player.lookBlock;
+    if (voxel) {
       // TODO: use type.air instead of 0
-      this.setVoxel(this.engine.player.lookBlock, 0);
+      this.setVoxel(voxel, 0);
     }
   };
 
@@ -416,25 +443,27 @@ class World extends EventEmitter {
     const { maxChunkProcessPerFrame } = this.options;
 
     const frameReceivedChunks = this.receivedChunks.splice(0, maxChunkProcessPerFrame);
-    frameReceivedChunks.forEach((serverChunk) => {
-      const { x: cx, z: cz } = serverChunk;
-      const coords = [cx, cz] as Coords2;
+    frameReceivedChunks.forEach(this.meshChunk);
+  };
 
-      let chunk = this.getChunkByCPos(coords);
+  private meshChunk = (serverChunk: ServerChunkType) => {
+    const { x: cx, z: cz } = serverChunk;
+    const coords = [cx, cz] as Coords2;
 
-      if (!chunk) {
-        const { chunkSize, subChunks, dimension, maxHeight } = this.options;
-        chunk = new Chunk(this.engine, coords, { size: chunkSize, subChunks, dimension, maxHeight });
-        this.setChunk(chunk);
-      }
+    let chunk = this.getChunkByCPos(coords);
 
-      const { meshes, voxels, lights } = serverChunk;
+    if (!chunk) {
+      const { chunkSize, subChunks, dimension, maxHeight } = this.options;
+      chunk = new Chunk(this.engine, coords, { size: chunkSize, subChunks, dimension, maxHeight });
+      this.setChunk(chunk);
+    }
 
-      chunk.setupMesh(meshes);
+    const { meshes, voxels, lights } = serverChunk;
 
-      if (voxels.length) chunk.voxels.data = serverChunk.voxels;
-      if (lights.length) chunk.lights.data = serverChunk.lights;
-    });
+    chunk.setupMesh(meshes);
+
+    if (voxels.length) chunk.voxels.data = serverChunk.voxels;
+    if (lights.length) chunk.lights.data = serverChunk.lights;
   };
 
   private animateSky = () => {
