@@ -112,13 +112,8 @@ class Network {
           world.handleServerChunk(chunkData, type === 'UPDATE');
         }
 
-        if (updates.length === 1) {
-          const update = updates[0];
-          world.setVoxel([update.vx, update.vy, update.vz], update.type, false);
-        } else {
-          const mapped = updates.map((u) => ({ voxel: [u.vx, u.vy, u.vz], type: u.type }));
-          world.setManyVoxels(mapped, false);
-        }
+        const mapped = updates.map((u) => ({ voxel: [u.vx, u.vy, u.vz], type: u.type }));
+        world.setManyVoxels(mapped, false);
 
         break;
       }

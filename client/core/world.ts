@@ -199,15 +199,6 @@ class World extends EventEmitter {
         type: 'UPDATE',
         updates: [{ vx, vy, vz, type }],
       });
-    } else {
-      const chunk = this.getChunkByVoxel(voxel);
-      if (chunk) {
-        const original = chunk.getVoxel(vx, vy, vz);
-        chunk.setVoxel(vx, vy, vz, type);
-        if (type === 0 && original !== 0) {
-          this.engine.particles.addBreakParticles(original, voxel);
-        }
-      }
     }
   };
 
@@ -228,16 +219,12 @@ class World extends EventEmitter {
         })),
       });
     } else {
+      this.engine.particles.addBreakParticles(
+        voxels.map(({ voxel }) => ({ voxel, type: this.engine.world.getVoxelByVoxel(voxel) })),
+        { count: voxels.length > 3 ? 1 : 6 },
+      );
       voxels.forEach(({ voxel, type }) => {
-        const [vx, vy, vz] = voxel;
-        const chunk = this.getChunkByVoxel(voxel);
-        if (chunk) {
-          const original = chunk.getVoxel(vx, vy, vz);
-          chunk.setVoxel(vx, vy, vz, type);
-          if (type === 0 && original !== 0) {
-            this.engine.particles.addBreakParticles(original, voxel, { count: 1 });
-          }
-        }
+        this.getChunkByVoxel(voxel)?.setVoxel(voxel[0], voxel[1], voxel[2], type);
       });
     }
   };
