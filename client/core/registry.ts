@@ -339,6 +339,10 @@ class Registry {
     return this.focuses[id.toString()];
   };
 
+  hasBlock = (id: number) => {
+    return !!this.options.blocks[id];
+  };
+
   private makeShaderMaterial = () => {
     const material = new ShaderMaterial({
       vertexColors: true,

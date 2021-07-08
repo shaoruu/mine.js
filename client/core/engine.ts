@@ -60,7 +60,7 @@ const defaultConfig: ConfigType = {
     domElement: undefined,
   },
   camera: {
-    fov: 75,
+    fov: 90,
     near: 0.1,
     far: 8000,
     minPolarAngle: 0,

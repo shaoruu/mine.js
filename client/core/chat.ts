@@ -11,15 +11,19 @@ type ChatOptionsType = {
 
 const HELP_TEXT = `
 Basic controls of the game:
+- <span>R</span>: Toggle zoom
 - <span>T</span>: Toggle chat
 - <span>F</span>: Toggle physics
 - <span>C</span>: Toggle perspective
-- <span>0-9</span>: Change block
+- <span>X</span>: Bulk destruction 
+- <span>Z</span>: Bulk placement 
+- <span>0-n</span>: Change block
 - <span>Space</span>: Jump / fly up
 - <span>W/A/S/D</span>: Movements
 - <span>L-Shift</span>: Fly down
 - <span>L-Mouse</span>: Break block
 - <span>R-Mouse</span>: Place block
+- <span>Tab</span>: Player list
 `;
 
 class Chat {
@@ -158,7 +162,41 @@ class Chat {
     }
 
     if (value.startsWith('/')) {
-      this.add({ type: 'INFO', body: 'Commands coming soon!' });
+      const { inventory, registry } = this.engine;
+
+      const commands = value.substr(1).split(' ');
+      switch (commands[0]) {
+        case 'bs':
+        case 'blocks': {
+          this.add({
+            type: 'INFO',
+            body: Object.keys(registry.options.blocks)
+              .map((key) => {
+                const { name } = registry.options.blocks[key];
+                return `${key}: ${name}`;
+              })
+              .join('\n'),
+          });
+          break;
+        }
+        case 'b':
+        case 'block': {
+          const block = +commands[1];
+          if (block) {
+            if (registry.hasBlock(block)) {
+              inventory.setHand(block);
+              this.add({ type: 'INFO', body: `Block set to: ${block}` });
+            } else {
+              this.add({ type: 'ERROR', body: `Block not found: ${block}` });
+            }
+            break;
+          }
+        }
+
+        default: {
+          this.add({ type: 'INFO', body: 'Commands coming soon!' });
+        }
+      }
       return;
     }
 

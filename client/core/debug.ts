@@ -216,13 +216,13 @@ class Debug {
   };
 
   setupInputs = () => {
-    const { inputs, player, world } = this.engine;
+    const { inputs, player, inventory, world, camera } = this.engine;
 
     const bulkPlace = (type?: number) => {
       return () => {
         const updates = [];
 
-        const t = type === undefined ? player.handType : 0;
+        const t = type === undefined ? inventory.hand : 0;
         const r = this.inputOptions.changeRadius;
 
         if (!player.lookBlock) return;
@@ -244,6 +244,30 @@ class Debug {
 
     inputs.bind('x', bulkPlace(0), 'in-game');
     inputs.bind('z', bulkPlace(), 'in-game');
+
+    inputs.bind(
+      'r',
+      () => {
+        camera.threeCamera.zoom = 3;
+        camera.threeCamera.updateProjectionMatrix();
+      },
+      'in-game',
+      {
+        occasion: 'keydown',
+      },
+    );
+
+    inputs.bind(
+      'r',
+      () => {
+        camera.threeCamera.zoom = 1;
+        camera.threeCamera.updateProjectionMatrix();
+      },
+      'in-game',
+      {
+        occasion: 'keyup',
+      },
+    );
   };
 
   tick = () => {
