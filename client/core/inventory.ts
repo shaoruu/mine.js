@@ -98,7 +98,7 @@ class Inventory {
       const slot = document.createElement('div') as Slot;
 
       if (i === this.handIndex) {
-        slot.classList.add('selected');
+        slot.classList.add('selected-slot');
       }
 
       slot.type = TEMP_BLOCK_MAP[i];
@@ -154,10 +154,10 @@ class Inventory {
   };
 
   setHandIndex = (i: number) => {
-    this.hotbar[this.handIndex].classList.remove('selected');
+    this.hotbar[this.handIndex].classList.remove('selected-slot');
     // to keep it always positive.
     this.handIndex = (i + this.hotbar.length) % this.hotbar.length;
-    this.hotbar[this.handIndex].classList.add('selected');
+    this.hotbar[this.handIndex].classList.add('selected-slot');
   };
 
   select = (index: number) => {

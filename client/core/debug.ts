@@ -1,5 +1,5 @@
 import { GUI } from 'dat.gui';
-import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
+import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Raycaster, Vector2 } from 'three';
 // import { AxesHelper, GridHelper } from 'three';
 
 import { Helper } from '../utils';
@@ -286,6 +286,8 @@ class Debug {
         (cz + 0.5) * chunkSize * dimension,
       );
     }
+
+    this.raycastTest();
   };
 
   toggle = () => {
@@ -304,6 +306,15 @@ class Debug {
     };
     this.dataEntries.push(newEntry);
     this.dataWrapper.insertBefore(wrapper, this.dataWrapper.firstChild);
+  };
+
+  raycastTest = () => {
+    // const getBlockMeta
+
+    const { camera, world, config } = this.engine;
+    const {
+      world: { dimension },
+    } = config;
   };
 
   calculateFPS = (function () {

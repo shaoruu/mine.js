@@ -1,4 +1,4 @@
-import { Frustum, Matrix4, PerspectiveCamera, Vector3 } from 'three';
+import { Frustum, Matrix4, PerspectiveCamera, Vector3, Mesh } from 'three';
 
 import { Engine } from './engine';
 
@@ -13,6 +13,7 @@ type CameraOptionsType = {
 class Camera {
   public threeCamera: PerspectiveCamera;
   public frustum: Frustum;
+  public visibles: Mesh[] = [];
 
   constructor(public engine: Engine, public options: CameraOptionsType) {
     const { fov, near, far } = this.options;
@@ -38,6 +39,7 @@ class Camera {
   }
 
   tick = () => {
+    this.visibles = [];
     const projectionMatrix = new Matrix4().multiplyMatrices(
       this.threeCamera.projectionMatrix,
       this.threeCamera.matrixWorldInverse,
@@ -45,6 +47,7 @@ class Camera {
     this.frustum.setFromProjectionMatrix(projectionMatrix);
     this.engine.world.chunkMeshes.forEach((mesh) => {
       mesh.visible = this.frustum.intersectsBox(mesh.geometry.boundingBox);
+      this.visibles.push(mesh);
     });
   };
 }
