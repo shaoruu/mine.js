@@ -100,7 +100,12 @@ impl Registry {
 
         // OBTAINED TEXTURE MAP
         let map_size = texture_map.len() as f32;
-        let count_per_side = ((map_size.sqrt() / 2.0).ceil().round() * 2.0).ceil() as u32;
+        let mut shifts = 1;
+        let count_per_side = map_size.sqrt().ceil() as u32;
+        while 1 << shifts < count_per_side {
+            shifts += 1;
+        }
+        let count_per_side = 1 << shifts;
         let texture_dim = 64;
         let atlas_width = count_per_side * texture_dim;
         let atlas_height = count_per_side * texture_dim;
@@ -143,6 +148,9 @@ impl Registry {
             let end_u = (f_start_x + texture_dim as f32) / f_atlas_width;
             let start_v = 1.0 - f_start_y / f_atlas_height;
             let end_v = 1.0 - (f_start_y + texture_dim as f32) / f_atlas_height;
+
+            let (start_u, start_v, end_u, end_v) =
+                fix_texture_bleeding((start_u, start_v, end_u, end_v), texture_dim);
 
             let uv = UV {
                 start_u,
@@ -319,4 +327,17 @@ pub fn get_texture_type(texture: &HashMap<String, String>) -> &str {
     } else {
         "x"
     }
+}
+
+fn fix_texture_bleeding(
+    (start_u, start_v, end_u, end_v): (f32, f32, f32, f32),
+    texture_size: u32,
+) -> (f32, f32, f32, f32) {
+    let offset = 0.5 / texture_size as f32;
+    (
+        start_u + offset,
+        start_v - offset,
+        end_u - offset,
+        end_v + offset,
+    )
 }

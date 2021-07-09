@@ -114,7 +114,7 @@ class Inventory {
         height: `${SLOT_SIZE}px`,
         background: 'rgba(84, 140, 168, 0.05)',
         border: `${SLOT_SIZE * 0.08}px solid ${BORDER_COLOR}`,
-        boxShadow: `inset 0 0 ${SLOT_SIZE * 0.1}px ${BORDER_COLOR}`,
+        boxShadow: `inset 0 0 ${SLOT_SIZE * 0.05}px ${BORDER_COLOR}`,
       });
 
       hotbar.appendChild(slot);

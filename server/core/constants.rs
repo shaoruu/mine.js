@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
-pub const LEVEL_SEED: u32 = 1021312;
+pub const LEVEL_SEED: u32 = 1021;
+// pub const LEVEL_SEED: u32 = 1021312;
 
 pub struct CornerData {
     pub pos: [i32; 3],

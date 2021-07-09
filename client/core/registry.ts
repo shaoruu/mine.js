@@ -100,7 +100,7 @@ class Registry {
       depth: false,
     });
     this.renderer.setSize(resolution, resolution);
-    // this.renderer.outputEncoding = sRGBEncoding;
+    this.renderer.outputEncoding = sRGBEncoding;
 
     this.blockGeometry = new BufferGeometry();
     this.plantGeometry = new PlaneBufferGeometry(focusPlantSize, focusPlantSize);
