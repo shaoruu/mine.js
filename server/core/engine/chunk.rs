@@ -357,8 +357,33 @@ impl Chunk {
     }
 
     #[inline]
+    pub fn get_voxels(&self) -> &Ndarray<u32> {
+        &self.voxels
+    }
+
+    #[inline]
+    pub fn set_voxels(&mut self, data: Ndarray<u32>) {
+        self.voxels = data;
+    }
+
+    #[inline]
+    pub fn get_lights(&self) -> &Ndarray<u32> {
+        &self.lights
+    }
+
+    #[inline]
     pub fn set_lights(&mut self, data: Ndarray<u32>) {
         self.lights = data;
+    }
+
+    #[inline]
+    pub fn get_height_map(&self) -> &Ndarray<u32> {
+        &self.height_map
+    }
+
+    #[inline]
+    pub fn set_height_map(&mut self, data: Ndarray<u32>) {
+        self.height_map = data;
     }
 
     pub fn calc_dirty_levels(&mut self, vy: i32, max_height: u32, sub_chunks: u32) {

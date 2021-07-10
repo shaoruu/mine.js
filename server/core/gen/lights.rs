@@ -1,5 +1,7 @@
 use std::collections::VecDeque;
 
+use log::debug;
+
 use crate::{
     core::{
         constants::{CHUNK_HORIZONTAL_NEIGHBORS, DATA_PADDING, VOXEL_NEIGHBORS},
@@ -347,7 +349,7 @@ impl Lights {
         mut queue: VecDeque<LightNode>,
         is_sunlight: bool,
         color: &LightColor,
-        voxels: &Ndarray<u32>,
+        space: &Space,
         lights: &mut Ndarray<u32>,
         registry: &Registry,
         config: &WorldConfig,
@@ -356,8 +358,10 @@ impl Lights {
         let max_light_level = config.max_light_level;
 
         // i heard .get() is faster than []
-        let shape0 = *voxels.shape.get(0).unwrap() as i32;
-        let shape2 = *voxels.shape.get(2).unwrap() as i32;
+        let shape0 = *space.shape.get(0).unwrap() as i32;
+        let shape2 = *space.shape.get(2).unwrap() as i32;
+
+        let Vec3(start_x, _, start_z) = space.min;
 
         while !queue.is_empty() {
             let LightNode { voxel, level } = queue.pop_front().unwrap();
@@ -381,7 +385,7 @@ impl Lights {
                 let nl = level - if sd { 0 } else { 1 };
                 let n_voxel = Vec3(nvx, nvy, nvz);
                 let block_type =
-                    registry.get_block_by_id(voxels[&[nvx as usize, nvy as usize, nvz as usize]]);
+                    registry.get_block_by_id(space.get_voxel(nvx + start_x, nvy, nvz + start_z));
 
                 if !block_type.is_transparent
                     || (if is_sunlight {
@@ -409,11 +413,8 @@ impl Lights {
 
     pub fn propagate(space: &Space, registry: &Registry, config: &WorldConfig) -> Ndarray<u32> {
         let Space {
-            width,
-            voxels,
-            height_map,
+            width, min, shape, ..
         } = space;
-        let width = *width;
 
         let &WorldConfig {
             chunk_size,
@@ -422,7 +423,7 @@ impl Lights {
             ..
         } = config;
 
-        let mut lights = ndarray(voxels.shape.clone(), 0);
+        let mut lights = ndarray(shape.to_owned(), 0);
 
         let mut red_light_queue = VecDeque::<LightNode>::new();
         let mut green_light_queue = VecDeque::<LightNode>::new();
@@ -434,12 +435,14 @@ impl Lights {
         const BLUE: LightColor = LightColor::Blue;
         const NONE: LightColor = LightColor::None;
 
+        let &Vec3(start_x, _, start_z) = min;
+
         for z in 1..(width - 1) as i32 {
             for x in 1..(width - 1) as i32 {
-                let h = height_map[&[x as usize, z as usize]] as i32;
+                let h = space.get_max_height(x + start_x, z + start_z) as i32;
 
                 for y in (0..max_height as i32).rev() {
-                    let id = voxels[&[x as usize, y as usize, z as usize]];
+                    let id = space.get_voxel(x + start_x, y, z + start_z);
                     let &Block {
                         is_transparent,
                         is_light,
@@ -454,14 +457,14 @@ impl Lights {
 
                         for [ox, oz] in CHUNK_HORIZONTAL_NEIGHBORS.iter() {
                             let neighbor_id =
-                                voxels[&[(x + ox) as usize, y as usize, (z + oz) as usize]];
+                                space.get_voxel(x + ox + start_x, y, z + oz + start_z);
                             let neighbor_block = registry.get_block_by_id(neighbor_id);
 
                             if !neighbor_block.is_transparent {
                                 continue;
                             }
 
-                            if height_map[&[(x + ox) as usize, (z + oz) as usize]] > y as usize {
+                            if space.get_max_height(x + ox + start_x, z + oz + start_z) > y as u32 {
                                 // means sunlight should propagate here horizontally
                                 if !sunlight_queue.iter().any(|LightNode { voxel, .. }| {
                                     voxel.0 == x && voxel.1 == y && voxel.2 == z
@@ -511,7 +514,7 @@ impl Lights {
             red_light_queue,
             false,
             &RED,
-            &voxels,
+            space,
             &mut lights,
             registry,
             config,
@@ -520,7 +523,7 @@ impl Lights {
             green_light_queue,
             false,
             &GREEN,
-            &voxels,
+            space,
             &mut lights,
             registry,
             config,
@@ -529,7 +532,7 @@ impl Lights {
             blue_light_queue,
             false,
             &BLUE,
-            &voxels,
+            space,
             &mut lights,
             registry,
             config,
@@ -538,7 +541,7 @@ impl Lights {
             sunlight_queue,
             true,
             &NONE,
-            &voxels,
+            space,
             &mut lights,
             registry,
             config,

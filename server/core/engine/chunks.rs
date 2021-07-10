@@ -6,10 +6,11 @@ use std::{
     path::PathBuf,
     sync::Arc,
     thread,
+    time::Instant,
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use log::info;
+use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::{
@@ -198,9 +199,7 @@ impl Chunks {
             });
 
             self.is_meshing = true;
-        }
-
-        if !self.is_generating && !self.to_generate.is_empty() {
+        } else if !self.is_generating && !self.to_generate.is_empty() {
             let chunks = self
                 .to_generate
                 .drain(0..self.max_per_thread.min(self.to_generate.len()))
