@@ -1,3 +1,7 @@
+use std::time::Instant;
+
+use log::debug;
+
 use crate::libs::{
     ndarray::{ndarray, Ndarray},
     types::Vec2,
@@ -32,24 +36,12 @@ impl Space {
 
         for dx in 0..width {
             for dz in 0..width {
-                let mut h = 0;
+                let vx = (min_inner.0 as usize - margin + dx) as i32;
+                let vz = (min_inner.2 as usize - margin + dz) as i32;
                 for dy in 0..max_height as usize {
-                    let voxel = chunks.get_voxel_by_voxel(
-                        (min_inner.0 as usize - margin + dx) as i32,
-                        dy as i32,
-                        (min_inner.2 as usize - margin + dz) as i32,
-                    );
-
-                    if dy > h
-                        && (dy == 0
-                            || (!chunks.registry.is_air(voxel) && !chunks.registry.is_plant(voxel)))
-                    {
-                        h = dy;
-                    }
-
-                    voxels[&[dx, dy, dz]] = voxel;
+                    voxels[&[dx, dy, dz]] = chunks.get_voxel_by_voxel(vx, dy as i32, vz);
                 }
-                height_map[&[dx, dz]] = h;
+                height_map[&[dx, dz]] = chunks.get_max_height(vx, vz) as usize;
             }
         }
 
