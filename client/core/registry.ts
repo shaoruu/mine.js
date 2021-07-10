@@ -220,7 +220,6 @@ class Registry {
 
     this.bufferScene.add(mesh);
     this.renderer.render(this.bufferScene, this.camera);
-    this.engine.rendering.scene.add(mesh);
 
     return this.canvas.toDataURL();
   };

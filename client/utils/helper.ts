@@ -147,7 +147,12 @@ class Helper {
       ...options,
     };
 
-    const url = new Url();
+    let url = new Url();
+
+    if (url.protocol === 'app') {
+      url = new Url('http://localhost:4000');
+    }
+
     url.path = path;
 
     Object.keys(params).forEach((key) => {

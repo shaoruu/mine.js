@@ -73,7 +73,9 @@ pub async fn world(params: Query<HashMap<String, String>>) -> Result<HttpRespons
 
 #[get("/time")]
 pub async fn time(params: Query<HashMap<String, String>>) -> Result<HttpResponse> {
-    let world_query = params.get("world").unwrap().to_owned();
+    let default = "testbed".to_owned();
+
+    let world_query = params.get("world").unwrap_or_else(|| &default).to_owned();
     let world_data = WsServer::from_registry()
         .send(message::GetWorld(world_query))
         .await
