@@ -29,6 +29,14 @@ impl Clock {
         self.delta * 1000.0
     }
 
+    pub fn set_time(&mut self, time: f32) {
+        self.time = time;
+    }
+
+    pub fn set_tick_speed(&mut self, tick_speed: f32) {
+        self.tick_speed = tick_speed;
+    }
+
     pub fn tick(&mut self) {
         let now = SystemTime::now();
 

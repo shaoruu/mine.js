@@ -2,13 +2,11 @@ use byteorder::{ByteOrder, LittleEndian};
 
 use libflate::zlib::{Decoder, Encoder};
 
-use log::debug;
 use serde::{Deserialize, Serialize};
 
 use std::{
     collections::HashSet,
     fs::File,
-    intrinsics::transmute,
     io::{Read, Write},
     path::PathBuf,
 };

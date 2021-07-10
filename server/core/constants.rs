@@ -432,3 +432,5 @@ pub const CHUNK_NEIGHBORS: [[i32; 2]; 8] = [
 pub const CHUNK_HORIZONTAL_NEIGHBORS: [[i32; 2]; 4] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
 pub const DATA_PADDING: usize = 1;
+
+pub const WORLD_DATA_FILE: &str = "world.json";

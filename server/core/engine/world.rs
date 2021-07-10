@@ -3,13 +3,16 @@ use log::info;
 use ansi_term::Colour::Yellow;
 use specs::shred::{Fetch, FetchMut, Resource};
 
+use std::fs::File;
+use std::io::Write;
 use std::time::Instant;
 
 use specs::{Builder, DispatcherBuilder, World as ECSWorld, WorldExt};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::core::comp::phys::Phys;
+use crate::core::constants::WORLD_DATA_FILE;
 use crate::core::engine::chunks::MeshLevel;
 use crate::core::network::models::messages::{
     self, chat_message::Type as ChatType, message::Type as MessageType,
@@ -53,6 +56,13 @@ pub struct WorldMeta {
     time: f32,
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WorldData {
+    time: f32,
+    tick_speed: f32,
+}
+
 pub struct World {
     pub ecs: ECSWorld,
 
@@ -78,7 +88,7 @@ impl World {
         ecs.register::<Phys>();
 
         // ECS Resources
-        ecs.insert(Chunks::new(&name, config, registry));
+        ecs.insert(Chunks::new(&name, config.clone(), registry));
         ecs.insert(Clock::new(time, tick_speed));
         ecs.insert(Players::new());
         ecs.insert(Physics::new(PhysicsOptions {
@@ -102,13 +112,20 @@ impl World {
             })
             .build();
 
-        World {
+        let mut new_world = World {
             ecs,
 
             name,
             preload,
             description,
+        };
+
+        if config.save {
+            new_world.sync_config();
+            new_world.save();
         }
+
+        new_world
     }
 
     pub fn ecs(&self) -> &ECSWorld {
@@ -351,14 +368,52 @@ impl World {
         self.broadcast(&msg, vec![]);
     }
 
+    pub fn sync_config(&mut self) {
+        let chunks = self.read_resource::<Chunks>();
+
+        let mut path = chunks.root_folder.clone();
+        path.push(WORLD_DATA_FILE);
+
+        drop(chunks);
+
+        if let Ok(file) = File::open(path) {
+            let WorldData { time, tick_speed } = serde_json::from_reader(file).unwrap();
+            let mut clock = self.write_resource::<Clock>();
+
+            clock.set_time(time);
+            clock.set_tick_speed(tick_speed);
+        }
+    }
+
     pub fn save(&self) {
         let chunks = self.read_resource::<Chunks>();
+        let clock = self.read_resource::<Clock>();
 
         if chunks.config.save {
             let start = Instant::now();
+
+            // saving world data
+            let mut root = chunks.root_folder.clone();
+            root.push(WORLD_DATA_FILE);
+
+            let mut file = File::create(root.into_os_string().into_string().unwrap())
+                .expect("Could not create world config.");
+
+            let data = WorldData {
+                time: clock.time,
+                tick_speed: clock.tick_speed,
+            };
+
+            let j = serde_json::to_string(&data).unwrap();
+
+            file.write_all(j.as_bytes())
+                .expect("Unable to save world data");
+
+            // saving chunks
             chunks.save();
+
             info!(
-                "Auto-saving chunks for world {} took {:?}.",
+                "Saving data for world \"{}\" took {:?}.",
                 self.name,
                 start.elapsed()
             );

@@ -3,6 +3,7 @@
 // use rayon::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
+    fs::File,
     path::PathBuf,
     sync::Arc,
     thread,
@@ -54,7 +55,8 @@ pub enum MeshLevel {
 /// A wrapper around all the chunks
 #[derive(Debug)]
 pub struct Chunks {
-    pub folder: PathBuf,
+    pub root_folder: PathBuf,
+    pub chunk_folder: PathBuf,
 
     pub chunk_cache: HashSet<Vec2<i32>>,
     pub to_generate: Vec<Chunk>,
@@ -90,13 +92,16 @@ impl Chunks {
         let mesh_sender = Arc::new(mesh_sender);
         let mesh_receiver = Arc::new(mesh_receiver);
 
-        let mut path = PathBuf::from(&config.chunk_root);
-        path.push(world_name);
+        let mut root_folder = PathBuf::from(&config.chunk_root);
+        root_folder.push(world_name);
+
+        let mut chunk_folder = root_folder.clone();
+        chunk_folder.push("chunks");
 
         if config.save {
-            std::fs::create_dir_all(&path).expect("Unable to create chunks directory...");
+            std::fs::create_dir_all(&chunk_folder).expect("Unable to create chunks directory...");
             info!(
-                "Storage for world \"{}\" saved at \"./{}/{}\".",
+                "Storage for world \"{}\" is at \"./{}/{}\".",
                 world_name, config.chunk_root, world_name
             );
         } else {
@@ -104,7 +109,8 @@ impl Chunks {
         }
 
         Chunks {
-            folder: path,
+            root_folder,
+            chunk_folder,
             chunk_cache: HashSet::new(),
 
             config: Arc::new(config),
@@ -292,6 +298,7 @@ impl Chunks {
     }
 
     pub fn save(&self) {
+        // saving the chunks
         self.chunks.values().for_each(|chunk| {
             if chunk.needs_saving {
                 chunk.save();
@@ -396,7 +403,8 @@ impl Chunks {
                 let chunk = self.get_chunk(&coords);
 
                 if chunk.is_none() {
-                    let mut new_chunk = Chunk::new(coords.to_owned(), &self.config, &self.folder);
+                    let mut new_chunk =
+                        Chunk::new(coords.to_owned(), &self.config, &self.chunk_folder);
 
                     if let Some(updates) = self.update_queue.remove(&coords) {
                         for u in updates {
