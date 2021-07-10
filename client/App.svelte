@@ -323,18 +323,28 @@
   #loading > div > div {
     height: 100%;
     background: green;
-    animation: test 0.1s forwards;
+    animation: test 0.8s forwards;
   }
 
   @keyframes test {
     0% {
       width: 20%;
     }
-    49% {
-      width: 50%;
+
+    20% {
+      width: 30%;
     }
-    50% {
-      width: 50%;
+
+    40% {
+      width: 60%;
+    }
+
+    70% {
+      width: 70%;
+    }
+
+    90% {
+      width: 95%;
     }
   }
 
