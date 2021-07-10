@@ -5,6 +5,8 @@ const serve = require('electron-serve');
 
 const loadURL = serve({ directory: 'public' });
 
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+
 require('electron-reload')(path.join(__dirname, '..', 'public'), {
   electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
 });

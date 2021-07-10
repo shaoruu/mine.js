@@ -28,7 +28,6 @@
   const fetchWorlds = (async () => {
     if (world) return {};
 
-    console.log(Helper.getServerURL({ path: '/worlds' }).toString());
     const response = await fetch(Helper.getServerURL({ path: '/worlds' }).toString(), COMMON_HEADERS);
 
     return await response.json();
