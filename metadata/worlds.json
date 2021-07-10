@@ -20,7 +20,7 @@
   "worlds": [
     {
       "name": "terrains",
-      "time": 670,
+      "time": 0,
       "save": false,
       "tickSpeed": 0,
       "generation": "hilly",

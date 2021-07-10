@@ -323,6 +323,8 @@ impl Handler<ListWorlds> for WsServer {
             });
         });
 
+        data.sort_by(|a, b| a.name.partial_cmp(&b.name).unwrap());
+
         MessageResult(data)
     }
 }
