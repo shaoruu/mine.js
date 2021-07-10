@@ -56,6 +56,7 @@ type RegistryOptionsType = {
   focusPlantSize: number;
   resolution: number;
   countPerSide?: number;
+  textureSize?: number;
   blocks?: Block[];
   ranges?: Range[];
 };

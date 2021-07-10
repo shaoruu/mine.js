@@ -15,6 +15,7 @@ pub struct Registry {
     pub ranges: Ranges,
     pub blocks: Blocks,
     pub uv_side_count: u32,
+    pub uv_texture_size: u32,
 
     name_map: HashMap<String, u32>,
 }
@@ -170,6 +171,7 @@ impl Registry {
             atlas,
             ranges,
             blocks,
+            uv_texture_size: texture_dim,
             uv_side_count: count_per_side,
             name_map,
         }
@@ -333,7 +335,7 @@ fn fix_texture_bleeding(
     (start_u, start_v, end_u, end_v): (f32, f32, f32, f32),
     texture_size: u32,
 ) -> (f32, f32, f32, f32) {
-    let offset = 0.5 / texture_size as f32;
+    let offset = 0.1 / texture_size as f32;
     (
         start_u + offset,
         start_v - offset,

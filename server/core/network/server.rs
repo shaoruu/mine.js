@@ -356,6 +356,7 @@ impl Handler<GetWorld> for WsServer {
             blocks: registry.blocks.to_owned(),
             ranges: registry.ranges.to_owned(),
             uv_side_count: registry.uv_side_count,
+            uv_texture_size: registry.uv_texture_size,
         })
     }
 }

@@ -238,11 +238,12 @@ class Engine extends EventEmitter {
 
   load = (worldData) => {
     const { world, registry } = this.config;
-    const { chunkSize, dimension, maxHeight, subChunks, name, blocks, ranges, uvSideCount } = worldData;
+    const { chunkSize, dimension, maxHeight, subChunks, name, blocks, ranges, uvSideCount, uvTextureSize } = worldData;
 
     registry.blocks = blocks;
     registry.ranges = ranges;
     registry.countPerSide = uvSideCount;
+    registry.textureSize = uvTextureSize;
 
     world.name = name;
     world.chunkSize = chunkSize;

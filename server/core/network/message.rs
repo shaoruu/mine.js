@@ -89,6 +89,7 @@ pub struct FullWorldData {
     pub blocks: Blocks,
     pub ranges: Ranges,
     pub uv_side_count: u32,
+    pub uv_texture_size: u32,
 }
 
 #[derive(Clone, Message)]

@@ -48,9 +48,7 @@ const MAX_PARTICLES = 100;
 class Particles {
   public groups: Group[] = [];
 
-  constructor(public engine: Engine, public options: ParticlesOptionsType) {
-    engine.on('ready', () => {});
-  }
+  constructor(public engine: Engine, public options: ParticlesOptionsType) {}
 
   addBreakParticles = (voxels: { voxel: Coords3; type: number }[], options: Partial<ParticleOptions> = {}) => {
     this.sanityCheck();
@@ -65,6 +63,8 @@ class Particles {
     const geometry = new BufferGeometry();
 
     voxels.forEach(({ voxel, type }) => {
+      if (type === 0) return;
+
       const [x, y, z] = voxel;
 
       const red = this.engine.world.getRedLight(voxel) / 15;
@@ -97,11 +97,15 @@ class Particles {
       }
     });
 
+    if (particles.length === 0) {
+      return;
+    }
+
     geometry.setAttribute('uv', new Float32BufferAttribute(Helper.flatten(uvs), 2));
     geometry.setAttribute('lights', new Float32BufferAttribute(lights, 4));
     geometry.attributes.uv.needsUpdate = true;
 
-    const countPerSide = this.engine.config.registry.countPerSide;
+    const { countPerSide, textureSize } = this.engine.config.registry;
     const material = new ShaderMaterial({
       uniforms: {
         uTexture: { value: this.engine.registry.atlasUniform.value },
@@ -109,7 +113,7 @@ class Particles {
           value: (window.innerHeight / (2.0 * Math.tan((0.5 * 60.0 * Math.PI) / 180.0))) * PARTICLE_SCALE,
         },
         uRepeat: {
-          value: new Vector2(1 / countPerSide, 1 / countPerSide),
+          value: new Vector2(1 / countPerSide - (0.1 / textureSize) * 2, 1 / countPerSide - (0.1 / textureSize) * 2),
         },
         uScale: {
           value: 1,
