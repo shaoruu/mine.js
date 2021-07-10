@@ -203,7 +203,7 @@ impl Chunks {
         if !self.is_generating && !self.to_generate.is_empty() {
             let chunks = self
                 .to_generate
-                .drain(0..self.max_per_thread.min(self.to_mesh.len()))
+                .drain(0..self.max_per_thread.min(self.to_generate.len()))
                 .collect::<Vec<_>>();
 
             let sender = self.gen_sender.clone();
