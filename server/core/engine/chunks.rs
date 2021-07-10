@@ -3,7 +3,6 @@
 // use rayon::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
-    fs::File,
     path::PathBuf,
     sync::Arc,
     thread,
@@ -745,7 +744,7 @@ impl Chunks {
         self.get_voxel_by_voxel(vx, vy, vz) != 0
     }
 
-    pub fn get_fluidity_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> bool {
+    pub fn get_fluidity_by_voxel(&self, _vx: i32, _vy: i32, _vz: i32) -> bool {
         // TODO: ADD FLUIDS
         false
     }

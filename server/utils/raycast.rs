@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 // HELP FROM https://github.com/andyhall/fast-voxel-raycast/blob/master/index.js
 
 use crate::libs::types::{GetVoxel, Vec3};

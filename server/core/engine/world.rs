@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use log::info;
 
 use ansi_term::Colour::Yellow;
@@ -347,7 +349,7 @@ impl World {
         drop(players);
 
         if freshly_joined {
-            let message = format!("{}(id={}) joined the world {}", name, player_id, world_name);
+            let message = format!("{} joined the world {}", name, world_name);
 
             info!("{}", Yellow.bold().paint(message));
 

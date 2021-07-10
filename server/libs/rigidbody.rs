@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use super::{aabb::Aabb, types::Vec3};
 
 pub struct RigidBody {

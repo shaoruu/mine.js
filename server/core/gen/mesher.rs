@@ -10,7 +10,7 @@ use crate::{
         },
         gen::lights::Lights,
     },
-    libs::types::{Block, MeshType, Vec2, Vec3, UV},
+    libs::types::{Block, MeshType, Vec3, UV},
 };
 
 pub struct Mesher;

@@ -1,9 +1,6 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
+#![allow(dead_code)]
 
-use log::debug;
+use std::sync::{Arc, Mutex};
 
 use crate::{
     core::engine::chunks::Chunks,
@@ -334,7 +331,7 @@ impl Physics {
         sweep(
             test_solid,
             old_aabb,
-            dx,
+            &upvec,
             &mut move |_, _, _, _| {
                 *temp.lock().unwrap() = true;
                 true

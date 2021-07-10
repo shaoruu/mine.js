@@ -251,10 +251,7 @@ impl Handler<LeaveWorld> for WsServer {
                 );
                 new_message.text = msg.player_id.to_string();
 
-                let message = format!(
-                    "{}(id={}) left the world {}",
-                    player_name, msg.player_id, msg.world_name
-                );
+                let message = format!("{} left the world {}", player_name, msg.world_name);
 
                 info!("{}", Yellow.bold().paint(message));
 

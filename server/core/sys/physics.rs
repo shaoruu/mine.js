@@ -1,6 +1,4 @@
-use log::debug;
-
-use specs::{ReadExpect, System, WriteExpect, WriteStorage};
+use specs::{ReadExpect, System, WriteStorage};
 
 use crate::{
     core::{

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::utils::math::approx_equals;
 
 use super::types::Vec3;
