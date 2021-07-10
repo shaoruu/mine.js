@@ -5,7 +5,7 @@ const serve = require('electron-serve');
 
 const loadURL = serve({ directory: 'public' });
 
-require('electron-reload')(path.join(__dirname, 'client'), {
+require('electron-reload')(path.join(__dirname, '..', 'public'), {
   electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
 });
 

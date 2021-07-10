@@ -1,3 +1,4 @@
+import isElectron from 'is-electron';
 import Mousetrap from 'mousetrap';
 
 import { Engine } from './engine';
@@ -34,10 +35,17 @@ class Inputs {
   }
 
   initEventPrevents = () => {
-    // window.addEventListener('beforeunload', (e) => {
-    //   e.preventDefault();
-    //   return (e.returnValue = 'Are you sure you want to exit?');
-    // });
+    if (isElectron()) {
+      // add event listener to document to unlock control
+      document.addEventListener('keyup', (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          if (this.engine.locked) {
+            this.engine.unlock();
+          }
+        }
+      });
+    }
   };
 
   initClickListener = () => {
