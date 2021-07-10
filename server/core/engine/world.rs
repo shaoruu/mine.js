@@ -1,4 +1,4 @@
-use log::{debug, info};
+use log::info;
 
 use ansi_term::Colour::Yellow;
 use specs::shred::{Fetch, FetchMut, Resource};
@@ -78,7 +78,7 @@ impl World {
         ecs.register::<Phys>();
 
         // ECS Resources
-        ecs.insert(Chunks::new(config, registry));
+        ecs.insert(Chunks::new(&name, config, registry));
         ecs.insert(Clock::new(time, tick_speed));
         ecs.insert(Players::new());
         ecs.insert(Physics::new(PhysicsOptions {
@@ -351,6 +351,20 @@ impl World {
         self.broadcast(&msg, vec![]);
     }
 
+    pub fn save(&self) {
+        let chunks = self.read_resource::<Chunks>();
+
+        if chunks.config.save {
+            let start = Instant::now();
+            chunks.save();
+            info!(
+                "Auto-saving chunks for world {} took {:?}.",
+                self.name,
+                start.elapsed()
+            );
+        }
+    }
+
     pub fn tick(&mut self) {
         // TODO: make dispatchers
 
@@ -365,6 +379,12 @@ impl World {
             .build();
 
         dispatcher.dispatch(&self.ecs);
+
         self.ecs.maintain();
+
+        // saving the chunks
+        if self.read_resource::<Clock>().tick % 8000 == 0 {
+            self.save()
+        }
     }
 }

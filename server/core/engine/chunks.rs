@@ -3,11 +3,13 @@
 // use rayon::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
+    path::PathBuf,
     sync::Arc,
     thread,
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
+use log::info;
 use rayon::prelude::*;
 
 use crate::{
@@ -52,6 +54,8 @@ pub enum MeshLevel {
 /// A wrapper around all the chunks
 #[derive(Debug)]
 pub struct Chunks {
+    pub folder: PathBuf,
+
     pub chunk_cache: HashSet<Vec2<i32>>,
     pub to_generate: Vec<Chunk>,
     pub to_mesh: VecDeque<Vec2<i32>>,
@@ -77,7 +81,7 @@ pub struct Chunks {
  * NEED REFACTOR ASAP
  */
 impl Chunks {
-    pub fn new(config: WorldConfig, registry: Registry) -> Self {
+    pub fn new(world_name: &str, config: WorldConfig, registry: Registry) -> Self {
         let (gen_sender, gen_receiver) = unbounded();
         let gen_sender = Arc::new(gen_sender);
         let gen_receiver = Arc::new(gen_receiver);
@@ -86,7 +90,21 @@ impl Chunks {
         let mesh_sender = Arc::new(mesh_sender);
         let mesh_receiver = Arc::new(mesh_receiver);
 
+        let mut path = PathBuf::from(&config.chunk_root);
+        path.push(world_name);
+
+        if config.save {
+            std::fs::create_dir_all(&path).expect("Unable to create chunks directory...");
+            info!(
+                "Storage for world \"{}\" saved at \"./{}/{}\".",
+                world_name, config.chunk_root, world_name
+            );
+        } else {
+            info!("World \"{}\" is temporarily saved in memory.", world_name);
+        }
+
         Chunks {
+            folder: path,
             chunk_cache: HashSet::new(),
 
             config: Arc::new(config),
@@ -273,9 +291,17 @@ impl Chunks {
         self.chunk_cache.clear();
     }
 
+    pub fn save(&self) {
+        self.chunks.values().for_each(|chunk| {
+            if chunk.needs_saving {
+                chunk.save();
+            }
+        })
+    }
+
     /// Unload chunks when too many chunks are loaded.
-    pub fn unload() {
-        todo!();
+    pub fn unload(&mut self) {
+        todo!()
     }
 
     /// Remesh a chunk, propagating itself and its neighbors then mesh.
@@ -370,12 +396,7 @@ impl Chunks {
                 let chunk = self.get_chunk(&coords);
 
                 if chunk.is_none() {
-                    let mut new_chunk = Chunk::new(
-                        coords.to_owned(),
-                        self.config.chunk_size,
-                        self.config.max_height as usize,
-                        self.config.dimension,
-                    );
+                    let mut new_chunk = Chunk::new(coords.to_owned(), &self.config, &self.folder);
 
                     if let Some(updates) = self.update_queue.remove(&coords) {
                         for u in updates {
@@ -383,7 +404,11 @@ impl Chunks {
                         }
                     }
 
-                    to_generate.push(new_chunk);
+                    if new_chunk.needs_terrain {
+                        to_generate.push(new_chunk);
+                    } else {
+                        self.add_chunk(new_chunk);
+                    }
                 }
 
                 if let Some(chunk) = self.get_chunk(&coords) {
@@ -441,10 +466,10 @@ impl Chunks {
 
         for updates in to_decorate_updates.iter() {
             for u in updates {
-                let h = self.get_max_height(u.voxel.0, u.voxel.2);
+                let h = self.get_max_height(u.voxel.0, u.voxel.2) as i32;
                 self.set_voxel_by_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
                 if u.voxel.1 > h && (!self.registry.is_air(u.id) && !self.registry.is_plant(u.id)) {
-                    self.set_max_height(u.voxel.0, u.voxel.2, u.voxel.1);
+                    self.set_max_height(u.voxel.0, u.voxel.2, u.voxel.1 as u32);
                 }
             }
         }
@@ -682,7 +707,7 @@ impl Chunks {
 
     /// Get the max height at a voxel column coordinate
     #[inline]
-    pub fn get_max_height(&self, vx: i32, vz: i32) -> i32 {
+    pub fn get_max_height(&self, vx: i32, vz: i32) -> u32 {
         if let Some(chunk) = self.get_chunk_by_voxel(vx, 0, vz) {
             chunk.get_max_height(vx, vz)
         } else {
@@ -692,7 +717,7 @@ impl Chunks {
 
     /// Set the max height at a voxel column coordinate
     #[inline]
-    pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
+    pub fn set_max_height(&mut self, vx: i32, vz: i32, height: u32) {
         // this is reasonable because if a chunk DNE, and gets instantiated later on,
         // max height will be generated on instantiation too.
         if let Some(chunk) = self.get_chunk_by_voxel_mut(vx, 0, vz) {
@@ -799,17 +824,17 @@ impl Chunks {
 
         // updating the height map
         if self.registry.is_air(id) {
-            if vy == height {
+            if vy == height as i32 {
                 // on max height, should set max height to lower
                 for y in (0..vy).rev() {
                     if y == 0 || !self.registry.is_air(self.get_voxel_by_voxel(vx, y, vz)) {
-                        self.set_max_height(vx, vz, y);
+                        self.set_max_height(vx, vz, y as u32);
                         break;
                     }
                 }
             }
-        } else if height < vy {
-            self.set_max_height(vx, vz, vy);
+        } else if height < vy as u32 {
+            self.set_max_height(vx, vz, vy as u32);
         }
 
         const RED: LightColor = LightColor::Red;

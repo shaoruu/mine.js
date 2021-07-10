@@ -1,7 +1,21 @@
-use std::collections::HashSet;
+use byteorder::{ByteOrder, LittleEndian};
+
+use libflate::zlib::{Decoder, Encoder};
+
+use log::debug;
+use serde::{Deserialize, Serialize};
+
+use std::{
+    collections::HashSet,
+    fs::File,
+    intrinsics::transmute,
+    io::{Read, Write},
+    path::PathBuf,
+};
 
 use crate::{
     core::{
+        engine::world::WorldConfig,
         gen::lights::{LightColor, Lights},
         network::models::ChunkProtocol,
     },
@@ -23,6 +37,15 @@ pub struct Meshes {
     pub transparent: Option<MeshType>,
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ChunkFileData {
+    needs_propagation: bool,
+    voxels: String,
+    lights: String,
+    height_map: String,
+}
+
 #[derive(Clone, Debug)]
 pub struct Chunk {
     pub name: String,
@@ -31,7 +54,7 @@ pub struct Chunk {
 
     voxels: Ndarray<u32>,
     lights: Ndarray<u32>,
-    height_map: Ndarray<i32>,
+    height_map: Ndarray<u32>,
 
     pub min: Vec3<i32>,
     pub max: Vec3<i32>,
@@ -52,20 +75,40 @@ pub struct Chunk {
     pub max_height: usize,
 
     pub meshes: Vec<Meshes>,
+
+    pub file: String,
 }
 
 impl Chunk {
-    pub fn new(coords: Vec2<i32>, size: usize, max_height: usize, dimension: usize) -> Self {
+    pub fn new(coords: Vec2<i32>, config: &WorldConfig, folder: &PathBuf) -> Self {
         let Vec2(cx, cz) = coords;
+
+        let &WorldConfig {
+            chunk_size: size,
+            dimension,
+            max_height,
+            save,
+            ..
+        } = config;
+
+        let max_height = max_height as usize;
 
         let name = convert::get_chunk_name(cx, cz);
 
         let voxels = ndarray(
-            vec![size + DATA_PADDING * 2, max_height, size + DATA_PADDING * 2],
+            vec![
+                size + DATA_PADDING * 2,
+                max_height as usize,
+                size + DATA_PADDING * 2,
+            ],
             0,
         );
         let lights = ndarray(
-            vec![size + DATA_PADDING * 2, max_height, size + DATA_PADDING * 2],
+            vec![
+                size + DATA_PADDING * 2,
+                max_height as usize,
+                size + DATA_PADDING * 2,
+            ],
             0,
         );
         let height_map = ndarray(vec![size + DATA_PADDING * 2, size + DATA_PADDING * 2], 0);
@@ -83,7 +126,12 @@ impl Chunk {
                 .add(&Vec3(0, max_height as i32, 0));
         let max = max_inner.add(&paddings);
 
-        Self {
+        let mut path = folder.clone();
+        let mut file_name = name.clone();
+        file_name.push_str(".json");
+        path.push(file_name.as_str());
+
+        let mut new_chunk = Self {
             name,
 
             coords,
@@ -110,7 +158,76 @@ impl Chunk {
             dimension,
 
             meshes: Vec::new(),
+
+            file: path.into_os_string().into_string().unwrap(),
+        };
+
+        if save {
+            new_chunk.try_load();
         }
+
+        new_chunk
+    }
+
+    /// try to access saved data file for chunk
+    pub fn try_load(&mut self) {
+        // open a file for reading
+
+        if let Ok(chunk_data) = File::open(&self.file) {
+            let data: ChunkFileData = serde_json::from_reader(chunk_data).unwrap();
+
+            let ChunkFileData {
+                needs_propagation,
+                voxels,
+                lights,
+                height_map,
+            } = data;
+
+            self.needs_saving = false;
+            self.needs_terrain = false;
+            self.needs_decoration = false;
+            self.needs_propagation = needs_propagation;
+
+            let decode_base64 = |base: String| {
+                let decoded = base64::decode(base).unwrap();
+                let mut decoder = Decoder::new(&decoded[..]).unwrap();
+                let mut buf = Vec::new();
+                decoder.read_to_end(&mut buf).unwrap();
+                let mut data = vec![0; buf.len() / 4];
+                LittleEndian::read_u32_into(&buf, &mut data);
+                data
+            };
+
+            self.lights.data = decode_base64(lights);
+            self.voxels.data = decode_base64(voxels);
+            self.height_map.data = decode_base64(height_map);
+        }
+    }
+
+    pub fn save(&self) {
+        let mut file = File::create(&self.file).expect("Could not create chunk file.");
+
+        let to_base_64 = |data: &Vec<u32>| {
+            let mut bytes = vec![0; data.len() * 4];
+            LittleEndian::write_u32_into(data, &mut bytes);
+
+            let mut encoder = Encoder::new(vec![]).unwrap();
+            encoder.write_all(bytes.as_slice()).unwrap();
+            let encoded = encoder.finish().into_result().unwrap();
+            base64::encode(&encoded)
+        };
+
+        let data = ChunkFileData {
+            needs_propagation: self.needs_propagation,
+            lights: to_base_64(&self.lights.data),
+            voxels: to_base_64(&self.voxels.data),
+            height_map: to_base_64(&self.height_map.data),
+        };
+
+        let j = serde_json::to_string(&data).unwrap();
+
+        file.write_all(j.as_bytes())
+            .expect("Unable to write to chunk file.");
     }
 
     #[inline]
@@ -224,9 +341,9 @@ impl Chunk {
     }
 
     #[inline]
-    pub fn get_max_height(&self, vx: i32, vz: i32) -> i32 {
+    pub fn get_max_height(&self, vx: i32, vz: i32) -> u32 {
         if !self.contains(vx, 0, vz) {
-            return self.max_height as i32;
+            return self.max_height as u32;
         }
 
         let Vec3(lx, _, lz) = self.to_local(vx, 0, vz);
@@ -234,7 +351,7 @@ impl Chunk {
     }
 
     #[inline]
-    pub fn set_max_height(&mut self, vx: i32, vz: i32, height: i32) {
+    pub fn set_max_height(&mut self, vx: i32, vz: i32, height: u32) {
         assert!(self.contains(vx, 0, vz,));
 
         let Vec3(lx, _, lz) = self.to_local(vx, 0, vz);
@@ -257,16 +374,6 @@ impl Chunk {
         } else if vy % sub_chunks == sub_chunks - 1 && level < sub_chunks - 1 {
             self.dirty_levels.insert(level + 1);
         }
-    }
-
-    #[allow(dead_code)]
-    pub fn load(&mut self) {
-        todo!()
-    }
-
-    #[allow(dead_code)]
-    pub fn save(&mut self) {
-        todo!()
     }
 
     pub fn get_protocol(

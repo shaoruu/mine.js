@@ -1328,6 +1328,8 @@ dependencies = [
  "actix-web",
  "actix-web-actors",
  "ansi_term",
+ "base64",
+ "byteorder",
  "bytes 1.0.1",
  "chrono",
  "crossbeam-channel 0.5.1",

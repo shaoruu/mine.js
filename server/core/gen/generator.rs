@@ -191,7 +191,7 @@ impl Generator {
 
                     // TODO: CHECK FROM REGISTRY &&&&& PLANTS
                     if vy == 0 || (!registry.is_air(id) && !registry.is_plant(id)) {
-                        chunk.set_max_height(vx, vz, vy);
+                        chunk.set_max_height(vx, vz, vy as u32);
                         break;
                     }
                 }

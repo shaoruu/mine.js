@@ -2,7 +2,7 @@
 
 use num::{cast, Float, Num};
 
-use serde::{de::Visitor, Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 use std::{
     collections::HashMap,

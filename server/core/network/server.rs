@@ -67,7 +67,7 @@ impl WsServer {
             id,
             time: clock.time,
             tick_speed: clock.tick_speed,
-            spawn: [0, chunks.get_max_height(0, 0), 0],
+            spawn: [0, chunks.get_max_height(0, 0) as i32, 0],
             passables: chunks.registry.get_passable_solids(),
         }
     }
