@@ -70,11 +70,15 @@ pub struct Chunks {
     update_queue: HashMap<Vec2<i32>, Vec<VoxelUpdate>>,
     noise: Noise,
 
-    // multithread stuff
+    is_generating: bool,
     gen_sender: Arc<Sender<Vec<Chunk>>>,
     gen_receiver: Arc<Receiver<Vec<Chunk>>>,
+
+    is_meshing: bool,
     mesh_sender: Arc<Sender<Vec<Chunk>>>,
     mesh_receiver: Arc<Receiver<Vec<Chunk>>>,
+
+    max_per_thread: usize,
 }
 
 /**
@@ -124,17 +128,25 @@ impl Chunks {
             update_queue: HashMap::new(),
             noise: Noise::new(LEVEL_SEED),
 
+            is_generating: false,
             gen_sender,
             gen_receiver,
+
+            is_meshing: false,
             mesh_sender,
             mesh_receiver,
+
+            max_per_thread: num_cpus::get(),
         }
     }
 
     pub fn tick(&mut self) {
-        if !self.to_mesh.is_empty() {
-            let to_mesh: Vec<(Chunk, Space)> = self
+        if !self.is_meshing && !self.to_mesh.is_empty() {
+            let to_mesh = self
                 .to_mesh
+                .drain(0..self.max_per_thread.min(self.to_mesh.len()))
+                .collect::<Vec<_>>();
+            let to_mesh: Vec<(Chunk, Space)> = to_mesh
                 .iter()
                 .map(|coords| {
                     (
@@ -185,12 +197,14 @@ impl Chunks {
                 sender.send(meshed).unwrap();
             });
 
-            self.to_mesh.clear();
+            self.is_meshing = true;
         }
 
-        if !self.to_generate.is_empty() {
-            let chunks = self.to_generate.clone();
-            self.to_generate.clear();
+        if !self.is_generating && !self.to_generate.is_empty() {
+            let chunks = self
+                .to_generate
+                .drain(0..self.max_per_thread.min(self.to_mesh.len()))
+                .collect::<Vec<_>>();
 
             let sender = self.gen_sender.clone();
             let config = self.config.clone();
@@ -207,18 +221,28 @@ impl Chunks {
                     .collect();
                 sender.send(chunks).unwrap();
             });
+
+            self.is_generating = true;
         }
 
-        if let Ok(chunks) = self.mesh_receiver.try_recv() {
-            chunks.into_iter().for_each(|c| {
-                self.add_chunk(c);
-            })
+        if self.is_meshing {
+            if let Ok(chunks) = self.mesh_receiver.try_recv() {
+                chunks.into_iter().for_each(|c| {
+                    self.add_chunk(c);
+                });
+
+                self.is_meshing = false;
+            }
         }
 
-        if let Ok(chunks) = self.gen_receiver.try_recv() {
-            chunks.into_iter().for_each(|c| {
-                self.add_chunk(c);
-            })
+        if self.is_generating {
+            if let Ok(chunks) = self.gen_receiver.try_recv() {
+                chunks.into_iter().for_each(|c| {
+                    self.add_chunk(c);
+                });
+
+                self.is_generating = false;
+            }
         }
     }
 

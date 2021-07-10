@@ -1340,6 +1340,7 @@ dependencies = [
  "log",
  "noise",
  "num",
+ "num_cpus",
  "prost",
  "prost-build",
  "rand 0.8.3",
