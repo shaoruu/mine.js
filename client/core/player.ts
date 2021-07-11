@@ -57,6 +57,7 @@ class Player {
     back: false,
   };
   private lookBlockMesh: Group;
+  private shadowMesh: Mesh;
 
   constructor(public engine: Engine, public options: PlayerOptionsType) {
     const { lookBlockScale, lookBlockColor } = options;
@@ -166,6 +167,9 @@ class Player {
       this.lookBlockMesh.renderOrder = 1000000;
 
       rendering.scene.add(this.lookBlockMesh);
+
+      // add own shadow
+      this.shadowMesh = this.engine.shadows.add(this.object);
     });
 
     engine.on('chat-enabled', () => {
@@ -358,6 +362,7 @@ class Player {
 
   toggleGodMode = () => {
     this.godMode = !this.godMode;
+    this.shadowMesh.visible = !this.godMode;
     if (this.godMode) {
       this.vel.set(0, 0, 0);
       this.acc.set(0, 0, 0);

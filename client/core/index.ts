@@ -14,4 +14,5 @@ export * from './physics';
 export * from './player';
 export * from './registry';
 export * from './rendering';
+export * from './shadows';
 export * from './world';

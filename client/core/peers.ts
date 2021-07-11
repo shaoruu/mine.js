@@ -125,6 +125,7 @@ class Peers {
     const newPlayer = new Peer(id);
 
     this.engine.rendering.scene.add(newPlayer.mesh);
+    this.engine.shadows.add(newPlayer.mesh);
     this.players.set(id, newPlayer);
   };
 
@@ -148,6 +149,7 @@ class Peers {
     if (!player) return;
 
     this.engine.rendering.scene.remove(player.mesh);
+    this.engine.shadows.remove(player.mesh);
     this.players.delete(id);
   };
 

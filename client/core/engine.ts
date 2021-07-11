@@ -5,6 +5,8 @@ import merge from 'deepmerge';
 
 import { Clock, DeepPartial } from '../libs';
 
+import { Shadows, ShadowsOptionsType } from './shadows';
+
 import { NetworkOptionsType } from '.';
 import {
   Camera,
@@ -45,6 +47,7 @@ type ConfigType = {
   inventory: InventoryOptionsType;
   world: WorldOptionsType;
   entities: EntitiesOptionsType;
+  shadows: ShadowsOptionsType;
   physics: PhysicsOptionsType;
   registry: RegistryOptionsType;
   rendering: RenderingOptionsType;
@@ -102,6 +105,10 @@ const defaultConfig: ConfigType = {
     movementLerpFactor: 0.4,
     maxEntities: 1000000,
   },
+  shadows: {
+    maxRadius: 0.4,
+    maxDist: 5,
+  },
   physics: {
     gravity: [0, -24, 0],
     minBounceImpulse: 0.5,
@@ -151,6 +158,7 @@ class Engine extends EventEmitter {
   public peers: Peers;
   public physics: Physics;
   public entities: Entities;
+  public shadows: Shadows;
   public particles: Particles;
 
   public paused = true;
@@ -170,6 +178,7 @@ class Engine extends EventEmitter {
       container,
       debug,
       entities,
+      shadows,
       particles,
       peers,
       physics,
@@ -221,6 +230,9 @@ class Engine extends EventEmitter {
 
     // entities
     this.entities = new Entities(this, entities);
+
+    // shadows
+    this.shadows = new Shadows(this, shadows);
 
     // peers
     this.peers = new Peers(this, peers);
@@ -278,6 +290,7 @@ class Engine extends EventEmitter {
     this.player.tick();
     this.physics.tick();
     this.entities.tick();
+    this.shadows.tick();
     this.particles.tick();
     this.peers.tick();
     this.world.tick();
