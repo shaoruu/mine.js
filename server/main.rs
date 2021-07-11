@@ -1,15 +1,11 @@
-use actix::SystemService;
 use log::info;
 
+use actix::SystemService;
 use actix_cors::Cors;
 use actix_files as fs;
 use actix_web::{web, App, HttpServer};
 
-mod core;
-mod libs;
-mod utils;
-
-use crate::core::network::{message, routes, server::WsServer};
+use server_core::network::{message, routes, server::WsServer};
 
 fn setup_logger() -> Result<(), fern::InitError> {
     fern::Dispatch::new()

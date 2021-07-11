@@ -5,42 +5,25 @@ authors = ["ian13456 <ian1314159@gmail.com>"]
 edition = "2018"
 
 
+[workspace]
+members = ["server/*"]
+
+
 [[bin]]
 name = "main"
 path = "server/main.rs"
 
 
 [dependencies]
+server_core = { path = "./server/core" }
+
 actix = "0.10.0"
-actix-broker = "0.3.1"
 actix-cors = "0.5.4"
 actix-files = "0.5.0"
 actix-web = "3.0.0"
-actix-web-actors = "3.0.0"
-ansi_term = "0.12.1"
-base64 = "0.13.0"
-bytes = "1.0.1"
 chrono = "0.4.19"
-crossbeam-channel = "0.5.1"
 fern = { version = "0.6.0", features = ["colored"] }
-image = "0.23.14"
-itertools = "0.10.1"
-libflate = "1.1.0"
 log = "0.4"
-noise = "0.7.0"
-num = "0.4.0"
-num_cpus = "1.13.0"
-prost = "0.7.0"
-rand = "0.8.3"
-rayon = "1.5.1"
-serde = "1.0.126"
-serde_json = "1.0"
-specs = "0.17.0"
-byteorder = "1.4.3"
-
-
-[build-dependencies]
-prost-build = "0.7.0"
 
 
 [profile.release]

@@ -1322,32 +1322,13 @@ name = "minejs"
 version = "0.1.0"
 dependencies = [
  "actix",
- "actix-broker",
  "actix-cors",
  "actix-files",
  "actix-web",
- "actix-web-actors",
- "ansi_term",
- "base64",
- "byteorder",
- "bytes 1.0.1",
  "chrono",
- "crossbeam-channel 0.5.1",
  "fern",
- "image",
- "itertools 0.10.1",
- "libflate",
  "log",
- "noise",
- "num",
- "num_cpus",
- "prost",
- "prost-build",
- "rand 0.8.3",
- "rayon",
- "serde",
- "serde_json",
- "specs",
+ "server_core",
 ]
 
 [[package]]
@@ -1719,7 +1700,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e6984d2f1a23009bd270b8bb56d0926810a3d483f59c987d77969e9d8e840b2"
 dependencies = [
  "bytes 1.0.1",
- "prost-derive",
+ "prost-derive 0.7.0",
+]
+
+[[package]]
+name = "prost"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de5e2533f59d08fcf364fd374ebda0692a70bd6d7e66ef97f306f45c6c5d8020"
+dependencies = [
+ "bytes 1.0.1",
+ "prost-derive 0.8.0",
 ]
 
 [[package]]
@@ -1734,7 +1725,7 @@ dependencies = [
  "log",
  "multimap",
  "petgraph",
- "prost",
+ "prost 0.7.0",
  "prost-types",
  "tempfile",
  "which",
@@ -1754,13 +1745,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost-derive"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "600d2f334aa05acb02a755e217ef1ab6dea4d51b58b7846588b747edec04efba"
+dependencies = [
+ "anyhow",
+ "itertools 0.10.1",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "prost-types"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b518d7cdd93dab1d1122cf07fa9a60771836c668dde9d9e2a139f957f0d9f1bb"
 dependencies = [
  "bytes 1.0.1",
- "prost",
+ "prost 0.7.0",
 ]
 
 [[package]]
@@ -2027,6 +2031,63 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "server_common"
+version = "0.1.0"
+dependencies = [
+ "noise",
+ "num",
+ "serde",
+]
+
+[[package]]
+name = "server_core"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-broker",
+ "actix-files",
+ "actix-web",
+ "actix-web-actors",
+ "ansi_term",
+ "base64",
+ "byteorder",
+ "crossbeam-channel 0.5.1",
+ "image",
+ "itertools 0.10.1",
+ "libflate",
+ "log",
+ "num_cpus",
+ "prost 0.8.0",
+ "prost-build",
+ "rand 0.8.3",
+ "rayon",
+ "serde",
+ "serde_json",
+ "server_common",
+ "server_libs",
+ "server_utils",
+ "specs",
+]
+
+[[package]]
+name = "server_libs"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "server_common",
+ "server_utils",
+]
+
+[[package]]
+name = "server_utils"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde_json",
+ "server_common",
 ]
 
 [[package]]
