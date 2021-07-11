@@ -17,6 +17,9 @@ class Head {
     this.box.paint('all', this.drawBackground);
     this.box.paint('front', this.drawFace);
     this.box.paint('sides', this.drawCrown, 1);
+
+    // to fix the transparency with leaves issue
+    this.mesh.renderOrder = 10000000000;
   }
 
   drawBackground = (material: MeshBasicMaterial) => {

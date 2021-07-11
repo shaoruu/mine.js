@@ -27,6 +27,7 @@ class Shadows {
       side: DoubleSide,
       color: 'rgb(0,0,0)',
       opacity: 0.3,
+      depthWrite: false,
       transparent: true,
     });
 
@@ -64,6 +65,7 @@ class Shadows {
   add = (object: Object3D) => {
     const mesh = new Mesh(this.geometry, this.material);
     mesh.rotateX(Math.PI / 2);
+    mesh.renderOrder = 100000000;
 
     this.engine.rendering.scene.add(mesh);
 
