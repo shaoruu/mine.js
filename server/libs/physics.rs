@@ -7,7 +7,7 @@ use crate::{
     utils::{math::approx_equals, sweep::sweep},
 };
 
-use super::{aabb::Aabb, rigidbody::RigidBody, types::Vec3};
+use super::{aabb::Aabb, rigidbody::RigidBody, vec::Vec3};
 
 type TestFunction<'a> = &'a dyn Fn(i32, i32, i32) -> bool;
 

@@ -6,7 +6,6 @@ use std::{
     path::PathBuf,
     sync::Arc,
     thread,
-    time::Instant,
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
@@ -31,7 +30,8 @@ use crate::{
     },
     libs::{
         noise::Noise,
-        types::{Block, Vec2, Vec3},
+        types::Block,
+        vec::{Vec2, Vec3},
     },
     utils::convert::{
         get_chunk_name, map_voxel_to_chunk, map_voxel_to_chunk_local, map_world_to_voxel,

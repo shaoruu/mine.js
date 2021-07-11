@@ -4,7 +4,10 @@ use actix::Recipient;
 
 use crate::{
     core::network::{message, models::messages},
-    libs::types::{Quaternion, Vec2, Vec3},
+    libs::{
+        types::Quaternion,
+        vec::{Vec2, Vec3},
+    },
 };
 
 #[derive(Debug)]

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::libs::types::{Vec2, Vec3};
+use crate::libs::vec::{Vec2, Vec3};
 
 const CONCAT: &str = "_";
 

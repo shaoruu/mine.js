@@ -2,7 +2,7 @@
 
 // HELP FROM https://github.com/andyhall/fast-voxel-raycast/blob/master/index.js
 
-use crate::libs::types::{GetVoxel, Vec3};
+use crate::libs::{types::GetVoxel, vec::Vec3};
 
 use super::math::approx_equals;
 

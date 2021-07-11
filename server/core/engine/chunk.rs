@@ -19,7 +19,8 @@ use crate::{
     },
     libs::{
         ndarray::{ndarray, Ndarray},
-        types::{MeshType, Vec2, Vec3},
+        types::MeshType,
+        vec::{Vec2, Vec3},
     },
     utils::convert,
 };

@@ -15,7 +15,8 @@ use crate::core::engine::players::{Player, Players};
 use crate::core::engine::registry::Registry;
 use crate::core::engine::world::{World, WorldConfig};
 use crate::core::network::models::create_chat_message;
-use crate::libs::types::{Quaternion, Vec3};
+use crate::libs::types::Quaternion;
+use crate::libs::vec::Vec3;
 use crate::utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use crate::utils::json;
 

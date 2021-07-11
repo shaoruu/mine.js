@@ -1,9 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
-use crate::libs::{
-    aabb::Aabb,
-    types::{GetVoxel, Vec3},
-};
+use crate::libs::{aabb::Aabb, types::GetVoxel, vec::Vec3};
 
 use super::math::approx_equals;
 

@@ -53,7 +53,23 @@ message ChatMessage {
   Type type = 1;
   string sender = 2;
   string body = 3;
-} 
+}
+
+message Entity {
+  enum Type {
+    BRUH = 0;
+  }
+
+  string id = 1;
+  Type type = 2;
+  float px = 3;
+  float py = 4;
+  float pz = 5;
+  float qx = 6;
+  float qy = 7;
+  float qz = 8;
+  float qw = 9;
+}
 
 message Message {
   enum Type {
@@ -81,4 +97,5 @@ message Message {
   repeated Peer peers = 5;
   repeated Chunk chunks = 6;
   repeated Update updates = 7;
+  repeated Entity entities = 8;
 }

@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use crate::{
     core::engine::{chunk::Chunk, registry::Registry},
-    libs::{noise::Noise, types::Vec3},
+    libs::{noise::Noise, vec::Vec3},
 };
 
 use super::biomes::{get_biome_config, BiomeConfig};

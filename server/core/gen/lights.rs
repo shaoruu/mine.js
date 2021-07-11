@@ -9,7 +9,8 @@ use crate::{
     },
     libs::{
         ndarray::{ndarray, Ndarray},
-        types::{Block, Vec3},
+        types::Block,
+        vec::Vec3,
     },
 };
 

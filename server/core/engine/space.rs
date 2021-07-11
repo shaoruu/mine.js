@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
     libs::{
         ndarray::Ndarray,
-        types::{Vec2, Vec3},
+        vec::{Vec2, Vec3},
     },
     utils::convert::{map_voxel_to_chunk, map_voxel_to_chunk_local},
 };

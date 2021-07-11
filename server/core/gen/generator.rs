@@ -6,7 +6,7 @@ use crate::{
     },
     libs::{
         noise::{Noise, NoiseConfig},
-        types::Vec3,
+        vec::Vec3,
     },
 };
 

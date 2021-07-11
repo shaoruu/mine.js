@@ -26,7 +26,8 @@ use crate::core::sys::PhysicsSystem;
 use crate::libs::aabb::Aabb;
 use crate::libs::physics::{Physics, PhysicsOptions};
 use crate::libs::rigidbody::RigidBody;
-use crate::libs::types::{Quaternion, Vec2, Vec3};
+use crate::libs::types::Quaternion;
+use crate::libs::vec::{Vec2, Vec3};
 
 use super::chunks::Chunks;
 use super::clock::Clock;

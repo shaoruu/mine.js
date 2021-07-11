@@ -2,7 +2,7 @@
 
 use crate::utils::math::approx_equals;
 
-use super::types::Vec3;
+use super::vec::Vec3;
 
 #[derive(Debug, Clone, Default)]
 pub struct Aabb {

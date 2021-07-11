@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use super::{aabb::Aabb, types::Vec3};
+use super::{aabb::Aabb, vec::Vec3};
 
 pub struct RigidBody {
     // flags for test
