@@ -422,11 +422,11 @@ impl World {
             // saving chunks
             chunks.save();
 
-            info!(
-                "Saving data for world \"{}\" took {:?}.",
-                self.name,
-                start.elapsed()
-            );
+            // info!(
+            //     "Saving data for world \"{}\" took {:?}.",
+            //     self.name,
+            //     start.elapsed()
+            // );
         }
     }
 
