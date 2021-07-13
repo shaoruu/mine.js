@@ -194,6 +194,10 @@ class World extends EventEmitter {
   setVoxel = (voxel: Coords3, type: number, sideEffects = true) => {
     const [vx, vy, vz] = voxel;
 
+    if (this.getVoxelByVoxel(voxel) !== 0 && type !== 0) {
+      return;
+    }
+
     if (sideEffects) {
       this.engine.network.server.sendEvent({
         type: 'UPDATE',

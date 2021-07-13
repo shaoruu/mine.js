@@ -384,6 +384,7 @@ varying vec4 vLight;
 float s = max(vLight.a * uSunlightIntensity * 0.8, 0.02);
 float scale = 1.0;
 outgoingLight.rgb *= vec3(s + pow(vLight.r, scale), s + pow(vLight.g, scale), s + pow(vLight.b, scale));
+// outgoingLight.rgb *= vec3(s + scale / sqrt(vLight.r), s + scale / sqrt(vLight.g), s + scale / sqrt(vLight.b));
 outgoingLight *= 0.88 * vAO;
 `,
         )

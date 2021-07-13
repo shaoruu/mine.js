@@ -1,7 +1,6 @@
-import raycast from 'fast-voxel-raycast';
-import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3, Group, Color } from 'three';
+import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3, Group, Color, Ray, Box3 } from 'three';
 
-import { EntityType, Peer, PointerLockControls } from '../libs';
+import { EntityType, Peer, PointerLockControls, raycast } from '../libs';
 import { Coords3 } from '../libs/types';
 import { Helper } from '../utils';
 
@@ -58,6 +57,7 @@ class Player {
   };
   private lookBlockMesh: Group;
   private shadowMesh: Mesh;
+  private blockRay: Ray;
 
   constructor(public engine: Engine, public options: PlayerOptionsType) {
     const { lookBlockScale, lookBlockColor } = options;
@@ -170,6 +170,8 @@ class Player {
 
       // add own shadow
       this.shadowMesh = this.engine.shadows.add(this.object);
+
+      this.blockRay = new Ray();
     });
 
     engine.on('chat-enabled', () => {
@@ -426,8 +428,8 @@ class Player {
       const camDir = new Vector3();
       const camPos = object.position;
 
-      const point: number[] = [];
-      const normal: number[] = [];
+      const point: Coords3 = [0, 0, 0];
+      const normal: Coords3 = [0, 0, 0];
 
       (this.perspective === 'second' ? object : threeCamera).getWorldDirection(camDir);
       camDir.normalize();
@@ -468,7 +470,7 @@ class Player {
   };
 
   private updateLookBlock = () => {
-    const { world, camera } = this.engine;
+    const { world, camera, registry } = this.engine;
     const { dimension, maxHeight } = world.options;
     const { reachDistance, lookBlockLerp } = this.options;
 
@@ -477,12 +479,28 @@ class Player {
     camera.threeCamera.getWorldDirection(camDir);
     camDir.normalize();
 
-    const point: number[] = [];
-    const normal: number[] = [];
+    const point: Coords3 = [0, 0, 0];
+    const normal: Coords3 = [0, 0, 0];
 
     const result = raycast(
-      (x, y, z) =>
-        y < maxHeight * dimension && Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)])),
+      (x, y, z, hx, hy, hz) => {
+        const vCoords = Helper.mapWorldPosToVoxelPos([x, y, z], dimension);
+        const type = world.getVoxelByVoxel(vCoords);
+
+        if (registry.isPlant(type)) {
+          const boxMin = [vCoords[0] + 0.2, vCoords[1] + 0, vCoords[2] + 0.2];
+          const boxMax = [vCoords[0] + 0.8, vCoords[1] + 0.7, vCoords[2] + 0.8];
+          this.blockRay.origin = new Vector3(hx / dimension, hy / dimension, hz / dimension);
+          this.blockRay.direction = camDir;
+          const tempBox = new Box3(new Vector3(...boxMin), new Vector3(...boxMax));
+
+          return !!this.blockRay.intersectBox(tempBox, new Vector3());
+        }
+
+        return (
+          y < maxHeight * dimension && Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)]))
+        );
+      },
       [camPos.x, camPos.y, camPos.z],
       [camDir.x, camDir.y, camDir.z],
       reachDistance * dimension,
@@ -504,6 +522,15 @@ class Player {
     const [nx, ny, nz] = normal;
     const newLookBlock = Helper.mapWorldPosToVoxelPos(<Coords3>flooredPoint, world.options.dimension);
 
+    const isPlant = registry.isPlant(world.getVoxelByVoxel(newLookBlock));
+
+    // check different block type
+    if (isPlant) {
+      this.lookBlockMesh.scale.set(0.6, 0.7, 0.6);
+    } else {
+      this.lookBlockMesh.scale.set(1, 1, 1);
+    }
+
     if (!world.getVoxelByVoxel(newLookBlock)) {
       // this means the look block isn't actually a block
       return;
@@ -513,7 +540,7 @@ class Player {
     this.lookBlockMesh.position.lerp(
       new Vector3(
         lbx * dimension + 0.5 * dimension,
-        lby * dimension + 0.5 * dimension,
+        lby * dimension + 0.5 * dimension - (isPlant ? 0.15 : 0),
         lbz * dimension + 0.5 * dimension,
       ),
       lookBlockLerp,

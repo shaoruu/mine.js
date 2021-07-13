@@ -8,6 +8,7 @@ export * from './message';
 export * from './peer';
 export * from './physics';
 export * from './pointerlock-controls';
+export * from './raycast';
 export * from './rigid-body';
 export * from './simple-cull';
 export * from './sky';
