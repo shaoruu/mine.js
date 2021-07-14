@@ -21,7 +21,6 @@
     {
       "name": "terrains",
       "time": 0,
-      "save": false,
       "tickSpeed": 0,
       "generation": "hilly",
       "description": "idek bro"
