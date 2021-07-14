@@ -1,11 +1,11 @@
 import vec3 from 'gl-vec3';
-import sweep from 'voxel-aabb-sweep';
 
 import { PhysicsOptionsType } from '../core';
 import { Helper } from '../utils';
 
 import { AABB } from './aabb';
 import { RigidBody } from './rigid-body';
+import { sweep } from './sweep';
 import { BodyOptionsType } from './types';
 
 // huge thanks to https://github.com/andyhall/voxel-physics-engine/blob/master/src/index.js
