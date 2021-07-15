@@ -374,7 +374,8 @@ impl World {
         self.broadcast(&msg, vec![player_id]);
     }
 
-    pub fn on_chat_message(&mut self, _player_id: usize, msg: messages::Message) {
+    pub fn on_chat_message(&mut self, player_id: usize, msg: messages::Message) {
+        info!("{:?}: {}", player_id, msg.clone().message.unwrap().body);
         self.broadcast(&msg, vec![]);
     }
 
@@ -400,8 +401,6 @@ impl World {
         let clock = self.read_resource::<Clock>();
 
         if chunks.config.save {
-            let start = Instant::now();
-
             // saving world data
             let mut root = chunks.root_folder.clone();
             root.push(WORLD_DATA_FILE);
