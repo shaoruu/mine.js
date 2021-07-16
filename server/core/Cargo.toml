@@ -5,7 +5,6 @@ edition = "2018"
 
 [dependencies]
 server_common = { path = "../common" }
-server_libs = { path = "../libs" }
 server_utils = { path = "../utils" }
 
 actix = "0.10.0"

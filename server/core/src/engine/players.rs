@@ -1,23 +1,23 @@
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    usize,
+};
 
 use actix::Recipient;
+use specs::Entity;
 
 use super::super::network::{message, models::messages};
 
-use server_common::{
-    quaternion::Quaternion,
-    vec::{Vec2, Vec3},
-};
+use server_common::vec::Vec2;
+
+pub type PlayerUpdates = HashMap<usize, messages::Peer>;
 
 #[derive(Debug)]
 pub struct Player {
+    pub entity: Entity,
     pub name: Option<String>,
     pub addr: Recipient<message::Message>,
-    pub position: Vec3<f32>,
-    pub rotation: Quaternion,
-    pub current_chunk: Option<Vec2<i32>>,
     pub requested_chunks: VecDeque<Vec2<i32>>,
-    pub render_radius: i16,
 }
 
 pub type Players = HashMap<usize, Player>;

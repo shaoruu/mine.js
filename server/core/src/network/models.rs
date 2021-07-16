@@ -211,3 +211,6 @@ pub fn encode_message(message: &messages::Message) -> Vec<u8> {
 pub fn decode_message(buf: &[u8]) -> Result<messages::Message, prost::DecodeError> {
     messages::Message::decode(&mut Cursor::new(buf))
 }
+
+pub type ChatType = messages::chat_message::Type;
+pub type MessageType = messages::message::Type;

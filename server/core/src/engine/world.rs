@@ -1,28 +1,42 @@
 #![allow(dead_code)]
 
+use actix::Recipient;
 use log::info;
 
 use ansi_term::Colour::Yellow;
 use specs::shred::{Fetch, FetchMut, Resource};
 
-use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
+use std::{collections::VecDeque, fs::File};
 
 use specs::{Builder, DispatcherBuilder, World as ECSWorld, WorldExt};
 
 use serde::{Deserialize, Serialize};
 
-use super::super::{
-    comp::phys::Phys,
-    constants::WORLD_DATA_FILE,
-    engine::chunks::MeshLevel,
-    network::models::{
-        create_chat_message, create_message, create_of_type,
-        messages::{self, chat_message::Type as ChatType, message::Type as MessageType},
-        ChunkProtocol, MessageComponents,
+use crate::comp::curr_chunk::CurrChunk;
+use crate::comp::id::Id;
+use crate::comp::name::Name;
+use crate::comp::rotation::Rotation;
+use crate::comp::view_radius::ViewRadius;
+use crate::sys::{BroadcastSystem, ChunkingSystem, PeersSystem};
+use crate::{
+    comp::rigidbody::RigidBody,
+    network::message::{JoinResult, Message},
+};
+
+use super::{
+    super::{
+        constants::WORLD_DATA_FILE,
+        engine::chunks::MeshLevel,
+        network::models::{
+            create_chat_message, create_message, create_of_type, messages, ChatType, ChunkProtocol,
+            MessageComponents, MessageType,
+        },
+        sys::PhysicsSystem,
     },
-    sys::PhysicsSystem,
+    physics::{Physics, PhysicsOptions},
+    players::Player,
 };
 
 use server_common::{
@@ -31,14 +45,9 @@ use server_common::{
     vec::{Vec2, Vec3},
 };
 
-use server_libs::{
-    physics::{Physics, PhysicsOptions},
-    rigidbody::RigidBody,
-};
-
 use super::chunks::Chunks;
 use super::clock::Clock;
-use super::players::{BroadcastExt, Players};
+use super::players::{BroadcastExt, PlayerUpdates, Players};
 use super::registry::Registry;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -81,6 +90,8 @@ pub struct World {
     pub description: String,
 }
 
+pub type MessagesQueue = Vec<(messages::Message, Vec<usize>)>;
+
 impl World {
     pub fn new(json: serde_json::Value, registry: Registry) -> Self {
         let WorldMeta {
@@ -95,12 +106,20 @@ impl World {
         let mut ecs = ECSWorld::new();
 
         // ECS Components
-        ecs.register::<Phys>();
+        ecs.register::<Id>();
+        ecs.register::<Name>();
+        ecs.register::<RigidBody>();
+        ecs.register::<Rotation>();
+        ecs.register::<CurrChunk>();
+        ecs.register::<ViewRadius>();
 
         // ECS Resources
+        ecs.insert(name.to_owned());
         ecs.insert(Chunks::new(&name, config.clone(), registry));
         ecs.insert(Clock::new(time, tick_speed));
         ecs.insert(Players::new());
+        ecs.insert(PlayerUpdates::new());
+        ecs.insert(MessagesQueue::new());
         ecs.insert(Physics::new(PhysicsOptions {
             gravity: Vec3(0.0, -24.0, 0.0),
             min_bounce_impulse: 0.1,
@@ -108,19 +127,7 @@ impl World {
             fluid_drag: 0.4,
             fluid_density: 2.0,
         }));
-
-        ecs.create_entity()
-            .with(Phys {
-                body: RigidBody::new(
-                    Aabb::new(&Vec3(0.0, 80.0, 0.0), &Vec3(0.8, 2.0, 0.8)),
-                    1.0,
-                    1.0,
-                    0.0,
-                    1.0,
-                    false,
-                ),
-            })
-            .build();
+        ecs.insert(config.clone());
 
         let mut new_world = World {
             ecs,
@@ -171,6 +178,118 @@ impl World {
             name,
             duration
         );
+    }
+
+    pub fn add_player(
+        &mut self,
+        id: Option<usize>,
+        player_name: Option<String>,
+        player_addr: Recipient<Message>,
+        render_radius: i16,
+    ) -> JoinResult {
+        let mut id = id.unwrap_or_else(rand::random::<usize>);
+
+        let clock = self.read_resource::<Clock>();
+        let chunks = self.read_resource::<Chunks>();
+
+        let time = clock.time;
+        let tick_speed = clock.tick_speed;
+        let spawn = [0, chunks.get_max_height(0, 0) as i32, 0];
+        let passables = chunks.registry.get_passable_solids();
+
+        drop(clock);
+        drop(chunks);
+
+        let mut players = self.write_resource::<Players>();
+
+        loop {
+            if players.contains_key(&id) {
+                id = rand::random::<usize>();
+            } else {
+                break;
+            }
+        }
+
+        drop(players);
+
+        let entity = self
+            .ecs_mut()
+            .create_entity()
+            .with(Id::new(id.to_owned()))
+            .with(Name::new(&player_name))
+            .with(RigidBody::new(
+                Aabb::new(
+                    &Vec3(spawn[0] as f32, spawn[1] as f32, spawn[2] as f32),
+                    &Vec3(0.8, 2.0, 0.8),
+                ),
+                1.0,
+                1.0,
+                0.0,
+                0.0,
+                false,
+            ))
+            .with(Rotation::new(0.0, 0.0, 0.0, 0.0))
+            .with(CurrChunk::new())
+            .with(ViewRadius::new(render_radius))
+            .build();
+
+        let mut players = self.write_resource::<Players>();
+
+        let new_player = Player {
+            entity,
+            name: player_name,
+            addr: player_addr,
+            requested_chunks: VecDeque::default(),
+        };
+
+        players.insert(id, new_player);
+
+        JoinResult {
+            id,
+            time,
+            tick_speed,
+            spawn,
+            passables,
+        }
+    }
+
+    pub fn remove_player(&mut self, player_id: &usize) {
+        let name = self.name.to_owned();
+        let mut players = self.write_resource::<Players>();
+        let mut message_queue = Vec::new();
+
+        let player = players.remove(player_id);
+
+        if player.is_none() {
+            return;
+        }
+
+        let player = player.unwrap();
+        drop(players);
+
+        let player_name = player.name.unwrap_or_else(|| "Somebody".to_owned());
+
+        self.ecs_mut()
+            .delete_entity(player.entity)
+            .expect("Error removing player entity...");
+
+        let mut new_message = create_chat_message(
+            MessageType::Leave,
+            ChatType::Info,
+            "",
+            format!("{} left the game", player_name).as_str(),
+        );
+        new_message.text = player_id.to_string();
+
+        let message = format!("{} left the world {}", player_name, name);
+
+        info!("{}", Yellow.bold().paint(message));
+
+        message_queue.push(new_message);
+
+        message_queue.into_iter().for_each(|message| {
+            self.broadcast(&message, vec![]);
+        })
     }
 
     pub fn broadcast(&mut self, msg: &messages::Message, exclude: Vec<usize>) {
@@ -314,64 +433,8 @@ impl World {
     }
 
     pub fn on_peer(&mut self, player_id: usize, msg: messages::Message) {
-        let world_name = self.name.to_owned();
-        let mut players = self.write_resource::<Players>();
-
-        let messages::Peer {
-            name,
-            px,
-            py,
-            pz,
-            qx,
-            qy,
-            qz,
-            qw,
-            ..
-        } = &msg.peers[0];
-
-        let player = players.get(&player_id);
-
-        if player.is_none() {
-            players.remove(&player_id);
-            return;
-        }
-
-        let player = player.unwrap();
-
-        let mut freshly_joined = false;
-
-        // TODO: fix this ambiguous logic
-        // means this player just joined.
-        if player.name.is_none() {
-            freshly_joined = true;
-        }
-
-        // borrow the player again.
-        let player = players.get_mut(&player_id).unwrap();
-
-        player.name = Some(name.to_owned());
-        player.position = Vec3(*px, *py, *pz);
-        player.rotation = Quaternion(*qx, *qy, *qz, *qw);
-
-        // ! will dropping be erroneous?
-        drop(players);
-
-        if freshly_joined {
-            let message = format!("{} joined the world {}", name, world_name);
-
-            info!("{}", Yellow.bold().paint(message));
-
-            let new_message = create_chat_message(
-                MessageType::Message,
-                ChatType::Info,
-                "",
-                format!("{} joined the game", name).as_str(),
-            );
-
-            self.broadcast(&new_message, vec![]);
-        }
-
-        self.broadcast(&msg, vec![player_id]);
+        let mut player_updates = self.write_resource::<PlayerUpdates>();
+        player_updates.insert(player_id, msg.peers[0].clone());
     }
 
     pub fn on_chat_message(&mut self, player_id: usize, msg: messages::Message) {
@@ -440,6 +503,9 @@ impl World {
 
         let mut dispatcher = DispatcherBuilder::new()
             .with(PhysicsSystem, "physics", &[])
+            .with(PeersSystem, "peers", &["physics"])
+            .with(ChunkingSystem, "chunking", &["peers"])
+            .with(BroadcastSystem, "broadcast", &["peers"])
             .build();
 
         dispatcher.dispatch(&self.ecs);

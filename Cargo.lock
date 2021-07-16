@@ -2067,18 +2067,8 @@ dependencies = [
  "serde",
  "serde_json",
  "server_common",
- "server_libs",
  "server_utils",
  "specs",
-]
-
-[[package]]
-name = "server_libs"
-version = "0.1.0"
-dependencies = [
- "serde",
- "server_common",
- "server_utils",
 ]
 
 [[package]]

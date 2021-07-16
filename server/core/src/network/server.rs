@@ -1,39 +1,27 @@
 use actix::prelude::*;
 use actix_broker::BrokerSubscribe;
 
-use log::info;
-
-use ansi_term::Colour::Yellow;
-
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
+use std::thread;
 use std::time::Duration;
 
-use super::super::{
-    engine::{
-        chunks::{Chunks, MeshLevel},
-        clock::Clock,
-        players::{Player, Players},
-        registry::Registry,
-        world::{World, WorldConfig},
-    },
-    network::models::create_chat_message,
+use super::super::engine::{
+    chunks::{Chunks, MeshLevel},
+    clock::Clock,
+    players::Players,
+    registry::Registry,
+    world::World,
 };
 
-use server_common::{quaternion::Quaternion, vec::Vec3};
-
-use server_utils::{
-    convert::{map_voxel_to_chunk, map_world_to_voxel},
-    json,
-};
+use server_utils::json;
 
 use super::message::{
-    FullWorldData, GetWorld, JoinResult, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds, Noop,
+    FullWorldData, GetWorld, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds, Noop,
     PlayerMessage, SimpleWorldData,
 };
 use super::models::{
-    create_message, messages, messages::chat_message::Type as ChatType,
-    messages::message::Type as MessageType, MessageComponents,
+    create_message, messages, messages::message::Type as MessageType, MessageComponents,
 };
 
 const SERVER_TICK: Duration = Duration::from_millis(16);
@@ -45,41 +33,6 @@ pub struct WsServer {
 }
 
 impl WsServer {
-    fn add_player_to_world(
-        &mut self,
-        world_name: &str,
-        id: Option<usize>,
-        player: Player,
-    ) -> JoinResult {
-        let mut id = id.unwrap_or_else(rand::random::<usize>);
-        let world = self.worlds.get_mut(world_name).expect("World not found.");
-
-        let mut players = world.write_resource::<Players>();
-
-        loop {
-            if players.contains_key(&id) {
-                id = rand::random::<usize>();
-            } else {
-                break;
-            }
-        }
-
-        players.insert(id, player);
-
-        drop(players);
-
-        let clock = world.read_resource::<Clock>();
-        let chunks = world.read_resource::<Chunks>();
-
-        JoinResult {
-            id,
-            time: clock.time,
-            tick_speed: clock.tick_speed,
-            spawn: [0, chunks.get_max_height(0, 0) as i32, 0],
-            passables: chunks.registry.get_passable_solids(),
-        }
-    }
-
     fn broadcast(
         &mut self,
         world_name: &str,
@@ -94,49 +47,8 @@ impl WsServer {
     }
 
     fn tick(&mut self) {
-        let mut to_generate = vec![];
-
         for world in self.worlds.values_mut() {
             world.tick();
-
-            let chunks = world.read_resource::<Chunks>();
-
-            let WorldConfig {
-                chunk_size,
-                dimension,
-                ..
-            } = *chunks.config;
-
-            drop(chunks);
-
-            let mut players = world.write_resource::<Players>();
-
-            for player in players.values_mut() {
-                if player.name.is_none() {
-                    continue;
-                }
-
-                let current_chunk = player.current_chunk.as_ref();
-
-                let Vec3(px, py, pz) = player.position;
-                let Vec3(vx, vy, vz) = map_world_to_voxel(px, py, pz, dimension);
-                let new_chunk = map_voxel_to_chunk(vx, vy, vz, chunk_size);
-
-                if current_chunk.is_none()
-                    || current_chunk.unwrap().0 != new_chunk.0
-                    || current_chunk.unwrap().1 != new_chunk.1
-                {
-                    player.current_chunk = Some(new_chunk.clone());
-
-                    to_generate.push((new_chunk, player.render_radius));
-                }
-            }
-
-            drop(players);
-
-            to_generate.iter().for_each(|(coords, r)| {
-                world.write_resource::<Chunks>().generate(coords, *r, false)
-            });
         }
     }
 
@@ -149,10 +61,6 @@ impl WsServer {
             let mut players = world.write_resource::<Players>();
 
             players.iter_mut().for_each(|(id, player)| {
-                if player.name.is_none() {
-                    return;
-                }
-
                 let requested_chunk = player.requested_chunks.pop_front();
                 request_queue.push((
                     requested_chunk.to_owned(),
@@ -223,16 +131,8 @@ impl Handler<JoinWorld> for WsServer {
             render_radius,
         } = msg;
 
-        let new_player = Player {
-            name: player_name,
-            addr: player_addr,
-            current_chunk: None,
-            position: Vec3::default(),
-            rotation: Quaternion::default(),
-            requested_chunks: VecDeque::default(),
-            render_radius,
-        };
-        let result = self.add_player_to_world(&world_name, None, new_player);
+        let world = self.worlds.get_mut(&world_name).expect("World not found!");
+        let result = world.add_player(None, player_name, player_addr, render_radius);
 
         MessageResult(result)
     }
@@ -242,34 +142,9 @@ impl Handler<LeaveWorld> for WsServer {
     type Result = ();
 
     fn handle(&mut self, msg: LeaveWorld, _ctx: &mut Self::Context) {
-        let mut message_queue = Vec::new();
-
         if let Some(world) = self.worlds.get_mut(&msg.world_name) {
-            let world_name = world.name.to_owned();
-            let mut players = world.write_resource::<Players>();
-
-            if let Some(player) = players.remove(&msg.player_id) {
-                let player_name = player.name.clone().unwrap_or_else(|| "Somebody".to_owned());
-
-                let mut new_message = create_chat_message(
-                    MessageType::Leave,
-                    ChatType::Info,
-                    "",
-                    format!("{} left the game", player_name).as_str(),
-                );
-                new_message.text = msg.player_id.to_string();
-
-                let message = format!("{} left the world {}", player_name, msg.world_name);
-
-                info!("{}", Yellow.bold().paint(message));
-
-                message_queue.push((world_name, new_message));
-            }
+            world.remove_player(&msg.player_id);
         }
-
-        message_queue.into_iter().for_each(|(world_name, message)| {
-            self.broadcast(&world_name, &message, vec![]);
-        })
     }
 }
 

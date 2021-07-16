@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use server_common::{aabb::Aabb, math::approx_equals, vec::Vec3};
 use server_utils::sweep::sweep;
 
-use super::rigidbody::RigidBody;
+use crate::comp::rigidbody::RigidBody;
 
 type TestFunction<'a> = &'a dyn Fn(i32, i32, i32) -> bool;
 
