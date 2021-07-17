@@ -15,7 +15,7 @@ pub struct ChunkProtocol {
     pub lights: Option<Ndarray<u32>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PeerProtocol {
     pub id: String,
     pub name: String,

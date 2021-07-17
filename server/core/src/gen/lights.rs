@@ -1,7 +1,5 @@
 use std::collections::VecDeque;
 
-use log::debug;
-
 use super::super::{
     constants::{CHUNK_HORIZONTAL_NEIGHBORS, DATA_PADDING, VOXEL_NEIGHBORS},
     engine::{chunks::Chunks, registry::Registry, space::Space, world::WorldConfig},

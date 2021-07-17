@@ -1,7 +1,8 @@
-use log::debug;
-use server_common::vec::Vec3;
-use server_utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use specs::{ReadExpect, ReadStorage, System, WriteExpect, WriteStorage};
+
+use server_utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
+
+use server_common::vec::Vec3;
 
 use crate::{
     comp::{curr_chunk::CurrChunk, rigidbody::RigidBody, view_radius::ViewRadius},

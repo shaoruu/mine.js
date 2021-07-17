@@ -40,7 +40,7 @@ impl WsServer {
     ) -> Option<()> {
         let world = self.worlds.get_mut(world_name)?;
 
-        world.broadcast(msg, exclude);
+        world.broadcast(msg, vec![], exclude);
 
         Some(())
     }

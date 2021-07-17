@@ -149,6 +149,7 @@ class Network {
           if (id === player.id) continue;
           peers.update(id, { name, position: [px, py, pz], rotation: [qx, qy, qz, qw] });
         }
+
         break;
       }
 

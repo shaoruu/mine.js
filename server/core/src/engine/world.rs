@@ -41,7 +41,6 @@ use super::{
 
 use server_common::{
     aabb::Aabb,
-    quaternion::Quaternion,
     vec::{Vec2, Vec3},
 };
 
@@ -90,7 +89,12 @@ pub struct World {
     pub description: String,
 }
 
-pub type MessagesQueue = Vec<(usize, messages::Message, Vec<usize>)>;
+pub type MessagesQueue = Vec<(
+    usize,
+    messages::Message,
+    Option<Vec<usize>>,
+    Option<Vec<usize>>,
+)>;
 
 impl World {
     pub fn new(json: serde_json::Value, registry: Registry) -> Self {
@@ -200,7 +204,7 @@ impl World {
         drop(clock);
         drop(chunks);
 
-        let mut players = self.write_resource::<Players>();
+        let players = self.read_resource::<Players>();
 
         loop {
             if players.contains_key(&id) {
@@ -288,12 +292,13 @@ impl World {
         message_queue.push(new_message);
 
         message_queue.into_iter().for_each(|message| {
-            self.broadcast(&message, vec![]);
+            self.broadcast(&message, vec![], vec![]);
         })
     }
 
-    pub fn broadcast(&mut self, msg: &messages::Message, exclude: Vec<usize>) {
-        self.write_resource::<Players>().broadcast(&0, msg, exclude);
+    pub fn broadcast(&mut self, msg: &messages::Message, include: Vec<usize>, exclude: Vec<usize>) {
+        self.write_resource::<Players>()
+            .broadcast(&0, msg, include, exclude);
     }
 
     pub fn on_chunk_request(&mut self, player_id: usize, msg: messages::Message) {
@@ -331,7 +336,7 @@ impl World {
         let mut new_message = create_of_type(MessageType::Config);
         new_message.json = json.to_string();
 
-        self.broadcast(&new_message, vec![]);
+        self.broadcast(&new_message, vec![], vec![]);
     }
 
     pub fn on_update(&mut self, _player_id: usize, msg: messages::Message) {
@@ -407,7 +412,7 @@ impl World {
             drop(chunks);
 
             let new_message = create_message(component);
-            self.broadcast(&new_message, vec![]);
+            self.broadcast(&new_message, vec![], vec![]);
         });
 
         let chunks = self.read_resource::<Chunks>();
@@ -429,22 +434,54 @@ impl World {
 
         drop(chunks);
 
-        self.broadcast(&new_message, vec![]);
+        self.broadcast(&new_message, vec![], vec![]);
     }
 
     pub fn on_peer(&mut self, player_id: usize, msg: messages::Message) {
         let mut player_updates = self.write_resource::<PlayerUpdates>();
         player_updates.insert(player_id, msg.peers[0].clone());
-
-        drop(player_updates);
-
-        let mut messages = self.write_resource::<MessagesQueue>();
-        messages.push((player_id, msg, vec![player_id]));
     }
 
-    pub fn on_chat_message(&mut self, player_id: usize, msg: messages::Message) {
-        info!("{:?}: {}", player_id, msg.clone().message.unwrap().body);
-        self.broadcast(&msg, vec![]);
+    pub fn on_chat_message(&mut self, _player_id: usize, msg: messages::Message) {
+        if let Some(message) = msg.message.clone() {
+            let sender: String = message.sender;
+            let body: String = message.body;
+
+            info!("{}: {}", sender, body);
+
+            if body.starts_with('/') {
+                let body = body
+                    .strip_prefix('/')
+                    .unwrap()
+                    .split_whitespace()
+                    .collect::<Vec<_>>();
+
+                let mut msgs = vec![];
+
+                let create_msg = |chat_type: ChatType, body: &str| {
+                    create_chat_message(MessageType::Message, chat_type, "", body)
+                };
+
+                match body.len() {
+                    0 => {
+                        msgs.push(create_msg(ChatType::Error, "Unknown command."));
+                    }
+                    1 => {
+                        if body[0] == "save" {
+                            self.save();
+                            msgs.push(create_msg(ChatType::Info, "World saved."));
+                        }
+                    }
+                    _ => {}
+                }
+
+                msgs.into_iter().for_each(|msg| {
+                    self.broadcast(&msg, vec![], vec![]);
+                });
+            } else {
+                self.broadcast(&msg, vec![], vec![]);
+            }
+        }
     }
 
     pub fn sync_config(&mut self) {

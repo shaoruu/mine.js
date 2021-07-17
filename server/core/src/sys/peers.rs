@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use log::info;
 
 use ansi_term::Colour::Yellow;
@@ -12,7 +14,10 @@ use crate::{
         players::{PlayerUpdates, Players},
         world::MessagesQueue,
     },
-    network::models::{create_chat_message, messages, ChatType, MessageType},
+    network::models::{
+        create_chat_message, create_message, messages, ChatType, MessageComponents, MessageType,
+        PeerProtocol,
+    },
 };
 
 pub struct PeersSystem;
@@ -44,9 +49,12 @@ impl<'a> System<'a> for PeersSystem {
             mut rotations,
         ) = data;
 
+        let mut peers_update = HashMap::new();
+
         for (id, name, body, rotation) in (&ids, &mut names, &mut bodies, &mut rotations).join() {
             if let Some(update) = updates.remove(&id.val) {
                 let messages::Peer {
+                    id: peer_id,
                     name: new_name,
                     px,
                     py,
@@ -57,6 +65,21 @@ impl<'a> System<'a> for PeersSystem {
                     qw,
                     ..
                 } = update;
+
+                peers_update.insert(
+                    id.val,
+                    PeerProtocol {
+                        id: peer_id,
+                        name: new_name.clone(),
+                        px,
+                        py,
+                        pz,
+                        qx,
+                        qy,
+                        qz,
+                        qw,
+                    },
+                );
 
                 if name.val.is_none() {
                     let message =
@@ -71,13 +94,34 @@ impl<'a> System<'a> for PeersSystem {
                         format!("{} joined the game", new_name).as_str(),
                     );
 
-                    messages.push((id.val.to_owned(), new_message, vec![]));
+                    messages.push((id.val.to_owned(), new_message, None, None));
                 }
 
                 name.val = Some(new_name.clone());
-                players.get_mut(&id.val).unwrap().name = Some(new_name);
                 body.set_position(&Vec3(px, py, pz));
                 rotation.val = Quaternion(qx, qy, qz, qw);
+
+                if let Some(player) = players.get_mut(&id.val) {
+                    player.name = Some(new_name);
+                }
+            }
+        }
+
+        for id in ids.join() {
+            let updates = peers_update
+                .iter()
+                .filter(|(&i, ..)| i != id.val)
+                .collect::<HashMap<_, _>>()
+                .values()
+                .map(|p| p.to_owned().to_owned())
+                .collect::<Vec<_>>();
+
+            if !updates.is_empty() {
+                let mut components = MessageComponents::default_for(MessageType::Peer);
+                components.peers = Some(updates);
+
+                let message = create_message(components);
+                messages.push((id.val, message, Some(vec![id.val]), None));
             }
         }
     }

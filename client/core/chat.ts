@@ -177,7 +177,7 @@ class Chat {
               })
               .join('\n'),
           });
-          break;
+          return;
         }
         case 'b':
         case 'block': {
@@ -189,15 +189,10 @@ class Chat {
             } else {
               this.add({ type: 'ERROR', body: `Block not found: ${block}` });
             }
-            break;
+            return;
           }
         }
-
-        default: {
-          this.add({ type: 'INFO', body: 'Commands coming soon!' });
-        }
       }
-      return;
     }
 
     server.sendEvent({
