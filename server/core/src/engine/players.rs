@@ -25,10 +25,10 @@ pub type Players = HashMap<usize, Player>;
 pub trait BroadcastExt {
     fn broadcast(
         &mut self,
-        sender: &usize,
         msg: &messages::Message,
         include: Vec<usize>,
         exclude: Vec<usize>,
+        sender: Option<usize>,
     );
 }
 
@@ -36,16 +36,17 @@ impl BroadcastExt for Players {
     /// Broadcast a message to all players. Exclude will be used if include is empty.
     fn broadcast(
         &mut self,
-        sender: &usize,
         msg: &messages::Message,
         include: Vec<usize>,
         exclude: Vec<usize>,
+        sender: Option<usize>,
     ) {
         let mut resting_players = vec![];
 
-        if *sender != 0 && !self.contains_key(sender) {
-            // means player DNE
-            return;
+        if let Some(sender) = sender {
+            if sender != 0 && !self.contains_key(&sender) {
+                return;
+            }
         }
 
         if !include.is_empty() {

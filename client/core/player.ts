@@ -1,6 +1,6 @@
 import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3, Group, Color, Ray, Box3 } from 'three';
 
-import { EntityType, Peer, PointerLockControls, raycast } from '../libs';
+import { PhysicalType, Peer, PointerLockControls, raycast } from '../libs';
 import { Coords3 } from '../libs/types';
 import { Helper } from '../utils';
 
@@ -36,7 +36,7 @@ class Player {
 
   public lookBlock: Coords3 | null = [0, 0, 0];
   public targetBlock: Coords3 | null = [0, 0, 0];
-  public entity: EntityType;
+  public entity: PhysicalType;
   public perspective: PerspectiveType = 'first';
 
   public own: Peer;
@@ -368,7 +368,7 @@ class Player {
     if (this.godMode) {
       this.vel.set(0, 0, 0);
       this.acc.set(0, 0, 0);
-      this.engine.entities.removeEntity('player');
+      this.engine.entities.removePhysical('player');
     } else {
       // activated again
       this.addEntity();
@@ -381,7 +381,7 @@ class Player {
     const cameraWorldWidth = bodyWidth * dimension;
     const cameraWorldHeight = (distToGround + distToTop) * dimension;
 
-    this.entity = this.engine.entities.addEntity(
+    this.entity = this.engine.entities.addPhysical(
       'player',
       this.controls.getObject(),
       [cameraWorldWidth, cameraWorldHeight, cameraWorldWidth],

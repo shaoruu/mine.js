@@ -94,7 +94,7 @@ impl<'a> System<'a> for PeersSystem {
                         format!("{} joined the game", new_name).as_str(),
                     );
 
-                    messages.push((id.val.to_owned(), new_message, None, None));
+                    messages.push((new_message, None, None, Some(id.val.to_owned())));
                 }
 
                 name.val = Some(new_name.clone());
@@ -121,7 +121,7 @@ impl<'a> System<'a> for PeersSystem {
                 components.peers = Some(updates);
 
                 let message = create_message(components);
-                messages.push((id.val, message, Some(vec![id.val]), None));
+                messages.push((message, Some(vec![id.val]), None, Some(id.val)));
             }
         }
     }

@@ -80,7 +80,7 @@ class Network {
     const { type } = event;
 
     const { engine } = this;
-    const { world, player, peers, chat } = engine;
+    const { world, player, peers, entities, chat } = engine;
 
     switch (type) {
       case 'INIT': {
@@ -148,6 +148,17 @@ class Network {
           const { id, name, px, py, pz, qx, qy, qz, qw } = peer;
           if (id === player.id) continue;
           peers.update(id, { name, position: [px, py, pz], rotation: [qx, qy, qz, qw] });
+        }
+
+        break;
+      }
+
+      case 'ENTITY': {
+        const { entities: entitiesData } = event;
+
+        for (const entity of entitiesData) {
+          const { id, type, px, py, pz, qx, qy, qz, qw } = entity;
+          entities.updateEntity(id, type, [px, py, pz], [qx, qy, qz, qw]);
         }
 
         break;

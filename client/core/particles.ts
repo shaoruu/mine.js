@@ -1,7 +1,7 @@
 import TWEEN from '@tweenjs/tween.js';
 import { BufferGeometry, Float32BufferAttribute, Points, ShaderMaterial, Vector3, Object3D, Vector2 } from 'three';
 
-import { EntityType, Coords3 } from '../libs/types';
+import { PhysicalType, Coords3 } from '../libs/types';
 import { Helper } from '../utils';
 
 import ParticlesFragmentShader from './shaders/particles/fragment.glsl';
@@ -24,7 +24,7 @@ type ParticleOptions = {
 
 type Group = {
   mesh: Points;
-  particles: EntityType[];
+  particles: PhysicalType[];
   options: ParticleOptions;
   update: () => void;
 };
@@ -80,7 +80,7 @@ class Particles {
       });
 
       for (let i = 0; i < count; i++) {
-        const entity = this.engine.entities.addEntity(
+        const entity = this.engine.entities.addPhysical(
           `${i}${Math.floor(Math.random() * 100000)}`,
           { position: new Vector3(x + Math.random(), y + Math.random(), z + Math.random()) } as Object3D,
           [0.1, 0.1, 0.1],
@@ -161,7 +161,7 @@ class Particles {
       const { mesh, particles, options } = group;
 
       particles.forEach((entity) => {
-        entities.removeEntity(entity.name);
+        entities.removePhysical(entity.name);
       });
 
       if (animate) {
@@ -178,7 +178,7 @@ class Particles {
     }
   }
 
-  private updatePositions = (geometry: BufferGeometry, particles: EntityType[]) => {
+  private updatePositions = (geometry: BufferGeometry, particles: PhysicalType[]) => {
     const positions = [];
     for (const particle of particles) {
       const { x, y, z } = particle.object.position;

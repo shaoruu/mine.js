@@ -13,7 +13,7 @@ impl<'a> System<'a> for BroadcastSystem {
     fn run(&mut self, data: Self::SystemData) {
         let (mut messages, mut players) = data;
 
-        for (sender, msg, include, exclude) in messages.iter() {
+        for (msg, include, exclude, sender) in messages.iter() {
             let include = if include.is_some() {
                 include.clone().unwrap()
             } else {
@@ -26,7 +26,12 @@ impl<'a> System<'a> for BroadcastSystem {
                 vec![]
             };
 
-            players.broadcast(sender, msg, include.to_owned(), exclude.to_owned());
+            players.broadcast(
+                msg,
+                include.to_owned(),
+                exclude.to_owned(),
+                sender.to_owned(),
+            );
         }
 
         messages.clear();

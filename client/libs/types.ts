@@ -36,12 +36,19 @@ export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
 };
 
-export type EntityType = {
+export type PhysicalType = {
   name: string;
   body: RigidBody;
   brain: Brain;
   offsets: [number, number, number];
   object: Object3D;
+};
+
+export type EntityType = {
+  type: string;
+  object: Object3D;
+  position: Coords3;
+  rotation: [number, number, number, number];
 };
 
 export type MeshResultType = {

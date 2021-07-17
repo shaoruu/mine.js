@@ -15,12 +15,13 @@ use specs::{Builder, DispatcherBuilder, World as ECSWorld, WorldExt};
 use serde::{Deserialize, Serialize};
 
 use crate::comp::curr_chunk::CurrChunk;
+use crate::comp::etype::EType;
 use crate::comp::id::Id;
 use crate::comp::name::Name;
 use crate::comp::rotation::Rotation;
 use crate::comp::view_radius::ViewRadius;
 use crate::network::models::ChatType;
-use crate::sys::{BroadcastSystem, ChunkingSystem, GenerationSystem, PeersSystem};
+use crate::sys::{BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, PeersSystem};
 use crate::{
     comp::rigidbody::RigidBody,
     network::message::{JoinResult, Message},
@@ -91,10 +92,10 @@ pub struct World {
 }
 
 pub type MessagesQueue = Vec<(
-    usize,
     messages::Message,
     Option<Vec<usize>>,
     Option<Vec<usize>>,
+    Option<usize>,
 )>;
 
 impl World {
@@ -117,6 +118,7 @@ impl World {
         ecs.register::<Rotation>();
         ecs.register::<CurrChunk>();
         ecs.register::<ViewRadius>();
+        ecs.register::<EType>();
 
         // ECS Resources
         ecs.insert(name.to_owned());
@@ -299,7 +301,7 @@ impl World {
 
     pub fn broadcast(&mut self, msg: &messages::Message, include: Vec<usize>, exclude: Vec<usize>) {
         self.write_resource::<Players>()
-            .broadcast(&0, msg, include, exclude);
+            .broadcast(msg, include, exclude, None);
     }
 
     pub fn on_chunk_request(&mut self, player_id: usize, msg: messages::Message) {
@@ -506,15 +508,15 @@ impl World {
         drop(bodies);
         drop(players);
 
-        let entity = self
-            .ecs_mut()
+        self.ecs_mut()
             .create_entity()
+            .with(EType::new("cow"))
             .with(RigidBody::new(
-                Aabb::new(&pos, &Vec3(0.8, 0.8, 0.8)),
+                Aabb::new(&Vec3(pos.0, pos.1 + 20.0, pos.2), &Vec3(0.2, 0.2, 0.2)),
                 1.0,
                 1.0,
                 0.0,
-                0.0,
+                1.0,
                 false,
             ))
             .with(Rotation::new(0.0, 0.0, 0.0, 0.0))
@@ -586,6 +588,7 @@ impl World {
             .with(PeersSystem, "peers", &["physics"])
             .with(ChunkingSystem, "chunking", &["peers"])
             .with(GenerationSystem, "generation", &["chunking"])
+            .with(EntitiesSystem, "entities", &["chunking"])
             .with(BroadcastSystem, "broadcast", &["peers"])
             .build();
 
