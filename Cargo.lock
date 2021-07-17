@@ -1188,6 +1188,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kdtree"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80ee359328fc9087e9e3fc0a4567c4dd27ec69a127d6a70e8d9dd22845b8b1a2"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "kernel32-sys"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2057,6 +2066,7 @@ dependencies = [
  "crossbeam-channel 0.5.1",
  "image",
  "itertools 0.10.1",
+ "kdtree",
  "libflate",
  "log",
  "num_cpus",

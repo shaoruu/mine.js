@@ -158,7 +158,7 @@ class Network {
 
         for (const entity of entitiesData) {
           const { id, type, px, py, pz, qx, qy, qz, qw } = entity;
-          entities.updateEntity(id, type, [px, py, pz], [qx, qy, qz, qw]);
+          entities.handleServerUpdate(id, type, [px, py, pz], [qx, qy, qz, qw]);
         }
 
         break;

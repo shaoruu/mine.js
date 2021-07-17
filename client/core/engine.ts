@@ -104,6 +104,7 @@ const defaultConfig: ConfigType = {
     movementLerp: true,
     movementLerpFactor: 0.4,
     maxEntities: 1000000,
+    maxProcessPerFrame: 16,
   },
   shadows: {
     maxRadius: 0.4,

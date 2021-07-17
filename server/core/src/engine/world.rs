@@ -21,12 +21,15 @@ use crate::comp::name::Name;
 use crate::comp::rotation::Rotation;
 use crate::comp::view_radius::ViewRadius;
 use crate::network::models::ChatType;
-use crate::sys::{BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, PeersSystem};
+use crate::sys::{
+    BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, PeersSystem, SearchSystem,
+};
 use crate::{
     comp::rigidbody::RigidBody,
     network::message::{JoinResult, Message},
 };
 
+use super::kdtree::KdTree;
 use super::{
     super::{
         constants::WORLD_DATA_FILE,
@@ -124,6 +127,7 @@ impl World {
         ecs.insert(name.to_owned());
         ecs.insert(Chunks::new(&name, config.clone(), registry));
         ecs.insert(Clock::new(time, tick_speed));
+        ecs.insert(KdTree::new());
         ecs.insert(Players::new());
         ecs.insert(PlayerUpdates::new());
         ecs.insert(MessagesQueue::new());
@@ -590,6 +594,7 @@ impl World {
             .with(GenerationSystem, "generation", &["chunking"])
             .with(EntitiesSystem, "entities", &["chunking"])
             .with(BroadcastSystem, "broadcast", &["peers"])
+            .with(SearchSystem, "search", &["entities", "peers"])
             .build();
 
         dispatcher.dispatch(&self.ecs);

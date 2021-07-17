@@ -177,10 +177,10 @@ class Chunk {
     }
   };
 
-  removeFromScene = () => {
+  removeFromScene = (animated = true) => {
     const { rendering } = this.engine;
 
-    this.animate(true).onComplete(() => {
+    const remove = () => {
       rendering.scene.remove(this.mesh);
 
       if (this.isAdded) {
@@ -197,7 +197,13 @@ class Chunk {
         });
         this.isAdded = false;
       }
-    });
+    };
+
+    if (animated) {
+      this.animate(true).onComplete(remove);
+    } else {
+      remove();
+    }
   };
 
   dispose = () => {
@@ -276,7 +282,7 @@ class Chunk {
           // [F, F, F, F, F, F, ...] 8 * 1 = 8
           const temp = this.altMeshes.get(type)[i * (type === 'opaque' ? 1 : 2) + j];
           if (this.isAdded) {
-            this.engine.rendering.scene.add(altMesh);
+            this.mesh.add(altMesh);
           }
           this.engine.rendering.scene.remove(temp);
           this.altMeshes.get(type)[i * (type === 'opaque' ? 1 : 2) + j] = altMesh;

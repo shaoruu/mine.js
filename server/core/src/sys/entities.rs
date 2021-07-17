@@ -2,7 +2,7 @@ use server_common::{quaternion::Quaternion, vec::Vec3};
 use specs::{Entities, ReadStorage, System, WriteExpect};
 
 use crate::{
-    comp::{curr_chunk::CurrChunk, etype::EType, id::Id, rigidbody::RigidBody, rotation::Rotation},
+    comp::{curr_chunk::CurrChunk, etype::EType, rigidbody::RigidBody, rotation::Rotation},
     engine::world::MessagesQueue,
     network::models::{create_message, EntityProtocol, MessageComponents, MessageType},
 };

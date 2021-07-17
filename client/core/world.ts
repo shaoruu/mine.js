@@ -57,6 +57,7 @@ class World extends EventEmitter {
       this.updateRenderRadius(this.options.renderRadius);
 
       engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
+      engine.inputs.bind('p', this.reloadChunks, '*');
     });
 
     engine.on('focus', async () => {
@@ -304,10 +305,23 @@ class World extends EventEmitter {
     this.pendingChunks.sort((a, b) => (cx - a[0]) ** 2 + (cz - a[1]) ** 2 - (cx - b[0]) ** 2 - (cz - b[1]) ** 2);
   };
 
+  reloadChunks = () => {
+    this.chunks.forEach((chunk) => {
+      chunk.removeFromScene(false);
+      chunk.dispose();
+    });
+
+    this.pendingChunks = [];
+    this.receivedChunks = [];
+
+    this.chunks.clear();
+    this.requestedChunks.clear();
+
+    this.surroundCamChunks();
+  };
+
   handleReconnection = () => {
-    // move requested chunks to pending
-    this.pendingChunks.push(...Array.from(this.requestedChunks).map((rc) => Helper.parseChunkName(rc) as Coords2));
-    this.sortPendingChunks();
+    this.reloadChunks();
   };
 
   get chunksLoaded() {

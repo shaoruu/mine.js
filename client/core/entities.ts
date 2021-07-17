@@ -8,11 +8,14 @@ type EntitiesOptionsType = {
   movementLerp: boolean;
   movementLerpFactor: number;
   maxEntities: number;
+  maxProcessPerFrame: number;
 };
 
 class Entities {
   public physicals: Map<string, PhysicalType> = new Map();
   public entities: Map<string, EntityType> = new Map();
+
+  private updates: [string, string, Coords3, [number, number, number, number]][] = [];
 
   constructor(public engine: Engine, public options: EntitiesOptionsType) {}
 
@@ -61,6 +64,10 @@ class Entities {
     }
   };
 
+  handleServerUpdate = (id: string, type: string, position: Coords3, rotation: [number, number, number, number]) => {
+    this.updates.push([id, type, position, rotation]);
+  };
+
   updateEntity = (id: string, type: string, position: Coords3, rotation: [...Coords3, number]) => {
     let entity = this.entities.get(id);
 
@@ -93,6 +100,12 @@ class Entities {
   };
 
   preTick = () => {
+    const { maxProcessPerFrame } = this.options;
+
+    this.updates.splice(0, maxProcessPerFrame).forEach((update) => {
+      this.updateEntity(...update);
+    });
+
     this.physicals.forEach((entity) => {
       if (entity.brain) {
         entity.brain.tick(this.engine.clock.delta);
