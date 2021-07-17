@@ -71,7 +71,7 @@ impl<'a> System<'a> for PeersSystem {
                         format!("{} joined the game", new_name).as_str(),
                     );
 
-                    messages.push((new_message, vec![]));
+                    messages.push((id.val.to_owned(), new_message, vec![]));
                 }
 
                 name.val = Some(new_name.clone());

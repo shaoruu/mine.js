@@ -13,8 +13,8 @@ impl<'a> System<'a> for BroadcastSystem {
     fn run(&mut self, data: Self::SystemData) {
         let (mut messages, mut players) = data;
 
-        for (msg, exclude) in messages.iter() {
-            players.broadcast(msg, exclude.to_owned());
+        for (sender, msg, exclude) in messages.iter() {
+            players.broadcast(sender, msg, exclude.to_owned());
         }
 
         messages.clear();

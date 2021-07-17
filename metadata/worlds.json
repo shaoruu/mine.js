@@ -29,6 +29,13 @@
       "name": "testbed",
       "generation": "flat",
       "description": "A testbed, go crazy"
+    },
+    {
+      "name": "z-dev-terrains",
+      "time": 0,
+      "tickSpeed": 0,
+      "generation": "hilly",
+      "description": "this ain't saved!"
     }
   ]
 }

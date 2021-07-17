@@ -3,7 +3,6 @@ use actix_broker::BrokerSubscribe;
 
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
-use std::thread;
 use std::time::Duration;
 
 use super::super::engine::{

@@ -90,7 +90,7 @@ pub struct World {
     pub description: String,
 }
 
-pub type MessagesQueue = Vec<(messages::Message, Vec<usize>)>;
+pub type MessagesQueue = Vec<(usize, messages::Message, Vec<usize>)>;
 
 impl World {
     pub fn new(json: serde_json::Value, registry: Registry) -> Self {
@@ -293,7 +293,7 @@ impl World {
     }
 
     pub fn broadcast(&mut self, msg: &messages::Message, exclude: Vec<usize>) {
-        self.write_resource::<Players>().broadcast(msg, exclude);
+        self.write_resource::<Players>().broadcast(&0, msg, exclude);
     }
 
     pub fn on_chunk_request(&mut self, player_id: usize, msg: messages::Message) {
@@ -439,7 +439,7 @@ impl World {
         drop(player_updates);
 
         let mut messages = self.write_resource::<MessagesQueue>();
-        messages.push((msg, vec![player_id]));
+        messages.push((player_id, msg, vec![player_id]));
     }
 
     pub fn on_chat_message(&mut self, player_id: usize, msg: messages::Message) {

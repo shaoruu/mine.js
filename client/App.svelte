@@ -223,14 +223,13 @@
     list-style: none;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: 5px 5rem;
+    padding: 3rem 5rem;
     border-radius: 5px;
   }
 
   #world-list-item {
     cursor: pointer;
     width: 400px;
-    height: 72px;
     border: 2px solid transparent;
     border-radius: 5px;
     display: flex;
@@ -249,7 +248,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    overflow: hidden;
     margin: 4px 0;
   }
 

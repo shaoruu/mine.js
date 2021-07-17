@@ -23,12 +23,17 @@ pub struct Player {
 pub type Players = HashMap<usize, Player>;
 
 pub trait BroadcastExt {
-    fn broadcast(&mut self, msg: &messages::Message, exclude: Vec<usize>);
+    fn broadcast(&mut self, sender: &usize, msg: &messages::Message, exclude: Vec<usize>);
 }
 
 impl BroadcastExt for Players {
-    fn broadcast(&mut self, msg: &messages::Message, exclude: Vec<usize>) {
+    fn broadcast(&mut self, sender: &usize, msg: &messages::Message, exclude: Vec<usize>) {
         let mut resting_players = vec![];
+
+        if *sender != 0 && !self.contains_key(sender) {
+            // means player DNE
+            return;
+        }
 
         for (id, player) in self.iter() {
             if exclude.contains(id) {

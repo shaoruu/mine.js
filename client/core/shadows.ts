@@ -18,8 +18,6 @@ class Shadows {
   public material: MeshBasicMaterial;
   public geometry: CircleBufferGeometry;
 
-  private maxDist: number;
-
   constructor(public engine: Engine, public options: ShadowsOptionsType) {
     this.list = [];
 
@@ -81,7 +79,8 @@ class Shadows {
     const index = this.list.findIndex((e) => e.object === object);
 
     if (index > 0) {
-      this.list.splice(index, 1);
+      const [removed] = this.list.splice(index, 1);
+      this.engine.rendering.scene.remove(removed.mesh);
     }
   };
 }
