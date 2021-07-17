@@ -61,6 +61,10 @@ impl WsServer {
             let mut players = world.write_resource::<Players>();
 
             players.iter_mut().for_each(|(id, player)| {
+                if player.name.is_none() {
+                    return;
+                }
+
                 let requested_chunk = player.requested_chunks.pop_front();
                 request_queue.push((
                     requested_chunk.to_owned(),
