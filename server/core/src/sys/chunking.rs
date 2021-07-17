@@ -12,22 +12,18 @@ use crate::{
 pub struct ChunkingSystem;
 
 impl<'a> System<'a> for ChunkingSystem {
-    #[allow(clippy::type_complexity)]
     type SystemData = (
         ReadExpect<'a, WorldConfig>,
-        WriteExpect<'a, Chunks>,
         ReadStorage<'a, RigidBody>,
-        ReadStorage<'a, ViewRadius>,
         WriteStorage<'a, CurrChunk>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
         use specs::Join;
 
-        let (configs, mut chunks, bodies, radiuses, mut curr_chunks) = data;
-        let mut to_generate = vec![];
+        let (configs, bodies, mut curr_chunks) = data;
 
-        for (body, radius, curr_chunk) in (&bodies, &radiuses, &mut curr_chunks).join() {
+        for (body, curr_chunk) in (&bodies, &mut curr_chunks).join() {
             let chunk_size = configs.chunk_size;
             let dimension = configs.dimension;
 
@@ -37,12 +33,8 @@ impl<'a> System<'a> for ChunkingSystem {
 
             if curr_chunk.diff(&new_chunk) {
                 curr_chunk.val = Some(new_chunk.clone());
-                to_generate.push((new_chunk, radius.val));
+                curr_chunk.changed = true;
             }
         }
-
-        to_generate
-            .iter()
-            .for_each(|(coords, r)| chunks.generate(coords, *r, false));
     }
 }

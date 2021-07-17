@@ -28,6 +28,19 @@ pub struct PeerProtocol {
     pub qw: f32,
 }
 
+#[derive(Debug, Clone)]
+pub struct EntityProtocol {
+    pub id: String,
+    pub r#type: String,
+    pub px: f32,
+    pub py: f32,
+    pub pz: f32,
+    pub qx: f32,
+    pub qy: f32,
+    pub qz: f32,
+    pub qw: f32,
+}
+
 #[derive(Debug)]
 pub struct UpdateProtocol {
     pub vx: i32,
@@ -50,6 +63,7 @@ pub struct MessageComponents {
     pub text: Option<String>,
     pub message: Option<ChatProtocol>,
     pub peers: Option<Vec<PeerProtocol>>,
+    pub entities: Option<Vec<EntityProtocol>>,
     pub chunks: Option<Vec<ChunkProtocol>>,
     pub updates: Option<Vec<UpdateProtocol>>,
 }
@@ -62,6 +76,7 @@ impl MessageComponents {
             text: None,
             message: None,
             peers: None,
+            entities: None,
             chunks: None,
             updates: None,
         }
@@ -117,6 +132,23 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
                 qy: peer.qy,
                 qz: peer.qz,
                 qw: peer.qw,
+            })
+            .collect()
+    }
+
+    if let Some(entities) = components.entities {
+        message.entities = entities
+            .into_iter()
+            .map(|entity| messages::Entity {
+                id: entity.id,
+                r#type: entity.r#type,
+                px: entity.px,
+                py: entity.py,
+                pz: entity.pz,
+                qx: entity.qx,
+                qy: entity.qy,
+                qz: entity.qz,
+                qw: entity.qw,
             })
             .collect()
     }

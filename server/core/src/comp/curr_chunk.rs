@@ -4,11 +4,15 @@ use specs::{Component, VecStorage};
 #[derive(Default)]
 pub struct CurrChunk {
     pub val: Option<Vec2<i32>>,
+    pub changed: bool,
 }
 
 impl CurrChunk {
     pub fn new() -> Self {
-        Self { val: None }
+        Self {
+            val: None,
+            changed: false,
+        }
     }
 
     pub fn diff(&self, chunk: &Vec2<i32>) -> bool {

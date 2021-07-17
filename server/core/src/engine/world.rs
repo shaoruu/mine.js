@@ -19,7 +19,8 @@ use crate::comp::id::Id;
 use crate::comp::name::Name;
 use crate::comp::rotation::Rotation;
 use crate::comp::view_radius::ViewRadius;
-use crate::sys::{BroadcastSystem, ChunkingSystem, PeersSystem};
+use crate::network::models::ChatType;
+use crate::sys::{BroadcastSystem, ChunkingSystem, GenerationSystem, PeersSystem};
 use crate::{
     comp::rigidbody::RigidBody,
     network::message::{JoinResult, Message},
@@ -30,7 +31,7 @@ use super::{
         constants::WORLD_DATA_FILE,
         engine::chunks::MeshLevel,
         network::models::{
-            create_chat_message, create_message, create_of_type, messages, ChatType, ChunkProtocol,
+            create_chat_message, create_message, create_of_type, messages, ChunkProtocol,
             MessageComponents, MessageType,
         },
         sys::PhysicsSystem,
@@ -442,7 +443,7 @@ impl World {
         player_updates.insert(player_id, msg.peers[0].clone());
     }
 
-    pub fn on_chat_message(&mut self, _player_id: usize, msg: messages::Message) {
+    pub fn on_chat_message(&mut self, player_id: usize, msg: messages::Message) {
         if let Some(message) = msg.message.clone() {
             let sender: String = message.sender;
             let body: String = message.body;
@@ -462,17 +463,20 @@ impl World {
                     create_chat_message(MessageType::Message, chat_type, "", body)
                 };
 
-                match body.len() {
-                    0 => {
-                        msgs.push(create_msg(ChatType::Error, "Unknown command."));
-                    }
-                    1 => {
-                        if body[0] == "save" {
+                if body.is_empty() {
+                    msgs.push(create_msg(ChatType::Error, "Unknown command."));
+                } else {
+                    match body[0] {
+                        "save" => {
                             self.save();
-                            msgs.push(create_msg(ChatType::Info, "World saved."));
+                            msgs.push(create_msg(ChatType::Info, "World has been saved."));
                         }
+                        "summon" => {
+                            self.test_entity(player_id);
+                            msgs.push(create_msg(ChatType::Info, "Summoned a test entity."))
+                        }
+                        _ => {}
                     }
-                    _ => {}
                 }
 
                 msgs.into_iter().for_each(|msg| {
@@ -482,6 +486,40 @@ impl World {
                 self.broadcast(&msg, vec![], vec![]);
             }
         }
+    }
+
+    pub fn test_entity(&mut self, player_id: usize) {
+        let players = self.read_resource::<Players>();
+        let player = players.get(&player_id);
+
+        if player.is_none() {
+            return;
+        }
+
+        let player = player.unwrap();
+
+        let bodies = self.ecs().read_component::<RigidBody>();
+        let body = bodies.get(player.entity).unwrap();
+
+        let pos = body.get_position();
+
+        drop(bodies);
+        drop(players);
+
+        let entity = self
+            .ecs_mut()
+            .create_entity()
+            .with(RigidBody::new(
+                Aabb::new(&pos, &Vec3(0.8, 0.8, 0.8)),
+                1.0,
+                1.0,
+                0.0,
+                0.0,
+                false,
+            ))
+            .with(Rotation::new(0.0, 0.0, 0.0, 0.0))
+            .with(CurrChunk::new())
+            .build();
     }
 
     pub fn sync_config(&mut self) {
@@ -547,6 +585,7 @@ impl World {
             .with(PhysicsSystem, "physics", &[])
             .with(PeersSystem, "peers", &["physics"])
             .with(ChunkingSystem, "chunking", &["peers"])
+            .with(GenerationSystem, "generation", &["chunking"])
             .with(BroadcastSystem, "broadcast", &["peers"])
             .build();
 
