@@ -435,6 +435,11 @@ impl World {
     pub fn on_peer(&mut self, player_id: usize, msg: messages::Message) {
         let mut player_updates = self.write_resource::<PlayerUpdates>();
         player_updates.insert(player_id, msg.peers[0].clone());
+
+        drop(player_updates);
+
+        let mut messages = self.write_resource::<MessagesQueue>();
+        messages.push((msg, vec![player_id]));
     }
 
     pub fn on_chat_message(&mut self, player_id: usize, msg: messages::Message) {

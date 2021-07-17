@@ -33,9 +33,7 @@ use server_common::{
     types::Block,
     vec::{Vec2, Vec3},
 };
-use server_utils::convert::{
-    get_chunk_name, map_voxel_to_chunk, map_voxel_to_chunk_local, map_world_to_voxel,
-};
+use server_utils::convert::{map_voxel_to_chunk, map_voxel_to_chunk_local, map_world_to_voxel};
 
 /// Light data of a single vertex
 struct VertexLight {
@@ -66,7 +64,7 @@ pub struct Chunks {
     pub builder: Arc<Builder>,
 
     caching: bool,
-    chunks: HashMap<String, Chunk>,
+    chunks: HashMap<Vec2<i32>, Chunk>,
     update_queue: HashMap<Vec2<i32>, Vec<VoxelUpdate>>,
     noise: Noise,
 
@@ -246,6 +244,10 @@ impl Chunks {
 
     pub fn len(&self) -> usize {
         self.chunks.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.chunks.is_empty()
     }
 
     /// Return all chunks as raw
@@ -461,13 +463,13 @@ impl Chunks {
             });
 
             for chunk in to_generate {
-                self.chunks.insert(chunk.name.to_owned(), chunk);
+                self.chunks.insert(chunk.coords.to_owned(), chunk);
             }
         }
 
         let to_decorate: Vec<Chunk> = to_decorate
             .iter()
-            .map(|coords| self.chunks.remove(&get_chunk_name(coords.0, coords.1)))
+            .map(|coords| self.chunks.remove(&coords))
             .flatten()
             .collect();
 
@@ -489,7 +491,7 @@ impl Chunks {
         for mut chunk in to_decorate {
             let coords = chunk.coords.to_owned();
             chunk.needs_decoration = false;
-            self.chunks.insert(chunk.name.to_owned(), chunk);
+            self.chunks.insert(chunk.coords.to_owned(), chunk);
             to_decorate_coords.push(coords);
         }
 
@@ -550,15 +552,13 @@ impl Chunks {
     /// Get a chunk reference from a coordinate
     #[inline]
     pub fn get_chunk(&self, coords: &Vec2<i32>) -> Option<&Chunk> {
-        let name = get_chunk_name(coords.0, coords.1);
-        self.chunks.get(&name)
+        self.chunks.get(&coords)
     }
 
     /// Get a mutable chunk reference from a coordinate
     #[inline]
     pub fn get_chunk_mut(&mut self, coords: &Vec2<i32>) -> Option<&mut Chunk> {
-        let name = get_chunk_name(coords.0, coords.1);
-        let chunk = self.chunks.get_mut(&name);
+        let chunk = self.chunks.get_mut(&coords);
         // ? does non-mutable chunks need to be cached?
         if self.caching && chunk.is_some() {
             self.chunk_cache.insert(coords.to_owned());
@@ -822,8 +822,8 @@ impl Chunks {
     }
 
     pub fn add_chunk(&mut self, chunk: Chunk) {
-        self.chunks.remove(&chunk.name);
-        self.chunks.insert(chunk.name.to_owned(), chunk);
+        self.chunks.remove(&chunk.coords);
+        self.chunks.insert(chunk.coords.to_owned(), chunk);
     }
 
     /// Update a voxel to a new type
@@ -1029,6 +1029,13 @@ impl Chunks {
         self.get_chunk_by_voxel_mut(vx, vy, vz)
             .unwrap()
             .needs_saving = true;
+
+        let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
+        neighbors.iter().for_each(|n_coords| {
+            if let Some(chunk) = self.get_chunk_mut(n_coords) {
+                chunk.needs_saving = true;
+            }
+        })
     }
 
     /// Propagate light on a chunk. Things this function does:
