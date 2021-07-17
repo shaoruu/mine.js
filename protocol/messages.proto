@@ -56,12 +56,8 @@ message ChatMessage {
 }
 
 message Entity {
-  enum Type {
-    BRUH = 0;
-  }
-
   string id = 1;
-  Type type = 2;
+  string type = 2;
   float px = 3;
   float py = 4;
   float pz = 5;
