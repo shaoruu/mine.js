@@ -284,6 +284,7 @@ class Chunk {
           if (this.isAdded) {
             this.mesh.add(altMesh);
           }
+          this.mesh.remove(temp);
           this.engine.rendering.scene.remove(temp);
           this.altMeshes.get(type)[i * (type === 'opaque' ? 1 : 2) + j] = altMesh;
         });
