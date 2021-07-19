@@ -57,6 +57,10 @@ where
             self.2 + other.2 * scale,
         )
     }
+
+    pub fn from_arr(arr: [T; 3]) -> Self {
+        Vec3(arr[0], arr[1], arr[2])
+    }
 }
 
 impl<T> Vec3<T>

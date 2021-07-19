@@ -1,0 +1,16 @@
+{
+  "etype": "Test",
+  "brain": "dumb-follow",
+  "rigidbody": {
+    "aabb": [0.2, 0.2, 0.2],
+    "mass": 1.0,
+    "friction": 1.0,
+    "restitution": 0.0,
+    "gravityMultiplier": 1.0,
+    "autoStep": false
+  },
+  "model": {
+    "material": "Test.mtl",
+    "object": "Test.obj"
+  }
+}

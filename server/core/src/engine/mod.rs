@@ -1,6 +1,7 @@
 pub mod chunk;
 pub mod chunks;
 pub mod clock;
+pub mod entities;
 pub mod kdtree;
 pub mod physics;
 pub mod players;

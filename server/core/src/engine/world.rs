@@ -29,6 +29,7 @@ use crate::{
     network::message::{JoinResult, Message},
 };
 
+use super::entities::Entities;
 use super::kdtree::KdTree;
 use super::{
     super::{
@@ -131,6 +132,7 @@ impl World {
         ecs.insert(Players::new());
         ecs.insert(PlayerUpdates::new());
         ecs.insert(MessagesQueue::new());
+        ecs.insert(Entities::new());
         ecs.insert(Physics::new(PhysicsOptions {
             gravity: Vec3(0.0, -24.0, 0.0),
             min_bounce_impulse: 0.1,

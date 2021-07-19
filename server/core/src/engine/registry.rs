@@ -20,6 +20,12 @@ pub struct Registry {
     name_map: HashMap<String, u32>,
 }
 
+impl Default for Registry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Registry {
     pub fn new() -> Self {
         let blocks_json: serde_json::Value =

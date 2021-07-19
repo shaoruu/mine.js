@@ -13,6 +13,12 @@ impl Rotation {
             val: Quaternion(qx, qy, qz, qw),
         }
     }
+
+    pub fn from_quaternion(quaternion: &Quaternion) -> Self {
+        Self {
+            val: quaternion.to_owned(),
+        }
+    }
 }
 
 impl Component for Rotation {
