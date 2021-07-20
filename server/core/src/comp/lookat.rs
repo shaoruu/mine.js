@@ -18,6 +18,14 @@ impl LookTarget {
             LookTarget::PLAYER(val) => val,
         }
     }
+
+    pub fn insert(target: &Self, val: LookTargetValue) -> Self {
+        match target {
+            LookTarget::ALL(_) => LookTarget::ALL(val),
+            LookTarget::ENTITY(_) => LookTarget::ENTITY(val),
+            LookTarget::PLAYER(_) => LookTarget::PLAYER(val),
+        }
+    }
 }
 
 #[derive(Component, Debug)]

@@ -11,6 +11,7 @@ class Entity {
   public target = new Vector3();
 
   private currLooking = new Vector3();
+  private bodyLooking = new Vector3();
 
   constructor(public entities: Entities, public etype: string, public prototype: Object3D) {
     const { children } = prototype;
@@ -37,6 +38,8 @@ class Entity {
   lerpAll = () => {
     if (this.target) {
       this.currLooking.lerp(this.target, 0.4);
+      this.bodyLooking.lerp(this.target, 0.05);
+      this.bodyLooking.y = this.mesh.position.y;
     }
   };
 
@@ -52,6 +55,7 @@ class Entity {
   playLookingAnimation = () => {
     if (this.target) {
       this.head.lookAt(this.currLooking);
+      this.mesh.lookAt(this.bodyLooking);
     } else {
       this.head.rotation.set(0, 0, 0);
     }

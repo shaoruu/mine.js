@@ -25,19 +25,12 @@ pub struct RigidBodyProto {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ModelProto {
-    pub material: String,
-    pub object: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct EntityPrototype {
     pub etype: String,
     pub brain: String,
     pub observe: String,
+    pub model: String,
     pub rigidbody: RigidBodyProto,
-    pub model: ModelProto,
 }
 
 pub type EntityPrototypes = HashMap<String, EntityPrototype>;

@@ -1,18 +1,6 @@
-import {
-  Object3D,
-  Vector3,
-  BoxBufferGeometry,
-  Mesh,
-  LoadingManager,
-  MeshBasicMaterial,
-  MeshPhongMaterial,
-  BoxHelper,
-  AmbientLight,
-} from 'three';
-import { Group, Matrix4, Quaternion } from 'three';
+import { Object3D, Vector3, LoadingManager, AmbientLight } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 import { AABB, Brain, PhysicalType, BodyOptionsType, Coords3, EntityType, createMaterial_ } from '../libs';
 import { Entity } from '../libs/entity';
@@ -23,10 +11,7 @@ import { Engine } from './engine';
 type EntityPrototype = {
   etype: string;
   brain: string;
-  model: {
-    material: string;
-    object: string;
-  };
+  model: string;
   rigidbody: {
     aabb: [number, number, number];
     autoStep: boolean;
@@ -58,12 +43,6 @@ class Entities {
 
       const keys = Object.keys(prototypes);
 
-      const manager = new LoadingManager();
-      const mtlLoader = new MTLLoader();
-
-      const path = Helper.getServerURL({ path: '/models/', clear: true }).toString();
-      mtlLoader.setPath(path);
-
       engine.rendering.scene.add(new AmbientLight());
 
       let count = 0;
@@ -72,12 +51,9 @@ class Entities {
 
         const prototype = new Entity(this, name, obj);
 
-        prototype.mesh.position.set(0, 55, -3);
         const scale = prototypes[name].rigidbody.aabb;
+        prototype.mesh.position.set(0, 55, -3);
         prototype.mesh.scale.set(...scale);
-
-        const helper = new BoxHelper(prototype.mesh, 0xffff00);
-        prototype.mesh.add(helper);
 
         this.prototypes.set(name.toLowerCase(), prototype);
 
@@ -86,29 +62,14 @@ class Entities {
         }
       };
 
+      const manager = new LoadingManager();
       const gltfLoader = new GLTFLoader(manager);
-      gltfLoader.setPath(path);
+      gltfLoader.setPath(Helper.getServerURL({ path: '/models/', clear: true }).toString());
 
       keys.forEach((name) => {
-        const {
-          model: { object },
-        } = prototypes[name];
+        const { model } = prototypes[name];
 
-        gltfLoader.load(object, (obj) => {
-          function dumpObject(obj, lines = [], isLast = true, prefix = '') {
-            const localPrefix = isLast ? '└─' : '├─';
-            lines.push(`${prefix}${prefix ? localPrefix : ''}${obj.name || '*no-name*'} [${obj.type}]`);
-            const newPrefix = prefix + (isLast ? '  ' : '│ ');
-            const lastNdx = obj.children.length - 1;
-            obj.children.forEach((child, ndx) => {
-              const isLast = ndx === lastNdx;
-              dumpObject(child, lines, isLast, newPrefix);
-            });
-            return lines;
-          }
-
-          console.log(dumpObject(obj.scene).join('\n'));
-
+        gltfLoader.load(model, (obj) => {
           onFinish(name, obj.scene);
         });
       });
@@ -151,7 +112,6 @@ class Entities {
   };
 
   getObject = (type: string): Entity => {
-    console.log(this.prototypes);
     return this.prototypes.get(type.toLowerCase()).clone();
   };
 

@@ -172,6 +172,18 @@ class Helper {
     return url;
   };
 
+  public static dumpObject = (obj, lines = [], isLast = true, prefix = '') => {
+    const localPrefix = isLast ? '└─' : '├─';
+    lines.push(`${prefix}${prefix ? localPrefix : ''}${obj.name || '*no-name*'} [${obj.type}]`);
+    const newPrefix = prefix + (isLast ? '  ' : '│ ');
+    const lastNdx = obj.children.length - 1;
+    obj.children.forEach((child, ndx) => {
+      const isLast = ndx === lastNdx;
+      Helper.dumpObject(child, lines, isLast, newPrefix);
+    });
+    return lines;
+  };
+
   public static round = (n: number, digits: number) => {
     return Math.round(n * 10 ** digits) / 10 ** digits;
   };

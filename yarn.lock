@@ -405,6 +405,11 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/svelte/-/svelte-1.0.13.tgz#2fa34376627192c0d643ce54964915e2bd3a58e4"
   integrity sha512-5lYJP45Xllo4yE/RUBccBT32eBlRDbqN8r1/MIvQbKxW3aFqaYPCNgm8D5V20X4ShHcwvYWNlKg3liDh1MlBoA==
 
+"@tweakpane/core@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@tweakpane/core/-/core-1.0.4.tgz#68a2749d78bd2a903f391a92ea95eb5d4e1f49a9"
+  integrity sha512-T0Skf8bOXVGmy2YzYirjB1leWunSG9CTeVlQcsk4FLATZP0iMYWdU213bA/04i9wyDkfoIkxQcOQ/ZVCqlt2Qw==
+
 "@tweenjs/tween.js@^18":
   version "18.6.4"
   resolved "https://registry.yarnpkg.com/@tweenjs/tween.js/-/tween.js-18.6.4.tgz#40a3d0a93647124872dec8e0fd1bd5926695b6ca"
@@ -8218,6 +8223,11 @@ tunnel@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/tunnel/-/tunnel-0.0.6.tgz#72f1314b34a5b192db012324df2cc587ca47f92c"
   integrity sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==
+
+tweakpane@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/tweakpane/-/tweakpane-3.0.3.tgz#a0406bd1cd90f9bb35b3023a73305d5848ea10fe"
+  integrity sha512-o+S1jWBQFlTSxj1gxIGBx3FuHy+8h7SCTPndSPnZ+fu4VlSFfEXk/jnrLlkPci9Uw5EW48Ig6uYHqcgmpoqmTg==
 
 tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"

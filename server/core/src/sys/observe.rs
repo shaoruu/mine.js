@@ -1,3 +1,6 @@
+use libflate::lz77::MAX_DISTANCE;
+use server_common::{math::approx_equals, vec::Vec3};
+use server_utils::raycast;
 use specs::{ReadExpect, ReadStorage, System, WriteStorage};
 
 use crate::{
@@ -5,7 +8,7 @@ use crate::{
         lookat::{LookAt, LookTarget},
         rigidbody::RigidBody,
     },
-    engine::kdtree::KdTree,
+    engine::{chunks::Chunks, kdtree::KdTree},
 };
 
 pub struct ObserveSystem;
@@ -13,6 +16,7 @@ pub struct ObserveSystem;
 impl<'a> System<'a> for ObserveSystem {
     type SystemData = (
         ReadExpect<'a, KdTree>,
+        ReadExpect<'a, Chunks>,
         ReadStorage<'a, RigidBody>,
         WriteStorage<'a, LookAt>,
     );
@@ -20,10 +24,12 @@ impl<'a> System<'a> for ObserveSystem {
     fn run(&mut self, data: Self::SystemData) {
         use specs::Join;
 
-        let (tree, bodies, mut look_ats) = data;
+        let (tree, chunks, bodies, mut look_ats) = data;
+
+        let test_solid = |x: i32, y: i32, z: i32| -> bool { chunks.get_solidity_by_voxel(x, y, z) };
 
         for (body, look_at) in (&bodies, &mut look_ats).join() {
-            let position = body.get_position();
+            let mut position = body.get_position();
 
             let closest_arr = (match look_at.0 {
                 LookTarget::ALL(_) => tree.search(&position, 2),
@@ -38,7 +44,7 @@ impl<'a> System<'a> for ObserveSystem {
                 continue;
             }
 
-            let closest = if closest_arr.is_empty() {
+            let mut closest = if closest_arr.is_empty() {
                 None
             } else if closest_arr.len() == 1 {
                 Some(closest_arr[0].clone())
@@ -46,11 +52,28 @@ impl<'a> System<'a> for ObserveSystem {
                 Some(closest_arr[1].clone())
             };
 
-            look_at.0 = match look_at.0 {
-                LookTarget::ALL(_) => LookTarget::ALL(closest),
-                LookTarget::ENTITY(_) => LookTarget::ENTITY(closest),
-                LookTarget::PLAYER(_) => LookTarget::PLAYER(closest),
-            };
+            // check if there are any blocks in between
+            if let Some(c) = &closest {
+                let mut dir = c.clone().sub(&position);
+                let dist = dir.len();
+
+                if !approx_equals(&dist, &0.0) {
+                    let hit = raycast::trace(
+                        dist,
+                        &test_solid,
+                        &mut position,
+                        &mut dir,
+                        &mut Vec3::default(),
+                        &mut Vec3::default(),
+                    );
+
+                    if hit {
+                        closest = None;
+                    }
+                }
+            }
+
+            look_at.0 = LookTarget::insert(&look_at.0, closest);
         }
     }
 }

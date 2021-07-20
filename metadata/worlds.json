@@ -34,6 +34,7 @@
       "name": "z-dev-terrains",
       "time": 0,
       "tickSpeed": 0,
+      "save": false,
       "generation": "hilly",
       "description": "this ain't saved!"
     }

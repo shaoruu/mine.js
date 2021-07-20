@@ -10,8 +10,5 @@
     "gravityMultiplier": 1.0,
     "autoStep": false
   },
-  "model": {
-    "material": "Test.mtl",
-    "object": "Test.gltf"
-  }
+  "model": "Test.gltf"
 }

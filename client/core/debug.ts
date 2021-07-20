@@ -1,5 +1,7 @@
 import { GUI } from 'dat.gui';
 import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Raycaster, Vector2 } from 'three';
+import { Pane } from 'tweakpane';
+
 // import { AxesHelper, GridHelper } from 'three';
 
 import { Helper } from '../utils';
@@ -9,7 +11,7 @@ import { Engine } from '.';
 type FormatterType = (input: any) => string;
 
 class Debug {
-  public gui: dat.GUI;
+  public gui: Pane;
   public wrapper: HTMLDivElement;
   public dataWrapper: HTMLDivElement;
   public dataEntries: {
@@ -30,11 +32,7 @@ class Debug {
 
   constructor(public engine: Engine) {
     // dat.gui
-    this.gui = new GUI({
-      width: 300,
-      closed: true,
-      hideable: false,
-    });
+    this.gui = new Pane();
 
     const {
       world: { chunkSize, dimension, maxHeight },
@@ -46,7 +44,7 @@ class Debug {
     );
 
     // move dat.gui panel to the top
-    const { parentElement } = this.gui.domElement;
+    const parentElement = this.gui.element;
     if (parentElement) {
       parentElement.parentNode.removeChild(parentElement);
     }
@@ -72,9 +70,9 @@ class Debug {
         alphaTest: 0.5,
       });
       this.atlasTest = new Mesh(testBlock, testMat);
-      this.atlasTest.position.set(0, 20, 0);
+      this.atlasTest.position.set(0, 0, -5);
       this.atlasTest.visible = false;
-      this.engine.rendering.scene.add(this.atlasTest);
+      this.engine.camera.threeCamera.add(this.atlasTest);
     });
   }
 
@@ -110,10 +108,10 @@ class Debug {
       justifyContent: 'flex-start',
     });
 
-    Helper.applyStyle(this.gui.domElement, {
+    Helper.applyStyle(this.gui.element, {
       position: 'absolute',
       top: '0',
-      right: '0',
+      right: '20px',
     });
   };
 
@@ -121,58 +119,73 @@ class Debug {
     const { domElement } = this.engine.container;
     domElement.appendChild(this.wrapper);
     this.wrapper.appendChild(this.dataWrapper);
-    this.wrapper.appendChild(this.gui.domElement);
+    this.wrapper.appendChild(this.gui.element);
   };
 
   setupAll = () => {
     // RENDERING
-    const { rendering, registry, player, world, camera } = this.engine;
+    const { registry, player, world, camera } = this.engine;
 
     // ENGINE
-    const engineFolder = this.gui.addFolder('Engine');
+    const engineFolder = this.gui.addFolder({ title: 'Engine', expanded: false });
     engineFolder
-      .add(this.engine, 'tickSpeed', 0, 100, 0.01)
-      .onChange((value) => this.engine.setTick(value))
-      .name('Tick speed');
+      .addInput(this.engine, 'tickSpeed', {
+        min: 0,
+        max: 100,
+        step: 0.01,
+        label: 'tick speed',
+      })
+      .on('change', (ev) => this.engine.setTick(ev.value));
 
-    // RENDERING
-    const renderingFolder = this.gui.addFolder('Rendering');
-    renderingFolder
-      .addColor(rendering.options, 'clearColor')
-      .onFinishChange((value) => rendering.renderer.setClearColor(value))
-      .name('Clear color');
-
-    // WORLD
-    const worldFolder = this.gui.addFolder('World');
+    const worldFolder = this.gui.addFolder({ title: 'World', expanded: false });
     const worldDebugConfigs = { time: world.sky.tracker.time };
     worldFolder
-      .add(world.options, 'renderRadius', 1, 20, 1)
-      .onFinishChange((value) => {
-        world.updateRenderRadius(value);
+      .addInput(world.options, 'renderRadius', {
+        min: 1,
+        max: 20,
+        step: 1,
+        label: 'render radius',
       })
-      .name('Render radius');
-    worldFolder.add(world.options, 'requestRadius', 1, 20, 1).name('Request radius');
+      .on('change', (ev) => {
+        world.updateRenderRadius(ev.value);
+      });
+    worldFolder.addInput(world.options, 'requestRadius', {
+      min: 1,
+      max: 20,
+      step: 1,
+      label: 'request radius',
+    });
     worldFolder
-      .add(worldDebugConfigs, 'time', 0, 2400, 10)
-      .onFinishChange((value) => world.setTime(value))
-      .name('Time value');
-    const aoFolder = worldFolder.addFolder('AO');
-    aoFolder.add(registry.aoUniform.value, 'x', 0, 255, 1).name('Level 0');
-    aoFolder.add(registry.aoUniform.value, 'y', 0, 255, 1).name('Level 1');
-    aoFolder.add(registry.aoUniform.value, 'z', 0, 255, 1).name('Level 2');
-    aoFolder.add(registry.aoUniform.value, 'w', 0, 255, 1).name('Level 3');
+      .addInput(worldDebugConfigs, 'time', { min: 0, max: 2400, step: 10, label: 'time value' })
+      .on('change', (ev) => world.setTime(ev.value));
+    const aoFolder = worldFolder.addFolder({ title: 'AO' });
+    aoFolder.addInput(registry.aoUniform, 'value', {
+      x: { min: 0, max: 255, step: 1 },
+      y: { min: 0, max: 255, step: 1 },
+      z: { min: 0, max: 255, step: 1 },
+      w: { min: 0, max: 255, step: 1 },
+    });
 
     // PLAYER
-    const playerFolder = this.gui.addFolder('Player');
-    playerFolder.add(player.options, 'acceleration', 0, 5, 0.01).name('Acceleration');
-    playerFolder.add(player.options, 'flyingInertia', 0, 5, 0.01).name('Flying inertia');
+    const playerFolder = this.gui.addFolder({ title: 'Player', expanded: false });
+    playerFolder.addInput(player.options, 'acceleration', {
+      min: 0,
+      max: 5,
+      step: 0.01,
+      label: 'acceleration',
+    });
+    playerFolder.addInput(player.options, 'flyingInertia', { min: 0, max: 5, step: 0.01, label: 'flying inertia' });
 
     // CAMERA
-    const cameraFolder = this.gui.addFolder('Camera');
+    const cameraFolder = this.gui.addFolder({ title: 'Camera' });
     cameraFolder
-      .add(camera.threeCamera, 'fov', 40, 120, 0.01)
-      .name('FOV')
-      .onChange(() => camera.threeCamera.updateProjectionMatrix());
+      .addInput(camera.threeCamera, 'fov', {
+        min: 40,
+        max: 120,
+        step: 0.01,
+        label: 'FOV',
+      })
+      .on('change', () => camera.threeCamera.updateProjectionMatrix());
 
     // const cameraFolder = this.gui.addFolder('camera');
     this.registerDisplay('FPS', this, 'fps');
@@ -184,35 +197,20 @@ class Debug {
     this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
 
     // REGISTRY
-    const registryFolder = this.gui.addFolder('Registry');
-    registryFolder.add(
-      {
-        'Toggle atlas': () => {
-          this.atlasTest.visible = !this.atlasTest.visible;
-        },
-      },
-      'Toggle atlas',
-    );
-    registryFolder.add(
-      {
-        'Toggle wireframe': () => {
-          registry.opaqueChunkMaterial.wireframe = !registry.opaqueChunkMaterial.wireframe;
-          registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
-        },
-      },
-      'Toggle wireframe',
-    );
+    const registryFolder = this.gui.addFolder({ title: 'Registry', expanded: false });
+    registryFolder.addButton({ title: 'Toggle', label: 'atlas' }).on('click', () => {
+      this.atlasTest.visible = !this.atlasTest.visible;
+    });
+    registryFolder.addButton({ title: 'Toggle', label: 'wireframe' }).on('click', () => {
+      registry.opaqueChunkMaterial.wireframe = !registry.opaqueChunkMaterial.wireframe;
+      registry.transparentChunkMaterials.forEach((m) => (m.wireframe = !m.wireframe));
+    });
 
     // DEBUG
-    const debugFolder = this.gui.addFolder('Debug');
-    debugFolder.add(
-      {
-        'Toggle chunk highlight': () => {
-          this.chunkHighlight.visible = !this.chunkHighlight.visible;
-        },
-      },
-      'Toggle chunk highlight',
-    );
+    const debugFolder = this.gui.addFolder({ title: 'Debug', expanded: false });
+    debugFolder.addButton({ title: 'Toggle', label: 'chunk highlight' }).on('click', () => {
+      this.chunkHighlight.visible = !this.chunkHighlight.visible;
+    });
   };
 
   setupInputs = () => {
@@ -286,8 +284,6 @@ class Debug {
         (cz + 0.5) * chunkSize * dimension,
       );
     }
-
-    this.raycastTest();
   };
 
   toggle = () => {
@@ -306,15 +302,6 @@ class Debug {
     };
     this.dataEntries.push(newEntry);
     this.dataWrapper.insertBefore(wrapper, this.dataWrapper.firstChild);
-  };
-
-  raycastTest = () => {
-    // const getBlockMeta
-
-    const { camera, world, config } = this.engine;
-    const {
-      world: { dimension },
-    } = config;
   };
 
   calculateFPS = (function () {

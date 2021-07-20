@@ -393,7 +393,7 @@ class Sky {
       : MathUtils.lerp(this.skyBox.mesh.rotation.z, rotation, this.options.lerpFactor);
   };
 
-  tick = (delta = 0, isFastForward = false) => {
+  tick = (delta = 0, isFastForward = false, overwrittenTick = 0.1) => {
     const { tracker } = this;
 
     if (!tracker.initialized) {
@@ -402,7 +402,7 @@ class Sky {
     }
 
     // add speed to time, and spin box meshes
-    const speed = this.rendering.engine.tickSpeed;
+    const speed = isFastForward ? overwrittenTick : this.rendering.engine.tickSpeed;
     tracker.time += speed * delta;
 
     // sync with server
