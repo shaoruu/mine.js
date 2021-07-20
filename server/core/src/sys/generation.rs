@@ -22,7 +22,7 @@ impl<'a> System<'a> for GenerationSystem {
         for (radius, curr_chunk) in (&radiuses, &mut curr_chunks).join() {
             if let Some(coords) = &curr_chunk.val {
                 if curr_chunk.changed {
-                    chunks.generate(coords, radius.val, false);
+                    chunks.generate(coords, radius.0, false);
                     curr_chunk.changed = false;
                 }
             }

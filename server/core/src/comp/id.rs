@@ -1,13 +1,11 @@
 use specs::{Component, VecStorage};
 
 #[derive(Default)]
-pub struct Id {
-    pub val: usize,
-}
+pub struct Id(pub usize);
 
 impl Id {
     pub fn new(id: usize) -> Self {
-        Self { val: id }
+        Self(id)
     }
 }
 

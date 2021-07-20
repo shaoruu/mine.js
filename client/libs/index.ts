@@ -5,6 +5,7 @@ export * from './chat-history';
 export * from './clock';
 export * from './clouds';
 export * from './message';
+export * from './overwrites';
 export * from './peer';
 export * from './physics';
 export * from './pointerlock-controls';

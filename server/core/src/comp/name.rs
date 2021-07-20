@@ -1,15 +1,11 @@
 use specs::{Component, VecStorage};
 
 #[derive(Default)]
-pub struct Name {
-    pub val: Option<String>,
-}
+pub struct Name(pub Option<String>);
 
 impl Name {
     pub fn new(name: &Option<String>) -> Self {
-        Self {
-            val: name.to_owned(),
-        }
+        Self(name.to_owned())
     }
 }
 

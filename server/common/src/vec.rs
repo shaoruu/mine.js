@@ -117,3 +117,13 @@ impl<T: Num + Clone> IndexMut<usize> for Vec3<T> {
         }
     }
 }
+
+impl<T: Num + Clone> From<Vec<T>> for Vec3<T> {
+    fn from(vec: Vec<T>) -> Self {
+        let x = vec[0].clone();
+        let y = vec[1].clone();
+        let z = vec[2].clone();
+
+        Self(x, y, z)
+    }
+}

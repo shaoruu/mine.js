@@ -1,23 +1,18 @@
-use server_common::quaternion::Quaternion;
 use specs::{Component, VecStorage};
+
+use server_common::quaternion::Quaternion;
 
 // consider making this more implicit
 #[derive(Default)]
-pub struct Rotation {
-    pub val: Quaternion,
-}
+pub struct Rotation(pub Quaternion);
 
 impl Rotation {
     pub fn new(qx: f32, qy: f32, qz: f32, qw: f32) -> Self {
-        Self {
-            val: Quaternion(qx, qy, qz, qw),
-        }
+        Self(Quaternion(qx, qy, qz, qw))
     }
 
     pub fn from_quaternion(quaternion: &Quaternion) -> Self {
-        Self {
-            val: quaternion.to_owned(),
-        }
+        Self(quaternion.to_owned())
     }
 }
 

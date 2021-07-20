@@ -65,6 +65,7 @@ message Entity {
   float qy = 7;
   float qz = 8;
   float qw = 9;
+  repeated float lookAt = 10 [packed=true];
 }
 
 message Message {

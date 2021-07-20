@@ -5,6 +5,8 @@ use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::time::Duration;
 
+use crate::engine::entities::Entities;
+
 use super::super::engine::{
     chunks::{Chunks, MeshLevel},
     clock::Clock,
@@ -223,6 +225,7 @@ impl Handler<GetWorld> for WsServer {
 
         let clock = world.read_resource::<Clock>();
         let chunks = world.read_resource::<Chunks>();
+        let entities = world.read_resource::<Entities>();
 
         let config = chunks.config.clone();
         let registry = chunks.registry.clone();
@@ -240,6 +243,7 @@ impl Handler<GetWorld> for WsServer {
             time: clock.time,
             blocks: registry.blocks.to_owned(),
             ranges: registry.ranges.to_owned(),
+            entities: entities.get_all(),
             uv_side_count: registry.uv_side_count,
             uv_texture_size: registry.uv_texture_size,
         })

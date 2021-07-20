@@ -4,6 +4,7 @@ use actix::Recipient;
 use log::info;
 
 use ansi_term::Colour::Yellow;
+use server_common::quaternion::Quaternion;
 use specs::shred::{Fetch, FetchMut, Resource};
 
 use std::io::Write;
@@ -17,12 +18,14 @@ use serde::{Deserialize, Serialize};
 use crate::comp::curr_chunk::CurrChunk;
 use crate::comp::etype::EType;
 use crate::comp::id::Id;
+use crate::comp::lookat::LookAt;
 use crate::comp::name::Name;
 use crate::comp::rotation::Rotation;
 use crate::comp::view_radius::ViewRadius;
 use crate::network::models::ChatType;
 use crate::sys::{
-    BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, PeersSystem, SearchSystem,
+    BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, ObserveSystem, PeersSystem,
+    SearchSystem,
 };
 use crate::{
     comp::rigidbody::RigidBody,
@@ -122,6 +125,7 @@ impl World {
         ecs.register::<Rotation>();
         ecs.register::<CurrChunk>();
         ecs.register::<ViewRadius>();
+        ecs.register::<LookAt>();
         ecs.register::<EType>();
 
         // ECS Resources
@@ -514,20 +518,36 @@ impl World {
         drop(bodies);
         drop(players);
 
-        self.ecs_mut()
-            .create_entity()
-            .with(EType::new("cow"))
-            .with(RigidBody::new(
-                Aabb::new(&Vec3(pos.0, pos.1 + 20.0, pos.2), &Vec3(0.2, 0.2, 0.2)),
-                1.0,
-                1.0,
-                0.0,
-                1.0,
-                false,
-            ))
-            .with(Rotation::new(0.0, 0.0, 0.0, 0.0))
-            .with(CurrChunk::new())
-            .build();
+        let entities = self.read_resource::<Entities>();
+        let prototype = entities
+            .get_prototype("Test")
+            .unwrap_or_else(|| panic!("Prototype not found: Test"))
+            .clone();
+
+        drop(entities);
+
+        Entities::spawn_entity(
+            &prototype,
+            self.ecs_mut(),
+            "Test",
+            &Vec3(pos.0, pos.1 + 20.0, pos.2),
+            &Quaternion(0.0, 0.0, 0.0, 0.0),
+        );
+
+        // self.ecs_mut()
+        //     .create_entity()
+        //     .with(EType::new("Test"))
+        //     .with(RigidBody::new(
+        //         Aabb::new( &Vec3(0.2, 0.2, 0.2)),
+        //         1.0,
+        //         1.0,
+        //         0.0,
+        //         1.0,
+        //         false,
+        //     ))
+        //     .with(Rotation::new(0.0, 0.0, 0.0, 0.0))
+        //     .with(CurrChunk::new())
+        //     .build();
     }
 
     pub fn sync_config(&mut self) {
@@ -594,9 +614,10 @@ impl World {
             .with(PeersSystem, "peers", &["physics"])
             .with(ChunkingSystem, "chunking", &["peers"])
             .with(GenerationSystem, "generation", &["chunking"])
+            .with(SearchSystem, "search", &["peers"])
+            .with(ObserveSystem, "observe", &["search"])
             .with(EntitiesSystem, "entities", &["chunking"])
             .with(BroadcastSystem, "broadcast", &["peers"])
-            .with(SearchSystem, "search", &["entities", "peers"])
             .build();
 
         dispatcher.dispatch(&self.ecs);

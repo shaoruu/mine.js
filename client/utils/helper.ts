@@ -6,6 +6,7 @@ import { Coords2, Coords3 } from '../libs/types';
 
 type ServerUrlOptions = {
   path?: string;
+  clear?: boolean;
   params?: { [key: string]: any };
 };
 
@@ -141,13 +142,17 @@ class Helper {
   };
 
   public static getServerURL = (options: ServerUrlOptions = {}) => {
-    const { path, params } = {
+    const { path, params, clear } = {
       path: '/',
       params: {},
       ...options,
     };
 
     let url = new Url();
+
+    if (clear) {
+      url.clearQuery();
+    }
 
     if (url.protocol === 'app') {
       url = new Url('http://localhost:4000');

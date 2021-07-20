@@ -1,13 +1,11 @@
 use specs::{Component, VecStorage};
 
 #[derive(Default)]
-pub struct ViewRadius {
-    pub val: i16,
-}
+pub struct ViewRadius(pub i16);
 
 impl ViewRadius {
-    pub fn new(id: i16) -> Self {
-        Self { val: id }
+    pub fn new(r: i16) -> Self {
+        Self(r)
     }
 }
 

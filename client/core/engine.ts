@@ -166,6 +166,11 @@ class Engine extends EventEmitter {
   public tickSpeed = 0.1;
   public started = false;
 
+  // TODO: make a loader?
+  public texturesLoaded = false;
+  public entitiesLoaded = false;
+  public assetsLoaded = false;
+
   constructor(worldData, params: DeepPartial<ConfigType> = {}) {
     super();
 
@@ -247,11 +252,33 @@ class Engine extends EventEmitter {
     this.boot();
 
     this.emit('ready');
+
+    this.on('focus-loaded', () => {
+      this.texturesLoaded = true;
+      if (this.entitiesLoaded) this.assetsLoaded = true;
+    });
+    this.on('entities-loaded', () => {
+      this.entitiesLoaded = true;
+      if (this.texturesLoaded) this.assetsLoaded = true;
+    });
   }
 
   load = (worldData) => {
-    const { world, registry } = this.config;
-    const { chunkSize, dimension, maxHeight, subChunks, name, blocks, ranges, uvSideCount, uvTextureSize } = worldData;
+    const { world, registry, entities } = this.config;
+    const {
+      chunkSize,
+      dimension,
+      maxHeight,
+      subChunks,
+      name,
+      blocks,
+      ranges,
+      uvSideCount,
+      uvTextureSize,
+      entities: prototypes,
+    } = worldData;
+
+    entities.prototypes = prototypes;
 
     registry.blocks = blocks;
     registry.ranges = ranges;

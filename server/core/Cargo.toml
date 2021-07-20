@@ -27,7 +27,7 @@ rand = "0.8.3"
 rayon = "1.5.1"
 serde = "1.0.126"
 serde_json = "1.0"
-specs = "0.17.0"
+specs = { version = "0.17.0", features = ["specs-derive"] }
 
 [build-dependencies]
-prost-build = "0.7.0"
+prost-build = "0.8.0"

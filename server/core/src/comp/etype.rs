@@ -1,15 +1,11 @@
 use specs::{Component, VecStorage};
 
 #[derive(Default)]
-pub struct EType {
-    pub val: String,
-}
+pub struct EType(pub String);
 
 impl EType {
     pub fn new(val: &str) -> Self {
-        Self {
-            val: val.to_owned(),
-        }
+        Self(val.to_owned())
     }
 }
 

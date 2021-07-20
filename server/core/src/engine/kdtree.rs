@@ -52,19 +52,19 @@ impl KdTree {
             .expect("Unable to construct KdTree.");
     }
 
-    pub fn search(&self, point: Vec3<f32>, count: usize) -> Vec<(f32, &Entity)> {
+    pub fn search(&self, point: &Vec3<f32>, count: usize) -> Vec<(f32, &Entity)> {
         self.union
             .nearest(&[point.0, point.1, point.2], count, &squared_euclidean)
             .expect("Unable to search KdTree.")
     }
 
-    pub fn search_player(&self, point: Vec3<f32>, count: usize) -> Vec<(f32, &Entity)> {
+    pub fn search_player(&self, point: &Vec3<f32>, count: usize) -> Vec<(f32, &Entity)> {
         self.players
             .nearest(&[point.0, point.1, point.2], count, &squared_euclidean)
             .expect("Unable to search KdTree.")
     }
 
-    pub fn search_entity(&self, point: Vec3<f32>, count: usize) -> Vec<(f32, &Entity)> {
+    pub fn search_entity(&self, point: &Vec3<f32>, count: usize) -> Vec<(f32, &Entity)> {
         self.entities
             .nearest(&[point.0, point.1, point.2], count, &squared_euclidean)
             .expect("Unable to search KdTree.")

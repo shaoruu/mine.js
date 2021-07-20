@@ -1,6 +1,7 @@
 {
   "etype": "Test",
   "brain": "dumb-follow",
+  "observe": "all",
   "rigidbody": {
     "aabb": [0.2, 0.2, 0.2],
     "mass": 1.0,
@@ -11,6 +12,6 @@
   },
   "model": {
     "material": "Test.mtl",
-    "object": "Test.obj"
+    "object": "Test.gltf"
   }
 }

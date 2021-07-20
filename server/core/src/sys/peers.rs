@@ -52,7 +52,7 @@ impl<'a> System<'a> for PeersSystem {
         let mut peers_update = HashMap::new();
 
         for (id, name, body, rotation) in (&ids, &mut names, &mut bodies, &mut rotations).join() {
-            if let Some(update) = updates.remove(&id.val) {
+            if let Some(update) = updates.remove(&id.0) {
                 let messages::Peer {
                     id: peer_id,
                     name: new_name,
@@ -67,7 +67,7 @@ impl<'a> System<'a> for PeersSystem {
                 } = update;
 
                 peers_update.insert(
-                    id.val,
+                    id.0,
                     PeerProtocol {
                         id: peer_id,
                         name: new_name.clone(),
@@ -81,7 +81,7 @@ impl<'a> System<'a> for PeersSystem {
                     },
                 );
 
-                if name.val.is_none() {
+                if name.0.is_none() {
                     let message =
                         format!("{} joined the world {}", new_name, world_name.to_string());
 
@@ -94,14 +94,14 @@ impl<'a> System<'a> for PeersSystem {
                         format!("{} joined the game", new_name).as_str(),
                     );
 
-                    messages.push((new_message, None, None, Some(id.val.to_owned())));
+                    messages.push((new_message, None, None, Some(id.0.to_owned())));
                 }
 
-                name.val = Some(new_name.clone());
+                name.0 = Some(new_name.clone());
                 body.set_position(&Vec3(px, py, pz));
-                rotation.val = Quaternion(qx, qy, qz, qw);
+                rotation.0 = Quaternion(qx, qy, qz, qw);
 
-                if let Some(player) = players.get_mut(&id.val) {
+                if let Some(player) = players.get_mut(&id.0) {
                     player.name = Some(new_name);
                 }
             }
@@ -110,7 +110,7 @@ impl<'a> System<'a> for PeersSystem {
         for id in ids.join() {
             let updates = peers_update
                 .iter()
-                .filter(|(&i, ..)| i != id.val)
+                .filter(|(&i, ..)| i != id.0)
                 .collect::<HashMap<_, _>>()
                 .values()
                 .map(|p| p.to_owned().to_owned())
@@ -121,7 +121,7 @@ impl<'a> System<'a> for PeersSystem {
                 components.peers = Some(updates);
 
                 let message = create_message(components);
-                messages.push((message, Some(vec![id.val]), None, Some(id.val)));
+                messages.push((message, Some(vec![id.0]), None, Some(id.0)));
             }
         }
     }

@@ -4,7 +4,13 @@ use serde::{Deserialize, Serialize};
 use server_common::{aabb::Aabb, quaternion::Quaternion, vec::Vec3};
 use specs::{Builder, Entity as ECSEntity, World, WorldExt};
 
-use crate::comp::{curr_chunk::CurrChunk, etype::EType, rigidbody::RigidBody, rotation::Rotation};
+use crate::comp::{
+    curr_chunk::CurrChunk,
+    etype::EType,
+    lookat::{LookAt, LookTarget},
+    rigidbody::RigidBody,
+    rotation::Rotation,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -29,12 +35,15 @@ pub struct ModelProto {
 pub struct EntityPrototype {
     pub etype: String,
     pub brain: String,
+    pub observe: String,
     pub rigidbody: RigidBodyProto,
     pub model: ModelProto,
 }
 
+pub type EntityPrototypes = HashMap<String, EntityPrototype>;
+
 pub struct Entities {
-    prototypes: HashMap<String, EntityPrototype>,
+    prototypes: EntityPrototypes,
 }
 
 impl Default for Entities {
@@ -48,7 +57,7 @@ impl Entities {
         let entities_json: serde_json::Value =
             serde_json::from_reader(File::open("metadata/entities.json").unwrap()).unwrap();
 
-        let mut prototypes: HashMap<String, EntityPrototype> = HashMap::new();
+        let mut prototypes: EntityPrototypes = HashMap::new();
 
         for value in entities_json.as_object().unwrap().values() {
             let value_str = value.as_str().unwrap();
@@ -62,21 +71,21 @@ impl Entities {
         Self { prototypes }
     }
 
+    pub fn get_all(&self) -> EntityPrototypes {
+        self.prototypes.clone()
+    }
+
     pub fn get_prototype(&self, etype: &str) -> Option<&EntityPrototype> {
         self.prototypes.get(etype)
     }
 
     pub fn spawn_entity(
-        &self,
+        prototype: &EntityPrototype,
         ecs: &mut World,
         etype: &str,
         position: &Vec3<f32>,
         rotation: &Quaternion,
     ) -> ECSEntity {
-        let prototype = self
-            .get_prototype(etype)
-            .unwrap_or_else(|| panic!("Prototype not found: {}", etype));
-
         let RigidBodyProto {
             aabb,
             mass,
@@ -85,6 +94,8 @@ impl Entities {
             gravity_multiplier,
             auto_step,
         } = prototype.rigidbody;
+
+        let observe = &prototype.observe;
 
         ecs.create_entity()
             .with(EType::new(etype))
@@ -98,6 +109,13 @@ impl Entities {
             ))
             .with(Rotation::from_quaternion(&rotation))
             .with(CurrChunk::new())
+            .with(LookAt(if observe == "all" {
+                LookTarget::ALL(None)
+            } else if observe == "player" {
+                LookTarget::PLAYER(None)
+            } else {
+                LookTarget::ENTITY(None)
+            }))
             .build()
     }
 }

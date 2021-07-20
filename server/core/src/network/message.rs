@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use actix::prelude::*;
 
+use crate::engine::entities::EntityPrototypes;
+
 use super::super::engine::registry::{Blocks, Ranges};
 
 use super::models;
@@ -88,6 +90,7 @@ pub struct FullWorldData {
     pub sub_chunks: u32,
     pub blocks: Blocks,
     pub ranges: Ranges,
+    pub entities: EntityPrototypes,
     pub uv_side_count: u32,
     pub uv_texture_size: u32,
 }

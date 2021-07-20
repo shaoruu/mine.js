@@ -4,7 +4,7 @@ use std::io::Cursor;
 
 use super::super::engine::chunk::Meshes;
 
-use server_common::ndarray::Ndarray;
+use server_common::{ndarray::Ndarray, vec::Vec3};
 
 #[derive(Debug)]
 pub struct ChunkProtocol {
@@ -39,6 +39,7 @@ pub struct EntityProtocol {
     pub qy: f32,
     pub qz: f32,
     pub qw: f32,
+    pub look_at: Option<Vec3<f32>>,
 }
 
 #[derive(Debug)]
@@ -149,6 +150,11 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
                 qy: entity.qy,
                 qz: entity.qz,
                 qw: entity.qw,
+                look_at: if let Some(look_at) = entity.look_at {
+                    vec![look_at.0, look_at.1, look_at.2]
+                } else {
+                    vec![]
+                },
             })
             .collect()
     }

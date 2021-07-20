@@ -2,6 +2,7 @@ import { Object3D } from 'three';
 
 import { AABB } from './aabb';
 import { Brain } from './brain';
+import { Entity } from './entity';
 import { RigidBody } from './rigid-body';
 
 export type BlockMaterialType =
@@ -46,7 +47,7 @@ export type PhysicalType = {
 
 export type EntityType = {
   type: string;
-  object: Object3D;
+  object: Entity;
   position: Coords3;
   rotation: [number, number, number, number];
 };
