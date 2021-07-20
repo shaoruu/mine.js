@@ -80,7 +80,7 @@ class Inventory {
       position: 'fixed',
       top: '0',
       left: '0',
-      zIndex: '4',
+      zIndex: '3',
       // visibility: 'hidden',
     });
 

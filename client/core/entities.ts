@@ -52,8 +52,12 @@ class Entities {
         const prototype = new Entity(this, name, obj);
 
         const scale = prototypes[name].rigidbody.aabb;
-        prototype.mesh.position.set(0, 55, -3);
+        prototype.mesh.position.set(0.5, 53.5, -0.5);
+        prototype.mesh.rotateY(Math.PI / 2);
         prototype.mesh.scale.set(...scale);
+        prototype.mesh.scale.multiplyScalar(5);
+
+        engine.rendering.scene.add(prototype.mesh);
 
         this.prototypes.set(name.toLowerCase(), prototype);
 
@@ -134,7 +138,6 @@ class Entities {
       const object = this.getObject(type);
 
       this.engine.rendering.scene.add(object.mesh);
-      object.mesh.scale.multiplyScalar(5);
 
       entity = {
         type,
