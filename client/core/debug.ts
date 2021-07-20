@@ -1,5 +1,4 @@
-import { GUI } from 'dat.gui';
-import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Raycaster, Vector2 } from 'three';
+import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
 import { Pane } from 'tweakpane';
 
 // import { AxesHelper, GridHelper } from 'three';

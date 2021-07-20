@@ -5,9 +5,6 @@ import merge from 'deepmerge';
 
 import { Clock, DeepPartial } from '../libs';
 
-import { Shadows, ShadowsOptionsType } from './shadows';
-
-import { NetworkOptionsType } from '.';
 import {
   Camera,
   CameraOptionsType,
@@ -22,6 +19,7 @@ import {
   Inventory,
   InventoryOptionsType,
   Network,
+  NetworkOptionsType,
   Particles,
   ParticlesOptionsType,
   Peers,
@@ -34,6 +32,8 @@ import {
   RegistryOptionsType,
   Rendering,
   RenderingOptionsType,
+  Shadows,
+  ShadowsOptionsType,
   World,
   WorldOptionsType,
 } from '.';
