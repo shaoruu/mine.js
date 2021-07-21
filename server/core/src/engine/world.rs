@@ -532,7 +532,7 @@ impl World {
             self.ecs_mut(),
             &prototype,
             "Test",
-            &Vec3(pos.0, pos.1 + 1.0, pos.2),
+            &Vec3(pos.0, pos.1, pos.2),
             &Quaternion(0.0, 0.0, 0.0, 0.0),
         );
     }

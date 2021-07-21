@@ -76,6 +76,7 @@ impl<'a> System<'a> for ObserveSystem {
                         if hit {
                             offset += 1;
                             count += 1;
+                            closest = None;
                             continue;
                         }
                     }
