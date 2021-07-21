@@ -1,3 +1,4 @@
+import TWEEN from '@tweenjs/tween.js';
 import { Object3D, Vector3, LoadingManager, Mesh, MeshStandardMaterial, MeshBasicMaterial } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
@@ -34,9 +35,9 @@ type EntitiesOptionsType = {
 
 class Entities {
   public physicals: Map<string, PhysicalType> = new Map();
-  public entities: Map<string, EntityType> = new Map();
+  public entities: Map<string, Entity> = new Map();
 
-  private updates: [string, string, Coords3, [number, number, number, number], Coords3][] = [];
+  private updates: [string, string, Coords3, Coords3][] = [];
   private prototypes: Map<string, Entity> = new Map();
 
   constructor(public engine: Engine, public options: EntitiesOptionsType) {
@@ -55,7 +56,8 @@ class Entities {
           rigidbody: { aabb },
           model: { scale },
         } = prototypes[name];
-        prototype.mesh.position.set(0.5, 53.5, -0.5);
+
+        prototype.setPosition([0.5, 53.5, -0.5]);
         prototype.mesh.rotateY(Math.PI / 2);
         prototype.mesh.scale.set(...aabb);
         prototype.mesh.scale.multiplyScalar(scale);
@@ -129,38 +131,25 @@ class Entities {
     return this.prototypes.get(type.toLowerCase()).clone();
   };
 
-  handleServerUpdate = (
-    id: string,
-    type: string,
-    position: Coords3,
-    rotation: [number, number, number, number],
-    lookAt?: Coords3,
-  ) => {
-    this.updates.push([id, type, position, rotation, lookAt]);
+  handleServerUpdate = (id: string, type: string, position: Coords3, lookAt?: Coords3) => {
+    this.updates.push([id, type, position, lookAt]);
   };
 
-  updateEntity = (id: string, type: string, position: Coords3, rotation: [...Coords3, number], lookAt?: Coords3) => {
+  updateEntity = (id: string, type: string, position: Coords3, lookAt?: Coords3) => {
     if (!this.engine.assetsLoaded) return;
 
     let entity = this.entities.get(id);
 
     if (!entity) {
       const object = this.getObject(type);
-
       this.engine.rendering.scene.add(object.mesh);
-
-      entity = {
-        type,
-        object,
-        position,
-        rotation,
-      };
+      entity = object;
     } else {
-      entity.position = position;
+      entity.setPosition(position);
       if (lookAt.length > 0) {
-        entity.object.setTarget(new Vector3(...lookAt));
+        entity.setTarget(new Vector3(...lookAt));
       } else {
-        entity.rotation = rotation;
+        entity.setTarget(null);
       }
     }
 
@@ -189,8 +178,15 @@ class Entities {
       }
     });
 
+    this.prototypes.forEach((p) => {
+      // const temp = p.mesh.position.clone();
+      // temp.x = Math.sin(performance.now() / 1000);
+      // p.setPosition([temp.x, temp.y, temp.z]);
+      p.tick();
+    });
+
     this.entities.forEach((p) => {
-      p.object.tick();
+      p.tick();
     });
   };
 
@@ -202,13 +198,6 @@ class Entities {
         object.position.lerp(new Vector3(px + offsets[0], py + offsets[1], pz + offsets[2]), movementLerpFactor);
       } else {
         object.position.set(px + offsets[0], py + offsets[1], pz + offsets[2]);
-      }
-    });
-    this.entities.forEach(({ object, position: [px, py, pz] }) => {
-      if (movementLerp) {
-        object.mesh.position.lerp(new Vector3(px, py, pz), movementLerpFactor);
-      } else {
-        object.mesh.position.set(px, py, pz);
       }
     });
   };
