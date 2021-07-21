@@ -260,13 +260,12 @@ impl SystemService for WsServer {
 
         let world_default = &worlds_json["default"];
 
-        let registry = Registry::new();
-
         for world_json in worlds_json["worlds"].as_array().unwrap() {
             let mut world_json = world_json.clone();
             json::merge(&mut world_json, world_default, false);
 
-            let mut new_world = World::new(world_json, registry.clone());
+            let registry = Registry::new(world_json["texturepack"].as_str().unwrap());
+            let mut new_world = World::new(world_json, registry);
             new_world.preload();
             worlds.insert(new_world.name.to_owned(), new_world);
         }

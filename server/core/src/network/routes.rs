@@ -48,7 +48,7 @@ pub async fn index() -> Result<fs::NamedFile> {
 
 #[get("/atlas")]
 pub async fn atlas() -> Result<fs::NamedFile> {
-    Ok(fs::NamedFile::open("textures/atlas.png")?)
+    Ok(fs::NamedFile::open("assets/textures/generated/atlas.png")?)
 }
 
 #[get("/worlds")]

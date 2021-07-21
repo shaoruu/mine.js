@@ -1,6 +1,6 @@
 {
   "base": "base-block.json",
-  "name": "Wood",
+  "name": "Planks",
   "textures": {
     "all": "wood.png"
   }

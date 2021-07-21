@@ -43,7 +43,7 @@ async fn main() -> std::io::Result<()> {
             .service(routes::world)
             .service(routes::time)
             .service(web::resource("/ws/").to(routes::ws_route))
-            .service(fs::Files::new("/models/", "models/objects/").show_files_listing())
+            .service(fs::Files::new("/models/", "assets/models/objects/").show_files_listing())
             .service(fs::Files::new("/", "public/").show_files_listing())
     })
     .bind(&addr)?;

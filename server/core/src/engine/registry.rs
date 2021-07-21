@@ -3,11 +3,19 @@
 use std::collections::HashMap;
 use std::fs::File;
 
+use serde::{Deserialize, Serialize};
+
 use server_common::types::{Block, TypeMap, UV};
 use server_utils::json;
 
 pub type Ranges = HashMap<String, UV>;
 pub type Blocks = HashMap<u32, Block>;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PackDetails {
+    pub dimension: u32,
+}
 
 #[derive(Debug, Clone)]
 pub struct Registry {
@@ -20,14 +28,8 @@ pub struct Registry {
     name_map: HashMap<String, u32>,
 }
 
-impl Default for Registry {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Registry {
-    pub fn new() -> Self {
+    pub fn new(pack_name: &str) -> Self {
         let blocks_json: serde_json::Value =
             serde_json::from_reader(File::open("metadata/blocks.json").unwrap()).unwrap();
 
@@ -37,6 +39,11 @@ impl Registry {
         let mut name_map = HashMap::new();
 
         let mut blocks: Blocks = HashMap::new();
+
+        let pack: PackDetails = serde_json::from_reader(
+            File::open(format!("assets/textures/packs/{}/pack.json", pack_name)).unwrap(),
+        )
+        .unwrap();
 
         for (id, value) in blocks_json.as_object().unwrap() {
             // remove first and last characters to remove the ""
@@ -70,11 +77,14 @@ impl Registry {
                     let img_src_str = img_src.as_str().unwrap();
 
                     let image = if img_src_str.ends_with(".png") {
-                        image::open(&format!("textures/images/{}", img_src_str)).unwrap()
+                        let path =
+                            format!("assets/textures/packs/{}/blocks/{}", pack_name, img_src_str);
+                        image::open(&path).unwrap_or_else(|_| panic!("Texture not found: {}", path))
                     } else {
                         // texture data
                         let texture_data: serde_json::Value = serde_json::from_reader(
-                            File::open(format!("textures/procedural/{}", img_src_str)).unwrap(),
+                            File::open(format!("assets/textures/procedural/{}", img_src_str))
+                                .unwrap(),
                         )
                         .unwrap();
 
@@ -113,7 +123,7 @@ impl Registry {
             shifts += 1;
         }
         let count_per_side = 1 << shifts;
-        let texture_dim = 64;
+        let texture_dim = pack.dimension;
         let atlas_width = count_per_side * texture_dim;
         let atlas_height = count_per_side * texture_dim;
 
@@ -171,7 +181,7 @@ impl Registry {
             col += 1;
         }
 
-        atlas.save("textures/atlas.png").unwrap();
+        atlas.save("assets/textures/generated/atlas.png").unwrap();
 
         Self {
             atlas,

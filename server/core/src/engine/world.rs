@@ -99,10 +99,10 @@ pub struct World {
 }
 
 pub type MessagesQueue = Vec<(
-    messages::Message,
-    Option<Vec<usize>>,
-    Option<Vec<usize>>,
-    Option<usize>,
+    messages::Message,  // actual message
+    Option<Vec<usize>>, // include
+    Option<Vec<usize>>, // exclude
+    Option<usize>,      // by who
 )>;
 
 impl World {
@@ -533,21 +533,6 @@ impl World {
             &Vec3(pos.0, pos.1 + 20.0, pos.2),
             &Quaternion(0.0, 0.0, 0.0, 0.0),
         );
-
-        // self.ecs_mut()
-        //     .create_entity()
-        //     .with(EType::new("Test"))
-        //     .with(RigidBody::new(
-        //         Aabb::new( &Vec3(0.2, 0.2, 0.2)),
-        //         1.0,
-        //         1.0,
-        //         0.0,
-        //         1.0,
-        //         false,
-        //     ))
-        //     .with(Rotation::new(0.0, 0.0, 0.0, 0.0))
-        //     .with(CurrChunk::new())
-        //     .build();
     }
 
     pub fn sync_config(&mut self) {

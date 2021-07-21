@@ -1,7 +1,8 @@
-use libflate::lz77::MAX_DISTANCE;
-use server_common::{math::approx_equals, vec::Vec3};
-use server_utils::raycast;
 use specs::{ReadExpect, ReadStorage, System, WriteStorage};
+
+use server_utils::raycast;
+
+use server_common::{math::approx_equals, vec::Vec3};
 
 use crate::{
     comp::{

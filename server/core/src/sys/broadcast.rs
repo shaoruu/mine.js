@@ -14,6 +14,8 @@ impl<'a> System<'a> for BroadcastSystem {
         let (mut messages, mut players) = data;
 
         for (msg, include, exclude, sender) in messages.iter() {
+            // TODO: add spam detection?
+
             let include = if include.is_some() {
                 include.clone().unwrap()
             } else {

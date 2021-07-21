@@ -15,6 +15,7 @@
     "pingInterval": 50000,
     "maxLoadedChunks": 2000,
     "description": "a testbed world",
+    "texturepack": "vibes",
     "subChunks": 8
   },
   "worlds": [
