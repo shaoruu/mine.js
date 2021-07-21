@@ -15,6 +15,7 @@ use specs::{Builder, DispatcherBuilder, World as ECSWorld, WorldExt};
 
 use serde::{Deserialize, Serialize};
 
+use crate::comp::brain::Brain;
 use crate::comp::curr_chunk::CurrChunk;
 use crate::comp::etype::EType;
 use crate::comp::id::Id;
@@ -24,8 +25,8 @@ use crate::comp::rotation::Rotation;
 use crate::comp::view_radius::ViewRadius;
 use crate::network::models::ChatType;
 use crate::sys::{
-    BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, ObserveSystem, PeersSystem,
-    SearchSystem,
+    BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, JumpingSystem,
+    ObserveSystem, PeersSystem, SearchSystem,
 };
 use crate::{
     comp::rigidbody::RigidBody,
@@ -127,6 +128,7 @@ impl World {
         ecs.register::<ViewRadius>();
         ecs.register::<LookAt>();
         ecs.register::<EType>();
+        ecs.register::<Brain>();
 
         // ECS Resources
         ecs.insert(name.to_owned());
@@ -603,6 +605,7 @@ impl World {
             .with(ObserveSystem, "observe", &["search"])
             .with(EntitiesSystem, "entities", &["chunking"])
             .with(BroadcastSystem, "broadcast", &["peers"])
+            .with(JumpingSystem, "jumping", &["entities"])
             .build();
 
         dispatcher.dispatch(&self.ecs);

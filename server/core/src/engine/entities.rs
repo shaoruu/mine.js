@@ -5,6 +5,7 @@ use server_common::{aabb::Aabb, quaternion::Quaternion, vec::Vec3};
 use specs::{Builder, Entity as ECSEntity, World, WorldExt};
 
 use crate::comp::{
+    brain::{Brain, BrainOptions},
     curr_chunk::CurrChunk,
     etype::EType,
     lookat::{LookAt, LookTarget},
@@ -116,6 +117,7 @@ impl Entities {
             } else {
                 LookTarget::ENTITY(None)
             }))
+            .with(Brain::new(BrainOptions::default()))
             .build()
     }
 }

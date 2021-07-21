@@ -1,4 +1,4 @@
-import { Mesh, Vector3, Object3D } from 'three';
+import { Mesh, Vector3, Object3D, Group } from 'three';
 
 import { Entities } from '../core';
 
@@ -9,6 +9,7 @@ const IDLE_ARM_SPEED = 0.06;
 
 class Entity {
   public head: Mesh;
+  public body: Group;
   public torso: Mesh;
   public arms: { left: Mesh; right: Mesh };
   public legs: { left: Mesh; right: Mesh };
@@ -16,13 +17,19 @@ class Entity {
   public speed = 0;
   public target: Vector3 = null;
 
+  public mesh: Mesh;
+
   public newPosition = new Vector3();
   private currLooking = new Vector3();
   private bodyLooking = new Vector3();
 
   constructor(public entities: Entities, public etype: string, public prototype: Object3D) {
-    const { children } = prototype;
+    this.mesh = prototype.clone() as Mesh;
+
+    const { children } = this.mesh;
+
     this.head = children.find((c) => c.name.toLowerCase() === 'head') as Mesh;
+
     this.torso = children.find((c) => c.name.toLowerCase() === 'torso') as Mesh;
 
     this.arms = {
@@ -34,6 +41,14 @@ class Entity {
       left: children.find((c) => c.name.toLowerCase() === 'left_leg') as Mesh,
       right: children.find((c) => c.name.toLowerCase() === 'right_leg') as Mesh,
     };
+
+    this.body = new Group();
+
+    const parts = [this.torso, this.arms.left, this.arms.right, this.legs.left, this.legs.right];
+
+    this.mesh.remove(...parts);
+    this.body.add(...parts);
+    this.mesh.add(this.body);
   }
 
   tick = () => {
@@ -54,14 +69,17 @@ class Entity {
   };
 
   lerpAll = () => {
+    // POSITION FIRST!!!!
+    // or else network latency will result in a weird
+    // animation defect where body glitches out.
+    if (this.newPosition.length() !== 0) {
+      this.mesh.position.lerp(this.newPosition, 0.7);
+    }
+
     if (this.target) {
       this.currLooking.lerp(this.target, 0.4);
       this.bodyLooking.lerp(this.target, 0.05);
       this.bodyLooking.y = this.mesh.position.y;
-    }
-
-    if (this.newPosition.length() !== 0) {
-      this.mesh.position.lerp(this.newPosition, 0.7);
     }
   };
 
@@ -84,7 +102,7 @@ class Entity {
   playLookingAnimation = () => {
     if (this.target) {
       this.head.lookAt(this.currLooking);
-      this.mesh.lookAt(this.bodyLooking);
+      this.body.lookAt(this.bodyLooking);
     }
   };
 
@@ -114,12 +132,8 @@ class Entity {
   };
 
   clone = () => {
-    return new Entity(this.entities, this.etype, this.prototype.clone());
+    return new Entity(this.entities, this.etype, this.prototype);
   };
-
-  get mesh() {
-    return this.prototype;
-  }
 }
 
 export { Entity };

@@ -136,6 +136,7 @@ const defaultConfig: ConfigType = {
   },
   network: {
     reconnectTimeout: 5000,
+    maxServerUpdates: 100,
   },
   particles: {
     count: 10,
@@ -165,6 +166,7 @@ class Engine extends EventEmitter {
   public paused = true;
   public tickSpeed = 0.1;
   public started = false;
+  public focused = false;
 
   // TODO: make a loader?
   public texturesLoaded = false;

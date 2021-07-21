@@ -1,3 +1,4 @@
+pub mod brain;
 pub mod curr_chunk;
 pub mod etype;
 pub mod id;

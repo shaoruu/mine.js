@@ -49,10 +49,12 @@ class Container extends EventEmitter {
   setupListeners = () => {
     window.addEventListener('blur', () => {
       this.engine.emit('blur');
+      this.engine.focused = false;
     });
 
     window.addEventListener('focus', () => {
       this.engine.emit('focus');
+      this.engine.focused = true;
     });
 
     this.engine.inputs.bind('k', this.toggleFullScreen, '*');

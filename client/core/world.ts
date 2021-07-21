@@ -185,6 +185,9 @@ class World extends EventEmitter {
     this.requestedChunks.delete(Helper.getChunkName(coords));
     if (prioritized) this.meshChunk(serverChunk);
     else this.receivedChunks.push(serverChunk);
+    if (this.receivedChunks.length >= this.engine.config.network.maxServerUpdates) {
+      this.receivedChunks.shift();
+    }
   };
 
   setChunk = (chunk: Chunk) => {

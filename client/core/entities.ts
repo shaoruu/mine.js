@@ -50,26 +50,26 @@ class Entities {
       const onFinish = (name: string, obj: Object3D) => {
         count++;
 
-        const prototype = new Entity(this, name, obj);
+        const entity = new Entity(this, name, obj);
 
         const {
           rigidbody: { aabb },
           model: { scale },
         } = prototypes[name];
 
-        prototype.setPosition([0.5, 53.5, -0.5]);
-        prototype.mesh.rotateY(Math.PI / 2);
-        prototype.mesh.scale.set(...aabb);
-        prototype.mesh.scale.multiplyScalar(scale);
+        entity.setPosition([0.5, 53.5, -0.5]);
+        entity.prototype.rotateY(Math.PI / 2);
+        entity.prototype.scale.set(...aabb);
+        entity.prototype.scale.multiplyScalar(scale);
 
-        prototype.mesh.children.forEach((child) => {
+        entity.prototype.children.forEach((child) => {
           const actual = child.children[0] as Mesh;
           const { map } = actual.material as MeshStandardMaterial;
           const overwriteMaterial = new MeshBasicMaterial({ map });
           actual.material = overwriteMaterial;
         });
 
-        this.prototypes.set(name.toLowerCase(), prototype);
+        this.prototypes.set(name.toLowerCase(), entity);
 
         if (count === keys.length) {
           engine.emit('entities-loaded');
@@ -133,6 +133,9 @@ class Entities {
 
   handleServerUpdate = (id: string, type: string, position: Coords3, lookAt?: Coords3) => {
     this.updates.push([id, type, position, lookAt]);
+    if (this.updates.length >= this.engine.config.network.maxServerUpdates) {
+      this.updates.shift();
+    }
   };
 
   updateEntity = (id: string, type: string, position: Coords3, lookAt?: Coords3) => {

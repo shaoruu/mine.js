@@ -88,6 +88,33 @@ where
     }
 }
 
+impl Vec3<f32> {
+    pub fn rotate_y(&self, origin: &Self, angle: f32) -> Self {
+        let ox = origin[0];
+        let oz = origin[2];
+
+        // translate point to origin
+        let px = self[0] - ox;
+        let pz = self[2] - oz;
+
+        let sc = angle.sin();
+        let cc = angle.cos();
+
+        // perform rotation and translate to correct position
+        Self(ox + pz * sc + px * cc, self[1], oz + pz * cc - px * sc)
+    }
+
+    pub fn normalize(&self) -> Self {
+        let Self(x, y, z) = self;
+        let len = x * x + y * y + z * z;
+        if len > 0.0 {
+            let len = 1.0 / len.sqrt();
+            return Self(self.0 * len, self.1 * len, self.2 * len);
+        }
+        self.to_owned()
+    }
+}
+
 impl<T: Num + Clone> Index<usize> for Vec3<T> {
     type Output = T;
 

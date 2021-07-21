@@ -14,6 +14,7 @@ type CustomWebSocket = WebSocket & {
 
 type NetworkOptionsType = {
   reconnectTimeout: number;
+  maxServerUpdates: number;
 };
 
 class Network {
@@ -173,6 +174,7 @@ class Network {
 
   onMessage = ({ data }) => {
     let event;
+
     try {
       // console.log('RECEIVED');
       event = Network.decode(new Uint8Array(data));
