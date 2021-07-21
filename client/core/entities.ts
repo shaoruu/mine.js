@@ -60,13 +60,14 @@ class Entities {
         prototype.mesh.scale.set(...aabb);
         prototype.mesh.scale.multiplyScalar(scale);
 
-        engine.rendering.scene.add(prototype.mesh);
         prototype.mesh.children.forEach((child) => {
           const actual = child.children[0] as Mesh;
           const { map } = actual.material as MeshStandardMaterial;
           const overwriteMaterial = new MeshBasicMaterial({ map });
           actual.material = overwriteMaterial;
         });
+
+        this.prototypes.set(name.toLowerCase(), prototype);
 
         if (count === keys.length) {
           engine.emit('entities-loaded');
