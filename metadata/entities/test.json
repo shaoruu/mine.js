@@ -10,5 +10,8 @@
     "gravityMultiplier": 1.0,
     "autoStep": false
   },
-  "model": "Test.gltf"
+  "model": {
+    "scale": 5,
+    "object": "Test.gltf"
+  }
 }

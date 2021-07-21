@@ -1,6 +1,5 @@
-import { Object3D, Vector3, LoadingManager, AmbientLight } from 'three';
+import { Object3D, Vector3, LoadingManager, Mesh, MeshStandardMaterial, MeshBasicMaterial } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 
 import { AABB, Brain, PhysicalType, BodyOptionsType, Coords3, EntityType, createMaterial_ } from '../libs';
 import { Entity } from '../libs/entity';
@@ -11,7 +10,10 @@ import { Engine } from './engine';
 type EntityPrototype = {
   etype: string;
   brain: string;
-  model: string;
+  model: {
+    scale: number;
+    object: string;
+  };
   rigidbody: {
     aabb: [number, number, number];
     autoStep: boolean;
@@ -43,23 +45,28 @@ class Entities {
 
       const keys = Object.keys(prototypes);
 
-      engine.rendering.scene.add(new AmbientLight());
-
       let count = 0;
       const onFinish = (name: string, obj: Object3D) => {
         count++;
 
         const prototype = new Entity(this, name, obj);
 
-        const scale = prototypes[name].rigidbody.aabb;
+        const {
+          rigidbody: { aabb },
+          model: { scale },
+        } = prototypes[name];
         prototype.mesh.position.set(0.5, 53.5, -0.5);
         prototype.mesh.rotateY(Math.PI / 2);
-        prototype.mesh.scale.set(...scale);
-        prototype.mesh.scale.multiplyScalar(5);
+        prototype.mesh.scale.set(...aabb);
+        prototype.mesh.scale.multiplyScalar(scale);
 
         engine.rendering.scene.add(prototype.mesh);
-
-        this.prototypes.set(name.toLowerCase(), prototype);
+        prototype.mesh.children.forEach((child) => {
+          const actual = child.children[0] as Mesh;
+          const { map } = actual.material as MeshStandardMaterial;
+          const overwriteMaterial = new MeshBasicMaterial({ map });
+          actual.material = overwriteMaterial;
+        });
 
         if (count === keys.length) {
           engine.emit('entities-loaded');
@@ -71,9 +78,11 @@ class Entities {
       gltfLoader.setPath(Helper.getServerURL({ path: '/models/', clear: true }).toString());
 
       keys.forEach((name) => {
-        const { model } = prototypes[name];
+        const {
+          model: { object },
+        } = prototypes[name];
 
-        gltfLoader.load(model, (obj) => {
+        gltfLoader.load(object, (obj) => {
           onFinish(name, obj.scene);
         });
       });

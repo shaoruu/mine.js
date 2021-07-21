@@ -61,6 +61,15 @@ class Entity {
     }
   };
 
+  playWalkingAnimation = () => {
+    const speed = 0.0006;
+    const amplitude = 0.12;
+    this.legs.left.rotation.x = Math.sin(performance.now() * speed) * amplitude;
+    this.legs.right.rotation.x = Math.cos(performance.now() * speed) * amplitude;
+    this.legs.left.rotation.z = Math.cos(performance.now() * speed) ** 2 * amplitude;
+    this.legs.right.rotation.z = -(Math.sin(performance.now() * speed) ** 2 * amplitude);
+  };
+
   setTarget = (target: Vector3) => {
     this.target = target;
   };

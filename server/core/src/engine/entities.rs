@@ -25,11 +25,18 @@ pub struct RigidBodyProto {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ModelProto {
+    pub scale: i32,
+    pub object: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EntityPrototype {
     pub etype: String,
     pub brain: String,
     pub observe: String,
-    pub model: String,
+    pub model: ModelProto,
     pub rigidbody: RigidBodyProto,
 }
 
