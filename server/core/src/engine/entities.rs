@@ -80,8 +80,8 @@ impl Entities {
     }
 
     pub fn spawn_entity(
-        prototype: &EntityPrototype,
         ecs: &mut World,
+        prototype: &EntityPrototype,
         etype: &str,
         position: &Vec3<f32>,
         rotation: &Quaternion,
