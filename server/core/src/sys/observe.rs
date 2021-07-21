@@ -32,45 +32,57 @@ impl<'a> System<'a> for ObserveSystem {
         for (body, look_at) in (&bodies, &mut look_ats).join() {
             let mut position = body.get_position();
 
-            let closest_arr = (match look_at.0 {
-                LookTarget::ALL(_) => tree.search(&position, 2),
-                LookTarget::ENTITY(_) => tree.search_entity(&position, 2),
-                LookTarget::PLAYER(_) => tree.search_player(&position, 1),
-            })
-            .into_iter()
-            .map(|(_, entity)| bodies.get(entity.to_owned()).unwrap().get_position())
-            .collect::<Vec<_>>();
+            // loop until found or nothing found
+            let mut closest: Option<Vec3<f32>> = None;
 
-            if closest_arr.is_empty() {
-                continue;
-            }
+            let mut offset = 0;
+            let mut count = 1;
 
-            let mut closest = if closest_arr.is_empty() {
-                None
-            } else if closest_arr.len() == 1 {
-                Some(closest_arr[0].clone())
-            } else {
-                Some(closest_arr[1].clone())
-            };
+            loop {
+                let closest_arr = (match look_at.0 {
+                    LookTarget::ALL(_) => tree.search(&position, count),
+                    LookTarget::ENTITY(_) => tree.search_entity(&position, count, true),
+                    LookTarget::PLAYER(_) => tree.search_player(&position, count, false),
+                })
+                .into_iter()
+                .map(|(_, entity)| bodies.get(entity.to_owned()).unwrap().get_position())
+                .collect::<Vec<_>>();
 
-            // check if there are any blocks in between
-            if let Some(c) = &closest {
-                let mut dir = c.clone().sub(&position);
-                let dist = dir.len();
+                if closest_arr.is_empty() || closest_arr.len() < count {
+                    break;
+                }
 
-                if !approx_equals(&dist, &0.0) {
-                    let hit = raycast::trace(
-                        dist,
-                        &test_solid,
-                        &mut position,
-                        &mut dir,
-                        &mut Vec3::default(),
-                        &mut Vec3::default(),
-                    );
+                closest = if closest_arr.is_empty() {
+                    continue;
+                } else {
+                    Some(closest_arr[offset].clone())
+                };
 
-                    if hit {
-                        closest = None;
+                // check if there are any blocks in between
+                if let Some(c) = &closest {
+                    let mut dir = c.clone().sub(&position);
+                    let dist = dir.len();
+
+                    if !approx_equals(&dist, &0.0) {
+                        let hit = raycast::trace(
+                            dist,
+                            &test_solid,
+                            &mut position,
+                            &mut dir,
+                            &mut Vec3::default(),
+                            &mut Vec3::default(),
+                        );
+
+                        if hit {
+                            offset += 1;
+                            count += 1;
+                            continue;
+                        }
                     }
+                }
+
+                if closest.is_some() {
+                    break;
                 }
             }
 
