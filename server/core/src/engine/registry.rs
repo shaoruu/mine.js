@@ -30,7 +30,7 @@ pub struct Registry {
 
 impl Registry {
     pub fn new(pack_name: &str) -> Self {
-        let blocks_json: serde_json::Value =
+        let blocks_json: HashMap<String, String> =
             serde_json::from_reader(File::open("metadata/blocks.json").unwrap()).unwrap();
 
         let mut base_cache: HashMap<String, serde_json::Value> = HashMap::new();
@@ -45,10 +45,8 @@ impl Registry {
         )
         .unwrap();
 
-        for (id, value) in blocks_json.as_object().unwrap() {
-            // remove first and last characters to remove the ""
-            let value_str = value.as_str().unwrap();
-            let path = format!("./metadata/blocks/{}", value_str);
+        for (id, block_file) in blocks_json.iter() {
+            let path = format!("./metadata/blocks/{}", block_file);
             let mut block_json: serde_json::Value =
                 serde_json::from_reader(File::open(path).unwrap()).unwrap();
 
