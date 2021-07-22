@@ -2,7 +2,8 @@ use specs::{Component, VecStorage};
 
 use server_common::{aabb::Aabb, vec::Vec3};
 
-#[derive(Default)]
+#[derive(Default, Component)]
+#[storage(VecStorage)]
 pub struct RigidBody {
     // flags for test
     pub collided: Option<Vec3<f32>>,
@@ -96,8 +97,4 @@ impl RigidBody {
     pub fn mark_active(&mut self) {
         self.sleep_frame_count = 10 | 0;
     }
-}
-
-impl Component for RigidBody {
-    type Storage = VecStorage<Self>;
 }

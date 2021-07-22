@@ -3,7 +3,8 @@ use specs::{Component, VecStorage};
 use server_common::quaternion::Quaternion;
 
 // consider making this more implicit
-#[derive(Default)]
+#[derive(Default, Component)]
+#[storage(VecStorage)]
 pub struct Rotation(pub Quaternion);
 
 impl Rotation {
@@ -14,8 +15,4 @@ impl Rotation {
     pub fn from_quaternion(quaternion: &Quaternion) -> Self {
         Self(quaternion.to_owned())
     }
-}
-
-impl Component for Rotation {
-    type Storage = VecStorage<Self>;
 }
