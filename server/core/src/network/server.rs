@@ -38,11 +38,12 @@ impl WsServer {
         &mut self,
         world_name: &str,
         msg: &messages::Message,
+        include: Vec<usize>,
         exclude: Vec<usize>,
     ) -> Option<()> {
         let world = self.worlds.get_mut(world_name)?;
 
-        world.broadcast(msg, vec![], exclude);
+        world.broadcast(msg, include, exclude);
 
         Some(())
     }
@@ -67,11 +68,7 @@ impl WsServer {
                 }
 
                 let requested_chunk = player.requested_chunks.pop_front();
-                request_queue.push((
-                    requested_chunk.to_owned(),
-                    world_name.to_owned(),
-                    id.to_owned(),
-                ));
+                request_queue.push((requested_chunk, world_name.to_owned(), id.to_owned()));
             });
         }
 
@@ -92,9 +89,14 @@ impl WsServer {
                             Some(vec![chunk.get_protocol(true, true, true, MeshLevel::All)]);
 
                         let new_message = create_message(component);
-                        message_queue.push_back((world_name.to_owned(), new_message, vec![]));
+                        message_queue.push_back((
+                            world_name.to_owned(),
+                            new_message,
+                            vec![player_id],
+                        ));
                     } else {
                         drop(chunks);
+
                         self.worlds
                             .get_mut(&world_name)
                             .unwrap()
@@ -109,8 +111,8 @@ impl WsServer {
 
         message_queue
             .into_iter()
-            .for_each(|(world_name, message, exclude)| {
-                self.broadcast(&world_name, &message, exclude);
+            .for_each(|(world_name, message, include)| {
+                self.broadcast(&world_name, &message, include, vec![]);
             })
     }
 }

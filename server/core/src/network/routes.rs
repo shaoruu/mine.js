@@ -14,6 +14,7 @@ use std::{
 
 use super::{message, server::WsServer, session};
 
+/// Main websocket route
 pub async fn ws_route(
     req: HttpRequest,
     params: Query<HashMap<String, String>>,
@@ -41,16 +42,19 @@ pub async fn ws_route(
     ws::start(player, &req, stream)
 }
 
+/// Main website path, serving statically built index.html
 #[get("/")]
 pub async fn index() -> Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("public/index.html")?)
 }
 
+/// Serving `registry` generated atlas
 #[get("/atlas")]
 pub async fn atlas() -> Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("assets/textures/generated/atlas.png")?)
 }
 
+/// Route to get a list of world data
 #[get("/worlds")]
 pub async fn worlds() -> Result<HttpResponse> {
     let worlds_data = WsServer::from_registry()
@@ -60,6 +64,7 @@ pub async fn worlds() -> Result<HttpResponse> {
     Ok(HttpResponse::Ok().json(worlds_data))
 }
 
+/// Route to get specific full world data
 #[get("/world")]
 pub async fn world(params: Query<HashMap<String, String>>) -> Result<HttpResponse> {
     let world_query = params.get("world").unwrap().to_owned();
@@ -71,6 +76,7 @@ pub async fn world(params: Query<HashMap<String, String>>) -> Result<HttpRespons
     Ok(HttpResponse::Ok().json(world_data))
 }
 
+/// Route to get time of world
 #[get("/time")]
 pub async fn time(params: Query<HashMap<String, String>>) -> Result<HttpResponse> {
     let default = "testbed".to_owned();

@@ -6,6 +6,7 @@ use super::super::engine::chunk::Meshes;
 
 use server_common::{ndarray::Ndarray, vec::Vec3};
 
+/// Protobuf format for chunks
 #[derive(Debug)]
 pub struct ChunkProtocol {
     pub x: i32,
@@ -15,6 +16,7 @@ pub struct ChunkProtocol {
     pub lights: Option<Ndarray<u32>>,
 }
 
+/// Protobuf format for peer updates
 #[derive(Debug, Clone)]
 pub struct PeerProtocol {
     pub id: String,
@@ -28,6 +30,7 @@ pub struct PeerProtocol {
     pub qw: f32,
 }
 
+/// Protobuf format for entity updates
 #[derive(Debug, Clone)]
 pub struct EntityProtocol {
     pub id: String,
@@ -42,6 +45,7 @@ pub struct EntityProtocol {
     pub look_at: Option<Vec3<f32>>,
 }
 
+/// Protobuf format for voxel updates
 #[derive(Debug)]
 pub struct UpdateProtocol {
     pub vx: i32,
@@ -50,6 +54,7 @@ pub struct UpdateProtocol {
     pub r#type: u32,
 }
 
+/// Protobuf format for chat messages
 #[derive(Debug)]
 pub struct ChatProtocol {
     pub r#type: messages::chat_message::Type,
@@ -57,6 +62,7 @@ pub struct ChatProtocol {
     pub body: String,
 }
 
+/// Protobuf format for an entire message
 #[derive(Debug)]
 pub struct MessageComponents {
     pub r#type: messages::message::Type,
@@ -84,20 +90,24 @@ impl MessageComponents {
     }
 }
 
+/// Load in the protobuf protocol
 pub mod messages {
     include!(concat!(env!("OUT_DIR"), "/protocol.rs"));
 }
 
 impl messages::Message {
+    /// Parse the JSON string field to serde_json
     pub fn parse_json(&self) -> Result<serde_json::Value, serde_json::Error> {
         serde_json::from_str(&self.json)
     }
 }
 
+/// Create an empty message for type
 pub fn create_of_type(r#type: messages::message::Type) -> messages::Message {
     create_message(MessageComponents::default_for(r#type))
 }
 
+/// Create a message with protobuf components
 pub fn create_message(components: MessageComponents) -> messages::Message {
     let mut message = messages::Message {
         r#type: components.r#type as i32,
@@ -223,6 +233,7 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
     message
 }
 
+/// Create a broadcast-able message
 pub fn create_chat_message(
     message_type: messages::message::Type,
     chat_type: messages::chat_message::Type,
@@ -240,6 +251,7 @@ pub fn create_chat_message(
     create_message(components)
 }
 
+/// Encode message into protobuf buffer
 pub fn encode_message(message: &messages::Message) -> Vec<u8> {
     let mut buf = Vec::new();
     buf.reserve(message.encoded_len());
@@ -247,6 +259,7 @@ pub fn encode_message(message: &messages::Message) -> Vec<u8> {
     buf
 }
 
+/// Decode protobuf buffer into message
 pub fn decode_message(buf: &[u8]) -> Result<messages::Message, prost::DecodeError> {
     messages::Message::decode(&mut Cursor::new(buf))
 }

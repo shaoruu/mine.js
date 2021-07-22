@@ -14,6 +14,7 @@ use server_common::{
 pub struct Generator;
 
 impl Generator {
+    /// Generate a chunk, standalone process, can be run in another thread.
     pub fn generate_chunk(chunk: &mut Chunk, registry: &Registry, config: &WorldConfig) {
         let Vec3(start_x, start_y, start_z) = chunk.min;
         let Vec3(end_x, _, end_z) = chunk.max;

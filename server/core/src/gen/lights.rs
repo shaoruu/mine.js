@@ -18,6 +18,9 @@ pub struct LightNode {
     pub level: u32,
 }
 
+/// Enum of light colors
+///
+/// `None` being sunlight
 pub enum LightColor {
     None,
     Red,
@@ -28,47 +31,55 @@ pub enum LightColor {
 pub struct Lights;
 
 impl Lights {
+    /// Extract the bits in light that stores sunlight
     #[inline]
     pub fn extract_sunlight(light: u32) -> u32 {
         (light >> 12) & 0xF
     }
 
+    /// Insert a value into the bits in light that stores sunlight
     #[inline]
     pub fn insert_sunlight(light: u32, level: u32) -> u32 {
         (light & 0xFFF) | (level << 12)
     }
 
+    /// Extract the bits in light that stores red light
     #[inline]
     pub fn extract_red_light(light: u32) -> u32 {
         (light >> 8) & 0xF
     }
 
+    /// Insert a value into the bits in light that stores red light
     #[inline]
     pub fn insert_red_light(light: u32, level: u32) -> u32 {
         (light & 0xF0FF) | (level << 8)
     }
 
+    /// Extract the bits in light that stores green light
     #[inline]
     pub fn extract_green_light(light: u32) -> u32 {
         (light >> 4) & 0xF
     }
 
+    /// Insert a value into the bits in light that stores green light
     #[inline]
     pub fn insert_green_light(light: u32, level: u32) -> u32 {
         (light & 0xFF0F) | (level << 4)
     }
 
+    /// Extract the bits in light that stores blue light
     #[inline]
     pub fn extract_blue_light(light: u32) -> u32 {
         light & 0xF
     }
 
+    /// Insert a value into the bits in light that stores blue light
     #[inline]
     pub fn insert_blue_light(light: u32, level: u32) -> u32 {
         (light & 0xFFF0) | (level)
     }
 
-    // TODO: CHANGE THIS CASTING?
+    /// Getter for sunlight by arbitrary coordinates
     fn get_sunlight(lights: &Ndarray<u32>, x: i32, y: i32, z: i32) -> u32 {
         let x = x as usize;
         let y = y as usize;
@@ -81,6 +92,7 @@ impl Lights {
         Lights::extract_sunlight(lights[&[x, y, z]])
     }
 
+    /// Setter for sunlight by arbitrary coordinates
     fn set_sunlight(lights: &mut Ndarray<u32>, x: i32, y: i32, z: i32, level: u32) {
         let x = x as usize;
         let y = y as usize;
@@ -93,6 +105,7 @@ impl Lights {
         lights[&[x, y, z]] = Lights::insert_sunlight(lights[&[x, y, z]], level);
     }
 
+    /// Getter for red light by arbitrary coordinates
     fn get_red_light(lights: &Ndarray<u32>, x: i32, y: i32, z: i32) -> u32 {
         let x = x as usize;
         let y = y as usize;
@@ -105,6 +118,7 @@ impl Lights {
         Lights::extract_red_light(lights[&[x, y, z]])
     }
 
+    /// Setter for red light by arbitrary coordinates
     fn set_red_light(lights: &mut Ndarray<u32>, x: i32, y: i32, z: i32, level: u32) {
         let x = x as usize;
         let y = y as usize;
@@ -117,6 +131,7 @@ impl Lights {
         lights[&[x, y, z]] = Lights::insert_red_light(lights[&[x, y, z]], level);
     }
 
+    /// Getter for green light by arbitrary coordinates
     fn get_green_light(lights: &Ndarray<u32>, x: i32, y: i32, z: i32) -> u32 {
         let x = x as usize;
         let y = y as usize;
@@ -129,6 +144,7 @@ impl Lights {
         Lights::extract_green_light(lights[&[x, y, z]])
     }
 
+    /// Setter for green light by arbitrary coordinates
     fn set_green_light(lights: &mut Ndarray<u32>, x: i32, y: i32, z: i32, level: u32) {
         let x = x as usize;
         let y = y as usize;
@@ -141,6 +157,7 @@ impl Lights {
         lights[&[x, y, z]] = Lights::insert_green_light(lights[&[x, y, z]], level);
     }
 
+    /// Getter for blue light by arbitrary coordinates
     fn get_blue_light(lights: &Ndarray<u32>, x: i32, y: i32, z: i32) -> u32 {
         let x = x as usize;
         let y = y as usize;
@@ -153,6 +170,7 @@ impl Lights {
         Lights::extract_blue_light(lights[&[x, y, z]])
     }
 
+    /// Setter for blue light by arbitrary coordinates
     fn set_blue_light(lights: &mut Ndarray<u32>, x: i32, y: i32, z: i32, level: u32) {
         let x = x as usize;
         let y = y as usize;
@@ -165,6 +183,7 @@ impl Lights {
         lights[&[x, y, z]] = Lights::insert_blue_light(lights[&[x, y, z]], level);
     }
 
+    /// Getter for torch light with arbitrary coordinates by color
     #[inline]
     fn get_torch_light(
         lights: &Ndarray<u32>,
@@ -181,6 +200,7 @@ impl Lights {
         }
     }
 
+    /// Setter for torch light with arbitrary coordinates by color
     #[inline]
     fn set_torch_light(
         lights: &mut Ndarray<u32>,
@@ -343,6 +363,7 @@ impl Lights {
         }
     }
 
+    /// Flood-fill a light source within a confined space
     pub fn flood_light(
         mut queue: VecDeque<LightNode>,
         is_sunlight: bool,
@@ -409,6 +430,7 @@ impl Lights {
         }
     }
 
+    /// Propagate both sunlight and torch light within a confined space.
     pub fn propagate(space: &Space, registry: &Registry, config: &WorldConfig) -> Ndarray<u32> {
         let Space {
             width, min, shape, ..
@@ -569,6 +591,7 @@ impl Lights {
         chunk_lights
     }
 
+    /// Calculate the light levels within a confined space
     pub fn calc_light(space: &Space, registry: &Registry, config: &WorldConfig) -> Ndarray<u32> {
         Lights::propagate(&space, registry, config)
     }
