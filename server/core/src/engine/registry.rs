@@ -11,12 +11,14 @@ use server_utils::json;
 pub type Ranges = HashMap<String, UV>;
 pub type Blocks = HashMap<u32, Block>;
 
+/// JSON format for texturepack details
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PackDetails {
     pub dimension: u32,
 }
 
+/// Resource to control block data and textures
 #[derive(Debug, Clone)]
 pub struct Registry {
     pub atlas: image::RgbaImage,
@@ -191,81 +193,97 @@ impl Registry {
         }
     }
 
+    /// Get block transparency by id
     #[inline]
     pub fn get_transparency_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_transparent
     }
 
+    /// Get block transparency by name
     #[inline]
     pub fn get_transparency_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_transparent
     }
 
+    /// Get block fluidity by id
     #[inline]
     pub fn get_fluiditiy_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_fluid
     }
 
+    /// Get block fluidity by name
     #[inline]
     pub fn get_fluiditiy_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_fluid
     }
 
+    /// Get block solidity by id
     #[inline]
     pub fn get_solidity_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_solid
     }
 
+    /// Get block solidity by name
     #[inline]
     pub fn get_solidity_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_solid
     }
 
+    /// Get block emptiness by id
     #[inline]
     pub fn get_emptiness_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_empty
     }
 
+    /// Get block emptiness by name
     #[inline]
     pub fn get_emptiness_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_empty
     }
 
+    /// Get block texture by id
     #[inline]
     pub fn get_texture_by_id(&self, id: u32) -> &HashMap<String, String> {
         &self.get_block_by_id(id).textures
     }
 
+    /// Get block texture by name
     #[inline]
     pub fn get_texture_by_name(&self, name: &str) -> &HashMap<String, String> {
         &self.get_block_by_name(name).textures
     }
 
+    /// Get block UV by id
     #[inline]
     pub fn get_uv_by_id(&self, id: u32) -> HashMap<String, &UV> {
         self.get_uv_map(self.get_block_by_id(id))
     }
 
+    /// Get block UV by name
     #[inline]
     pub fn get_uv_by_name(&self, name: &str) -> HashMap<String, &UV> {
         self.get_uv_map(self.get_block_by_name(name))
     }
 
+    /// Check if block is air by id
     #[inline]
     pub fn is_air(&self, id: u32) -> bool {
         self.get_block_by_id(id).name == "Air"
     }
 
+    /// Check if block is a plant by id
     #[inline]
     pub fn is_plant(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_plant
     }
 
+    /// Check if block is plantable by id
     #[inline]
     pub fn is_plantable(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_plantable
     }
 
+    /// Get block data by id
     #[inline]
     pub fn get_block_by_id(&self, id: u32) -> &Block {
         self.blocks
@@ -273,6 +291,7 @@ impl Registry {
             .unwrap_or_else(|| panic!("Block id not found: {}", id))
     }
 
+    /// Get block data by name
     #[inline]
     pub fn get_block_by_name(&self, name: &str) -> &Block {
         let &id = self
@@ -282,12 +301,14 @@ impl Registry {
         self.get_block_by_id(id)
     }
 
+    /// Get block id by name
     pub fn get_id_by_name(&self, name: &str) -> &u32 {
         self.name_map
             .get(name)
             .unwrap_or_else(|| panic!("Type name not found: {}", name))
     }
 
+    /// Get UV map by block
     pub fn get_uv_map(&self, block: &Block) -> HashMap<String, &UV> {
         let mut uv_map = HashMap::new();
 
@@ -303,6 +324,7 @@ impl Registry {
         uv_map
     }
 
+    /// Get type map of all blocks
     pub fn get_type_map(&self, blocks: Vec<&str>) -> TypeMap {
         let mut type_map = HashMap::new();
 
@@ -318,6 +340,7 @@ impl Registry {
         type_map
     }
 
+    /// Get solids that can be treated as empty's
     pub fn get_passable_solids(&self) -> Vec<u32> {
         self.blocks
             .iter()
@@ -326,11 +349,13 @@ impl Registry {
             .collect()
     }
 
+    /// Check if registery contains type
     pub fn has_type(&self, id: u32) -> bool {
         self.blocks.contains_key(&id)
     }
 }
 
+/// Get the JSON string of texture type
 pub fn get_texture_type(texture: &HashMap<String, String>) -> &str {
     let len = texture.len();
 
@@ -345,6 +370,8 @@ pub fn get_texture_type(texture: &HashMap<String, String>) -> &str {
     }
 }
 
+/// Fixing texture bleeding with the
+/// [Half-texel edge correction method](http://drilian.com/2008/11/25/understanding-half-pixel-and-half-texel-offsets/)
 fn fix_texture_bleeding(
     (start_u, start_v, end_u, end_v): (f32, f32, f32, f32),
     texture_size: u32,

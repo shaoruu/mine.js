@@ -6,12 +6,14 @@ use super::biomes::{get_biome_config, BiomeConfig};
 
 use server_common::{noise::Noise, vec::Vec3};
 
+/// Decoration update unit
 #[derive(Clone, Debug)]
 pub struct VoxelUpdate {
     pub voxel: Vec3<i32>,
     pub id: u32,
 }
 
+/// Tool to decorate chunks
 #[derive(Debug)]
 pub struct Builder {
     noise: Noise,
@@ -23,6 +25,7 @@ impl Builder {
         Self { noise, registry }
     }
 
+    /// Helper function to draw a circle of blocks horizontally
     fn draw_circle(x: i32, y: i32, z: i32, r: i32, id: u32) -> Vec<VoxelUpdate> {
         let mut sx = 0;
         let mut sz = 0;
@@ -49,6 +52,7 @@ impl Builder {
         updates
     }
 
+    /// Sample locations within chunk to place plants down
     fn sample_plants(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
@@ -72,6 +76,7 @@ impl Builder {
         locations
     }
 
+    /// Place plants down on sampled locations
     fn generate_plants(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
         let locations = self.sample_plants(chunk);
         let types = self.registry.get_type_map(vec![
@@ -141,6 +146,7 @@ impl Builder {
         updates
     }
 
+    /// Sample locations within chunk to place trees down
     fn sample_trees(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
@@ -161,6 +167,7 @@ impl Builder {
         locations
     }
 
+    /// Place trees down on sampled locations
     fn generate_trees(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
         let locations = self.sample_trees(chunk);
         let types = self
@@ -262,6 +269,7 @@ impl Builder {
         updates
     }
 
+    /// Sample locations within chunk to place lamps down
     fn sample_lamps(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
@@ -278,6 +286,7 @@ impl Builder {
         locations
     }
 
+    /// Place lamps down on sampled locations
     fn generate_lamps(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
         let locations = self.sample_lamps(chunk);
         let types = self.registry.get_type_map(vec!["Stone", "Yellow"]);
@@ -294,6 +303,7 @@ impl Builder {
         updates
     }
 
+    /// Sample locations within chunk to place a big stone structure down
     fn sample_stone_structure(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
@@ -310,6 +320,7 @@ impl Builder {
         locations
     }
 
+    /// Place big stone structures down on sampled locations
     fn generate_stone_structure(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
         let locations = self.sample_stone_structure(chunk);
         let types = self.registry.get_type_map(vec!["Yellow", "Stone Brick"]);
@@ -340,6 +351,7 @@ impl Builder {
         updates
     }
 
+    /// Returns a list of voxel updates from chunk
     pub fn build(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
         let mut updates = Vec::new();
 

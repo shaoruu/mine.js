@@ -12,6 +12,9 @@ use server_common::vec::Vec2;
 
 pub type PlayerUpdates = HashMap<usize, messages::Peer>;
 
+/// Single unit of a player
+///
+/// Stores the broker address to communicate with server
 #[derive(Debug)]
 pub struct Player {
     pub entity: Entity,
@@ -20,6 +23,7 @@ pub struct Player {
     pub requested_chunks: VecDeque<Vec2<i32>>,
 }
 
+/// Resource to store all server-side players in a HashMap
 pub type Players = HashMap<usize, Player>;
 
 pub trait BroadcastExt {

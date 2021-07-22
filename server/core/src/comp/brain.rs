@@ -83,18 +83,22 @@ impl Brain {
         }
     }
 
-    pub fn freeze(&mut self) {
+    /// Stop an entity from walking
+    pub fn stop(&mut self) {
         self.state.running = false;
     }
 
+    /// Mark entity to start walking
     pub fn walk(&mut self) {
         self.state.running = true;
     }
 
+    /// Mark entity to start jumping
     pub fn jump(&mut self) {
         self.state.jumping = true;
     }
 
+    /// Operate brain state upon a rigid body
     pub fn operate(&mut self, look_at: &LookAt, body: &mut RigidBody, dt: f32) {
         // move implementation originally written as external module
         //   see https://github.com/andyhall/voxel-fps-controller

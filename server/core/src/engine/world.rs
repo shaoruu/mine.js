@@ -91,6 +91,7 @@ struct WorldData {
     tick_speed: f32,
 }
 
+/// A single voxel-based and ECS-based world
 pub struct World {
     pub ecs: ECSWorld,
 
@@ -99,6 +100,7 @@ pub struct World {
     pub description: String,
 }
 
+/// Resource of messages to be broadcasted per tick
 pub type MessagesQueue = Vec<(
     messages::Message,  // actual message
     Option<Vec<usize>>, // include
@@ -107,6 +109,9 @@ pub type MessagesQueue = Vec<(
 )>;
 
 impl World {
+    /// Instantiate a new voxel world, registers the necessary components and resources
+    ///
+    /// Attempts to save the world data to its corresponding JSON file.
     pub fn new(json: serde_json::Value, registry: Registry) -> Self {
         let WorldMeta {
             name,
@@ -164,22 +169,27 @@ impl World {
         new_world
     }
 
+    /// Getter for world's internal ECS world
     pub fn ecs(&self) -> &ECSWorld {
         &self.ecs
     }
 
+    /// Getter for a mutable reference to world's internal ECS world
     pub fn ecs_mut(&mut self) -> &mut ECSWorld {
         &mut self.ecs
     }
 
+    /// Read an ECS resource generically
     pub fn read_resource<T: Resource>(&self) -> Fetch<T> {
         self.ecs.read_resource::<T>()
     }
 
+    /// Write an ECS resource generically
     pub fn write_resource<T: Resource>(&mut self) -> FetchMut<T> {
         self.ecs.write_resource::<T>()
     }
 
+    /// Preload chunks around `0,0` on start
     pub fn preload(&mut self) {
         let preload = self.preload;
         let name = self.name.to_owned();
@@ -199,6 +209,7 @@ impl World {
         );
     }
 
+    /// Add a new player, signaled from the server
     pub fn add_player(
         &mut self,
         id: Option<usize>,
@@ -272,6 +283,7 @@ impl World {
         }
     }
 
+    /// Remove a player, signaled from the server
     pub fn remove_player(&mut self, player_id: &usize) {
         let name = self.name.to_owned();
         let mut players = self.write_resource::<Players>();
@@ -311,11 +323,33 @@ impl World {
         })
     }
 
+    /// Broadcast a message instantly
+    ///
+    /// Suggested against, use message_queue instead.
     pub fn broadcast(&mut self, msg: &messages::Message, include: Vec<usize>, exclude: Vec<usize>) {
         self.write_resource::<Players>()
             .broadcast(msg, include, exclude, None);
     }
 
+    /// Adds a message to the message queue
+    ///
+    /// Message will be sent per tick, in a lazy fashion.
+    pub fn broadcast_lazy(
+        &mut self,
+        msg: &messages::Message,
+        include: Vec<usize>,
+        exclude: Vec<usize>,
+        from: usize,
+    ) {
+        self.write_resource::<MessagesQueue>().push((
+            msg.to_owned(),
+            Some(include),
+            Some(exclude),
+            Some(from),
+        ))
+    }
+
+    /// Handles server-side chunk request
     pub fn on_chunk_request(&mut self, player_id: usize, msg: messages::Message) {
         let mut players = self.write_resource::<Players>();
 
@@ -329,7 +363,8 @@ impl World {
         }
     }
 
-    pub fn on_config(&mut self, _player_id: usize, msg: messages::Message) {
+    /// Handles server-side config change
+    pub fn on_config(&mut self, player_id: usize, msg: messages::Message) {
         let mut clock = self.write_resource::<Clock>();
 
         let json = msg.parse_json().unwrap();
@@ -351,9 +386,13 @@ impl World {
         let mut new_message = create_of_type(MessageType::Config);
         new_message.json = json.to_string();
 
-        self.broadcast(&new_message, vec![], vec![]);
+        self.broadcast_lazy(&new_message, vec![], vec![], player_id);
     }
 
+    /// Handles server-side voxel updates
+    ///
+    /// Remesh chunks based on which sub-chunks are changed according to internal
+    /// chunk caching system.
     pub fn on_update(&mut self, _player_id: usize, msg: messages::Message) {
         let mut chunks = self.write_resource::<Chunks>();
 
@@ -452,11 +491,13 @@ impl World {
         self.broadcast(&new_message, vec![], vec![]);
     }
 
+    /// Adds the player update to the resource `PlayerUpdate`, handled later in an ECS system.
     pub fn on_peer(&mut self, player_id: usize, msg: messages::Message) {
         let mut player_updates = self.write_resource::<PlayerUpdates>();
         player_updates.insert(player_id, msg.peers[0].clone());
     }
 
+    /// Handles an incoming chat message, broadcasts response lazily
     pub fn on_chat_message(&mut self, player_id: usize, msg: messages::Message) {
         if let Some(message) = msg.message.clone() {
             let sender: String = message.sender;
@@ -494,14 +535,17 @@ impl World {
                 }
 
                 msgs.into_iter().for_each(|msg| {
-                    self.broadcast(&msg, vec![], vec![]);
+                    self.broadcast_lazy(&msg, vec![], vec![], player_id);
                 });
             } else {
-                self.broadcast(&msg, vec![], vec![]);
+                self.broadcast_lazy(&msg, vec![], vec![], player_id);
             }
         }
     }
 
+    /// TEST:
+    ///
+    /// Used to test entity spawning
     pub fn test_entity(&mut self, player_id: usize) {
         let players = self.read_resource::<Players>();
         let player = players.get(&player_id);
@@ -537,6 +581,7 @@ impl World {
         );
     }
 
+    /// Sync configurations to the world's JSON file
     pub fn sync_config(&mut self) {
         let chunks = self.read_resource::<Chunks>();
 
@@ -554,6 +599,10 @@ impl World {
         }
     }
 
+    /// Saves the world. Things done:
+    ///
+    /// 1. Saves the world configs (`time`, `tick_speed`, ...etc)
+    /// 2. Save all chunks within `chunks` to their corresponding JSON files
     pub fn save(&self) {
         let chunks = self.read_resource::<Chunks>();
         let clock = self.read_resource::<Clock>();
@@ -587,6 +636,13 @@ impl World {
         }
     }
 
+    /// A world tick
+    ///
+    /// 1. Tick resources
+    ///     - `Clock`
+    ///     - `Chunks`
+    /// 2. Dispatch all ECS systems
+    /// 3. Periodically save the world
     pub fn tick(&mut self) {
         // TODO: make dispatchers
 

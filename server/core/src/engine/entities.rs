@@ -13,6 +13,7 @@ use crate::comp::{
     rotation::Rotation,
 };
 
+/// JSON format to store a rigid body configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RigidBodyProto {
@@ -24,6 +25,7 @@ pub struct RigidBodyProto {
     pub auto_step: bool,
 }
 
+/// JSON format to store an entity model
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModelProto {
@@ -31,6 +33,7 @@ pub struct ModelProto {
     pub object: String,
 }
 
+/// Base entity type, compatible to store as JSON
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EntityPrototype {
@@ -41,8 +44,10 @@ pub struct EntityPrototype {
     pub rigidbody: RigidBodyProto,
 }
 
+/// Entity type map
 pub type EntityPrototypes = HashMap<String, EntityPrototype>;
 
+/// Entities resource stored as a map
 pub struct Entities {
     prototypes: EntityPrototypes,
 }
@@ -72,14 +77,17 @@ impl Entities {
         Self { prototypes }
     }
 
+    /// Clone all prototypes
     pub fn get_all(&self) -> EntityPrototypes {
         self.prototypes.clone()
     }
 
+    /// Get a single prototype reference
     pub fn get_prototype(&self, etype: &str) -> Option<&EntityPrototype> {
         self.prototypes.get(etype)
     }
 
+    /// Spawn in an ECS entity, based on a certain prototype
     pub fn spawn_entity(
         ecs: &mut World,
         prototype: &EntityPrototype,

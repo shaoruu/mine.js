@@ -138,6 +138,16 @@ impl Chunks {
         }
     }
 
+    /// Tick does four things:
+    ///
+    /// 1. Checks if any chunks needs to be generated. If any is found,
+    /// the chunk coordinates are sent to another thread to be generated.
+    /// 2. Checks if any thread is waiting to return a generated chunk. If
+    /// received any, the new chunk will be added to `chunks` itself.
+    /// 3. Checks if any chunks needs to be meshed. If any is found, the chunks
+    /// are then sent to another thread to be meshed (lit and culled).
+    /// 4. Checks if any thread is waiting to return a meshed chunk. If so, add
+    /// them back into `chunks` itself.
     pub fn tick(&mut self) {
         if !self.is_meshing && !self.to_mesh.is_empty() {
             let to_mesh = self
@@ -242,10 +252,12 @@ impl Chunks {
         }
     }
 
+    /// Getter for the count of internal chunks
     pub fn len(&self) -> usize {
         self.chunks.len()
     }
 
+    /// Getter for whether there are no chunks loaded
     pub fn is_empty(&self) -> bool {
         self.chunks.is_empty()
     }
@@ -308,18 +320,22 @@ impl Chunks {
         self.generate(&Vec2(0, 0), width, true);
     }
 
+    /// Start the internal cache, caching any mutated chunks.
     pub fn start_caching(&mut self) {
         self.caching = true;
     }
 
+    /// Stop the internal cache
     pub fn stop_caching(&mut self) {
         self.caching = false;
     }
 
+    /// Clear the internal mutated chunks cache
     pub fn clear_cache(&mut self) {
         self.chunk_cache.clear();
     }
 
+    /// Save all chunks to their according JSON files
     pub fn save(&self) {
         // saving the chunks
         self.chunks.values().for_each(|chunk| {
@@ -599,6 +615,11 @@ impl Chunks {
     }
 
     /// Set the voxel type for a voxel coordinate
+    ///
+    /// Side-effects:
+    ///
+    /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
+    /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
     #[inline]
     pub fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         let max_height = self.config.max_height;
@@ -657,6 +678,11 @@ impl Chunks {
     }
 
     /// Set the sunlight level for a voxel coordinate
+    ///
+    /// Side-effects:
+    ///
+    /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
+    /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
     #[inline]
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         let max_height = self.config.max_height;
@@ -684,6 +710,7 @@ impl Chunks {
         })
     }
 
+    /// Get the torch light level by voxel coordinates of a specified color
     #[inline]
     pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32, color: &LightColor) -> u32 {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
@@ -694,6 +721,12 @@ impl Chunks {
         }
     }
 
+    /// Set the torch light level by voxel coordinates of a specified color
+    ///
+    /// Side-effects:
+    ///
+    /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
+    /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
     #[inline]
     pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32, color: &LightColor) {
         let max_height = self.config.max_height;
@@ -762,10 +795,12 @@ impl Chunks {
         })
     }
 
+    /// Get whether a voxel is solid
     pub fn get_solidity_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> bool {
         self.get_voxel_by_voxel(vx, vy, vz) != 0
     }
 
+    /// Get whether a voxel is fluid
     pub fn get_fluidity_by_voxel(&self, _vx: i32, _vy: i32, _vz: i32) -> bool {
         // TODO: ADD FLUIDS
         false
@@ -821,6 +856,9 @@ impl Chunks {
         neighbor_chunks
     }
 
+    /// Add a chunk instance to self
+    ///
+    /// Removes existing chunks first.
     pub fn add_chunk(&mut self, chunk: Chunk) {
         self.chunks.remove(&chunk.coords);
         self.chunks.insert(chunk.coords.to_owned(), chunk);

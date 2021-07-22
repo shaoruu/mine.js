@@ -12,6 +12,7 @@ impl Rotation {
         Self(Quaternion(qx, qy, qz, qw))
     }
 
+    /// Instantiate a rotation component from a Quaternion
     pub fn from_quaternion(quaternion: &Quaternion) -> Self {
         Self(quaternion.to_owned())
     }

@@ -4,6 +4,13 @@ use kdtree::KdTree as KdTreeCore;
 use server_common::vec::Vec3;
 use specs::Entity;
 
+/// World-wide K-dimensional tree for fast positional querying
+///
+/// Separated into three searchable sections:
+///
+/// 1. Union: All entities
+/// 2. Players: All players
+/// 3. Entities: All entities
 #[derive(Debug)]
 pub struct KdTree {
     union: KdTreeCore<f32, Entity, [f32; 3]>,

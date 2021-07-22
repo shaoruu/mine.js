@@ -3,6 +3,7 @@ use specs::{Component, VecStorage};
 
 type LookTargetValue = Option<Vec3<f32>>;
 
+/// Observable target of an entity
 #[derive(Clone, Debug)]
 pub enum LookTarget {
     ALL(LookTargetValue),
@@ -28,6 +29,8 @@ impl LookTarget {
     }
 }
 
+/// By adding this component, an entity has the ability to scan around
+/// and look at the closest entity.
 #[derive(Component, Debug)]
 #[storage(VecStorage)]
 pub struct LookAt(pub LookTarget);

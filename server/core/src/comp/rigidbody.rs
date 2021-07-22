@@ -62,38 +62,52 @@ impl RigidBody {
         }
     }
 
+    /// Setter for rigid body's position
     pub fn set_position(&mut self, p: &Vec3<f32>) {
         let delta = p.sub(&self.aabb.base);
         self.aabb.translate(&delta);
         self.mark_active();
     }
 
+    /// Getter for rigid body's position
     pub fn get_position(&self) -> Vec3<f32> {
         self.aabb.base.clone()
     }
 
+    /// Adds a vector to rigid body's internal force, which gets
+    /// processed every tick.
     pub fn apply_force(&mut self, f: &Vec3<f32>) {
         self.forces = self.forces.add(f);
         self.mark_active();
     }
 
+    /// Adds a vector to rigid body's internal impulse, which gets
+    /// processed every tick.
     pub fn apply_impulse(&mut self, i: &Vec3<f32>) {
         self.impulses = self.impulses.add(i);
         self.mark_active();
     }
 
+    /// Get x-axis of the resting vector of a rigid body. A resting
+    /// vector indicates whether a body is resting or not.
     pub fn at_rest_x(&self) -> f32 {
         self.resting[0]
     }
 
+    /// Get y-axis of the resting vector of a rigid body. A resting
+    /// vector indicates whether a body is resting or not.
     pub fn at_rest_y(&self) -> f32 {
         self.resting[1]
     }
 
+    /// Get z-axis of the resting vector of a rigid body. A resting
+    /// vector indicates whether a body is resting or not.
     pub fn at_rest_z(&self) -> f32 {
         self.resting[2]
     }
 
+    /// Mark rigid body as active. Active bodies will be processed for
+    /// physics each tick.
     pub fn mark_active(&mut self) {
         self.sleep_frame_count = 10 | 0;
     }

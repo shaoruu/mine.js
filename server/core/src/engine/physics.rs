@@ -9,6 +9,7 @@ use crate::comp::rigidbody::RigidBody;
 
 type TestFunction<'a> = &'a dyn Fn(i32, i32, i32) -> bool;
 
+/// Options to spawn in a body
 pub struct BodyOptions<'a> {
     pub aabb: Aabb,
     pub mass: f32,
@@ -19,6 +20,7 @@ pub struct BodyOptions<'a> {
     pub auto_step: bool,
 }
 
+/// Options to add physics to body
 #[derive(Clone, Default)]
 pub struct PhysicsOptions {
     pub gravity: Vec3<f32>,
@@ -28,6 +30,7 @@ pub struct PhysicsOptions {
     pub fluid_density: f32,
 }
 
+/// Resource for operating physics on bodies
 #[derive(Default)]
 pub struct Physics {
     options: PhysicsOptions,
@@ -38,6 +41,7 @@ impl Physics {
         Self { options }
     }
 
+    /// Process the physics on a certain body
     pub fn iterate_body(
         &self,
         b: &mut RigidBody,

@@ -28,6 +28,7 @@ use super::super::constants::DATA_PADDING;
 
 use super::chunks::MeshLevel;
 
+/// Prototype for storing chunk's meshes and sending them to client
 #[derive(Debug, Clone)]
 pub struct Meshes {
     pub sub_chunk: i32,
@@ -35,6 +36,7 @@ pub struct Meshes {
     pub transparent: Option<MeshType>,
 }
 
+/// Prototype for chunk's internal data used to send to client
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ChunkFileData {
@@ -44,6 +46,9 @@ struct ChunkFileData {
     height_map: String,
 }
 
+/// Base unit column for voxels
+///
+/// Dimensions are specified as `max_height * chunk_size * max_height`
 #[derive(Clone, Debug)]
 pub struct Chunk {
     pub name: String,
@@ -78,6 +83,8 @@ pub struct Chunk {
 }
 
 impl Chunk {
+    /// Constructor for a chunk. Attempts to load from existing files,
+    /// otherwise is marked to be generated.
     pub fn new(coords: Vec2<i32>, config: &WorldConfig, folder: &PathBuf) -> Self {
         let Vec2(cx, cz) = coords;
 
@@ -124,7 +131,7 @@ impl Chunk {
                 .add(&Vec3(0, max_height as i32, 0));
         let max = max_inner.add(&paddings);
 
-        let mut path = folder.clone();
+        let mut path = folder.to_path_buf();
         let mut file_name = name.clone();
         file_name.push_str(".json");
         path.push(file_name.as_str());
@@ -167,7 +174,7 @@ impl Chunk {
         new_chunk
     }
 
-    /// try to access saved data file for chunk
+    /// Try to load the chunk from saved data file
     pub fn try_load(&mut self) {
         // open a file for reading
 
@@ -202,6 +209,7 @@ impl Chunk {
         }
     }
 
+    /// Save the chunk into a JSON compressed file
     pub fn save(&self) {
         let mut file = File::create(&self.file).expect("Could not create chunk file.");
 
@@ -228,6 +236,9 @@ impl Chunk {
             .expect("Unable to write to chunk file.");
     }
 
+    /// Get a voxel type within chunk by voxel coordinates
+    ///
+    /// Returns 0 if it's outside of the chunk.
     #[inline]
     pub fn get_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
@@ -238,6 +249,9 @@ impl Chunk {
         self.voxels[&[lx as usize, ly as usize, lz as usize]]
     }
 
+    /// Set a voxel to type within chunk by voxel coordinates
+    ///
+    /// Panics if the coordinates are outside of chunk.
     #[inline]
     pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         assert!(self.contains(vx, vy, vz,));
@@ -246,6 +260,9 @@ impl Chunk {
         self.voxels[&[lx as usize, ly as usize, lz as usize]] = id;
     }
 
+    /// Get the red light value for voxel by voxel coordinates
+    ///
+    /// Returns 0 if it's outside of the chunk.
     #[inline]
     pub fn get_red_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
@@ -256,6 +273,9 @@ impl Chunk {
         self.get_local_red_light(lx as usize, ly as usize, lz as usize)
     }
 
+    /// Set the red light value for voxel by voxel coordinates
+    ///
+    /// Panics if it's outside of the chunk.
     #[inline]
     pub fn set_red_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
@@ -264,24 +284,9 @@ impl Chunk {
         self.set_local_red_light(lx as usize, ly as usize, lz as usize, level);
     }
 
-    #[inline]
-    pub fn get_blue_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
-        if !self.contains(vx, vy, vz) {
-            return 0;
-        }
-
-        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
-        self.get_local_blue_light(lx as usize, ly as usize, lz as usize)
-    }
-
-    #[inline]
-    pub fn set_blue_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
-        assert!(self.contains(vx, vy, vz,));
-
-        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
-        self.set_local_blue_light(lx as usize, ly as usize, lz as usize, level);
-    }
-
+    /// Get the green light value for voxel by voxel coordinates
+    ///
+    /// Returns 0 if it's outside of the chunk.
     #[inline]
     pub fn get_green_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
@@ -292,12 +297,39 @@ impl Chunk {
         self.get_local_green_light(lx as usize, ly as usize, lz as usize)
     }
 
+    /// Set the green light value for voxel by voxel coordinates
+    ///
+    /// Panics if it's outside of the chunk.
     #[inline]
     pub fn set_green_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
         let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
         self.set_local_green_light(lx as usize, ly as usize, lz as usize, level);
+    }
+
+    /// Get the blue light value for voxel by voxel coordinates
+    ///
+    /// Returns 0 if it's outside of the chunk.
+    #[inline]
+    pub fn get_blue_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+        if !self.contains(vx, vy, vz) {
+            return 0;
+        }
+
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        self.get_local_blue_light(lx as usize, ly as usize, lz as usize)
+    }
+
+    /// Set the blue light value for voxel by voxel coordinates
+    ///
+    /// Panics if it's outside of the chunk.
+    #[inline]
+    pub fn set_blue_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
+        assert!(self.contains(vx, vy, vz,));
+
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        self.set_local_blue_light(lx as usize, ly as usize, lz as usize, level);
     }
 
     #[inline]
@@ -310,6 +342,9 @@ impl Chunk {
         }
     }
 
+    /// Get the torch light value for voxel by voxel coordinates by color
+    ///
+    /// Returns 0 if it's outside of the chunk.
     #[inline]
     pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32, color: &LightColor) {
         match color {
@@ -320,6 +355,9 @@ impl Chunk {
         }
     }
 
+    /// Get the sunlight value for voxel by voxel coordinates
+    ///
+    /// Returns 0 if it's not within the chunk.
     #[inline]
     pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
@@ -330,6 +368,9 @@ impl Chunk {
         self.get_local_sunlight(lx as usize, ly as usize, lz as usize)
     }
 
+    /// Set the sunlight value for voxel by voxel coordinates
+    ///
+    /// Panics if it's outside of the chunk.
     #[inline]
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
@@ -338,6 +379,9 @@ impl Chunk {
         self.set_local_sunlight(lx as usize, ly as usize, lz as usize, level)
     }
 
+    /// Get the max height of a voxel column
+    ///
+    /// Returns `max_height` if it's not within the chunk.
     #[inline]
     pub fn get_max_height(&self, vx: i32, vz: i32) -> u32 {
         if !self.contains(vx, 0, vz) {
@@ -348,6 +392,9 @@ impl Chunk {
         self.height_map[&[lx as usize, lz as usize]]
     }
 
+    /// Set the max height of a voxel column
+    ///
+    /// Panics if it's not within the chunk.
     #[inline]
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: u32) {
         assert!(self.contains(vx, 0, vz,));
@@ -356,36 +403,43 @@ impl Chunk {
         self.height_map[&[lx as usize, lz as usize]] = height;
     }
 
+    /// Getter the entire voxel ndarray
     #[inline]
     pub fn get_voxels(&self) -> &Ndarray<u32> {
         &self.voxels
     }
 
+    /// Setter the entire voxel ndarray
     #[inline]
     pub fn set_voxels(&mut self, data: Ndarray<u32>) {
         self.voxels = data;
     }
 
+    /// Getter for the entire lights ndarray
     #[inline]
     pub fn get_lights(&self) -> &Ndarray<u32> {
         &self.lights
     }
 
+    /// Setter for the entire lights ndarray
     #[inline]
     pub fn set_lights(&mut self, data: Ndarray<u32>) {
         self.lights = data;
     }
 
+    /// Getter for the entire height map
     #[inline]
     pub fn get_height_map(&self) -> &Ndarray<u32> {
         &self.height_map
     }
 
+    /// Setter for the entire height map
     #[inline]
     pub fn set_height_map(&mut self, data: Ndarray<u32>) {
         self.height_map = data;
     }
 
+    /// Calculate and mark a sub-chunk as dirty at a certain height
     pub fn calc_dirty_levels(&mut self, vy: i32, max_height: u32, sub_chunks: u32) {
         let vy = vy as u32;
         let unit = max_height / sub_chunks;
@@ -399,6 +453,9 @@ impl Chunk {
         }
     }
 
+    /// Get the protocol to send to client
+    ///
+    /// Making most fields such as meshes, voxels, and lights optional
     pub fn get_protocol(
         &self,
         needs_meshes: bool,
@@ -435,51 +492,61 @@ impl Chunk {
         }
     }
 
+    /// Get the red light value locally
     #[inline]
     fn get_local_red_light(&self, lx: usize, ly: usize, lz: usize) -> u32 {
         Lights::extract_red_light(self.lights[&[lx, ly, lz]])
     }
 
+    /// Set the red light value locally
     #[inline]
     fn set_local_red_light(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
         self.lights[&[lx, ly, lz]] = Lights::insert_red_light(self.lights[&[lx, ly, lz]], level);
     }
 
+    /// Get the green light value locally
     #[inline]
     fn get_local_green_light(&self, lx: usize, ly: usize, lz: usize) -> u32 {
         Lights::extract_green_light(self.lights[&[lx, ly, lz]])
     }
 
+    /// Set the green light value locally
     #[inline]
     fn set_local_green_light(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
         self.lights[&[lx, ly, lz]] = Lights::insert_green_light(self.lights[&[lx, ly, lz]], level);
     }
 
+    /// Get the blue light value locally
     #[inline]
     fn get_local_blue_light(&self, lx: usize, ly: usize, lz: usize) -> u32 {
         Lights::extract_blue_light(self.lights[&[lx, ly, lz]])
     }
 
+    /// Set the blue light value locally
     #[inline]
     fn set_local_blue_light(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
         self.lights[&[lx, ly, lz]] = Lights::insert_blue_light(self.lights[&[lx, ly, lz]], level);
     }
 
+    /// Get the sunlight value locally
     #[inline]
     fn get_local_sunlight(&self, lx: usize, ly: usize, lz: usize) -> u32 {
         Lights::extract_sunlight(self.lights[&[lx, ly, lz]])
     }
 
+    /// Set the sunlight value locally
     #[inline]
     fn set_local_sunlight(&mut self, lx: usize, ly: usize, lz: usize, level: u32) {
         self.lights[&[lx, ly, lz]] = Lights::insert_sunlight(self.lights[&[lx, ly, lz]], level);
     }
 
+    /// Convert voxel coordinates to local chunk coordinates
     #[inline]
     fn to_local(&self, vx: i32, vy: i32, vz: i32) -> Vec3<i32> {
         Vec3(vx, vy, vz).sub(&self.min)
     }
 
+    /// Returns whether a set of voxel coordinates is within the chunk padding.
     #[inline]
     fn contains(&self, vx: i32, vy: i32, vz: i32) -> bool {
         let size = self.size as i32;

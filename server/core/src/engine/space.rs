@@ -65,7 +65,9 @@ impl Space {
         }
     }
 
-    /// x,y,z in terms of voxels
+    /// Access a voxel by voxel coordinates within the space
+    ///
+    /// `x,y,z` in terms of voxels
     pub fn get_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let coords = map_voxel_to_chunk(vx, vy, vz, self.chunk_size);
         let Vec3(lx, ly, lz) = map_voxel_to_chunk_local(vx, vy, vz, self.chunk_size);
@@ -76,7 +78,9 @@ impl Space {
         }
     }
 
-    /// x,y,z in terms of voxels
+    /// Access the max height by voxel column within the space
+    ///
+    /// `x,y,z` in terms of voxels
     pub fn get_max_height(&self, vx: i32, vz: i32) -> u32 {
         let coords = map_voxel_to_chunk(vx, 0, vz, self.chunk_size);
         let Vec3(lx, _, lz) = map_voxel_to_chunk_local(vx, 0, vz, self.chunk_size);

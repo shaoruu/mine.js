@@ -1,5 +1,6 @@
 use specs::{Component, VecStorage};
 
+/// General name tagging component
 #[derive(Default, Component)]
 #[storage(VecStorage)]
 pub struct Name(pub Option<String>);

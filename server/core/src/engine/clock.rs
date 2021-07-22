@@ -23,22 +23,29 @@ impl Clock {
         }
     }
 
+    /// Get the delta in seconds
     pub fn delta_secs(&self) -> f32 {
         self.delta
     }
 
+    /// Get the delta in milliseconds
     pub fn delta_milli(&self) -> f32 {
         self.delta * 1000.0
     }
 
+    /// Set the time of clock
     pub fn set_time(&mut self, time: f32) {
         self.time = time;
     }
 
+    /// Set the tick speed of clock
     pub fn set_tick_speed(&mut self, tick_speed: f32) {
         self.tick_speed = tick_speed;
     }
 
+    /// Process a tick of clock
+    ///
+    /// Adds `tick_speed` to `time`, and calculate the delta time passed.
     pub fn tick(&mut self) {
         let now = SystemTime::now();
 
