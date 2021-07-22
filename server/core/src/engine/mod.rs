@@ -1,3 +1,4 @@
+pub mod astar;
 pub mod chunk;
 pub mod chunks;
 pub mod clock;

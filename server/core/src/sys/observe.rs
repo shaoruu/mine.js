@@ -8,6 +8,7 @@ use crate::{
     comp::{
         lookat::{LookAt, LookTarget},
         rigidbody::RigidBody,
+        view_radius::ViewRadius,
     },
     engine::{chunks::Chunks, kdtree::KdTree},
 };
@@ -15,21 +16,24 @@ use crate::{
 pub struct ObserveSystem;
 
 impl<'a> System<'a> for ObserveSystem {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         ReadExpect<'a, KdTree>,
         ReadExpect<'a, Chunks>,
         ReadStorage<'a, RigidBody>,
+        ReadStorage<'a, ViewRadius>,
         WriteStorage<'a, LookAt>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
         use specs::Join;
 
-        let (tree, chunks, bodies, mut look_ats) = data;
+        let (tree, chunks, bodies, radiuses, mut look_ats) = data;
 
+        let dimension = chunks.config.dimension;
         let test_solid = |x: i32, y: i32, z: i32| -> bool { chunks.get_solidity_by_voxel(x, y, z) };
 
-        for (body, look_at) in (&bodies, &mut look_ats).join() {
+        for (body, radius, look_at) in (&bodies, &radiuses, &mut look_ats).join() {
             let mut position = body.get_position();
 
             // loop until found or nothing found
@@ -63,7 +67,14 @@ impl<'a> System<'a> for ObserveSystem {
                     let mut dir = c.clone().sub(&position);
                     let dist = dir.len();
 
+                    // closest point is too far, target nothing
+                    if dist > radius.0 as f32 * dimension as f32 {
+                        closest = None;
+                        break;
+                    }
+
                     if !approx_equals(&dist, &0.0) {
+                        // there's something blocking the target from seeing
                         let hit = raycast::trace(
                             dist,
                             &test_solid,

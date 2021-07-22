@@ -7,7 +7,7 @@
     "tickSpeed": 3,
     "maxPlayers": 10,
     "maxHeight": 128,
-    "renderRadius": 8,
+    "renderRadius": 96,
     "preload": 12,
     "name": "testbed",
     "chunkRoot": "data",

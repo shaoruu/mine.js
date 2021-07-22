@@ -5,6 +5,7 @@ use log::info;
 
 use ansi_term::Colour::Yellow;
 use server_common::quaternion::Quaternion;
+use server_utils::convert::map_world_to_voxel;
 use specs::shred::{Fetch, FetchMut, Resource};
 
 use std::io::Write;
@@ -23,6 +24,7 @@ use crate::comp::lookat::LookAt;
 use crate::comp::name::Name;
 use crate::comp::rotation::Rotation;
 use crate::comp::view_radius::ViewRadius;
+use crate::engine::astar::PathNode;
 use crate::network::models::ChatType;
 use crate::sys::{
     BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, JumpingSystem,
@@ -33,6 +35,7 @@ use crate::{
     network::message::{JoinResult, Message},
 };
 
+use super::astar::AStar;
 use super::entities::Entities;
 use super::kdtree::KdTree;
 use super::{
@@ -579,6 +582,62 @@ impl World {
             &Vec3(pos.0, pos.1, pos.2),
             &Quaternion(0.0, 0.0, 0.0, 0.0),
         );
+    }
+
+    /// TEST:
+    ///
+    /// Testing path finding
+    pub fn test_pathfinding(&mut self, player_id: usize) {
+        let players = self.read_resource::<Players>();
+        let player = players.get(&player_id);
+
+        if player.is_none() {
+            return;
+        }
+
+        let player = player.unwrap();
+
+        let bodies = self.ecs().read_component::<RigidBody>();
+        let body = bodies.get(player.entity).unwrap();
+
+        let pos = body.get_position();
+
+        drop(bodies);
+        drop(players);
+
+        let chunks = self.read_resource::<Chunks>();
+        let dimension = chunks.config.dimension;
+
+        let start = Vec3(0, 0, 0);
+        let voxel_pos = map_world_to_voxel(pos.0, pos.1, pos.2, dimension);
+
+        // AStar::calculate(
+        //     &start,
+        //     &voxel_pos,
+        //     &|&node| {
+        //         let PathNode(vx, vy, vz) = node;
+        //         let mut successors = vec![];
+
+        //         // TODO: add sweeping checks
+
+        //         if !chunks.get_solidity_by_voxel(vx + 1, vy, vz) {
+        //             successors.push((PathNode(vx + 1, vy, vz), 1))
+        //         }
+        //         if !chunks.get_solidity_by_voxel(vx - 1, vy, vz) {
+        //             successors.push((PathNode(vx - 1, vy, vz), 1))
+        //         }
+
+        //         if !chunks.get_solidity_by_voxel(vx, vy, vz + 1) {
+        //             successors.push((PathNode(vx, vy, vz + 1), 1))
+        //         }
+        //         if !chunks.get_solidity_by_voxel(vx, vy, vz + 1) {
+        //             successors.push((PathNode(vx, vy, vz + 1), 1))
+        //         }
+
+        //         successors
+        //     },
+        //     &|| {},
+        // );
     }
 
     /// Sync configurations to the world's JSON file

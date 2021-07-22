@@ -1,7 +1,8 @@
 use specs::{Component, VecStorage};
 
 /// A view radius defines how far an entity can see.
-/// The unit is chunks.
+///
+/// The unit is voxels.
 #[derive(Default, Component)]
 #[storage(VecStorage)]
 pub struct ViewRadius(pub i16);

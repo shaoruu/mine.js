@@ -11,6 +11,7 @@ use crate::comp::{
     lookat::{LookAt, LookTarget},
     rigidbody::RigidBody,
     rotation::Rotation,
+    view_radius::ViewRadius,
 };
 
 /// JSON format to store a rigid body configuration
@@ -40,6 +41,7 @@ pub struct EntityPrototype {
     pub etype: String,
     pub brain: String,
     pub observe: String,
+    pub view_distance: i16,
     pub model: ModelProto,
     pub rigidbody: RigidBodyProto,
 }
@@ -105,6 +107,7 @@ impl Entities {
         } = prototype.rigidbody;
 
         let observe = &prototype.observe;
+        let view_distance = &prototype.view_distance;
 
         ecs.create_entity()
             .with(EType::new(etype))
@@ -125,6 +128,7 @@ impl Entities {
             } else {
                 LookTarget::ENTITY(None)
             }))
+            .with(ViewRadius::new(*view_distance))
             .with(Brain::new(BrainOptions::default()))
             .build()
     }
