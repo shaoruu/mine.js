@@ -61,11 +61,8 @@ message Entity {
   float px = 3;
   float py = 4;
   float pz = 5;
-  float qx = 6;
-  float qy = 7;
-  float qz = 8;
-  float qw = 9;
-  repeated float lookAt = 10 [packed=true];
+  repeated float heading = 6 [packed=true];
+  repeated float lookAt = 7 [packed=true];
 }
 
 message Message {

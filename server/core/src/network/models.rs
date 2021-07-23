@@ -38,10 +38,7 @@ pub struct EntityProtocol {
     pub px: f32,
     pub py: f32,
     pub pz: f32,
-    pub qx: f32,
-    pub qy: f32,
-    pub qz: f32,
-    pub qw: f32,
+    pub heading: Option<Vec3<f32>>,
     pub look_at: Option<Vec3<f32>>,
 }
 
@@ -156,10 +153,11 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
                 px: entity.px,
                 py: entity.py,
                 pz: entity.pz,
-                qx: entity.qx,
-                qy: entity.qy,
-                qz: entity.qz,
-                qw: entity.qw,
+                heading: if let Some(heading) = entity.heading {
+                    vec![heading.0, heading.1, heading.2]
+                } else {
+                    vec![]
+                },
                 look_at: if let Some(look_at) = entity.look_at {
                     vec![look_at.0, look_at.1, look_at.2]
                 } else {

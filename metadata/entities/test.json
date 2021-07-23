@@ -1,6 +1,6 @@
 {
   "etype": "Test",
-  "observe": "all",
+  "observe": "player",
   "viewDistance": 16,
   "brain": "dumb-follow",
   "brainOptions": {

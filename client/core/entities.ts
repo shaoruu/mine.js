@@ -37,7 +37,7 @@ class Entities {
   public physicals: Map<string, PhysicalType> = new Map();
   public entities: Map<string, Entity> = new Map();
 
-  private updates: [string, string, Coords3, Coords3][] = [];
+  private updates: [string, string, Coords3, Coords3, Coords3][] = [];
   private prototypes: Map<string, Entity> = new Map();
 
   constructor(public engine: Engine, public options: EntitiesOptionsType) {
@@ -131,14 +131,14 @@ class Entities {
     return this.prototypes.get(type.toLowerCase()).clone();
   };
 
-  handleServerUpdate = (id: string, type: string, position: Coords3, lookAt?: Coords3) => {
-    this.updates.push([id, type, position, lookAt]);
+  handleServerUpdate = (id: string, type: string, position: Coords3, heading?: Coords3, lookAt?: Coords3) => {
+    this.updates.push([id, type, position, heading, lookAt]);
     if (this.updates.length >= this.engine.config.network.maxServerUpdates) {
       this.updates.shift();
     }
   };
 
-  updateEntity = (id: string, type: string, position: Coords3, lookAt?: Coords3) => {
+  updateEntity = (id: string, type: string, position: Coords3, heading?: Coords3, lookAt?: Coords3) => {
     if (!this.engine.assetsLoaded) return;
 
     let entity = this.entities.get(id);
@@ -153,6 +153,12 @@ class Entities {
         entity.setTarget(new Vector3(...lookAt));
       } else {
         entity.setTarget(null);
+      }
+
+      if (heading.length > 0) {
+        entity.setHeading(new Vector3(...heading));
+      } else {
+        entity.setHeading(null);
       }
     }
 

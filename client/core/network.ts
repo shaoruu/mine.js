@@ -158,8 +158,8 @@ class Network {
         const { entities: entitiesData } = event;
 
         for (const entity of entitiesData) {
-          const { id, type, px, py, pz, lookAt } = entity;
-          entities.handleServerUpdate(id, type, [px, py, pz], lookAt);
+          const { id, type, px, py, pz, heading, lookAt } = entity;
+          entities.handleServerUpdate(id, type, [px, py, pz], heading, lookAt);
         }
 
         break;

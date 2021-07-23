@@ -16,6 +16,7 @@ class Entity {
 
   public speed = 0;
   public target: Vector3 = null;
+  public heading: Vector3 = null;
 
   public mesh: Mesh;
 
@@ -78,6 +79,12 @@ class Entity {
 
     if (this.target) {
       this.currLooking.lerp(this.target, 0.4);
+    }
+
+    if (this.heading) {
+      this.bodyLooking.lerp(this.heading, 0.05);
+      this.bodyLooking.y = this.mesh.position.y;
+    } else if (this.target) {
       this.bodyLooking.lerp(this.target, 0.05);
       this.bodyLooking.y = this.mesh.position.y;
     }
@@ -121,6 +128,10 @@ class Entity {
 
   setTarget = (target: Vector3) => {
     this.target = target;
+  };
+
+  setHeading = (heading: Vector3) => {
+    this.heading = heading;
   };
 
   setPosition = (position: Coords3) => {
