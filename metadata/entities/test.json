@@ -1,11 +1,23 @@
 {
   "etype": "Test",
-  "brain": "dumb-follow",
   "observe": "all",
   "viewDistance": 16,
+  "brain": "dumb-follow",
+  "brainOptions": {
+    "maxSpeed": 6.0,
+    "moveForce": 12.0,
+    "responsiveness": 120.0,
+    "runningFriction": 0.4,
+    "standingFriction": 2.0,
+    "airMoveMult": 0.7,
+    "jumpImpulse": 8.0,
+    "jumpForce": 1.1,
+    "jumpTime": 50.0,
+    "airJumps": 0
+  },
   "rigidbody": {
     "aabb": [0.2, 0.2, 0.2],
-    "head": [0.1, 0.18, 0.1],
+    "head": 0.18,
     "mass": 1.0,
     "friction": 1.0,
     "restitution": 0.0,

@@ -175,9 +175,7 @@ class Network {
         const { json } = event;
         if (this.engine.debug) {
           const { debug } = this.engine;
-          const blockArr = json;
-          debug.clearHighlights();
-          blockArr.forEach((coords) => debug.addHighlight(coords));
+          debug.addHighlights(json);
         }
         break;
       }

@@ -1,7 +1,18 @@
-import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Group, BoxBufferGeometry } from 'three';
+import {
+  BoxGeometry,
+  DoubleSide,
+  Mesh,
+  MeshBasicMaterial,
+  PlaneBufferGeometry,
+  Group,
+  BoxBufferGeometry,
+  Line,
+  BufferGeometry,
+  Vector3,
+} from 'three';
 import { Pane } from 'tweakpane';
 
-// import { AxesHelper, GridHelper } from 'three';
+// import { AxesHelper, GridHelper, Vector3 } from 'three';
 
 import { Coords3 } from '../libs/types';
 import { Helper } from '../utils';
@@ -30,12 +41,12 @@ class Debug {
     maxChangeRadius: 6,
   };
 
-  public highlights = new Group();
-  public highlightMaterial = new MeshBasicMaterial({
-    color: 'yellow',
-    transparent: true,
-    opacity: 0.3,
-  });
+  public highlights = new Line(
+    new BufferGeometry(),
+    new MeshBasicMaterial({
+      color: 'yellow',
+    }),
+  );
 
   constructor(public engine: Engine) {
     // dat.gui
@@ -63,6 +74,8 @@ class Debug {
       this.mount();
 
       this.chunkHighlight.visible = false;
+      this.highlights.frustumCulled = false;
+
       engine.rendering.scene.add(this.chunkHighlight);
       engine.rendering.scene.add(this.highlights);
       engine.inputs.bind('j', this.toggle, '*');
@@ -294,18 +307,13 @@ class Debug {
     }
   };
 
-  clearHighlights = () => {
-    while (this.highlights.children.length) {
-      this.highlights.remove(this.highlights.children[0]);
-    }
-  };
-
-  addHighlight = ([x, y, z]: Coords3) => {
+  addHighlights = (points: Coords3[]) => {
+    const vectors = [];
     const dimension = this.engine.config.world.dimension;
-    const geometry = new BoxBufferGeometry(dimension, dimension, dimension);
-    const mesh = new Mesh(geometry, this.highlightMaterial);
-    mesh.position.set((x + 0.5) * dimension, (y + 0.5) * dimension, (z + 0.5) * dimension);
-    this.highlights.add(mesh);
+    points.forEach(([x, y, z]) =>
+      vectors.push(new Vector3((x + 0.5) * dimension, (y + 0.5) * dimension, (z + 0.5) * dimension)),
+    );
+    this.highlights.geometry.setFromPoints(vectors);
   };
 
   toggle = () => {

@@ -12,6 +12,7 @@ use crate::comp::{
     rotation::Rotation,
     target::{Target, TargetInner},
     view_radius::ViewRadius,
+    walk_towards::WalkTowards,
 };
 
 /// JSON format to store a rigid body configuration
@@ -19,7 +20,7 @@ use crate::comp::{
 #[serde(rename_all = "camelCase")]
 pub struct RigidBodyProto {
     pub aabb: Vec3<f32>,
-    pub head: Vec3<f32>,
+    pub head: f32,
     pub mass: f32,
     pub friction: f32,
     pub restitution: f32,
@@ -40,10 +41,11 @@ pub struct ModelProto {
 #[serde(rename_all = "camelCase")]
 pub struct EntityPrototype {
     pub etype: String,
-    pub brain: String,
     pub observe: String,
     pub view_distance: i16,
     pub model: ModelProto,
+    pub brain: String,
+    pub brain_options: BrainOptions,
     pub rigidbody: RigidBodyProto,
 }
 
@@ -110,12 +112,13 @@ impl Entities {
 
         let observe = &prototype.observe;
         let view_distance = &prototype.view_distance;
+        let brain_options = prototype.brain_options.to_owned();
 
         ecs.create_entity()
             .with(EType::new(etype))
             .with(RigidBody::new(
                 Aabb::new(position, &aabb),
-                &head,
+                *head,
                 *mass,
                 *friction,
                 *restitution,
@@ -132,7 +135,8 @@ impl Entities {
                 TargetInner::ENTITY(None)
             }))
             .with(ViewRadius::new(*view_distance))
-            .with(Brain::new(BrainOptions::default()))
+            .with(Brain::new(brain_options))
+            .with(WalkTowards(None, 100))
             .build()
     }
 }

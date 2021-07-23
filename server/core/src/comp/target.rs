@@ -1,7 +1,7 @@
 use server_common::vec::Vec3;
 use specs::{Component, Entity, VecStorage};
 
-type TargetValue = Option<(Vec3<f32>, Entity)>;
+type TargetValue = Option<(Vec3<f32>, bool, Entity)>;
 
 /// Observable target of an entity
 #[derive(Clone, Debug)]
@@ -45,7 +45,7 @@ impl Target {
         self.0 = TargetInner::insert(&self.0, value);
     }
 
-    pub fn position(&self) -> Option<Vec3<f32>> {
+    pub fn get_position(&self) -> Option<Vec3<f32>> {
         if let Some(inner) = TargetInner::extract(&self.0) {
             Some(inner.0)
         } else {
@@ -53,11 +53,19 @@ impl Target {
         }
     }
 
-    pub fn entity(&self) -> Option<Entity> {
+    pub fn get_entity(&self) -> Option<Entity> {
         if let Some(inner) = TargetInner::extract(&self.0) {
-            Some(inner.1)
+            Some(inner.2)
         } else {
             None
+        }
+    }
+
+    pub fn is_obstructed(&self) -> bool {
+        if let Some(inner) = TargetInner::extract(&self.0) {
+            inner.1
+        } else {
+            false
         }
     }
 }

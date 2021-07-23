@@ -4,7 +4,7 @@ import { Entities } from '../core';
 
 import { Coords3 } from './types';
 
-const WALKING_SPEED = 0.8;
+const WALKING_SPEED = 1.4;
 const IDLE_ARM_SPEED = 0.06;
 
 class Entity {

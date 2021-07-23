@@ -20,7 +20,8 @@ impl<'a> System<'a> for PhysicsSystem {
 
         let (core, clock, chunks, mut bodies) = data;
 
-        let test_solid = |x: i32, y: i32, z: i32| -> bool { chunks.get_solidity_by_voxel(x, y, z) };
+        let test_solid =
+            |x: i32, y: i32, z: i32| -> bool { !chunks.get_walkable_by_voxel(x, y, z) };
         let test_fluid = |_, _, _| false;
 
         (&mut bodies)

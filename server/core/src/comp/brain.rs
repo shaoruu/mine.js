@@ -1,8 +1,10 @@
 use specs::{Component, VecStorage};
 
+use serde::{Deserialize, Serialize};
+
 use server_common::vec::Vec3;
 
-use super::{rigidbody::RigidBody, target::Target};
+use super::rigidbody::RigidBody;
 
 pub struct BrainState {
     pub heading: f32,
@@ -28,6 +30,8 @@ impl Default for BrainState {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BrainOptions {
     pub max_speed: f32,
     pub move_force: f32,
@@ -45,10 +49,10 @@ pub struct BrainOptions {
 impl Default for BrainOptions {
     fn default() -> Self {
         Self {
-            max_speed: 10.0,
-            move_force: 20.0,
-            responsiveness: 240.0,
-            running_friction: 0.1,
+            max_speed: 6.0,
+            move_force: 12.0,
+            responsiveness: 120.0,
+            running_friction: 0.4,
             standing_friction: 2.0,
 
             air_move_mult: 0.7,
@@ -95,17 +99,16 @@ impl Brain {
         self.state.jumping = true;
     }
 
+    /// Mark entity to be calm
+    pub fn stop_jumping(&mut self) {
+        self.state.jumping = false;
+    }
+
     /// Operate brain state upon a rigid body
-    pub fn operate(&mut self, target: &Target, body: &mut RigidBody, dt: f32) {
+    pub fn operate(&mut self, target: &Vec3<f32>, body: &mut RigidBody, dt: f32) {
         // move implementation originally written as external module
         //   see https://github.com/andyhall/voxel-fps-controller
         //   for original code
-        let target = target.position();
-        if target.is_none() {
-            return;
-        }
-
-        let target = target.unwrap();
         let origin = body.get_position();
 
         let dx = target.0 - origin.0;

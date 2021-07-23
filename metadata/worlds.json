@@ -18,7 +18,7 @@
     "texturepack": "vibes",
     "subChunks": 8,
     "playerDimensions": [0.6, 1.8, 0.6],
-    "playerHead": [0.3, 1.6, 0.3]
+    "playerHead": 1.6
   },
   "worlds": [
     {

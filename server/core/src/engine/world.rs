@@ -30,8 +30,8 @@ use crate::comp::walk_towards::WalkTowards;
 use crate::engine::astar::PathNode;
 use crate::network::models::{create_of_type, ChatType};
 use crate::sys::{
-    BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, JumpingSystem,
-    ObserveSystem, PeersSystem, SearchSystem,
+    BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, ObserveSystem,
+    PathFindSystem, PeersSystem, SearchSystem, WalkTowardsSystem,
 };
 use crate::{
     comp::rigidbody::RigidBody,
@@ -79,7 +79,7 @@ pub struct WorldConfig {
     pub sub_chunks: u32,
     pub generation: String,
     pub player_dimensions: Vec3<f32>,
-    pub player_head: Vec3<f32>,
+    pub player_head: f32,
 }
 
 #[derive(Deserialize)]
@@ -253,7 +253,7 @@ impl World {
 
         let config = self.read_resource::<WorldConfig>();
         let dimension = config.player_dimensions.clone();
-        let head = config.player_head.clone();
+        let head = config.player_head;
 
         drop(config);
 
@@ -267,7 +267,7 @@ impl World {
                     &Vec3(spawn[0] as f32, spawn[1] as f32, spawn[2] as f32),
                     &dimension,
                 ),
-                &head,
+                head,
                 1.0,
                 1.0,
                 0.0,
@@ -707,8 +707,6 @@ impl World {
             &|p| p.distance(&target_node) / 3,
         );
 
-        debug!("{:?}", result);
-
         drop(chunks);
 
         let nodes = if let Some((nodes, _)) = result {
@@ -801,8 +799,9 @@ impl World {
             .with(SearchSystem, "search", &["peers"])
             .with(ObserveSystem, "observe", &["search"])
             .with(EntitiesSystem, "entities", &["chunking"])
+            .with(PathFindSystem, "pathfind", &["observe"])
             .with(BroadcastSystem, "broadcast", &["peers"])
-            .with(JumpingSystem, "jumping", &["entities"])
+            .with(WalkTowardsSystem, "walk_towards", &["pathfind"])
             .build();
 
         dispatcher.dispatch(&self.ecs);

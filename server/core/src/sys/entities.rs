@@ -44,7 +44,7 @@ impl<'a> System<'a> for EntitiesSystem {
             let Vec3(px, py, pz) = body.get_position();
             let Quaternion(qx, qy, qz, qw) = rotation.0;
 
-            let look_target = target.position();
+            let look_target = target.get_position();
 
             entity_updates.push(EntityProtocol {
                 id: ent.id().to_string(),

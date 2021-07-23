@@ -11,7 +11,7 @@ pub struct RigidBody {
 
     pub aabb: Aabb,
     pub mass: f32,
-    pub head: Vec3<f32>,
+    pub head: f32,
     pub friction: f32,
     pub restitution: f32,
     pub gravity_multiplier: f32,
@@ -33,7 +33,7 @@ impl RigidBody {
     /// Create a physical body
     ///
     /// * `aabb` - AABB hit box of rigid body
-    /// * `head` - offset from AABB base to head
+    /// * `head` - y-offset from AABB base to head
     /// * `mass` - mass of rigid body
     /// * `friction` - friction of rigid body
     /// * `restitution` - restitution of rigid body
@@ -44,14 +44,14 @@ impl RigidBody {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         aabb: Aabb,
-        head: &Vec3<f32>,
+        head: f32,
         mass: f32,
         friction: f32,
         restitution: f32,
         gravity_multiplier: f32,
         auto_step: bool,
     ) -> Self {
-        assert!(head.len() < aabb.vec.len());
+        assert!(head < aabb.vec.1);
 
         Self {
             collided: None,
@@ -81,26 +81,36 @@ impl RigidBody {
     /// Moving the rigid body by the head
     pub fn set_head_position(&mut self, p: &Vec3<f32>) {
         self.set_position(p);
-        let head = self.head.scale(-1.0);
-        self.aabb.translate(&head);
+        self.aabb.translate(&Vec3(0.0, -self.head, 0.0));
         self.mark_active();
     }
 
     /// Setter for rigid body's position
     pub fn set_position(&mut self, p: &Vec3<f32>) {
-        let delta = p.sub(&self.aabb.base);
+        let delta = p.sub(&self.get_position());
         self.aabb.translate(&delta);
         self.mark_active();
     }
 
     /// Getter for rigid body's head position
     pub fn get_head_position(&self) -> Vec3<f32> {
-        self.aabb.base.clone().add(&self.head)
+        self.get_position().add(&Vec3(0.0, self.head, 0.0))
     }
 
     /// Getter for rigid body's position
+    ///
+    /// At the center bottom of the AABB box
     pub fn get_position(&self) -> Vec3<f32> {
-        self.aabb.base.clone()
+        let mut offset = self.aabb.vec.clone();
+        offset.0 /= 2.0;
+        offset.1 = 0.0;
+        offset.2 /= 2.0;
+        self.aabb.base.clone().add(&offset)
+    }
+
+    /// Getter for rigid body's dimension
+    pub fn get_dimension(&self) -> Vec3<f32> {
+        self.aabb.vec.clone()
     }
 
     /// Adds a vector to rigid body's internal force, which gets
