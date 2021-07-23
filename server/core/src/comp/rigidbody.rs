@@ -1,4 +1,4 @@
-use specs::{Component, Entity, Storage, VecStorage};
+use specs::{Component, VecStorage};
 
 use server_common::{aabb::Aabb, vec::Vec3};
 

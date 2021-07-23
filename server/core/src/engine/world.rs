@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use actix::Recipient;
-use log::info;
+use log::{debug, info};
 
 use ansi_term::Colour::Yellow;
 use server_common::quaternion::Quaternion;
@@ -25,7 +25,7 @@ use crate::comp::name::Name;
 use crate::comp::rotation::Rotation;
 use crate::comp::view_radius::ViewRadius;
 use crate::engine::astar::PathNode;
-use crate::network::models::ChatType;
+use crate::network::models::{create_of_type, ChatType};
 use crate::sys::{
     BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, JumpingSystem,
     ObserveSystem, PeersSystem, SearchSystem,
@@ -43,8 +43,8 @@ use super::{
         constants::WORLD_DATA_FILE,
         engine::chunks::MeshLevel,
         network::models::{
-            create_chat_message, create_message, create_of_type, messages, ChunkProtocol,
-            MessageComponents, MessageType,
+            create_chat_message, create_message, messages, ChunkProtocol, MessageComponents,
+            MessageType,
         },
         sys::PhysicsSystem,
     },
@@ -540,7 +540,11 @@ impl World {
                         }
                         "summon" => {
                             self.test_entity(player_id);
-                            msgs.push(create_msg(ChatType::Info, "Summoned a test entity."))
+                            msgs.push(create_msg(ChatType::Info, "Summoned a test entity."));
+                        }
+                        "path" => {
+                            self.test_pathfinding(player_id);
+                            msgs.push(create_msg(ChatType::Info, "Testing pathfinding..."));
                         }
                         _ => {}
                     }
@@ -617,36 +621,89 @@ impl World {
         let chunks = self.read_resource::<Chunks>();
         let dimension = chunks.config.dimension;
 
-        let start = Vec3(0, 0, 0);
+        let start = Vec3(0, 52, 0);
         let voxel_pos = map_world_to_voxel(pos.0, pos.1, pos.2, dimension);
+        let target_node = PathNode(voxel_pos.0, voxel_pos.1, voxel_pos.2);
 
-        // AStar::calculate(
-        //     &start,
-        //     &voxel_pos,
-        //     &|&node| {
-        //         let PathNode(vx, vy, vz) = node;
-        //         let mut successors = vec![];
+        debug!("Start: {:?}", start);
+        debug!("Target: {:?}", voxel_pos);
+        debug!(
+            "Start ID {:?}",
+            chunks.get_voxel_by_voxel(start.0, start.1, start.2)
+        );
+        debug!(
+            "Target ID: {:?}",
+            chunks.get_voxel_by_voxel(voxel_pos.0, voxel_pos.1, voxel_pos.2)
+        );
 
-        //         // TODO: add sweeping checks
+        let result = AStar::calculate(
+            &start,
+            &voxel_pos,
+            &|node| {
+                let &PathNode(vx, vy, vz) = node;
+                let mut successors = vec![];
 
-        //         if !chunks.get_solidity_by_voxel(vx + 1, vy, vz) {
-        //             successors.push((PathNode(vx + 1, vy, vz), 1))
-        //         }
-        //         if !chunks.get_solidity_by_voxel(vx - 1, vy, vz) {
-        //             successors.push((PathNode(vx - 1, vy, vz), 1))
-        //         }
+                // TODO: add sweeping checks
 
-        //         if !chunks.get_solidity_by_voxel(vx, vy, vz + 1) {
-        //             successors.push((PathNode(vx, vy, vz + 1), 1))
-        //         }
-        //         if !chunks.get_solidity_by_voxel(vx, vy, vz + 1) {
-        //             successors.push((PathNode(vx, vy, vz + 1), 1))
-        //         }
+                if !chunks.get_solidity_by_voxel(vx + 1, vy, vz)
+                    && (chunks.get_solidity_by_voxel(vx + 1, vy - 1, vz)
+                        || (!chunks.get_solidity_by_voxel(vx + 1, vy - 1, vz)
+                            && chunks.get_solidity_by_voxel(vx + 1, vy - 2, vz)))
+                {
+                    successors.push((PathNode(vx + 1, vy, vz), 1))
+                }
+                if !chunks.get_solidity_by_voxel(vx - 1, vy, vz)
+                    && (chunks.get_solidity_by_voxel(vx - 1, vy - 1, vz)
+                        || (!chunks.get_solidity_by_voxel(vx - 1, vy - 1, vz)
+                            && chunks.get_solidity_by_voxel(vx - 1, vy - 2, vz)))
+                {
+                    successors.push((PathNode(vx - 1, vy, vz), 1))
+                }
 
-        //         successors
-        //     },
-        //     &|| {},
-        // );
+                if !chunks.get_solidity_by_voxel(vx, vy + 1, vz)
+                    && chunks.get_solidity_by_voxel(vx, vy - 1, vz)
+                {
+                    successors.push((PathNode(vx, vy + 1, vz), 1))
+                }
+                if !chunks.get_solidity_by_voxel(vx, vy - 1, vz)
+                    && chunks.get_solidity_by_voxel(vx, vy - 2, vz)
+                {
+                    successors.push((PathNode(vx, vy - 1, vz), 1))
+                }
+
+                if !chunks.get_solidity_by_voxel(vx, vy, vz + 1)
+                    && (chunks.get_solidity_by_voxel(vx, vy - 1, vz + 1)
+                        || (!chunks.get_solidity_by_voxel(vx, vy - 1, vz + 1)
+                            && chunks.get_solidity_by_voxel(vx, vy - 2, vz + 1)))
+                {
+                    successors.push((PathNode(vx, vy, vz + 1), 1))
+                }
+                if !chunks.get_solidity_by_voxel(vx, vy, vz - 1)
+                    && (chunks.get_solidity_by_voxel(vx, vy - 1, vz - 1)
+                        || (!chunks.get_solidity_by_voxel(vx, vy - 1, vz - 1)
+                            && chunks.get_solidity_by_voxel(vx, vy - 2, vz - 1)))
+                {
+                    successors.push((PathNode(vx, vy, vz - 1), 1))
+                }
+
+                successors
+            },
+            &|p| p.distance(&target_node) / 3,
+        );
+
+        debug!("{:?}", result);
+
+        drop(chunks);
+
+        let nodes = if let Some((nodes, _)) = result {
+            nodes
+        } else {
+            vec![]
+        };
+        let mut test = create_of_type(MessageType::Pick);
+        let j = serde_json::to_string(&nodes).unwrap();
+        test.json = j;
+        self.broadcast(&test, vec![], vec![]);
     }
 
     /// Sync configurations to the world's JSON file

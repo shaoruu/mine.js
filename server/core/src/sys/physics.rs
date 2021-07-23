@@ -18,12 +18,12 @@ impl<'a> System<'a> for PhysicsSystem {
         use rayon::prelude::*;
         use specs::ParJoin;
 
-        let (core, clock, chunks, mut body) = data;
+        let (core, clock, chunks, mut bodies) = data;
 
         let test_solid = |x: i32, y: i32, z: i32| -> bool { chunks.get_solidity_by_voxel(x, y, z) };
         let test_fluid = |_, _, _| false;
 
-        (&mut body)
+        (&mut bodies)
             .par_join()
             .for_each(|b| core.iterate_body(b, clock.delta_secs(), &test_solid, &test_fluid));
     }

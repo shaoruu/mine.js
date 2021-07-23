@@ -168,6 +168,18 @@ class Network {
       case 'MESSAGE': {
         const { message } = event;
         chat.add(message);
+        break;
+      }
+
+      case 'PICK': {
+        const { json } = event;
+        if (this.engine.debug) {
+          const { debug } = this.engine;
+          const blockArr = json;
+          debug.clearHighlights();
+          blockArr.forEach((coords) => debug.addHighlight(coords));
+        }
+        break;
       }
     }
   };

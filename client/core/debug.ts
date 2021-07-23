@@ -1,8 +1,9 @@
-import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry } from 'three';
+import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Group, BoxBufferGeometry } from 'three';
 import { Pane } from 'tweakpane';
 
 // import { AxesHelper, GridHelper } from 'three';
 
+import { Coords3 } from '../libs/types';
 import { Helper } from '../utils';
 
 import { Engine } from '.';
@@ -28,6 +29,13 @@ class Debug {
     minChangeRadius: 1,
     maxChangeRadius: 6,
   };
+
+  public highlights = new Group();
+  public highlightMaterial = new MeshBasicMaterial({
+    color: 'yellow',
+    transparent: true,
+    opacity: 0.3,
+  });
 
   constructor(public engine: Engine) {
     // dat.gui
@@ -56,6 +64,7 @@ class Debug {
 
       this.chunkHighlight.visible = false;
       engine.rendering.scene.add(this.chunkHighlight);
+      engine.rendering.scene.add(this.highlights);
       engine.inputs.bind('j', this.toggle, '*');
     });
 
@@ -283,6 +292,22 @@ class Debug {
         (cz + 0.5) * chunkSize * dimension,
       );
     }
+  };
+
+  clearHighlights = () => {
+    while (this.highlights.children.length) {
+      this.highlights.remove(this.highlights.children[0]);
+    }
+  };
+
+  addHighlight = ([x, y, z]: Coords3) => {
+    const dimension = this.engine.config.world.dimension;
+    const geometry = new BoxBufferGeometry(dimension, dimension, dimension);
+    const mesh = new Mesh(geometry, this.highlightMaterial);
+    const scale = 0.3;
+    mesh.scale.multiplyScalar(scale);
+    mesh.position.set((x + 0.5) * dimension, (y + 0.5) * dimension, (z + 0.5) * dimension);
+    this.highlights.add(mesh);
   };
 
   toggle = () => {

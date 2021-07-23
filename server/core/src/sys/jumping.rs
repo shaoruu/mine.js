@@ -16,7 +16,8 @@ impl<'a> System<'a> for JumpingSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        use specs::Join;
+        use rayon::prelude::*;
+        use specs::ParJoin;
 
         let (clock, look_ats, mut bodies, mut brains) = data;
         let tick = clock.tick;
@@ -24,10 +25,12 @@ impl<'a> System<'a> for JumpingSystem {
         if tick % 100 == 0 {
             let delta = clock.delta;
 
-            for (look_at, body, brain) in (&look_ats, &mut bodies, &mut brains).join() {
-                brain.jump();
-                brain.operate(look_at, body, delta);
-            }
+            (&look_ats, &mut bodies, &mut brains)
+                .par_join()
+                .for_each(|(look_at, body, brain)| {
+                    brain.jump();
+                    brain.operate(look_at, body, delta);
+                });
         }
     }
 }

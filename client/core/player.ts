@@ -563,7 +563,7 @@ class Player {
   get position(): Coords3 {
     const { x, y, z } = this.controls.object.position;
     const { distToGround } = this.engine.config.player;
-    return [x, y - distToGround, z];
+    return [x, y - distToGround + 0.01, z];
   }
 
   get voxel(): Coords3 {
