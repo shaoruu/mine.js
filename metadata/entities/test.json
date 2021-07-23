@@ -8,7 +8,7 @@
     "moveForce": 12.0,
     "responsiveness": 120.0,
     "runningFriction": 0.4,
-    "standingFriction": 2.0,
+    "standingFriction": 4.0,
     "airMoveMult": 0.7,
     "jumpImpulse": 8.0,
     "jumpForce": 1.1,

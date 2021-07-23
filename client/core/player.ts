@@ -54,6 +54,7 @@ class Player {
     right: false,
     front: false,
     back: false,
+    sprint: false,
   };
   private lookBlockMesh: Group;
   private shadowMesh: Mesh;
@@ -184,6 +185,10 @@ class Player {
     if (this.engine.inputs.namespace !== 'in-game') return;
 
     switch (code) {
+      case 'KeyR':
+        this.movements.sprint = true;
+
+        break;
       case 'ArrowUp':
       case 'KeyW':
         this.movements.front = true;
@@ -294,7 +299,7 @@ class Player {
     const { object } = this.controls;
     const { state } = this.entity.brain;
 
-    const { right, left, up, down, front, back } = this.movements;
+    const { sprint, right, left, up, down, front, back } = this.movements;
 
     const fb = front ? (back ? 0 : 1) : back ? -1 : 0;
     const rl = left ? (right ? 0 : 1) : right ? -1 : 0;
@@ -315,6 +320,11 @@ class Player {
 
     if ((fb | rl) === 0) {
       state.running = false;
+
+      if (state.sprinting) {
+        this.movements.sprint = false;
+        state.sprinting = false;
+      }
     } else {
       state.running = true;
       if (fb) {
@@ -331,6 +341,9 @@ class Player {
 
     // set jump as true, and brain will handle the jumping
     state.jumping = up ? (down ? false : true) : down ? false : false;
+
+    // apply sprint state change
+    state.sprinting = sprint;
   };
 
   teleport = (voxel: Coords3) => {
@@ -398,6 +411,7 @@ class Player {
 
   resetMovements = () => {
     this.movements = {
+      sprint: false,
       front: false,
       back: false,
       left: false,

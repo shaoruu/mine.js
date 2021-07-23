@@ -200,13 +200,13 @@ class Debug {
     // CAMERA
     const cameraFolder = this.gui.addFolder({ title: 'Camera' });
     cameraFolder
-      .addInput(camera.threeCamera, 'fov', {
+      .addInput(camera.options, 'fov', {
         min: 40,
         max: 120,
         step: 0.01,
         label: 'FOV',
       })
-      .on('change', () => camera.threeCamera.updateProjectionMatrix());
+      .on('change', (ev) => camera.setFOV(ev.value));
 
     // const cameraFolder = this.gui.addFolder('camera');
     this.registerDisplay('FPS', this, 'fps');
@@ -265,7 +265,7 @@ class Debug {
     inputs.bind('z', bulkPlace(), 'in-game');
 
     inputs.bind(
-      'r',
+      'v',
       () => {
         camera.threeCamera.zoom = 3;
         camera.threeCamera.updateProjectionMatrix();

@@ -66,6 +66,7 @@ const defaultConfig: ConfigType = {
     fov: 90,
     near: 0.1,
     far: 8000,
+    lerpFactor: 0.7,
     minPolarAngle: 0,
     maxPolarAngle: Math.PI,
   },

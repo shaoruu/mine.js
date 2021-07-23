@@ -9,6 +9,7 @@ type BrainOptionsType = {
   runningFriction: number;
   standingFriction: number;
 
+  sprintFactor: number;
   airMoveMult: number;
   jumpImpulse: number;
   jumpForce: number;
@@ -20,6 +21,7 @@ type BrainStateType = {
   heading: number; // radians, heading location
   running: boolean;
   jumping: boolean;
+  sprinting: boolean;
 
   // internal state
   jumpCount: number;
@@ -28,12 +30,13 @@ type BrainStateType = {
 };
 
 const defaultBrainOptions: BrainOptionsType = {
-  maxSpeed: 10,
-  moveForce: 20,
+  maxSpeed: 6,
+  moveForce: 30,
   responsiveness: 240,
   runningFriction: 0.1,
-  standingFriction: 2,
+  standingFriction: 4,
 
+  sprintFactor: 1.4,
   airMoveMult: 0.7,
   jumpImpulse: 8,
   jumpForce: 1,
@@ -45,6 +48,7 @@ const defaultBrainState: BrainStateType = {
   heading: 0,
   running: false,
   jumping: false,
+  sprinting: false,
 
   jumpCount: 0,
   isJumping: false,
@@ -111,9 +115,9 @@ class Brain {
     const m = this.tempVec;
     const push = this.tempVec2;
     if (this.state.running) {
-      const speed = this.options.maxSpeed;
+      let speed = this.options.maxSpeed;
       // todo: add crouch/sprint modifiers if needed
-      // if (state.sprint) speed *= state.sprintMoveMult
+      if (this.state.sprinting) speed *= this.options.sprintFactor;
       // if (state.crouch) speed *= state.crouchMoveMult
       vec3.set(m, 0, 0, speed);
 
