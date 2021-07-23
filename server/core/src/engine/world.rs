@@ -4,8 +4,7 @@ use actix::Recipient;
 use log::{debug, info};
 
 use ansi_term::Colour::Yellow;
-use server_common::quaternion::Quaternion;
-use server_utils::convert::map_world_to_voxel;
+
 use specs::shred::{Fetch, FetchMut, Resource};
 
 use std::io::Write;
@@ -15,6 +14,9 @@ use std::{collections::VecDeque, fs::File};
 use specs::{Builder, DispatcherBuilder, World as ECSWorld, WorldExt};
 
 use serde::{Deserialize, Serialize};
+
+use server_common::quaternion::Quaternion;
+use server_utils::convert::map_world_to_voxel;
 
 use crate::comp::brain::Brain;
 use crate::comp::curr_chunk::CurrChunk;
@@ -623,6 +625,7 @@ impl World {
 
         let start = Vec3(0, 52, 0);
         let voxel_pos = map_world_to_voxel(pos.0, pos.1, pos.2, dimension);
+
         let target_node = PathNode(voxel_pos.0, voxel_pos.1, voxel_pos.2);
 
         debug!("Start: {:?}", start);
@@ -636,6 +639,20 @@ impl World {
             chunks.get_voxel_by_voxel(voxel_pos.0, voxel_pos.1, voxel_pos.2)
         );
 
+        let walkable = |vx: i32, vy: i32, vz: i32, h: f32| {
+            if chunks.get_walkable_by_voxel(vx, vy, vz) {
+                return false;
+            }
+
+            for i in 1..(h.ceil() as i32 + 1) {
+                if !chunks.get_walkable_by_voxel(vx, vy + i, vz) {
+                    return false;
+                }
+            }
+
+            true
+        };
+
         let result = AStar::calculate(
             &start,
             &voxel_pos,
@@ -644,46 +661,42 @@ impl World {
                 let mut successors = vec![];
 
                 // TODO: add sweeping checks
+                let height = 1.0;
 
-                if !chunks.get_solidity_by_voxel(vx + 1, vy, vz)
-                    && (chunks.get_solidity_by_voxel(vx + 1, vy - 1, vz)
-                        || (!chunks.get_solidity_by_voxel(vx + 1, vy - 1, vz)
-                            && chunks.get_solidity_by_voxel(vx + 1, vy - 2, vz)))
-                {
-                    successors.push((PathNode(vx + 1, vy, vz), 1))
-                }
-                if !chunks.get_solidity_by_voxel(vx - 1, vy, vz)
-                    && (chunks.get_solidity_by_voxel(vx - 1, vy - 1, vz)
-                        || (!chunks.get_solidity_by_voxel(vx - 1, vy - 1, vz)
-                            && chunks.get_solidity_by_voxel(vx - 1, vy - 2, vz)))
-                {
-                    successors.push((PathNode(vx - 1, vy, vz), 1))
+                // +X direction
+                if walkable(vx + 1, vy - 1, vz, height) {
+                    successors.push((PathNode(vx + 1, vy, vz), 1));
+                } else if walkable(vx + 1, vy, vz, height) {
+                    successors.push((PathNode(vx + 1, vy + 1, vz), 2));
+                } else if walkable(vx + 1, vy - 2, vz, height) {
+                    successors.push((PathNode(vx + 1, vy - 1, vz), 2));
                 }
 
-                if !chunks.get_solidity_by_voxel(vx, vy + 1, vz)
-                    && chunks.get_solidity_by_voxel(vx, vy - 1, vz)
-                {
-                    successors.push((PathNode(vx, vy + 1, vz), 1))
-                }
-                if !chunks.get_solidity_by_voxel(vx, vy - 1, vz)
-                    && chunks.get_solidity_by_voxel(vx, vy - 2, vz)
-                {
-                    successors.push((PathNode(vx, vy - 1, vz), 1))
+                // -X direction
+                if walkable(vx - 1, vy - 1, vz, height) {
+                    successors.push((PathNode(vx - 1, vy, vz), 1));
+                } else if walkable(vx - 1, vy, vz, height) {
+                    successors.push((PathNode(vx - 1, vy + 1, vz), 2));
+                } else if walkable(vx - 1, vy - 2, vz, height) {
+                    successors.push((PathNode(vx - 1, vy - 1, vz), 2));
                 }
 
-                if !chunks.get_solidity_by_voxel(vx, vy, vz + 1)
-                    && (chunks.get_solidity_by_voxel(vx, vy - 1, vz + 1)
-                        || (!chunks.get_solidity_by_voxel(vx, vy - 1, vz + 1)
-                            && chunks.get_solidity_by_voxel(vx, vy - 2, vz + 1)))
-                {
-                    successors.push((PathNode(vx, vy, vz + 1), 1))
+                // +Z direction
+                if walkable(vx, vy - 1, vz + 1, height) {
+                    successors.push((PathNode(vx, vy, vz + 1), 1));
+                } else if walkable(vx, vy, vz + 1, height) {
+                    successors.push((PathNode(vx, vy + 1, vz + 1), 2));
+                } else if walkable(vx, vy - 2, vz + 1, height) {
+                    successors.push((PathNode(vx, vy - 1, vz + 1), 2));
                 }
-                if !chunks.get_solidity_by_voxel(vx, vy, vz - 1)
-                    && (chunks.get_solidity_by_voxel(vx, vy - 1, vz - 1)
-                        || (!chunks.get_solidity_by_voxel(vx, vy - 1, vz - 1)
-                            && chunks.get_solidity_by_voxel(vx, vy - 2, vz - 1)))
-                {
-                    successors.push((PathNode(vx, vy, vz - 1), 1))
+
+                // -Z direction
+                if walkable(vx, vy - 1, vz - 1, height) {
+                    successors.push((PathNode(vx, vy, vz - 1), 1));
+                } else if walkable(vx, vy, vz - 1, height) {
+                    successors.push((PathNode(vx, vy + 1, vz - 1), 2));
+                } else if walkable(vx, vy - 2, vz - 1, height) {
+                    successors.push((PathNode(vx, vy - 1, vz - 1), 2));
                 }
 
                 successors

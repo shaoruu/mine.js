@@ -304,8 +304,6 @@ class Debug {
     const dimension = this.engine.config.world.dimension;
     const geometry = new BoxBufferGeometry(dimension, dimension, dimension);
     const mesh = new Mesh(geometry, this.highlightMaterial);
-    const scale = 0.3;
-    mesh.scale.multiplyScalar(scale);
     mesh.position.set((x + 0.5) * dimension, (y + 0.5) * dimension, (z + 0.5) * dimension);
     this.highlights.add(mesh);
   };

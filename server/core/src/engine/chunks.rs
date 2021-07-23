@@ -795,6 +795,14 @@ impl Chunks {
         })
     }
 
+    /// Get whether a voxel is walkable
+    pub fn get_walkable_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> bool {
+        let block = self
+            .registry
+            .get_block_by_id(self.get_voxel_by_voxel(vx, vy, vz));
+        !block.is_solid || block.is_plant
+    }
+
     /// Get whether a voxel is solid
     pub fn get_solidity_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> bool {
         self.get_voxel_by_voxel(vx, vy, vz) != 0
