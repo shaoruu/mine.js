@@ -267,8 +267,7 @@ class Debug {
     inputs.bind(
       'v',
       () => {
-        camera.threeCamera.zoom = 3;
-        camera.threeCamera.updateProjectionMatrix();
+        camera.setZoom(3);
       },
       'in-game',
       {
@@ -277,10 +276,9 @@ class Debug {
     );
 
     inputs.bind(
-      'r',
+      'v',
       () => {
-        camera.threeCamera.zoom = 1;
-        camera.threeCamera.updateProjectionMatrix();
+        camera.setZoom(1);
       },
       'in-game',
       {
