@@ -40,11 +40,12 @@ impl Space {
 
         for x in -extended..(extended + 1) {
             for z in -extended..(extended + 1) {
-                let chunk = chunks.raw(&Vec2(cx + x, cz + z)).unwrap();
-                let voxel_data_clone = chunk.get_voxels().clone();
-                let height_map_clone = chunk.get_height_map().clone();
-                voxels.insert(chunk.coords.to_owned(), voxel_data_clone);
-                height_maps.insert(chunk.coords.to_owned(), height_map_clone);
+                if let Some(chunk) = chunks.raw(&Vec2(cx + x, cz + z)) {
+                    let voxel_data_clone = chunk.get_voxels().clone();
+                    let height_map_clone = chunk.get_height_map().clone();
+                    voxels.insert(chunk.coords.to_owned(), voxel_data_clone);
+                    height_maps.insert(chunk.coords.to_owned(), height_map_clone);
+                }
             }
         }
 

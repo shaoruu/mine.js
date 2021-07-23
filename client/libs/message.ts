@@ -12,7 +12,9 @@ class Message {
 
     Helper.applyStyle(this.wrapper, {
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      verticalAlign: 'middle',
       padding: '5px',
     });
 
