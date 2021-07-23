@@ -75,6 +75,8 @@ pub struct WorldConfig {
     pub max_loaded_chunks: i32,
     pub sub_chunks: u32,
     pub generation: String,
+    pub player_dimensions: Vec3<f32>,
+    pub player_head: Vec3<f32>,
 }
 
 #[derive(Deserialize)]
@@ -245,6 +247,12 @@ impl World {
 
         drop(players);
 
+        let config = self.read_resource::<WorldConfig>();
+        let dimension = config.player_dimensions.clone();
+        let head = config.player_head.clone();
+
+        drop(config);
+
         let entity = self
             .ecs_mut()
             .create_entity()
@@ -253,8 +261,9 @@ impl World {
             .with(RigidBody::new(
                 Aabb::new(
                     &Vec3(spawn[0] as f32, spawn[1] as f32, spawn[2] as f32),
-                    &Vec3(0.8, 2.0, 0.8),
+                    &dimension,
                 ),
+                &head,
                 1.0,
                 1.0,
                 0.0,
@@ -562,7 +571,7 @@ impl World {
         let bodies = self.ecs().read_component::<RigidBody>();
         let body = bodies.get(player.entity).unwrap();
 
-        let pos = body.get_position();
+        let pos = body.get_head_position();
 
         drop(bodies);
         drop(players);

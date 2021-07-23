@@ -1,4 +1,4 @@
-use specs::{Component, VecStorage};
+use specs::{Component, Entity, Storage, VecStorage};
 
 use server_common::{aabb::Aabb, vec::Vec3};
 
@@ -11,6 +11,7 @@ pub struct RigidBody {
 
     pub aabb: Aabb,
     pub mass: f32,
+    pub head: Vec3<f32>,
     pub friction: f32,
     pub restitution: f32,
     pub gravity_multiplier: f32,
@@ -29,20 +30,35 @@ pub struct RigidBody {
 }
 
 impl RigidBody {
+    /// Create a physical body
+    ///
+    /// * `aabb` - AABB hit box of rigid body
+    /// * `head` - offset from AABB base to head
+    /// * `mass` - mass of rigid body
+    /// * `friction` - friction of rigid body
+    /// * `restitution` - restitution of rigid body
+    /// * `gravity_multiplier` - gravity multiplier of rigid body
+    /// * `auto_step` - whether or not if body auto steps
+    ///
+    /// Panics if `head` has greater length than `aabb`'s dimensions
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         aabb: Aabb,
+        head: &Vec3<f32>,
         mass: f32,
         friction: f32,
         restitution: f32,
         gravity_multiplier: f32,
         auto_step: bool,
     ) -> Self {
+        assert!(head.len() < aabb.vec.len());
+
         Self {
             collided: None,
             stepped: false,
 
             aabb,
+            head: head.to_owned(),
             mass,
             friction,
             restitution,
@@ -62,11 +78,24 @@ impl RigidBody {
         }
     }
 
+    /// Moving the rigid body by the head
+    pub fn set_head_position(&mut self, p: &Vec3<f32>) {
+        self.set_position(p);
+        let head = self.head.scale(-1.0);
+        self.aabb.translate(&head);
+        self.mark_active();
+    }
+
     /// Setter for rigid body's position
     pub fn set_position(&mut self, p: &Vec3<f32>) {
         let delta = p.sub(&self.aabb.base);
         self.aabb.translate(&delta);
         self.mark_active();
+    }
+
+    /// Getter for rigid body's head position
+    pub fn get_head_position(&self) -> Vec3<f32> {
+        self.aabb.base.clone().add(&self.head)
     }
 
     /// Getter for rigid body's position

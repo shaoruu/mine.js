@@ -98,7 +98,7 @@ impl<'a> System<'a> for PeersSystem {
                 }
 
                 name.0 = Some(new_name.clone());
-                body.set_position(&Vec3(px, py, pz));
+                body.set_head_position(&Vec3(px, py, pz));
                 rotation.0 = Quaternion(qx, qy, qz, qw);
 
                 if let Some(player) = players.get_mut(&id.0) {

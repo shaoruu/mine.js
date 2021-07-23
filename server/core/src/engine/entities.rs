@@ -18,7 +18,8 @@ use crate::comp::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RigidBodyProto {
-    pub aabb: [f32; 3],
+    pub aabb: Vec3<f32>,
+    pub head: Vec3<f32>,
     pub mass: f32,
     pub friction: f32,
     pub restitution: f32,
@@ -99,12 +100,13 @@ impl Entities {
     ) -> ECSEntity {
         let RigidBodyProto {
             aabb,
+            head,
             mass,
             friction,
             restitution,
             gravity_multiplier,
             auto_step,
-        } = prototype.rigidbody;
+        } = &prototype.rigidbody;
 
         let observe = &prototype.observe;
         let view_distance = &prototype.view_distance;
@@ -112,12 +114,13 @@ impl Entities {
         ecs.create_entity()
             .with(EType::new(etype))
             .with(RigidBody::new(
-                Aabb::new(position, &Vec3::from_arr(aabb)),
-                mass,
-                friction,
-                restitution,
-                gravity_multiplier,
-                auto_step,
+                Aabb::new(position, &aabb),
+                &head,
+                *mass,
+                *friction,
+                *restitution,
+                *gravity_multiplier,
+                *auto_step,
             ))
             .with(Rotation::from_quaternion(&rotation))
             .with(CurrChunk::new())

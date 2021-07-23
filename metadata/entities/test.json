@@ -5,6 +5,7 @@
   "viewDistance": 16,
   "rigidbody": {
     "aabb": [0.2, 0.2, 0.2],
+    "head": [0.1, 0.18, 0.1],
     "mass": 1.0,
     "friction": 1.0,
     "restitution": 0.0,

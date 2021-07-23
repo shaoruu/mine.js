@@ -34,7 +34,7 @@ impl<'a> System<'a> for ObserveSystem {
         let test_solid = |x: i32, y: i32, z: i32| -> bool { chunks.get_solidity_by_voxel(x, y, z) };
 
         for (body, radius, look_at) in (&bodies, &radiuses, &mut look_ats).join() {
-            let mut position = body.get_position();
+            let mut position = body.get_head_position();
 
             // loop until found or nothing found
             let mut closest: Option<Vec3<f32>> = None;
@@ -49,7 +49,7 @@ impl<'a> System<'a> for ObserveSystem {
                     LookTarget::PLAYER(_) => tree.search_player(&position, count, false),
                 })
                 .into_iter()
-                .map(|(_, entity)| bodies.get(entity.to_owned()).unwrap().get_position())
+                .map(|(_, entity)| bodies.get(entity.to_owned()).unwrap().get_head_position())
                 .collect::<Vec<_>>();
 
                 if closest_arr.is_empty() || closest_arr.len() < count {

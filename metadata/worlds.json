@@ -16,7 +16,9 @@
     "maxLoadedChunks": 2000,
     "description": "a testbed world",
     "texturepack": "vibes",
-    "subChunks": 8
+    "subChunks": 8,
+    "playerDimensions": [0.6, 1.8, 0.6],
+    "playerHead": [0.3, 1.6, 0.3]
   },
   "worlds": [
     {

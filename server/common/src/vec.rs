@@ -2,6 +2,8 @@ use num::{cast, Float, Num};
 
 use std::ops::{Index, IndexMut};
 
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Eq, PartialEq, Clone, Default, Hash)]
 pub struct Vec2<T>(pub T, pub T);
 
@@ -11,7 +13,7 @@ impl<T: Copy + 'static> Vec2<T> {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Default, Hash)]
+#[derive(Debug, Eq, PartialEq, Clone, Default, Hash, Serialize, Deserialize)]
 pub struct Vec3<T>(pub T, pub T, pub T);
 
 impl<T: Copy + 'static> Vec3<T> {
