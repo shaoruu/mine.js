@@ -22,10 +22,11 @@ use crate::comp::brain::Brain;
 use crate::comp::curr_chunk::CurrChunk;
 use crate::comp::etype::EType;
 use crate::comp::id::Id;
-use crate::comp::lookat::LookAt;
 use crate::comp::name::Name;
 use crate::comp::rotation::Rotation;
+use crate::comp::target::Target;
 use crate::comp::view_radius::ViewRadius;
+use crate::comp::walk_towards::WalkTowards;
 use crate::engine::astar::PathNode;
 use crate::network::models::{create_of_type, ChatType};
 use crate::sys::{
@@ -132,15 +133,16 @@ impl World {
         let mut ecs = ECSWorld::new();
 
         // ECS Components
+        ecs.register::<Brain>();
+        ecs.register::<CurrChunk>();
+        ecs.register::<EType>();
         ecs.register::<Id>();
+        ecs.register::<Target>();
         ecs.register::<Name>();
         ecs.register::<RigidBody>();
         ecs.register::<Rotation>();
-        ecs.register::<CurrChunk>();
         ecs.register::<ViewRadius>();
-        ecs.register::<LookAt>();
-        ecs.register::<EType>();
-        ecs.register::<Brain>();
+        ecs.register::<WalkTowards>();
 
         // ECS Resources
         ecs.insert(name.to_owned());
@@ -623,8 +625,9 @@ impl World {
         let chunks = self.read_resource::<Chunks>();
         let dimension = chunks.config.dimension;
 
-        let start = Vec3(0, 52, 0);
-        let voxel_pos = map_world_to_voxel(pos.0, pos.1, pos.2, dimension);
+        let start = chunks.get_standable_voxel(&Vec3(0, 52, 0));
+        let voxel_pos =
+            chunks.get_standable_voxel(&map_world_to_voxel(pos.0, pos.1, pos.2, dimension));
 
         let target_node = PathNode(voxel_pos.0, voxel_pos.1, voxel_pos.2);
 

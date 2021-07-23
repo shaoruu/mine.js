@@ -2,10 +2,7 @@ use specs::{Component, VecStorage};
 
 use server_common::vec::Vec3;
 
-use super::{
-    lookat::{LookAt, LookTarget},
-    rigidbody::RigidBody,
-};
+use super::{rigidbody::RigidBody, target::Target};
 
 pub struct BrainState {
     pub heading: f32,
@@ -99,11 +96,11 @@ impl Brain {
     }
 
     /// Operate brain state upon a rigid body
-    pub fn operate(&mut self, look_at: &LookAt, body: &mut RigidBody, dt: f32) {
+    pub fn operate(&mut self, target: &Target, body: &mut RigidBody, dt: f32) {
         // move implementation originally written as external module
         //   see https://github.com/andyhall/voxel-fps-controller
         //   for original code
-        let target = LookTarget::extract(look_at.0.clone());
+        let target = target.position();
         if target.is_none() {
             return;
         }

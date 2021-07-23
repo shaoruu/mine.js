@@ -864,6 +864,20 @@ impl Chunks {
         neighbor_chunks
     }
 
+    /// Get the voxel above the first standable block below
+    pub fn get_standable_voxel(&self, voxel: &Vec3<i32>) -> Vec3<i32> {
+        let mut voxel = voxel.clone();
+        loop {
+            if voxel.1 == 0 || self.get_walkable_by_voxel(voxel.0, voxel.1, voxel.2) {
+                voxel.1 -= 1;
+            } else {
+                break;
+            }
+        }
+        voxel.1 += 1;
+        voxel
+    }
+
     /// Add a chunk instance to self
     ///
     /// Removes existing chunks first.

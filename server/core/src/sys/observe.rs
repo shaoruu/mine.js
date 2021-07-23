@@ -1,4 +1,4 @@
-use specs::{ReadExpect, ReadStorage, System, WriteStorage};
+use specs::{Entity, ReadExpect, ReadStorage, System, WriteStorage};
 
 use server_utils::raycast;
 
@@ -6,8 +6,8 @@ use server_common::{math::approx_equals, vec::Vec3};
 
 use crate::{
     comp::{
-        lookat::{LookAt, LookTarget},
         rigidbody::RigidBody,
+        target::{Target, TargetInner},
         view_radius::ViewRadius,
     },
     engine::{chunks::Chunks, kdtree::KdTree},
@@ -22,7 +22,7 @@ impl<'a> System<'a> for ObserveSystem {
         ReadExpect<'a, Chunks>,
         ReadStorage<'a, RigidBody>,
         ReadStorage<'a, ViewRadius>,
-        WriteStorage<'a, LookAt>,
+        WriteStorage<'a, Target>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -37,19 +37,24 @@ impl<'a> System<'a> for ObserveSystem {
             let mut position = body.get_head_position();
 
             // loop until found or nothing found
-            let mut closest: Option<Vec3<f32>> = None;
+            let mut closest: Option<(Vec3<f32>, Entity)> = None;
 
             let mut offset = 0;
             let mut count = 1;
 
             loop {
                 let closest_arr = (match look_at.0 {
-                    LookTarget::ALL(_) => tree.search(&position, count),
-                    LookTarget::ENTITY(_) => tree.search_entity(&position, count, true),
-                    LookTarget::PLAYER(_) => tree.search_player(&position, count, false),
+                    TargetInner::ALL(_) => tree.search(&position, count),
+                    TargetInner::ENTITY(_) => tree.search_entity(&position, count, true),
+                    TargetInner::PLAYER(_) => tree.search_player(&position, count, false),
                 })
                 .into_iter()
-                .map(|(_, entity)| bodies.get(entity.to_owned()).unwrap().get_head_position())
+                .map(|(_, entity)| {
+                    (
+                        bodies.get(entity.to_owned()).unwrap().get_head_position(),
+                        entity.to_owned(),
+                    )
+                })
                 .collect::<Vec<_>>();
 
                 if closest_arr.is_empty() || closest_arr.len() < count {
@@ -63,7 +68,7 @@ impl<'a> System<'a> for ObserveSystem {
                 };
 
                 // check if there are any blocks in between
-                if let Some(c) = &closest {
+                if let Some((c, _)) = &closest {
                     let mut dir = c.clone().sub(&position);
                     let dist = dir.len();
 
@@ -98,7 +103,7 @@ impl<'a> System<'a> for ObserveSystem {
                 }
             }
 
-            look_at.0 = LookTarget::insert(&look_at.0, closest);
+            look_at.set(closest);
         }
     }
 }

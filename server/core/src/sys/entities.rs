@@ -3,11 +3,8 @@ use specs::{Entities, ReadStorage, System, WriteExpect};
 
 use crate::{
     comp::{
-        curr_chunk::CurrChunk,
-        etype::EType,
-        lookat::{LookAt, LookTarget},
-        rigidbody::RigidBody,
-        rotation::Rotation,
+        curr_chunk::CurrChunk, etype::EType, rigidbody::RigidBody, rotation::Rotation,
+        target::Target,
     },
     engine::world::MessagesQueue,
     network::models::{create_message, EntityProtocol, MessageComponents, MessageType},
@@ -24,30 +21,30 @@ impl<'a> System<'a> for EntitiesSystem {
         ReadStorage<'a, RigidBody>,
         ReadStorage<'a, Rotation>,
         ReadStorage<'a, CurrChunk>,
-        ReadStorage<'a, LookAt>,
+        ReadStorage<'a, Target>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
         use specs::Join;
 
-        let (entities, mut messages, types, bodies, rotations, curr_chunks, look_ats) = data;
+        let (entities, mut messages, types, bodies, rotations, curr_chunks, targets) = data;
 
         let mut entity_updates = vec![];
 
-        for (ent, etype, body, rotation, _curr_chunk, look_at) in (
+        for (ent, etype, body, rotation, _curr_chunk, target) in (
             &*entities,
             &types,
             &bodies,
             &rotations,
             &curr_chunks,
-            &look_ats,
+            &targets,
         )
             .join()
         {
             let Vec3(px, py, pz) = body.get_position();
             let Quaternion(qx, qy, qz, qw) = rotation.0;
 
-            let look_target = LookTarget::extract(look_at.0.clone());
+            let look_target = target.position();
 
             entity_updates.push(EntityProtocol {
                 id: ent.id().to_string(),

@@ -8,9 +8,9 @@ use crate::comp::{
     brain::{Brain, BrainOptions},
     curr_chunk::CurrChunk,
     etype::EType,
-    lookat::{LookAt, LookTarget},
     rigidbody::RigidBody,
     rotation::Rotation,
+    target::{Target, TargetInner},
     view_radius::ViewRadius,
 };
 
@@ -124,12 +124,12 @@ impl Entities {
             ))
             .with(Rotation::from_quaternion(&rotation))
             .with(CurrChunk::new())
-            .with(LookAt(if observe == "all" {
-                LookTarget::ALL(None)
+            .with(Target(if observe == "all" {
+                TargetInner::ALL(None)
             } else if observe == "player" {
-                LookTarget::PLAYER(None)
+                TargetInner::PLAYER(None)
             } else {
-                LookTarget::ENTITY(None)
+                TargetInner::ENTITY(None)
             }))
             .with(ViewRadius::new(*view_distance))
             .with(Brain::new(BrainOptions::default()))
