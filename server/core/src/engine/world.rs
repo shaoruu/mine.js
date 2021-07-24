@@ -224,7 +224,6 @@ impl World {
         id: Option<usize>,
         player_name: Option<String>,
         player_addr: Recipient<Message>,
-        render_radius: i16,
     ) -> JoinResult {
         let mut id = id.unwrap_or_else(rand::random::<usize>);
 
@@ -253,6 +252,7 @@ impl World {
 
         let config = self.read_resource::<WorldConfig>();
         let dimension = config.player_dimensions.clone();
+        let render_radius = config.render_radius as i16;
         let head = config.player_head;
 
         drop(config);
@@ -546,10 +546,6 @@ impl World {
                             self.test_entity(player_id);
                             msgs.push(create_msg(ChatType::Info, "Summoned a test entity."));
                         }
-                        "path" => {
-                            self.test_pathfinding(player_id);
-                            msgs.push(create_msg(ChatType::Info, "Testing pathfinding..."));
-                        }
                         _ => {}
                     }
                 }
@@ -599,125 +595,6 @@ impl World {
             &Vec3(pos.0, pos.1, pos.2),
             &Quaternion(0.0, 0.0, 0.0, 0.0),
         );
-    }
-
-    /// TEST:
-    ///
-    /// Testing path finding
-    pub fn test_pathfinding(&mut self, player_id: usize) {
-        let players = self.read_resource::<Players>();
-        let player = players.get(&player_id);
-
-        if player.is_none() {
-            return;
-        }
-
-        let player = player.unwrap();
-
-        let bodies = self.ecs().read_component::<RigidBody>();
-        let body = bodies.get(player.entity).unwrap();
-
-        let pos = body.get_position();
-
-        drop(bodies);
-        drop(players);
-
-        let chunks = self.read_resource::<Chunks>();
-        let dimension = chunks.config.dimension;
-
-        let start = chunks.get_standable_voxel(&Vec3(0, 52, 0));
-        let voxel_pos =
-            chunks.get_standable_voxel(&map_world_to_voxel(pos.0, pos.1, pos.2, dimension));
-
-        let target_node = PathNode(voxel_pos.0, voxel_pos.1, voxel_pos.2);
-
-        debug!("Start: {:?}", start);
-        debug!("Target: {:?}", voxel_pos);
-        debug!(
-            "Start ID {:?}",
-            chunks.get_voxel_by_voxel(start.0, start.1, start.2)
-        );
-        debug!(
-            "Target ID: {:?}",
-            chunks.get_voxel_by_voxel(voxel_pos.0, voxel_pos.1, voxel_pos.2)
-        );
-
-        let walkable = |vx: i32, vy: i32, vz: i32, h: f32| {
-            if chunks.get_walkable_by_voxel(vx, vy, vz) {
-                return false;
-            }
-
-            for i in 1..(h.ceil() as i32 + 1) {
-                if !chunks.get_walkable_by_voxel(vx, vy + i, vz) {
-                    return false;
-                }
-            }
-
-            true
-        };
-
-        let result = AStar::calculate(
-            &start,
-            &voxel_pos,
-            &|node| {
-                let &PathNode(vx, vy, vz) = node;
-                let mut successors = vec![];
-
-                // TODO: add sweeping checks
-                let height = 1.0;
-
-                // +X direction
-                if walkable(vx + 1, vy - 1, vz, height) {
-                    successors.push((PathNode(vx + 1, vy, vz), 1));
-                } else if walkable(vx + 1, vy, vz, height) {
-                    successors.push((PathNode(vx + 1, vy + 1, vz), 2));
-                } else if walkable(vx + 1, vy - 2, vz, height) {
-                    successors.push((PathNode(vx + 1, vy - 1, vz), 2));
-                }
-
-                // -X direction
-                if walkable(vx - 1, vy - 1, vz, height) {
-                    successors.push((PathNode(vx - 1, vy, vz), 1));
-                } else if walkable(vx - 1, vy, vz, height) {
-                    successors.push((PathNode(vx - 1, vy + 1, vz), 2));
-                } else if walkable(vx - 1, vy - 2, vz, height) {
-                    successors.push((PathNode(vx - 1, vy - 1, vz), 2));
-                }
-
-                // +Z direction
-                if walkable(vx, vy - 1, vz + 1, height) {
-                    successors.push((PathNode(vx, vy, vz + 1), 1));
-                } else if walkable(vx, vy, vz + 1, height) {
-                    successors.push((PathNode(vx, vy + 1, vz + 1), 2));
-                } else if walkable(vx, vy - 2, vz + 1, height) {
-                    successors.push((PathNode(vx, vy - 1, vz + 1), 2));
-                }
-
-                // -Z direction
-                if walkable(vx, vy - 1, vz - 1, height) {
-                    successors.push((PathNode(vx, vy, vz - 1), 1));
-                } else if walkable(vx, vy, vz - 1, height) {
-                    successors.push((PathNode(vx, vy + 1, vz - 1), 2));
-                } else if walkable(vx, vy - 2, vz - 1, height) {
-                    successors.push((PathNode(vx, vy - 1, vz - 1), 2));
-                }
-
-                successors
-            },
-            &|p| p.distance(&target_node) / 3,
-        );
-
-        drop(chunks);
-
-        let nodes = if let Some((nodes, _)) = result {
-            nodes
-        } else {
-            vec![]
-        };
-        let mut test = create_of_type(MessageType::Pick);
-        let j = serde_json::to_string(&nodes).unwrap();
-        test.json = j;
-        self.broadcast(&test, vec![], vec![]);
     }
 
     /// Sync configurations to the world's JSON file

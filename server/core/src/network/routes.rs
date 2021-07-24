@@ -35,7 +35,6 @@ pub async fn ws_route(
 
     let player = session::WsSession {
         world_name,
-        render_radius: 12,
         ..Default::default()
     };
 

@@ -21,8 +21,6 @@ pub struct WsSession {
     pub world_name: String,
     // name in world
     pub name: Option<String>,
-    // radius of render?
-    pub render_radius: i16,
 }
 
 impl WsSession {
@@ -42,7 +40,6 @@ impl WsSession {
             world_name: world_name.to_owned(),
             player_name: self.name.clone(),
             player_addr: ctx.address().recipient(),
-            render_radius: self.render_radius,
         };
 
         WsServer::from_registry()

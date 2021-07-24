@@ -31,7 +31,6 @@ pub struct JoinWorld {
     pub world_name: String,
     pub player_name: Option<String>,
     pub player_addr: Recipient<Message>,
-    pub render_radius: i16,
 }
 
 #[derive(Clone, Message)]

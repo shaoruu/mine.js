@@ -135,11 +135,10 @@ impl Handler<JoinWorld> for WsServer {
             world_name,
             player_name,
             player_addr,
-            render_radius,
         } = msg;
 
         let world = self.worlds.get_mut(&world_name).expect("World not found!");
-        let result = world.add_player(None, player_name, player_addr, render_radius);
+        let result = world.add_player(None, player_name, player_addr);
 
         MessageResult(result)
     }

@@ -9,7 +9,7 @@ use std::{
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use log::info;
+use log::{debug, info};
 use rayon::prelude::*;
 
 use super::super::{
