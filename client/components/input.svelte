@@ -29,7 +29,7 @@
   }
 
   .inputField input {
-    width: 90%;
+    width: 80%;
     line-height: 24px;
     background: black;
     color: white;
