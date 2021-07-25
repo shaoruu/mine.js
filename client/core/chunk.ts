@@ -83,16 +83,21 @@ class Chunk {
     vec3.add(this.max, this.max, [0, maxHeight, 0]);
   }
 
-  setVoxel = (vx: number, vy: number, vz: number, type: number) => {
+  setVoxel = (vx: number, vy: number, vz: number, type: number, rotation: number, yRotation: number) => {
     if (!this.contains(vx, vy, vz)) return;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-    return this.voxels.set(lx, ly, lz, type);
+
+    let value = type & 0xffff;
+    value = type | ((rotation & 0xf) << 16);
+    value = type | ((yRotation & 0xf) << 20);
+
+    return this.voxels.set(lx, ly, lz, value);
   };
 
   getVoxel = (vx: number, vy: number, vz: number) => {
     if (!this.contains(vx, vy, vz)) return 1;
     const [lx, ly, lz] = this.toLocal(vx, vy, vz);
-    return this.voxels.get(lx, ly, lz);
+    return this.voxels.get(lx, ly, lz) & 0xffff;
   };
 
   getLocalRedLight = (lx: number, ly: number, lz: number) => {

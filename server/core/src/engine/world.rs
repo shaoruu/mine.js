@@ -421,6 +421,8 @@ impl World {
             let vy = update.vy;
             let vz = update.vz;
             let id = update.r#type;
+            let rotation = update.rotation;
+            let y_rotation = update.y_rotation;
 
             if vy < 0 || vy >= chunks.config.max_height as i32 || !chunks.registry.has_type(id) {
                 continue;
@@ -437,7 +439,7 @@ impl World {
             }
 
             chunks.start_caching();
-            chunks.update(vx, vy, vz, id);
+            chunks.update(vx, vy, vz, id, rotation, y_rotation);
             chunks.stop_caching();
 
             let neighbor_chunks = chunks.get_neighbor_chunk_coords(vx, vy, vz);
@@ -454,6 +456,8 @@ impl World {
                     vy: vy + 1,
                     vz,
                     r#type: air,
+                    rotation: 0,
+                    y_rotation: 0,
                 });
             }
 
@@ -465,6 +469,8 @@ impl World {
 
         drop(chunks);
 
+        let mut chunk_mesh_protocols = vec![];
+
         cache.iter().for_each(|coords| {
             let mut chunks = self.write_resource::<Chunks>();
 
@@ -472,21 +478,16 @@ impl World {
             let mesh_level = MeshLevel::Levels(levels);
 
             let chunk = chunks.get(&coords, &mesh_level, true).unwrap();
-
-            let mut component = MessageComponents::default_for(MessageType::Update);
-            component.chunks = Some(vec![chunk.get_protocol(true, false, false, mesh_level)]);
+            chunk_mesh_protocols.push(chunk.get_protocol(true, false, false, mesh_level));
 
             drop(chunks);
-
-            let new_message = create_message(component);
-            self.broadcast(&new_message, vec![], vec![]);
         });
 
         let chunks = self.read_resource::<Chunks>();
 
         // First send the message, so borrow checker doesn't freak out
         let mut components = MessageComponents::default_for(MessageType::Update);
-        let chunk_protocols: Vec<ChunkProtocol> = cache
+        let mut chunk_protocols: Vec<ChunkProtocol> = cache
             .iter()
             .map(|coords| {
                 chunks
@@ -495,6 +496,7 @@ impl World {
                     .get_protocol(false, false, true, MeshLevel::None)
             })
             .collect();
+        chunk_protocols.append(&mut chunk_mesh_protocols);
         components.chunks = Some(chunk_protocols);
         let mut new_message = create_message(components);
         new_message.updates = results;

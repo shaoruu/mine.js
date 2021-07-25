@@ -49,6 +49,8 @@ pub struct UpdateProtocol {
     pub vy: i32,
     pub vz: i32,
     pub r#type: u32,
+    pub rotation: u32,
+    pub y_rotation: u32,
 }
 
 /// Protobuf format for chat messages
@@ -224,6 +226,8 @@ pub fn create_message(components: MessageComponents) -> messages::Message {
                 vx: update.vx,
                 vy: update.vy,
                 vz: update.vz,
+                rotation: update.rotation,
+                y_rotation: update.y_rotation,
             })
             .collect()
     }

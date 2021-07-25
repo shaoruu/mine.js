@@ -6,9 +6,6 @@ pub const LEVEL_SEED: u32 = 1021;
 pub struct CornerData {
     pub pos: [i32; 3],
     pub uv: [i32; 2],
-    pub side1: u8,
-    pub side2: u8,
-    pub corner: u8,
 }
 
 pub struct CornerSimplified {
@@ -21,7 +18,6 @@ pub struct BlockFace<'a> {
     pub mat3: &'a str,
     pub mat6: &'a str,
     pub corners: [CornerData; 4],
-    pub neighbors: [[i32; 3]; 8],
 }
 
 pub struct PlantFace<'a> {
@@ -48,41 +44,19 @@ pub const BLOCK_FACES: [BlockFace<'static>; 6] = [
             CornerData {
                 pos: [0, 1, 0],
                 uv: [0, 1],
-                side1: 1,
-                side2: 3,
-                corner: 0,
             },
             CornerData {
                 pos: [0, 0, 0],
                 uv: [0, 0],
-                side1: 3,
-                side2: 6,
-                corner: 5,
             },
             CornerData {
                 pos: [0, 1, 1],
                 uv: [1, 1],
-                side1: 1,
-                side2: 4,
-                corner: 2,
             },
             CornerData {
                 pos: [0, 0, 1],
                 uv: [1, 0],
-                side1: 4,
-                side2: 6,
-                corner: 7,
             },
-        ],
-        neighbors: [
-            [-1, 1, -1], // 0
-            [-1, 1, 0],
-            [-1, 1, 1],
-            [-1, 0, -1], // 3
-            [-1, 0, 1],  // 4
-            [-1, -1, -1],
-            [-1, -1, 0],
-            [-1, -1, 1],
         ],
     },
     // viewing from +x to -x (head towards +y) (indices):
@@ -103,41 +77,19 @@ pub const BLOCK_FACES: [BlockFace<'static>; 6] = [
             CornerData {
                 pos: [1, 1, 1],
                 uv: [0, 1],
-                side1: 1,
-                side2: 4,
-                corner: 2,
             },
             CornerData {
                 pos: [1, 0, 1],
                 uv: [0, 0],
-                side1: 4,
-                side2: 6,
-                corner: 7,
             },
             CornerData {
                 pos: [1, 1, 0],
                 uv: [1, 1],
-                side1: 1,
-                side2: 3,
-                corner: 0,
             },
             CornerData {
                 pos: [1, 0, 0],
                 uv: [1, 0],
-                side1: 3,
-                side2: 6,
-                corner: 5,
             },
-        ],
-        neighbors: [
-            [1, 1, -1], // 0
-            [1, 1, 0],
-            [1, 1, 1],
-            [1, 0, -1], // 3
-            [1, 0, 1],  // 4
-            [1, -1, -1],
-            [1, -1, 0],
-            [1, -1, 1],
         ],
     },
     // viewing from -y to +y (head towards +z) (indices):
@@ -158,41 +110,19 @@ pub const BLOCK_FACES: [BlockFace<'static>; 6] = [
             CornerData {
                 pos: [1, 0, 1],
                 uv: [1, 0],
-                side1: 1,
-                side2: 4,
-                corner: 2,
             },
             CornerData {
                 pos: [0, 0, 1],
                 uv: [0, 0],
-                side1: 1,
-                side2: 3,
-                corner: 0,
             },
             CornerData {
                 pos: [1, 0, 0],
                 uv: [1, 1],
-                side1: 4,
-                side2: 6,
-                corner: 7,
             },
             CornerData {
                 pos: [0, 0, 0],
                 uv: [0, 1],
-                side1: 3,
-                side2: 6,
-                corner: 5,
             },
-        ],
-        neighbors: [
-            [-1, -1, 1],
-            [0, -1, 1],
-            [1, -1, 1],
-            [-1, -1, 0],
-            [1, -1, 0],
-            [-1, -1, -1],
-            [0, -1, -1],
-            [1, -1, -1],
         ],
     },
     // viewing from -y to +y (head towards +z) (indices):
@@ -213,41 +143,19 @@ pub const BLOCK_FACES: [BlockFace<'static>; 6] = [
             CornerData {
                 pos: [0, 1, 1],
                 uv: [1, 1],
-                side1: 1,
-                side2: 3,
-                corner: 0,
             },
             CornerData {
                 pos: [1, 1, 1],
                 uv: [0, 1],
-                side1: 1,
-                side2: 4,
-                corner: 2,
             },
             CornerData {
                 pos: [0, 1, 0],
                 uv: [1, 0],
-                side1: 3,
-                side2: 6,
-                corner: 5,
             },
             CornerData {
                 pos: [1, 1, 0],
                 uv: [0, 0],
-                side1: 4,
-                side2: 6,
-                corner: 7,
             },
-        ],
-        neighbors: [
-            [-1, 1, 1],
-            [0, 1, 1],
-            [1, 1, 1],
-            [-1, 1, 0],
-            [1, 1, 0],
-            [-1, 1, -1],
-            [0, 1, -1],
-            [1, 1, -1],
         ],
     },
     // viewing from -z to +z (head towards +y) (indices):
@@ -268,41 +176,19 @@ pub const BLOCK_FACES: [BlockFace<'static>; 6] = [
             CornerData {
                 pos: [1, 0, 0],
                 uv: [0, 0],
-                side1: 3,
-                side2: 6,
-                corner: 5,
             },
             CornerData {
                 pos: [0, 0, 0],
                 uv: [1, 0],
-                side1: 4,
-                side2: 6,
-                corner: 7,
             },
             CornerData {
                 pos: [1, 1, 0],
                 uv: [0, 1],
-                side1: 1,
-                side2: 3,
-                corner: 0,
             },
             CornerData {
                 pos: [0, 1, 0],
                 uv: [1, 1],
-                side1: 1,
-                side2: 4,
-                corner: 2,
             },
-        ],
-        neighbors: [
-            [1, 1, -1],
-            [0, 1, -1],
-            [-1, 1, -1],
-            [1, 0, -1],
-            [-1, 0, -1],
-            [1, -1, -1],
-            [0, -1, -1],
-            [-1, -1, -1],
         ],
     },
     // viewing from +z to -z (head towards +y) (indices):
@@ -323,41 +209,19 @@ pub const BLOCK_FACES: [BlockFace<'static>; 6] = [
             CornerData {
                 pos: [0, 0, 1],
                 uv: [0, 0],
-                side1: 4,
-                side2: 6,
-                corner: 7,
             },
             CornerData {
                 pos: [1, 0, 1],
                 uv: [1, 0],
-                side1: 3,
-                side2: 6,
-                corner: 5,
             },
             CornerData {
                 pos: [0, 1, 1],
                 uv: [0, 1],
-                side1: 1,
-                side2: 4,
-                corner: 2,
             },
             CornerData {
                 pos: [1, 1, 1],
                 uv: [1, 1],
-                side1: 1,
-                side2: 3,
-                corner: 0,
             },
-        ],
-        neighbors: [
-            [1, 1, 1],
-            [0, 1, 1],
-            [-1, 1, 1],
-            [1, 0, 1],
-            [-1, 0, 1],
-            [1, -1, 1],
-            [0, -1, 1],
-            [-1, -1, 1],
         ],
     },
 ];

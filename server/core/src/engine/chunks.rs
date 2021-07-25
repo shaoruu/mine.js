@@ -991,7 +991,7 @@ impl Chunks {
     }
 
     /// Update a voxel to a new type
-    pub fn update(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
+    pub fn update(&mut self, vx: i32, vy: i32, vz: i32, id: u32, rotation: u32, y_rotation: u32) {
         // TODO: fix this code (might have better way)
         self.get_chunk_by_voxel_mut(vx, vy, vz)
             .unwrap()
@@ -1014,6 +1014,21 @@ impl Chunks {
 
         // updating the new block
         self.set_voxel_by_voxel(vx, vy, vz, id);
+
+        if updated_type.rotatable {
+            let y_rotation = if updated_type.y_rotatable {
+                y_rotation
+            } else {
+                0
+            };
+
+            self.set_voxel_rotation_by_voxel(
+                vx,
+                vy,
+                vz,
+                &BlockRotation::encode(rotation, y_rotation),
+            );
+        }
 
         // updating the height map
         if self.registry.is_air(id) {

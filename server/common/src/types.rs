@@ -19,6 +19,8 @@ pub struct UV {
 #[serde(rename_all = "camelCase")]
 pub struct Block {
     pub name: String,
+    pub rotatable: bool,
+    pub y_rotatable: bool,
     pub is_block: bool,
     pub is_empty: bool,
     pub is_fluid: bool,

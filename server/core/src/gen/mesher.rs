@@ -1,3 +1,5 @@
+#![allow(clippy::collapsible_else_if)]
+
 use itertools::izip;
 
 use super::super::{
@@ -61,10 +63,10 @@ impl Mesher {
         let &Vec3(start_x, _, start_z) = min_inner;
         let &Vec3(end_x, _, end_z) = max_inner;
 
-        let vertex_ao = |side1: u32, side2: u32, corner: u32| -> i32 {
-            let num_s1 = !registry.get_transparency_by_id(side1) as i32;
-            let num_s2 = !registry.get_transparency_by_id(side2) as i32;
-            let num_c = !registry.get_transparency_by_id(corner) as i32;
+        let vertex_ao = |side1: bool, side2: bool, corner: bool| -> i32 {
+            let num_s1 = !side1 as i32;
+            let num_s2 = !side2 as i32;
+            let num_c = !corner as i32;
 
             if num_s1 == 1 && num_s2 == 1 {
                 0
@@ -83,7 +85,9 @@ impl Mesher {
                     (sub_chunk * sub_chunk_unit) as i32..((sub_chunk + 1) * sub_chunk_unit) as i32
                 {
                     let voxel_id = chunk.get_voxel(vx, vy, vz);
+                    let rotation = chunk.get_voxel_rotation(vx, vy, vz);
                     let &Block {
+                        rotatable,
                         is_solid,
                         is_transparent,
                         is_block,
@@ -117,11 +121,20 @@ impl Mesher {
 
                                 for &CornerSimplified { pos, uv } in corners.iter() {
                                     let offset = (1.0 - plant_shrink) / 2.0;
-                                    let pos_x =
-                                        pos[0] as f32 * plant_shrink + offset + (vx + dx) as f32;
-                                    let pos_y = (pos[1] + vy) as f32;
-                                    let pos_z =
-                                        pos[2] as f32 * plant_shrink + offset + (vz + dz) as f32;
+
+                                    let mut position = [
+                                        pos[0] as f32 * plant_shrink + offset,
+                                        pos[1] as f32,
+                                        pos[2] as f32 * plant_shrink + offset,
+                                    ];
+
+                                    if rotatable {
+                                        rotation.rotate(&mut position, true);
+                                    }
+
+                                    let pos_x = position[0] + (vx + dx) as f32;
+                                    let pos_y = position[1] + vy as f32;
+                                    let pos_z = position[2] + (vz + dz) as f32;
 
                                     positions.push(pos_x * *dimension as f32);
                                     positions.push(pos_y * *dimension as f32);
@@ -154,9 +167,21 @@ impl Mesher {
                                 mat3,
                                 mat6,
                                 corners,
-                                neighbors,
                             } in BLOCK_FACES.iter()
                             {
+                                let dir = dir.to_owned();
+                                let mut dir = [dir[0] as f32, dir[1] as f32, dir[2] as f32];
+
+                                if rotatable {
+                                    rotation.rotate(&mut dir, false);
+                                }
+
+                                let dir = [
+                                    dir[0].round() as i32,
+                                    dir[1].round() as i32,
+                                    dir[2].round() as i32,
+                                ];
+
                                 let nvx = vx + dir[0];
                                 let nvy = vy + dir[1];
                                 let nvz = vz + dir[2];
@@ -171,11 +196,6 @@ impl Mesher {
                                         || (n_block_type.transparent_standalone
                                             && dir[0] + dir[1] + dir[2] >= 1))
                                 {
-                                    let near_voxels: Vec<u32> = neighbors
-                                        .iter()
-                                        .map(|[a, b, c]| chunk.get_voxel(vx + a, vy + b, vz + c))
-                                        .collect();
-
                                     let UV {
                                         start_u,
                                         end_u,
@@ -197,34 +217,29 @@ impl Mesher {
                                     let mut four_green_lights = vec![];
                                     let mut four_blue_lights = vec![];
 
-                                    for CornerData {
-                                        pos,
-                                        uv,
-                                        side1,
-                                        side2,
-                                        corner,
-                                    } in corners.iter()
-                                    {
-                                        let pos_x = pos[0] + vx;
-                                        let pos_y = pos[1] + vy;
-                                        let pos_z = pos[2] + vz;
+                                    for CornerData { pos, uv } in corners.iter() {
+                                        let mut position =
+                                            [pos[0] as f32, pos[1] as f32, pos[2] as f32];
 
-                                        positions.push(pos_x as f32 * *dimension as f32);
-                                        positions.push(pos_y as f32 * *dimension as f32);
-                                        positions.push(pos_z as f32 * *dimension as f32);
+                                        if rotatable {
+                                            rotation.rotate(&mut position, true);
+                                        }
+
+                                        let pos_x = position[0] + vx as f32;
+                                        let pos_y = position[1] + vy as f32;
+                                        let pos_z = position[2] + vz as f32;
+
+                                        positions.push(pos_x * *dimension as f32);
+                                        positions.push(pos_y * *dimension as f32);
+                                        positions.push(pos_z * *dimension as f32);
 
                                         uvs.push(uv[0] as f32 * (end_u - start_u) + start_u);
                                         uvs.push(uv[1] as f32 * (start_v - end_v) + end_v);
-                                        face_aos.push(vertex_ao(
-                                            near_voxels[*side1 as usize],
-                                            near_voxels[*side2 as usize],
-                                            near_voxels[*corner as usize],
-                                        ));
 
                                         // calculating the 8 voxels around this vertex
-                                        let dx = pos[0];
-                                        let dy = pos[1];
-                                        let dz = pos[2];
+                                        let dx = position[0].round() as i32;
+                                        let dy = position[1].round() as i32;
+                                        let dz = position[2].round() as i32;
 
                                         let dx = if dx == 0 { -1 } else { 1 };
                                         let dy = if dy == 0 { -1 } else { 1 };
@@ -278,6 +293,14 @@ impl Mesher {
                                             registry,
                                         )
                                         .is_transparent;
+
+                                        if dir[0].abs() == 1 {
+                                            face_aos.push(vertex_ao(b110, b101, b111));
+                                        } else if dir[1].abs() == 1 {
+                                            face_aos.push(vertex_ao(b110, b011, b111));
+                                        } else {
+                                            face_aos.push(vertex_ao(b011, b101, b111));
+                                        }
 
                                         // TODO: light be leaking
 

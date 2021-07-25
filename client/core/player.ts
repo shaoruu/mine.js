@@ -27,6 +27,15 @@ const TEMP_BLOCK_MAP = [1, 2, 3, 4, 100, 10, 12, 13, 14, 15];
 const LOCAL_STORAGE_PLAYER_NAME = 'mine.js-player';
 const DEFAULT_PLAYER_NAME = 'naenaebaby';
 
+const PY_ROTATION = 0;
+const NY_ROTATION = 1;
+const PX_ROTATION = 2;
+const NX_ROTATION = 3;
+const PZ_ROTATION = 4;
+const NZ_ROTATION = 5;
+
+type TargetBlock = { voxel: Coords3; rotation?: number; yRotation?: number };
+
 class Player {
   public id: string;
   public name: string;
@@ -35,7 +44,11 @@ class Player {
   public controls: PointerLockControls;
 
   public lookBlock: Coords3 | null = [0, 0, 0];
-  public targetBlock: Coords3 | null = [0, 0, 0];
+  public targetBlock: TargetBlock | null = {
+    voxel: [0, 0, 0],
+    rotation: PY_ROTATION,
+    yRotation: 0,
+  };
   public entity: PhysicalType;
   public perspective: PerspectiveType = 'first';
 
@@ -561,8 +574,28 @@ class Player {
     );
 
     this.lookBlock = newLookBlock;
+
     // target block is look block summed with the normal
-    this.targetBlock = [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz];
+    const rotation =
+      nx !== 0
+        ? nx > 0
+          ? PX_ROTATION
+          : NX_ROTATION
+        : ny !== 0
+        ? ny > 0
+          ? PY_ROTATION
+          : NY_ROTATION
+        : nz !== 0
+        ? nz > 0
+          ? PZ_ROTATION
+          : NZ_ROTATION
+        : 0;
+
+    this.targetBlock = {
+      voxel: [this.lookBlock[0] + nx, this.lookBlock[1] + ny, this.lookBlock[2] + nz],
+      rotation,
+      yRotation: 0,
+    };
   };
 
   get object() {
@@ -590,4 +623,4 @@ class Player {
   }
 }
 
-export { Player, PlayerOptionsType };
+export { Player, PlayerOptionsType, TargetBlock };

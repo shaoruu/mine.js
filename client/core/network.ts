@@ -113,7 +113,15 @@ class Network {
           world.handleServerChunk(chunkData, type === 'UPDATE');
         }
 
-        const mapped = updates.map((u) => ({ voxel: [u.vx, u.vy, u.vz], type: u.type }));
+        const mapped = updates.map((u) => ({
+          target: {
+            voxel: [u.vx, u.vy, u.vz],
+            rotation: u.rotation,
+            yRotation: u.yRotation,
+          },
+          type: u.type,
+        }));
+
         world.setManyVoxels(mapped, false);
 
         break;

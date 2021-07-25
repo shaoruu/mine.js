@@ -6,6 +6,7 @@ import { Helper } from '../utils';
 
 import { Chunk } from './chunk';
 import { Engine } from './engine';
+import { TargetBlock } from './player';
 
 type WorldOptionsType = {
   name?: string;
@@ -195,7 +196,9 @@ class World extends EventEmitter {
     return this.chunks.set(chunk.name, chunk);
   };
 
-  setVoxel = (voxel: Coords3, type: number, sideEffects = true) => {
+  setVoxel = (target: TargetBlock, type: number, sideEffects = true) => {
+    const { voxel, rotation, yRotation } = target;
+
     const [vx, vy, vz] = voxel;
 
     if (this.getVoxelByVoxel(voxel) !== 0 && type !== 0) {
@@ -205,13 +208,15 @@ class World extends EventEmitter {
     if (sideEffects) {
       this.engine.network.server.sendEvent({
         type: 'UPDATE',
-        updates: [{ vx, vy, vz, type }],
+        updates: [{ vx, vy, vz, type, rotation, yRotation }],
       });
     }
   };
 
-  setManyVoxels = (voxels: { voxel: Coords3; type: number }[], sideEffects = true) => {
-    if (voxels.length > this.options.maxBlockPerFrame) {
+  setManyVoxels = (targets: { target: TargetBlock; type: number }[], sideEffects = true) => {
+    if (!targets.length) return;
+
+    if (targets.length > this.options.maxBlockPerFrame) {
       // console.warn('Changing more voxels than recommended...');
       // TODO: maybe split the whole thing into chunks of updates?
     }
@@ -219,20 +224,31 @@ class World extends EventEmitter {
     if (sideEffects) {
       this.engine.network.server.sendEvent({
         type: 'UPDATE',
-        updates: voxels.map(({ voxel: [vx, vy, vz], type }) => ({
-          vx,
-          vy,
-          vz,
-          type,
-        })),
+        updates: targets.map(
+          ({
+            target: {
+              voxel: [vx, vy, vz],
+              rotation,
+              yRotation,
+            },
+            type,
+          }) => ({
+            vx,
+            vy,
+            vz,
+            type,
+            rotation,
+            yRotation,
+          }),
+        ),
       });
     } else {
       this.engine.particles.addBreakParticles(
-        voxels.map(({ voxel }) => ({ voxel, type: this.engine.world.getVoxelByVoxel(voxel) })),
-        { count: voxels.length > 3 ? 1 : 6 },
+        targets.map(({ target: { voxel } }) => ({ voxel, type: this.engine.world.getVoxelByVoxel(voxel) })),
+        { count: targets.length > 3 ? 1 : 6 },
       );
-      voxels.forEach(({ voxel, type }) => {
-        this.getChunkByVoxel(voxel)?.setVoxel(voxel[0], voxel[1], voxel[2], type);
+      targets.forEach(({ target: { voxel, rotation, yRotation }, type }) => {
+        this.getChunkByVoxel(voxel)?.setVoxel(voxel[0], voxel[1], voxel[2], type, rotation, yRotation);
       });
     }
   };
@@ -241,7 +257,7 @@ class World extends EventEmitter {
     const voxel = this.engine.player.lookBlock;
     if (voxel) {
       // TODO: use type.air instead of 0
-      this.setVoxel(voxel, 0);
+      this.setVoxel({ voxel }, 0);
     }
   };
 
@@ -260,7 +276,7 @@ class World extends EventEmitter {
       const blockSize = dimension - 0.05;
 
       if (targetBlock) {
-        const [tx, ty, tz] = targetBlock;
+        const [tx, ty, tz] = targetBlock.voxel;
         const offset = (dimension - blockSize) / 2;
         const blockAABB = new AABB([tx + offset, ty + offset, tz + offset], [blockSize, blockSize, blockSize]);
         if (!aabb.intersects(blockAABB)) this.setVoxel(targetBlock, type);
