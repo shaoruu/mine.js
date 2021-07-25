@@ -156,19 +156,11 @@ pub fn trace(
 
 #[cfg(test)]
 mod tests {
-    use log::debug;
-
     use super::*;
 
     #[test]
     fn sphere_test() {
-        let voxel = |x: i32, y: i32, z: i32| {
-            if x == 0 && y == 0 && z == 0 {
-                true
-            } else {
-                false
-            }
-        };
+        let voxel = |x: i32, y: i32, z: i32| x == 0 && y == 0 && z == 0;
 
         let mut hit_position = Vec3::default();
         let mut hit_normal = Vec3::default();
@@ -194,7 +186,7 @@ mod tests {
                                 &mut hit_position,
                                 &mut hit_normal,
                             );
-                            assert_eq!(b, true);
+                            assert!(b);
                         }
                     }
                 }

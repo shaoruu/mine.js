@@ -2,7 +2,6 @@
 
 use std::sync::{Arc, Mutex};
 
-use log::debug;
 use server_common::vec::Vec3;
 use server_utils::convert::map_world_to_voxel;
 use specs::{ReadExpect, ReadStorage, System, WriteExpect, WriteStorage};

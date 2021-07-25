@@ -9,8 +9,10 @@ use std::{
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use log::{debug, info};
+use log::info;
 use rayon::prelude::*;
+
+use crate::gen::blocks::BlockRotation;
 
 use super::super::{
     constants::{LEVEL_SEED, VOXEL_NEIGHBORS},
@@ -616,6 +618,8 @@ impl Chunks {
 
     /// Set the voxel type for a voxel coordinate
     ///
+    /// Note: This clears the voxel rotation and stage.
+    ///
     /// Side-effects:
     ///
     /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
@@ -662,6 +666,106 @@ impl Chunks {
                     voxel: Vec3(vx, vy, vz),
                     id,
                 });
+            }
+        })
+    }
+
+    /// Get the voxel rotation at a voxel coordinate
+    #[inline]
+    pub fn get_voxel_rotation_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> BlockRotation {
+        let chunk = self.get_chunk_by_voxel(vx, vy, vz);
+        if let Some(chunk) = chunk {
+            chunk.get_voxel_rotation(vx, vy, vz)
+        } else {
+            panic!("Rotation not obtainable.");
+        }
+    }
+
+    /// Set the voxel rotation at a voxel coordinate
+    ///
+    /// Side-effects:
+    ///
+    /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
+    /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
+    #[inline]
+    pub fn set_voxel_rotation_by_voxel(
+        &mut self,
+        vx: i32,
+        vy: i32,
+        vz: i32,
+        rotation: &BlockRotation,
+    ) {
+        let max_height = self.config.max_height;
+        if vy as u32 >= max_height {
+            return;
+        }
+
+        let sub_chunks = self.config.sub_chunks;
+        let chunk = self.get_chunk_by_voxel_mut(vx, vy, vz);
+
+        // TODO: update chunks data for unloaded chunks.
+
+        if let Some(chunk) = chunk {
+            chunk.set_voxel_rotation(vx, vy, vz, rotation);
+            chunk.calc_dirty_levels(vy, max_height, sub_chunks);
+            chunk.is_dirty = true;
+        }
+
+        let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
+        neighbors.iter().for_each(|c| {
+            let n_chunk = self.get_chunk_mut(c);
+
+            if let Some(n_chunk) = n_chunk {
+                n_chunk.set_voxel_rotation(vx, vy, vz, rotation);
+                n_chunk.calc_dirty_levels(vy, max_height, sub_chunks);
+                n_chunk.is_dirty = true;
+            }
+        })
+    }
+
+    /// Get the voxel stage at a voxel coordinate
+    #[inline]
+    pub fn get_voxel_stage_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+        let chunk = self.get_chunk_by_voxel(vx, vy, vz);
+        if let Some(chunk) = chunk {
+            chunk.get_voxel_stage(vx, vy, vz)
+        } else {
+            panic!("Stage not obtainable.");
+        }
+    }
+
+    /// Set the voxel stage at a voxel coordinate
+    ///
+    /// Side-effects:
+    ///
+    /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
+    /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
+    #[inline]
+    pub fn set_voxel_stage_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, stage: u32) {
+        let max_height = self.config.max_height;
+        if vy as u32 >= max_height {
+            return;
+        }
+
+        let sub_chunks = self.config.sub_chunks;
+        let chunk = self.get_chunk_by_voxel_mut(vx, vy, vz);
+
+        // TODO: update chunks data for unloaded chunks.
+
+        if let Some(chunk) = chunk {
+            chunk.set_voxel_stage(vx, vy, vz, stage);
+            chunk.calc_dirty_levels(vy, max_height, sub_chunks);
+            chunk.is_dirty = true;
+        }
+
+        let neighbors = self.get_neighbor_chunk_coords(vx, vy, vz);
+        neighbors.iter().for_each(|c| {
+            let n_chunk = self.get_chunk_mut(c);
+
+            if let Some(n_chunk) = n_chunk {
+                n_chunk.set_voxel_stage(vx, vy, vz, stage);
+                n_chunk.calc_dirty_levels(vy, max_height, sub_chunks);
+                n_chunk.is_dirty = true;
             }
         })
     }

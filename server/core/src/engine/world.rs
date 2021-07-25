@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use actix::Recipient;
-use log::{debug, info};
+use log::info;
 
 use ansi_term::Colour::Yellow;
 
@@ -16,7 +16,6 @@ use specs::{Builder, DispatcherBuilder, World as ECSWorld, WorldExt};
 use serde::{Deserialize, Serialize};
 
 use server_common::quaternion::Quaternion;
-use server_utils::convert::map_world_to_voxel;
 
 use crate::comp::brain::Brain;
 use crate::comp::curr_chunk::CurrChunk;
@@ -27,7 +26,6 @@ use crate::comp::rotation::Rotation;
 use crate::comp::target::Target;
 use crate::comp::view_radius::ViewRadius;
 use crate::comp::walk_towards::WalkTowards;
-use crate::engine::astar::PathNode;
 use crate::network::models::{create_of_type, ChatType};
 use crate::sys::{
     BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, ObserveSystem,
@@ -38,7 +36,6 @@ use crate::{
     network::message::{JoinResult, Message},
 };
 
-use super::astar::AStar;
 use super::entities::Entities;
 use super::kdtree::KdTree;
 use super::{

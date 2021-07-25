@@ -11,6 +11,8 @@ use std::{
     path::PathBuf,
 };
 
+use crate::gen::blocks::{BlockRotation, Blocks};
+
 use super::super::{
     engine::world::WorldConfig,
     gen::lights::{LightColor, Lights},
@@ -236,11 +238,11 @@ impl Chunk {
             .expect("Unable to write to chunk file.");
     }
 
-    /// Get a voxel type within chunk by voxel coordinates
+    /// Get the raw value of voxel
     ///
     /// Returns 0 if it's outside of the chunk.
     #[inline]
-    pub fn get_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+    pub fn get_raw_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
         }
@@ -249,15 +251,72 @@ impl Chunk {
         self.voxels[&[lx as usize, ly as usize, lz as usize]]
     }
 
+    /// Set the raw value of voxel
+    ///
+    /// Panics if the coordinates are outside of chunk.
+    #[inline]
+    pub fn set_raw_voxel(&mut self, vx: i32, vy: i32, vz: i32, value: u32) {
+        assert!(self.contains(vx, vy, vz,));
+
+        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
+        self.voxels[&[lx as usize, ly as usize, lz as usize]] = value;
+    }
+
+    /// Get a voxel type within chunk by voxel coordinates
+    ///
+    /// Returns 0 if it's outside of the chunk.
+    #[inline]
+    pub fn get_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+        Blocks::extract_id(self.get_raw_voxel(vx, vy, vz))
+    }
+
     /// Set a voxel to type within chunk by voxel coordinates
+    ///
+    /// Note: This clears the rotation and stage.
     ///
     /// Panics if the coordinates are outside of chunk.
     #[inline]
     pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
+        let value = Blocks::insert_id(0, id);
+        self.set_raw_voxel(vx, vy, vz, value);
+    }
+
+    /// Get a voxel rotation within chunk by voxel coordinates
+    ///
+    /// Panics if it's outside of chunk
+    #[inline]
+    pub fn get_voxel_rotation(&self, vx: i32, vy: i32, vz: i32) -> BlockRotation {
         assert!(self.contains(vx, vy, vz,));
 
-        let Vec3(lx, ly, lz) = self.to_local(vx, vy, vz);
-        self.voxels[&[lx as usize, ly as usize, lz as usize]] = id;
+        Blocks::extract_rotation(self.get_raw_voxel(vx, vy, vz))
+    }
+
+    /// Set a voxel to rotation within chunk by voxel coordinates
+    ///
+    /// Panics if the coordinates are outside of chunk
+    #[inline]
+    pub fn set_voxel_rotation(&mut self, vx: i32, vy: i32, vz: i32, rotation: &BlockRotation) {
+        let value = Blocks::insert_rotation(self.get_raw_voxel(vx, vy, vz), rotation);
+        self.set_raw_voxel(vx, vy, vz, value);
+    }
+
+    /// Get a voxel stage within chunk by voxel coordinates
+    ///
+    /// Panics if it's outside of chunk
+    #[inline]
+    pub fn get_voxel_stage(&self, vx: i32, vy: i32, vz: i32) -> u32 {
+        assert!(self.contains(vx, vy, vz));
+
+        Blocks::extract_stage(self.get_raw_voxel(vx, vy, vz))
+    }
+
+    /// Set a voxel stage within chunk by voxel coordinates
+    ///
+    /// Panics if it's outside of chunk
+    #[inline]
+    pub fn set_voxel_stage(&mut self, vx: i32, vy: i32, vz: i32, stage: u32) {
+        let value = Blocks::insert_stage(self.get_raw_voxel(vx, vy, vz), stage);
+        self.set_raw_voxel(vx, vy, vz, value);
     }
 
     /// Get the red light value for voxel by voxel coordinates

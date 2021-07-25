@@ -341,7 +341,7 @@ mod tests {
         let collided = Arc::new(Mutex::new(false));
         let test = collided.clone();
 
-        let mut callback = move |t: f32, axis: usize, dir: i32, vec: &mut Vec3<f32>| {
+        let mut callback = move |_t: f32, _axis: usize, _dir: i32, _vec: &mut Vec3<f32>| {
             *test.lock().unwrap() = true;
             true
         };
