@@ -31,7 +31,22 @@ pub struct Registry {
 }
 
 impl Registry {
-    pub fn new(pack_name: &str, write: bool) -> Self {
+    pub fn new(mut packs: Vec<String>, write: bool) -> Self {
+        if packs.is_empty() {
+            panic!("No texture packs found.");
+        }
+
+        let registry: Self = Registry::load_pack(&packs.remove(0), write);
+
+        packs.into_iter().for_each(|name| {
+            Registry::load_pack(&name, write);
+        });
+
+        registry
+    }
+
+    /// Load a texture pack
+    pub fn load_pack(pack_name: &str, write: bool) -> Self {
         let blocks_json: HashMap<String, String> =
             serde_json::from_reader(File::open("assets/metadata/blocks.json").unwrap()).unwrap();
 
@@ -168,7 +183,7 @@ impl Registry {
             let end_v = 1.0 - (f_start_y + texture_dim as f32) / f_atlas_height;
 
             let (start_u, start_v, end_u, end_v) =
-                fix_texture_bleeding((start_u, start_v, end_u, end_v), texture_dim);
+                fix_texture_bleeding((start_u, start_v, end_u, end_v));
 
             let uv = UV {
                 start_u,
@@ -382,9 +397,8 @@ pub fn get_texture_type(texture: &HashMap<String, String>) -> &str {
 /// [Half-texel edge correction method](http://drilian.com/2008/11/25/understanding-half-pixel-and-half-texel-offsets/)
 fn fix_texture_bleeding(
     (start_u, start_v, end_u, end_v): (f32, f32, f32, f32),
-    texture_size: u32,
 ) -> (f32, f32, f32, f32) {
-    let offset = 0.1 / texture_size as f32;
+    let offset = 0.1 / 128 as f32;
     (
         start_u + offset,
         start_v - offset,

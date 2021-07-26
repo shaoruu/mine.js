@@ -43,6 +43,10 @@ async fn main() -> std::io::Result<()> {
             .service(routes::time)
             .service(web::resource("/ws/").to(routes::ws_route))
             .service(fs::Files::new("/atlas/", "assets/textures/generated/").show_files_listing())
+            .service(
+                fs::Files::new("/procedural/", "assets/textures/procedural").show_files_listing(),
+            )
+            .service(fs::Files::new("/packs/", "assets/textures/packs/").show_files_listing())
             .service(fs::Files::new("/models/", "assets/models/objects/").show_files_listing())
             .service(fs::Files::new("/", "public/").show_files_listing())
     })

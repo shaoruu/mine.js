@@ -79,18 +79,21 @@ class Debug {
       engine.inputs.bind('j', this.toggle, '*');
     });
 
-    engine.on('world-ready', () => {
+    engine.on('focus-loaded', () => {
       // textureTest
       const testBlock = new PlaneBufferGeometry(4, 4);
       const testMat = new MeshBasicMaterial({
         map: this.engine.registry.atlasUniform.value,
         side: DoubleSide,
         transparent: true,
+        depthTest: false,
         alphaTest: 0.5,
       });
+
       this.atlasTest = new Mesh(testBlock, testMat);
       this.atlasTest.position.set(0, 0, -5);
       this.atlasTest.visible = false;
+      this.atlasTest.renderOrder = 10000000000;
       this.engine.camera.threeCamera.add(this.atlasTest);
     });
   }
@@ -150,8 +153,13 @@ class Debug {
     // RENDERING
     const { registry, player, world, camera, rendering, sounds } = this.engine;
 
+    /* -------------------------------------------------------------------------- */
+    /*                              TEMPORARY OPTIONS                             */
+    /* -------------------------------------------------------------------------- */
+    const sessionFolder = this.gui.addFolder({ title: 'Session (Temporary)', expanded: true });
+
     // ENGINE
-    const engineFolder = this.gui.addFolder({ title: 'Engine', expanded: false });
+    const engineFolder = sessionFolder.addFolder({ title: 'Engine', expanded: false });
     engineFolder
       .addInput(this.engine, 'tickSpeed', {
         min: 0,
@@ -161,7 +169,7 @@ class Debug {
       })
       .on('change', (ev) => this.engine.setTick(ev.value));
 
-    const worldFolder = this.gui.addFolder({ title: 'World', expanded: false });
+    const worldFolder = sessionFolder.addFolder({ title: 'World', expanded: false });
     const worldDebugConfigs = { time: world.sky.tracker.time };
     worldFolder
       .addInput(world.options, 'renderRadius', {
@@ -191,7 +199,7 @@ class Debug {
     });
 
     // PLAYER
-    const playerFolder = this.gui.addFolder({ title: 'Player', expanded: false });
+    const playerFolder = sessionFolder.addFolder({ title: 'Player', expanded: false });
     playerFolder.addInput(player.options, 'acceleration', {
       min: 0,
       max: 5,
@@ -201,7 +209,7 @@ class Debug {
     playerFolder.addInput(player.options, 'flyingInertia', { min: 0, max: 5, step: 0.01, label: 'flying inertia' });
 
     // CAMERA
-    const cameraFolder = this.gui.addFolder({ title: 'Camera' });
+    const cameraFolder = sessionFolder.addFolder({ title: 'Camera' });
     cameraFolder
       .addInput(camera.options, 'fov', {
         min: 40,
@@ -222,7 +230,7 @@ class Debug {
     this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
 
     // REGISTRY
-    const registryFolder = this.gui.addFolder({ title: 'Registry', expanded: false });
+    const registryFolder = sessionFolder.addFolder({ title: 'Registry', expanded: false });
     registryFolder.addButton({ title: 'Toggle', label: 'atlas' }).on('click', () => {
       this.atlasTest.visible = !this.atlasTest.visible;
     });
@@ -232,13 +240,30 @@ class Debug {
     });
 
     // DEBUG
-    const debugFolder = this.gui.addFolder({ title: 'Debug', expanded: false });
+    const debugFolder = sessionFolder.addFolder({ title: 'Debug', expanded: false });
     debugFolder.addButton({ title: 'Toggle', label: 'chunk highlight' }).on('click', () => {
       this.chunkHighlight.visible = !this.chunkHighlight.visible;
     });
 
-    // SOUNDS
+    /* -------------------------------------------------------------------------- */
+    /*                                SAVED OPTIONS                               */
+    /* -------------------------------------------------------------------------- */
+    const packs = this.engine.registry.options.packs;
+    const packsObject = {};
+    packs.forEach((p) => (packsObject[p] = p));
 
+    const saved = this.gui.addFolder({ title: 'Local (Saved)', expanded: true });
+
+    const savedRegistryFolder = saved.addFolder({ title: 'Registry', expanded: true });
+    savedRegistryFolder
+      .addInput({ texturePack: this.engine.registry.texturePack }, 'texturePack', { options: packsObject })
+      .on('change', (ev) => {
+        registry.setTexturePack(ev.value);
+      });
+
+    /* -------------------------------------------------------------------------- */
+    /*                               SOUNDS DISPLAY                               */
+    /* -------------------------------------------------------------------------- */
     const createAudioNode = (name) => {
       const node = document.createElement('div');
 

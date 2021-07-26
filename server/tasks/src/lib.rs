@@ -10,12 +10,10 @@ use server_utils::convert::parse_chunk_name;
 use indicatif::{ProgressBar, ProgressStyle};
 
 pub fn loop_through_chunks(func: &dyn Fn(&mut Chunk, &Registry)) {
-    let configs = Configs::load_worlds("assets/metadata/worlds.json");
+    let (configs, registry) = Configs::load_worlds("assets/metadata/worlds.json");
 
-    configs.into_iter().for_each(|(name, (meta, config))| {
+    configs.into_iter().for_each(|(name, (_, config))| {
         if config.save {
-            let registry = Registry::new(&meta.texturepack, false);
-
             let path = PathBuf::from_str(format!("./data/{}/chunks", name).as_ref()).unwrap();
 
             println!("Processing world: {}", name);

@@ -12,7 +12,6 @@ use super::super::engine::{
     chunks::{Chunks, MeshLevel},
     clock::Clock,
     players::Players,
-    registry::Registry,
     world::World,
 };
 
@@ -50,11 +49,10 @@ impl WsServer {
     fn load_worlds(&mut self) {
         // Loading worlds from `worlds.json`
         let mut worlds: HashMap<String, World> = HashMap::new();
-        let configs = Configs::load_worlds("assets/metadata/worlds.json");
+        let (configs, registry) = Configs::load_worlds("assets/metadata/worlds.json");
 
         configs.into_iter().for_each(|(_, (meta, config))| {
-            let registry = Registry::new(&meta.texturepack, true);
-            let mut new_world = World::new(meta, config, registry);
+            let mut new_world = World::new(meta, config, registry.to_owned());
             new_world.preload();
             worlds.insert(new_world.name.to_owned(), new_world);
         });
@@ -257,12 +255,12 @@ impl Handler<GetWorld> for WsServer {
             sub_chunks: config.sub_chunks,
             tick_speed: clock.tick_speed,
             time: clock.time,
-            texturepack: meta.texturepack.to_owned(),
             blocks: registry.blocks.to_owned(),
             ranges: registry.ranges.to_owned(),
             entities: entities.get_all(),
             uv_side_count: registry.uv_side_count,
             uv_texture_size: registry.uv_texture_size,
+            packs: meta.packs.to_owned(),
         })
     }
 }

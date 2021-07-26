@@ -87,12 +87,12 @@ pub struct FullWorldData {
     pub tick_speed: f32,
     pub render_radius: usize,
     pub sub_chunks: u32,
-    pub texturepack: String,
     pub blocks: Blocks,
     pub ranges: Ranges,
     pub entities: EntityPrototypes,
     pub uv_side_count: u32,
     pub uv_texture_size: u32,
+    pub packs: Vec<String>,
 }
 
 #[derive(Clone, Message)]

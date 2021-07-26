@@ -2,16 +2,20 @@ use std::{collections::HashMap, fs::File};
 
 use server_utils::json;
 
-use super::world::{WorldConfig, WorldMeta};
+use super::{
+    registry::Registry,
+    world::{WorldConfig, WorldMeta},
+};
 
 pub struct Configs;
 
 impl Configs {
-    pub fn load_worlds(path: &str) -> HashMap<String, (WorldMeta, WorldConfig)> {
+    pub fn load_worlds(path: &str) -> (HashMap<String, (WorldMeta, WorldConfig)>, Registry) {
         let worlds_json: serde_json::Value =
             serde_json::from_reader(File::open(path).unwrap()).unwrap();
 
-        let world_default = &worlds_json["default"];
+        let world_default = &worlds_json["shared"];
+        let packs: Vec<String> = serde_json::from_value(world_default["packs"].to_owned()).unwrap();
 
         let mut map = HashMap::new();
 
@@ -25,6 +29,12 @@ impl Configs {
             map.insert(meta.name.to_owned(), (meta, config));
         }
 
-        map
+        if map.is_empty() {
+            panic!("No configs found!");
+        }
+
+        let registry = Registry::new(packs, true);
+
+        (map, registry)
     }
 }

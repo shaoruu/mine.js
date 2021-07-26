@@ -90,11 +90,11 @@ pub struct WorldConfig {
 #[serde(rename_all = "camelCase")]
 pub struct WorldMeta {
     pub name: String,
-    pub texturepack: String,
     pub description: String,
     pub preload: i16,
     pub tick_speed: f32,
     pub time: f32,
+    pub packs: Vec<String>,
 }
 /// A single voxel-based and ECS-based world
 pub struct World {

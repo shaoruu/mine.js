@@ -57,14 +57,17 @@ type RegistryOptionsType = {
   resolution: number;
   countPerSide?: number;
   textureSize?: number;
-  texturepack?: string;
+  packs?: string[];
   blocks?: Block[];
   ranges?: Range[];
 };
 
 const TRANSPARENT_SIDES = [FrontSide, BackSide];
+const TEXTURE_PACK_KEY = 'mine.js-texturepack-key';
 
 class Registry {
+  public texturePack: string;
+
   public atlasUniform: { value: Texture | null };
   public aoUniform: { value: Vector4 };
 
@@ -83,6 +86,8 @@ class Registry {
 
   constructor(public engine: Engine, public options: RegistryOptionsType) {
     const { focusDist, focusBlockSize, focusPlantSize, resolution } = options;
+
+    this.texturePack = localStorage.getItem(TEXTURE_PACK_KEY) || this.options.packs[0];
 
     this.aoUniform = { value: new Vector4(100.0, 170.0, 210.0, 255.0) };
 
@@ -160,17 +165,12 @@ class Registry {
 
     engine.on('ready', () => {
       this.atlasUniform = {
-        value: new TextureLoader().load(`${engine.network.cleanURL}atlas/${this.options.texturepack}-atlas.png`, () => {
-          engine.emit('texture-loaded');
-        }),
+        value: null,
       };
 
-      const atlas = this.atlasUniform.value;
-
-      atlas.minFilter = NearestFilter;
-      atlas.magFilter = NearestFilter;
-      atlas.generateMipmaps = false;
-      atlas.encoding = sRGBEncoding;
+      this.setTexturePack(this.texturePack, () => {
+        engine.emit('texture-loaded');
+      });
 
       this.opaqueChunkMaterial = this.makeShaderMaterial();
       this.transparentChunkMaterials = TRANSPARENT_SIDES.map((side) => {
@@ -192,6 +192,32 @@ class Registry {
       engine.emit('focus-loaded');
     });
   }
+
+  setTexturePack = (packName: string, onFinish?: () => void) => {
+    localStorage.setItem(TEXTURE_PACK_KEY, packName);
+
+    this.atlasUniform.value = new TextureLoader().load(
+      `${this.engine.network.cleanURL}atlas/${packName}-atlas.png`,
+      () => {
+        if (onFinish) onFinish();
+        this.atlasUniform.value.needsUpdate = true;
+      },
+    );
+
+    const atlas = this.atlasUniform.value;
+
+    atlas.minFilter = NearestFilter;
+    atlas.magFilter = NearestFilter;
+    atlas.generateMipmaps = false;
+    atlas.encoding = sRGBEncoding;
+
+    Object.keys(this.options.blocks).forEach((idStr) => {
+      const id = +idStr;
+      this.focuses[idStr] = this.focus(id);
+    });
+
+    this.engine.inventory.updateDOM();
+  };
 
   focus = (id: number) => {
     const { isBlock, isPlant } = this.options.blocks[id];

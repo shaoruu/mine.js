@@ -1,5 +1,5 @@
 {
-  "default": {
+  "shared": {
     "time": 0,
     "save": true,
     "dimension": 1,
@@ -15,10 +15,10 @@
     "pingInterval": 50000,
     "maxLoadedChunks": 2000,
     "description": "a testbed world",
-    "texturepack": "vibes",
     "subChunks": 8,
     "playerDimensions": [0.6, 1.8, 0.6],
-    "playerHead": 1.6
+    "playerHead": 1.6,
+    "packs": ["Vibes", "Flourish", "Pixel-Perfection"]
   },
   "worlds": [
     {
@@ -40,7 +40,7 @@
       "save": false,
       "generation": "hilly",
       "description": "this ain't saved!",
-      "texturepack": "pixel_perfection"
+      "texturepack": "Pixel-Perfection"
     }
   ]
 }
