@@ -2,11 +2,13 @@
 
 MineJS is a multiplayer voxel engine that runs in your browser! (Probably should change the name to MineRS/MineTS)
 
+
+**Any PRs are welcomed!** 
+Here's the quick TODO list that we're following: [Link](https://www.notion.so/f61d8c4ce1e245b6aba980adf0f1ea7c?v=77f64c4f1ed342a1b25d8af524cb9da0)
+
 ## :dart: Disclaimers
 
-Still working on the project daily. **Any PRs are welcomed!** Also, here's the quick TODO list that we're following: [Link](https://www.notion.so/f61d8c4ce1e245b6aba980adf0f1ea7c?v=77f64c4f1ed342a1b25d8af524cb9da0)
-
-Mobs coming soon! (Server-side physics is mostly done.)
+This is purely a passionate project. Although inspired, I have no intention for this game to be affiliated with Minecraft, or any licensed voxel engines. Further, textures and assets used in the game are all licensed for free use. More information can be found in last section.
 
 ## :crown: Motivation
 
@@ -28,10 +30,13 @@ We thought it would be interesting to design a game that is inspired by popular 
 
 ## :video_game: Controls
 
-- <kbd>R</kbd>: Toggle zoom
+- <kbd>V</kbd>: Toggle zoom
+- <kbd>R</kbd>: Toggle sprint
 - <kbd>T</kbd>: Toggle chat
+- <kbd>J</kbd>: Toggle debug 
 - <kbd>F</kbd>: Toggle physics
 - <kbd>C</kbd>: Toggle perspective
+- <kbd>K</kbd>: Toggle fullscreen
 - <kbd>Z</kbd>: Bulk placement
 - <kbd>X</kbd>: Bulk desctruction
 - <kbd>0-n</kbd>: Change block placement
@@ -77,3 +82,9 @@ yarn watch
 
 # visit localhost:3000
 ```
+
+### :notebook: Citations
+- [Open Source Voxel Textures](https://opengameart.org/content/voxel-pack) - Licensed under OpenGameArt for free use.
+- [Flourish Resource Pack](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/resource-packs/1245961-16x-1-7-4-wip-flourish) - Licensed for free use.
+- [Alvoria's Sanity](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/resource-packs/1243771-alvorias-sanity-1-12-2-no-longer-updating-sorry) - Licensed for free use under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License.](https://www.minecraftforum.net/linkout?remoteUrl=http%253a%252f%252fcreativecommons.org%252flicenses%252fby-nc-sa%252f4.0%252f)
+- [Pixel Perfection](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/resource-packs/1242533-pixel-perfection-now-with-polar-bears-1-11) - Licensed for free use under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License.](https://www.minecraftforum.net/linkout?remoteUrl=http%253a%252f%252fcreativecommons.org%252flicenses%252fby-nc-sa%252f4.0%252f)
