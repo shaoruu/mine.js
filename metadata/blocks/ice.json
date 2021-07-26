@@ -1,6 +1,7 @@
 {
   "base": "base-block.json",
   "name": "Ice",
+  "transparent": true,
   "textures": {
     "all": "ice.png"
   }

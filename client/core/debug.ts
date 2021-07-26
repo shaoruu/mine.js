@@ -4,8 +4,6 @@ import {
   Mesh,
   MeshBasicMaterial,
   PlaneBufferGeometry,
-  Group,
-  BoxBufferGeometry,
   Line,
   BufferGeometry,
   Vector3,
@@ -23,7 +21,6 @@ type FormatterType = (input: any) => string;
 
 class Debug {
   public gui: Pane;
-  public wrapper: HTMLDivElement;
   public dataWrapper: HTMLDivElement;
   public audioWrapper: HTMLDivElement;
   public dataEntries: {
@@ -108,19 +105,10 @@ class Debug {
   };
 
   makeDOM = () => {
-    this.wrapper = document.createElement('div');
-    this.wrapper.id = 'debug-wrapper';
-    Helper.applyStyle(this.wrapper, {
-      top: '0',
-      width: '100%',
-      height: '100%',
-      position: 'fixed',
-    });
-
     this.dataWrapper = document.createElement('div');
     this.dataWrapper.id = 'data-wrapper';
     Helper.applyStyle(this.dataWrapper, {
-      position: 'absolute',
+      position: 'fixed',
       top: '0',
       left: '0',
       background: '#00000022',
@@ -133,15 +121,16 @@ class Debug {
     });
 
     Helper.applyStyle(this.gui.element, {
-      position: 'absolute',
+      position: 'fixed',
       top: '0',
       right: '20px',
+      zIndex: '1000000000000',
     });
 
     this.audioWrapper = document.createElement('div');
     this.audioWrapper.id = 'audio-wrapper';
     Helper.applyStyle(this.audioWrapper, {
-      position: 'absolute',
+      position: 'fixed',
       right: '0',
       bottom: '20px',
       background: '#2C2E43',
@@ -152,10 +141,9 @@ class Debug {
 
   mount = () => {
     const { domElement } = this.engine.container;
-    domElement.appendChild(this.wrapper);
-    this.wrapper.appendChild(this.dataWrapper);
-    this.wrapper.appendChild(this.audioWrapper);
-    this.wrapper.appendChild(this.gui.element);
+    domElement.appendChild(this.dataWrapper);
+    domElement.appendChild(this.audioWrapper);
+    domElement.appendChild(this.gui.element);
   };
 
   setupAll = () => {
@@ -367,8 +355,12 @@ class Debug {
   };
 
   toggle = () => {
-    const { display } = this.wrapper.style;
-    this.wrapper.style.display = display === 'none' ? 'inline' : 'none';
+    const display = this.dataWrapper.style.display;
+    const newDisplay = display === 'none' ? 'inline' : 'none';
+
+    this.dataWrapper.style.display = newDisplay;
+    this.gui.element.style.display = newDisplay;
+    this.audioWrapper.style.display = newDisplay;
   };
 
   registerDisplay = (name: string, object: any, attribute: string, formatter: FormatterType = (str) => str) => {
