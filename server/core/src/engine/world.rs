@@ -94,6 +94,8 @@ pub struct WorldMeta {
     pub preload: i16,
     pub tick_speed: f32,
     pub time: f32,
+
+    #[serde(default)]
     pub packs: Vec<String>,
 }
 /// A single voxel-based and ECS-based world

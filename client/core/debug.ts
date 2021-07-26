@@ -330,6 +330,25 @@ class Debug {
     inputs.bind('z', bulkPlace(), 'in-game');
 
     inputs.bind(
+      '=',
+      () =>
+        (this.inputOptions.changeRadius = Math.max(
+          Math.min(this.inputOptions.changeRadius + 1, this.inputOptions.maxChangeRadius),
+          this.inputOptions.minChangeRadius,
+        )),
+      'in-game',
+    );
+    inputs.bind(
+      '-',
+      () =>
+        (this.inputOptions.changeRadius = Math.max(
+          Math.min(--this.inputOptions.changeRadius - 1, this.inputOptions.maxChangeRadius),
+          this.inputOptions.minChangeRadius,
+        )),
+      'in-game',
+    );
+
+    inputs.bind(
       'v',
       () => {
         camera.setZoom(3);

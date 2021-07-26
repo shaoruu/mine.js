@@ -17,8 +17,7 @@
     "description": "a testbed world",
     "subChunks": 8,
     "playerDimensions": [0.6, 1.8, 0.6],
-    "playerHead": 1.6,
-    "packs": ["Vibes", "Flourish", "Pixel-Perfection"]
+    "playerHead": 1.6
   },
   "worlds": [
     {

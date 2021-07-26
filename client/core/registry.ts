@@ -180,7 +180,6 @@ class Registry {
         material.alphaTest = 0.3;
         return material;
       });
-      this.material = new MeshBasicMaterial({ map: this.atlasUniform.value, side: DoubleSide });
     });
 
     engine.on('texture-loaded', () => {
@@ -201,6 +200,13 @@ class Registry {
       () => {
         if (onFinish) onFinish();
         this.atlasUniform.value.needsUpdate = true;
+
+        Object.keys(this.options.blocks).forEach((idStr) => {
+          const id = +idStr;
+          this.focuses[idStr] = this.focus(id);
+        });
+
+        this.engine.inventory.updateDOM();
       },
     );
 
@@ -211,12 +217,7 @@ class Registry {
     atlas.generateMipmaps = false;
     atlas.encoding = sRGBEncoding;
 
-    Object.keys(this.options.blocks).forEach((idStr) => {
-      const id = +idStr;
-      this.focuses[idStr] = this.focus(id);
-    });
-
-    this.engine.inventory.updateDOM();
+    this.material = new MeshBasicMaterial({ map: this.atlasUniform.value, side: DoubleSide });
   };
 
   focus = (id: number) => {

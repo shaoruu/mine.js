@@ -5,8 +5,12 @@ import {
   DepthFormat,
   DepthTexture,
   FloatType,
+  GammaEncoding,
   LinearFilter,
+  LogLuvEncoding,
+  RGBADepthPacking,
   RGBAFormat,
+  RGBDEncoding,
   Scene,
   UnsignedIntType,
   WebGLRenderer,
@@ -76,7 +80,7 @@ class Rendering extends EventEmitter {
     });
     this.renderTarget.stencilBuffer = false;
     this.renderTarget.depthBuffer = true;
-    this.renderTarget.texture.encoding = sRGBEncoding;
+    this.renderTarget.texture.encoding = GammaEncoding;
     // @ts-ignore
     this.renderTarget.depthTexture = new DepthTexture();
     this.renderTarget.depthTexture.format = DepthFormat;
