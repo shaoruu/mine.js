@@ -1,5 +1,6 @@
 import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Quaternion, Vector3, Group, Color, Ray, Box3 } from 'three';
 
+import FootstepsSFX from '../assets/sfx/walking.wav';
 import { PhysicalType, Peer, PointerLockControls, raycast } from '../libs';
 import { Coords3 } from '../libs/types';
 import { Helper } from '../utils';
@@ -33,6 +34,8 @@ const PX_ROTATION = 2;
 const NX_ROTATION = 3;
 const PZ_ROTATION = 4;
 const NZ_ROTATION = 5;
+
+const FOOTSTEP_SFX_NAME = 'footsteps';
 
 type TargetBlock = { voxel: Coords3; rotation?: number; yRotation?: number };
 
@@ -186,6 +189,13 @@ class Player {
       this.shadowMesh = this.engine.shadows.add(this.object);
 
       this.blockRay = new Ray();
+
+      this.engine.sounds.add(FOOTSTEP_SFX_NAME, FootstepsSFX, {
+        loop: true,
+        fadeTime: 500,
+        maxVolume: 0.5,
+        multiple: false,
+      });
     });
 
     engine.on('chat-enabled', () => {
@@ -272,6 +282,7 @@ class Player {
       this.godModeMovements();
     } else {
       this.moveEntity();
+      this.playFootsteps();
     }
 
     this.updateLookBlock();
@@ -359,6 +370,17 @@ class Player {
     state.sprinting = sprint;
   };
 
+  playFootsteps = () => {
+    const { state } = this.entity.brain;
+    const { atRestY } = this.entity.body;
+
+    if (state.running && atRestY === -1) {
+      this.engine.sounds.play(FOOTSTEP_SFX_NAME, { object: this.object });
+    } else {
+      this.engine.sounds.pause(FOOTSTEP_SFX_NAME);
+    }
+  };
+
   teleport = (voxel: Coords3) => {
     const {
       config: {
@@ -391,10 +413,12 @@ class Player {
   toggleGodMode = () => {
     this.godMode = !this.godMode;
     this.shadowMesh.visible = !this.godMode;
+
     if (this.godMode) {
       this.vel.set(0, 0, 0);
       this.acc.set(0, 0, 0);
       this.engine.entities.removePhysical('player');
+      this.engine.sounds.pause(FOOTSTEP_SFX_NAME);
     } else {
       // activated again
       this.addEntity();

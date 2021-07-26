@@ -34,6 +34,8 @@ import {
   RenderingOptionsType,
   Shadows,
   ShadowsOptionsType,
+  Sounds,
+  SoundsOptionsType,
   World,
   WorldOptionsType,
 } from '.';
@@ -48,6 +50,7 @@ type ConfigType = {
   world: WorldOptionsType;
   entities: EntitiesOptionsType;
   shadows: ShadowsOptionsType;
+  sounds: SoundsOptionsType;
   physics: PhysicsOptionsType;
   registry: RegistryOptionsType;
   rendering: RenderingOptionsType;
@@ -111,6 +114,9 @@ const defaultConfig: ConfigType = {
     maxRadius: 0.4,
     maxDist: 5,
   },
+  sounds: {
+    maxTracks: 1000,
+  },
   physics: {
     gravity: [0, -24, 0],
     minBounceImpulse: 0.5,
@@ -162,6 +168,7 @@ class Engine extends EventEmitter {
   public physics: Physics;
   public entities: Entities;
   public shadows: Shadows;
+  public sounds: Sounds;
   public particles: Particles;
 
   public paused = true;
@@ -188,6 +195,7 @@ class Engine extends EventEmitter {
       debug,
       entities,
       shadows,
+      sounds,
       particles,
       peers,
       physics,
@@ -242,6 +250,9 @@ class Engine extends EventEmitter {
 
     // shadows
     this.shadows = new Shadows(this, shadows);
+
+    // sounds
+    this.sounds = new Sounds(this, sounds);
 
     // peers
     this.peers = new Peers(this, peers);

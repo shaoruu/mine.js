@@ -73,7 +73,7 @@ module.exports = {
         },
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        test: /\.(mp3|ogg|wav|png|svg|jpg|jpeg|gif)$/i,
         type: 'asset/resource',
       },
       // Shaders

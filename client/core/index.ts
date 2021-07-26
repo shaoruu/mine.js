@@ -15,4 +15,5 @@ export * from './player';
 export * from './registry';
 export * from './rendering';
 export * from './shadows';
+export * from './sounds';
 export * from './world';

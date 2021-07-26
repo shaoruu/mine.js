@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 
+import BlockChangeSFX from '../assets/sfx/plop.ogg';
 import { AABB, Clouds, ServerChunkType, Sky } from '../libs';
 import { Coords3, Coords2 } from '../libs/types';
 import { Helper } from '../utils';
@@ -21,6 +22,8 @@ type WorldOptionsType = {
   chunkAnimation: boolean;
   animationTime: number;
 };
+
+const BLOCK_SFX_NAME = 'block break';
 
 class World extends EventEmitter {
   public name: string;
@@ -59,6 +62,10 @@ class World extends EventEmitter {
 
       engine.inputs.bind('esc', engine.lock, 'menu', { occasion: 'keyup' });
       engine.inputs.bind('p', this.reloadChunks, '*');
+    });
+
+    engine.on('ready', () => {
+      engine.sounds.add(BLOCK_SFX_NAME, BlockChangeSFX);
     });
 
     engine.on('focus', async () => {
@@ -247,6 +254,11 @@ class World extends EventEmitter {
         targets.map(({ target: { voxel } }) => ({ voxel, type: this.engine.world.getVoxelByVoxel(voxel) })),
         { count: targets.length > 3 ? 1 : 6 },
       );
+
+      targets.slice(0, 3).forEach(({ target: { voxel } }) => {
+        this.engine.sounds.play(BLOCK_SFX_NAME, { position: voxel });
+      });
+
       targets.forEach(({ target: { voxel, rotation, yRotation }, type }) => {
         this.getChunkByVoxel(voxel)?.setVoxel(voxel[0], voxel[1], voxel[2], type, rotation, yRotation);
       });

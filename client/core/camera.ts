@@ -1,4 +1,4 @@
-import { Frustum, Matrix4, PerspectiveCamera, Vector3, Mesh, MathUtils } from 'three';
+import { Frustum, Matrix4, PerspectiveCamera, Vector3, Mesh, MathUtils, AudioListener } from 'three';
 
 import { Engine } from './engine';
 
@@ -15,6 +15,7 @@ class Camera {
   public threeCamera: PerspectiveCamera;
   public frustum: Frustum;
   public visibles: Mesh[] = [];
+  public audioListener: AudioListener;
 
   private newZoom: number;
   private newFOV: number;
@@ -33,6 +34,10 @@ class Camera {
 
     // initialize the three.js frustum
     this.frustum = new Frustum();
+
+    // initialize audio listener on camera
+    this.audioListener = new AudioListener();
+    this.threeCamera.add(this.audioListener);
 
     // listen to resize, and adjust accordingly
     // ? should move to it's own logic for all event listeners?

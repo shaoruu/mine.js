@@ -25,6 +25,7 @@ class Debug {
   public gui: Pane;
   public wrapper: HTMLDivElement;
   public dataWrapper: HTMLDivElement;
+  public audioWrapper: HTMLDivElement;
   public dataEntries: {
     ele: HTMLParagraphElement;
     obj: any;
@@ -108,14 +109,16 @@ class Debug {
 
   makeDOM = () => {
     this.wrapper = document.createElement('div');
+    this.wrapper.id = 'debug-wrapper';
     Helper.applyStyle(this.wrapper, {
       top: '0',
       width: '100%',
+      height: '100%',
       position: 'fixed',
-      zIndex: '10000000',
     });
 
     this.dataWrapper = document.createElement('div');
+    this.dataWrapper.id = 'data-wrapper';
     Helper.applyStyle(this.dataWrapper, {
       position: 'absolute',
       top: '0',
@@ -134,18 +137,30 @@ class Debug {
       top: '0',
       right: '20px',
     });
+
+    this.audioWrapper = document.createElement('div');
+    this.audioWrapper.id = 'audio-wrapper';
+    Helper.applyStyle(this.audioWrapper, {
+      position: 'absolute',
+      right: '0',
+      bottom: '20px',
+      background: '#2C2E43',
+      color: '#EEEEEE',
+      content: '0',
+    });
   };
 
   mount = () => {
     const { domElement } = this.engine.container;
     domElement.appendChild(this.wrapper);
     this.wrapper.appendChild(this.dataWrapper);
+    this.wrapper.appendChild(this.audioWrapper);
     this.wrapper.appendChild(this.gui.element);
   };
 
   setupAll = () => {
     // RENDERING
-    const { registry, player, world, camera } = this.engine;
+    const { registry, player, world, camera, rendering, sounds } = this.engine;
 
     // ENGINE
     const engineFolder = this.gui.addFolder({ title: 'Engine', expanded: false });
@@ -214,6 +229,7 @@ class Debug {
     this.registerDisplay('chunks loaded', world, 'chunksLoaded');
     this.registerDisplay('position', player, 'voxelPositionStr');
     this.registerDisplay('looking at', player, 'lookBlockStr');
+    this.registerDisplay('scene objects', rendering.scene.children, 'length');
     this.registerDisplay('memory used', this, 'memoryUsage');
     this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
 
@@ -231,6 +247,38 @@ class Debug {
     const debugFolder = this.gui.addFolder({ title: 'Debug', expanded: false });
     debugFolder.addButton({ title: 'Toggle', label: 'chunk highlight' }).on('click', () => {
       this.chunkHighlight.visible = !this.chunkHighlight.visible;
+    });
+
+    // SOUNDS
+
+    const createAudioNode = (name) => {
+      const node = document.createElement('div');
+
+      Helper.applyStyle(node, {
+        padding: '5px 20px',
+        textAlign: 'center',
+      });
+
+      node.innerHTML = name;
+
+      return node;
+    };
+
+    const playing = new Map();
+
+    sounds.on('started', (name) => {
+      if (playing.has(name)) return;
+      const node = createAudioNode(name);
+      this.audioWrapper.appendChild(node);
+      playing.set(name, node);
+    });
+
+    sounds.on('stopped', (name) => {
+      const node = playing.get(name);
+      if (node) {
+        this.audioWrapper.removeChild(node);
+        playing.delete(name);
+      }
     });
   };
 
