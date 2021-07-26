@@ -33,7 +33,7 @@ pub trait BroadcastExt {
         include: Vec<usize>,
         exclude: Vec<usize>,
         sender: Option<usize>,
-    );
+    ) -> Vec<Player>;
 }
 
 impl BroadcastExt for Players {
@@ -44,12 +44,12 @@ impl BroadcastExt for Players {
         include: Vec<usize>,
         exclude: Vec<usize>,
         sender: Option<usize>,
-    ) {
+    ) -> Vec<Player> {
         let mut resting_players = vec![];
 
         if let Some(sender) = sender {
             if sender != 0 && !self.contains_key(&sender) {
-                return;
+                return vec![];
             }
         }
 
@@ -81,8 +81,14 @@ impl BroadcastExt for Players {
             }
         }
 
+        let mut inactives = vec![];
+
         resting_players.iter().for_each(|id| {
-            self.remove(id);
+            if let Some(player) = self.remove(id) {
+                inactives.push(player);
+            }
         });
+
+        inactives
     }
 }

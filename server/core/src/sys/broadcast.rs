@@ -1,4 +1,4 @@
-use specs::{System, WriteExpect};
+use specs::{Entities, System, WriteExpect};
 
 use crate::engine::{
     players::{BroadcastExt, Players},
@@ -8,10 +8,14 @@ use crate::engine::{
 pub struct BroadcastSystem;
 
 impl<'a> System<'a> for BroadcastSystem {
-    type SystemData = (WriteExpect<'a, MessagesQueue>, WriteExpect<'a, Players>);
+    type SystemData = (
+        Entities<'a>,
+        WriteExpect<'a, MessagesQueue>,
+        WriteExpect<'a, Players>,
+    );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut messages, mut players) = data;
+        let (entities, mut messages, mut players) = data;
 
         for (msg, include, exclude, sender) in messages.iter() {
             // TODO: add spam detection?
@@ -28,12 +32,18 @@ impl<'a> System<'a> for BroadcastSystem {
                 vec![]
             };
 
-            players.broadcast(
+            let inactives = players.broadcast(
                 msg,
                 include.to_owned(),
                 exclude.to_owned(),
                 sender.to_owned(),
             );
+
+            inactives.into_iter().for_each(|player| {
+                entities
+                    .delete(player.entity)
+                    .expect("Unable to remove player entity.");
+            });
         }
 
         messages.clear();
