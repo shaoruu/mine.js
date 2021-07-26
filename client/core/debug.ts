@@ -244,15 +244,19 @@ class Debug {
         const t = type === undefined ? inventory.hand : 0;
         const r = this.inputOptions.changeRadius;
 
-        if (!player.lookBlock) return;
-        const [vx, vy, vz] = player.lookBlock;
+        if (!player.targetBlock) return;
+        const {
+          voxel: [vx, vy, vz],
+          rotation,
+          yRotation,
+        } = player.targetBlock;
 
         for (let x = -r; x <= r; x++) {
           for (let y = -r; y <= r; y++) {
             for (let z = -r; z <= r; z++) {
               if (x ** 2 + y ** 2 + z ** 2 > r * r) continue;
               if (world.getVoxelByVoxel([vx + x, vy + y, vz + z]) === t) continue;
-              updates.push({ voxel: [vx + x, vy + y, vz + z], type: t });
+              updates.push({ target: { voxel: [vx + x, vy + y, vz + z], rotation, yRotation }, type: t });
             }
           }
         }
