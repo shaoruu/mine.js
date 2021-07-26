@@ -37,12 +37,12 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
-            .service(routes::atlas)
             .service(routes::index)
             .service(routes::worlds)
             .service(routes::world)
             .service(routes::time)
             .service(web::resource("/ws/").to(routes::ws_route))
+            .service(fs::Files::new("/atlas/", "assets/textures/generated/").show_files_listing())
             .service(fs::Files::new("/models/", "assets/models/objects/").show_files_listing())
             .service(fs::Files::new("/", "public/").show_files_listing())
     })

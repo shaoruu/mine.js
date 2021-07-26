@@ -1,0 +1,11 @@
+{
+  "base": "base-block.json",
+  "name": "Color Snow",
+  "isLight": true,
+  "redLightLevel": 8,
+  "greenLightLevel": 8,
+  "blueLightLevel": 8,
+  "textures": {
+    "all": "snow.json"
+  }
+}

@@ -21,7 +21,7 @@ impl Generator {
 
         match config.generation.as_str() {
             "flat" => {
-                let types = registry.get_type_map(vec!["Stone", "Stone Brick"]);
+                let types = registry.get_type_map(vec!["Stone", "Stone Bricks"]);
 
                 let is_empty = true;
 
@@ -31,7 +31,7 @@ impl Generator {
                     for vz in start_z..end_z {
                         for vy in start_y..flat_height {
                             if vx % 32 == 0 || vz % 32 == 0 {
-                                chunk.set_voxel(vx, vy, vz, types["Stone Brick"]);
+                                chunk.set_voxel(vx, vy, vz, types["Stone Bricks"]);
                             } else {
                                 chunk.set_voxel(vx, vy, vz, types["Stone"]);
                             }

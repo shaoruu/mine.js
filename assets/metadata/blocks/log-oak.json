@@ -1,0 +1,10 @@
+{
+  "base": "base-block.json",
+  "name": "Oak Log",
+  "rotatable": true,
+  "textures": {
+    "top": "log_oak_top.png",
+    "side": "log_oak_side.png",
+    "bottom": "log_oak_top.png"
+  }
+}

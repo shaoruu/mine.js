@@ -9,4 +9,4 @@ public/build/
 public/*.mp3
 protocol/index.js
 protocol/index.d.ts
-assets/textures/generated/atlas.png
+assets/textures/generated/*.png

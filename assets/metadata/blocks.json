@@ -1,0 +1,31 @@
+{
+  "0": "air.json",
+  "1": "dirt.json",
+  "2": "grass-block.json",
+  "3": "stone.json",
+  "4": "sand.json",
+  "7": "ice.json",
+
+  "30": "bricks-stone.json",
+
+  "40": "glass.json",
+
+  "60": "log-oak.json",
+
+  "70": "planks-oak.json",
+
+  "80": "leaves-oak.json",
+  "81": "leaves-acacia.json",
+
+  "100": "grass.json",
+  "101": "mushroom-brown.json",
+  "102": "mushroom-red.json",
+
+  "1000": "color-blue.json",
+  "1001": "color-green.json",
+  "1002": "color-snow.json",
+  "1003": "color-yellow.json",
+  "1004": "color-lime.json",
+  "1005": "color-red.json",
+  "1006": "color-test.json"
+}

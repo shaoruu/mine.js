@@ -287,6 +287,7 @@ class Engine extends EventEmitter {
       name,
       blocks,
       ranges,
+      texturepack,
       uvSideCount,
       uvTextureSize,
       entities: prototypes,
@@ -296,6 +297,7 @@ class Engine extends EventEmitter {
 
     registry.blocks = blocks;
     registry.ranges = ranges;
+    registry.texturepack = texturepack;
     registry.countPerSide = uvSideCount;
     registry.textureSize = uvTextureSize;
 

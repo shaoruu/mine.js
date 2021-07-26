@@ -47,12 +47,6 @@ pub async fn index() -> Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("public/index.html")?)
 }
 
-/// Serving `registry` generated atlas
-#[get("/atlas")]
-pub async fn atlas() -> Result<fs::NamedFile> {
-    Ok(fs::NamedFile::open("assets/textures/generated/atlas.png")?)
-}
-
 /// Route to get a list of world data
 #[get("/worlds")]
 pub async fn worlds() -> Result<HttpResponse> {

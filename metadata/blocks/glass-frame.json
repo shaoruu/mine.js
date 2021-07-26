@@ -1,8 +1,0 @@
-{
-  "base": "base-block.json",
-  "name": "Glass Frame",
-  "isTransparent": true,
-  "textures": {
-    "all": "glass_frame.png"
-  }
-}

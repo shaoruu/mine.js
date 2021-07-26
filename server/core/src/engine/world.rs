@@ -62,6 +62,13 @@ use super::clock::Clock;
 use super::players::{BroadcastExt, PlayerUpdates, Players};
 use super::registry::Registry;
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WorldData {
+    time: f32,
+    tick_speed: f32,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldConfig {
@@ -79,23 +86,16 @@ pub struct WorldConfig {
     pub player_head: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldMeta {
-    name: String,
-    description: String,
-    preload: i16,
-    tick_speed: f32,
-    time: f32,
+    pub name: String,
+    pub texturepack: String,
+    pub description: String,
+    pub preload: i16,
+    pub tick_speed: f32,
+    pub time: f32,
 }
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WorldData {
-    time: f32,
-    tick_speed: f32,
-}
-
 /// A single voxel-based and ECS-based world
 pub struct World {
     pub ecs: ECSWorld,
@@ -117,15 +117,15 @@ impl World {
     /// Instantiate a new voxel world, registers the necessary components and resources
     ///
     /// Attempts to save the world data to its corresponding JSON file.
-    pub fn new(json: serde_json::Value, registry: Registry) -> Self {
+    pub fn new(meta: WorldMeta, config: WorldConfig, registry: Registry) -> Self {
         let WorldMeta {
             name,
             description,
             preload,
             tick_speed,
             time,
-        } = serde_json::from_value(json.clone()).unwrap();
-        let config: WorldConfig = serde_json::from_value(json).unwrap();
+            ..
+        } = meta.clone();
 
         let mut ecs = ECSWorld::new();
 
@@ -158,6 +158,7 @@ impl World {
             fluid_density: 2.0,
         }));
         ecs.insert(config.clone());
+        ecs.insert(meta);
 
         let mut new_world = World {
             ecs,

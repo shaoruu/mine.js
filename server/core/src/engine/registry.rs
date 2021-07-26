@@ -31,9 +31,9 @@ pub struct Registry {
 }
 
 impl Registry {
-    pub fn new(pack_name: &str) -> Self {
+    pub fn new(pack_name: &str, write: bool) -> Self {
         let blocks_json: HashMap<String, String> =
-            serde_json::from_reader(File::open("metadata/blocks.json").unwrap()).unwrap();
+            serde_json::from_reader(File::open("assets/metadata/blocks.json").unwrap()).unwrap();
 
         let mut base_cache: HashMap<String, serde_json::Value> = HashMap::new();
         let mut texture_map: HashMap<String, image::DynamicImage> = HashMap::new();
@@ -48,7 +48,7 @@ impl Registry {
         .unwrap();
 
         for (id, block_file) in blocks_json.iter() {
-            let path = format!("./metadata/blocks/{}", block_file);
+            let path = format!("./assets/metadata/blocks/{}", block_file);
             let mut block_json: serde_json::Value =
                 serde_json::from_reader(File::open(path).unwrap()).unwrap();
 
@@ -58,7 +58,8 @@ impl Registry {
                 serde_json::Value::String(base_str) => {
                     Some(base_cache.entry(base_str.to_owned()).or_insert_with(|| {
                         serde_json::from_reader(
-                            File::open(format!("./metadata/blocks/{}", base_str).as_str()).unwrap(),
+                            File::open(format!("./assets/metadata/blocks/{}", base_str).as_str())
+                                .unwrap(),
                         )
                         .unwrap()
                     }))
@@ -181,7 +182,14 @@ impl Registry {
             col += 1;
         }
 
-        atlas.save("assets/textures/generated/atlas.png").unwrap();
+        if write {
+            atlas
+                .save(&format!(
+                    "assets/textures/generated/{}-atlas.png",
+                    pack_name
+                ))
+                .unwrap();
+        }
 
         Self {
             atlas,

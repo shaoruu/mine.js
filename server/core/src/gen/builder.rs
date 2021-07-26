@@ -79,15 +79,9 @@ impl Builder {
     /// Place plants down on sampled locations
     fn generate_plants(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
         let locations = self.sample_plants(chunk);
-        let types = self.registry.get_type_map(vec![
-            "Dirt",
-            "Grass",
-            "Tan Grass",
-            "Brown Grass",
-            "Brown Mushroom",
-            "Red Mushroom",
-            "Tan Mushroom",
-        ]);
+        let types =
+            self.registry
+                .get_type_map(vec!["Dirt", "Grass", "Brown Mushroom", "Red Mushroom"]);
 
         let mut updates = Vec::new();
 
@@ -116,25 +110,6 @@ impl Builder {
                 && stand == types["Dirt"]
             {
                 id = types["Brown Mushroom"];
-            } else if self
-                .noise
-                .fractal_octave_perlin3(vx, vy, vz, plant_scale * 9.012, 4)
-                > 0.3
-            {
-                id = types["Tan Grass"];
-            } else if self
-                .noise
-                .fractal_octave_perlin3(vx, vy, vz, plant_scale * 6.45, 2)
-                > 0.36
-            {
-                id = types["Tan Mushroom"];
-            } else if self
-                .noise
-                .fractal_octave_perlin3(vx, vy, vz, plant_scale * 4.44, 1)
-                > 0.25
-                && stand == types["Dirt"]
-            {
-                id = types["Brown Grass"];
             }
 
             updates.push(VoxelUpdate {
@@ -172,7 +147,7 @@ impl Builder {
         let locations = self.sample_trees(chunk);
         let types = self
             .registry
-            .get_type_map(vec!["Trunk", "Leaves", "Leaves Orange"]);
+            .get_type_map(vec!["Oak Log", "Oak Leaves", "Acacia Leaves"]);
 
         let mut updates = Vec::new();
 
@@ -206,15 +181,15 @@ impl Builder {
             };
 
             let leaves_type = if self.noise.perlin2(vx, vz, 0.005) > 0.1 {
-                types["Leaves Orange"]
+                types["Acacia Leaves"]
             } else {
-                types["Leaves"]
+                types["Oak Leaves"]
             };
 
             for i in 0..height {
                 updates.push(VoxelUpdate {
                     voxel: Vec3(vx as i32, vy as i32 + i, vz as i32),
-                    id: types["Trunk"],
+                    id: types["Oak Log"],
                 })
             }
 
@@ -236,7 +211,7 @@ impl Builder {
                     for k in -limit..=limit {
                         let center = i == 0 && k == 0;
                         let mf = if center && j != bush_height {
-                            types["Trunk"]
+                            types["Oak Log"]
                         } else {
                             leaves_type
                         };
@@ -289,14 +264,14 @@ impl Builder {
     /// Place lamps down on sampled locations
     fn generate_lamps(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
         let locations = self.sample_lamps(chunk);
-        let types = self.registry.get_type_map(vec!["Stone", "Yellow"]);
+        let types = self.registry.get_type_map(vec!["Stone", "Color Yellow"]);
 
         let mut updates = Vec::new();
 
         for location in locations.into_iter() {
             updates.push(VoxelUpdate {
                 voxel: location,
-                id: types["Yellow"],
+                id: types["Color Yellow"],
             })
         }
 
@@ -323,7 +298,9 @@ impl Builder {
     /// Place big stone structures down on sampled locations
     fn generate_stone_structure(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
         let locations = self.sample_stone_structure(chunk);
-        let types = self.registry.get_type_map(vec!["Yellow", "Stone Brick"]);
+        let types = self
+            .registry
+            .get_type_map(vec!["Color Yellow", "Stone Bricks"]);
 
         let mut updates = Vec::new();
 
@@ -336,14 +313,14 @@ impl Builder {
                     vy + i,
                     vz,
                     3 + i % 3 - 1,
-                    types["Stone Brick"],
+                    types["Stone Bricks"],
                 ));
             }
 
             for i in 0..4 {
                 updates.push(VoxelUpdate {
                     voxel: Vec3(vx, vy + i, vz),
-                    id: types["Yellow"],
+                    id: types["Color Yellow"],
                 });
             }
         }

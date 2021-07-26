@@ -66,13 +66,13 @@ impl Default for Entities {
 impl Entities {
     pub fn new() -> Self {
         let entities_json: serde_json::Value =
-            serde_json::from_reader(File::open("metadata/entities.json").unwrap()).unwrap();
+            serde_json::from_reader(File::open("assets/metadata/entities.json").unwrap()).unwrap();
 
         let mut prototypes: EntityPrototypes = HashMap::new();
 
         for value in entities_json.as_object().unwrap().values() {
             let value_str = value.as_str().unwrap();
-            let path = format!("./metadata/entities/{}", value_str);
+            let path = format!("./assets/metadata/entities/{}", value_str);
             let entity: EntityPrototype =
                 serde_json::from_reader(File::open(path).unwrap()).unwrap();
 

@@ -57,6 +57,7 @@ type RegistryOptionsType = {
   resolution: number;
   countPerSide?: number;
   textureSize?: number;
+  texturepack?: string;
   blocks?: Block[];
   ranges?: Range[];
 };
@@ -159,7 +160,7 @@ class Registry {
 
     engine.on('ready', () => {
       this.atlasUniform = {
-        value: new TextureLoader().load(`${engine.network.cleanURL}atlas`, () => {
+        value: new TextureLoader().load(`${engine.network.cleanURL}atlas/${this.options.texturepack}-atlas.png`, () => {
           engine.emit('texture-loaded');
         }),
       };

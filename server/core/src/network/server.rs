@@ -2,10 +2,11 @@ use actix::prelude::*;
 use actix_broker::BrokerSubscribe;
 
 use std::collections::{HashMap, VecDeque};
-use std::fs::File;
 use std::time::Duration;
 
+use crate::engine::config::Configs;
 use crate::engine::entities::Entities;
+use crate::engine::world::WorldMeta;
 
 use super::super::engine::{
     chunks::{Chunks, MeshLevel},
@@ -14,8 +15,6 @@ use super::super::engine::{
     registry::Registry,
     world::World,
 };
-
-use server_utils::json;
 
 use super::message::{
     FullWorldData, GetWorld, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds, Noop,
@@ -46,6 +45,21 @@ impl WsServer {
         world.broadcast(msg, include, exclude);
 
         Some(())
+    }
+
+    fn load_worlds(&mut self) {
+        // Loading worlds from `worlds.json`
+        let mut worlds: HashMap<String, World> = HashMap::new();
+        let configs = Configs::load_worlds("assets/metadata/worlds.json");
+
+        configs.into_iter().for_each(|(_, (meta, config))| {
+            let registry = Registry::new(&meta.texturepack, true);
+            let mut new_world = World::new(meta, config, registry);
+            new_world.preload();
+            worlds.insert(new_world.name.to_owned(), new_world);
+        });
+
+        self.worlds = worlds;
     }
 
     fn tick(&mut self) {
@@ -227,6 +241,7 @@ impl Handler<GetWorld> for WsServer {
         let clock = world.read_resource::<Clock>();
         let chunks = world.read_resource::<Chunks>();
         let entities = world.read_resource::<Entities>();
+        let meta = world.read_resource::<WorldMeta>();
 
         let config = chunks.config.clone();
         let registry = chunks.registry.clone();
@@ -242,6 +257,7 @@ impl Handler<GetWorld> for WsServer {
             sub_chunks: config.sub_chunks,
             tick_speed: clock.tick_speed,
             time: clock.time,
+            texturepack: meta.texturepack.to_owned(),
             blocks: registry.blocks.to_owned(),
             ranges: registry.ranges.to_owned(),
             entities: entities.get_all(),
@@ -253,25 +269,7 @@ impl Handler<GetWorld> for WsServer {
 
 impl SystemService for WsServer {
     fn service_started(&mut self, ctx: &mut Context<Self>) {
-        // Loading worlds from `worlds.json`
-        let mut worlds: HashMap<String, World> = HashMap::new();
-
-        let worlds_json: serde_json::Value =
-            serde_json::from_reader(File::open("metadata/worlds.json").unwrap()).unwrap();
-
-        let world_default = &worlds_json["default"];
-
-        for world_json in worlds_json["worlds"].as_array().unwrap() {
-            let mut world_json = world_json.clone();
-            json::merge(&mut world_json, world_default, false);
-
-            let registry = Registry::new(world_json["texturepack"].as_str().unwrap());
-            let mut new_world = World::new(world_json, registry);
-            new_world.preload();
-            worlds.insert(new_world.name.to_owned(), new_world);
-        }
-
-        self.worlds = worlds;
+        self.load_worlds();
 
         ctx.run_interval(SERVER_TICK, |act, _ctx| {
             act.tick();

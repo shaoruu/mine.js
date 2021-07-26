@@ -1,0 +1,9 @@
+{
+  "base": "base-block.json",
+  "name": "Oak Leaves",
+  "isTransparent": true,
+  "transparentStandalone": true,
+  "textures": {
+    "all": "leaves_oak.png"
+  }
+}

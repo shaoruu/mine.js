@@ -1,0 +1,9 @@
+{
+  "base": "base-block.json",
+  "name": "Acacia Leaves",
+  "isTransparent": true,
+  "transparentStandalone": true,
+  "textures": {
+    "all": "leaves_acacia.png"
+  }
+}

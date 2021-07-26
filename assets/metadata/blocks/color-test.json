@@ -1,0 +1,11 @@
+{
+  "base": "base-block.json",
+  "name": "Color Test",
+  "isLight": true,
+  "redLightLevel": 12,
+  "greenLightLevel": 7,
+  "blueLightLevel": 2,
+  "textures": {
+    "all": "test.json"
+  }
+}

@@ -23,8 +23,6 @@ type PlayerOptionsType = {
 
 type PerspectiveType = 'first' | 'second' | 'third';
 
-const TEMP_BLOCK_MAP = [1, 2, 3, 4, 100, 10, 12, 13, 14, 15];
-
 const LOCAL_STORAGE_PLAYER_NAME = 'mine.js-player';
 const DEFAULT_PLAYER_NAME = 'naenaebaby';
 
@@ -102,10 +100,6 @@ class Player {
 
     inputs.bind('f', () => this.toggleGodMode(), 'in-game');
     inputs.bind('c', () => this.togglePerspective(), 'in-game');
-
-    for (let i = 0; i < TEMP_BLOCK_MAP.length; i++) {
-      inputs.bind(i.toString(), () => (this.handType = TEMP_BLOCK_MAP[i]), 'in-game');
-    }
 
     this.controls.addEventListener('lock', () => {
       engine.emit('lock');
@@ -192,8 +186,8 @@ class Player {
 
       this.engine.sounds.add(FOOTSTEP_SFX_NAME, FootstepsSFX, {
         loop: true,
-        fadeTime: 500,
-        maxVolume: 0.5,
+        fadeTime: 800,
+        maxVolume: 1.0,
         multiple: false,
       });
     });

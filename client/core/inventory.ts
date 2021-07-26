@@ -21,7 +21,7 @@ class Slot extends HTMLDivElement {
   }
 }
 
-const TEMP_BLOCK_MAP = [1, 2, 3, 4, 100, 10, 12, 13, 14, 15];
+const TEMP_BLOCK_MAP = [1, 2, 3, 1000, 1001, 1002, 1003, 1004, 1005, 1006];
 const SLOT_SIZE = 40; // px
 const BORDER_COLOR = '#393B44';
 

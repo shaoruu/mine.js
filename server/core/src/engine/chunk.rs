@@ -8,7 +8,7 @@ use std::{
     collections::HashSet,
     fs::File,
     io::{Read, Write},
-    path::PathBuf,
+    path::Path,
 };
 
 use crate::gen::blocks::{BlockRotation, Blocks};
@@ -87,7 +87,7 @@ pub struct Chunk {
 impl Chunk {
     /// Constructor for a chunk. Attempts to load from existing files,
     /// otherwise is marked to be generated.
-    pub fn new(coords: Vec2<i32>, config: &WorldConfig, folder: &PathBuf) -> Self {
+    pub fn new(coords: Vec2<i32>, config: &WorldConfig, folder: &Path) -> Self {
         let Vec2(cx, cz) = coords;
 
         let &WorldConfig {
@@ -181,7 +181,8 @@ impl Chunk {
         // open a file for reading
 
         if let Ok(chunk_data) = File::open(&self.file) {
-            let data: ChunkFileData = serde_json::from_reader(chunk_data).unwrap();
+            let data: ChunkFileData = serde_json::from_reader(chunk_data)
+                .unwrap_or_else(|_| panic!("Couldn't load chunk file: {:?}", self.coords));
 
             let ChunkFileData {
                 needs_propagation,
