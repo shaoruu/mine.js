@@ -38,6 +38,8 @@ pub trait BroadcastExt {
 
 impl BroadcastExt for Players {
     /// Broadcast a message to all players. Exclude will be used if include is empty.
+    ///
+    /// Returns a list of inactive/disconnected players
     fn broadcast(
         &mut self,
         msg: &messages::Message,
