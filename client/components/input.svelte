@@ -16,12 +16,12 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    color: rgb(168, 168, 168);
     margin-bottom: 0.8em;
   }
 
   .inputField p {
     overflow: hidden;
+    color: var(--color-text-secondary);
     text-overflow: ellipsis;
     width: 100%;
     text-align: center;
@@ -29,12 +29,12 @@
   }
 
   .inputField input {
-    width: 80%;
+    width: 70%;
     line-height: 24px;
     background: black;
     color: white;
     padding: 5px;
-    border: 2px solid #566da1;
+    border: 2px solid var(--color-primary);
     border-radius: 10px;
     margin: 8px;
     font-size: 16px;

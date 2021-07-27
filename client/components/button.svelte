@@ -3,17 +3,17 @@
 <style>
   .button {
     border: none;
-    border-bottom: 3px solid #35425f;
-    border-right: 2px solid #35425f;
-    border-left: 2px solid #728ecf;
-    border-top: 2px solid #728ecf;
-    box-shadow: 0 0 2px 2px black;
+    border-bottom: 3px solid var(--color-darker);
+    border-right: 2px solid var(--color-darker);
+    border-left: 2px solid var(--color-light);
+    border-top: 2px solid var(--color-light);
+    box-shadow: 0 0 2px 2px var(--color-box-shadow);
     color: white;
     height: 35px;
     font-size: 15px;
-    background: #465881;
+    background: var(--color-primary);
     border-radius: 3px;
-    text-shadow: 2px 2px #4c4c4c;
+    text-shadow: 2px 2px var(--color-text-shadow);
     cursor: pointer;
     padding: 3px 5px;
     margin: 10px;
@@ -21,12 +21,12 @@
   }
 
   .button:not([disabled]):hover {
-    background: #7c8bbc;
-    border-bottom: 3px solid #59639a;
-    border-right: 2px solid #59639a;
-    border-left: 2px solid #bdc6ff;
-    border-top: 2px solid #bdc6ff;
-    color: #f8f6a4;
+    background: var(--color-secondary);
+    border-bottom: 3px solid var(--color-dark);
+    border-right: 2px solid var(--color-dark);
+    border-left: 2px solid var(--color-lighter);
+    border-top: 2px solid var(--color-lighter);
+    color: var(--color-accent);
   }
 
   .button:disabled {

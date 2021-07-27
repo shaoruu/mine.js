@@ -6,6 +6,7 @@
 }
 
 :root {
+  /* TWEAKPANE */
   --tp-base-background-color: hsla(230, 20%, 11%, 1);
   --tp-base-shadow-color: hsla(0, 0%, 0%, 0.2);
   --tp-button-background-color: hsla(230, 10%, 80%, 1);
@@ -27,6 +28,18 @@
   --tp-label-foreground-color: hsla(230, 12%, 48%, 1);
   --tp-monitor-background-color: hsla(230, 20%, 8%, 1);
   --tp-monitor-foreground-color: hsla(230, 12%, 48%, 1);
+
+  /* MINEJS */
+  --color-lighter: #bdc6ff;
+  --color-light: #728ecf;
+  --color-primary: #465881;
+  --color-secondary: #7c8bbc;
+  --color-dark: #59639a;
+  --color-darker: #35425f;
+  --color-accent: #f8f6a4;
+  --color-box-shadow: #000000;
+  --color-text-shadow: #4c4c4c;
+  --color-text-secondary: #a8a8a8;
 }
 
 * {

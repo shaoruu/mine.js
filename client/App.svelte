@@ -94,7 +94,7 @@
       {#if !locked && !chatEnabled}
         <div id="pause-menu">
           <div />
-          <h2>Game menu</h2>
+          <h2>Game Menu</h2>
           <Input
             placeholder="Username"
             value={engine ? engine.player.name : ''}

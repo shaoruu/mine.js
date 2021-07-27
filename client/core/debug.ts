@@ -101,7 +101,7 @@ class Debug {
   makeDataEntry = () => {
     const dataEntry = document.createElement('p');
     Helper.applyStyle(dataEntry, {
-      fontSize: '16px',
+      fontSize: '13.3333px',
       margin: '0',
     });
     return dataEntry;
@@ -112,10 +112,10 @@ class Debug {
     this.dataWrapper.id = 'data-wrapper';
     Helper.applyStyle(this.dataWrapper, {
       position: 'fixed',
-      top: '0',
-      left: '0',
+      top: '10px',
+      left: '10px',
+      color: '#eee',
       background: '#00000022',
-      color: 'white',
       padding: '4px',
       display: 'flex',
       flexDirection: 'column-reverse',
@@ -125,8 +125,8 @@ class Debug {
 
     Helper.applyStyle(this.gui.element, {
       position: 'fixed',
-      top: '0',
-      right: '20px',
+      top: '10px',
+      right: '10px',
       zIndex: '1000000000000',
     });
 
@@ -156,7 +156,7 @@ class Debug {
     /* -------------------------------------------------------------------------- */
     /*                              TEMPORARY OPTIONS                             */
     /* -------------------------------------------------------------------------- */
-    const sessionFolder = this.gui.addFolder({ title: 'Session (Temporary)', expanded: true });
+    const sessionFolder = this.gui.addFolder({ title: 'Session (Temporary)', expanded: false });
 
     // ENGINE
     const engineFolder = sessionFolder.addFolder({ title: 'Engine', expanded: false });
@@ -256,7 +256,10 @@ class Debug {
 
     const savedRegistryFolder = saved.addFolder({ title: 'Registry', expanded: true });
     savedRegistryFolder
-      .addInput({ texturePack: this.engine.registry.texturePack }, 'texturePack', { options: packsObject })
+      .addInput({ texturePack: this.engine.registry.texturePack }, 'texturePack', {
+        options: packsObject,
+        label: 'texture pack',
+      })
       .on('change', (ev) => {
         registry.setTexturePack(ev.value);
       });

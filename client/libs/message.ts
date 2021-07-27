@@ -16,12 +16,12 @@ class Message {
       justifyContent: 'flex-start',
       verticalAlign: 'middle',
       padding: '5px',
-      width: '50vw',
+      width: '40vw',
       background: 'rgba(0,0,0,0.45)',
     });
 
     Helper.applyStyle([this.sender, this.body], {
-      fontSize: '16px',
+      fontSize: '14px',
       color: 'white',
     });
 
@@ -49,6 +49,9 @@ class Message {
         });
         break;
       case 'PLAYER':
+        Helper.applyStyle([this.sender, this.body], {
+          color: '#eee',
+        });
         this.sender.innerHTML = `&lt;${sender}&gt;`;
         this.body.innerHTML = body;
         break;
