@@ -1,4 +1,3 @@
-import TWEEN from '@tweenjs/tween.js';
 import { Object3D, Vector3, LoadingManager, Mesh, MeshStandardMaterial, MeshBasicMaterial } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 

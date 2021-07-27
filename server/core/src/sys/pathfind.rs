@@ -4,16 +4,14 @@ use std::sync::{Arc, Mutex};
 
 use server_common::vec::Vec3;
 use server_utils::convert::map_world_to_voxel;
-use specs::{ReadExpect, ReadStorage, System, WriteExpect, WriteStorage};
+use specs::{ReadExpect, ReadStorage, System, WriteStorage};
 
 use crate::{
     comp::{rigidbody::RigidBody, target::Target, walk_towards::WalkTowards},
     engine::{
         astar::{AStar, PathNode},
         chunks::Chunks,
-        world::MessagesQueue,
     },
-    network::models::{create_of_type, MessageType},
 };
 
 const MAX_DEPTH_SEARCH: i32 = 2048;
@@ -24,7 +22,6 @@ impl<'a> System<'a> for PathFindSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = (
         ReadExpect<'a, Chunks>,
-        WriteExpect<'a, MessagesQueue>,
         ReadStorage<'a, RigidBody>,
         ReadStorage<'a, Target>,
         WriteStorage<'a, WalkTowards>,
@@ -33,7 +30,7 @@ impl<'a> System<'a> for PathFindSystem {
     fn run(&mut self, data: Self::SystemData) {
         use specs::Join;
 
-        let (chunks, mut messages, bodies, targets, mut walk_towards) = data;
+        let (chunks, bodies, targets, mut walk_towards) = data;
 
         let dimension = chunks.config.dimension;
 
@@ -176,11 +173,6 @@ impl<'a> System<'a> for PathFindSystem {
                             .map(|p| Vec3(p.0, p.1, p.2))
                             .collect::<Vec<_>>(),
                     );
-
-                    let mut test = create_of_type(MessageType::Pick);
-                    let j = serde_json::to_string(&nodes).unwrap();
-                    test.json = j;
-                    messages.push((test, None, None, None));
                 } else {
                     walk_toward.0 = None;
                 }

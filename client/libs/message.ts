@@ -16,10 +16,11 @@ class Message {
       justifyContent: 'flex-start',
       verticalAlign: 'middle',
       padding: '5px',
+      width: '50vw',
+      background: 'rgba(0,0,0,0.45)',
     });
 
     Helper.applyStyle([this.sender, this.body], {
-      fontFamily: "'Alata', sans-serif",
       fontSize: '16px',
       color: 'white',
     });

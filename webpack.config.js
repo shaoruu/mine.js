@@ -76,6 +76,12 @@ module.exports = {
         test: /\.(mp3|ogg|wav|png|svg|jpg|jpeg|gif)$/i,
         type: 'asset/resource',
       },
+      {
+        test: /\.(woff|woff2|ttf)$/,
+        use: {
+          loader: 'url-loader',
+        },
+      },
       // Shaders
       {
         test: /\.(glsl|vs|fs|vert|frag)$/,

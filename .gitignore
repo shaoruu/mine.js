@@ -7,6 +7,8 @@ data
 /target
 public/build/
 public/*.mp3
+public/*.ogg
+public/*.wav
 protocol/index.js
 protocol/index.d.ts
 assets/textures/generated/*.png

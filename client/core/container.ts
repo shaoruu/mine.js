@@ -61,12 +61,14 @@ class Container extends EventEmitter {
   };
 
   toggleFullScreen = () => {
-    const elem = document.body;
+    const elem = document.body as any;
+    const doc = document as any;
+
     if (
-      (document.fullScreenElement !== undefined && document.fullScreenElement === null) ||
-      (document.msFullscreenElement !== undefined && document.msFullscreenElement === null) ||
-      (document.mozFullScreen !== undefined && !document.mozFullScreen) ||
-      (document.webkitIsFullScreen !== undefined && !document.webkitIsFullScreen)
+      (doc.fullScreenElement !== undefined && doc.fullScreenElement === null) ||
+      (doc.msFullscreenElement !== undefined && doc.msFullscreenElement === null) ||
+      (doc.mozFullScreen !== undefined && !doc.mozFullScreen) ||
+      (doc.webkitIsFullScreen !== undefined && !doc.webkitIsFullScreen)
     ) {
       if (elem.requestFullScreen) {
         elem.requestFullScreen();
@@ -79,14 +81,14 @@ class Container extends EventEmitter {
         elem.msRequestFullscreen();
       }
     } else {
-      if (document.cancelFullScreen) {
-        document.cancelFullScreen();
-      } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-      } else if (document.webkitCancelFullScreen) {
-        document.webkitCancelFullScreen();
-      } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
+      if (doc.cancelFullScreen) {
+        doc.cancelFullScreen();
+      } else if (doc.mozCancelFullScreen) {
+        doc.mozCancelFullScreen();
+      } else if (doc.webkitCancelFullScreen) {
+        doc.webkitCancelFullScreen();
+      } else if (doc.msExitFullscreen) {
+        doc.msExitFullscreen();
       }
     }
   };

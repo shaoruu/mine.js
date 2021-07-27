@@ -11,19 +11,23 @@ type ChatOptionsType = {
 
 const HELP_TEXT = `
 Basic controls of the game:
-- <span>R</span>: Toggle zoom
-- <span>T</span>: Toggle chat
-- <span>F</span>: Toggle physics
-- <span>C</span>: Toggle perspective
-- <span>X</span>: Bulk destruction 
-- <span>Z</span>: Bulk placement 
-- <span>0-n</span>: Change block
-- <span>Space</span>: Jump / fly up
-- <span>W/A/S/D</span>: Movements
-- <span>L-Shift</span>: Fly down
-- <span>L-Mouse</span>: Break block
-- <span>R-Mouse</span>: Place block
-- <span>Tab</span>: Player list
+- <kbd>V</kbd>: Toggle zoom
+- <kbd>R</kbd>: Toggle sprint
+- <kbd>T</kbd>: Toggle chat
+- <kbd>J</kbd>: Toggle debug 
+- <kbd>F</kbd>: Toggle physics
+- <kbd>C</kbd>: Toggle perspective
+- <kbd>K</kbd>: Toggle fullscreen
+- <kbd>Z</kbd>: Bulk placement
+- <kbd>X</kbd>: Bulk destruction
+- <kbd>0-n</kbd>: Change block placement
+- <kbd>Space</kbd>: Jump / fly up
+- <kbd>W/A/S/D</kbd>: Movements
+- <kbd>L-Shift</kbd>: Fly down
+- <kbd>L-Mouse</kbd>: Break block
+- <kbd>M-Mouse</kbd>: Get block of looking
+- <kbd>R-Mouse</kbd>: Place block
+- <kbd>Tab</kbd>: Player list
 `;
 
 class Chat {
@@ -76,13 +80,12 @@ class Chat {
       position: 'fixed',
       bottom: '75px',
       left: '0',
-      width: '40%',
       marginLeft: `${margin}px`,
-      maxHeight: '50%',
+      maxHeight: '50vh',
       overflowY: 'auto',
-      background: 'rgba(0,0,0,0.45)',
       wordBreak: 'break-all',
       display: 'flex',
+      flex: '1',
       flexDirection: 'column',
       justifyContent: 'flex-end',
       listStyle: 'none',
@@ -98,7 +101,6 @@ class Chat {
       background: 'rgba(0,0,0,0.45)',
       padding: '5px',
       zIndex: '5',
-      fontFamily: "'Alata', sans-serif",
       fontSize: '16px',
       color: 'white',
       border: 'none',
@@ -114,8 +116,9 @@ class Chat {
     this.gui.input.spellcheck = false;
     this.gui.input.maxLength = 256;
 
-    this.gui.wrapper.addEventListener('click', this.focusInput, false);
+    this.gui.messages.classList.add('hide-scrollbar');
 
+    this.gui.wrapper.addEventListener('click', this.focusInput, false);
     this.gui.wrapper.appendChild(this.gui.messages);
 
     this.engine.container.domElement.appendChild(this.gui.wrapper);

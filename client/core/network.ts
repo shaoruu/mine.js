@@ -77,114 +77,149 @@ class Network {
     this.server = server;
   };
 
+  onInit = (event) => {
+    const { world, player } = this.engine;
+    const {
+      json: { id, time, tickSpeed, spawn, passables },
+    } = event;
+
+    player.id = id;
+    player.teleport(spawn);
+
+    world.setTime(time, false);
+    world.setBlockData({ passables });
+
+    this.engine.setTick(tickSpeed, false);
+    this.engine.emit('init');
+  };
+
+  onConfig = (event) => {
+    const {
+      json: { time, tickSpeed },
+    } = event;
+
+    if (Helper.isNumber(time)) this.engine.world.setTime(time, false);
+    if (Helper.isNumber(tickSpeed)) this.engine.setTick(tickSpeed, false);
+  };
+
+  onUpdate = (event) => {
+    const { world } = this.engine;
+    const { updates, chunks } = event;
+
+    for (const chunkData of chunks) {
+      world.handleServerChunk(chunkData, true);
+    }
+
+    const mapped = updates.map((u) => ({
+      target: {
+        voxel: [u.vx, u.vy, u.vz],
+        rotation: u.rotation,
+        yRotation: u.yRotation,
+      },
+      type: u.type,
+    }));
+
+    world.setManyVoxels(mapped, false);
+  };
+
+  onLoad = (event) => {
+    const { world } = this.engine;
+    const { chunks } = event;
+
+    for (const chunkData of chunks) {
+      world.handleServerChunk(chunkData, false);
+    }
+  };
+
+  onJoin = (event) => {
+    const { text: id } = event;
+
+    this.engine.peers.join(id);
+  };
+
+  onLeave = (event) => {
+    const { peers, chat } = this.engine;
+    const { text: id, message } = event;
+
+    peers.leave(id);
+
+    if (message) {
+      chat.add(message);
+    }
+  };
+
+  onPeer = (event) => {
+    const { player, peers } = this.engine;
+    const { peers: peersData } = event;
+
+    for (const peer of peersData) {
+      const { id, name, px, py, pz, qx, qy, qz, qw } = peer;
+      if (id === player.id) continue;
+      peers.update(id, { name, position: [px, py, pz], rotation: [qx, qy, qz, qw] });
+    }
+  };
+
+  onEntity = (event) => {
+    const { entities } = this.engine;
+    const { entities: entitiesData } = event;
+
+    for (const entity of entitiesData) {
+      const { id, type, px, py, pz, heading, lookAt } = entity;
+      entities.handleServerUpdate(id, type, [px, py, pz], heading, lookAt);
+    }
+  };
+
+  onChat = (event) => {
+    const { message } = event;
+    this.engine.chat.add(message);
+  };
+
   onEvent = (event) => {
     const { type } = event;
 
-    const { engine } = this;
-    const { world, player, peers, entities, chat } = engine;
-
     switch (type) {
       case 'INIT': {
-        const {
-          json: { id, time, tickSpeed, spawn, passables },
-        } = event;
-        player.id = id;
-        world.setTime(time, false);
-        world.setBlockData({ passables });
-        engine.setTick(tickSpeed, false);
-        player.teleport(spawn);
-        engine.emit('init');
+        this.onInit(event);
         break;
       }
 
       case 'CONFIG': {
-        const {
-          json: { time, tickSpeed },
-        } = event;
-        if (Helper.isNumber(time)) world.setTime(time, false);
-        if (Helper.isNumber(tickSpeed)) engine.setTick(tickSpeed, false);
+        this.onConfig(event);
         break;
       }
 
       case 'UPDATE': {
-        const { updates, chunks } = event;
-
-        for (const chunkData of chunks) {
-          world.handleServerChunk(chunkData, type === 'UPDATE');
-        }
-
-        const mapped = updates.map((u) => ({
-          target: {
-            voxel: [u.vx, u.vy, u.vz],
-            rotation: u.rotation,
-            yRotation: u.yRotation,
-          },
-          type: u.type,
-        }));
-
-        world.setManyVoxels(mapped, false);
-
+        this.onUpdate(event);
         break;
       }
 
       case 'LOAD': {
-        const { chunks } = event;
-        for (const chunkData of chunks) {
-          world.handleServerChunk(chunkData, false);
-        }
+        this.onLoad(event);
         break;
       }
 
       case 'JOIN': {
-        const { text: id } = event;
-        peers.join(id);
+        this.onJoin(event);
         break;
       }
 
       case 'LEAVE': {
-        const { text: id, message } = event;
-        peers.leave(id);
-        if (message) {
-          chat.add(message);
-        }
+        this.onLeave(event);
         break;
       }
 
       case 'PEER': {
-        const { peers: peersData } = event;
-
-        for (const peer of peersData) {
-          const { id, name, px, py, pz, qx, qy, qz, qw } = peer;
-          if (id === player.id) continue;
-          peers.update(id, { name, position: [px, py, pz], rotation: [qx, qy, qz, qw] });
-        }
-
+        this.onPeer(event);
         break;
       }
 
       case 'ENTITY': {
-        const { entities: entitiesData } = event;
-
-        for (const entity of entitiesData) {
-          const { id, type, px, py, pz, heading, lookAt } = entity;
-          entities.handleServerUpdate(id, type, [px, py, pz], heading, lookAt);
-        }
-
+        this.onEntity(event);
         break;
       }
 
       case 'MESSAGE': {
-        const { message } = event;
-        chat.add(message);
-        break;
-      }
-
-      case 'PICK': {
-        const { json } = event;
-        if (this.engine.debug) {
-          const { debug } = this.engine;
-          debug.addHighlights(json);
-        }
+        this.onChat(event);
         break;
       }
     }
@@ -194,7 +229,6 @@ class Network {
     let event;
 
     try {
-      // console.log('RECEIVED');
       event = Network.decode(new Uint8Array(data));
     } catch (e) {
       return;

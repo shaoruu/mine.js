@@ -34,6 +34,7 @@ class Peer {
     this.newQuaternion = this.head.mesh.quaternion;
 
     this.nameMesh = new SpriteText(this.name, options.headDimension / 3);
+    this.nameMesh.fontFace = 'Ponderosa';
     this.nameMesh.position.y += options.headDimension * 1;
     this.nameMesh.backgroundColor = '#00000077';
     this.nameMesh.material.depthTest = false;

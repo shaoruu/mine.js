@@ -38,7 +38,7 @@ We thought it would be interesting to design a game that is inspired by popular 
 - <kbd>C</kbd>: Toggle perspective
 - <kbd>K</kbd>: Toggle fullscreen
 - <kbd>Z</kbd>: Bulk placement
-- <kbd>X</kbd>: Bulk desctruction
+- <kbd>X</kbd>: Bulk destruction 
 - <kbd>0-n</kbd>: Change block placement
 - <kbd>Space</kbd>: Jump / fly up
 - <kbd>W/A/S/D</kbd>: Movements
@@ -84,6 +84,7 @@ yarn watch
 ```
 
 ### :notebook: Citations
+- [Ponderosa Font](https://www.1001fonts.com/ponderosa-font.html) - [Licensed](http://www.fontframe.com/tepidmonkey) for non-commercial and commercial use.
 - [Open Source Voxel Textures](https://opengameart.org/content/voxel-pack) - Licensed under OpenGameArt for free use.
 - [Flourish Resource Pack](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/resource-packs/1245961-16x-1-7-4-wip-flourish) - Licensed for free use.
 - [Alvoria's Sanity](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/resource-packs/1243771-alvorias-sanity-1-12-2-no-longer-updating-sorry) - Licensed for free use under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License.](https://www.minecraftforum.net/linkout?remoteUrl=http%253a%252f%252fcreativecommons.org%252flicenses%252fby-nc-sa%252f4.0%252f)

@@ -55,9 +55,6 @@ class Player {
 
   public own: Peer;
 
-  // TODO: extract this logic into Inventory
-  public handType = 1;
-
   private acc = new Vector3();
   private vel = new Vector3();
   private vec = new Vector3();
@@ -70,46 +67,15 @@ class Player {
     back: false,
     sprint: false,
   };
+
   private lookBlockMesh: Group;
   private shadowMesh: Mesh;
   private blockRay: Ray;
 
   constructor(public engine: Engine, public options: PlayerOptionsType) {
-    const { lookBlockScale, lookBlockColor } = options;
-
     // three.js pointerlock controls
     this.controls = new PointerLockControls(engine.camera.threeCamera, engine.container.canvas);
     engine.rendering.scene.add(this.controls.getObject());
-    engine.container.canvas.onclick = () => this.controls.lock();
-
-    // movement handling
-    document.addEventListener('keydown', this.onKeyDown, false);
-    document.addEventListener('keyup', this.onKeyUp, false);
-
-    const { config, rendering, inputs, world } = engine;
-
-    inputs.click('left', () => world.breakVoxel(), 'in-game');
-    inputs.click('right', () => world.placeVoxel(this.engine.inventory.hand), 'in-game');
-    inputs.click(
-      'middle',
-      () => {
-        if (this.lookBlock) this.engine.inventory.setHand(engine.world.getVoxelByVoxel(this.lookBlock));
-      },
-      'in-game',
-    );
-
-    inputs.bind('f', () => this.toggleGodMode(), 'in-game');
-    inputs.bind('c', () => this.togglePerspective(), 'in-game');
-
-    this.controls.addEventListener('lock', () => {
-      engine.emit('lock');
-      engine.inputs.setNamespace('in-game');
-    });
-
-    this.controls.addEventListener('unlock', () => {
-      engine.emit('unlock');
-      engine.inputs.setNamespace(engine.chat.enabled ? 'chat' : 'menu');
-    });
 
     // retrieve name from localStorage
     this.name = localStorage.getItem(LOCAL_STORAGE_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
@@ -118,66 +84,14 @@ class Player {
     this.own.mesh.rotation.y = Math.PI * 2;
     this.object.add(this.own.mesh);
 
-    // look block
     engine.on('ready', () => {
-      // register camera as entity      // set up look block mesh
-      const { dimension } = config.world;
-
+      // register camera as entity
       if (!this.godMode) {
         this.addEntity();
       }
 
-      this.lookBlockMesh = new Group();
-
-      const mat = new MeshBasicMaterial({
-        color: new Color(lookBlockColor),
-        opacity: 0.3,
-        transparent: true,
-      });
-
-      const w = 0.01;
-      const dim = dimension * lookBlockScale;
-      const side = new Mesh(new BoxBufferGeometry(dim, w, w), mat);
-
-      for (let i = -1; i <= 1; i += 2) {
-        for (let j = -1; j <= 1; j += 2) {
-          const temp = side.clone();
-
-          temp.position.y = ((dim - w) / 2) * i;
-          temp.position.z = ((dim - w) / 2) * j;
-
-          this.lookBlockMesh.add(temp);
-        }
-      }
-
-      for (let i = -1; i <= 1; i += 2) {
-        for (let j = -1; j <= 1; j += 2) {
-          const temp = side.clone();
-
-          temp.position.x = ((dim - w) / 2) * i;
-          temp.position.y = ((dim - w) / 2) * j;
-          temp.rotation.y = Math.PI / 2;
-
-          this.lookBlockMesh.add(temp);
-        }
-      }
-
-      for (let i = -1; i <= 1; i += 2) {
-        for (let j = -1; j <= 1; j += 2) {
-          const temp = side.clone();
-
-          temp.position.z = ((dim - w) / 2) * i;
-          temp.position.x = ((dim - w) / 2) * j;
-          temp.rotation.z = Math.PI / 2;
-
-          this.lookBlockMesh.add(temp);
-        }
-      }
-
-      this.lookBlockMesh.frustumCulled = false;
-      this.lookBlockMesh.renderOrder = 1000000;
-
-      rendering.scene.add(this.lookBlockMesh);
+      this.setupListeners();
+      this.setupLookTargets();
 
       // add own shadow
       this.shadowMesh = this.engine.shadows.add(this.object);
@@ -186,7 +100,7 @@ class Player {
 
       this.engine.sounds.add(FOOTSTEP_SFX_NAME, FootstepsSFX, {
         loop: true,
-        fadeTime: 800,
+        fadeTime: 600,
         maxVolume: 1.0,
         multiple: false,
       });
@@ -196,6 +110,95 @@ class Player {
       this.resetMovements();
     });
   }
+
+  setupListeners = () => {
+    // movement handling
+    document.addEventListener('keydown', this.onKeyDown, false);
+    document.addEventListener('keyup', this.onKeyUp, false);
+
+    const { inputs, world, inventory, chat } = this.engine;
+
+    inputs.click('left', () => world.breakVoxel(), 'in-game');
+    inputs.click('right', () => world.placeVoxel(inventory.hand), 'in-game');
+    inputs.click(
+      'middle',
+      () => {
+        if (this.lookBlock) this.engine.inventory.setHand(world.getVoxelByVoxel(this.lookBlock));
+      },
+      'in-game',
+    );
+
+    inputs.bind('f', () => this.toggleGodMode(), 'in-game');
+    inputs.bind('c', () => this.togglePerspective(), 'in-game');
+
+    this.controls.addEventListener('lock', () => {
+      this.engine.emit('lock');
+      inputs.setNamespace('in-game');
+    });
+
+    this.controls.addEventListener('unlock', () => {
+      this.engine.emit('unlock');
+      inputs.setNamespace(chat.enabled ? 'chat' : 'menu');
+    });
+  };
+
+  setupLookTargets = () => {
+    const { lookBlockScale, lookBlockColor } = this.options;
+    const { config, rendering } = this.engine;
+    const { dimension } = config.world;
+
+    this.lookBlockMesh = new Group();
+
+    const mat = new MeshBasicMaterial({
+      color: new Color(lookBlockColor),
+      opacity: 0.3,
+      transparent: true,
+    });
+
+    const w = 0.01;
+    const dim = dimension * lookBlockScale;
+    const side = new Mesh(new BoxBufferGeometry(dim, w, w), mat);
+
+    for (let i = -1; i <= 1; i += 2) {
+      for (let j = -1; j <= 1; j += 2) {
+        const temp = side.clone();
+
+        temp.position.y = ((dim - w) / 2) * i;
+        temp.position.z = ((dim - w) / 2) * j;
+
+        this.lookBlockMesh.add(temp);
+      }
+    }
+
+    for (let i = -1; i <= 1; i += 2) {
+      for (let j = -1; j <= 1; j += 2) {
+        const temp = side.clone();
+
+        temp.position.x = ((dim - w) / 2) * i;
+        temp.position.y = ((dim - w) / 2) * j;
+        temp.rotation.y = Math.PI / 2;
+
+        this.lookBlockMesh.add(temp);
+      }
+    }
+
+    for (let i = -1; i <= 1; i += 2) {
+      for (let j = -1; j <= 1; j += 2) {
+        const temp = side.clone();
+
+        temp.position.z = ((dim - w) / 2) * i;
+        temp.position.x = ((dim - w) / 2) * j;
+        temp.rotation.z = Math.PI / 2;
+
+        this.lookBlockMesh.add(temp);
+      }
+    }
+
+    this.lookBlockMesh.frustumCulled = false;
+    this.lookBlockMesh.renderOrder = 1000000;
+
+    rendering.scene.add(this.lookBlockMesh);
+  };
 
   onKeyDown = ({ code }: KeyboardEvent) => {
     if (!this.controls.isLocked || this.engine.chat.enabled) return;

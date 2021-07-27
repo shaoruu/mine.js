@@ -324,8 +324,6 @@ class Engine extends EventEmitter {
 
     this.emit('tick-begin');
 
-    // TWEEN animations
-
     // pre-ticks for before physics
     this.entities.preTick();
 
@@ -340,6 +338,7 @@ class Engine extends EventEmitter {
     this.world.tick();
     this.rendering.tick();
 
+    // TWEEN animations
     TWEEN.update();
 
     if (this.debug) {

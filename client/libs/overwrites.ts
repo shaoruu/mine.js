@@ -1,4 +1,4 @@
-import { Color, MeshBasicMaterial, sRGBEncoding, NearestFilter } from 'three';
+import { Color, MeshBasicMaterial, NearestFilter } from 'three';
 
 export function createMaterial_(materialName) {
   // Create material
