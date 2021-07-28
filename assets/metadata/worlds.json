@@ -17,7 +17,9 @@
     "description": "a testbed world",
     "subChunks": 8,
     "playerDimensions": [0.6, 1.8, 0.6],
-    "playerHead": 1.6
+    "playerHead": 1.6,
+    "maxPerThread": 10,
+    "serverTickRate": 4
   },
   "worlds": [
     {
@@ -34,8 +36,10 @@
     },
     {
       "name": "z-dev-terrains",
-      "time": 0,
+      "time": 1200,
       "tickSpeed": 0,
+      "chunkSize": 16,
+      "subChunks": 8,
       "save": false,
       "generation": "hilly",
       "description": "this ain't saved!",

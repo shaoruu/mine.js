@@ -95,10 +95,10 @@ impl Generator {
                                     get_biome_config(vx, vz, &noise);
 
                                 for vy in start_y..end_y {
-                                    // // this is because chunks might come in with preset voxels
-                                    // if chunk.get_voxel(vx, vy, vz) != 0 {
-                                    //     continue;
-                                    // }
+                                    // this is because chunks might come in with preset voxels
+                                    if chunk.get_voxel(vx, vy, vz) != 0 {
+                                        continue;
+                                    }
 
                                     let vy_ = vy;
                                     let vy = vy - height_offset;

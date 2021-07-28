@@ -1,30 +1,20 @@
 use actix::prelude::*;
 use actix_broker::BrokerSubscribe;
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::time::Duration;
 
 use crate::engine::config::Configs;
 use crate::engine::entities::Entities;
-use crate::engine::world::WorldMeta;
+use crate::engine::world::{WorldConfig, WorldMeta};
 
-use super::super::engine::{
-    chunks::{Chunks, MeshLevel},
-    clock::Clock,
-    players::Players,
-    world::World,
-};
+use super::super::engine::{chunks::Chunks, clock::Clock, players::Players, world::World};
 
 use super::message::{
     FullWorldData, GetWorld, JoinWorld, LeaveWorld, ListWorldNames, ListWorlds, Noop,
     PlayerMessage, SimpleWorldData,
 };
-use super::models::{
-    create_message, messages, messages::message::Type as MessageType, MessageComponents,
-};
-
-const SERVER_TICK: Duration = Duration::from_millis(16);
-const CHUNKING_TICK: Duration = Duration::from_millis(18);
+use super::models::{messages, messages::message::Type as MessageType};
 
 #[derive(Default)]
 pub struct WsServer {
@@ -32,20 +22,6 @@ pub struct WsServer {
 }
 
 impl WsServer {
-    fn broadcast(
-        &mut self,
-        world_name: &str,
-        msg: &messages::Message,
-        include: Vec<usize>,
-        exclude: Vec<usize>,
-    ) -> Option<()> {
-        let world = self.worlds.get_mut(world_name)?;
-
-        world.broadcast(msg, include, exclude);
-
-        Some(())
-    }
-
     fn load_worlds(&mut self) {
         // Loading worlds from `worlds.json`
         let mut worlds: HashMap<String, World> = HashMap::new();
@@ -60,72 +36,25 @@ impl WsServer {
         self.worlds = worlds;
     }
 
-    fn tick(&mut self) {
-        for world in self.worlds.values_mut() {
-            world.tick();
-        }
-    }
-
-    fn chunking(&mut self) {
-        let mut request_queue = vec![];
-        let mut message_queue = VecDeque::new();
+    fn start_worlds(&mut self, ctx: &mut Context<Self>) -> Vec<SpawnHandle> {
+        let mut processes = vec![];
 
         for world in self.worlds.values_mut() {
-            let world_name = world.name.to_owned();
-            let mut players = world.write_resource::<Players>();
-
-            players.iter_mut().for_each(|(id, player)| {
-                if player.name.is_none() {
-                    return;
-                }
-
-                let requested_chunk = player.requested_chunks.pop_front();
-                request_queue.push((requested_chunk, world_name.to_owned(), id.to_owned()));
-            });
+            let tick_rate = world.read_resource::<WorldConfig>().server_tick_rate;
+            processes.push((world.name.to_owned(), tick_rate));
         }
 
-        request_queue
-            .into_iter()
-            .for_each(|(coords, world_name, player_id)| {
-                if let Some(coords) = coords {
-                    let mut chunks = self
-                        .worlds
-                        .get_mut(&world_name)
-                        .unwrap()
-                        .write_resource::<Chunks>();
-                    if let Some(chunk) = chunks.get(&coords, &MeshLevel::All, false) {
-                        // SEND CHUNK BACK TO PLAYER
+        let mut intervals = vec![];
 
-                        let mut component = MessageComponents::default_for(MessageType::Load);
-                        component.chunks =
-                            Some(vec![chunk.get_protocol(true, true, true, MeshLevel::All)]);
+        processes.into_iter().for_each(|(name, tick_rate)| {
+            intervals.push(
+                ctx.run_interval(Duration::from_millis(tick_rate), move |act, _ctx| {
+                    act.worlds.get_mut(&name).unwrap().tick();
+                }),
+            );
+        });
 
-                        let new_message = create_message(component);
-                        message_queue.push_back((
-                            world_name.to_owned(),
-                            new_message,
-                            vec![player_id],
-                        ));
-                    } else {
-                        drop(chunks);
-
-                        self.worlds
-                            .get_mut(&world_name)
-                            .unwrap()
-                            .write_resource::<Players>()
-                            .get_mut(&player_id)
-                            .unwrap()
-                            .requested_chunks
-                            .push_back(coords);
-                    }
-                }
-            });
-
-        message_queue
-            .into_iter()
-            .for_each(|(world_name, message, include)| {
-                self.broadcast(&world_name, &message, include, vec![]);
-            })
+        intervals
     }
 }
 
@@ -268,14 +197,7 @@ impl Handler<GetWorld> for WsServer {
 impl SystemService for WsServer {
     fn service_started(&mut self, ctx: &mut Context<Self>) {
         self.load_worlds();
-
-        ctx.run_interval(SERVER_TICK, |act, _ctx| {
-            act.tick();
-        });
-
-        ctx.run_interval(CHUNKING_TICK, |act, _ctx| {
-            act.chunking();
-        });
+        self.start_worlds(ctx);
     }
 }
 

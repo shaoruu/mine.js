@@ -9,7 +9,7 @@ use std::{
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use log::info;
+use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::gen::blocks::BlockRotation;
@@ -77,8 +77,6 @@ pub struct Chunks {
     is_meshing: bool,
     mesh_sender: Arc<Sender<Vec<Chunk>>>,
     mesh_receiver: Arc<Receiver<Vec<Chunk>>>,
-
-    max_per_thread: usize,
 }
 
 /**
@@ -135,8 +133,6 @@ impl Chunks {
             is_meshing: false,
             mesh_sender,
             mesh_receiver,
-
-            max_per_thread: num_cpus::get(),
         }
     }
 
@@ -154,7 +150,7 @@ impl Chunks {
         if !self.is_meshing && !self.to_mesh.is_empty() {
             let to_mesh = self
                 .to_mesh
-                .drain(0..self.max_per_thread.min(self.to_mesh.len()))
+                .drain(0..self.config.max_per_thread.min(self.to_mesh.len()))
                 .collect::<Vec<_>>();
             let to_mesh: Vec<(Chunk, Space)> = to_mesh
                 .iter()
@@ -211,7 +207,7 @@ impl Chunks {
         } else if !self.is_generating && !self.to_generate.is_empty() {
             let chunks = self
                 .to_generate
-                .drain(0..self.max_per_thread.min(self.to_generate.len()))
+                .drain(0..self.config.max_per_thread.min(self.to_generate.len()))
                 .collect::<Vec<_>>();
 
             let sender = self.gen_sender.clone();
@@ -471,6 +467,17 @@ impl Chunks {
         if !is_preload {
             // let the multithreading begin!
             self.to_generate.append(&mut to_generate);
+            self.to_generate.sort_by(|a, b| {
+                let dax = a.coords.0 - coords.0;
+                let daz = a.coords.1 - coords.1;
+                let dbx = b.coords.0 - coords.0;
+                let dbz = b.coords.1 - coords.1;
+
+                let dist_a = dax * dax + daz * daz;
+                let dist_b = dbx * dbx + dbz * dbz;
+
+                dist_a.partial_cmp(&dist_b).unwrap()
+            })
         } else {
             to_generate.par_iter_mut().for_each(|new_chunk| {
                 Generator::generate_chunk(new_chunk, &self.registry, &self.config);

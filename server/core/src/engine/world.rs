@@ -28,8 +28,8 @@ use crate::comp::view_radius::ViewRadius;
 use crate::comp::walk_towards::WalkTowards;
 use crate::network::models::{create_of_type, ChatType};
 use crate::sys::{
-    BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, ObserveSystem,
-    PathFindSystem, PeersSystem, SearchSystem, WalkTowardsSystem,
+    BroadcastSystem, ChunkingSystem, EntitiesSystem, GenerationSystem, MeshingSystem,
+    ObserveSystem, PathFindSystem, PeersSystem, SearchSystem, WalkTowardsSystem,
 };
 use crate::{
     comp::rigidbody::RigidBody,
@@ -84,6 +84,8 @@ pub struct WorldConfig {
     pub generation: String,
     pub player_dimensions: Vec3<f32>,
     pub player_head: f32,
+    pub max_per_thread: usize,
+    pub server_tick_rate: u64,
 }
 
 #[derive(Deserialize, Clone)]
@@ -675,6 +677,7 @@ impl World {
             .with(PeersSystem, "peers", &["physics"])
             .with(ChunkingSystem, "chunking", &["peers"])
             .with(GenerationSystem, "generation", &["chunking"])
+            .with(MeshingSystem, "meshing", &["generation"])
             .with(SearchSystem, "search", &["peers"])
             .with(ObserveSystem, "observe", &["search"])
             .with(EntitiesSystem, "entities", &["chunking"])
