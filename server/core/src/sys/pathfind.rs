@@ -165,14 +165,18 @@ impl<'a> System<'a> for PathFindSystem {
                     &|p| p.distance(&PathNode(goal.0, goal.1, goal.2)) / 3,
                 );
 
-                if let Some((nodes, _count)) = path {
-                    walk_toward.0 = Some(
-                        nodes
-                            .clone()
-                            .iter()
-                            .map(|p| Vec3(p.0, p.1, p.2))
-                            .collect::<Vec<_>>(),
-                    );
+                if let Some((nodes, count)) = path {
+                    if count > walk_toward.1 as u32 {
+                        walk_toward.0 = None;
+                    } else {
+                        walk_toward.0 = Some(
+                            nodes
+                                .clone()
+                                .iter()
+                                .map(|p| Vec3(p.0, p.1, p.2))
+                                .collect::<Vec<_>>(),
+                        );
+                    }
                 } else {
                     walk_toward.0 = None;
                 }

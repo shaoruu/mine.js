@@ -40,7 +40,7 @@ type TargetBlock = { voxel: Coords3; rotation?: number; yRotation?: number };
 class Player {
   public id: string;
   public name: string;
-  public godMode = true;
+  public spectatorMode = false;
 
   public controls: PointerLockControls;
 
@@ -86,7 +86,7 @@ class Player {
 
     engine.on('ready', () => {
       // register camera as entity
-      if (!this.godMode) {
+      if (!this.spectatorMode) {
         this.addEntity();
       }
 
@@ -128,7 +128,21 @@ class Player {
       'in-game',
     );
 
-    inputs.bind('f', () => this.toggleGodMode(), 'in-game');
+    let lastSpace = -1;
+    inputs.bind(
+      'space',
+      () => {
+        let now = performance.now();
+        if (now - lastSpace < 250) {
+          this.toggleFly();
+          now = 0;
+        }
+        lastSpace = now;
+      },
+      'in-game',
+      { occasion: 'keyup' },
+    );
+
     inputs.bind('c', () => this.togglePerspective(), 'in-game');
 
     this.controls.addEventListener('lock', () => {
@@ -275,8 +289,8 @@ class Player {
   };
 
   tick = () => {
-    if (this.godMode) {
-      this.godModeMovements();
+    if (this.spectatorMode) {
+      this.spectatorModeMovements();
     } else {
       this.moveEntity();
       this.playFootsteps();
@@ -286,7 +300,7 @@ class Player {
     this.updatePerspective();
   };
 
-  godModeMovements = () => {
+  spectatorModeMovements = () => {
     const { delta } = this.engine.clock;
 
     const { right, left, up, down, front, back } = this.movements;
@@ -318,7 +332,7 @@ class Player {
 
   moveEntity = () => {
     const { object } = this.controls;
-    const { state } = this.entity.brain;
+    const { state, body } = this.entity.brain;
 
     const { sprint, right, left, up, down, front, back } = this.movements;
 
@@ -363,8 +377,16 @@ class Player {
     // set jump as true, and brain will handle the jumping
     state.jumping = up ? (down ? false : true) : down ? false : false;
 
+    // crouch to true, so far used for flying
+    state.crouching = down;
+
     // apply sprint state change
     state.sprinting = sprint;
+
+    // means landed, no more fly
+    if (body.gravityMultiplier === 0 && body.atRestY === -1) {
+      this.toggleFly();
+    }
   };
 
   playFootsteps = () => {
@@ -390,7 +412,7 @@ class Player {
 
     let newPosition: Coords3;
 
-    if (this.godMode) {
+    if (this.spectatorMode) {
       newPosition = [(vx + 0.5) * dimension, (vy + 1 + distToGround) * dimension, (vz + 0.5) * dimension];
 
       this.controls.getObject().position.set(...newPosition);
@@ -407,11 +429,19 @@ class Player {
     return newPosition;
   };
 
-  toggleGodMode = () => {
-    this.godMode = !this.godMode;
-    this.shadowMesh.visible = !this.godMode;
+  toggleFly = () => {
+    if (this.spectatorMode) return;
 
-    if (this.godMode) {
+    const { body } = this.entity;
+    const isFlying = body.gravityMultiplier === 0;
+    body.gravityMultiplier = isFlying ? 1 : 0;
+  };
+
+  toggleSpectatorMode = () => {
+    this.spectatorMode = !this.spectatorMode;
+    this.shadowMesh.visible = !this.spectatorMode;
+
+    if (this.spectatorMode) {
       this.vel.set(0, 0, 0);
       this.acc.set(0, 0, 0);
       this.engine.entities.removePhysical('player');

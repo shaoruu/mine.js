@@ -275,8 +275,8 @@ class World extends EventEmitter {
 
   placeVoxel = (type: number) => {
     const { dimension } = this.options;
-    const { targetBlock, godMode } = this.engine.player;
-    if (godMode) {
+    const { targetBlock, spectatorMode } = this.engine.player;
+    if (spectatorMode) {
       if (targetBlock) this.setVoxel(targetBlock, type);
     } else {
       const {

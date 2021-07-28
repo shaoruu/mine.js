@@ -164,6 +164,11 @@ class Chat {
       return;
     }
 
+    if (value === '/spectator') {
+      this.engine.player.toggleSpectatorMode();
+      return;
+    }
+
     if (value.startsWith('/')) {
       const { inventory, registry } = this.engine;
 
