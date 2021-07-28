@@ -78,7 +78,7 @@ const defaultConfig: ConfigType = {
     disappearTimeout: 2000,
   },
   player: {
-    sensitivity: 0.8,
+    sensitivity: 80,
     acceleration: 0.6,
     flyingInertia: 3,
     reachDistance: 32,
