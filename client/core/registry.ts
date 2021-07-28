@@ -63,7 +63,6 @@ type RegistryOptionsType = {
 };
 
 const TRANSPARENT_SIDES = [FrontSide, BackSide];
-const TEXTURE_PACK_KEY = 'mine.js-texturepack-key';
 
 class Registry {
   public texturePack: string;
@@ -87,7 +86,7 @@ class Registry {
   constructor(public engine: Engine, public options: RegistryOptionsType) {
     const { focusDist, focusBlockSize, focusPlantSize, resolution } = options;
 
-    this.texturePack = localStorage.getItem(TEXTURE_PACK_KEY) || this.options.packs[0];
+    this.texturePack = this.options.packs[0];
 
     this.aoUniform = { value: new Vector4(100.0, 170.0, 210.0, 255.0) };
 
@@ -193,13 +192,10 @@ class Registry {
   }
 
   setTexturePack = (packName: string, onFinish?: () => void) => {
-    localStorage.setItem(TEXTURE_PACK_KEY, packName);
-
     this.atlasUniform.value = new TextureLoader().load(
       `${this.engine.network.cleanURL}atlas/${packName}-atlas.png`,
       () => {
         if (onFinish) onFinish();
-        this.atlasUniform.value.needsUpdate = true;
 
         Object.keys(this.options.blocks).forEach((idStr) => {
           const id = +idStr;

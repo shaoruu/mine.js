@@ -78,6 +78,7 @@ const defaultConfig: ConfigType = {
     disappearTimeout: 2000,
   },
   player: {
+    sensitivity: 0.8,
     acceleration: 0.6,
     flyingInertia: 3,
     reachDistance: 32,
@@ -269,11 +270,17 @@ class Engine extends EventEmitter {
 
     this.on('focus-loaded', () => {
       this.texturesLoaded = true;
-      if (this.entitiesLoaded) this.assetsLoaded = true;
+      if (this.entitiesLoaded) {
+        this.assetsLoaded = true;
+        this.emit('assets-loaded');
+      }
     });
     this.on('entities-loaded', () => {
       this.entitiesLoaded = true;
-      if (this.texturesLoaded) this.assetsLoaded = true;
+      if (this.texturesLoaded) {
+        this.assetsLoaded = true;
+        this.emit('assets-loaded');
+      }
     });
   }
 

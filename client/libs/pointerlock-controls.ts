@@ -1,4 +1,6 @@
-import { Euler, EventDispatcher, Vector3, PerspectiveCamera, Group } from 'three';
+import { Euler, EventDispatcher, Vector3, Group } from 'three';
+
+import { Camera } from '../core';
 
 const _euler = new Euler(0, 0, 0, 'YXZ');
 const _vector = new Vector3();
@@ -13,29 +15,32 @@ class PointerLockControls extends EventDispatcher {
   public object = new Group();
 
   public isLocked = false;
+  public sensitivity = 90;
   public minPolarAngle = Math.PI * 0.01;
   public maxPolarAngle = Math.PI * 0.99;
 
   private lockCallback: () => void;
   private unlockCallback: () => void;
 
-  constructor(public camera: PerspectiveCamera, public domElement: HTMLElement) {
+  constructor(public camera: Camera, public domElement: HTMLElement) {
     super();
 
     this.connect();
-    this.object.add(camera);
+    this.object.add(camera.threeCamera);
   }
 
   onMouseMove = (event: MouseEvent) => {
     if (this.isLocked === false) return;
+
+    const { delta } = this.camera.engine.clock;
 
     const movementX = event.movementX || 0;
     const movementY = event.movementY || 0;
 
     _euler.setFromQuaternion(this.object.quaternion);
 
-    _euler.y -= movementX * 0.002;
-    _euler.x -= movementY * 0.002;
+    _euler.y -= (movementX * this.sensitivity * delta) / 1000;
+    _euler.x -= (movementY * this.sensitivity * delta) / 1000;
 
     _euler.x = Math.max(_PI_2 - this.maxPolarAngle, Math.min(_PI_2 - this.minPolarAngle, _euler.x));
 

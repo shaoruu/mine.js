@@ -46,6 +46,8 @@ class Debug {
     }),
   );
 
+  public savedSettings: { [key: string]: any } = {};
+
   constructor(public engine: Engine) {
     // dat.gui
     this.gui = new Pane();
@@ -66,11 +68,6 @@ class Debug {
     }
 
     engine.on('ready', () => {
-      this.makeDOM();
-      this.setupAll();
-      this.setupInputs();
-      this.mount();
-
       this.chunkHighlight.visible = false;
       this.highlights.frustumCulled = false;
 
@@ -79,7 +76,12 @@ class Debug {
       engine.inputs.bind('j', this.toggle, '*');
     });
 
-    engine.on('focus-loaded', () => {
+    engine.on('assets-loaded', () => {
+      this.makeDOM();
+      this.setupAll();
+      this.setupInputs();
+      this.mount();
+
       // textureTest
       const testBlock = new PlaneBufferGeometry(4, 4);
       const testMat = new MeshBasicMaterial({
@@ -208,17 +210,6 @@ class Debug {
     });
     playerFolder.addInput(player.options, 'flyingInertia', { min: 0, max: 5, step: 0.01, label: 'flying inertia' });
 
-    // CAMERA
-    const cameraFolder = sessionFolder.addFolder({ title: 'Camera' });
-    cameraFolder
-      .addInput(camera.options, 'fov', {
-        min: 40,
-        max: 120,
-        step: 0.01,
-        label: 'FOV',
-      })
-      .on('change', (ev) => camera.setFOV(ev.value));
-
     // const cameraFolder = this.gui.addFolder('camera');
     this.registerDisplay('FPS', this, 'fps');
     this.registerDisplay('chunk', world, 'camChunkPosStr');
@@ -248,20 +239,49 @@ class Debug {
     /* -------------------------------------------------------------------------- */
     /*                                SAVED OPTIONS                               */
     /* -------------------------------------------------------------------------- */
+    const { config } = this.engine;
+
     const packs = this.engine.registry.options.packs;
     const packsObject = {};
     packs.forEach((p) => (packsObject[p] = p));
 
     const saved = this.gui.addFolder({ title: 'Local (Saved)', expanded: true });
 
+    const savedPlayerFolder = saved.addFolder({ title: 'Player', expanded: true });
+    const sensitivitySaver = this.registerSaver(
+      'sensitivity',
+      config.player.sensitivity,
+      (val) => (player.controls.sensitivity = val),
+    );
+    savedPlayerFolder.addInput(this.savedSettings, 'sensitivity', { min: 10, max: 150, step: 1 }).on('change', (ev) => {
+      sensitivitySaver(ev.value);
+    });
+
+    const fovSaver = this.registerSaver('fov', config.camera.fov, (val) => camera.setFOV(val));
+    savedPlayerFolder
+      .addInput(this.savedSettings, 'fov', {
+        min: 40,
+        max: 120,
+        step: 1,
+        label: 'FOV',
+      })
+      .on('change', (ev) => fovSaver(ev.value));
+
+    const soundSaver = this.registerSaver('mute', false, (val) => camera.audioListener.setMasterVolume(val ? 0 : 1));
+    savedPlayerFolder.addInput(this.savedSettings, 'mute').on('change', (ev) => soundSaver(ev.value));
+
     const savedRegistryFolder = saved.addFolder({ title: 'Registry', expanded: true });
+    const texturePackSaver = this.registerSaver('texturePack', this.engine.registry.texturePack, (val) => {
+      registry.setTexturePack(val);
+    });
+    console.log(this.savedSettings);
     savedRegistryFolder
-      .addInput({ texturePack: this.engine.registry.texturePack }, 'texturePack', {
+      .addInput(this.savedSettings, 'texturePack', {
         options: packsObject,
         label: 'texture pack',
       })
       .on('change', (ev) => {
-        registry.setTexturePack(ev.value);
+        texturePackSaver(ev.value);
       });
 
     /* -------------------------------------------------------------------------- */
@@ -408,6 +428,25 @@ class Debug {
     this.dataWrapper.style.display = newDisplay;
     this.gui.element.style.display = newDisplay;
     this.audioWrapper.style.display = newDisplay;
+  };
+
+  registerSaver = (name: string, value: any, func?: (value: any) => void) => {
+    const key = `mine.js-debug-${name}`;
+    const local = localStorage.getItem(key);
+    const stored = typeof value === 'number' ? +local : typeof value === 'boolean' ? local === 'true' : local;
+    const actualValue = stored || value;
+
+    this.savedSettings[name] = actualValue;
+
+    const saver = (newValue: any) => {
+      if (func) func(newValue);
+      this.savedSettings[name] = newValue;
+      localStorage.setItem(key, newValue);
+    };
+
+    saver(actualValue);
+
+    return saver;
   };
 
   registerDisplay = (name: string, object: any, attribute: string, formatter: FormatterType = (str) => str) => {

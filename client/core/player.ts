@@ -8,6 +8,7 @@ import { Helper } from '../utils';
 import { Engine } from '.';
 
 type PlayerOptionsType = {
+  sensitivity: number;
   acceleration: number;
   flyingInertia: number;
   reachDistance: number;
@@ -74,7 +75,7 @@ class Player {
 
   constructor(public engine: Engine, public options: PlayerOptionsType) {
     // three.js pointerlock controls
-    this.controls = new PointerLockControls(engine.camera.threeCamera, engine.container.canvas);
+    this.controls = new PointerLockControls(engine.camera, engine.container.canvas);
     engine.rendering.scene.add(this.controls.getObject());
 
     // retrieve name from localStorage
@@ -143,7 +144,8 @@ class Player {
       { occasion: 'keyup' },
     );
 
-    inputs.bind('c', () => this.togglePerspective(), 'in-game');
+    inputs.bind('f', this.toggleSpectatorMode, 'in-game');
+    inputs.bind('c', this.togglePerspective, 'in-game');
 
     this.controls.addEventListener('lock', () => {
       this.engine.emit('lock');
@@ -487,8 +489,8 @@ class Player {
 
   togglePerspective = () => {
     this.perspective = this.perspective === 'first' ? 'third' : this.perspective === 'third' ? 'second' : 'first';
-    this.controls.camera.position.copy(new Vector3(0, 0, 0));
-    this.controls.camera.quaternion.copy(new Quaternion(0, 0, 0, 0));
+    this.controls.camera.threeCamera.position.copy(new Vector3(0, 0, 0));
+    this.controls.camera.threeCamera.quaternion.copy(new Quaternion(0, 0, 0, 0));
     this.own.mesh.visible = this.perspective !== 'first';
   };
 

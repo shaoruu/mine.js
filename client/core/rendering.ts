@@ -7,16 +7,12 @@ import {
   FloatType,
   GammaEncoding,
   LinearFilter,
-  LogLuvEncoding,
-  RGBADepthPacking,
   RGBAFormat,
-  RGBDEncoding,
   Scene,
   UnsignedIntType,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
-import { sRGBEncoding } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
@@ -69,6 +65,7 @@ class Rendering extends EventEmitter {
     this.renderer.setClearColor(new Color(clearColor));
     this.renderer.sortObjects = true;
     this.renderer.extensions.get('EXT_color_buffer_float');
+    this.renderer.extensions.get('EXT_float_blend');
 
     // composer
     const { width, height } = this.renderSize;
