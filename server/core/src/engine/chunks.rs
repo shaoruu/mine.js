@@ -582,7 +582,6 @@ impl Chunks {
     }
 
     /// Get a mutable chunk reference from a coordinate
-    #[inline]
     pub fn get_chunk_mut(&mut self, coords: &Vec2<i32>) -> Option<&mut Chunk> {
         // self.update_activities(coords);
 
@@ -596,21 +595,18 @@ impl Chunks {
     }
 
     /// Get a chunk reference from a voxel coordinate
-    #[inline]
     pub fn get_chunk_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> Option<&Chunk> {
         let coords = map_voxel_to_chunk(vx, vy, vz, self.config.chunk_size);
         self.get_chunk(&coords)
     }
 
     /// Get a mutable chunk reference from a voxel coordinate
-    #[inline]
     pub fn get_chunk_by_voxel_mut(&mut self, vx: i32, vy: i32, vz: i32) -> Option<&mut Chunk> {
         let coords = map_voxel_to_chunk(vx, vy, vz, self.config.chunk_size);
         self.get_chunk_mut(&coords)
     }
 
     /// Get the voxel type at a voxel coordinate
-    #[inline]
     pub fn get_voxel_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
         if let Some(chunk) = chunk {
@@ -621,7 +617,6 @@ impl Chunks {
     }
 
     /// Get the voxel type at a world coordinate
-    #[inline]
     pub fn get_voxel_by_world(&self, wx: f32, wy: f32, wz: f32) -> u32 {
         let Vec3(vx, vy, vz) = map_world_to_voxel(wx, wy, wz, self.config.dimension);
         self.get_voxel_by_voxel(vx, vy, vz)
@@ -635,7 +630,6 @@ impl Chunks {
     ///
     /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
     /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
-    #[inline]
     pub fn set_voxel_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         let max_height = self.config.max_height;
         if vy as u32 >= max_height {
@@ -682,7 +676,6 @@ impl Chunks {
     }
 
     /// Get the voxel rotation at a voxel coordinate
-    #[inline]
     pub fn get_voxel_rotation_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> BlockRotation {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
         if let Some(chunk) = chunk {
@@ -698,7 +691,6 @@ impl Chunks {
     ///
     /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
     /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
-    #[inline]
     pub fn set_voxel_rotation_by_voxel(
         &mut self,
         vx: i32,
@@ -735,7 +727,6 @@ impl Chunks {
     }
 
     /// Get the voxel stage at a voxel coordinate
-    #[inline]
     pub fn get_voxel_stage_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
         if let Some(chunk) = chunk {
@@ -751,7 +742,6 @@ impl Chunks {
     ///
     /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
     /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
-    #[inline]
     pub fn set_voxel_stage_by_voxel(&mut self, vx: i32, vy: i32, vz: i32, stage: u32) {
         let max_height = self.config.max_height;
         if vy as u32 >= max_height {
@@ -782,7 +772,6 @@ impl Chunks {
     }
 
     /// Get the sunlight level at a voxel coordinate
-    #[inline]
     pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
         if let Some(chunk) = chunk {
@@ -798,7 +787,6 @@ impl Chunks {
     ///
     /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
     /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
-    #[inline]
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         let max_height = self.config.max_height;
         if vy as u32 >= max_height {
@@ -826,7 +814,6 @@ impl Chunks {
     }
 
     /// Get the torch light level by voxel coordinates of a specified color
-    #[inline]
     pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32, color: &LightColor) -> u32 {
         let chunk = self.get_chunk_by_voxel(vx, vy, vz);
         if let Some(chunk) = chunk {
@@ -842,7 +829,6 @@ impl Chunks {
     ///
     /// 1. Sets the neighboring chunk's padding data if the coordinates are on a chunk edge.
     /// 2. Calculates the chunk's and the neighbors' dirty sub-chunk levels
-    #[inline]
     pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32, color: &LightColor) {
         let max_height = self.config.max_height;
         if vy as u32 >= max_height {
@@ -870,20 +856,17 @@ impl Chunks {
     }
 
     /// Get a block type from a voxel coordinate
-    #[inline]
     pub fn get_block_by_voxel(&self, vx: i32, vy: i32, vz: i32) -> &Block {
         let voxel = self.get_voxel_by_voxel(vx, vy, vz);
         self.registry.get_block_by_id(voxel)
     }
 
     /// Get a block type from a voxel id
-    #[inline]
     pub fn get_block_by_id(&self, id: u32) -> &Block {
         self.registry.get_block_by_id(id)
     }
 
     /// Get the max height at a voxel column coordinate
-    #[inline]
     pub fn get_max_height(&self, vx: i32, vz: i32) -> u32 {
         if let Some(chunk) = self.get_chunk_by_voxel(vx, 0, vz) {
             chunk.get_max_height(vx, vz)
@@ -893,7 +876,6 @@ impl Chunks {
     }
 
     /// Set the max height at a voxel column coordinate
-    #[inline]
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: u32) {
         // this is reasonable because if a chunk DNE, and gets instantiated later on,
         // max height will be generated on instantiation too.

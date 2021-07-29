@@ -242,7 +242,6 @@ impl Chunk {
     /// Get the raw value of voxel
     ///
     /// Returns 0 if it's outside of the chunk.
-    #[inline]
     pub fn get_raw_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
@@ -255,7 +254,6 @@ impl Chunk {
     /// Set the raw value of voxel
     ///
     /// Panics if the coordinates are outside of chunk.
-    #[inline]
     pub fn set_raw_voxel(&mut self, vx: i32, vy: i32, vz: i32, value: u32) {
         assert!(self.contains(vx, vy, vz,));
 
@@ -266,7 +264,6 @@ impl Chunk {
     /// Get a voxel type within chunk by voxel coordinates
     ///
     /// Returns 0 if it's outside of the chunk.
-    #[inline]
     pub fn get_voxel(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         Blocks::extract_id(self.get_raw_voxel(vx, vy, vz))
     }
@@ -276,7 +273,6 @@ impl Chunk {
     /// Note: This clears the rotation and stage.
     ///
     /// Panics if the coordinates are outside of chunk.
-    #[inline]
     pub fn set_voxel(&mut self, vx: i32, vy: i32, vz: i32, id: u32) {
         let value = Blocks::insert_id(0, id);
         self.set_raw_voxel(vx, vy, vz, value);
@@ -285,7 +281,6 @@ impl Chunk {
     /// Get a voxel rotation within chunk by voxel coordinates
     ///
     /// Panics if it's outside of chunk
-    #[inline]
     pub fn get_voxel_rotation(&self, vx: i32, vy: i32, vz: i32) -> BlockRotation {
         assert!(self.contains(vx, vy, vz,));
 
@@ -295,7 +290,6 @@ impl Chunk {
     /// Set a voxel to rotation within chunk by voxel coordinates
     ///
     /// Panics if the coordinates are outside of chunk
-    #[inline]
     pub fn set_voxel_rotation(&mut self, vx: i32, vy: i32, vz: i32, rotation: &BlockRotation) {
         let value = Blocks::insert_rotation(self.get_raw_voxel(vx, vy, vz), rotation);
         self.set_raw_voxel(vx, vy, vz, value);
@@ -304,7 +298,6 @@ impl Chunk {
     /// Get a voxel stage within chunk by voxel coordinates
     ///
     /// Panics if it's outside of chunk
-    #[inline]
     pub fn get_voxel_stage(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         assert!(self.contains(vx, vy, vz));
 
@@ -314,7 +307,6 @@ impl Chunk {
     /// Set a voxel stage within chunk by voxel coordinates
     ///
     /// Panics if it's outside of chunk
-    #[inline]
     pub fn set_voxel_stage(&mut self, vx: i32, vy: i32, vz: i32, stage: u32) {
         let value = Blocks::insert_stage(self.get_raw_voxel(vx, vy, vz), stage);
         self.set_raw_voxel(vx, vy, vz, value);
@@ -323,7 +315,6 @@ impl Chunk {
     /// Get the red light value for voxel by voxel coordinates
     ///
     /// Returns 0 if it's outside of the chunk.
-    #[inline]
     pub fn get_red_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
@@ -336,7 +327,6 @@ impl Chunk {
     /// Set the red light value for voxel by voxel coordinates
     ///
     /// Panics if it's outside of the chunk.
-    #[inline]
     pub fn set_red_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
@@ -347,7 +337,6 @@ impl Chunk {
     /// Get the green light value for voxel by voxel coordinates
     ///
     /// Returns 0 if it's outside of the chunk.
-    #[inline]
     pub fn get_green_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
@@ -360,7 +349,6 @@ impl Chunk {
     /// Set the green light value for voxel by voxel coordinates
     ///
     /// Panics if it's outside of the chunk.
-    #[inline]
     pub fn set_green_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
@@ -371,7 +359,6 @@ impl Chunk {
     /// Get the blue light value for voxel by voxel coordinates
     ///
     /// Returns 0 if it's outside of the chunk.
-    #[inline]
     pub fn get_blue_light(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
@@ -384,7 +371,6 @@ impl Chunk {
     /// Set the blue light value for voxel by voxel coordinates
     ///
     /// Panics if it's outside of the chunk.
-    #[inline]
     pub fn set_blue_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
@@ -392,6 +378,9 @@ impl Chunk {
         self.set_local_blue_light(lx as usize, ly as usize, lz as usize, level);
     }
 
+    /// Get the torch light value for voxel by voxel coordinates by color
+    ///
+    /// Returns 0 if it's outside of the chunk.
     #[inline]
     pub fn get_torch_light(&self, vx: i32, vy: i32, vz: i32, color: &LightColor) -> u32 {
         match color {
@@ -402,9 +391,9 @@ impl Chunk {
         }
     }
 
-    /// Get the torch light value for voxel by voxel coordinates by color
+    /// Set the torch light value for voxel by voxel coordinates by color
     ///
-    /// Returns 0 if it's outside of the chunk.
+    /// Panics if it's outside of the chunk.
     #[inline]
     pub fn set_torch_light(&mut self, vx: i32, vy: i32, vz: i32, level: u32, color: &LightColor) {
         match color {
@@ -418,7 +407,6 @@ impl Chunk {
     /// Get the sunlight value for voxel by voxel coordinates
     ///
     /// Returns 0 if it's not within the chunk.
-    #[inline]
     pub fn get_sunlight(&self, vx: i32, vy: i32, vz: i32) -> u32 {
         if !self.contains(vx, vy, vz) {
             return 0;
@@ -431,7 +419,6 @@ impl Chunk {
     /// Set the sunlight value for voxel by voxel coordinates
     ///
     /// Panics if it's outside of the chunk.
-    #[inline]
     pub fn set_sunlight(&mut self, vx: i32, vy: i32, vz: i32, level: u32) {
         assert!(self.contains(vx, vy, vz,));
 
@@ -442,7 +429,6 @@ impl Chunk {
     /// Get the max height of a voxel column
     ///
     /// Returns `max_height` if it's not within the chunk.
-    #[inline]
     pub fn get_max_height(&self, vx: i32, vz: i32) -> u32 {
         if !self.contains(vx, 0, vz) {
             return self.max_height as u32;
@@ -455,7 +441,6 @@ impl Chunk {
     /// Set the max height of a voxel column
     ///
     /// Panics if it's not within the chunk.
-    #[inline]
     pub fn set_max_height(&mut self, vx: i32, vz: i32, height: u32) {
         assert!(self.contains(vx, 0, vz,));
 

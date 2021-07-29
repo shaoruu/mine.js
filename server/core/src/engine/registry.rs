@@ -217,91 +217,76 @@ impl Registry {
     }
 
     /// Get block transparency by id
-    #[inline]
     pub fn get_transparency_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_transparent
     }
 
     /// Get block transparency by name
-    #[inline]
     pub fn get_transparency_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_transparent
     }
 
     /// Get block fluidity by id
-    #[inline]
     pub fn get_fluiditiy_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_fluid
     }
 
     /// Get block fluidity by name
-    #[inline]
     pub fn get_fluiditiy_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_fluid
     }
 
     /// Get block solidity by id
-    #[inline]
     pub fn get_solidity_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_solid
     }
 
     /// Get block solidity by name
-    #[inline]
     pub fn get_solidity_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_solid
     }
 
     /// Get block emptiness by id
-    #[inline]
     pub fn get_emptiness_by_id(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_empty
     }
 
     /// Get block emptiness by name
-    #[inline]
     pub fn get_emptiness_by_name(&self, name: &str) -> bool {
         self.get_block_by_name(name).is_empty
     }
 
     /// Get block texture by id
-    #[inline]
     pub fn get_texture_by_id(&self, id: u32) -> &HashMap<String, String> {
         &self.get_block_by_id(id).textures
     }
 
     /// Get block texture by name
-    #[inline]
     pub fn get_texture_by_name(&self, name: &str) -> &HashMap<String, String> {
         &self.get_block_by_name(name).textures
     }
 
     /// Get block UV by id
-    #[inline]
     pub fn get_uv_by_id(&self, id: u32) -> HashMap<String, &UV> {
         self.get_uv_map(self.get_block_by_id(id))
     }
 
     /// Get block UV by name
-    #[inline]
     pub fn get_uv_by_name(&self, name: &str) -> HashMap<String, &UV> {
         self.get_uv_map(self.get_block_by_name(name))
     }
 
     /// Check if block is air by id
-    #[inline]
     pub fn is_air(&self, id: u32) -> bool {
         self.get_block_by_id(id).name == "Air"
     }
 
     /// Check if block is a plant by id
-    #[inline]
     pub fn is_plant(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_plant
     }
 
     /// Check if block is plantable by id
-    #[inline]
     pub fn is_plantable(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_plantable
     }
@@ -315,7 +300,6 @@ impl Registry {
     }
 
     /// Get block data by name
-    #[inline]
     pub fn get_block_by_name(&self, name: &str) -> &Block {
         let &id = self
             .name_map
