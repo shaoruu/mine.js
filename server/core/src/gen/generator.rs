@@ -4,7 +4,7 @@ use super::super::{
     gen::builder::VoxelUpdate,
 };
 
-use super::biomes::{get_biome_config, BiomeConfig, CAVE_SCALE};
+use super::biomes::{get_biome_config, BiomeConfig, Biomes, CAVE_SCALE};
 
 use server_common::{
     noise::{Noise, NoiseConfig},
@@ -15,7 +15,12 @@ pub struct Generator;
 
 impl Generator {
     /// Generate a chunk, standalone process, can be run in another thread.
-    pub fn generate_chunk(chunk: &mut Chunk, registry: &Registry, config: &WorldConfig) {
+    pub fn generate_chunk(
+        chunk: &mut Chunk,
+        registry: &Registry,
+        biomes: &Biomes,
+        config: &WorldConfig,
+    ) {
         let Vec3(start_x, start_y, start_z) = chunk.min;
         let Vec3(end_x, _, end_z) = chunk.max;
 
@@ -167,6 +172,26 @@ impl Generator {
                         chunk.set_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
                     })
                 });
+
+                chunk.is_empty = is_empty;
+            }
+            "biome_test" => {
+                let types = registry.get_type_map(vec!["Stone", "Stone Bricks"]);
+
+                let is_empty = true;
+
+                for vx in start_x..end_x {
+                    for vz in start_z..end_z {
+                        let biome = biomes.get_biome(vx, vz, 2);
+                        for vy in start_y..biome.config.height_offset {
+                            if biome.name == "TestA" {
+                                chunk.set_voxel(vx, vy, vz, types["Stone Bricks"]);
+                            } else {
+                                chunk.set_voxel(vx, vy, vz, types["Stone"]);
+                            }
+                        }
+                    }
+                }
 
                 chunk.is_empty = is_empty;
             }

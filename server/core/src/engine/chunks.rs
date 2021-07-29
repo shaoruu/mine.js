@@ -5,14 +5,13 @@ use std::{
     collections::{HashMap, HashSet, VecDeque},
     path::PathBuf,
     sync::Arc,
-    thread,
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use log::{debug, info};
 use rayon::prelude::*;
 
-use crate::gen::blocks::BlockRotation;
+use crate::gen::{biomes::Biomes, blocks::BlockRotation};
 
 use super::super::{
     constants::{LEVEL_SEED, VOXEL_NEIGHBORS},
@@ -60,10 +59,12 @@ pub struct Chunks {
     pub chunk_cache: HashSet<Vec2<i32>>,
     pub to_generate: Vec<Chunk>,
     pub to_mesh: VecDeque<Vec2<i32>>,
+    pub activities: VecDeque<Vec2<i32>>,
 
     pub config: Arc<WorldConfig>,
     pub registry: Arc<Registry>,
     pub builder: Arc<Builder>,
+    pub biomes: Arc<Biomes>,
 
     caching: bool,
     chunks: HashMap<Vec2<i32>, Chunk>,
@@ -117,9 +118,11 @@ impl Chunks {
             config: Arc::new(config),
             registry: Arc::new(registry.to_owned()),
             builder: Arc::new(Builder::new(registry, Noise::new(LEVEL_SEED))),
+            biomes: Arc::new(Biomes::default()),
 
             to_generate: vec![],
             to_mesh: VecDeque::new(),
+            activities: VecDeque::new(),
 
             caching: false,
             chunks: HashMap::new(),
@@ -213,12 +216,13 @@ impl Chunks {
             let sender = self.gen_sender.clone();
             let config = self.config.clone();
             let registry = self.registry.clone();
+            let biomes = self.biomes.clone();
 
             rayon::spawn(move || {
                 let chunks: Vec<Chunk> = chunks
                     .into_iter()
                     .map(|mut chunk| {
-                        Generator::generate_chunk(&mut chunk, &registry, &config);
+                        Generator::generate_chunk(&mut chunk, &registry, &biomes, &config);
                         Generator::generate_chunk_height_map(&mut chunk, &registry, &config);
                         chunk
                     })
@@ -480,7 +484,7 @@ impl Chunks {
             })
         } else {
             to_generate.par_iter_mut().for_each(|new_chunk| {
-                Generator::generate_chunk(new_chunk, &self.registry, &self.config);
+                Generator::generate_chunk(new_chunk, &self.registry, &self.biomes, &self.config);
             });
 
             to_generate.par_iter_mut().for_each(|chunk| {
@@ -488,7 +492,7 @@ impl Chunks {
             });
 
             for chunk in to_generate {
-                self.chunks.insert(chunk.coords.to_owned(), chunk);
+                self.add_chunk(chunk);
             }
         }
 
@@ -516,7 +520,7 @@ impl Chunks {
         for mut chunk in to_decorate {
             let coords = chunk.coords.to_owned();
             chunk.needs_decoration = false;
-            self.chunks.insert(chunk.coords.to_owned(), chunk);
+            self.add_chunk(chunk);
             to_decorate_coords.push(coords);
         }
 
@@ -529,9 +533,6 @@ impl Chunks {
                 }
             }
         }
-
-        // dropping in another thread to speed up the process
-        thread::spawn(move || drop(to_decorate_updates));
     }
 
     /// Populate a chunk with preset decorations.
@@ -583,11 +584,14 @@ impl Chunks {
     /// Get a mutable chunk reference from a coordinate
     #[inline]
     pub fn get_chunk_mut(&mut self, coords: &Vec2<i32>) -> Option<&mut Chunk> {
+        // self.update_activities(coords);
+
         let chunk = self.chunks.get_mut(&coords);
         // ? does non-mutable chunks need to be cached?
         if self.caching && chunk.is_some() {
             self.chunk_cache.insert(coords.to_owned());
         }
+
         chunk
     }
 
@@ -993,8 +997,12 @@ impl Chunks {
     ///
     /// Removes existing chunks first.
     pub fn add_chunk(&mut self, chunk: Chunk) {
+        self.update_activities(&chunk.coords);
+
         self.chunks.remove(&chunk.coords);
         self.chunks.insert(chunk.coords.to_owned(), chunk);
+
+        self.unload_chunks();
     }
 
     /// Update a voxel to a new type
@@ -1239,5 +1247,31 @@ impl Chunks {
         chunk.needs_propagation = false;
         chunk.needs_saving = true;
         chunk.set_lights(lights);
+    }
+
+    /// Update the activities of chunks
+    fn update_activities(&mut self, coords: &Vec2<i32>) {
+        if let Some(index) = self.activities.iter().position(|c| *c == *coords) {
+            self.activities.remove(index);
+        }
+
+        self.activities.push_back(coords.to_owned());
+    }
+
+    /// Unload chunks that are too old.
+    fn unload_chunks(&mut self) {
+        let diff = self.chunks.len() as i32 - self.config.max_loaded_chunks as i32;
+
+        if diff > 0 {
+            for _ in 0..diff {
+                if let Some(coords) = self.activities.pop_front() {
+                    if let Some(chunk) = self.chunks.remove(&coords) {
+                        if self.config.save {
+                            chunk.save();
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -39,23 +39,23 @@ impl KdTree {
         self.entities = KdTreeCore::new(3);
     }
 
-    pub fn add_player(&mut self, id: Entity, point: Vec3<f32>) {
+    pub fn add_player(&mut self, ent: Entity, point: Vec3<f32>) {
         self.players
-            .add([point.0, point.1, point.2], id)
+            .add([point.0, point.1, point.2], ent)
             .expect("Unable to construct KdTree.");
 
         self.union
-            .add([point.0, point.1, point.2], id)
+            .add([point.0, point.1, point.2], ent)
             .expect("Unable to construct KdTree.");
     }
 
-    pub fn add_entity(&mut self, id: Entity, point: Vec3<f32>) {
+    pub fn add_entity(&mut self, ent: Entity, point: Vec3<f32>) {
         self.entities
-            .add([point.0, point.1, point.2], id)
+            .add([point.0, point.1, point.2], ent)
             .expect("Unable to construct KdTree.");
 
         self.union
-            .add([point.0, point.1, point.2], id)
+            .add([point.0, point.1, point.2], ent)
             .expect("Unable to construct KdTree.");
     }
 

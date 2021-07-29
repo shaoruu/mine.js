@@ -79,7 +79,7 @@ pub struct WorldConfig {
     pub save: bool,
     pub chunk_root: String,
     pub render_radius: usize,
-    pub max_loaded_chunks: i32,
+    pub max_loaded_chunks: usize,
     pub sub_chunks: u32,
     pub generation: String,
     pub player_dimensions: Vec3<f32>,

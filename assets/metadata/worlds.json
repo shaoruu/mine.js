@@ -41,7 +41,7 @@
       "chunkSize": 16,
       "subChunks": 8,
       "save": false,
-      "generation": "hilly",
+      "generation": "biome_test",
       "description": "this ain't saved!",
       "texturepack": "Pixel-Perfection"
     }

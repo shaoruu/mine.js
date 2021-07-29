@@ -1,7 +1,13 @@
+use std::fs::File;
+
 // THIS FILE IS GARBO
 // NEEDS MORE WORK ON THIS ONE
 // WILL COME BACK SOON
 // PR WELCOMED!!!
+use kdtree::distance::squared_euclidean;
+use kdtree::KdTree;
+
+use serde::Deserialize;
 
 use server_common::{
     math::smooth_interpolation,
@@ -12,6 +18,18 @@ use server_common::{
 pub const TEMPERATURE_SCALE: f64 = 0.005;
 pub const HUMIDITY_SCALE: f64 = 0.002;
 
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct BiomeConfigs {
+    temperature_scale: f64,
+    temperature_seed: u32,
+    humidity_scale: f64,
+    humidity_seed: u32,
+    biomes: Vec<Biome>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct BiomeConfig {
     pub scale: f64,
     pub octaves: i32,
@@ -22,6 +40,123 @@ pub struct BiomeConfig {
     pub tree_scale: f64,
     pub plant_scale: f64,
     pub amplifier: f64,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Biome {
+    pub name: String,
+
+    pub temperature: f64,
+    pub humidity: f64,
+
+    pub config: BiomeConfig,
+}
+
+#[derive(Debug)]
+pub struct Biomes {
+    temperature_scale: f64,
+    temperature_noise: Noise,
+
+    humidity_scale: f64,
+    humidity_noise: Noise,
+
+    presets: KdTree<f64, Biome, [f64; 2]>,
+}
+
+impl Default for Biomes {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Biomes {
+    pub fn new() -> Self {
+        let biome_configs: BiomeConfigs =
+            serde_json::from_reader(File::open("assets/metadata/biomes.json").unwrap()).unwrap();
+
+        let BiomeConfigs {
+            temperature_scale,
+            temperature_seed,
+            humidity_scale,
+            humidity_seed,
+            biomes,
+        } = biome_configs;
+
+        let mut new_biomes = Self {
+            temperature_scale,
+            temperature_noise: Noise::new(temperature_seed),
+
+            humidity_scale,
+            humidity_noise: Noise::new(humidity_seed),
+
+            presets: KdTree::new(2),
+        };
+
+        biomes.into_iter().for_each(|biome| {
+            new_biomes.register(biome);
+        });
+
+        new_biomes
+    }
+
+    /// Add a biome to preset
+    pub fn register(&mut self, biome: Biome) {
+        self.presets
+            .add([biome.temperature, biome.humidity], biome)
+            .expect("Unable to add biome preset.")
+    }
+
+    /// Sample the closet possible #`count` biomes
+    pub fn get_biomes(&self, temperature: f64, humidity: f64, count: usize) -> Vec<(f64, &Biome)> {
+        let results = self
+            .presets
+            .nearest(&[temperature, humidity], count, &squared_euclidean)
+            .expect("Unable to search for biome presets.");
+
+        let sum: f64 = results.iter().map(|(dist, _)| dist).sum();
+
+        results
+            .into_iter()
+            .map(|(dist, b)| (1.0 - dist / sum, b))
+            .collect()
+    }
+
+    /// Get the interpolated height of X nearest biomes
+    pub fn get_biome(&self, vx: i32, vz: i32, sample: usize) -> Biome {
+        let vx = vx as f64;
+        let vz = vz as f64;
+
+        let temperature = self
+            .temperature_noise
+            .simplex2(vx, vz, self.temperature_scale)
+            .abs();
+        let humidity = self
+            .humidity_noise
+            .simplex2(vx, vz, self.humidity_scale)
+            .abs();
+
+        let biomes = self.get_biomes(temperature, humidity, sample);
+
+        if biomes.is_empty() {
+            panic!("No biomes found.")
+        }
+
+        // https://www.gstatic.com/education/formulas2/355397047/en/weighted_average_formula.svg
+
+        let mut numerator = 0.0;
+        let mut denominator = 0.0;
+
+        biomes.iter().for_each(|(weight, biome)| {
+            numerator += weight * biome.config.height_offset as f64;
+            denominator += weight;
+        });
+
+        let mut biome = biomes[0].1.clone();
+        biome.config.height_offset = (numerator / denominator) as i32;
+
+        biome
+    }
 }
 
 const HILL_BIOME_CONFIG: BiomeConfig = BiomeConfig {
