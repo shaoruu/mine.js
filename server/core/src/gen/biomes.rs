@@ -61,7 +61,7 @@ pub struct Biomes {
     humidity_scale: f64,
     humidity_noise: Noise,
 
-    presets: KdTree<f64, Biome, [f64; 2]>,
+    presets: KdTree<f64, Biome, Vec<f64>>,
 }
 
 impl Default for Biomes {
@@ -103,7 +103,7 @@ impl Biomes {
     /// Add a biome to preset
     pub fn register(&mut self, biome: Biome) {
         self.presets
-            .add([biome.temperature, biome.humidity], biome)
+            .add(vec![biome.temperature, biome.humidity], biome)
             .expect("Unable to add biome preset.")
     }
 
@@ -147,8 +147,9 @@ impl Biomes {
         let mut numerator = 0.0;
         let mut denominator = 0.0;
 
-        biomes.iter().for_each(|(weight, biome)| {
-            numerator += weight * biome.config.height_offset as f64;
+        biomes.iter().for_each(|(weight, b)| {
+            let weight = weight.powi(2);
+            numerator += weight * b.config.height_offset as f64;
             denominator += weight;
         });
 

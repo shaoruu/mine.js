@@ -28,7 +28,8 @@ impl<'a> System<'a> for PathFindSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        use specs::Join;
+        use rayon::prelude::*;
+        use specs::ParJoin;
 
         let (chunks, bodies, targets, mut walk_towards) = data;
 
@@ -49,138 +50,142 @@ impl<'a> System<'a> for PathFindSystem {
             true
         };
 
-        for (body, target, walk_toward) in (&bodies, &targets, &mut walk_towards).join() {
-            if let Some(position) = target.get_position() {
-                let body_pos = body.get_position();
-                let body_dim = body.get_dimension();
+        (&bodies, &targets, &mut walk_towards).par_join().for_each(
+            |(body, target, walk_toward)| {
+                if let Some(position) = target.get_position() {
+                    let body_pos = body.get_position();
+                    let body_dim = body.get_dimension();
 
-                let body_vpos = map_world_to_voxel(body_pos.0, body_pos.1, body_pos.2, dimension);
-                let target_vpos = map_world_to_voxel(position.0, position.1, position.2, dimension);
+                    let body_vpos =
+                        map_world_to_voxel(body_pos.0, body_pos.1, body_pos.2, dimension);
+                    let target_vpos =
+                        map_world_to_voxel(position.0, position.1, position.2, dimension);
 
-                let start = chunks.get_standable_voxel(&body_vpos);
-                let goal = chunks.get_standable_voxel(&target_vpos);
+                    let start = chunks.get_standable_voxel(&body_vpos);
+                    let goal = chunks.get_standable_voxel(&target_vpos);
 
-                let height = body_dim.1;
+                    let height = body_dim.1;
 
-                let count = Arc::new(Mutex::new(0));
+                    let count = Arc::new(Mutex::new(0));
 
-                let path = AStar::calculate(
-                    &start,
-                    &goal,
-                    &|node| {
-                        let &PathNode(vx, vy, vz) = node;
-                        let mut successors = vec![];
-                        let mut locked_count = count.lock().unwrap();
+                    let path = AStar::calculate(
+                        &start,
+                        &goal,
+                        &|node| {
+                            let &PathNode(vx, vy, vz) = node;
+                            let mut successors = vec![];
+                            let mut locked_count = count.lock().unwrap();
 
-                        *locked_count += 1;
-                        if *locked_count >= MAX_DEPTH_SEARCH {
-                            return successors;
+                            *locked_count += 1;
+                            if *locked_count >= MAX_DEPTH_SEARCH {
+                                return successors;
+                            }
+
+                            // emptiness
+                            let py = !walkable(vx, vy + 1, vz, height);
+                            let px = !walkable(vx + 1, vy, vz, height);
+                            let pz = !walkable(vx, vy, vz + 1, height);
+                            let nx = !walkable(vx - 1, vy, vz, height);
+                            let nz = !walkable(vx, vy, vz - 1, height);
+                            let pxpy = !walkable(vx + 1, vy + 1, vz, height);
+                            let pzpy = !walkable(vx, vy + 1, vz + 1, height);
+                            let nxpy = !walkable(vx - 1, vy + 1, vz, height);
+                            let nzpy = !walkable(vx, vy + 1, vz - 1, height);
+
+                            // +X direction
+                            if walkable(vx + 1, vy - 1, vz, height) {
+                                successors.push((PathNode(vx + 1, vy, vz), 1));
+                            } else if walkable(vx + 1, vy, vz, height) && py {
+                                successors.push((PathNode(vx + 1, vy + 1, vz), 2));
+                            } else if walkable(vx + 1, vy - 2, vz, height) && px {
+                                successors.push((PathNode(vx + 1, vy - 1, vz), 2));
+                            }
+
+                            // -X direction
+                            if walkable(vx - 1, vy - 1, vz, height) {
+                                successors.push((PathNode(vx - 1, vy, vz), 1));
+                            } else if walkable(vx - 1, vy, vz, height) && py {
+                                successors.push((PathNode(vx - 1, vy + 1, vz), 2));
+                            } else if walkable(vx - 1, vy - 2, vz, height) && nx {
+                                successors.push((PathNode(vx - 1, vy - 1, vz), 2));
+                            }
+
+                            // +Z direction
+                            if walkable(vx, vy - 1, vz + 1, height) {
+                                successors.push((PathNode(vx, vy, vz + 1), 1));
+                            } else if walkable(vx, vy, vz + 1, height) && py {
+                                successors.push((PathNode(vx, vy + 1, vz + 1), 2));
+                            } else if walkable(vx, vy - 2, vz + 1, height) && pz {
+                                successors.push((PathNode(vx, vy - 1, vz + 1), 2));
+                            }
+
+                            // -Z direction
+                            if walkable(vx, vy - 1, vz - 1, height) {
+                                successors.push((PathNode(vx, vy, vz - 1), 1));
+                            } else if walkable(vx, vy, vz - 1, height) && py {
+                                successors.push((PathNode(vx, vy + 1, vz - 1), 2));
+                            } else if walkable(vx, vy - 2, vz - 1, height) && nz {
+                                successors.push((PathNode(vx, vy - 1, vz - 1), 2));
+                            }
+
+                            // +X+Z direction
+                            if walkable(vx + 1, vy - 1, vz + 1, height) && px && pz {
+                                successors.push((PathNode(vx + 1, vy, vz + 1), 2));
+                            } else if walkable(vx + 1, vy, vz + 1, height) && py && pxpy && pzpy {
+                                successors.push((PathNode(vx + 1, vy + 1, vz + 1), 3));
+                            } else if walkable(vx + 1, vy - 2, vz + 1, height) && px && pz {
+                                successors.push((PathNode(vx + 1, vy - 1, vz + 1), 3));
+                            }
+
+                            // +X-Z direction
+                            if walkable(vx + 1, vy - 1, vz - 1, height) && px && nz {
+                                successors.push((PathNode(vx + 1, vy, vz - 1), 2));
+                            } else if walkable(vx + 1, vy, vz - 1, height) && py && pxpy && nzpy {
+                                successors.push((PathNode(vx + 1, vy + 1, vz - 1), 3));
+                            } else if walkable(vx + 1, vy - 2, vz - 1, height) && px && nz {
+                                successors.push((PathNode(vx + 1, vy - 1, vz - 1), 3));
+                            }
+
+                            // -X+Z direction
+                            if walkable(vx - 1, vy - 1, vz + 1, height) && nx && pz {
+                                successors.push((PathNode(vx - 1, vy, vz + 1), 2));
+                            } else if walkable(vx - 1, vy, vz + 1, height) && py && nxpy && pzpy {
+                                successors.push((PathNode(vx - 1, vy + 1, vz + 1), 3));
+                            } else if walkable(vx - 1, vy - 2, vz + 1, height) && nx && pz {
+                                successors.push((PathNode(vx - 1, vy - 1, vz + 1), 3));
+                            }
+
+                            // -X-Z direction
+                            if walkable(vx - 1, vy - 1, vz - 1, height) && nx && nz {
+                                successors.push((PathNode(vx - 1, vy, vz - 1), 2));
+                            } else if walkable(vx - 1, vy, vz - 1, height) && py && nxpy && nzpy {
+                                successors.push((PathNode(vx - 1, vy + 1, vz - 1), 3));
+                            } else if walkable(vx - 1, vy - 2, vz - 1, height) && nx && nz {
+                                successors.push((PathNode(vx - 1, vy - 1, vz - 1), 3));
+                            }
+
+                            successors
+                        },
+                        &|p| p.distance(&PathNode(goal.0, goal.1, goal.2)) / 3,
+                    );
+
+                    if let Some((nodes, count)) = path {
+                        if count > walk_toward.1 as u32 {
+                            walk_toward.0 = None;
+                        } else {
+                            walk_toward.0 = Some(
+                                nodes
+                                    .clone()
+                                    .iter()
+                                    .map(|p| Vec3(p.0, p.1, p.2))
+                                    .collect::<Vec<_>>(),
+                            );
                         }
-
-                        // emptiness
-                        let py = !walkable(vx, vy + 1, vz, height);
-                        let px = !walkable(vx + 1, vy, vz, height);
-                        let pz = !walkable(vx, vy, vz + 1, height);
-                        let nx = !walkable(vx - 1, vy, vz, height);
-                        let nz = !walkable(vx, vy, vz - 1, height);
-                        let pxpy = !walkable(vx + 1, vy + 1, vz, height);
-                        let pzpy = !walkable(vx, vy + 1, vz + 1, height);
-                        let nxpy = !walkable(vx - 1, vy + 1, vz, height);
-                        let nzpy = !walkable(vx, vy + 1, vz - 1, height);
-
-                        // +X direction
-                        if walkable(vx + 1, vy - 1, vz, height) {
-                            successors.push((PathNode(vx + 1, vy, vz), 1));
-                        } else if walkable(vx + 1, vy, vz, height) && py {
-                            successors.push((PathNode(vx + 1, vy + 1, vz), 2));
-                        } else if walkable(vx + 1, vy - 2, vz, height) && px {
-                            successors.push((PathNode(vx + 1, vy - 1, vz), 2));
-                        }
-
-                        // -X direction
-                        if walkable(vx - 1, vy - 1, vz, height) {
-                            successors.push((PathNode(vx - 1, vy, vz), 1));
-                        } else if walkable(vx - 1, vy, vz, height) && py {
-                            successors.push((PathNode(vx - 1, vy + 1, vz), 2));
-                        } else if walkable(vx - 1, vy - 2, vz, height) && nx {
-                            successors.push((PathNode(vx - 1, vy - 1, vz), 2));
-                        }
-
-                        // +Z direction
-                        if walkable(vx, vy - 1, vz + 1, height) {
-                            successors.push((PathNode(vx, vy, vz + 1), 1));
-                        } else if walkable(vx, vy, vz + 1, height) && py {
-                            successors.push((PathNode(vx, vy + 1, vz + 1), 2));
-                        } else if walkable(vx, vy - 2, vz + 1, height) && pz {
-                            successors.push((PathNode(vx, vy - 1, vz + 1), 2));
-                        }
-
-                        // -Z direction
-                        if walkable(vx, vy - 1, vz - 1, height) {
-                            successors.push((PathNode(vx, vy, vz - 1), 1));
-                        } else if walkable(vx, vy, vz - 1, height) && py {
-                            successors.push((PathNode(vx, vy + 1, vz - 1), 2));
-                        } else if walkable(vx, vy - 2, vz - 1, height) && nz {
-                            successors.push((PathNode(vx, vy - 1, vz - 1), 2));
-                        }
-
-                        // +X+Z direction
-                        if walkable(vx + 1, vy - 1, vz + 1, height) && px && pz {
-                            successors.push((PathNode(vx + 1, vy, vz + 1), 2));
-                        } else if walkable(vx + 1, vy, vz + 1, height) && py && pxpy && pzpy {
-                            successors.push((PathNode(vx + 1, vy + 1, vz + 1), 3));
-                        } else if walkable(vx + 1, vy - 2, vz + 1, height) && px && pz {
-                            successors.push((PathNode(vx + 1, vy - 1, vz + 1), 3));
-                        }
-
-                        // +X-Z direction
-                        if walkable(vx + 1, vy - 1, vz - 1, height) && px && nz {
-                            successors.push((PathNode(vx + 1, vy, vz - 1), 2));
-                        } else if walkable(vx + 1, vy, vz - 1, height) && py && pxpy && nzpy {
-                            successors.push((PathNode(vx + 1, vy + 1, vz - 1), 3));
-                        } else if walkable(vx + 1, vy - 2, vz - 1, height) && px && nz {
-                            successors.push((PathNode(vx + 1, vy - 1, vz - 1), 3));
-                        }
-
-                        // -X+Z direction
-                        if walkable(vx - 1, vy - 1, vz + 1, height) && nx && pz {
-                            successors.push((PathNode(vx - 1, vy, vz + 1), 2));
-                        } else if walkable(vx - 1, vy, vz + 1, height) && py && nxpy && pzpy {
-                            successors.push((PathNode(vx - 1, vy + 1, vz + 1), 3));
-                        } else if walkable(vx - 1, vy - 2, vz + 1, height) && nx && pz {
-                            successors.push((PathNode(vx - 1, vy - 1, vz + 1), 3));
-                        }
-
-                        // -X-Z direction
-                        if walkable(vx - 1, vy - 1, vz - 1, height) && nx && nz {
-                            successors.push((PathNode(vx - 1, vy, vz - 1), 2));
-                        } else if walkable(vx - 1, vy, vz - 1, height) && py && nxpy && nzpy {
-                            successors.push((PathNode(vx - 1, vy + 1, vz - 1), 3));
-                        } else if walkable(vx - 1, vy - 2, vz - 1, height) && nx && nz {
-                            successors.push((PathNode(vx - 1, vy - 1, vz - 1), 3));
-                        }
-
-                        successors
-                    },
-                    &|p| p.distance(&PathNode(goal.0, goal.1, goal.2)) / 3,
-                );
-
-                if let Some((nodes, count)) = path {
-                    if count > walk_toward.1 as u32 {
-                        walk_toward.0 = None;
                     } else {
-                        walk_toward.0 = Some(
-                            nodes
-                                .clone()
-                                .iter()
-                                .map(|p| Vec3(p.0, p.1, p.2))
-                                .collect::<Vec<_>>(),
-                        );
+                        walk_toward.0 = None;
                     }
-                } else {
-                    walk_toward.0 = None;
                 }
-            }
-        }
+            },
+        );
     }
 }

@@ -13,9 +13,9 @@ use specs::Entity;
 /// 3. Entities: All entities
 #[derive(Debug)]
 pub struct KdTree {
-    union: KdTreeCore<f32, Entity, [f32; 3]>,
-    players: KdTreeCore<f32, Entity, [f32; 3]>,
-    entities: KdTreeCore<f32, Entity, [f32; 3]>,
+    union: KdTreeCore<f32, Entity, Vec<f32>>,
+    players: KdTreeCore<f32, Entity, Vec<f32>>,
+    entities: KdTreeCore<f32, Entity, Vec<f32>>,
 }
 
 impl Default for KdTree {
@@ -41,21 +41,21 @@ impl KdTree {
 
     pub fn add_player(&mut self, ent: Entity, point: Vec3<f32>) {
         self.players
-            .add([point.0, point.1, point.2], ent)
+            .add(vec![point.0, point.1, point.2], ent)
             .expect("Unable to construct KdTree.");
 
         self.union
-            .add([point.0, point.1, point.2], ent)
+            .add(vec![point.0, point.1, point.2], ent)
             .expect("Unable to construct KdTree.");
     }
 
     pub fn add_entity(&mut self, ent: Entity, point: Vec3<f32>) {
         self.entities
-            .add([point.0, point.1, point.2], ent)
+            .add(vec![point.0, point.1, point.2], ent)
             .expect("Unable to construct KdTree.");
 
         self.union
-            .add([point.0, point.1, point.2], ent)
+            .add(vec![point.0, point.1, point.2], ent)
             .expect("Unable to construct KdTree.");
     }
 

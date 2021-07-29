@@ -1,55 +1,58 @@
 {
-  "temperatureScale": 0.04,
-  "temperatureSeed": 123123,
-  "humidityScale": 0.04,
+  "temperatureScale": 0.008,
+  "temperatureSeed": 12323,
+  "humidityScale": 0.008,
   "humiditySeed": 58311,
   "biomes": [
     {
       "name": "TestA",
-      "temperature": 0.5,
-      "humidity": 0.13,
+      "temperature": 0.15,
+      "humidity": 0.25,
       "config": {
-        "scale": 0.001,
-        "octaves": 4,
+        "scale": 0.08,
+        "octaves": 3,
         "persistence": 0.8,
         "lacunarity": 1.4,
-        "heightOffset": 60,
-        "heightScale": 0.04,
+        "heightWeight": 1.0,
+        "heightOffset": 70,
+        "heightScale": 0.01,
         "treeScale": 0.1,
         "plantScale": 0.2,
-        "amplifier": 1.8
+        "amplifier": 0.8
       }
     },
     {
       "name": "TestB",
-      "temperature": 0.2,
+      "temperature": 0.1,
       "humidity": 0.2,
       "config": {
-        "scale": 0.03,
-        "octaves": 2,
+        "scale": 0.003,
+        "octaves": 1,
         "persistence": 0.6,
         "lacunarity": 0.8,
-        "heightOffset": 30,
-        "heightScale": 0.05,
+        "heightWeight": 3.0,
+        "heightOffset": 40,
+        "heightScale": 0.06,
         "treeScale": 0.03,
         "plantScale": 0.8,
-        "amplifier": 0.4
+        "amplifier": 0.2
       }
     },
     {
       "name": "TestC",
-      "temperature": 0.0,
-      "humidity": 0.0,
+      "temperature": 0.05,
+      "humidity": 0.15,
       "config": {
-        "scale": 0.03,
-        "octaves": 2,
+        "scale": 0.08,
+        "octaves": 3,
         "persistence": 0.6,
         "lacunarity": 0.8,
+        "heightWeight": 1.0,
         "heightOffset": 90,
         "heightScale": 0.05,
         "treeScale": 0.03,
         "plantScale": 0.8,
-        "amplifier": 0.4
+        "amplifier": 0.5
       }
     }
   ]

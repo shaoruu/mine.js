@@ -176,18 +176,53 @@ impl Generator {
                 chunk.is_empty = is_empty;
             }
             "biome_test" => {
-                let types = registry.get_type_map(vec!["Stone", "Stone Bricks"]);
+                let types = registry.get_type_map(vec!["Grass Block", "Sand", "Stone", "Dirt"]);
 
                 let is_empty = true;
+
+                let noise = Noise::new(LEVEL_SEED);
+
+                let is_solid_at = |vx: i32, vy: i32, vz: i32, biome: &BiomeConfig| {
+                    noise.octave_simplex3(
+                        vx as f64,
+                        (vy - biome.height_offset) as f64,
+                        vz as f64,
+                        biome.scale,
+                        NoiseConfig {
+                            octaves: biome.octaves,
+                            persistence: biome.persistence,
+                            lacunarity: biome.lacunarity,
+                            height_scale: biome.height_scale,
+                            amplifier: biome.amplifier,
+                        },
+                    ) > -0.2
+                };
 
                 for vx in start_x..end_x {
                     for vz in start_z..end_z {
                         let biome = biomes.get_biome(vx, vz, 2);
-                        for vy in start_y..biome.config.height_offset {
-                            if biome.name == "TestA" {
-                                chunk.set_voxel(vx, vy, vz, types["Stone Bricks"]);
-                            } else {
+                        for vy in (start_y..biome.config.height_offset).rev() {
+                            let is_solid = is_solid_at(vx, vy, vz, &biome.config);
+                            if !is_solid {
+                                continue;
+                            }
+
+                            if chunk.get_voxel(vx, vy + 2, vz) != 0 {
                                 chunk.set_voxel(vx, vy, vz, types["Stone"]);
+                                continue;
+                            }
+
+                            if chunk.get_voxel(vx, vy + 1, vz) != 0 {
+                                chunk.set_voxel(vx, vy, vz, types["Dirt"]);
+                                continue;
+                            }
+
+                            if biome.name == "TestA" {
+                                chunk.set_voxel(vx, vy, vz, types["Grass Block"]);
+                            } else if biome.name == "TestB" {
+                                chunk.set_voxel(vx, vy, vz, types["Sand"]);
+                            } else {
+                                chunk.set_voxel(vx, vy, vz, types["Grass Block"]);
                             }
                         }
                     }
