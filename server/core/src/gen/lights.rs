@@ -326,7 +326,7 @@ impl Lights {
             for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
                 let nvy = vy + oy;
 
-                if nvy < 0 || nvy > max_height {
+                if nvy < 0 || nvy >= max_height {
                     continue;
                 }
 
@@ -389,7 +389,7 @@ impl Lights {
             for [ox, oy, oz] in VOXEL_NEIGHBORS.iter() {
                 let nvy = vy + oy;
 
-                if nvy < 0 || nvy > max_height {
+                if nvy < 0 || nvy >= max_height {
                     continue;
                 }
 

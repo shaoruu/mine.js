@@ -139,7 +139,7 @@ impl Biomes {
         let biomes = self.get_biomes(temperature, humidity, sample);
 
         if biomes.is_empty() {
-            panic!("No biomes found.")
+            panic!("No biomes found.");
         }
 
         // https://www.gstatic.com/education/formulas2/355397047/en/weighted_average_formula.svg
