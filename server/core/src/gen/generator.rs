@@ -222,7 +222,7 @@ impl Generator {
                             } else if biome.name == "TestB" {
                                 chunk.set_voxel(vx, vy, vz, types["Sand"]);
                             } else {
-                                chunk.set_voxel(vx, vy, vz, types["Grass Block"]);
+                                chunk.set_voxel(vx, vy, vz, types["Dirt"]);
                             }
                         }
                     }

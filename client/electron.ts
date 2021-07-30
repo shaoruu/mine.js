@@ -13,6 +13,7 @@ require('electron-reload')(path.join(__dirname, '..', 'public'), {
 
 async function createWindow() {
   const win = new BrowserWindow({
+    icon: path.join(__dirname, '..', 'public', 'favicon.png'),
     width: 1200,
     height: 800,
   });

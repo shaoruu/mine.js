@@ -108,17 +108,27 @@ impl Biomes {
     }
 
     /// Sample the closet possible #`count` biomes
-    pub fn get_biomes(&self, temperature: f64, humidity: f64, count: usize) -> Vec<(f64, &Biome)> {
+    pub fn get_biomes(&self, temperature: f64, humidity: f64, count: usize) -> Vec<(f64, Biome)> {
         let results = self
             .presets
             .nearest(&[temperature, humidity], count, &squared_euclidean)
             .expect("Unable to search for biome presets.");
 
         let sum: f64 = results.iter().map(|(dist, _)| dist).sum();
+        let average = sum / results.len() as f64;
 
         results
             .into_iter()
-            .map(|(dist, b)| (1.0 - dist / sum, b))
+            .map(|(dist, b)| {
+                let mut b = b.to_owned();
+
+                // that means it should be river
+                if (average - dist).abs() < 0.005 {
+                    b.config.height_offset = 20;
+                }
+
+                (1.0 - dist / sum, b)
+            })
             .collect()
     }
 
