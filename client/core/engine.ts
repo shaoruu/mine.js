@@ -122,8 +122,8 @@ const defaultConfig: ConfigType = {
     gravity: [0, -24, 0],
     minBounceImpulse: 0.5,
     airDrag: 0.1,
-    fluidDrag: 0.4,
-    fluidDensity: 2.0,
+    fluidDrag: 1.4,
+    fluidDensity: 1.4,
   },
   registry: {
     resolution: 500,

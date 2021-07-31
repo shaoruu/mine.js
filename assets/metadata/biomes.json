@@ -1,9 +1,11 @@
 {
-  "temperatureScale": 0.0048,
-  "temperatureSeed": 323,
-  "humidityScale": 0.0048,
-  "humiditySeed": 51,
-  "waterHeight": 42,
+  "temperatureScale": 0.0088,
+  "temperatureSeed": 323151,
+  "humidityScale": 0.0088,
+  "humiditySeed": 515113,
+  "waterHeight": 44,
+  "solidThreshold": 0.5,
+  "sampleSize": 2,
   "river": {
     "name": "River",
     "temperature": -1.0,
@@ -26,8 +28,8 @@
   "biomes": [
     {
       "name": "Desert",
-      "temperature": 0.05,
-      "humidity": 0.05,
+      "temperature": 0.1,
+      "humidity": 0.1,
       "blocks": {
         "cover": "Sand"
       },
@@ -36,7 +38,7 @@
         "octaves": 2,
         "persistence": 0.8,
         "lacunarity": 0.4,
-        "heightOffset": 55,
+        "heightOffset": 58,
         "heightScale": 0.3,
         "treeScale": 0.1,
         "plantScale": 0.2,
@@ -45,8 +47,8 @@
     },
     {
       "name": "Grass Desert",
-      "temperature": 0.25,
-      "humidity": 0.05,
+      "temperature": 0.5,
+      "humidity": 0.1,
       "blocks": {
         "cover": "Sand"
       },
@@ -55,7 +57,7 @@
         "octaves": 2,
         "persistence": 0.8,
         "lacunarity": 0.4,
-        "heightOffset": 55,
+        "heightOffset": 60,
         "heightScale": 0.3,
         "treeScale": 0.1,
         "plantScale": 0.2,
@@ -64,8 +66,8 @@
     },
     {
       "name": "Tundra",
-      "temperature": 0.45,
-      "humidity": 0.15,
+      "temperature": 0.9,
+      "humidity": 0.3,
       "blocks": {
         "cover": "Sand"
       },
@@ -83,8 +85,8 @@
     },
     {
       "name": "Taiga",
-      "temperature": 0.35,
-      "humidity": 0.3,
+      "temperature": 0.7,
+      "humidity": 0.6,
       "blocks": {
         "cover": "Grass Block"
       },
@@ -102,8 +104,8 @@
     },
     {
       "name": "Woods",
-      "temperature": 0.2,
-      "humidity": 0.25,
+      "temperature": 0.4,
+      "humidity": 0.36,
       "blocks": {
         "cover": "Grass Block"
       },
@@ -112,7 +114,7 @@
         "octaves": 4,
         "persistence": 0.8,
         "lacunarity": 0.4,
-        "heightOffset": 65,
+        "heightOffset": 75,
         "heightScale": 0.6,
         "treeScale": 0.2,
         "plantScale": 0.4,
@@ -121,27 +123,27 @@
     },
     {
       "name": "Savanna",
-      "temperature": 0.05,
-      "humidity": 0.25,
+      "temperature": 0.1,
+      "humidity": 0.4,
       "blocks": {
         "cover": "Grass Block"
       },
       "config": {
         "scale": 0.07,
-        "octaves": 3,
+        "octaves": 2,
         "persistence": 0.8,
-        "lacunarity": 0.4,
+        "lacunarity": 0.2,
         "heightOffset": 60,
-        "heightScale": 0.4,
-        "treeScale": 0.02,
+        "heightScale": 0.1,
+        "treeScale": 0.03,
         "plantScale": 0.4,
-        "amplifier": 0.4
+        "amplifier": 0.2
       }
     },
     {
       "name": "Forest",
-      "temperature": 0.25,
-      "humidity": 0.35,
+      "temperature": 0.4,
+      "humidity": 0.64,
       "blocks": {
         "cover": "Grass Block"
       },
@@ -152,15 +154,15 @@
         "lacunarity": 0.4,
         "heightOffset": 60,
         "heightScale": 0.5,
-        "treeScale": 0.4,
+        "treeScale": 0.24,
         "plantScale": 0.4,
         "amplifier": 0.6
       }
     },
     {
       "name": "Seasonal Forest",
-      "temperature": 0.05,
-      "humidity": 0.35,
+      "temperature": 0.1,
+      "humidity": 0.64,
       "blocks": {
         "cover": "Grass Block"
       },
@@ -171,34 +173,34 @@
         "lacunarity": 0.4,
         "heightOffset": 58,
         "heightScale": 0.3,
-        "treeScale": 0.4,
+        "treeScale": 0.3,
         "plantScale": 0.3,
         "amplifier": 0.4
       }
     },
     {
       "name": "Swamp",
-      "temperature": 0.25,
-      "humidity": 0.45,
+      "temperature": 0.5,
+      "humidity": 0.9,
       "blocks": {
         "cover": "Grass Block"
       },
       "config": {
-        "scale": 0.07,
+        "scale": 0.007,
         "octaves": 2,
-        "persistence": 0.8,
-        "lacunarity": 0.4,
-        "heightOffset": 55,
-        "heightScale": 0.2,
-        "treeScale": 0.01,
+        "persistence": 0.4,
+        "lacunarity": 0.2,
+        "heightOffset": 53,
+        "heightScale": 0.3,
+        "treeScale": 0.012,
         "plantScale": 0.4,
         "amplifier": 0.1
       }
     },
     {
       "name": "Rain Forest",
-      "temperature": 0.05,
-      "humidity": 0.45,
+      "temperature": 0.1,
+      "humidity": 0.9,
       "blocks": {
         "cover": "Grass Block"
       },
@@ -209,7 +211,7 @@
         "lacunarity": 0.4,
         "heightOffset": 55,
         "heightScale": 0.8,
-        "treeScale": 0.5,
+        "treeScale": 0.3,
         "plantScale": 0.4,
         "amplifier": 0.2
       }

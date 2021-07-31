@@ -17,3 +17,6 @@ name = "clean_chunks"
 
 [[bin]]
 name = "map_ids"
+
+[[bin]]
+name = "script"

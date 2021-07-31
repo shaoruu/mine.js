@@ -26,6 +26,8 @@ pub struct BiomeConfigs {
     pub humidity_scale: f64,
     pub humidity_seed: u32,
     pub water_height: i32,
+    pub solid_threshold: f64,
+    pub sample_size: usize,
     pub river: Biome,
     pub biomes: Vec<Biome>,
 }
@@ -83,6 +85,7 @@ impl Default for Biomes {
 }
 
 impl Biomes {
+    /// https://www.desmos.com/calculator/vjrxi1kyh7
     pub fn new() -> Self {
         let biome_configs: BiomeConfigs =
             serde_json::from_reader(File::open("assets/metadata/biomes.json").unwrap()).unwrap();
@@ -128,10 +131,18 @@ impl Biomes {
             .nearest(&[temperature, humidity], count, &squared_euclidean)
             .expect("Unable to search for biome presets.");
 
-        let sum: f64 = results.iter().map(|(dist, _)| dist).sum();
+        let mut sum: f64 = results.iter().map(|(dist, _)| dist).sum();
         let average = sum / results.len() as f64;
 
-        let river = ((results[0].0 - average).abs(), &self.configs.river);
+        let mut d_sum = 0.0;
+        results
+            .iter()
+            .for_each(|(dist, _)| d_sum += (average - dist).abs());
+
+        let d_average = d_sum / results.len() as f64;
+
+        sum += d_average;
+        let river = (d_average, &self.configs.river);
 
         let mut temp = vec![river];
         temp.append(&mut results);
@@ -148,14 +159,12 @@ impl Biomes {
         let vx = vx as f64;
         let vz = vz as f64;
 
-        let temperature = self
+        let temperature = (self
             .temperature_noise
             .simplex2(vx, vz, self.temperature_scale)
-            .abs();
-        let humidity = self
-            .humidity_noise
-            .simplex2(vx, vz, self.humidity_scale)
-            .abs();
+            + 1.0)
+            * 0.5;
+        let humidity = (self.humidity_noise.simplex2(vx, vz, self.humidity_scale) + 1.0) * 0.5;
 
         let biomes = self.get_biomes(temperature, humidity, sample);
 

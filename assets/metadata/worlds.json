@@ -44,6 +44,17 @@
       "generation": "biome_test",
       "description": "this ain't saved!",
       "texturepack": "Pixel-Perfection"
+    },
+    {
+      "name": "z-dev-flat",
+      "time": 1200,
+      "tickSpeed": 0,
+      "save": false,
+      "chunkSize": 16,
+      "subChunks": 8,
+      "generation": "flat",
+      "description": "this ain't saved!",
+      "maxPerThread": 10
     }
   ]
 }

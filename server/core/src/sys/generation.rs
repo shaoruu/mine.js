@@ -1,13 +1,14 @@
-use specs::{ReadStorage, System, WriteExpect, WriteStorage};
+use specs::{ReadExpect, ReadStorage, System, WriteExpect, WriteStorage};
 
 use crate::{
     comp::{curr_chunk::CurrChunk, id::Id, view_radius::ViewRadius},
-    engine::chunks::Chunks,
+    engine::{chunks::Chunks, clock::Clock},
 };
 
 pub struct GenerationSystem;
 
 impl<'a> System<'a> for GenerationSystem {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         WriteExpect<'a, Chunks>,
         ReadStorage<'a, Id>,

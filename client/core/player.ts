@@ -577,9 +577,7 @@ class Player {
           return !!this.blockRay.intersectBox(tempBox, new Vector3());
         }
 
-        return (
-          y < maxHeight * dimension && Boolean(world.getVoxelByWorld([Math.floor(x), Math.floor(y), Math.floor(z)]))
-        );
+        return y < maxHeight * dimension && world.getSolidityByWorld([Math.floor(x), Math.floor(y), Math.floor(z)]);
       },
       [camPos.x, camPos.y, camPos.z],
       [camDir.x, camDir.y, camDir.z],

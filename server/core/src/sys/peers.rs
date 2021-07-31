@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use log::{debug, info};
+use log::info;
 
 use ansi_term::Colour::Yellow;
 
-use server_utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
+use server_utils::convert::map_world_to_voxel;
 use specs::{ReadExpect, ReadStorage, System, WriteExpect, WriteStorage};
 
 use server_common::{quaternion::Quaternion, vec::Vec3};
@@ -106,7 +106,10 @@ impl<'a> System<'a> for PeersSystem {
                 rotation.0 = Quaternion(qx, qy, qz, qw);
 
                 let voxel = map_world_to_voxel(px, py, pz, chunks.config.dimension);
-                let biome = chunks.biomes.get_biome(voxel.0, voxel.2, 2);
+                let biome =
+                    chunks
+                        .biomes
+                        .get_biome(voxel.0, voxel.2, chunks.biomes.configs.sample_size);
                 let mut new_message = create_of_type(MessageType::Info);
                 new_message.json = format!("{{\"biome\": \"{}\"}}", biome.name);
                 messages.push((new_message, Some(vec![id.0]), None, None));

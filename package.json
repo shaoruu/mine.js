@@ -58,6 +58,7 @@
     "server:kill": "kill -9 $(lsof -ti:4000)",
     "server:mapids": "cross-env RUST_BACKTRACE=1 cargo run -p server_tasks --bin map_ids --release",
     "server:clean": "cross-env RUST_BACKTRACE=1 cargo run -p server_tasks --bin clean_chunks --release",
+    "server:script": "cross-env RUST_BACKTRACE=1 cargo run -p server_tasks --bin script --release",
     "server:udeps": "cargo +nightly udeps",
     "build": "cross-env NODE_ENV=production webpack",
     "compile:ts": "pbts -o protocol/index.d.ts protocol/index.js",

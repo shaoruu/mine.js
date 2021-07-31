@@ -3,10 +3,11 @@ use std::{
     collections::{HashMap, HashSet, VecDeque},
     path::PathBuf,
     sync::Arc,
+    time::Instant,
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use log::info;
+use log::{debug, info};
 use rayon::prelude::*;
 
 use crate::gen::{biomes::Biomes, blocks::BlockRotation};
@@ -49,7 +50,9 @@ pub struct Chunks {
 
     pub chunk_cache: HashSet<Vec2<i32>>,
     pub to_generate: Vec<Chunk>,
+    pub generating: HashSet<Vec2<i32>>,
     pub to_mesh: VecDeque<Vec2<i32>>,
+    pub meshing: HashSet<Vec2<i32>>,
     pub activities: VecDeque<Vec2<i32>>,
 
     pub config: Arc<WorldConfig>,
@@ -62,11 +65,9 @@ pub struct Chunks {
     update_queue: HashMap<Vec2<i32>, Vec<VoxelUpdate>>,
     noise: Noise,
 
-    is_generating: bool,
     gen_sender: Arc<Sender<Vec<Chunk>>>,
     gen_receiver: Arc<Receiver<Vec<Chunk>>>,
 
-    is_meshing: bool,
     mesh_sender: Arc<Sender<Vec<Chunk>>>,
     mesh_receiver: Arc<Receiver<Vec<Chunk>>>,
 }
@@ -112,7 +113,9 @@ impl Chunks {
             biomes: Arc::new(Biomes::default()),
 
             to_generate: vec![],
+            generating: HashSet::new(),
             to_mesh: VecDeque::new(),
+            meshing: HashSet::new(),
             activities: VecDeque::new(),
 
             caching: false,
@@ -120,11 +123,9 @@ impl Chunks {
             update_queue: HashMap::new(),
             noise: Noise::new(LEVEL_SEED),
 
-            is_generating: false,
             gen_sender,
             gen_receiver,
 
-            is_meshing: false,
             mesh_sender,
             mesh_receiver,
         }
@@ -141,7 +142,7 @@ impl Chunks {
     /// 4. Checks if any thread is waiting to return a meshed chunk. If so, add
     /// them back into `chunks` itself.
     pub fn tick(&mut self) {
-        if !self.is_meshing && !self.to_mesh.is_empty() {
+        if !self.to_mesh.is_empty() {
             let to_mesh = self
                 .to_mesh
                 .drain(0..self.config.max_per_thread.min(self.to_mesh.len()))
@@ -149,6 +150,9 @@ impl Chunks {
             let to_mesh: Vec<(Chunk, Space)> = to_mesh
                 .iter()
                 .map(|coords| {
+                    // mark as meshing
+                    self.meshing.insert(coords.to_owned());
+
                     (
                         self.get_chunk(coords).unwrap().clone(),
                         Space::new(self, &coords, self.config.max_light_level as usize),
@@ -196,13 +200,17 @@ impl Chunks {
 
                 sender.send(meshed).unwrap();
             });
+        }
 
-            self.is_meshing = true;
-        } else if !self.is_generating && !self.to_generate.is_empty() {
+        if !self.to_generate.is_empty() {
             let chunks = self
                 .to_generate
                 .drain(0..self.config.max_per_thread.min(self.to_generate.len()))
                 .collect::<Vec<_>>();
+
+            chunks.iter().for_each(|chunk| {
+                self.generating.insert(chunk.coords.to_owned());
+            });
 
             let sender = self.gen_sender.clone();
             let config = self.config.clone();
@@ -220,28 +228,18 @@ impl Chunks {
                     .collect();
                 sender.send(chunks).unwrap();
             });
-
-            self.is_generating = true;
         }
 
-        if self.is_meshing {
-            if let Ok(chunks) = self.mesh_receiver.try_recv() {
-                chunks.into_iter().for_each(|c| {
-                    self.add_chunk(c);
-                });
-
-                self.is_meshing = false;
-            }
+        if let Ok(chunks) = self.mesh_receiver.try_recv() {
+            chunks.into_iter().for_each(|c| {
+                self.add_chunk(c);
+            });
         }
 
-        if self.is_generating {
-            if let Ok(chunks) = self.gen_receiver.try_recv() {
-                chunks.into_iter().for_each(|c| {
-                    self.add_chunk(c);
-                });
-
-                self.is_generating = false;
-            }
+        if let Ok(chunks) = self.gen_receiver.try_recv() {
+            chunks.into_iter().for_each(|c| {
+                self.add_chunk(c);
+            });
         }
     }
 
@@ -298,7 +296,7 @@ impl Chunks {
             let chunk = chunk.unwrap();
             if chunk.is_dirty {
                 let coords = chunk.coords.to_owned();
-                if !self.to_mesh.contains(&coords) {
+                if !self.to_mesh.contains(&coords) && !self.meshing.contains(&coords) {
                     self.to_mesh.push_back(coords);
                 }
                 return None;
@@ -435,19 +433,25 @@ impl Chunks {
                 let chunk = self.get_chunk(&coords);
 
                 if chunk.is_none() {
-                    let mut new_chunk =
-                        Chunk::new(coords.to_owned(), &self.config, &self.chunk_folder);
+                    let index = self.to_generate.iter().position(|c| c.coords.eq(&coords));
 
-                    if let Some(updates) = self.update_queue.remove(&coords) {
-                        for u in updates {
-                            new_chunk.set_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
+                    if index.is_none() {
+                        let mut new_chunk =
+                            Chunk::new(coords.to_owned(), &self.config, &self.chunk_folder);
+
+                        if let Some(updates) = self.update_queue.remove(&coords) {
+                            for u in updates {
+                                new_chunk.set_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
+                            }
                         }
-                    }
 
-                    if new_chunk.needs_terrain {
-                        to_generate.push(new_chunk);
-                    } else {
-                        self.add_chunk(new_chunk);
+                        if new_chunk.needs_terrain {
+                            if !self.generating.contains(&new_chunk.coords) {
+                                to_generate.push(new_chunk);
+                            }
+                        } else {
+                            self.add_chunk(new_chunk);
+                        }
                     }
                 }
 
@@ -953,6 +957,9 @@ impl Chunks {
     ///
     /// Removes existing chunks first.
     pub fn add_chunk(&mut self, chunk: Chunk) {
+        self.meshing.remove(&chunk.coords);
+        self.generating.remove(&chunk.coords);
+
         self.update_activities(&chunk.coords);
 
         self.chunks.remove(&chunk.coords);
