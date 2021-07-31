@@ -92,6 +92,7 @@ impl Mesher {
                         is_transparent,
                         is_block,
                         is_plant,
+                        is_fluid,
                         ..
                     } = registry.get_block_by_id(voxel_id);
 
@@ -189,7 +190,8 @@ impl Mesher {
                                 let neighbor_id = chunk.get_voxel(nvx, nvy, nvz);
                                 let n_block_type = registry.get_block_by_id(neighbor_id);
 
-                                if n_block_type.is_transparent
+                                if ((n_block_type.is_transparent && !n_block_type.is_fluid)
+                                    || (n_block_type.is_fluid && !is_fluid))
                                     && (!transparent
                                         || n_block_type.is_empty
                                         || neighbor_id != voxel_id

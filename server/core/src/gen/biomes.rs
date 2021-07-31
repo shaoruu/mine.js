@@ -20,12 +20,14 @@ pub const HUMIDITY_SCALE: f64 = 0.002;
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-struct BiomeConfigs {
-    temperature_scale: f64,
-    temperature_seed: u32,
-    humidity_scale: f64,
-    humidity_seed: u32,
-    biomes: Vec<Biome>,
+pub struct BiomeConfigs {
+    pub temperature_scale: f64,
+    pub temperature_seed: u32,
+    pub humidity_scale: f64,
+    pub humidity_seed: u32,
+    pub water_height: i32,
+    pub river: Biome,
+    pub biomes: Vec<Biome>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -44,17 +46,27 @@ pub struct BiomeConfig {
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct BlocksData {
+    pub cover: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Biome {
     pub name: String,
 
     pub temperature: f64,
     pub humidity: f64,
 
+    pub blocks: BlocksData,
+
     pub config: BiomeConfig,
 }
 
 #[derive(Debug)]
 pub struct Biomes {
+    pub configs: BiomeConfigs,
+
     temperature_scale: f64,
     temperature_noise: Noise,
 
@@ -81,20 +93,22 @@ impl Biomes {
             humidity_scale,
             humidity_seed,
             biomes,
-        } = biome_configs;
+            ..
+        } = &biome_configs;
 
         let mut new_biomes = Self {
-            temperature_scale,
-            temperature_noise: Noise::new(temperature_seed),
+            temperature_scale: *temperature_scale,
+            temperature_noise: Noise::new(*temperature_seed),
 
-            humidity_scale,
-            humidity_noise: Noise::new(humidity_seed),
+            humidity_scale: *humidity_scale,
+            humidity_noise: Noise::new(*humidity_seed),
 
+            configs: biome_configs.clone(),
             presets: KdTree::new(2),
         };
 
-        biomes.into_iter().for_each(|biome| {
-            new_biomes.register(biome);
+        biomes.iter().for_each(|biome| {
+            new_biomes.register(biome.to_owned());
         });
 
         new_biomes
@@ -108,8 +122,8 @@ impl Biomes {
     }
 
     /// Sample the closet possible #`count` biomes
-    pub fn get_biomes(&self, temperature: f64, humidity: f64, count: usize) -> Vec<(f64, Biome)> {
-        let results = self
+    pub fn get_biomes(&self, temperature: f64, humidity: f64, count: usize) -> Vec<(f64, &Biome)> {
+        let mut results = self
             .presets
             .nearest(&[temperature, humidity], count, &squared_euclidean)
             .expect("Unable to search for biome presets.");
@@ -117,18 +131,15 @@ impl Biomes {
         let sum: f64 = results.iter().map(|(dist, _)| dist).sum();
         let average = sum / results.len() as f64;
 
+        let river = ((results[0].0 - average).abs(), &self.configs.river);
+
+        let mut temp = vec![river];
+        temp.append(&mut results);
+        results = temp;
+
         results
             .into_iter()
-            .map(|(dist, b)| {
-                let mut b = b.to_owned();
-
-                // that means it should be river
-                if (average - dist).abs() < 0.005 {
-                    b.config.height_offset = 20;
-                }
-
-                (1.0 - dist / sum, b)
-            })
+            .map(|(dist, b)| (1.0 - dist / sum, b))
             .collect()
     }
 
@@ -163,8 +174,15 @@ impl Biomes {
             denominator += weight;
         });
 
-        let mut biome = biomes[0].1.clone();
-        biome.config.height_offset = (numerator / denominator) as i32;
+        let height = (numerator / denominator) as i32;
+
+        let mut biome = if height > self.configs.water_height && biomes[0].1.name == "River" {
+            biomes[1].1.clone()
+        } else {
+            biomes[0].1.clone()
+        };
+
+        biome.config.height_offset = height;
 
         biome
     }

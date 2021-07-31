@@ -1,0 +1,9 @@
+{
+  "base": "base-block.json",
+  "name": "Water",
+  "isFluid": true,
+  "isTransparent": true,
+  "textures": {
+    "all": "water.png"
+  }
+}

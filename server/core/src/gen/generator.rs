@@ -10,6 +10,7 @@ use server_common::{
     noise::{Noise, NoiseConfig},
     vec::Vec3,
 };
+use specs::world::Generation;
 
 pub struct Generator;
 
@@ -176,33 +177,47 @@ impl Generator {
                 chunk.is_empty = is_empty;
             }
             "biome_test" => {
-                let types = registry.get_type_map(vec!["Grass Block", "Sand", "Stone", "Dirt"]);
+                let types =
+                    registry.get_type_map(vec!["Water", "Grass Block", "Sand", "Stone", "Dirt"]);
 
                 let is_empty = true;
 
                 let noise = Noise::new(LEVEL_SEED);
 
-                let is_solid_at = |vx: i32, vy: i32, vz: i32, biome: &BiomeConfig| {
-                    noise.octave_simplex3(
-                        vx as f64,
-                        (vy - biome.height_offset) as f64,
-                        vz as f64,
-                        biome.scale,
-                        NoiseConfig {
-                            octaves: biome.octaves,
-                            persistence: biome.persistence,
-                            lacunarity: biome.lacunarity,
-                            height_scale: biome.height_scale,
-                            amplifier: biome.amplifier,
-                        },
-                    ) > -0.2
+                let is_solid_at = |vx: i32, vy: i32, vz: i32, config: &BiomeConfig| {
+                    vy < config.height_offset
+                        && noise.octave_simplex3(
+                            vx as f64,
+                            (vy - config.height_offset) as f64,
+                            vz as f64,
+                            config.scale,
+                            NoiseConfig {
+                                octaves: config.octaves,
+                                persistence: config.persistence,
+                                lacunarity: config.lacunarity,
+                                height_scale: config.height_scale,
+                                amplifier: config.amplifier,
+                            },
+                        ) > 0.5
                 };
 
                 for vx in start_x..end_x {
                     for vz in start_z..end_z {
                         let biome = biomes.get_biome(vx, vz, 2);
-                        for vy in (start_y..biome.config.height_offset).rev() {
+
+                        let cover = *registry.get_id_by_name(&biome.blocks.cover);
+
+                        for vy in (start_y
+                            ..biome.config.height_offset.max(biomes.configs.water_height))
+                            .rev()
+                        {
                             let is_solid = is_solid_at(vx, vy, vz, &biome.config);
+
+                            if !is_solid && vy < biomes.configs.water_height {
+                                chunk.set_voxel(vx, vy, vz, types["Water"]);
+                                continue;
+                            }
+
                             if !is_solid {
                                 continue;
                             }
@@ -217,13 +232,7 @@ impl Generator {
                                 continue;
                             }
 
-                            if biome.name == "TestA" {
-                                chunk.set_voxel(vx, vy, vz, types["Grass Block"]);
-                            } else if biome.name == "TestB" {
-                                chunk.set_voxel(vx, vy, vz, types["Sand"]);
-                            } else {
-                                chunk.set_voxel(vx, vy, vz, types["Dirt"]);
-                            }
+                            chunk.set_voxel(vx, vy, vz, cover);
                         }
                     }
                 }
@@ -250,12 +259,17 @@ impl Generator {
                     let id = chunk.get_voxel(vx, vy, vz);
 
                     // TODO: CHECK FROM REGISTRY &&&&& PLANTS
-                    if vy == 0 || (!registry.is_air(id) && !registry.is_plant(id)) {
+                    if vy == 0 || (Generator::check_height(id, registry)) {
                         chunk.set_max_height(vx, vz, vy as u32);
                         break;
                     }
                 }
             }
         }
+    }
+
+    /// Logic for height map determination
+    pub fn check_height(id: u32, registry: &Registry) -> bool {
+        !registry.is_air(id) && !registry.is_plant(id) && !registry.is_fluid(id)
     }
 }

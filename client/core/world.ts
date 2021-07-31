@@ -147,12 +147,15 @@ class World extends EventEmitter {
 
   getSolidityByVoxel = (vCoords: Coords3) => {
     const type = this.getVoxelByVoxel(vCoords);
-    return vCoords[1] < this.options.maxHeight && type !== 0 && !this.blockData.passables.includes(type);
+    const block = this.engine.registry.getBlock(type);
+    return (
+      vCoords[1] < this.options.maxHeight && !block?.isFluid && type !== 0 && !this.blockData.passables.includes(type)
+    );
   };
 
   getFluidityByVoxel = (vCoords: Coords3) => {
-    // TODO
-    return false;
+    const type = this.getVoxelByVoxel(vCoords);
+    return this.engine.registry.getBlock(type)?.isFluid;
   };
 
   getSolidityByWorld = (wCoords: Coords3) => {

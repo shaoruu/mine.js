@@ -131,6 +131,14 @@ class Network {
     }
   };
 
+  onInfo = (event) => {
+    const { debug } = this.engine;
+    const { biome } = event.json;
+    if (debug && biome) {
+      debug.biome = biome;
+    }
+  };
+
   onJoin = (event) => {
     const { text: id } = event;
 
@@ -195,6 +203,11 @@ class Network {
 
       case 'LOAD': {
         this.onLoad(event);
+        break;
+      }
+
+      case 'INFO': {
+        this.onInfo(event);
         break;
       }
 

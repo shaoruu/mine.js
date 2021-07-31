@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 // use rayon::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
@@ -8,7 +6,7 @@ use std::{
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use log::{debug, info};
+use log::info;
 use rayon::prelude::*;
 
 use crate::gen::{biomes::Biomes, blocks::BlockRotation};
@@ -35,13 +33,6 @@ use server_common::{
     vec::{Vec2, Vec3},
 };
 use server_utils::convert::{map_voxel_to_chunk, map_voxel_to_chunk_local, map_world_to_voxel};
-
-/// Light data of a single vertex
-struct VertexLight {
-    count: u32,
-    torch_light: u32,
-    sunlight: u32,
-}
 
 #[derive(Clone, Debug)]
 pub enum MeshLevel {
@@ -506,12 +497,13 @@ impl Chunks {
             .par_iter()
             .map(|chunk| {
                 let builder = self.builder.clone();
+                let biomes = self.biomes.clone();
 
                 if !chunk.needs_decoration {
                     return vec![];
                 }
 
-                builder.build(chunk)
+                builder.build(chunk, &biomes)
             })
             .collect();
 
@@ -528,29 +520,11 @@ impl Chunks {
             for u in updates {
                 let h = self.get_max_height(u.voxel.0, u.voxel.2) as i32;
                 self.set_voxel_by_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id);
-                if u.voxel.1 > h && (!self.registry.is_air(u.id) && !self.registry.is_plant(u.id)) {
+                if u.voxel.1 > h && Generator::check_height(u.id, &self.registry) {
                     self.set_max_height(u.voxel.0, u.voxel.2, u.voxel.1 as u32);
                 }
             }
         }
-    }
-
-    /// Populate a chunk with preset decorations.
-    fn decorate_chunk(&mut self, coords: &Vec2<i32>) {
-        let chunk = self
-            .get_chunk_mut(&coords)
-            .unwrap_or_else(|| panic!("Chunk not found {:?}", coords));
-
-        if !chunk.needs_decoration {
-            return;
-        }
-
-        chunk.needs_decoration = false;
-
-        let updates = self.builder.build(self.get_chunk(coords).unwrap());
-        updates
-            .iter()
-            .for_each(|u| self.set_voxel_by_voxel(u.voxel.0, u.voxel.1, u.voxel.2, u.id));
     }
 
     /// Centered around a coordinate, return 3x3 chunks neighboring the coordinate (not inclusive).
@@ -1032,7 +1006,12 @@ impl Chunks {
             if vy == height as i32 {
                 // on max height, should set max height to lower
                 for y in (0..vy).rev() {
-                    if y == 0 || !self.registry.is_air(self.get_voxel_by_voxel(vx, y, vz)) {
+                    if y == 0
+                        || Generator::check_height(
+                            self.get_voxel_by_voxel(vx, y, vz),
+                            &self.registry,
+                        )
+                    {
                         self.set_max_height(vx, vz, y as u32);
                         break;
                     }

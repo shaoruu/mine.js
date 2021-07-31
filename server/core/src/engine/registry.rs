@@ -281,14 +281,19 @@ impl Registry {
         self.get_block_by_id(id).name == "Air"
     }
 
+    /// Check if block is fluid by id
+    pub fn is_fluid(&self, id: u32) -> bool {
+        self.get_block_by_id(id).is_fluid
+    }
+
     /// Check if block is a plant by id
     pub fn is_plant(&self, id: u32) -> bool {
         self.get_block_by_id(id).is_plant
     }
 
     /// Check if block is plantable by id
-    pub fn is_plantable(&self, id: u32) -> bool {
-        self.get_block_by_id(id).is_plantable
+    pub fn is_plantable(&self, id: u32, above: u32) -> bool {
+        self.get_block_by_id(id).is_plantable && self.get_block_by_id(above).is_empty
     }
 
     /// Get block data by id

@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
-use log::info;
+use log::{debug, info};
 
 use ansi_term::Colour::Yellow;
 
+use server_utils::convert::{map_voxel_to_chunk, map_world_to_voxel};
 use specs::{ReadExpect, ReadStorage, System, WriteExpect, WriteStorage};
 
 use server_common::{quaternion::Quaternion, vec::Vec3};
@@ -11,12 +12,13 @@ use server_common::{quaternion::Quaternion, vec::Vec3};
 use crate::{
     comp::{id::Id, name::Name, rigidbody::RigidBody, rotation::Rotation},
     engine::{
+        chunks::Chunks,
         players::{PlayerUpdates, Players},
         world::MessagesQueue,
     },
     network::models::{
-        create_chat_message, create_message, messages, ChatType, MessageComponents, MessageType,
-        PeerProtocol,
+        create_chat_message, create_message, create_of_type, messages, ChatType, MessageComponents,
+        MessageType, PeerProtocol,
     },
 };
 
@@ -26,6 +28,7 @@ impl<'a> System<'a> for PeersSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = (
         ReadExpect<'a, String>,
+        ReadExpect<'a, Chunks>,
         WriteExpect<'a, PlayerUpdates>,
         WriteExpect<'a, MessagesQueue>,
         WriteExpect<'a, Players>,
@@ -40,6 +43,7 @@ impl<'a> System<'a> for PeersSystem {
 
         let (
             world_name,
+            chunks,
             mut updates,
             mut messages,
             mut players,
@@ -100,6 +104,12 @@ impl<'a> System<'a> for PeersSystem {
                 name.0 = Some(new_name.clone());
                 body.set_head_position(&Vec3(px, py, pz));
                 rotation.0 = Quaternion(qx, qy, qz, qw);
+
+                let voxel = map_world_to_voxel(px, py, pz, chunks.config.dimension);
+                let biome = chunks.biomes.get_biome(voxel.0, voxel.2, 2);
+                let mut new_message = create_of_type(MessageType::Info);
+                new_message.json = format!("{{\"biome\": \"{}\"}}", biome.name);
+                messages.push((new_message, Some(vec![id.0]), None, None));
 
                 if let Some(player) = players.get_mut(&id.0) {
                     player.name = Some(new_name);

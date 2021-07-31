@@ -61,7 +61,10 @@ class Sounds extends EventEmitter {
   };
 
   play = (name: string, { position, object }: { position?: Coords3; object?: Object3D }) => {
-    const { buffer, options } = this.getTrack(name);
+    const track = this.getTrack(name);
+    if (!track) return;
+
+    const { buffer, options } = track;
     const { loop, multiple, refDistance, maxVolume, fadeTime } = options;
 
     if (this.audios.has(name) && !multiple) {

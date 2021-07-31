@@ -46,6 +46,8 @@ class Debug {
     }),
   );
 
+  public biome = 'Unkonwn';
+
   public savedSettings: { [key: string]: any } = {};
 
   constructor(public engine: Engine) {
@@ -215,6 +217,7 @@ class Debug {
     this.registerDisplay('chunk', world, 'camChunkPosStr');
     this.registerDisplay('chunks loaded', world, 'chunksLoaded');
     this.registerDisplay('position', player, 'voxelPositionStr');
+    this.registerDisplay('biome', this, 'biome');
     this.registerDisplay('looking at', player, 'lookBlockStr');
     this.registerDisplay('scene objects', rendering.scene.children, 'length');
     this.registerDisplay('memory used', this, 'memoryUsage');
@@ -274,7 +277,6 @@ class Debug {
     const texturePackSaver = this.registerSaver('texturePack', this.engine.registry.texturePack, (val) => {
       registry.setTexturePack(val);
     });
-    console.log(this.savedSettings);
     savedRegistryFolder
       .addInput(this.savedSettings, 'texturePack', {
         options: packsObject,

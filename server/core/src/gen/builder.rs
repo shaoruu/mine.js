@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use super::super::engine::{chunk::Chunk, registry::Registry};
 
-use super::biomes::{get_biome_config, BiomeConfig};
+use super::biomes::{BiomeConfig, Biomes};
 
 use server_common::{noise::Noise, vec::Vec3};
 
@@ -53,7 +53,7 @@ impl Builder {
     }
 
     /// Sample locations within chunk to place plants down
-    fn sample_plants(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
+    fn sample_plants(&self, chunk: &Chunk, biomes: &Biomes) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
 
@@ -61,9 +61,11 @@ impl Builder {
             for vz in min.2..max.2 {
                 let vy = chunk.get_max_height(vx, vz) as i32;
 
-                let BiomeConfig { plant_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
+                let BiomeConfig { plant_scale, .. } = biomes.get_biome(vx, vz, 2).config;
 
-                if self.registry.is_plantable(chunk.get_voxel(vx, vy, vz))
+                if self
+                    .registry
+                    .is_plantable(chunk.get_voxel(vx, vy, vz), chunk.get_voxel(vx, vy + 1, vz))
                     && self
                         .noise
                         .central_fractal_perlin(vx as f64, vz as f64, plant_scale, 5)
@@ -77,8 +79,8 @@ impl Builder {
     }
 
     /// Place plants down on sampled locations
-    fn generate_plants(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
-        let locations = self.sample_plants(chunk);
+    fn generate_plants(&self, chunk: &Chunk, biomes: &Biomes) -> Vec<VoxelUpdate> {
+        let locations = self.sample_plants(chunk, biomes);
         let types =
             self.registry
                 .get_type_map(vec!["Dirt", "Grass", "Brown Mushroom", "Red Mushroom"]);
@@ -91,7 +93,7 @@ impl Builder {
 
             let mut id = types["Grass"];
 
-            let BiomeConfig { plant_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
+            let BiomeConfig { plant_scale, .. } = biomes.get_biome(vx, vz, 2).config;
 
             let vx = vx as f64;
             let vy = vy as f64;
@@ -122,16 +124,18 @@ impl Builder {
     }
 
     /// Sample locations within chunk to place trees down
-    fn sample_trees(&self, chunk: &Chunk) -> Vec<Vec3<i32>> {
+    fn sample_trees(&self, chunk: &Chunk, biomes: &Biomes) -> Vec<Vec3<i32>> {
         let mut locations = Vec::new();
         let Chunk { min, max, .. } = chunk;
 
         for vx in min.0..max.0 {
             for vz in min.2..max.2 {
                 let vy = chunk.get_max_height(vx, vz) as i32;
-                let BiomeConfig { tree_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
+                let BiomeConfig { tree_scale, .. } = biomes.get_biome(vx, vz, 2).config;
 
-                if self.registry.is_plantable(chunk.get_voxel(vx, vy, vz))
+                if self
+                    .registry
+                    .is_plantable(chunk.get_voxel(vx, vy, vz), chunk.get_voxel(vx, vy + 1, vz))
                     && self.noise.central_perlin(vx as f64, vz as f64, tree_scale)
                 {
                     locations.push(Vec3(vx, vy, vz));
@@ -143,8 +147,8 @@ impl Builder {
     }
 
     /// Place trees down on sampled locations
-    fn generate_trees(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
-        let locations = self.sample_trees(chunk);
+    fn generate_trees(&self, chunk: &Chunk, biomes: &Biomes) -> Vec<VoxelUpdate> {
+        let locations = self.sample_trees(chunk, biomes);
         let types = self
             .registry
             .get_type_map(vec!["Oak Log", "Oak Leaves", "Acacia Leaves"]);
@@ -154,7 +158,7 @@ impl Builder {
         for location in locations.into_iter() {
             let Vec3(vx, vy, vz) = location;
 
-            let BiomeConfig { tree_scale, .. } = get_biome_config(vx, vz, &self.noise).1;
+            let BiomeConfig { tree_scale, .. } = biomes.get_biome(vx, vz, 2).config;
 
             let test2 = tree_scale * 1.424;
             let test3 = tree_scale * 2.41;
@@ -329,13 +333,13 @@ impl Builder {
     }
 
     /// Returns a list of voxel updates from chunk
-    pub fn build(&self, chunk: &Chunk) -> Vec<VoxelUpdate> {
+    pub fn build(&self, chunk: &Chunk, biomes: &Biomes) -> Vec<VoxelUpdate> {
         let mut updates = Vec::new();
 
-        updates.append(&mut self.generate_lamps(chunk));
-        updates.append(&mut self.generate_stone_structure(chunk));
-        updates.append(&mut self.generate_plants(chunk));
-        updates.append(&mut self.generate_trees(chunk));
+        // updates.append(&mut self.generate_lamps(chunk));
+        // updates.append(&mut self.generate_stone_structure(chunk));
+        updates.append(&mut self.generate_plants(chunk, biomes));
+        updates.append(&mut self.generate_trees(chunk, biomes));
 
         updates
     }

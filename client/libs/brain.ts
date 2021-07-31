@@ -9,6 +9,8 @@ type BrainOptionsType = {
   runningFriction: number;
   standingFriction: number;
 
+  flySpeed: number;
+  flyForce: number;
   flyImpulse: number;
   flyInertia: number;
 
@@ -40,7 +42,9 @@ const defaultBrainOptions: BrainOptionsType = {
   runningFriction: 0.1,
   standingFriction: 4,
 
-  flyImpulse: 0.5,
+  flySpeed: 20,
+  flyForce: 60,
+  flyImpulse: 0.8,
   flyInertia: 3,
 
   sprintFactor: 1.4,
@@ -179,7 +183,7 @@ class Brain {
       const m = this.tempVec;
       const push = this.tempVec2;
       if (this.state.running) {
-        let speed = this.options.maxSpeed;
+        let speed = this.options.flySpeed;
         // todo: add crouch/sprint modifiers if needed
         if (this.state.sprinting) speed *= this.options.sprintFactor;
         // if (state.crouch) speed *= state.crouchMoveMult
@@ -198,7 +202,7 @@ class Brain {
 
         if (pushLen > 0) {
           // pushing force vector
-          let canPush = this.options.moveForce;
+          let canPush = this.options.flyForce;
 
           // apply final force
           const pushAmt = this.options.responsiveness * pushLen;
