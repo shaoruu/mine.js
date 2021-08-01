@@ -379,6 +379,10 @@ class Registry {
     return this.getBlock(id) && this.getBlock(id).isPlant;
   };
 
+  isFluid = (id: number) => {
+    return this.getBlock(id) && this.getBlock(id).isFluid;
+  };
+
   hasBlock = (id: number) => {
     return !!this.options.blocks[id];
   };

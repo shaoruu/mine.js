@@ -28,6 +28,17 @@ We thought it would be interesting to design a game that is inspired by popular 
 
 ![](https://i.imgur.com/2MUrcLb.png)
 
+## :construction_worker: WIP (all help welcomed!)
+
+##### Terrain Generation
+
+![](https://i.imgur.com/vho3K5o.jpg)
+
+##### [Entities (Robot ATM)](https://www.youtube.com/watch?v=zZYVJUPB0xc&t=9s&ab_channel=iantheearl)
+
+![](https://i.imgur.com/iD1lfok.png)
+
+
 ## :video_game: Controls
 
 - <kbd>V</kbd>: Toggle zoom

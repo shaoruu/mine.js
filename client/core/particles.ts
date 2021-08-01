@@ -63,7 +63,7 @@ class Particles {
     const geometry = new BufferGeometry();
 
     voxels.forEach(({ voxel, type }) => {
-      if (type === 0) return;
+      if (type === 0 || this.engine.registry.isFluid(type)) return;
 
       const [x, y, z] = voxel;
 

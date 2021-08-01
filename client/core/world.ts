@@ -211,7 +211,8 @@ class World extends EventEmitter {
 
     const [vx, vy, vz] = voxel;
 
-    if (this.getVoxelByVoxel(voxel) !== 0 && type !== 0) {
+    const currType = this.getVoxelByVoxel(voxel);
+    if (currType !== 0 && !this.engine.registry.isFluid(currType) && type !== 0) {
       return;
     }
 

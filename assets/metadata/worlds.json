@@ -38,6 +38,7 @@
       "name": "z-dev-terrains",
       "time": 1200,
       "tickSpeed": 0,
+      "maxHeight": 256,
       "chunkSize": 16,
       "subChunks": 8,
       "save": false,
