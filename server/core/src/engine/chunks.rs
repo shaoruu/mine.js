@@ -1,9 +1,7 @@
-// use rayon::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     path::PathBuf,
     sync::Arc,
-    time::Instant,
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
@@ -155,7 +153,7 @@ impl Chunks {
 
                     (
                         self.get_chunk(coords).unwrap().clone(),
-                        Space::new(self, &coords, self.config.max_light_level as usize),
+                        Space::new(self, coords, self.config.max_light_level as usize),
                     )
                 })
                 .collect();
@@ -166,7 +164,7 @@ impl Chunks {
 
             rayon::spawn(move || {
                 let meshed = to_mesh
-                    .into_iter()
+                    .into_par_iter()
                     .map(|(mut chunk, space)| {
                         if chunk.needs_propagation {
                             let lights = Lights::calc_light(&space, &registry, &config);
@@ -219,7 +217,7 @@ impl Chunks {
 
             rayon::spawn(move || {
                 let chunks: Vec<Chunk> = chunks
-                    .into_iter()
+                    .into_par_iter()
                     .map(|mut chunk| {
                         Generator::generate_chunk(&mut chunk, &registry, &biomes, &config);
                         Generator::generate_chunk_height_map(&mut chunk, &registry, &config);

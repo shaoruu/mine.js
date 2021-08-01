@@ -135,9 +135,7 @@ impl Biomes {
         let average = sum / results.len() as f64;
 
         let mut d_sum = 0.0;
-        results
-            .iter()
-            .for_each(|(dist, _)| d_sum += (average - dist).abs());
+        results.iter().for_each(|(dist, _)| d_sum += average - dist);
 
         let d_average = d_sum / results.len() as f64;
 
@@ -162,9 +160,9 @@ impl Biomes {
         let temperature = (self
             .temperature_noise
             .simplex2(vx, vz, self.temperature_scale)
-            + 1.0)
+            + 0.7)
             * 0.5;
-        let humidity = (self.humidity_noise.simplex2(vx, vz, self.humidity_scale) + 1.0) * 0.5;
+        let humidity = (self.humidity_noise.simplex2(vx, vz, self.humidity_scale) + 0.7) * 0.5;
 
         let biomes = self.get_biomes(temperature, humidity, sample);
 

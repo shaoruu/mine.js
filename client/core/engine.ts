@@ -100,7 +100,7 @@ const defaultConfig: ConfigType = {
     renderRadius: 6,
     requestRadius: 8,
     // maximum amount of chunks to process per frame tick
-    maxChunkProcessPerFrame: 16,
+    maxChunkProcessPerFrame: 8,
     maxBlockPerFrame: 500,
     chunkAnimation: true,
     animationTime: 500,

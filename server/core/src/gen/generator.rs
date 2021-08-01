@@ -22,7 +22,7 @@ impl Generator {
         config: &WorldConfig,
     ) {
         let Vec3(start_x, start_y, start_z) = chunk.min;
-        let Vec3(end_x, _, end_z) = chunk.max;
+        let Vec3(end_x, end_y, end_z) = chunk.max;
 
         match config.generation.as_str() {
             "flat" => {
@@ -184,20 +184,21 @@ impl Generator {
                 let noise = Noise::new(LEVEL_SEED);
 
                 let is_solid_at = |vx: i32, vy: i32, vz: i32, config: &BiomeConfig| {
-                    vy < config.height_offset
-                        && noise.octave_simplex3(
-                            vx as f64,
-                            (vy - config.height_offset) as f64,
-                            vz as f64,
-                            config.scale,
-                            NoiseConfig {
-                                octaves: config.octaves,
-                                persistence: config.persistence,
-                                lacunarity: config.lacunarity,
-                                height_scale: config.height_scale,
-                                amplifier: config.amplifier,
-                            },
-                        ) > biomes.configs.solid_threshold
+                    // vy < config.height_offset
+                    //     &&
+                    noise.octave_simplex3(
+                        vx as f64,
+                        (vy - config.height_offset) as f64,
+                        vz as f64,
+                        config.scale,
+                        NoiseConfig {
+                            octaves: config.octaves,
+                            persistence: config.persistence,
+                            lacunarity: config.lacunarity,
+                            height_scale: config.height_scale,
+                            amplifier: config.amplifier,
+                        },
+                    ) > biomes.configs.solid_threshold
                 };
 
                 for vx in start_x..end_x {
@@ -206,10 +207,7 @@ impl Generator {
 
                         let cover = *registry.get_id_by_name(&biome.blocks.cover);
 
-                        for vy in (start_y
-                            ..biome.config.height_offset.max(biomes.configs.water_height))
-                            .rev()
-                        {
+                        for vy in (start_y..end_y).rev() {
                             let is_solid = is_solid_at(vx, vy, vz, &biome.config);
 
                             if !is_solid && vy < biomes.configs.water_height {
