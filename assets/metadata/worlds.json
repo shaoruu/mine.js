@@ -19,7 +19,7 @@
     "playerDimensions": [0.6, 1.8, 0.6],
     "playerHead": 1.6,
     "maxPerThread": 10,
-    "serverTickRate": 8
+    "serverTickRate": 2
   },
   "worlds": [
     {

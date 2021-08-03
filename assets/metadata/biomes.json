@@ -1,25 +1,28 @@
 {
   "temperatureScale": 0.00625,
-  "temperatureSeed": 3251,
-  "humidityScale": 0.00625,
-  "humiditySeed": 5113,
+  "temperatureSeed": 325151,
+  "humidityScale": 0.00825,
+  "humiditySeed": 515113,
+  "riverScale": 0.003,
+  "riverSeed": 3251,
   "waterHeight": 44,
   "solidThreshold": 0.2,
-  "sampleSize": 2,
+  "riverThreshold": 0.04,
+  "radiusScale": 1.3,
+  "radiusMinimum": 0.08,
   "river": {
     "name": "River",
-    "temperature": -1.0,
-    "humidity": -1.0,
+    "presets": [[0.3, 0.1]],
     "blocks": {
       "cover": "Sand"
     },
     "config": {
-      "scale": 0.04,
+      "scale": 0.004,
       "octaves": 3,
       "persistence": 0.8,
       "lacunarity": 0.4,
-      "heightOffset": 30,
-      "heightScale": 0.5,
+      "heightOffset": 20,
+      "heightScale": 0.05,
       "treeScale": 0.1,
       "plantScale": 0.2,
       "amplifier": 0.8
@@ -27,19 +30,36 @@
   },
   "biomes": [
     {
-      "name": "Desert",
-      "temperature": 0.1,
-      "humidity": 0.1,
+      "name": "Lake",
+      "presets": [[0.3, 0.1]],
       "blocks": {
         "cover": "Sand"
       },
       "config": {
-        "scale": 0.03,
+        "scale": 0.004,
+        "octaves": 3,
+        "persistence": 0.8,
+        "lacunarity": 0.4,
+        "heightOffset": 20,
+        "heightScale": 0.05,
+        "treeScale": 0.1,
+        "plantScale": 0.2,
+        "amplifier": 0.8
+      }
+    },
+    {
+      "name": "Desert",
+      "presets": [[0.1, 0.1]],
+      "blocks": {
+        "cover": "Sand"
+      },
+      "config": {
+        "scale": 0.003,
         "octaves": 2,
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 58,
-        "heightScale": 0.3,
+        "heightScale": 0.05,
         "treeScale": 0.1,
         "plantScale": 0.2,
         "amplifier": 0.4
@@ -47,18 +67,17 @@
     },
     {
       "name": "Grass Desert",
-      "temperature": 0.5,
-      "humidity": 0.1,
+      "presets": [[0.5, 0.1]],
       "blocks": {
         "cover": "Sand"
       },
       "config": {
-        "scale": 0.04,
+        "scale": 0.004,
         "octaves": 2,
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 60,
-        "heightScale": 0.3,
+        "heightScale": 0.05,
         "treeScale": 0.1,
         "plantScale": 0.2,
         "amplifier": 0.4
@@ -66,75 +85,89 @@
     },
     {
       "name": "Tundra",
-      "temperature": 0.9,
-      "humidity": 0.3,
+      "presets": [[0.9, 0.3]],
       "blocks": {
-        "cover": "Sand"
+        "cover": "Dirt"
       },
       "config": {
-        "scale": 0.03,
+        "scale": 0.02,
         "octaves": 3,
         "persistence": 0.8,
         "lacunarity": 0.4,
-        "heightOffset": 60,
-        "heightScale": 0.6,
-        "treeScale": 0.1,
-        "plantScale": 0.2,
-        "amplifier": 0.4
+        "heightOffset": 70,
+        "heightScale": 0.05,
+        "treeScale": 0.06,
+        "plantScale": 0.3,
+        "amplifier": 0.6
       }
     },
     {
       "name": "Taiga",
-      "temperature": 0.7,
-      "humidity": 0.6,
+      "presets": [[0.7, 0.5]],
       "blocks": {
-        "cover": "Grass Block"
+        "cover": "Dirt"
       },
       "config": {
-        "scale": 0.04,
+        "scale": 0.011,
         "octaves": 3,
-        "persistence": 0.8,
-        "lacunarity": 0.4,
-        "heightOffset": 75,
-        "heightScale": 0.8,
+        "persistence": 0.7,
+        "lacunarity": 0.3,
+        "heightOffset": 80,
+        "heightScale": 0.05,
         "treeScale": 0.18,
         "plantScale": 0.4,
         "amplifier": 0.8
       }
     },
     {
+      "name": "Mountains",
+      "presets": [[0.7, 0.7]],
+      "blocks": {
+        "cover": "Stone"
+      },
+      "config": {
+        "scale": 0.03,
+        "octaves": 3,
+        "persistence": 1.2,
+        "lacunarity": 0.3,
+        "heightOffset": 100,
+        "heightScale": 0.05,
+        "treeScale": 0.18,
+        "plantScale": 0.4,
+        "amplifier": 1.8
+      }
+    },
+    {
       "name": "Woods",
-      "temperature": 0.4,
-      "humidity": 0.36,
+      "presets": [[0.4, 0.36]],
       "blocks": {
         "cover": "Grass Block"
       },
       "config": {
-        "scale": 0.003,
+        "scale": 0.008,
         "octaves": 4,
-        "persistence": 1.8,
-        "lacunarity": 1.4,
-        "heightOffset": 105,
-        "heightScale": 10.6,
-        "treeScale": 0.02,
+        "persistence": 0.6,
+        "lacunarity": 0.4,
+        "heightOffset": 70,
+        "heightScale": 0.05,
+        "treeScale": 0.12,
         "plantScale": 0.4,
-        "amplifier": 1.6
+        "amplifier": 0.8
       }
     },
     {
       "name": "Savanna",
-      "temperature": 0.1,
-      "humidity": 0.4,
+      "presets": [[0.1, 0.4]],
       "blocks": {
         "cover": "Grass Block"
       },
       "config": {
-        "scale": 0.04,
+        "scale": 0.004,
         "octaves": 2,
         "persistence": 0.8,
         "lacunarity": 0.2,
         "heightOffset": 60,
-        "heightScale": 0.1,
+        "heightScale": 0.05,
         "treeScale": 0.03,
         "plantScale": 0.4,
         "amplifier": 0.2
@@ -142,18 +175,17 @@
     },
     {
       "name": "Forest",
-      "temperature": 0.4,
-      "humidity": 0.64,
+      "presets": [[0.4, 0.64]],
       "blocks": {
         "cover": "Grass Block"
       },
       "config": {
-        "scale": 0.03,
+        "scale": 0.003,
         "octaves": 3,
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 60,
-        "heightScale": 0.5,
+        "heightScale": 0.05,
         "treeScale": 0.24,
         "plantScale": 0.4,
         "amplifier": 0.6
@@ -161,18 +193,17 @@
     },
     {
       "name": "Seasonal Forest",
-      "temperature": 0.1,
-      "humidity": 0.64,
+      "presets": [[0.1, 0.64]],
       "blocks": {
         "cover": "Grass Block"
       },
       "config": {
-        "scale": 0.04,
+        "scale": 0.004,
         "octaves": 3,
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 58,
-        "heightScale": 0.3,
+        "heightScale": 0.05,
         "treeScale": 0.3,
         "plantScale": 0.3,
         "amplifier": 0.4
@@ -180,18 +211,17 @@
     },
     {
       "name": "Swamp",
-      "temperature": 0.5,
-      "humidity": 0.9,
+      "presets": [[0.5, 0.9]],
       "blocks": {
         "cover": "Grass Block"
       },
       "config": {
-        "scale": 0.03,
+        "scale": 0.003,
         "octaves": 2,
         "persistence": 0.4,
         "lacunarity": 0.2,
         "heightOffset": 53,
-        "heightScale": 0.3,
+        "heightScale": 0.05,
         "treeScale": 0.012,
         "plantScale": 0.4,
         "amplifier": 0.1
@@ -199,13 +229,12 @@
     },
     {
       "name": "Rain Forest",
-      "temperature": 0.1,
-      "humidity": 0.9,
+      "presets": [[0.1, 0.9]],
       "blocks": {
         "cover": "Grass Block"
       },
       "config": {
-        "scale": 0.07,
+        "scale": 0.007,
         "octaves": 3,
         "persistence": 0.8,
         "lacunarity": 0.4,

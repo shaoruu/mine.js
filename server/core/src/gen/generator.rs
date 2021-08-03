@@ -203,7 +203,7 @@ impl Generator {
 
                 for vx in start_x..end_x {
                     for vz in start_z..end_z {
-                        let biome = biomes.get_biome(vx, vz, biomes.configs.sample_size);
+                        let biome = biomes.get_biome(vx, vz);
 
                         let cover = *registry.get_id_by_name(&biome.blocks.cover);
 

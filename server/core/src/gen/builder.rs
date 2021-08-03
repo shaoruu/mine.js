@@ -61,8 +61,7 @@ impl Builder {
             for vz in min.2..max.2 {
                 let vy = chunk.get_max_height(vx, vz) as i32;
 
-                let BiomeConfig { plant_scale, .. } =
-                    biomes.get_biome(vx, vz, biomes.configs.sample_size).config;
+                let BiomeConfig { plant_scale, .. } = biomes.get_biome(vx, vz).config;
 
                 if self
                     .registry
@@ -94,8 +93,7 @@ impl Builder {
 
             let mut id = types["Grass"];
 
-            let BiomeConfig { plant_scale, .. } =
-                biomes.get_biome(vx, vz, biomes.configs.sample_size).config;
+            let BiomeConfig { plant_scale, .. } = biomes.get_biome(vx, vz).config;
 
             let vx = vx as f64;
             let vy = vy as f64;
@@ -133,8 +131,7 @@ impl Builder {
         for vx in min.0..max.0 {
             for vz in min.2..max.2 {
                 let vy = chunk.get_max_height(vx, vz) as i32;
-                let BiomeConfig { tree_scale, .. } =
-                    biomes.get_biome(vx, vz, biomes.configs.sample_size).config;
+                let BiomeConfig { tree_scale, .. } = biomes.get_biome(vx, vz).config;
 
                 if self
                     .registry
@@ -159,8 +156,7 @@ impl Builder {
         for location in locations.into_iter() {
             let Vec3(vx, vy, vz) = location;
 
-            let BiomeConfig { tree_scale, .. } =
-                biomes.get_biome(vx, vz, biomes.configs.sample_size).config;
+            let BiomeConfig { tree_scale, .. } = biomes.get_biome(vx, vz).config;
 
             let test2 = tree_scale * 1.424;
             let test3 = tree_scale * 2.41;
