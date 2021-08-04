@@ -52,7 +52,9 @@ class Network {
     server.binaryType = 'arraybuffer';
     server.sendEvent = (event) => {
       const encoded = Network.encode(event);
-      server.send(encoded);
+      if (this.connected) {
+        server.send(encoded);
+      }
     };
     server.onopen = () => {
       this.engine.emit('connected');
@@ -65,16 +67,24 @@ class Network {
     server.onmessage = this.onMessage;
     server.onclose = () => {
       this.engine.emit('disconnected');
-      this.connected = false;
 
-      this.reconnection = setTimeout(() => {
-        this.connect();
-      }, this.options.reconnectTimeout);
+      if (this.connected) {
+        this.reconnection = setTimeout(() => {
+          this.connect();
+        }, this.options.reconnectTimeout);
+      }
+
+      this.connected = false;
     };
 
     server.serverURL = url;
 
     this.server = server;
+  };
+
+  dispose = () => {
+    this.connected = false;
+    this.server.close();
   };
 
   onInit = (event) => {

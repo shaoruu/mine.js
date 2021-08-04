@@ -16,6 +16,8 @@ class Inputs {
   public clickCallbacks: Map<ClickType, ClickCallbacks> = new Map();
   public scrollCallbacks: ScrollCallbacks = [];
 
+  private unbinds: (() => void)[] = [];
+
   constructor(public engine: Engine) {
     this.add('forward', 'w');
     this.add('backward', 's');
@@ -36,42 +38,44 @@ class Inputs {
 
   initEventPrevents = () => {
     if (isElectron()) {
-      // add event listener to document to unlock control
-      document.addEventListener('keyup', (e) => {
+      const listener = (e) => {
         if (e.key === 'Escape') {
           e.preventDefault();
           if (this.engine.locked) {
             this.engine.unlock();
           }
         }
-      });
+      };
+
+      // add event listener to document to unlock control
+      document.addEventListener('keyup', listener);
+      this.unbinds.push(() => document.removeEventListener('keyup', listener));
     }
   };
 
   initClickListener = () => {
     (['left', 'middle', 'right'] as ClickType[]).forEach((type) => this.clickCallbacks.set(type, []));
 
-    document.addEventListener(
-      'mousedown',
-      ({ button }) => {
-        if (!this.engine.locked) return;
+    const listener = ({ button }) => {
+      if (!this.engine.locked) return;
 
-        let callbacks: ClickCallbacks = [];
+      let callbacks: ClickCallbacks = [];
 
-        if (button === 0) callbacks = this.clickCallbacks.get('left');
-        else if (button === 1) callbacks = this.clickCallbacks.get('middle');
-        else if (button === 2) callbacks = this.clickCallbacks.get('right');
+      if (button === 0) callbacks = this.clickCallbacks.get('left');
+      else if (button === 1) callbacks = this.clickCallbacks.get('middle');
+      else if (button === 2) callbacks = this.clickCallbacks.get('right');
 
-        callbacks.forEach(({ namespace, callback }) => {
-          if (this.namespace === namespace) callback();
-        });
-      },
-      false,
-    );
+      callbacks.forEach(({ namespace, callback }) => {
+        if (this.namespace === namespace) callback();
+      });
+    };
+
+    document.addEventListener('mousedown', listener, false);
+    this.unbinds.push(() => document.removeEventListener('mousedown', listener, false));
   };
 
   initScrollListener = () => {
-    document.addEventListener('wheel', ({ deltaY }) => {
+    const listener = ({ deltaY }) => {
       if (!this.engine.locked) return;
 
       this.scrollCallbacks.forEach(({ up, down, namespace }) => {
@@ -80,7 +84,10 @@ class Inputs {
           else if (deltaY < 0) down(deltaY);
         }
       });
-    });
+    };
+
+    document.addEventListener('wheel', listener);
+    this.unbinds.push(() => document.removeEventListener('wheel', listener));
   };
 
   click = (type: ClickType, callback: () => void, namespace: InputNamespace) => {
@@ -123,15 +130,18 @@ class Inputs {
       },
       occasion,
     );
-  };
 
-  unbind = (name: string) => {
-    const combo = this.combos.get(name);
-    if (combo) Mousetrap.unbind(combo);
+    this.unbinds.push(() => {
+      mousetrap.unbind(combo, occasion);
+    });
   };
 
   setNamespace = (namespace: InputNamespace) => {
     this.namespace = namespace;
+  };
+
+  dispose = () => {
+    this.unbinds.forEach((fn) => fn());
   };
 }
 

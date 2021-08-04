@@ -100,7 +100,7 @@ const defaultConfig: ConfigType = {
     renderRadius: 6,
     requestRadius: 8,
     // maximum amount of chunks to process per frame tick
-    maxChunkProcessPerFrame: 8,
+    maxChunkProcessPerFrame: 4,
     maxBlockPerFrame: 500,
     chunkAnimation: true,
     animationTime: 500,
@@ -176,6 +176,7 @@ class Engine extends EventEmitter {
   public tickSpeed = 0.1;
   public started = false;
   public focused = false;
+  public killed = false;
 
   // TODO: make a loader?
   public texturesLoaded = false;
@@ -185,6 +186,9 @@ class Engine extends EventEmitter {
   constructor(worldData, params: DeepPartial<ConfigType> = {}) {
     super();
 
+    // extract the unmergable ones out first
+    const { container } = params;
+
     this.config = merge(defaultConfig, params);
 
     this.load(worldData);
@@ -192,7 +196,6 @@ class Engine extends EventEmitter {
     const {
       camera,
       chat,
-      container,
       debug,
       entities,
       shadows,
@@ -217,6 +220,7 @@ class Engine extends EventEmitter {
     this.network = new Network(this, network);
 
     // container
+    // @ts-ignore
     this.container = new Container(this, container);
 
     // rendering
@@ -320,7 +324,9 @@ class Engine extends EventEmitter {
       this.tick();
       this.render();
 
-      requestAnimationFrame(cycle);
+      if (!this.killed) {
+        requestAnimationFrame(cycle);
+      }
     };
 
     cycle();
@@ -370,6 +376,14 @@ class Engine extends EventEmitter {
   pause = () => {
     this.paused = true;
     this.emit('pause');
+  };
+
+  stop = () => {
+    this.network.dispose();
+    this.inputs.dispose();
+    this.player.dispose();
+
+    this.killed = true;
   };
 
   lock = (cb?: () => void) => {

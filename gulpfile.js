@@ -7,6 +7,10 @@ gulp.task('dev', function () {
     notify: false,
     server: {
       baseDir: ['./public'], //added multiple directories
+      routes: {
+        '/biomes': 'public/index.html',
+        '/game': 'public/index.html',
+      },
     },
     files: ['./public'],
     ui: false,

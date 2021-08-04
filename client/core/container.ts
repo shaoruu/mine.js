@@ -14,6 +14,8 @@ class Container extends EventEmitter {
   public domElement: HTMLElement = document.body;
   public canvas: HTMLCanvasElement;
 
+  private unbinds: (() => void)[] = [];
+
   constructor(public engine: Engine, public options: ContainerOptionsType) {
     super();
 
@@ -42,20 +44,28 @@ class Container extends EventEmitter {
     this.fitCanvas();
 
     this.domElement = domElement;
-    this.domElement.append(this.canvas);
+    this.domElement.appendChild(this.canvas);
     this.domElement.id = 'mine.js-container';
   };
 
   setupListeners = () => {
-    window.addEventListener('blur', () => {
+    const onBlur = () => {
       this.engine.emit('blur');
       this.engine.focused = false;
-    });
+    };
 
-    window.addEventListener('focus', () => {
+    const onFocus = () => {
       this.engine.emit('focus');
       this.engine.focused = true;
-    });
+    };
+
+    window.addEventListener('blur', onBlur);
+    window.addEventListener('focus', onFocus);
+
+    this.unbinds.push(
+      () => window.removeEventListener('blur', onBlur),
+      () => window.removeEventListener('focus', onFocus),
+    );
 
     this.engine.inputs.bind('k', this.toggleFullScreen, '*');
   };
@@ -98,6 +108,10 @@ class Container extends EventEmitter {
       width: '100vw',
       height: '100vh',
     });
+  };
+
+  dispose = () => {
+    this.unbinds.forEach((fn) => fn());
   };
 }
 

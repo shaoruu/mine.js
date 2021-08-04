@@ -149,6 +149,7 @@ class Helper {
     };
 
     let url = new Url();
+    url.hash = '';
 
     if (clear) {
       url.clearQuery();

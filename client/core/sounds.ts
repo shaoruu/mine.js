@@ -72,7 +72,9 @@ class Sounds extends EventEmitter {
 
       // means it was in the midst stopping
       if (pack.tween) {
-        pack.tween.to({ volume: maxVolume }).duration(fadeTime).start();
+        if (pack.audio.getVolume() !== maxVolume) {
+          pack.tween.to({ volume: maxVolume }).duration(fadeTime).start();
+        }
       } else {
         const { audio } = pack;
 
@@ -136,15 +138,17 @@ class Sounds extends EventEmitter {
   pause = (name: string) => {
     const pack = this.getAudio(name);
     if (pack && pack.tween) {
-      pack.tween
-        .to({ volume: 0 })
-        .start()
-        .onComplete(() => {
-          pack.tween = null;
-          pack.audio.pause();
+      if (pack.audio.getVolume() !== 0) {
+        pack.tween
+          .to({ volume: 0 })
+          .start()
+          .onComplete(() => {
+            pack.tween = null;
+            pack.audio.pause();
 
-          this.emit('stopped', name);
-        });
+            this.emit('stopped', name);
+          });
+      }
     }
   };
 

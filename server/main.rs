@@ -37,7 +37,8 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
-            .service(routes::index)
+            .route("/", web::get().to(routes::index))
+            .route("/biomes", web::get().to(routes::index))
             .service(routes::worlds)
             .service(routes::world)
             .service(routes::time)

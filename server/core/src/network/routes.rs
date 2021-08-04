@@ -42,7 +42,6 @@ pub async fn ws_route(
 }
 
 /// Main website path, serving statically built index.html
-#[get("/")]
 pub async fn index() -> Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("public/index.html")?)
 }

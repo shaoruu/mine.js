@@ -494,6 +494,10 @@ class Player {
     this.own.mesh.visible = this.perspective !== 'first';
   };
 
+  dispose = () => {
+    this.controls.dispose();
+  };
+
   private updatePerspective = () => {
     const {
       world,
