@@ -332,8 +332,8 @@ impl Builder {
 
         // updates.append(&mut self.generate_lamps(chunk));
         // updates.append(&mut self.generate_stone_structure(chunk));
-        updates.append(&mut self.generate_plants(chunk, biomes));
-        updates.append(&mut self.generate_trees(chunk, biomes));
+        // updates.append(&mut self.generate_plants(chunk, biomes));
+        // updates.append(&mut self.generate_trees(chunk, biomes));
 
         updates
     }

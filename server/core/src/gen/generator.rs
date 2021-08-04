@@ -6,6 +6,7 @@ use super::super::{
 
 use super::biomes::{get_biome_config, BiomeConfig, Biomes, CAVE_SCALE};
 
+use log::debug;
 use server_common::{
     noise::{Noise, NoiseConfig},
     vec::Vec3,
@@ -183,10 +184,13 @@ impl Generator {
 
                 let noise = Noise::new(LEVEL_SEED);
 
-                let is_solid_at = |vx: i32, vy: i32, vz: i32, config: &BiomeConfig| {
+                let mut sum = 0.0;
+                let mut count = 0.0;
+
+                let mut is_solid_at = |vx: i32, vy: i32, vz: i32, config: &BiomeConfig| {
                     // vy < config.height_offset
                     //     &&
-                    noise.octave_simplex3(
+                    let val = noise.octave_simplex3(
                         vx as f64,
                         (vy - config.height_offset) as f64,
                         vz as f64,
@@ -198,7 +202,12 @@ impl Generator {
                             height_scale: config.height_scale,
                             amplifier: config.amplifier,
                         },
-                    ) > biomes.configs.solid_threshold
+                    );
+
+                    sum += val;
+                    count += 1.0;
+
+                    val > biomes.configs.solid_threshold
                 };
 
                 for vx in start_x..end_x {
@@ -235,6 +244,8 @@ impl Generator {
                 }
 
                 chunk.is_empty = is_empty;
+
+                // debug!("average {:?}", sum / count);
             }
             _ => panic!("Generation type not found."),
         }

@@ -1,15 +1,15 @@
 {
-  "temperatureScale": 0.00625,
+  "temperatureScale": 0.000325,
   "temperatureSeed": 325151,
-  "humidityScale": 0.00825,
+  "humidityScale": 0.00325,
   "humiditySeed": 515113,
-  "riverScale": 0.003,
+  "riverScale": 0.0083,
   "riverSeed": 3251,
-  "waterHeight": 44,
-  "solidThreshold": 0.2,
-  "riverThreshold": 0.04,
+  "waterHeight": 52,
+  "solidThreshold": -0.6,
+  "riverThreshold": 0.02,
   "radiusScale": 1.3,
-  "radiusMinimum": 0.08,
+  "radiusMinimum": 0.1,
   "river": {
     "name": "River",
     "presets": [[0.3, 0.1]],
@@ -21,8 +21,8 @@
       "octaves": 3,
       "persistence": 0.8,
       "lacunarity": 0.4,
-      "heightOffset": 20,
-      "heightScale": 0.05,
+      "heightOffset": 45,
+      "heightScale": 0.01,
       "treeScale": 0.1,
       "plantScale": 0.2,
       "amplifier": 0.8
@@ -41,7 +41,7 @@
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 20,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.1,
         "plantScale": 0.2,
         "amplifier": 0.8
@@ -59,7 +59,7 @@
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 58,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.1,
         "plantScale": 0.2,
         "amplifier": 0.4
@@ -77,7 +77,7 @@
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 60,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.1,
         "plantScale": 0.2,
         "amplifier": 0.4
@@ -95,7 +95,7 @@
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 70,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.06,
         "plantScale": 0.3,
         "amplifier": 0.6
@@ -113,7 +113,7 @@
         "persistence": 0.7,
         "lacunarity": 0.3,
         "heightOffset": 80,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.18,
         "plantScale": 0.4,
         "amplifier": 0.8
@@ -131,7 +131,7 @@
         "persistence": 1.2,
         "lacunarity": 0.3,
         "heightOffset": 100,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.18,
         "plantScale": 0.4,
         "amplifier": 1.8
@@ -144,15 +144,15 @@
         "cover": "Grass Block"
       },
       "config": {
-        "scale": 0.008,
+        "scale": 0.08,
         "octaves": 4,
         "persistence": 0.6,
         "lacunarity": 0.4,
         "heightOffset": 70,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.12,
         "plantScale": 0.4,
-        "amplifier": 0.8
+        "amplifier": 0.3
       }
     },
     {
@@ -167,7 +167,7 @@
         "persistence": 0.8,
         "lacunarity": 0.2,
         "heightOffset": 60,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.03,
         "plantScale": 0.4,
         "amplifier": 0.2
@@ -185,7 +185,7 @@
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 60,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.24,
         "plantScale": 0.4,
         "amplifier": 0.6
@@ -203,7 +203,7 @@
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 58,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.3,
         "plantScale": 0.3,
         "amplifier": 0.4
@@ -221,7 +221,7 @@
         "persistence": 0.4,
         "lacunarity": 0.2,
         "heightOffset": 53,
-        "heightScale": 0.05,
+        "heightScale": 0.01,
         "treeScale": 0.012,
         "plantScale": 0.4,
         "amplifier": 0.1
@@ -239,7 +239,7 @@
         "persistence": 0.8,
         "lacunarity": 0.4,
         "heightOffset": 55,
-        "heightScale": 0.8,
+        "heightScale": 0.01,
         "treeScale": 0.3,
         "plantScale": 0.4,
         "amplifier": 0.2

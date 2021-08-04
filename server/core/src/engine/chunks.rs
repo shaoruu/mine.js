@@ -164,7 +164,7 @@ impl Chunks {
 
             rayon::spawn(move || {
                 let meshed = to_mesh
-                    .into_par_iter()
+                    .into_iter()
                     .map(|(mut chunk, space)| {
                         if chunk.needs_propagation {
                             let lights = Lights::calc_light(&space, &registry, &config);
@@ -217,7 +217,7 @@ impl Chunks {
 
             rayon::spawn(move || {
                 let chunks: Vec<Chunk> = chunks
-                    .into_par_iter()
+                    .into_iter()
                     .map(|mut chunk| {
                         Generator::generate_chunk(&mut chunk, &registry, &biomes, &config);
                         Generator::generate_chunk_height_map(&mut chunk, &registry, &config);
@@ -478,10 +478,7 @@ impl Chunks {
         } else {
             to_generate.par_iter_mut().for_each(|new_chunk| {
                 Generator::generate_chunk(new_chunk, &self.registry, &self.biomes, &self.config);
-            });
-
-            to_generate.par_iter_mut().for_each(|chunk| {
-                Generator::generate_chunk_height_map(chunk, &self.registry, &self.config);
+                Generator::generate_chunk_height_map(new_chunk, &self.registry, &self.config);
             });
 
             for chunk in to_generate {
@@ -491,7 +488,7 @@ impl Chunks {
 
         let to_decorate: Vec<Chunk> = to_decorate
             .iter()
-            .map(|coords| self.chunks.remove(&coords))
+            .map(|coords| self.chunks.remove(coords))
             .flatten()
             .collect();
 

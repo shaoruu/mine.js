@@ -1,3 +1,5 @@
+use std::f64;
+
 use server_common::noise::{Noise, NoiseConfig};
 use server_core::gen::biomes::Biomes;
 
@@ -68,9 +70,13 @@ fn main() {
             //     },
             // );
 
+            let n: f64 = 1.0;
+
+            // let val =
+            //     noise.simplex2(vx as f64, vz as f64, 0.8) * (1.0 / (n.sqrt() / 2.0)) * 0.5 + 0.5;
             let val = noise.simplex2(vx as f64, vz as f64, 0.008) + 0.5;
-            let val = val + (noise2.simplex2(vx as f64, vz as f64, 0.008 * 1.2) + 0.5).powi(2);
-            let val = val * 0.6;
+            // let val = val + (noise2.simplex2(vx as f64, vz as f64, 0.008 * 1.2) + 0.5).powi(2);
+            // let val = val ;
 
             if val < min {
                 min = val;
