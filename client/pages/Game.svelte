@@ -71,6 +71,13 @@
   };
 </script>
 
+{#if loading}
+  <div id="loading">
+    <p>loading...</p>
+    <div><div /></div>
+  </div>
+{/if}
+
 <main>
   <div bind:this={domElement} />
   <div>
@@ -129,5 +136,56 @@
   #pause-menu > h2 {
     color: #ccc;
     margin-bottom: 1em;
+  }
+
+  #loading {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: 10000000000000000;
+    background: #334257;
+    top: 0;
+    left: 0;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  #loading > div {
+    margin: 20px;
+    width: 200px;
+    height: 5px;
+    background: gray;
+  }
+
+  #loading > div > div {
+    height: 100%;
+    background: green;
+    animation: test 0.8s forwards;
+  }
+
+  @keyframes test {
+    0% {
+      width: 20%;
+    }
+
+    20% {
+      width: 30%;
+    }
+
+    40% {
+      width: 60%;
+    }
+
+    70% {
+      width: 70%;
+    }
+
+    90% {
+      width: 95%;
+    }
   }
 </style>

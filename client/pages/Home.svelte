@@ -47,13 +47,6 @@
   });
 </script>
 
-{#if loading}
-  <div id="loading">
-    <p>loading...</p>
-    <div><div /></div>
-  </div>
-{/if}
-
 <main>
   <div id="world-list-wrapper" bind:this={wrapper}>
     <h1 id="world-list-title">Select a world</h1>
@@ -198,57 +191,6 @@
   #world-list-item > div > ul > li:nth-child(3) {
     /* background: linear-gradient(0deg, green 0%, green 80%, gray 81%, gray 100%); */
     background: green;
-  }
-
-  #loading {
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    z-index: 10000000000000000;
-    background: #334257;
-    top: 0;
-    left: 0;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
-
-  #loading > div {
-    margin: 20px;
-    width: 200px;
-    height: 5px;
-    background: gray;
-  }
-
-  #loading > div > div {
-    height: 100%;
-    background: green;
-    animation: test 0.8s forwards;
-  }
-
-  @keyframes test {
-    0% {
-      width: 20%;
-    }
-
-    20% {
-      width: 30%;
-    }
-
-    40% {
-      width: 60%;
-    }
-
-    70% {
-      width: 70%;
-    }
-
-    90% {
-      width: 95%;
-    }
   }
 
   .selected {
