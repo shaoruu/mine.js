@@ -82,6 +82,7 @@
     "is-electron": "^2.2.0",
     "mousetrap": "^1.6.5",
     "ndarray": "^1.0.19",
+    "noisejs": "^2.1.0",
     "pako": "^2.0.3",
     "query-string": "^7.0.0",
     "random-name": "^0.1.2",
