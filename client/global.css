@@ -83,3 +83,16 @@ body {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+.navigation {
+  color: #eeeeee;
+  background: #2c394b;
+  border: 2px solid #2c394b;
+  padding: 10px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.navigation:hover {
+  border-color: #eeeeee;
+}

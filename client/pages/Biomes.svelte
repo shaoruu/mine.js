@@ -23,8 +23,10 @@
 
   import BiomesVertexShader from '../core/shaders/biomes/vertex.glsl';
   import BiomesFragmentShader from '../core/shaders/biomes/fragment.glsl';
+  import { link } from 'svelte-spa-router';
 
   let el: HTMLCanvasElement;
+  let wrapper: HTMLDivElement;
 
   function packColor(color: Color) {
     return Math.floor(color.r * 255) + Math.floor(color.g * 255) * 256 + Math.floor(color.b * 255) * 256 ** 2;
@@ -54,10 +56,13 @@
     controls.maxPolarAngle = Math.PI / 2;
 
     const debug = new Pane();
+    debug.element.parentNode.removeChild(debug.element);
+    wrapper.appendChild(debug.element);
 
     // CONSTANTS
     // const SEED = 500 * Math.random();
     const SEED = 189.91792574986545;
+    const SCALE = 0.04;
     const WIDTH = 300;
     const DIMENSION = 512;
     const RADIUS_SCALE = 1.2;
@@ -69,7 +74,7 @@
       depthColor: '#8e8b99',
       surfaceColor: '#f5ece4',
       center: new Vector3(0, 0, 0),
-      displayBiomeCount: false,
+      display: 'default',
     };
 
     debug.element.style.position = 'fixed';
@@ -103,8 +108,6 @@
       function dist(t1: number, h1: number, w1: number, t2: number, h2: number, w2: number) {
         return Math.sqrt((t1 - t2) ** 2 + (h1 - h2) ** 2 + (w1 - w2) ** 2);
       }
-
-      let bruh = true;
 
       for (let i = 0; i <= DIMENSION; i++) {
         for (let j = 0; j <= DIMENSION; j++) {
@@ -141,40 +144,28 @@
           });
 
           let depth = 0;
-          if (bruh) {
-            console.log(weightedBiomes);
-          }
+
+          let displayDefault = debugObject.display === 'default';
+          let displayBiomeCount = debugObject.display === 'biome count';
+          let displayActualBiome = debugObject.display === 'actual biome';
 
           let base = new Color(0, 0, 0);
           weightedBiomes.forEach(([w, b]) => {
             depth += (b.depth * w) / sumWeights;
-            if (!debugObject.displayBiomeCount) {
-              if (bruh) {
-                console.log(
-                  new Color(b.color),
-                  w,
-                  sumWeights,
-                  w / sumWeights,
-                  radius,
-                  dist(b.temperature, b.humidity, b.weirdness, temperature, humidity, weirdness),
-                );
-              }
+            if (displayDefault) {
               base.add(new Color(b.color).multiplyScalar(w / sumWeights));
               base.multiplyScalar(0.5);
             }
           });
 
-          if (debugObject.displayBiomeCount) {
+          if (displayBiomeCount) {
             base.r = weightedBiomes.length / biomes.length;
             base.g = weightedBiomes.length / biomes.length;
             base.b = weightedBiomes.length / biomes.length;
-          } else {
-            // base.multiplyScalar(1 / weightedBiomes.length);
           }
 
-          if (bruh) {
-            console.log(base);
-            bruh = false;
+          if (displayActualBiome) {
+            base = new Color(weightedBiomes[0][1].color);
           }
 
           // const val = sample(p);
@@ -200,9 +191,17 @@
       geometry.setAttribute('color', new Int32BufferAttribute(colors.data, 1));
     };
 
-    const general = debug.addFolder({ title: 'General' });
+    const general = debug.addFolder({ title: 'General', expanded: false });
     general.addInput(debugObject, 'center').on('change', runSample);
-    general.addInput(debugObject, 'displayBiomeCount', { label: 'display biome count' }).on('change', runSample);
+    general
+      .addInput(debugObject, 'display', {
+        options: [
+          { text: 'default', value: 'default' },
+          { text: 'biome count', value: 'biome count' },
+          { text: 'actual biome', value: 'actual biome' },
+        ],
+      })
+      .on('change', runSample);
     general
       .addInput(debugObject, 'depthColor', { label: 'depth color' })
       .on('change', () => material.uniforms.uDepthColor.value.set(debugObject.depthColor));
@@ -294,7 +293,7 @@
     const continents: NoiseConfig = {
       enabled: true,
       seed: SEED,
-      scale: 0.005,
+      scale: SCALE * 0.05,
       strength: 0.38,
       layers: 5,
       baseRoughness: 0.43,
@@ -308,7 +307,7 @@
     const mountains: NoiseConfig = {
       enabled: true,
       seed: SEED,
-      scale: 0.014,
+      scale: SCALE * 0.14,
       strength: 0.71,
       layers: 5,
       baseRoughness: 0.65,
@@ -322,7 +321,7 @@
     const temperature: NoiseConfig = {
       enabled: true,
       seed: SEED * 0.512,
-      scale: 0.009,
+      scale: SCALE * 0.09,
       strength: 0.6,
       layers: 2,
       baseRoughness: 0.4,
@@ -336,7 +335,7 @@
     const humidity: NoiseConfig = {
       enabled: true,
       seed: SEED * 1.512,
-      scale: 0.009,
+      scale: SCALE * 0.09,
       strength: 0.6,
       layers: 2,
       baseRoughness: 0.4,
@@ -350,7 +349,7 @@
     const weirdness: NoiseConfig = {
       enabled: true,
       seed: SEED * 2.812,
-      scale: 0.009,
+      scale: SCALE * 0.09,
       strength: 0.6,
       layers: 2,
       baseRoughness: 0.4,
@@ -396,7 +395,11 @@
   });
 </script>
 
-<canvas bind:this={el} />
+<main bind:this={wrapper}>
+  <canvas bind:this={el} />
+</main>
+
+<a id="back" class="navigation" href="/" use:link>&lt; Back</a>
 
 <style>
   :root {
@@ -427,5 +430,11 @@
     width: 100vw;
     height: 100vh;
     background: black;
+  }
+
+  #back {
+    position: fixed;
+    top: 8px;
+    left: 8px;
   }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { push } from 'svelte-spa-router';
+  import { push, link } from 'svelte-spa-router';
   import { onMount } from 'svelte';
   import QS from 'query-string';
 
@@ -80,6 +80,9 @@
       {/await}
     </ul>
   </div>
+  <a href="/biomes" use:link>
+    <div id="biomes" class="navigation">> Biome Visuals</div>
+  </a>
 </main>
 
 <style>
@@ -195,5 +198,11 @@
 
   .selected {
     border-color: rgba(173, 173, 173, 0.74) !important;
+  }
+
+  #biomes {
+    position: fixed;
+    bottom: 8px;
+    right: 8px;
   }
 </style>
