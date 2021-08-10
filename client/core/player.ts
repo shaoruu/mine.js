@@ -673,8 +673,12 @@ class Player {
   }
 
   get voxelPositionStr() {
-    const { voxel } = this;
-    return `${voxel[0]} ${voxel[1]} ${voxel[2]}`;
+    const { position } = this;
+    const { dimension } = this.engine.world.options;
+
+    return `${(position[0] / dimension).toFixed(2)} / ${(position[1] / dimension).toFixed(2)} / ${(
+      position[2] / dimension
+    ).toFixed(2)}`;
   }
 }
 

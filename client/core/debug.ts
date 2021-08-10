@@ -102,11 +102,12 @@ class Debug {
     });
   }
 
-  makeDataEntry = () => {
+  makeDataEntry = (newline = false) => {
     const dataEntry = document.createElement('p');
     Helper.applyStyle(dataEntry, {
       fontSize: '13.3333px',
       margin: '0',
+      ...(newline ? { height: '16px' } : {}),
     });
     return dataEntry;
   };
@@ -213,15 +214,20 @@ class Debug {
     playerFolder.addInput(player.options, 'flyingInertia', { min: 0, max: 5, step: 0.01, label: 'flying inertia' });
 
     // const cameraFolder = this.gui.addFolder('camera');
-    this.registerDisplay('FPS', this, 'fps');
-    this.registerDisplay('chunk', world, 'camChunkPosStr');
-    this.registerDisplay('chunks loaded', world, 'chunksLoaded');
-    this.registerDisplay('position', player, 'voxelPositionStr');
-    this.registerDisplay('biome', this, 'biome');
-    this.registerDisplay('looking at', player, 'lookBlockStr');
-    this.registerDisplay('scene objects', rendering.scene.children, 'length');
-    this.registerDisplay('memory used', this, 'memoryUsage');
-    this.registerDisplay('time', world.sky.tracker, 'time', (num) => num.toFixed(0));
+    this.displayTitle('MineJS beta-0.1.0');
+    this.registerDisplay('', this, 'fps');
+    this.displayNewline();
+    this.registerDisplay('Mem', this, 'memoryUsage');
+    this.registerDisplay('Time', world.sky.tracker, 'time', (num) => num.toFixed(0));
+    this.registerDisplay('Biome', this, 'biome');
+    this.registerDisplay('Scene object', rendering.scene.children, 'length');
+    this.displayNewline();
+    this.registerDisplay('XYZ', player, 'voxelPositionStr');
+    this.registerDisplay('Block', player, 'lookBlockStr');
+    this.registerDisplay('Chunk', world, 'camChunkPosStr');
+    this.registerDisplay('Chunks loaded', world, 'chunksLoaded');
+    this.displayNewline();
+    this.displayTitle('/help for a tutorial');
 
     // REGISTRY
     const registryFolder = sessionFolder.addFolder({ title: 'Registry', expanded: false });
@@ -399,7 +405,7 @@ class Debug {
   tick = () => {
     for (const { ele, name, attribute, obj, formatter } of this.dataEntries) {
       const newValue = obj[attribute];
-      ele.innerHTML = `${name}: ${formatter(newValue)}`;
+      ele.innerHTML = `${name ? `${name}: ` : ''}${formatter(newValue)}`;
     }
 
     if (this.chunkHighlight.visible) {
@@ -451,8 +457,9 @@ class Debug {
     return saver;
   };
 
-  registerDisplay = (name: string, object: any, attribute: string, formatter: FormatterType = (str) => str) => {
+  registerDisplay = (name: string, object?: any, attribute?: string, formatter: FormatterType = (str) => str) => {
     const wrapper = this.makeDataEntry();
+
     const newEntry = {
       ele: wrapper,
       obj: object,
@@ -460,8 +467,20 @@ class Debug {
       formatter,
       attribute,
     };
+
     this.dataEntries.push(newEntry);
     this.dataWrapper.insertBefore(wrapper, this.dataWrapper.firstChild);
+  };
+
+  displayTitle = (title: string) => {
+    const newline = this.makeDataEntry(true);
+    newline.innerHTML = title;
+    this.dataWrapper.insertBefore(newline, this.dataWrapper.firstChild);
+  };
+
+  displayNewline = () => {
+    const newline = this.makeDataEntry(true);
+    this.dataWrapper.insertBefore(newline, this.dataWrapper.firstChild);
   };
 
   calculateFPS = (function () {
@@ -505,7 +524,7 @@ class Debug {
       if (!min || min > value) min = value;
       if (!max || max < value) max = value;
 
-      return `${value} (${min}, ${max})`;
+      return `${value} fps (${min}, ${max})`;
     };
   })();
 

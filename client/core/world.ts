@@ -363,7 +363,8 @@ class World extends EventEmitter {
   }
 
   get camChunkPosStr() {
-    return `${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
+    const local = Helper.mapVoxelPosToChunkLocalPos(this.engine.player.voxel, this.options.chunkSize);
+    return `${local[0]} ${local[1]} ${local[2]} in ${this.camChunkPos[0]} ${this.camChunkPos[1]}`;
   }
 
   get chunkMeshes() {
