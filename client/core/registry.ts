@@ -86,7 +86,7 @@ class Registry {
   constructor(public engine: Engine, public options: RegistryOptionsType) {
     const { focusDist, focusBlockSize, focusPlantSize, resolution } = options;
 
-    this.texturePack = this.options.packs[0];
+    this.texturePack = this.options.packs.length > 0 ? this.options.packs[1] : this.options.packs[0];
 
     this.aoUniform = { value: new Vector4(100.0, 170.0, 210.0, 255.0) };
 
