@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use actix_broker::BrokerSubscribe;
 
-use std::collections::HashMap;
+use hashbrown::HashMap;
 use std::time::Duration;
 
 use crate::engine::config::Configs;

@@ -1,7 +1,6 @@
-use std::{
-    collections::HashMap,
-    fs::{self, File},
-};
+use hashbrown::HashMap;
+
+use std::fs::{self, File};
 
 use server_utils::json;
 
