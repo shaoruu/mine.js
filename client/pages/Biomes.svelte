@@ -2,6 +2,7 @@
   import ndarray from 'ndarray';
   import { Noise } from 'noisejs';
   import { Pane } from 'tweakpane';
+  import createKDTree from 'static-kdtree';
 
   import { onMount } from 'svelte';
   import {
@@ -16,6 +17,7 @@
     Color,
     WebGLRenderer,
     Int32BufferAttribute,
+    sRGBEncoding,
   } from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
@@ -25,7 +27,7 @@
   let el: HTMLCanvasElement;
 
   function packColor(color: Color) {
-    return color.r * 255 + color.g * 255 * 256 + color.b * 255 * 256 ** 2;
+    return Math.floor(color.r * 255) + Math.floor(color.g * 255) * 256 + Math.floor(color.b * 255) * 256 ** 2;
   }
 
   onMount(() => {
@@ -34,6 +36,7 @@
     const renderer = new WebGLRenderer({ antialias: true, canvas: el });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = sRGBEncoding;
 
     const camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
     camera.position.set(400, 200, 0);
@@ -53,9 +56,12 @@
     const debug = new Pane();
 
     // CONSTANTS
-    const SEED = 500 * Math.random();
+    // const SEED = 500 * Math.random();
+    const SEED = 189.91792574986545;
     const WIDTH = 300;
     const DIMENSION = 512;
+    const RADIUS_SCALE = 1.2;
+    const MIN_RADIUS = 0.1;
 
     console.log('SEED: ', SEED);
 
@@ -63,6 +69,7 @@
       depthColor: '#8e8b99',
       surfaceColor: '#f5ece4',
       center: new Vector3(0, 0, 0),
+      displayBiomeCount: false,
     };
 
     debug.element.style.position = 'fixed';
@@ -84,26 +91,110 @@
     });
     const plane = new Mesh(geometry, material);
 
-    const runSample = () => {
+    const runSample = async () => {
       const heights = ndarray(new Float32Array((DIMENSION + 1) ** 2), [DIMENSION + 1, DIMENSION + 1]);
       const colors = ndarray(new Int32Array((DIMENSION + 1) ** 2), [DIMENSION + 1, DIMENSION + 1]);
 
       let sum = 0;
+      let min = 10;
+      let max = -10;
       let count = 0;
+
+      function dist(t1: number, h1: number, w1: number, t2: number, h2: number, w2: number) {
+        return Math.sqrt((t1 - t2) ** 2 + (h1 - h2) ** 2 + (w1 - w2) ** 2);
+      }
+
+      let bruh = true;
 
       for (let i = 0; i <= DIMENSION; i++) {
         for (let j = 0; j <= DIMENSION; j++) {
-          const val = sample(new Vector3(i, 0, j));
+          const p = new Vector3(i, 0, j);
 
-          sum += val;
-          count += 1;
+          const temperature = sampleTemperature(p);
+          const humidity = sampleHumidity(p);
+          const weirdness = sampleWeirdness(p);
 
-          heights.set(i, j, val);
-          colors.set(i, j, packColor(new Color(1, 1, 1)));
+          const index = tree.nn([temperature, humidity, weirdness]);
+          const closest = biomes[index];
+          const nDist = dist(
+            closest.temperature,
+            closest.humidity,
+            closest.weirdness,
+            temperature,
+            humidity,
+            weirdness,
+          );
+
+          const radius = Math.max(nDist * RADIUS_SCALE, MIN_RADIUS);
+
+          const nearBiomes = [];
+          tree.rnn([temperature, humidity, weirdness], radius, (k: number) => {
+            nearBiomes.push(biomes[k]);
+          });
+
+          let sumWeights = 0;
+          const weightedBiomes = nearBiomes.map((b) => {
+            const d = dist(b.temperature, b.humidity, b.weirdness, temperature, humidity, weirdness);
+            const weight = (radius ** 2 - d ** 2) ** 2;
+            sumWeights += weight;
+            return [weight, b];
+          });
+
+          let depth = 0;
+          if (bruh) {
+            console.log(weightedBiomes);
+          }
+
+          let base = new Color(0, 0, 0);
+          weightedBiomes.forEach(([w, b]) => {
+            depth += (b.depth * w) / sumWeights;
+            if (!debugObject.displayBiomeCount) {
+              if (bruh) {
+                console.log(
+                  new Color(b.color),
+                  w,
+                  sumWeights,
+                  w / sumWeights,
+                  radius,
+                  dist(b.temperature, b.humidity, b.weirdness, temperature, humidity, weirdness),
+                );
+              }
+              base.add(new Color(b.color).multiplyScalar(w / sumWeights));
+              base.multiplyScalar(0.5);
+            }
+          });
+
+          if (debugObject.displayBiomeCount) {
+            base.r = weightedBiomes.length / biomes.length;
+            base.g = weightedBiomes.length / biomes.length;
+            base.b = weightedBiomes.length / biomes.length;
+          } else {
+            // base.multiplyScalar(1 / weightedBiomes.length);
+          }
+
+          if (bruh) {
+            console.log(base);
+            bruh = false;
+          }
+
+          // const val = sample(p);
+
+          // sum += val;
+          // count += 1;
+
+          // if (val < min) {
+          //   min = val;
+          // }
+          // if (val > max) {
+          //   max = val;
+          // }
+
+          heights.set(i, j, depth);
+          colors.set(i, j, packColor(base));
         }
       }
 
-      console.log('average: ', sum / count);
+      console.log('average:', sum / count, '\nmin:', min, '\nmax:', max);
 
       geometry.setAttribute('height', new Float32BufferAttribute(heights.data, 1));
       geometry.setAttribute('color', new Int32BufferAttribute(colors.data, 1));
@@ -111,6 +202,7 @@
 
     const general = debug.addFolder({ title: 'General' });
     general.addInput(debugObject, 'center').on('change', runSample);
+    general.addInput(debugObject, 'displayBiomeCount', { label: 'display biome count' }).on('change', runSample);
     general
       .addInput(debugObject, 'depthColor', { label: 'depth color' })
       .on('change', () => material.uniforms.uDepthColor.value.set(debugObject.depthColor));
@@ -152,7 +244,7 @@
       folder.addInput(config, 'baseRoughness', { min: 0, max: 1, step: 0.01 });
       folder.addInput(config, 'roughness', { min: 0, max: 5, step: 0.01 });
       folder.addInput(config, 'persistence', { min: 0, max: 5, step: 0.01 });
-      folder.addInput(config, 'minValue', { min: 0, max: 5, step: 0.01 });
+      folder.addInput(config, 'minValue', { min: -5, max: 5, step: 0.01 });
 
       folder.on('change', runSample);
 
@@ -178,7 +270,7 @@
             .add(config.center);
           let v = noise.simplex3(p.x, p.y, p.z);
           // todo: this is not 0-1
-          noiseValue += (v + 1.0) * 0.5 * amplitude;
+          noiseValue += (v * 1.414 + 0.5) * amplitude;
           frequency *= config.roughness;
           amplitude *= config.persistence;
         }
@@ -189,16 +281,26 @@
       };
     };
 
+    const biomes = [
+      { name: 'A', temperature: 0.3, humidity: 0.3, weirdness: 0.2, color: '#64C9CF', depth: 0.8 },
+      { name: 'B', temperature: 0.1, humidity: 0.1, weirdness: 0.1, color: '#986D8E', depth: 0.4 },
+      { name: 'C', temperature: 0.1, humidity: 0.2, weirdness: 0.3, color: '#87A8A4', depth: 0.6 },
+      { name: 'D', temperature: 0.6, humidity: 0.9, weirdness: 0.4, color: '#FF4C29', depth: 0.2 },
+      { name: 'E', temperature: 0.9, humidity: 0.5, weirdness: 0.6, color: '#001E6C', depth: 1.0 },
+    ];
+
+    const tree = createKDTree(biomes.map((b) => [b.temperature, b.humidity, b.weirdness]));
+
     const continents: NoiseConfig = {
       enabled: true,
       seed: SEED,
       scale: 0.005,
-      strength: 0.6,
+      strength: 0.38,
       layers: 5,
       baseRoughness: 0.43,
-      roughness: 1.96,
+      roughness: 1.3,
       persistence: 0.54,
-      minValue: 1.03,
+      minValue: 0.9,
       center: debugObject.center,
       firstLayerAsMask: false,
     };
@@ -207,7 +309,7 @@
       enabled: true,
       seed: SEED,
       scale: 0.014,
-      strength: 2.9,
+      strength: 0.71,
       layers: 5,
       baseRoughness: 0.65,
       roughness: 1.74,
@@ -221,28 +323,42 @@
       enabled: true,
       seed: SEED * 0.512,
       scale: 0.009,
-      strength: 0.65,
+      strength: 0.6,
       layers: 2,
       baseRoughness: 0.4,
       roughness: 1.74,
       persistence: 0.6,
-      minValue: 0.76,
+      minValue: 0,
       center: debugObject.center,
-      firstLayerAsMask: true,
+      firstLayerAsMask: false,
     };
 
     const humidity: NoiseConfig = {
       enabled: true,
       seed: SEED * 1.512,
       scale: 0.009,
-      strength: 0.65,
+      strength: 0.6,
       layers: 2,
       baseRoughness: 0.4,
       roughness: 1.74,
       persistence: 0.6,
-      minValue: 0.76,
+      minValue: 0,
       center: debugObject.center,
-      firstLayerAsMask: true,
+      firstLayerAsMask: false,
+    };
+
+    const weirdness: NoiseConfig = {
+      enabled: true,
+      seed: SEED * 2.812,
+      scale: 0.009,
+      strength: 0.6,
+      layers: 2,
+      baseRoughness: 0.4,
+      roughness: 1.74,
+      persistence: 0.6,
+      minValue: 0,
+      center: debugObject.center,
+      firstLayerAsMask: false,
     };
 
     const sampleContinents = makeNoiseLayer('Continents', continents);
@@ -250,7 +366,9 @@
 
     const sample = sampleMountains;
 
-    // const sample = makeNoiseLayer('Humidity', humidity);
+    const sampleHumidity = makeNoiseLayer('Humidity', humidity);
+    const sampleTemperature = makeNoiseLayer('Temperature', temperature);
+    const sampleWeirdness = makeNoiseLayer('Weirdness', weirdness);
 
     runSample();
 
@@ -270,8 +388,6 @@
 
       controls.update();
       renderer.render(scene, camera);
-
-      plane.rotation.z += 0.001;
     }
 
     animate();

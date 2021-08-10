@@ -15,8 +15,7 @@ impl<'a> System<'a> for PhysicsSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        use rayon::prelude::*;
-        use specs::ParJoin;
+        use specs::Join;
 
         let (core, clock, chunks, mut bodies) = data;
 
@@ -24,8 +23,8 @@ impl<'a> System<'a> for PhysicsSystem {
             |x: i32, y: i32, z: i32| -> bool { !chunks.get_walkable_by_voxel(x, y, z) };
         let test_fluid = |_, _, _| false;
 
-        (&mut bodies)
-            .par_join()
-            .for_each(|b| core.iterate_body(b, clock.delta_secs(), &test_solid, &test_fluid));
+        for body in (&mut bodies).join() {
+            core.iterate_body(body, clock.delta_secs(), &test_solid, &test_fluid);
+        }
     }
 }

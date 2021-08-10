@@ -11,9 +11,9 @@ void main()
 {
     float mixStrength = (vElevation + uColorOffset) * uColorMultiplier;
     
-    vec3 color = mix(uDepthColor, uSurfaceColor, mixStrength);
+    vec3 color = normalize(mix(uDepthColor, uSurfaceColor, mixStrength));
 
     color *= vColor;
 
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(vColor, 1.0);
 }

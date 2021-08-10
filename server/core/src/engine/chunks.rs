@@ -1,12 +1,9 @@
-use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    path::PathBuf,
-    sync::Arc,
-};
+use hashbrown::{HashMap, HashSet};
+use std::{collections::VecDeque, path::PathBuf, sync::Arc};
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use log::{debug, info};
-use rayon::prelude::*;
+use rayon::{prelude::*, ThreadPool, ThreadPoolBuilder};
 
 use crate::gen::{biomes::Biomes, blocks::BlockRotation};
 
@@ -62,6 +59,8 @@ pub struct Chunks {
     chunks: HashMap<Vec2<i32>, Chunk>,
     update_queue: HashMap<Vec2<i32>, Vec<VoxelUpdate>>,
     noise: Noise,
+
+    pool: ThreadPool,
 
     gen_sender: Arc<Sender<Vec<Chunk>>>,
     gen_receiver: Arc<Receiver<Vec<Chunk>>>,
@@ -121,6 +120,11 @@ impl Chunks {
             update_queue: HashMap::new(),
             noise: Noise::new(LEVEL_SEED),
 
+            pool: ThreadPoolBuilder::new()
+                .num_threads(num_cpus::get())
+                .build()
+                .unwrap(),
+
             gen_sender,
             gen_receiver,
 
@@ -158,11 +162,11 @@ impl Chunks {
                 })
                 .collect();
 
-            let sender = self.mesh_sender.clone();
-            let config = self.config.clone();
-            let registry = self.registry.clone();
+            let sender = Arc::clone(&self.mesh_sender);
+            let config = Arc::clone(&self.config);
+            let registry = Arc::clone(&self.registry);
 
-            rayon::spawn(move || {
+            self.pool.spawn(move || {
                 let meshed = to_mesh
                     .into_iter()
                     .map(|(mut chunk, space)| {
@@ -198,9 +202,7 @@ impl Chunks {
 
                 sender.send(meshed).unwrap();
             });
-        }
-
-        if !self.to_generate.is_empty() {
+        } else if !self.to_generate.is_empty() {
             let chunks = self
                 .to_generate
                 .drain(0..self.config.max_per_thread.min(self.to_generate.len()))
@@ -210,12 +212,12 @@ impl Chunks {
                 self.generating.insert(chunk.coords.to_owned());
             });
 
-            let sender = self.gen_sender.clone();
-            let config = self.config.clone();
-            let registry = self.registry.clone();
-            let biomes = self.biomes.clone();
+            let sender = Arc::clone(&self.gen_sender);
+            let config = Arc::clone(&self.config);
+            let registry = Arc::clone(&self.registry);
+            let biomes = Arc::clone(&self.biomes);
 
-            rayon::spawn(move || {
+            self.pool.spawn(move || {
                 let chunks: Vec<Chunk> = chunks
                     .into_iter()
                     .map(|mut chunk| {
@@ -492,12 +494,12 @@ impl Chunks {
             .flatten()
             .collect();
 
+        let builder = self.builder.clone();
+        let biomes = self.biomes.clone();
+
         let to_decorate_updates: Vec<Vec<VoxelUpdate>> = to_decorate
             .par_iter()
             .map(|chunk| {
-                let builder = self.builder.clone();
-                let biomes = self.biomes.clone();
-
                 if !chunk.needs_decoration {
                     return vec![];
                 }

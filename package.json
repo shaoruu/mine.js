@@ -88,6 +88,7 @@
     "random-name": "^0.1.2",
     "raw-loader": "^4.0.2",
     "source-map-support": "^0.5.19",
+    "static-kdtree": "^1.0.2",
     "stats.js": "^0.17.0",
     "svelte-routing": "^1.6.0",
     "svelte-spa-router": "^3.2.0",

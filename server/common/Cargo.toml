@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-num = "0.4.0"
+hashbrown = "0.11"
 noise = "0.7.0"
+num = "0.4.0"
 serde = "1.0.126"

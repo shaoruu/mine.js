@@ -4,8 +4,9 @@ use libflate::zlib::{Decoder, Encoder};
 
 use serde::{Deserialize, Serialize};
 
+use hashbrown::HashSet;
+
 use std::{
-    collections::HashSet,
     fs::File,
     io::{Read, Write},
     path::Path,

@@ -2070,6 +2070,7 @@ dependencies = [
 name = "server_common"
 version = "0.1.0"
 dependencies = [
+ "hashbrown",
  "noise",
  "num",
  "serde",
@@ -2088,6 +2089,7 @@ dependencies = [
  "base64",
  "byteorder",
  "crossbeam-channel 0.5.1",
+ "hashbrown",
  "image",
  "itertools",
  "kdtree",
