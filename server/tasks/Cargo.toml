@@ -1,12 +1,12 @@
 [package]
+edition = "2018"
 name = "server_tasks"
 version = "0.1.0"
-edition = "2018"
 
 [dependencies]
-server_common = { path = "../common" }
-server_core = { path = "../core" }
-server_utils = { path = "../utils" }
+server_common = {path = "../common"}
+server_core = {path = "../core"}
+server_utils = {path = "../utils"}
 
 indicatif = "0.16.2"
 serde = "1.0.126"

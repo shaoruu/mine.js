@@ -1,7 +1,7 @@
 [package]
+edition = "2018"
 name = "server_common"
 version = "0.1.0"
-edition = "2018"
 
 [dependencies]
 noise = "0.7.0"
