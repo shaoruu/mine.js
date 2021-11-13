@@ -8,7 +8,7 @@ Here's the quick TODO list that we're following: [Link](https://www.notion.so/f6
 
 ## :dart: Disclaimers
 
-This is purely a passionate project. Although inspired, I have no intention for this game to be affiliated with Minecraft, or any licensed voxel engines. Further, textures and assets used in the game are all licensed for free use. More information can be found in last section.
+This is purely a passionate project. Although inspired, I have no intention for this game to be affiliated with Minecraft, or any licensed voxel engines. Further, textures and assets used in the game are all licensed for free use. More information can be found in the last section.
 
 ## :crown: Motivation
 
