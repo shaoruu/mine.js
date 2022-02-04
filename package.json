@@ -92,7 +92,7 @@
     "stats.js": "^0.17.0",
     "svelte-routing": "^1.6.0",
     "svelte-spa-router": "^3.2.0",
-    "three": "^0.127.0",
+    "three": "^0.137.0",
     "three-spritetext": "^1.6.2",
     "tweakpane": "^3.0.3",
     "typedarray-pool": "^1.2.0",
