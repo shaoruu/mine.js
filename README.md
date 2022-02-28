@@ -1,4 +1,4 @@
-# [MineJS](http://mine.iantheearl.io/)
+# [MineJS](http://mine.shaoruu.io/)
 
 MineJS is a multiplayer voxel engine that runs in your browser! (Probably should change the name to MineRS/MineTS)
 
