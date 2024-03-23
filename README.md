@@ -1,3 +1,7 @@
+## [A BETTER MINEJS](https://github.com/voxelize/voxelize)
+
+MineJS has been rewritten into a customizable fullstack library called [voxelize](https://github.com/voxelize/voxelize)
+
 # [MineJS](http://mine.shaoruu.io/)
 
 MineJS is a multiplayer voxel engine that runs in your browser! (Probably should change the name to MineRS/MineTS)
